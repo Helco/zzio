@@ -1,9 +1,11 @@
 using System;
 using System.IO;
 
-namespace zzio.primitives {
+namespace zzio.primitives
+{
     [System.Serializable]
-    public struct TexCoord {
+    public struct TexCoord
+    {
         public float u, v;
 
         public TexCoord(float u, float v)

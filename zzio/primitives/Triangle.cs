@@ -1,9 +1,11 @@
 using System;
 using System.IO;
 
-namespace zzio.primitives {
+namespace zzio.primitives
+{
     [System.Serializable]
-    public struct Triangle {
+    public struct Triangle
+    {
         public UInt16 m, v1, v2, v3;
 
         public Triangle(UInt16 v1, UInt16 v2, UInt16 v3, UInt16 m)

@@ -1,9 +1,11 @@
 using System;
 using System.IO;
 
-namespace zzio.primitives {
+namespace zzio.primitives
+{
     [System.Serializable]
-    public struct Quaternion {
+    public struct Quaternion
+    {
         public float x, y, z, w;
 
         public Quaternion(float x, float y, float z, float w)

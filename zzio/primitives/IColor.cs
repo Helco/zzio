@@ -1,7 +1,8 @@
 using System;
 using System.IO;
 
-namespace zzio.primitives {
+namespace zzio.primitives
+{
     [System.Serializable]
     public struct IColor
     {

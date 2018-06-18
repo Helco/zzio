@@ -1,9 +1,11 @@
 using System;
 using System.IO;
 
-namespace zzio.primitives {
+namespace zzio.primitives
+{
     [System.Serializable]
-    public struct Normal {
+    public struct Normal
+    {
         public byte x, y, z;
         public sbyte p;
 

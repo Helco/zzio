@@ -17,7 +17,7 @@ namespace zzio.effect
                 { "ElectricBolt",       () => new ElectricBolt() },
                 { "Models",             () => new Models() },
                 { "MovingPlanes",       () => new MovingPlanes() },
-                { "Particle Beam",       () => new ParticleBeam() },
+                { "Particle Beam",      () => new ParticleBeam() },
                 { "ParticleCollector",  () => new ParticleCollector() },
                 { "ParticleEmitter",    () => new ParticleEmitter() },
                 { "PlaneBeam",          () => new PlaneBeam() },
