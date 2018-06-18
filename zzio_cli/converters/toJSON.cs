@@ -44,7 +44,7 @@ namespace zzio.cli.converters
         {
             byte[] buffer = new byte[from.Length];
             from.Read(buffer, 0, (int)from.Length);
-            var obj = Config.read(buffer);
+            var obj = VarConfig.read(buffer);
             buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
             to.Write(buffer, 0, buffer.Length);
         }

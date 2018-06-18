@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 namespace zzio
 {
     [System.Serializable]
-    public struct ConfigVar
+    public struct VarConfigVar
     {
         public string name;
         public float floatValue;
@@ -17,14 +17,14 @@ namespace zzio
     }
 
     [System.Serializable]
-    public class Config
+    public class VarConfig
     {
         public byte[] checksum; //always 16 bytes
         public UInt32 header; //3 bytes, meaning unknown
-        public ConfigVar firstValue; //name is always null
-        public ConfigVar[] vars;
+        public VarConfigVar firstValue; //name is always null
+        public VarConfigVar[] vars;
 
-        public Config(byte[] chk, UInt32 h, ConfigVar fV, ConfigVar[] v)
+        public VarConfig(byte[] chk, UInt32 h, VarConfigVar fV, VarConfigVar[] v)
         {
             checksum = chk;
             header = h;
@@ -32,13 +32,13 @@ namespace zzio
             vars = v;
         }
 
-        public static Config read(byte[] buffer)
+        public static VarConfig read(byte[] buffer)
         {
             BinaryReader reader = new BinaryReader(new MemoryStream(buffer));
             byte[] checksum = reader.ReadBytes(16);
             UInt32 header = ((UInt32)reader.ReadUInt16() << 8) | reader.ReadByte();
-            ConfigVar firstValue = readVar(null, reader);
-            List<ConfigVar> vars = new List<ConfigVar>();
+            VarConfigVar firstValue = readVar(null, reader);
+            List<VarConfigVar> vars = new List<VarConfigVar>();
 
             byte[] calculatedChecksum = MD5.Create().ComputeHash(buffer, 25, buffer.Length - 25);
             for (int i=0; i<16; i++)
@@ -57,12 +57,12 @@ namespace zzio
                 vars.Add(readVar(name.ToString(), reader));
             }
 
-            return new Config(checksum, header, firstValue, vars.ToArray());
+            return new VarConfig(checksum, header, firstValue, vars.ToArray());
         }
 
-        private static ConfigVar readVar(string name, BinaryReader reader)
+        private static VarConfigVar readVar(string name, BinaryReader reader)
         {
-            ConfigVar v;
+            VarConfigVar v;
             v.name = name;
             v.floatValue = reader.ReadSingle();
             byte isString = reader.ReadByte();
@@ -121,7 +121,7 @@ namespace zzio
             rawWriter.Write(md5.Hash, 0, 16);
         }
 
-        private static void writeVar(BinaryWriter writer, ConfigVar var)
+        private static void writeVar(BinaryWriter writer, VarConfigVar var)
         {
             writer.Write(var.floatValue);
             if (var.stringValue != null)
