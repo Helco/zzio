@@ -1,8 +1,8 @@
 ﻿using System;
 using Newtonsoft.Json;
 using System.Linq;
-
 using zzio.rwbs;
+using zzio.primitives;
 
 namespace zzio {
     public class JsonDummyConverter : JsonConverter {
