@@ -161,32 +161,5 @@
 
             Unknown = -1
         }
-
-        public static partial class Utils {
-            public static bool isSectionListSection(SectionId id) {
-                switch (id) {
-                    case (SectionId.Extension):
-                    case (SectionId.Texture):
-                    case (SectionId.Material):
-                    case (SectionId.MaterialList):
-                    case (SectionId.AtomicSection):
-                    case (SectionId.PlaneSection):
-                    case (SectionId.World):
-                    case (SectionId.FrameList):
-                    case (SectionId.Geometry):
-                    case (SectionId.Clump):
-                    case (SectionId.Light):
-                    case (SectionId.Atomic):
-                    case (SectionId.TextureNative):
-                    case (SectionId.TextureDictionary):
-                    case (SectionId.GeometryList): { return true; }
-                    default: { return false; }
-                }
-            }
-
-            public static bool usesFirstStruct(SectionId id) {
-                return isSectionListSection(id) && id != SectionId.Extension;
-            }
-        }
     }
 }

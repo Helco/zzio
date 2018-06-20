@@ -15,8 +15,7 @@ namespace zzio.cli.converters
                 ObjectCreationHandling = ObjectCreationHandling.Replace,
                 Formatting = Formatting.Indented,
                 Converters = new JsonConverter[] {
-                            new Newtonsoft.Json.Converters.StringEnumConverter(),
-                            new JsonPrimitivesConverter()
+                            new Newtonsoft.Json.Converters.StringEnumConverter()
                         }
             });
         }
@@ -111,11 +110,8 @@ namespace zzio.cli.converters
         public FileType TypeTo { get { return FileType.JSON; } }
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
-            byte[] buffer = new byte[from.Length];
-            from.Read(buffer, 0, (int)from.Length);
-            var reader = new rwbs.Reader(buffer);
-            var obj = reader.readSection();
-            buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+            var obj = zzio.rwbs.Section.readNew(from);
+            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
             to.Write(buffer, 0, buffer.Length);
         }
     }
@@ -126,11 +122,8 @@ namespace zzio.cli.converters
         public FileType TypeTo { get { return FileType.JSON; } }
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
-            byte[] buffer = new byte[from.Length];
-            from.Read(buffer, 0, (int)from.Length);
-            var reader = new rwbs.Reader(buffer);
-            var obj = reader.readSection();
-            buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+            var obj = zzio.rwbs.Section.readNew(from);
+            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
             to.Write(buffer, 0, buffer.Length);
         }
     }

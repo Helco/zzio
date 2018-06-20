@@ -13,7 +13,7 @@ namespace zzio.tests.rwbs
             Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/rwbs_sample.dff")
         );
 
-        private void testSection(BaseSection section)
+        private void testSection(Section section)
         {
             Assert.IsInstanceOf(typeof(RWClump), section);
             RWClump clump = (RWClump)section;
@@ -22,14 +22,14 @@ namespace zzio.tests.rwbs
             Assert.AreEqual(0, clump.atomicCount);
             Assert.AreEqual(0, clump.camCount);
             Assert.AreEqual(0, clump.lightCount);
-            Assert.AreEqual(2, clump.childs.Length);
+            Assert.AreEqual(3, clump.children.Count);
             
             
-            Assert.IsInstanceOf(typeof(RWFrameList), clump.childs[0]);
-            RWFrameList frameList = (RWFrameList)clump.childs[0];
+            Assert.IsInstanceOf(typeof(RWFrameList), clump.children[0]);
+            RWFrameList frameList = (RWFrameList)clump.children[0];
             Assert.AreSame(clump, frameList.parent);
             Assert.AreEqual(SectionId.FrameList, frameList.sectionId);
-            Assert.AreEqual(0, frameList.childs.Length);
+            Assert.AreEqual(0, frameList.children.Count);
             Assert.AreEqual(1, frameList.frames.Length);
             Frame frame = frameList.frames[0];
             Assert.AreEqual(0, frame.creationFlags);
@@ -43,19 +43,24 @@ namespace zzio.tests.rwbs
             Assert.AreEqual(0.0f, frame.position.y);
             Assert.AreEqual(0.0f, frame.position.z);
 
-            Assert.IsInstanceOf(typeof(RWGeometryList), clump.childs[1]);
-            RWGeometryList geoList = (RWGeometryList)clump.childs[1];
+            Assert.IsInstanceOf(typeof(RWExtension), clump.children[1]);
+            RWExtension extension = (RWExtension)clump.children[1];
+            Assert.AreSame(clump, extension.parent);
+            Assert.AreEqual(0, extension.children.Count);
+
+            Assert.IsInstanceOf(typeof(RWGeometryList), clump.children[2]);
+            RWGeometryList geoList = (RWGeometryList)clump.children[2];
             Assert.AreSame(clump, geoList.parent);
             Assert.AreEqual(SectionId.GeometryList, geoList.sectionId);
-            Assert.AreEqual(0, geoList.childs.Length);
+            Assert.AreEqual(0, geoList.children.Count);
             Assert.AreEqual(0, geoList.geometryCount);
         }
 
         [Test]
         public void read()
         {
-            Reader reader = new Reader(sampleData.ToArray());
-            BaseSection section = reader.readSection();
+            MemoryStream stream = new MemoryStream(sampleData, false);
+            Section section = Section.readNew(stream);
             testSection(section);
         }
     }

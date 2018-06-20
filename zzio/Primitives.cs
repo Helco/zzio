@@ -4,36 +4,6 @@ using Newtonsoft.Json;
 using zzio.primitives;
 
 namespace zzio {
-    namespace rwbs {
-        [System.Serializable]
-        public struct Frame {
-            public float[] rotMatrix;
-            public Vector position;
-            public UInt32 frameIndex; //propably previous sibling?
-            public UInt32 creationFlags;
-
-            public static Frame read(BinaryReader reader) {
-                Frame f;
-                f.rotMatrix = new float[9];
-                for (int i = 0; i < 9; i++)
-                    f.rotMatrix[i] = reader.ReadSingle();
-                f.position = Vector.read(reader);
-                f.frameIndex = reader.ReadUInt32();
-                f.creationFlags = reader.ReadUInt32();
-                return f;
-            }
-
-            public void write(BinaryWriter w)
-            {
-                for (int i = 0; i < 9; i++)
-                    w.Write(rotMatrix[i]);
-                position.write(w);
-                w.Write(frameIndex);
-                w.Write(creationFlags);
-            }
-        }
-    }
-
     public partial class Utils {
         public static string readZString(BinaryReader reader) {
             return readSizedString(reader, reader.ReadUInt32());
