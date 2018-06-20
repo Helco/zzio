@@ -2,6 +2,7 @@
 using System.IO;
 using Newtonsoft.Json;
 using zzio.primitives;
+using zzio.utils;
 
 namespace zzio {
     namespace scn {
@@ -206,10 +207,10 @@ namespace zzio {
             private static Trigger readTrigger(BinaryReader reader) {
                 Trigger t;
                 t.idx = reader.ReadUInt32();
-                t.colliderType = Utils.intToEnum<TriggerColliderType>(reader.ReadInt32());
+                t.colliderType = EnumUtils.intToEnum<TriggerColliderType>(reader.ReadInt32());
                 t.normalizeDir = reader.ReadUInt32();
                 t.dir = Vector.read(reader);
-                t.type = Utils.intToEnum<TriggerType>(reader.ReadInt32());
+                t.type = EnumUtils.intToEnum<TriggerType>(reader.ReadInt32());
                 t.ii1 = reader.ReadUInt32();
                 t.ii2 = reader.ReadUInt32();
                 t.ii3 = reader.ReadUInt32();
@@ -234,7 +235,7 @@ namespace zzio {
             private static Effect readEffect(BinaryReader reader) {
                 Effect e;
                 e.idx = reader.ReadUInt32();
-                e.type = Utils.intToEnum<EffectType>(reader.ReadInt32());
+                e.type = EnumUtils.intToEnum<EffectType>(reader.ReadInt32());
                 e.v1 = e.v2 = e.v3 = new Vector();
                 e.param = 0;
                 e.effectFile = null;
@@ -270,7 +271,7 @@ namespace zzio {
             private static EffectV2 readEffectV2(BinaryReader reader) {
                 EffectV2 e;
                 e.idx = reader.ReadUInt32();
-                e.type = Utils.intToEnum<EffectV2Type>(reader.ReadInt32());
+                e.type = EnumUtils.intToEnum<EffectV2Type>(reader.ReadInt32());
                 e.i1 = reader.ReadUInt32();
                 e.i2 = reader.ReadUInt32();
                 e.i3 = reader.ReadUInt32();
@@ -303,7 +304,7 @@ namespace zzio {
 
             private static Behaviour readBehaviour(BinaryReader reader) {
                 Behaviour b;
-                b.type = Utils.intToEnum<BehaviourType>(reader.ReadInt32());
+                b.type = EnumUtils.intToEnum<BehaviourType>(reader.ReadInt32());
                 b.modelId = reader.ReadUInt32();
                 return b;
             }

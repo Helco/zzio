@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using zzio.primitives;
+using zzio.utils;
 
 namespace zzio.effect.parts
 {
@@ -54,7 +55,7 @@ namespace zzio.effect.parts
             minProgress = r.ReadSingle();
             minSize = r.ReadSingle();
             r.BaseStream.Seek(4, SeekOrigin.Current);
-            renderMode = Utils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
+            renderMode = EnumUtils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
             if (size > 128)
                 doTexShiftY = r.ReadSingle() == 0.0f; // don't look... it's legacy code behaviour
         }

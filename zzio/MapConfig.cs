@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using zzio.utils;
 
 namespace zzio
 {
@@ -37,7 +38,7 @@ namespace zzio
                 MapMarker m;
                 m.posX = reader.ReadInt32();
                 m.posY = reader.ReadInt32();
-                m.section = Utils.intToEnum<MapMarkerSection>(reader.ReadInt32());
+                m.section = EnumUtils.intToEnum<MapMarkerSection>(reader.ReadInt32());
                 m.sceneId = reader.ReadUInt32();
                 markers[i] = m;
             }

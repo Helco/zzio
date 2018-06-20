@@ -9,11 +9,6 @@ namespace zzio {
             return readSizedString(reader, reader.ReadUInt32());
         }
 
-        internal static T intToFlags<T>(uint v)
-        {
-            throw new NotImplementedException();
-        }
-
         public static string readSizedString(BinaryReader reader, uint len)
         {
             if (len == 0)
@@ -51,13 +46,6 @@ namespace zzio {
                 while (rest-- < 4) //use the integer underflow to our favor
                     writer.Write((byte)0);
             }
-        }
-
-        public static T intToEnum<T>(int i) {
-            if (Enum.IsDefined(typeof(T), i))
-                return (T)Enum.Parse(typeof(T), i.ToString());
-            else
-                return (T)Enum.Parse(typeof(T), "Unknown");
         }
 
         public static bool isUID (string str)

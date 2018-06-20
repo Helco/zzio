@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using zzio.utils;
 
 namespace zzio.effect.parts
 {
@@ -84,7 +85,7 @@ namespace zzio.effect.parts
             r.BaseStream.Seek(3, SeekOrigin.Current);
             yOffset = r.ReadSingle();
             if (size > 168)
-                renderMode = Utils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
+                renderMode = EnumUtils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
             if (size > 172)
                 minPosX = r.ReadSingle();
         }

@@ -12,24 +12,24 @@ namespace zzio.rwbs
         private static readonly Dictionary<SectionId, Func<Section>> sectionTypeCtors
             = new Dictionary<SectionId, Func<Section>>()
             {
-                { SectionId.Atomic, () => new RWAtomic() },
+                { SectionId.Atomic,        () => new RWAtomic() },
                 { SectionId.AtomicSection, () => new RWAtomicSection() },
-                { SectionId.BinMeshPLG, () => new RWBinMeshPLG() },
-                { SectionId.Clump, () => new RWClump() },
-                { SectionId.Extension, () => new RWExtension() },
-                { SectionId.FrameList, () => new RWFrameList() },
-                { SectionId.Geometry, () => new RWGeometry() },
-                { SectionId.GeometryList, () => new RWGeometryList() },
-                { SectionId.Material, () => new RWMaterial() },
-                { SectionId.MaterialList, () => new RWMaterialList() },
-                { SectionId.MorphPLG, () => new RWMorphPLG() },
-                { SectionId.PlaneSection, () => new RWPlaneSection() },
-                { SectionId.SkinPLG, () => new RWSkinPLG() },
-                { SectionId.String, () => new RWString() },
-                { SectionId.Struct, () => new RWStruct() },
-                { SectionId.Texture, () => new RWTexture() },
-                { SectionId.World, () => new RWWorld() },
-                { SectionId.Unknown, () => new UnknownSection(SectionId.Unknown) }
+                { SectionId.BinMeshPLG,    () => new RWBinMeshPLG() },
+                { SectionId.Clump,         () => new RWClump() },
+                { SectionId.Extension,     () => new RWExtension() },
+                { SectionId.FrameList,     () => new RWFrameList() },
+                { SectionId.Geometry,      () => new RWGeometry() },
+                { SectionId.GeometryList,  () => new RWGeometryList() },
+                { SectionId.Material,      () => new RWMaterial() },
+                { SectionId.MaterialList,  () => new RWMaterialList() },
+                { SectionId.MorphPLG,      () => new RWMorphPLG() },
+                { SectionId.PlaneSection,  () => new RWPlaneSection() },
+                { SectionId.SkinPLG,       () => new RWSkinPLG() },
+                { SectionId.String,        () => new RWString() },
+                { SectionId.Struct,        () => new RWStruct() },
+                { SectionId.Texture,       () => new RWTexture() },
+                { SectionId.World,         () => new RWWorld() },
+                { SectionId.Unknown,       () => new UnknownSection(SectionId.Unknown) }
             };
 
         public abstract SectionId sectionId { get; }
@@ -42,7 +42,7 @@ namespace zzio.rwbs
         public static void readHead(Stream stream, out SectionId sectionId, out UInt32 size, out UInt32 version)
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
-            sectionId = Utils.intToEnum<SectionId>(reader.ReadInt32());
+            sectionId = EnumUtils.intToEnum<SectionId>(reader.ReadInt32());
             size = reader.ReadUInt32();
             version = reader.ReadUInt32();
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using zzio.utils;
 
 namespace zzio.effect.parts
 {
@@ -70,7 +71,7 @@ namespace zzio.effect.parts
             tileH = r.ReadUInt32();
             color = r.ReadUInt32();
             name = Utils.readCAString(r, 32);
-            mode = Utils.intToEnum<ParticleBeamMode>(r.ReadInt32());
+            mode = EnumUtils.intToEnum<ParticleBeamMode>(r.ReadInt32());
             fadeMode = r.ReadUInt32();
             beamWidth = r.ReadSingle();
             beamHeight = r.ReadSingle();
@@ -78,7 +79,7 @@ namespace zzio.effect.parts
             fadeXSpeed = r.ReadSingle();
             fadeYSpeed = r.ReadSingle();
             fadeSpeed = r.ReadSingle();
-            renderMode = Utils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
+            renderMode = EnumUtils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
         }
     }
 }

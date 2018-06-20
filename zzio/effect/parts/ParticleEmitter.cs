@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using zzio.primitives;
+using zzio.utils;
 
 namespace zzio.effect.parts
 {
@@ -93,7 +94,7 @@ namespace zzio.effect.parts
             scale.width = r.ReadSingle();
             gravity = Vector.read(r);
             gravityMod = Vector.read(r);
-            type = Utils.intToEnum<ParticleType>(r.ReadInt32());
+            type = EnumUtils.intToEnum<ParticleType>(r.ReadInt32());
             texName = Utils.readCAString(r, 32);
             tileW = r.ReadUInt32();
             tileH = r.ReadUInt32();
@@ -109,7 +110,7 @@ namespace zzio.effect.parts
             hasDirection = r.ReadBoolean();
             r.BaseStream.Seek(3, SeekOrigin.Current);
             if (size > 288)
-                renderMode = Utils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
+                renderMode = EnumUtils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
         }
     }
 }

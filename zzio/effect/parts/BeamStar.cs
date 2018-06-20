@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using zzio.utils;
 
 namespace zzio.effect.parts
 {
@@ -54,7 +55,7 @@ namespace zzio.effect.parts
 
             phase1 = r.ReadUInt32();
             phase2 = r.ReadUInt32();
-            complexity = Utils.intToEnum<BeamStarComplexity>(r.ReadInt32());
+            complexity = EnumUtils.intToEnum<BeamStarComplexity>(r.ReadInt32());
             width = r.ReadSingle();
             scaleSpeedXY = r.ReadSingle();
             r.BaseStream.Seek(1, SeekOrigin.Current);
@@ -68,8 +69,8 @@ namespace zzio.effect.parts
             name = Utils.readCAString(r, 32);
             r.BaseStream.Seek(3, SeekOrigin.Current);
             endTexVEnd = r.ReadSingle();
-            mode = Utils.intToEnum<BeamStarMode>(r.ReadInt32());
-            renderMode = Utils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
+            mode = EnumUtils.intToEnum<BeamStarMode>(r.ReadInt32());
+            renderMode = EnumUtils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
         }
     }
 }

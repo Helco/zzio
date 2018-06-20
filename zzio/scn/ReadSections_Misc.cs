@@ -2,6 +2,7 @@
 using System.IO;
 using Newtonsoft.Json;
 using zzio.primitives;
+using zzio.utils;
 
 namespace zzio {
     namespace scn {
@@ -125,8 +126,8 @@ namespace zzio {
             private static Version readVersion (BinaryReader reader) {
                 Version v;
                 v.author = Utils.readZString(reader);
-                v.country = Utils.intToEnum<VersionBuildCountry>(reader.ReadInt32());
-                v.type = Utils.intToEnum<VersionBuildType>(reader.ReadInt32());
+                v.country = EnumUtils.intToEnum<VersionBuildCountry>(reader.ReadInt32());
+                v.type = EnumUtils.intToEnum<VersionBuildType>(reader.ReadInt32());
                 v.v3 = reader.ReadUInt32();
                 v.buildVersion = reader.ReadUInt32();
                 v.date = Utils.readZString(reader);
@@ -224,7 +225,7 @@ namespace zzio {
                 if (d.dataSize != 0x20 && d.dataSize != 0x24)
                     throw new InvalidDataException("Unknown size for dataset structure");
                 d.sceneId = reader.ReadUInt32();
-                d.sceneType = Utils.intToEnum<SceneType>(reader.ReadInt32());
+                d.sceneType = EnumUtils.intToEnum<SceneType>(reader.ReadInt32());
                 d.nameUID = reader.ReadUInt32();
                 d.unk1 = reader.ReadUInt16();
                 d.padding1 = reader.ReadUInt16();

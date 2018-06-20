@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using zzio.utils;
 
 namespace zzio {
     public enum ZZDBDataType {
@@ -104,7 +105,7 @@ namespace zzio {
                 UInt32 filledColumnCount = reader.ReadUInt32();
                 rows[i].columns = new ZZDBRowData[filledColumnCount];
                 for (UInt32 j = 0; j < filledColumnCount; j++) {
-                    rows[i].columns[j].entryType = Utils.intToEnum<ZZDBDataType>(reader.ReadInt32());
+                    rows[i].columns[j].entryType = EnumUtils.intToEnum<ZZDBDataType>(reader.ReadInt32());
                     rows[i].columns[j].columnIndex = reader.ReadUInt32();
                     switch (rows[i].columns[j].entryType) {
                         case (ZZDBDataType.String): { rows[i].columns[j].data = Utils.readZString(reader); } break;

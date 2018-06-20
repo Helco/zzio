@@ -2,6 +2,7 @@
 using System.IO;
 using Newtonsoft.Json;
 using zzio.primitives;
+using zzio.utils;
 
 namespace zzio {
     namespace scn {
@@ -117,7 +118,7 @@ namespace zzio {
             private static Light readLight(BinaryReader reader) {
                 Light l;
                 l.idx = reader.ReadUInt32();
-                l.type = Utils.intToEnum<LightType>(reader.ReadInt32());
+                l.type = EnumUtils.intToEnum<LightType>(reader.ReadInt32());
                 l.color = FColor.read(reader);
                 l.flags = (LightFlags)reader.ReadUInt32();
                 l.pos = new Vector();
@@ -155,7 +156,7 @@ namespace zzio {
                 m.color = reader.ReadUInt32();
                 m.worldDetailLevel = reader.ReadByte();
                 m.ff2 = reader.ReadByte();
-                m.renderType = Utils.intToEnum<RenderType>(reader.ReadInt32());
+                m.renderType = EnumUtils.intToEnum<RenderType>(reader.ReadInt32());
                 m.ff3 = reader.ReadByte();
                 m.i7 = reader.ReadInt32();
                 return m;

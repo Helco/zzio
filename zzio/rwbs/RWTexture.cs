@@ -43,10 +43,10 @@ namespace zzio.rwbs
         protected override void readStruct(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
-            filterMode = Utils.intToEnum<TextureFilterMode>(reader.ReadByte());
+            filterMode = EnumUtils.intToEnum<TextureFilterMode>(reader.ReadByte());
             byte addressing = reader.ReadByte();
-            uAddressingMode = Utils.intToEnum<TextureAddressingMode>(addressing & 0xf);
-            vAddressingMode = Utils.intToEnum<TextureAddressingMode>(addressing >> 4);
+            uAddressingMode = EnumUtils.intToEnum<TextureAddressingMode>(addressing & 0xf);
+            vAddressingMode = EnumUtils.intToEnum<TextureAddressingMode>(addressing >> 4);
             UInt16 flags = reader.ReadUInt16();
             useMipLevels = (flags & 1) > 0;
             // more flags are not known yet

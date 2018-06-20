@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using zzio.utils;
 
 namespace zzio.effect.parts
 {
@@ -65,7 +66,7 @@ namespace zzio.effect.parts
             circlesAround = r.ReadBoolean();
             r.BaseStream.Seek(2, SeekOrigin.Current);
             yOffset = r.ReadSingle();
-            renderMode = Utils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
+            renderMode = EnumUtils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
             useDirection = r.ReadBoolean();
             r.BaseStream.Seek(3, SeekOrigin.Current);
             if (size > 136)
