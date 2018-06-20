@@ -72,14 +72,14 @@ namespace zzio.effect.parts
             extraPhase = r.ReadUInt32();
             minScaleSpeed = r.ReadSingle();
             maxScaleSpeed = r.ReadSingle();
-            texName = Utils.readCAString(r, 32);
+            texName = r.ReadSizedCString(32);
             tileId = r.ReadUInt32();
             tileCount = r.ReadUInt32();
             tileDuration = r.ReadUInt32();
             tileW = r.ReadUInt32();
             tileH = r.ReadUInt32();
             color = r.ReadUInt32();
-            name = Utils.readCAString(r, 32);
+            name = r.ReadSizedCString(32);
             amplColor = r.ReadUInt32();
             circlesAround = r.ReadBoolean();
             r.BaseStream.Seek(3, SeekOrigin.Current);

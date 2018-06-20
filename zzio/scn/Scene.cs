@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using zzio.primitives;
+using zzio.utils;
 
 namespace zzio {
     namespace scn {
@@ -39,19 +40,19 @@ namespace zzio {
             public static Scene read(byte[] buffer) {
                 Scene s = new Scene();
                 BinaryReader reader = new BinaryReader(new MemoryStream(buffer, false));
-                if (Utils.readZString(reader) != "[Scenefile]")
+                if (reader.ReadZString() != "[Scenefile]")
                     throw new InvalidDataException("Buffer is not a scene file");
 
                 bool shouldReadNext = true;
                 string sectionName;
                 while (shouldReadNext) {
-                    switch (sectionName = Utils.readZString(reader)) {
+                    switch (sectionName = reader.ReadZString()) {
                         case ("[Version]"): { s.version = readVersion(reader); }break;
                         case ("[Misc]"): { s.misc = readMisc(reader); }break;
                         case ("[WaypointSystem]"): { s.waypointSystem = readWaypointSystem(reader); }break;
                         case ("[Dataset]"): { s.dataset = readDataset(reader);  }break;
                         case ("[SceneOrigin]"): { s.sceneOrigin = Vector.read(reader); }break;
-                        case ("[Backdrop]"): { s.backdropFile = Utils.readZString(reader); }break;
+                        case ("[Backdrop]"): { s.backdropFile = reader.ReadZString(); }break;
                         case ("[Lights]"): {
                                 UInt32 count = reader.ReadUInt32();
                                 s.lights = new Light[count];

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using zzio.utils;
 
 namespace zzio {
     public class PAKArchive {
@@ -25,7 +26,7 @@ namespace zzio {
             UInt32 count = reader.ReadUInt32();
             while (count > 0) {
                 count--;
-                string name = Utils.readZString(reader).ToLower();
+                string name = reader.ReadZString().ToLower();
                 if (name.StartsWith("..\\"))
                     name = name.Substring(3);
                 FilePos pos;

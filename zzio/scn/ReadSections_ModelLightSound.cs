@@ -145,7 +145,7 @@ namespace zzio {
             private static FOModel readFOModel(BinaryReader reader) {
                 FOModel m;
                 m.idx = reader.ReadUInt32();
-                m.filename = Utils.readZString(reader);
+                m.filename = reader.ReadZString();
                 m.pos = Vector.read(reader);
                 m.rot = Vector.read(reader);
                 m.f1 = reader.ReadSingle();
@@ -165,7 +165,7 @@ namespace zzio {
             private static Model readModel(BinaryReader reader) {
                 Model m;
                 m.idx = reader.ReadUInt32();
-                m.filename = Utils.readZString(reader);
+                m.filename = reader.ReadZString();
                 m.pos = Vector.read(reader);
                 m.rot = Vector.read(reader);
                 m.scale = Vector.read(reader);
@@ -200,8 +200,8 @@ namespace zzio {
                     m.data[i].someFlag = reader.ReadByte();
                     m.data[i].someColor = reader.ReadUInt32();
                     m.data[i].cc = reader.ReadUInt32();
-                    m.data[i].s1 = Utils.readZString(reader);
-                    m.data[i].s2 = Utils.readZString(reader);
+                    m.data[i].s1 = reader.ReadZString();
+                    m.data[i].s2 = reader.ReadZString();
                 }
                 return m;
             }
@@ -209,7 +209,7 @@ namespace zzio {
             private static Sample3D readSample3D(BinaryReader reader) {
                 Sample3D s;
                 s.idx = reader.ReadUInt32();
-                s.filename = Utils.readZString(reader);
+                s.filename = reader.ReadZString();
                 s.v1 = Vector.read(reader);
                 s.v2 = Vector.read(reader);
                 s.v3 = Vector.read(reader);
@@ -224,7 +224,7 @@ namespace zzio {
             private static Sample2D readSample2D(BinaryReader reader) {
                 Sample2D s;
                 s.idx = reader.ReadUInt32();
-                s.filename = Utils.readZString(reader);
+                s.filename = reader.ReadZString();
                 s.i1 = reader.ReadUInt32();
                 s.i2 = reader.ReadUInt32();
                 s.c = reader.ReadByte();

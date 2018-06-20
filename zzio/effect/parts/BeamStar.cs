@@ -59,14 +59,14 @@ namespace zzio.effect.parts
             width = r.ReadSingle();
             scaleSpeedXY = r.ReadSingle();
             r.BaseStream.Seek(1, SeekOrigin.Current);
-            texName = Utils.readCAString(r, 32);
+            texName = r.ReadSizedCString(32);
             r.BaseStream.Seek(3 + 2 * 4, SeekOrigin.Current);
             startTexVEnd = r.ReadSingle();
             rotationSpeed = r.ReadSingle();
             texShiftVStart = r.ReadSingle();
             r.BaseStream.Seek(1, SeekOrigin.Current);
             color = r.ReadUInt32();
-            name = Utils.readCAString(r, 32);
+            name = r.ReadSizedCString(32);
             r.BaseStream.Seek(3, SeekOrigin.Current);
             endTexVEnd = r.ReadSingle();
             mode = EnumUtils.intToEnum<BeamStarMode>(r.ReadInt32());

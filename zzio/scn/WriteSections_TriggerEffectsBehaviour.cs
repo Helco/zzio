@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using zzio.utils;
 
 namespace zzio.scn
 {
@@ -16,7 +17,7 @@ namespace zzio.scn
             writer.Write(t.ii2);
             writer.Write(t.ii3);
             writer.Write(t.ii4);
-            Utils.writeZString(writer, t.s);
+            writer.WriteZString(t.s);
             t.pos.write(writer);
             switch(t.colliderType)
             {
@@ -53,12 +54,12 @@ namespace zzio.scn
                     }break;
                 case (EffectType.Unknown7):
                     {
-                        Utils.writeZString(writer, e.effectFile);
+                        writer.WriteZString(e.effectFile);
                         e.v1.write(writer);
                     }break;
                 case (EffectType.Unknown13):
                     {
-                        Utils.writeZString(writer, e.effectFile);
+                        writer.WriteZString(e.effectFile);
                         e.v1.write(writer);
                         e.v2.write(writer);
                         e.v3.write(writer);
@@ -92,7 +93,7 @@ namespace zzio.scn
                     }break;
                 case (EffectV2Type.Unknown13):
                     {
-                        Utils.writeZString(writer, e.s);
+                        writer.WriteZString(e.s);
                         e.v1.write(writer);
                         e.v2.write(writer);
                         e.v3.write(writer);

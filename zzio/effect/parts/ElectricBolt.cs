@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using zzio.utils;
 
 namespace zzio.effect.parts
 {
@@ -37,14 +38,14 @@ namespace zzio.effect.parts
             phase2 = r.ReadUInt32();
             branchDist = r.ReadSingle();
             branchWidth = r.ReadSingle();
-            texName = Utils.readCAString(r, 32);
+            texName = r.ReadSizedCString(32);
             tileId = r.ReadUInt32();
             tileW = r.ReadUInt32();
             tileH = r.ReadUInt32();
             tileCount = r.ReadUInt32();
             r.BaseStream.Seek(4, SeekOrigin.Current);
             color = r.ReadUInt32();
-            name = Utils.readCAString(r, 32);
+            name = r.ReadSizedCString(32);
             r.BaseStream.Seek(4, SeekOrigin.Current);
         }
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using zzio.utils;
 
 namespace zzio.scn
 {
@@ -34,7 +35,7 @@ namespace zzio.scn
         private static void writeFOModel(BinaryWriter writer, FOModel m)
         {
             writer.Write(m.idx);
-            Utils.writeZString(writer, m.filename);
+            writer.WriteZString(m.filename);
             m.pos.write(writer);
             m.rot.write(writer);
             writer.Write(m.f1);
@@ -53,7 +54,7 @@ namespace zzio.scn
         private static void writeModel(BinaryWriter writer, Model m)
         {
             writer.Write(m.idx);
-            Utils.writeZString(writer, m.filename);
+            writer.WriteZString(m.filename);
             m.pos.write(writer);
             m.rot.write(writer);
             m.scale.write(writer);
@@ -87,15 +88,15 @@ namespace zzio.scn
                 writer.Write(m.data[i].someFlag);
                 writer.Write(m.data[i].someColor);
                 writer.Write(m.data[i].cc);
-                Utils.writeZString(writer, m.data[i].s1);
-                Utils.writeZString(writer, m.data[i].s2);
+                writer.WriteZString(m.data[i].s1);
+                writer.WriteZString(m.data[i].s2);
             }
         }
 
         private static void writeSample3D(BinaryWriter writer, Sample3D s)
         {
             writer.Write(s.idx);
-            Utils.writeZString(writer, s.filename);
+            writer.WriteZString(s.filename);
             s.v1.write(writer);
             s.v2.write(writer);
             s.v3.write(writer);
@@ -109,7 +110,7 @@ namespace zzio.scn
         private static void writeSample2D(BinaryWriter writer, Sample2D s)
         {
             writer.Write(s.idx);
-            Utils.writeZString(writer, s.filename);
+            writer.WriteZString(s.filename);
             writer.Write(s.i1);
             writer.Write(s.i2);
             writer.Write(s.c);

@@ -53,13 +53,13 @@ namespace zzio.effect.parts
             targetSize = r.ReadSingle();
             rotation = r.ReadSingle();
             texShift = r.ReadSingle();
-            texName = Utils.readCAString(r, 32);
+            texName = r.ReadSizedCString(32);
             tileId = r.ReadUInt32();
             tileW = r.ReadUInt32();
             tileH = r.ReadUInt32();
             manualProgress = r.ReadBoolean();
             color = r.ReadUInt32();
-            name = Utils.readCAString(r, 32);
+            name = r.ReadSizedCString(32);
             r.BaseStream.Seek(3, SeekOrigin.Current);
             minProgress = r.ReadSingle();
             disableSecondPlane = r.ReadBoolean();

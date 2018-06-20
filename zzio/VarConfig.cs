@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
+using zzio.utils;
 
 namespace zzio
 {
@@ -49,7 +50,7 @@ namespace zzio
 
             while (reader.BaseStream.Position < reader.BaseStream.Length)
             {
-                var name = new StringBuilder(Utils.readSizedString(reader, reader.ReadByte()));
+                var name = new StringBuilder(reader.ReadSizedString(reader.ReadByte()));
                 for (int i = 0; i < name.Length; i++)
                     name[i] = (char)(name[i] ^ 0x75);
                 if (reader.ReadByte() != 0)
@@ -67,7 +68,7 @@ namespace zzio
             v.floatValue = reader.ReadSingle();
             byte isString = reader.ReadByte();
             if (isString > 0)
-                v.stringValue = Utils.readSizedString(reader, reader.ReadByte());
+                v.stringValue = reader.ReadSizedString(reader.ReadByte());
             else
                 v.stringValue = null;
             v.ignored = reader.ReadByte();

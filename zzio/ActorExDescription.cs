@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using zzio.utils;
 
 namespace zzio {
     [System.Serializable]
@@ -28,22 +29,22 @@ namespace zzio {
             List<string> bodyAnimations = new List<string>(), wingsAnimations = new List<string>();
             List<int> bodyAnimData = new List<int>(), wingsAnimData = new List<int>();
 
-            if (Utils.readZString(reader) != "[ActorExDescriptionFile]")
+            if (reader.ReadZString() != "[ActorExDescriptionFile]")
                 throw new InvalidDataException("Not an actorex description file");
             bool stopParsing = false;
             string sect;
             while(!stopParsing) {
-                switch(sect = Utils.readZString(reader)) {
-                    case ("[ModelFilename_Body]"): { actor.bodyModel = Utils.readZString(reader); }break;
+                switch(sect = reader.ReadZString()) {
+                    case ("[ModelFilename_Body]"): { actor.bodyModel = reader.ReadZString(); }break;
                     case ("[AnimationPoolID_Body]"): { actor.bodyAnimationPoolID = reader.ReadInt32(); }break;
                     case ("[AnimationFilename_Body]"): {
-                            bodyAnimations.Add(Utils.readZString(reader));
+                            bodyAnimations.Add(reader.ReadZString());
                             bodyAnimData.Add(reader.ReadInt32());
                         }break;
-                    case ("[ModelFilename_Wings]"): { actor.wingsModel = Utils.readZString(reader); }break;
+                    case ("[ModelFilename_Wings]"): { actor.wingsModel = reader.ReadZString(); }break;
                     case ("[AnimationPoolID_Wings]"): { actor.wingsAnimationPoolID = reader.ReadInt32(); }break;
                     case ("[AnimationFilename_Wings]"): {
-                            wingsAnimations.Add(Utils.readZString(reader));
+                            wingsAnimations.Add(reader.ReadZString());
                             wingsAnimData.Add(reader.ReadInt32());
                         }break;
                     case ("[AttachWingsToBone]"): { actor.attachWingsToBone = reader.ReadInt32(); }break;
@@ -71,38 +72,38 @@ namespace zzio {
         public void write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream);
-            Utils.writeZString(writer, "[ActorExDescriptionFile]");
+            writer.WriteZString("[ActorExDescriptionFile]");
 
-            Utils.writeZString(writer, "[ModelFilename_Body]");
-            Utils.writeZString(writer, bodyModel);
-            Utils.writeZString(writer, "[AnimationPoolID_Body]");
+            writer.WriteZString("[ModelFilename_Body]");
+            writer.WriteZString(bodyModel);
+            writer.WriteZString("[AnimationPoolID_Body]");
             writer.Write(bodyAnimationPoolID);
             for (int i=0; i<bodyAnimations.Length; i++)
             {
-                Utils.writeZString(writer, "[AnimationFilename_Body]");
-                Utils.writeZString(writer, bodyAnimations[i]);
+                writer.WriteZString("[AnimationFilename_Body]");
+                writer.WriteZString(bodyAnimations[i]);
                 writer.Write(bodyAnimationData[i]);
             }
 
-            Utils.writeZString(writer, "[ModelFilename_Wings]");
-            Utils.writeZString(writer, wingsModel);
-            Utils.writeZString(writer, "[AnimationPoolID_Wings]");
+            writer.WriteZString("[ModelFilename_Wings]");
+            writer.WriteZString(wingsModel);
+            writer.WriteZString("[AnimationPoolID_Wings]");
             writer.Write(wingsAnimationPoolID);
             for (int i = 0; i < wingsAnimations.Length; i++)
             {
-                Utils.writeZString(writer, "[AnimationFilename_Wings]");
-                Utils.writeZString(writer, wingsAnimations[i]);
+                writer.WriteZString("[AnimationFilename_Wings]");
+                writer.WriteZString(wingsAnimations[i]);
                 writer.Write(wingsAnimationData[i]);
             }
 
-            Utils.writeZString(writer, "[AttachWingsToBone]");
+            writer.WriteZString("[AttachWingsToBone]");
             writer.Write(attachWingsToBone);
-            Utils.writeZString(writer, "[HeadBoneID]");
+            writer.WriteZString("[HeadBoneID]");
             writer.Write(headBoneID);
-            Utils.writeZString(writer, "[EffectBoneID]");
+            writer.WriteZString("[EffectBoneID]");
             writer.Write(effectBoneID);
 
-            Utils.writeZString(writer, "[EOS]");
+            writer.WriteZString("[EOS]");
         }
     }
 }

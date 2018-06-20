@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using zzio.utils;
 
 namespace zzio
 {
@@ -9,22 +10,22 @@ namespace zzio
         {
             private static void writeVersion(BinaryWriter writer, Version version)
             {
-                Utils.writeZString(writer, version.author);
+                writer.WriteZString(version.author);
                 writer.Write((int)version.country);
                 writer.Write((int)version.type);
                 writer.Write(version.v3);
                 writer.Write(version.buildVersion);
-                Utils.writeZString(writer, version.date);
-                Utils.writeZString(writer, version.time);
+                writer.WriteZString(version.date);
+                writer.WriteZString(version.time);
                 writer.Write(version.year);
                 writer.Write(version.vv2);
             }
 
             private static void writeMisc(BinaryWriter writer, Misc m)
             {
-                Utils.writeZString(writer, m.worldFile);
-                Utils.writeZString(writer, m.worldPath);
-                Utils.writeZString(writer, m.texturePath);
+                writer.WriteZString(m.worldFile);
+                writer.WriteZString(m.worldPath);
+                writer.WriteZString(m.texturePath);
                 m.ambientLight.write(writer);
                 m.v1.write(writer);
                 m.v2.write(writer);
@@ -108,8 +109,8 @@ namespace zzio
                 writer.Write(s.unk5);
                 if (s.dataSize > 0x20)
                     writer.Write((uint)(s.unk6 ? 1 : 0));
-                Utils.writeZString(writer, s.s1);
-                Utils.writeZString(writer, s.s2);
+                writer.WriteZString(s.s1);
+                writer.WriteZString(s.s2);
             }
 
             private static void writeVertexModifier(BinaryWriter writer, VertexModifier m)
@@ -126,13 +127,13 @@ namespace zzio
 
             private static void writeTextureProperty(BinaryWriter writer, TextureProperty p)
             {
-                Utils.writeZString(writer, p.fileName);
+                writer.WriteZString(p.fileName);
                 writer.Write(p.ii);
             }
 
             private static void writeSceneItem(BinaryWriter writer, SceneItem i)
             {
-                Utils.writeZString(writer, i.s);
+                writer.WriteZString(i.s);
                 writer.Write(i.i1);
                 writer.Write(i.i2);
             }

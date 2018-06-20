@@ -125,13 +125,13 @@ namespace zzio {
         public partial class Scene {
             private static Version readVersion (BinaryReader reader) {
                 Version v;
-                v.author = Utils.readZString(reader);
+                v.author = reader.ReadZString();
                 v.country = EnumUtils.intToEnum<VersionBuildCountry>(reader.ReadInt32());
                 v.type = EnumUtils.intToEnum<VersionBuildType>(reader.ReadInt32());
                 v.v3 = reader.ReadUInt32();
                 v.buildVersion = reader.ReadUInt32();
-                v.date = Utils.readZString(reader);
-                v.time = Utils.readZString(reader);
+                v.date = reader.ReadZString();
+                v.time = reader.ReadZString();
                 v.year = reader.ReadUInt32();
                 v.vv2 = reader.ReadUInt32();
                 return v;
@@ -139,9 +139,9 @@ namespace zzio {
 
             private static Misc readMisc (BinaryReader reader) {
                 Misc m;
-                m.worldFile = Utils.readZString(reader);
-                m.worldPath = Utils.readZString(reader);
-                m.texturePath = Utils.readZString(reader);
+                m.worldFile = reader.ReadZString();
+                m.worldPath = reader.ReadZString();
+                m.texturePath = reader.ReadZString();
                 m.ambientLight = FColor.read(reader);
                 m.v1 = Vector.read(reader);
                 m.v2 = Vector.read(reader);
@@ -240,8 +240,8 @@ namespace zzio {
                     d.unk6 = reader.ReadUInt32() != 0;
                 else
                     d.unk6 = false;
-                d.s1 = Utils.readZString(reader);
-                d.s2 = Utils.readZString(reader);
+                d.s1 = reader.ReadZString();
+                d.s2 = reader.ReadZString();
                 return d;
             }
 
@@ -262,14 +262,14 @@ namespace zzio {
 
             private static TextureProperty readTexProperty(BinaryReader reader) {
                 TextureProperty p;
-                p.fileName = Utils.readZString(reader);
+                p.fileName = reader.ReadZString();
                 p.ii = reader.ReadInt32();
                 return p;
             }
 
             private static SceneItem readSceneItem(BinaryReader reader) {
                 SceneItem i;
-                i.s = Utils.readZString(reader);
+                i.s = reader.ReadZString();
                 i.i1 = reader.ReadUInt32();
                 i.i2 = reader.ReadUInt32();
                 return i;

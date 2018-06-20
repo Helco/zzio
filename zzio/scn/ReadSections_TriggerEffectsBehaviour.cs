@@ -215,7 +215,7 @@ namespace zzio {
                 t.ii2 = reader.ReadUInt32();
                 t.ii3 = reader.ReadUInt32();
                 t.ii4 = reader.ReadUInt32();
-                t.s = Utils.readZString(reader);
+                t.s = reader.ReadZString();
                 t.pos = Vector.read(reader);
                 t.size = new Vector();
                 t.radius = 0.0f;
@@ -253,11 +253,11 @@ namespace zzio {
                             e.v1 = Vector.read(reader);
                         }break;
                     case (EffectType.Unknown7): {
-                            e.effectFile = Utils.readZString(reader);
+                            e.effectFile = reader.ReadZString();
                             e.v1 = Vector.read(reader);
                         }break;
                     case (EffectType.Unknown13): {
-                            e.effectFile = Utils.readZString(reader);
+                            e.effectFile = reader.ReadZString();
                             e.v1 = Vector.read(reader);
                             e.v2 = Vector.read(reader);
                             e.v3 = Vector.read(reader);
@@ -291,7 +291,7 @@ namespace zzio {
                             e.param = reader.ReadUInt32();
                         }break;
                     case (EffectV2Type.Unknown13): {
-                            e.s = Utils.readZString(reader);
+                            e.s = reader.ReadZString();
                             e.v1 = Vector.read(reader);
                             e.v2 = Vector.read(reader);
                             e.v3 = Vector.read(reader);

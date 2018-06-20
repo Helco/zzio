@@ -63,14 +63,14 @@ namespace zzio.effect.parts
             parWidth = r.ReadSingle();
             parHeight = r.ReadSingle();
             r.BaseStream.Seek(4, SeekOrigin.Current);
-            texName = Utils.readCAString(r, 32);
+            texName = r.ReadSizedCString(32);
             tileId = r.ReadUInt32();
             tileCount = r.ReadUInt32();
             tileDuration = r.ReadUInt32();
             tileW = r.ReadUInt32();
             tileH = r.ReadUInt32();
             color = r.ReadUInt32();
-            name = Utils.readCAString(r, 32);
+            name = r.ReadSizedCString(32);
             mode = EnumUtils.intToEnum<ParticleBeamMode>(r.ReadInt32());
             fadeMode = r.ReadUInt32();
             beamWidth = r.ReadSingle();

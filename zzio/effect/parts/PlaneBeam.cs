@@ -50,12 +50,12 @@ namespace zzio.effect.parts
             height = r.ReadSingle();
             minScale = r.ReadSingle();
             rotationMod = r.ReadSingle();
-            texName = Utils.readCAString(r, 32);
+            texName = r.ReadSizedCString(32);
             tileId = r.ReadUInt32();
             tileW = r.ReadUInt32();
             tileH = r.ReadUInt32();
             color = r.ReadUInt32();
-            name = Utils.readCAString(r, 32);
+            name = r.ReadSizedCString(32);
             renderMode = EnumUtils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
             speed = r.ReadSingle();
             mode2 = r.ReadUInt32();

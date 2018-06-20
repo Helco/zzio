@@ -47,10 +47,10 @@ namespace zzio.effect.parts
             rotationAxis = Vector.read(r);
             scaleSpeed = Vector.read(r);
             texShift = r.ReadSingle();
-            modelName = Utils.readCAString(r, 32);
+            modelName = r.ReadSizedCString(32);
             ignoreHead = r.ReadBoolean();
             color = r.ReadUInt32();
-            name = Utils.readCAString(r, 32);
+            name = r.ReadSizedCString(32);
             r.BaseStream.Seek(3, SeekOrigin.Current);
             minProgress = r.ReadSingle();
             minSize = r.ReadSingle();

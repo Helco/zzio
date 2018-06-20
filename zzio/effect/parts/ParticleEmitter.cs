@@ -68,7 +68,7 @@ namespace zzio.effect.parts
             head1 = r.ReadUInt32();
             head2 = r.ReadUInt32();
             r.BaseStream.Seek(4 * 4 + 32 + 1, SeekOrigin.Current); // many unused variables
-            name = Utils.readCAString(r, 32);
+            name = r.ReadSizedCString(32);
             r.BaseStream.Seek(3, SeekOrigin.Current);
             minSpawnRateModProgress = r.ReadUInt32();
             life.value = r.ReadSingle();
@@ -95,7 +95,7 @@ namespace zzio.effect.parts
             gravity = Vector.read(r);
             gravityMod = Vector.read(r);
             type = EnumUtils.intToEnum<ParticleType>(r.ReadInt32());
-            texName = Utils.readCAString(r, 32);
+            texName = r.ReadSizedCString(32);
             tileW = r.ReadUInt32();
             tileH = r.ReadUInt32();
             tileId = r.ReadUInt32();

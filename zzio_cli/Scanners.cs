@@ -61,7 +61,7 @@ namespace zzio.cli
             uint first = reader.ReadUInt32();
             if (first != 17)
                 return false;
-            return Utils.readSizedString(reader, first) == "[Effect Combiner]";
+            return reader.ReadSizedString(first) == "[Effect Combiner]";
         }
     }
 
@@ -77,7 +77,7 @@ namespace zzio.cli
             uint first = reader.ReadUInt32();
             if (first != 11)
                 return false;
-            return Utils.readSizedString(reader, first) == "[Scenefile]";
+            return reader.ReadSizedString(first) == "[Scenefile]";
         }
     }
 
@@ -93,7 +93,7 @@ namespace zzio.cli
             uint first = reader.ReadUInt32();
             if (first != 24)
                 return false;
-            return Utils.readSizedString(reader, first) == "[ActorExDescriptionFile]";
+            return reader.ReadSizedString(first) == "[ActorExDescriptionFile]";
         }
     }
 
@@ -110,7 +110,7 @@ namespace zzio.cli
             uint size = reader.ReadByte();
             if (stream.Length < 20 + size)
                 return false;
-            var str = new StringBuilder(Utils.readSizedString(reader, size));
+            var str = new StringBuilder(reader.ReadSizedString(size));
             for (int i = 0; i < size; i++)
                 str[i] = (char)(str[i] ^ 0x75);
             return Regex.Match(str.ToString(), "^[A-Za-z0-9_]+$").Success;
@@ -145,7 +145,7 @@ namespace zzio.cli
             uint size = reader.ReadUInt32();
             if (size > 512 || size == 0) //this is just a guess for the normal FBS index
                 return false;
-            return Regex.Match(Utils.readSizedString(reader, size), "^[A-Za-z0-9_]+$").Success;
+            return Regex.Match(reader.ReadSizedString(size), "^[A-Za-z0-9_]+$").Success;
         }
     }
 

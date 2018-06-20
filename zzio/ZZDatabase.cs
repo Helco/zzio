@@ -52,7 +52,7 @@ namespace zzio {
             string[] columnNames = new string[columnCount];
             for (UInt32 i=0; i<columnCount; i++) {
                 columnNumbers[i] = reader.ReadUInt32();
-                columnNames[i] = Utils.readZString(reader);
+                columnNames[i] = reader.ReadZString();
             }
             return new ZZDatabaseIndex(columnNumbers, columnNames);
         }
@@ -64,7 +64,7 @@ namespace zzio {
             for (int i = 0; i<columnNumbers.Length; i++)
             {
                 writer.Write(columnNumbers[i]);
-                Utils.writeZString(writer, columnNames[i]);
+                writer.WriteZString(columnNames[i]);
             }
         }
 
@@ -108,7 +108,7 @@ namespace zzio {
                     rows[i].columns[j].entryType = EnumUtils.intToEnum<ZZDBDataType>(reader.ReadInt32());
                     rows[i].columns[j].columnIndex = reader.ReadUInt32();
                     switch (rows[i].columns[j].entryType) {
-                        case (ZZDBDataType.String): { rows[i].columns[j].data = Utils.readZString(reader); } break;
+                        case (ZZDBDataType.String): { rows[i].columns[j].data = reader.ReadZString(); } break;
                         case (ZZDBDataType.UInt): { reader.ReadUInt32(); rows[i].columns[j].data = reader.ReadUInt32(); } break;
                         case (ZZDBDataType.Byte): { reader.ReadUInt32(); rows[i].columns[j].data = reader.ReadByte(); } break;
                         case (ZZDBDataType.UUID): {
@@ -147,7 +147,7 @@ namespace zzio {
                     writer.Write(data.columnIndex);
                     switch(data.entryType)
                     {
-                        case (ZZDBDataType.String): { Utils.writeZString(writer, data.data as String); }break;
+                        case (ZZDBDataType.String): { writer.WriteZString(data.data as String); }break;
                         case (ZZDBDataType.UInt): { writer.Write(4); writer.Write((uint)data.data); }break;
                         case (ZZDBDataType.Byte): { writer.Write(1); writer.Write((byte)data.data); }break;
                         case (ZZDBDataType.UUID):

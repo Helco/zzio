@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using zzio.utils;
 
 namespace zzio.effect.parts
 {
@@ -34,8 +35,8 @@ namespace zzio.effect.parts
             maxDist = r.ReadSingle();
             r.BaseStream.Seek(4, SeekOrigin.Current);
             isDisabled = r.ReadBoolean();
-            fileName = Utils.readCAString(r, 32);
-            name = Utils.readCAString(r, 32);
+            fileName = r.ReadSizedCString(32);
+            name = r.ReadSizedCString(32);
             r.BaseStream.Seek(3, SeekOrigin.Current);
         }
     }

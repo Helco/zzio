@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using zzio.effect.parts;
 using zzio.primitives;
+using zzio.utils;
 
 namespace zzio.effect
 {
@@ -31,7 +32,7 @@ namespace zzio.effect
             new Dictionary<string, Action<EffectCombiner, BinaryReader>>()
             {
                 { "Effect_Combiner_Description", (eff, r) => {
-                    eff.description = Utils.readCAString(r, 32);
+                    eff.description = r.ReadSizedCString(32);
                 } },
                 { "Effect_Combiner_Parameter", (eff, r) => {
                     r.BaseStream.Seek(4, SeekOrigin.Current);
@@ -61,13 +62,13 @@ namespace zzio.effect
             List<IEffectPart> partsList = new List<IEffectPart>();
             BinaryReader r = new BinaryReader(stream);
 
-            if (Utils.readZString(r) != "[Effect Combiner]")
+            if (r.ReadZString() != "[Effect Combiner]")
                 throw new InvalidDataException("File does not start with correct tag");
 
             bool shouldReadNext = true;
             while (shouldReadNext)
             {
-                string sectionName = Utils.readZString(r);
+                string sectionName = r.ReadZString();
                 if (!sectionName.StartsWith("[") || !sectionName.EndsWith("]"))
                     throw new InvalidDataException("Invalid section name format: \"" + sectionName + "\"");
                 sectionName = sectionName.Substring(1, sectionName.Length - 2);
