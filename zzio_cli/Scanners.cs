@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using zzio.utils;
 
 namespace zzio.cli
 {
@@ -58,7 +59,7 @@ namespace zzio.cli
             if (stream.Length < 24)
                 return false;
             BinaryReader reader = new BinaryReader(stream);
-            uint first = reader.ReadUInt32();
+            int first = reader.ReadInt32();
             if (first != 17)
                 return false;
             return reader.ReadSizedString(first) == "[Effect Combiner]";
@@ -74,7 +75,7 @@ namespace zzio.cli
             if (stream.Length < 24)
                 return false;
             BinaryReader reader = new BinaryReader(stream);
-            uint first = reader.ReadUInt32();
+            int first = reader.ReadInt32();
             if (first != 11)
                 return false;
             return reader.ReadSizedString(first) == "[Scenefile]";
@@ -90,7 +91,7 @@ namespace zzio.cli
             if (stream.Length < 24)
                 return false;
             BinaryReader reader = new BinaryReader(stream);
-            uint first = reader.ReadUInt32();
+            int first = reader.ReadInt32();
             if (first != 24)
                 return false;
             return reader.ReadSizedString(first) == "[ActorExDescriptionFile]";
@@ -107,7 +108,7 @@ namespace zzio.cli
                 return false;
             BinaryReader reader = new BinaryReader(stream);
             stream.Seek(25, SeekOrigin.Current);
-            uint size = reader.ReadByte();
+            int size = reader.ReadByte();
             if (stream.Length < 20 + size)
                 return false;
             var str = new StringBuilder(reader.ReadSizedString(size));
@@ -142,7 +143,7 @@ namespace zzio.cli
             if (reader.ReadUInt32() >= 1 << 30)
                 return false;
             reader.ReadUInt32(); //skip
-            uint size = reader.ReadUInt32();
+            int size = reader.ReadInt32();
             if (size > 512 || size == 0) //this is just a guess for the normal FBS index
                 return false;
             return Regex.Match(reader.ReadSizedString(size), "^[A-Za-z0-9_]+$").Success;
