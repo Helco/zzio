@@ -40,21 +40,23 @@ namespace zzio.utils
         public static void WriteZString(this BinaryWriter writer, string text)
         {
             byte[] buf = Encoding.UTF8.GetBytes(text);
-            writer.Write(buf.Length + 1); // zstrings are null-terminated
-            writer.WriteSizedString(buf, buf.Length + 1);
-        }
-
-        /// <summary>Writes a fixed sized, 0-terminated string</summary>
-        public static void WriteSizedString(this BinaryWriter writer, String text, int len)
-        {
-            writer.WriteSizedString(Encoding.UTF8.GetBytes(text), len);
+            writer.Write(buf.Length); // zstrings are not null-terminated
+            writer.WriteSizedString(buf, buf.Length);
         }
 
         /// <summary>Writes a fixed sized, 0-terminated string</summary>
         /// <param name="maxLen">Max byte count to write, including the 0-terminator</param>
+        public static void WriteSizedCString(this BinaryWriter writer, String text, int maxLen)
+        {
+            writer.WriteSizedString(Encoding.UTF8.GetBytes(text), maxLen - 1);
+            writer.Write((byte)0);
+        }
+
+        /// <summary>Writes a fixed sized, not terminated string</summary>
+        /// <param name="maxLen">Max byte count to write</param>
         public static void WriteSizedString(this BinaryWriter writer, byte[] buf, int maxLen)
         {
-            int written = Math.Min(buf.Length, maxLen - 1);
+            int written = Math.Min(buf.Length, maxLen);
             writer.Write(buf, 0, written);
 
             for (; written < maxLen; written++)

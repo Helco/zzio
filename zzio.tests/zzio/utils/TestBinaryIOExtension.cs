@@ -10,9 +10,9 @@ namespace zzio.tests.utils
     {
         private readonly byte[] expectedZString = new byte[]
         {
-            13, 0, 0, 0,
+            12, 0, 0, 0,
             (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o', (byte)' ',
-            (byte)'W', (byte)'o', (byte)'r', (byte)'l', (byte)'d', (byte)'!', 0
+            (byte)'W', (byte)'o', (byte)'r', (byte)'l', (byte)'d', (byte)'!'
         };
 
         private readonly byte[] testCString = new byte[]
@@ -65,12 +65,12 @@ namespace zzio.tests.utils
         {
             MemoryStream stream = new MemoryStream();
             BinaryWriter writer = new BinaryWriter(stream);
-            writer.WriteSizedString("cstring", 8);
+            writer.WriteSizedCString("cstring", 8);
             Assert.AreEqual(expectedCString, stream.ToArray());
 
             stream = new MemoryStream();
             writer = new BinaryWriter(stream);
-            writer.WriteSizedString("cstrings are the best", 8);
+            writer.WriteSizedCString("cstrings are the best", 8);
             Assert.AreEqual(expectedCString, stream.ToArray());
         }
     }
