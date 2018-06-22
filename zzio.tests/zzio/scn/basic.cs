@@ -15,7 +15,7 @@ namespace zzio.tests.scn
 
         private void testScene(Scene scn)
         {
-            Assert.AreEqual(12, scn.ambientSoundCount);
+            Assert.AreEqual(12, scn.ambientSound);
 
             Assert.AreEqual("Helco", scn.version.author);
             Assert.AreEqual(4, scn.version.buildVersion);
@@ -28,18 +28,20 @@ namespace zzio.tests.scn
             Assert.AreEqual(2018, scn.version.year);
 
             Assert.AreEqual(2, scn.sceneItems.Length);
-            Assert.AreEqual(2, scn.sceneItems[0].i1);
-            Assert.AreEqual(4, scn.sceneItems[0].i2);
-            Assert.AreEqual("", scn.sceneItems[0].s);
-            Assert.AreEqual(3, scn.sceneItems[1].i1);
-            Assert.AreEqual(4, scn.sceneItems[1].i2);
-            Assert.AreEqual("", scn.sceneItems[1].s);
+            Assert.AreEqual(2, scn.sceneItems[0].index);
+            Assert.AreEqual(4, scn.sceneItems[0].type);
+            Assert.AreEqual("", scn.sceneItems[0].name);
+            Assert.AreEqual(3, scn.sceneItems[1].index);
+            Assert.AreEqual(4, scn.sceneItems[1].type);
+            Assert.AreEqual("", scn.sceneItems[1].name);
         }
 
         [Test]
         public void read()
         {
-            Scene scene = Scene.read(sampleData.ToArray());
+            MemoryStream stream = new MemoryStream(sampleData, false);
+            Scene scene = new Scene();
+            scene.read(stream);
             testScene(scene);
         }
     }
