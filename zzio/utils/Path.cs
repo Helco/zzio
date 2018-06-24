@@ -5,8 +5,11 @@ using System.Text;
 
 namespace zzio.utils
 {
+    /// <summary>Represents a path to a file</summary>
+    /// <remarks>This supports windows and POSIX paths and tries to ignore as much inconsistencies as possible</remarks> 
     public class Path : IEquatable<Path>, IEquatable<string>
     {
+        /// <value>The platform-dependant path separator</value>
         public static string Separator
         {
             get
@@ -50,6 +53,7 @@ namespace zzio.utils
             return part == "." || part == ".." || part == "~" || part.EndsWith(":");
         }
 
+        /// <summary>Constructs a new path out of a string</summary>
         public Path(string path)
         {
             path = path.Trim();
@@ -72,26 +76,33 @@ namespace zzio.utils
                 (parts.Length > 0 && isDirectoryPart(parts.Last()));
         }
 
+        /// <summary>Constructs a new path as copy of another one</summary> 
         public Path(Path path) : this(path.parts.ToArray(), path.type, path.isDirectory)
         {
         }
 
+        /// <summary>Compares two paths for equality</summary>
+        /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
         public bool Equals(string path)
         {
             return Equals(new Path(path));
         }
 
+        /// <summary>Compares two paths for equality</summary>
         public bool Equals(string path, bool caseSensitive)
         {
             return Equals(new Path(path), caseSensitive);
         }
 
+        /// <summary>Compares two paths for equality</summary>
+        /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
         public bool Equals(Path path)
         {
             bool caseSensitive = Environment.OSVersion.Platform != PlatformID.Win32NT;
             return Equals(path, caseSensitive);
         }
 
+        /// <summary>Compares two paths for equality</summary>
         public bool Equals(Path path, bool caseSensitive)
         {
             Path me = this.Absolute();
@@ -109,21 +120,30 @@ namespace zzio.utils
             return true;
         }
 
+        /// <summary>Compares two paths for equality</summary>
+        /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
         public static bool operator == (Path pathA, string pathB)
         {
             return pathA.Equals(pathB);
         }
 
+
+        /// <summary>Compares two paths for inequality</summary>
+        /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
         public static bool operator != (Path pathA, string pathB)
         {
             return !pathA.Equals(pathB);
         }
 
+        /// <summary>Compares two paths for equality</summary>
+        /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
         public static bool operator == (Path pathA, Path pathB)
         {
             return pathA.Equals(pathB);
         }
 
+        /// <summary>Compares two paths for inequality</summary>
+        /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
         public static bool operator != (Path pathA, Path pathB)
         {
             return !pathA.Equals(pathB);
@@ -149,6 +169,8 @@ namespace zzio.utils
             return hash;
         }
 
+        /// <value>The root for this path</value>
+        /// <remarks>For unix this is always "/", for windows it is the drive letter (in the path or current)</remarks>
         public Path Root
         {
             get
@@ -167,21 +189,29 @@ namespace zzio.utils
             }
         }
 
+        /// <summary>Combines this path with some other paths</summary>
+        /// <remarks>The combined path is normalized</remarks>
         public Path Combine(params string[] paths)
         {
             return Combine((IEnumerable<string>)paths);
         }
 
+        /// <summary>Combines this path with some other paths</summary>
+        /// <remarks>The combined path is normalized</remarks>
         public Path Combine(IEnumerable<string> paths)
         {
             return Combine(paths.Select(pathString => new Path(pathString)));
         }
 
+        /// <summary>Combines this path with some other paths</summary>
+        /// <remarks>The combined path is normalized</remarks>
         public Path Combine(params Path[] paths)
         {
             return Combine((IEnumerable<Path>)paths);
         }
 
+        /// <summary>Combines this path with some other paths</summary>
+        /// <remarks>The combined path is normalized</remarks>
         public Path Combine(IEnumerable<Path> paths)
         {
             List<string> newParts = new List<string>(parts);
@@ -196,6 +226,7 @@ namespace zzio.utils
             return new Path(newParts.ToArray(), type, lastIsDirectory).Normalize();
         }
 
+        /// <summary>Normalizes this path by removing unnecessary navigation</summary>
         public Path Normalize()
         {
             List<string> newParts = new List<string>();
@@ -218,6 +249,7 @@ namespace zzio.utils
             return new Path(newParts.ToArray(), type, newIsDirectory);
         }
 
+        /// <summary>Returns the absolute and normalized path (based on current directory)</summary>
         public Path Absolute()
         {
             if (type == PathType.Relative)
@@ -226,22 +258,28 @@ namespace zzio.utils
                 return Normalize();
         }
 
+        /// <summary>Returns the normalized path navigating to `this` from `basePath`</summary>
+        /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
         public Path RelativeTo(string basePath)
         {
             return RelativeTo(new Path(basePath));
         }
 
+        /// <summary>Returns the normalized path navigating to `this` from `basePath`</summary>
         public Path RelativeTo(string basePath, bool caseSensitive)
         {
             return RelativeTo(new Path(basePath), caseSensitive);
         }
 
+        /// <summary>Returns the normalized path navigating to `this` from `basePath`</summary>
+        /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
         public Path RelativeTo(Path basePath)
         {
             bool caseSensitive = Environment.OSVersion.Platform != PlatformID.Win32NT;
             return RelativeTo(basePath, caseSensitive);
         }
 
+        /// <summary>Returns the normalized path navigating to `this` from `basePath`</summary>
         public Path RelativeTo(Path basePath, bool caseSensitive)
         {
             Path me = Absolute();
@@ -291,6 +329,8 @@ namespace zzio.utils
             throw new InvalidOperationException("This should never happen");
         }
 
+        /// <summary>Returns this path as windows path string ('\' as separator)</summary>
+        /// <remarks>POSIX rooted paths (e.g. '/a/b') cannot be printed as windows path</remarks>
         public string ToWin32String()
         {
             if (type == PathType.Root)
@@ -307,6 +347,7 @@ namespace zzio.utils
             return result.ToString();
         }
 
+        /// <summary>Returns this path as POSIX path string ('/' as separator)</summary>
         public string ToPOSIXString()
         {
             StringBuilder result = new StringBuilder();
@@ -324,6 +365,7 @@ namespace zzio.utils
             return result.ToString();
         }
 
+        /// <summary>Returns this path as string complying with the current platform</summary>
         public override string ToString()
         {
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
