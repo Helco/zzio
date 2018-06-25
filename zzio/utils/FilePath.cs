@@ -7,7 +7,7 @@ namespace zzio.utils
 {
     /// <summary>Represents a path to a file</summary>
     /// <remarks>This supports windows and POSIX paths and tries to ignore as much inconsistencies as possible</remarks> 
-    public class Path : IEquatable<Path>, IEquatable<string>
+    public class FilePath : IEquatable<FilePath>, IEquatable<string>
     {
         /// <value>The platform-dependant path separator</value>
         public static string Separator
@@ -31,7 +31,7 @@ namespace zzio.utils
         private readonly PathType type;
         private readonly bool isDirectory;
 
-        private Path(string[] parts, PathType type, bool isDirectory)
+        private FilePath(string[] parts, PathType type, bool isDirectory)
         {
             this.parts = parts;
             this.type = type;
@@ -54,7 +54,7 @@ namespace zzio.utils
         }
 
         /// <summary>Constructs a new path out of a string</summary>
-        public Path(string path)
+        public FilePath(string path)
         {
             path = path.Trim();
             if (path.Length == 0)
@@ -77,7 +77,7 @@ namespace zzio.utils
         }
 
         /// <summary>Constructs a new path as copy of another one</summary> 
-        public Path(Path path) : this(path.parts.ToArray(), path.type, path.isDirectory)
+        public FilePath(FilePath path) : this(path.parts.ToArray(), path.type, path.isDirectory)
         {
         }
 
@@ -85,27 +85,27 @@ namespace zzio.utils
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
         public bool Equals(string path)
         {
-            return Equals(new Path(path));
+            return Equals(new FilePath(path));
         }
 
         /// <summary>Compares two paths for equality</summary>
         public bool Equals(string path, bool caseSensitive)
         {
-            return Equals(new Path(path), caseSensitive);
+            return Equals(new FilePath(path), caseSensitive);
         }
 
         /// <summary>Compares two paths for equality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public bool Equals(Path path)
+        public bool Equals(FilePath path)
         {
             bool caseSensitive = Environment.OSVersion.Platform != PlatformID.Win32NT;
             return Equals(path, caseSensitive);
         }
 
         /// <summary>Compares two paths for equality</summary>
-        public bool Equals(Path path, bool caseSensitive)
+        public bool Equals(FilePath path, bool caseSensitive)
         {
-            Path me = this.Absolute();
+            FilePath me = this.Absolute();
             path = path.Absolute();
             if (me.parts.Length != path.parts.Length || me.type != path.type)
                 return false;
@@ -122,7 +122,7 @@ namespace zzio.utils
 
         /// <summary>Compares two paths for equality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator == (Path pathA, string pathB)
+        public static bool operator == (FilePath pathA, string pathB)
         {
             return pathA.Equals(pathB);
         }
@@ -130,29 +130,29 @@ namespace zzio.utils
 
         /// <summary>Compares two paths for inequality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator != (Path pathA, string pathB)
+        public static bool operator != (FilePath pathA, string pathB)
         {
             return !pathA.Equals(pathB);
         }
 
         /// <summary>Compares two paths for equality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator == (Path pathA, Path pathB)
+        public static bool operator == (FilePath pathA, FilePath pathB)
         {
             return pathA.Equals(pathB);
         }
 
         /// <summary>Compares two paths for inequality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator != (Path pathA, Path pathB)
+        public static bool operator != (FilePath pathA, FilePath pathB)
         {
             return !pathA.Equals(pathB);
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is Path)
-                return Equals(obj as Path);
+            if (obj is FilePath)
+                return Equals(obj as FilePath);
             else if (obj is string)
                 return Equals(obj as string);
             return false;
@@ -171,18 +171,18 @@ namespace zzio.utils
 
         /// <value>The root for this path</value>
         /// <remarks>For unix this is always "/", for windows it is the drive letter (in the path or current)</remarks>
-        public Path Root
+        public FilePath Root
         {
             get
             {
                 if (type == PathType.Relative)
-                    return new Path(Environment.CurrentDirectory).Root;
+                    return new FilePath(Environment.CurrentDirectory).Root;
                 else if (type == PathType.Root)
-                    return new Path(new string[0], PathType.Root, true);
+                    return new FilePath(new string[0], PathType.Root, true);
                 else if (type == PathType.Drive)
                 {
                     string drive = parts.Last(part => part.EndsWith(":"));
-                    return new Path(new string[] { drive }, PathType.Drive, true);
+                    return new FilePath(new string[] { drive }, PathType.Drive, true);
                 }
                 else
                     throw new NotSupportedException("PathType \"" + type + "\" not yet supported in Root property");
@@ -191,43 +191,43 @@ namespace zzio.utils
 
         /// <summary>Combines this path with some other paths</summary>
         /// <remarks>The combined path is normalized</remarks>
-        public Path Combine(params string[] paths)
+        public FilePath Combine(params string[] paths)
         {
             return Combine((IEnumerable<string>)paths);
         }
 
         /// <summary>Combines this path with some other paths</summary>
         /// <remarks>The combined path is normalized</remarks>
-        public Path Combine(IEnumerable<string> paths)
+        public FilePath Combine(IEnumerable<string> paths)
         {
-            return Combine(paths.Select(pathString => new Path(pathString)));
+            return Combine(paths.Select(pathString => new FilePath(pathString)));
         }
 
         /// <summary>Combines this path with some other paths</summary>
         /// <remarks>The combined path is normalized</remarks>
-        public Path Combine(params Path[] paths)
+        public FilePath Combine(params FilePath[] paths)
         {
-            return Combine((IEnumerable<Path>)paths);
+            return Combine((IEnumerable<FilePath>)paths);
         }
 
         /// <summary>Combines this path with some other paths</summary>
         /// <remarks>The combined path is normalized</remarks>
-        public Path Combine(IEnumerable<Path> paths)
+        public FilePath Combine(IEnumerable<FilePath> paths)
         {
             List<string> newParts = new List<string>(parts);
             bool lastIsDirectory = isDirectory;
-            foreach (Path path in paths)
+            foreach (FilePath path in paths)
             {
                 if (path.type != PathType.Relative)
                     throw new InvalidOperationException("Only relative paths can be combined");
                 newParts.AddRange(path.parts);
                 lastIsDirectory = path.isDirectory;
             }
-            return new Path(newParts.ToArray(), type, lastIsDirectory).Normalize();
+            return new FilePath(newParts.ToArray(), type, lastIsDirectory).Normalize();
         }
 
         /// <summary>Normalizes this path by removing unnecessary navigation</summary>
-        public Path Normalize()
+        public FilePath Normalize()
         {
             List<string> newParts = new List<string>();
             foreach (string part in parts)
@@ -246,43 +246,43 @@ namespace zzio.utils
             }
             bool newIsDirectory = isDirectory ||
                 (newParts.Count > 0 && isDirectoryPart(newParts.Last()));
-            return new Path(newParts.ToArray(), type, newIsDirectory);
+            return new FilePath(newParts.ToArray(), type, newIsDirectory);
         }
 
         /// <summary>Returns the absolute and normalized path (based on current directory)</summary>
-        public Path Absolute()
+        public FilePath Absolute()
         {
             if (type == PathType.Relative)
-                return new Path(Environment.CurrentDirectory).Combine(this);
+                return new FilePath(Environment.CurrentDirectory).Combine(this);
             else
                 return Normalize();
         }
 
         /// <summary>Returns the normalized path navigating to `this` from `basePath`</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public Path RelativeTo(string basePath)
+        public FilePath RelativeTo(string basePath)
         {
-            return RelativeTo(new Path(basePath));
+            return RelativeTo(new FilePath(basePath));
         }
 
         /// <summary>Returns the normalized path navigating to `this` from `basePath`</summary>
-        public Path RelativeTo(string basePath, bool caseSensitive)
+        public FilePath RelativeTo(string basePath, bool caseSensitive)
         {
-            return RelativeTo(new Path(basePath), caseSensitive);
+            return RelativeTo(new FilePath(basePath), caseSensitive);
         }
 
         /// <summary>Returns the normalized path navigating to `this` from `basePath`</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public Path RelativeTo(Path basePath)
+        public FilePath RelativeTo(FilePath basePath)
         {
             bool caseSensitive = Environment.OSVersion.Platform != PlatformID.Win32NT;
             return RelativeTo(basePath, caseSensitive);
         }
 
         /// <summary>Returns the normalized path navigating to `this` from `basePath`</summary>
-        public Path RelativeTo(Path basePath, bool caseSensitive)
+        public FilePath RelativeTo(FilePath basePath, bool caseSensitive)
         {
-            Path me = Absolute();
+            FilePath me = Absolute();
             basePath = basePath.Absolute();
             if (me.Root != basePath.Root)
                 throw new InvalidOperationException("Sub- and base path have different roots");
@@ -306,12 +306,12 @@ namespace zzio.utils
                 for (int i = partI; i < basePath.parts.Length; i++)
                     newParts.Add("..");
                 newParts.AddRange(me.parts.Skip(partI));
-                return new Path(newParts.ToArray(), PathType.Relative, isDirectory);
+                return new FilePath(newParts.ToArray(), PathType.Relative, isDirectory);
             }
             // Case 2: "a/b/c/d" relative to "a/b" should return "c/d"
             else if (partI < me.parts.Length)
             {
-                return new Path(me.parts.Skip(partI).ToArray(), PathType.Relative, isDirectory);
+                return new FilePath(me.parts.Skip(partI).ToArray(), PathType.Relative, isDirectory);
             }
             // Case 3: "a/b" relative to "a/b/c/d" should return "../../"
             else if (partI < basePath.parts.Length)
@@ -319,11 +319,11 @@ namespace zzio.utils
                 string[] newParts = new string[basePath.parts.Length - partI];
                 for (int i = 0; i < newParts.Length; i++)
                     newParts[i] = "..";
-                return new Path(newParts, PathType.Relative, true);
+                return new FilePath(newParts, PathType.Relative, true);
             }
             // Case 4: "a/b/c" relative to "a/b/c" should return ""
             else
-                return new Path(new string[0], PathType.Relative, false);
+                return new FilePath(new string[0], PathType.Relative, false);
 
             // Only to silent the compiler
             throw new InvalidOperationException("This should never happen");
