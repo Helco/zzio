@@ -59,14 +59,55 @@ namespace zzio.tests.utils
         [Test]
         public void absolute()
         {
-            Assert.AreEqual("c:/a/b/", new FilePath("c:/a/b/c/../").Absolute().ToPOSIXString());
-            Assert.AreEqual("/b/c/d", new FilePath("/b/./././/c/d").Absolute().ToPOSIXString());
+            Assert.AreEqual("c:/a/b/", new FilePath("c:/a/b/c/../").Absolute.ToPOSIXString());
+            Assert.AreEqual("/b/c/d", new FilePath("/b/./././/c/d").Absolute.ToPOSIXString());
 
             string cur = Environment.CurrentDirectory;
             if (!cur.EndsWith(FilePath.Separator))
                 cur += FilePath.Separator;
-            Assert.AreEqual(cur + "a", new FilePath("a").Absolute());
-            Assert.AreEqual(cur + "a", new FilePath("./b/..\\a").Absolute());
+            Assert.AreEqual(cur + "a", new FilePath("a").Absolute);
+            Assert.AreEqual(cur + "a", new FilePath("./b/..\\a").Absolute);
+        }
+
+        [Test]
+        public void parts()
+        {
+            Assert.AreEqual(new string[] { "a", "b", "C" }, new FilePath("a/b\\C/").Parts);
+            Assert.AreEqual(new string[] { "c:", "d" }, new FilePath("c:\\d").Parts);
+            Assert.AreEqual(new string[] { "e", "f" }, new FilePath("/e/f").Parts);
+        }
+
+        [Test]
+        public void staysinbound()
+        {
+            Assert.True(new FilePath("a/b/c").StaysInbound);
+            Assert.True(new FilePath("a/b/../").StaysInbound);
+            Assert.True(new FilePath("a/../").StaysInbound);
+            Assert.True(new FilePath("c:/d/../").StaysInbound);
+            Assert.True(new FilePath("/d/..").StaysInbound);
+            Assert.False(new FilePath("a/../../").StaysInbound);
+            Assert.False(new FilePath("..").StaysInbound);
+            Assert.False(new FilePath("c:/..").StaysInbound);
+            Assert.False(new FilePath("/../").StaysInbound);
+        }
+
+        [Test]
+        public void parent()
+        {
+            FilePath path = new FilePath("a/b/c");
+            Assert.AreEqual("a/b/", (path = path.Parent));
+            Assert.AreEqual("a/", (path = path.Parent));
+            Assert.AreEqual("./", (path = path.Parent));
+            Assert.AreEqual("../", (path = path.Parent));
+            Assert.AreEqual("../../", (path = path.Parent));
+
+            Assert.AreEqual("a/", new FilePath("a/b/../c/.//").Parent);
+
+            Assert.AreEqual("c:", new FilePath("c:/a").Parent);
+            Assert.AreEqual(null, new FilePath("c:/a/").Parent.Parent);
+
+            Assert.AreEqual("/d", new FilePath("/d/e").Parent);
+            Assert.AreEqual(null, new FilePath("/d/e").Parent.Parent);
         }
 
         [Test]

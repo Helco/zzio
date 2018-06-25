@@ -105,8 +105,8 @@ namespace zzio.utils
         /// <summary>Compares two paths for equality</summary>
         public bool Equals(FilePath path, bool caseSensitive)
         {
-            FilePath me = this.Absolute();
-            path = path.Absolute();
+            FilePath me = this.Absolute;
+            path = path.Absolute;
             if (me.parts.Length != path.parts.Length || me.type != path.type)
                 return false;
             StringComparison comp = caseSensitive
@@ -122,7 +122,7 @@ namespace zzio.utils
 
         /// <summary>Compares two paths for equality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator == (FilePath pathA, string pathB)
+        public static bool operator ==(FilePath pathA, string pathB)
         {
             return pathA.Equals(pathB);
         }
@@ -130,21 +130,21 @@ namespace zzio.utils
 
         /// <summary>Compares two paths for inequality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator != (FilePath pathA, string pathB)
+        public static bool operator !=(FilePath pathA, string pathB)
         {
             return !pathA.Equals(pathB);
         }
 
         /// <summary>Compares two paths for equality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator == (FilePath pathA, FilePath pathB)
+        public static bool operator ==(FilePath pathA, FilePath pathB)
         {
             return pathA.Equals(pathB);
         }
 
         /// <summary>Compares two paths for inequality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator != (FilePath pathA, FilePath pathB)
+        public static bool operator !=(FilePath pathA, FilePath pathB)
         {
             return !pathA.Equals(pathB);
         }
@@ -223,39 +223,95 @@ namespace zzio.utils
                 newParts.AddRange(path.parts);
                 lastIsDirectory = path.isDirectory;
             }
-            return new FilePath(newParts.ToArray(), type, lastIsDirectory).Normalize();
+            return new FilePath(newParts.ToArray(), type, lastIsDirectory).Normalized;
         }
 
-        /// <summary>Normalizes this path by removing unnecessary navigation</summary>
-        public FilePath Normalize()
+        /// <value>Normalizes this path by removing unnecessary navigation</value>
+        public FilePath Normalized
         {
-            List<string> newParts = new List<string>();
-            foreach (string part in parts)
+            get
             {
-                if (part == ".")
-                    continue;
-                else if (part == ".." && newParts.Count > 0)
-                    newParts.RemoveAt(newParts.Count - 1);
-                else if (part == "~" || part.EndsWith(":"))
+                List<string> newParts = new List<string>();
+                foreach (string part in parts)
                 {
-                    newParts.Clear();
-                    newParts.Add(part);
+                    if (part == ".")
+                        continue;
+                    else if (part == ".." && newParts.Count > 0 && newParts.Last() != "..")
+                        newParts.RemoveAt(newParts.Count - 1);
+                    else if (part == "~" || part.EndsWith(":"))
+                    {
+                        newParts.Clear();
+                        newParts.Add(part);
+                    }
+                    else
+                        newParts.Add(part);
                 }
-                else
-                    newParts.Add(part);
+                bool newIsDirectory = isDirectory ||
+                    (newParts.Count > 0 && isDirectoryPart(newParts.Last()));
+                return new FilePath(newParts.ToArray(), type, newIsDirectory);
             }
-            bool newIsDirectory = isDirectory ||
-                (newParts.Count > 0 && isDirectoryPart(newParts.Last()));
-            return new FilePath(newParts.ToArray(), type, newIsDirectory);
         }
 
-        /// <summary>Returns the absolute and normalized path (based on current directory)</summary>
-        public FilePath Absolute()
+        /// <value>The absolute and normalized path (based on the current directory)</value>
+        public FilePath Absolute
         {
-            if (type == PathType.Relative)
-                return new FilePath(Environment.CurrentDirectory).Combine(this);
-            else
-                return Normalize();
+            get
+            {
+                if (type == PathType.Relative)
+                    return new FilePath(Environment.CurrentDirectory).Combine(this);
+                else
+                    return Normalized;
+            }
+        }
+
+        /// <value>An array of all parts of this path without the separators</value>
+        public string[] Parts
+        {
+            get
+            {
+                return parts.ToArray();
+            }
+        }
+
+        /// <value>Whether the path stays in the boundary of its base</value>
+        public bool StaysInbound
+        {
+            get
+            {
+                int minNested = type == PathType.Drive ? 1 : 0;
+                int nested = 0;
+                FilePath norm = Normalized;
+                foreach (string part in norm.parts)
+                {
+                    if (part == "..")
+                    {
+                        if (--nested < minNested)
+                            return false;
+                    }
+                    else
+                        nested++;
+                }
+                return nested >= minNested;
+            }
+        }
+
+        /// <value>The containing normalized path of this one or `null` if rooted</value>
+        public FilePath Parent
+        {
+            get
+            {
+                FilePath norm = Normalized;
+                if (!norm.StaysInbound)
+                    return norm.Combine("../");
+                else if (norm.parts.Length > 1)
+                    return new FilePath(norm.parts.Take(norm.parts.Length - 1).ToArray(), type, true);
+                else if (type != PathType.Relative)
+                    return null;
+                else if (norm.parts.Length == 1)
+                    return new FilePath("./");
+                else
+                    return new FilePath("../");
+            }
         }
 
         /// <summary>Returns the normalized path navigating to `this` from `basePath`</summary>
@@ -282,8 +338,8 @@ namespace zzio.utils
         /// <summary>Returns the normalized path navigating to `this` from `basePath`</summary>
         public FilePath RelativeTo(FilePath basePath, bool caseSensitive)
         {
-            FilePath me = Absolute();
-            basePath = basePath.Absolute();
+            FilePath me = Absolute;
+            basePath = basePath.Absolute;
             if (me.Root != basePath.Root)
                 throw new InvalidOperationException("Sub- and base path have different roots");
 
