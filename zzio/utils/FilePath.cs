@@ -122,7 +122,7 @@ namespace zzio.utils
 
         /// <summary>Compares two paths for equality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator ==(FilePath pathA, string pathB)
+        public static bool operator ==(FilePath pathA, object pathB)
         {
             return pathA.Equals(pathB);
         }
@@ -130,21 +130,7 @@ namespace zzio.utils
 
         /// <summary>Compares two paths for inequality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator !=(FilePath pathA, string pathB)
-        {
-            return !pathA.Equals(pathB);
-        }
-
-        /// <summary>Compares two paths for equality</summary>
-        /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator ==(FilePath pathA, FilePath pathB)
-        {
-            return pathA.Equals(pathB);
-        }
-
-        /// <summary>Compares two paths for inequality</summary>
-        /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator !=(FilePath pathA, FilePath pathB)
+        public static bool operator !=(FilePath pathA, object pathB)
         {
             return !pathA.Equals(pathB);
         }
