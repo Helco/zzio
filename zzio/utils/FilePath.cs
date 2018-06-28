@@ -124,6 +124,8 @@ namespace zzio.utils
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
         public static bool operator ==(FilePath pathA, object pathB)
         {
+            if (object.ReferenceEquals(pathA, null))
+                return object.ReferenceEquals(pathB, null);
             return pathA.Equals(pathB);
         }
 
@@ -132,6 +134,8 @@ namespace zzio.utils
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
         public static bool operator !=(FilePath pathA, object pathB)
         {
+            if (object.ReferenceEquals(pathA, null))
+                return !object.ReferenceEquals(pathB, null);
             return !pathA.Equals(pathB);
         }
 
