@@ -1,0 +1,38 @@
+using System;
+using System.IO;
+using System.Text;
+
+namespace zzio.primitives
+{
+    [Serializable]
+    public struct UID
+    {
+        public readonly UInt32 raw;
+        public int Module { get { return (int)(raw % 16); } }
+
+        public UID(UInt32 raw = 0)
+        {
+            this.raw = raw;
+        }
+
+        public override int GetHashCode()
+        {
+            return raw.GetHashCode();
+        }
+
+        public static UID ReadNew(BinaryReader reader)
+        {
+            return new UID(reader.ReadUInt32());
+        }
+
+        public void Write(BinaryWriter writer)
+        {
+            writer.Write(raw);
+        }
+
+        public override string ToString()
+        {
+            return raw.ToString("X").PadLeft(8, '0');
+        }
+    }
+}
