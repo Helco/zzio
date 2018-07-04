@@ -22,9 +22,9 @@ namespace zzio.db
     }
 
     [Serializable]
-    public struct Cell
+    public struct Cell : IEquatable<Cell>
     {
-        // This structure is a bit convoluted but allows Cell to be
+        // This structure is a bit tricky but allows Cell to be
         // a struct value type and it is not supposed to be extendable
         // make a better database file instead...
 
@@ -84,34 +84,81 @@ namespace zzio.db
             ColumnIndex = columnIndex;
         }
 
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+                return false;
+            else
+                return Equals((Cell)obj);
+        }
+
+        public bool Equals(Cell cell)
+        {
+            if (Type != cell.Type || ColumnIndex != cell.ColumnIndex)
+                return false;
+            switch(Type)
+            {
+                case CellDataType.String: return stringValue == cell.stringValue;
+                case CellDataType.Integer: return integerValue == cell.integerValue;
+                case CellDataType.Byte: return byteValue == cell.byteValue;
+                case CellDataType.ForeignKey: return foreignKeyValue.Equals(cell.foreignKeyValue);
+                case CellDataType.Buffer: return bufferValue.SequenceEqual(cell.bufferValue);
+                default: return false;
+            }
+        }
+        
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         private static void readFixedSize(BinaryReader reader, UInt32 expectedSize)
         {
             UInt32 actualSize = reader.ReadUInt32();
             if (actualSize != expectedSize)
                 throw new InvalidDataException("Invalid cell size: " + actualSize);
         }
-
-        private static readonly Dictionary<CellDataType, Func<BinaryReader, dynamic>> dataReaders =
-            new Dictionary<CellDataType, Func<BinaryReader, dynamic>>()
-            {
-                { CellDataType.String,     (r) => { return r.ReadZString(); } },
-                { CellDataType.Integer,    (r) => { readFixedSize(r, 4); return r.ReadInt32(); } },
-                { CellDataType.Byte,       (r) => { readFixedSize(r, 1); return r.ReadByte(); } },
-                { CellDataType.ForeignKey, (r) => { readFixedSize(r, 8); return ForeignKey.ReadNew(r); } },
-                { CellDataType.Buffer,     (r) => { return r.ReadBytes(r.ReadInt32()); } }
-            };
-
-        public Cell ReadNew(BinaryReader reader)
+        
+        public static Cell ReadNew(BinaryReader reader)
         {
             CellDataType type = EnumUtils.intToEnum<CellDataType>(reader.ReadInt32());
             int columnIndex = reader.ReadInt32();
 
-            if (dataReaders.ContainsKey(type))
+            // We could do better with dynamic, but Unity can't
+            switch(type)
             {
-                dynamic value = dataReaders[type](reader);
-                return new Cell(value, columnIndex);
+                case CellDataType.String:
+                {
+                    string value = reader.ReadZString();
+                    return new Cell(value, columnIndex);
+                }
+                case CellDataType.Integer:
+                {
+                    readFixedSize(reader, 4);
+                    int value = reader.ReadInt32();
+                    return new Cell(value, columnIndex);
+                }
+                case CellDataType.Byte:
+                {
+                    readFixedSize(reader, 1);
+                    byte value = reader.ReadByte();
+                    return new Cell(value, columnIndex);
+                }
+                case CellDataType.ForeignKey:
+                {
+                    readFixedSize(reader, 8);
+                    ForeignKey value = ForeignKey.ReadNew(reader);
+                    return new Cell(value, columnIndex);
+                }
+                case CellDataType.Buffer:
+                {
+                    int length = reader.ReadInt32();
+                    byte[] value = reader.ReadBytes(length);
+                    return new Cell(value, columnIndex);
+                }
+                default:
+                    throw new InvalidDataException("Unknown cell data type");
             }
-            throw new InvalidDataException("Unknown cell data type");
         }
 
         private static readonly Dictionary<CellDataType, Action<BinaryWriter, Cell>> dataWriters =

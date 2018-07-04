@@ -14,6 +14,11 @@ namespace zzio.primitives
             this.type = type;
         }
 
+        public override int GetHashCode()
+        {
+            return (type.raw.GetHashCode() << 4) ^ 0x15fba3ce ^ uid.raw.GetHashCode();
+        }
+
         public static ForeignKey ReadNew(BinaryReader reader)
         {
             return new ForeignKey(UID.ReadNew(reader), UID.ReadNew(reader));
