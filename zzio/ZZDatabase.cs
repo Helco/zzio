@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using zzio.utils;
 
 namespace zzio {
@@ -34,10 +33,8 @@ namespace zzio {
     }
 
     public class ZZDatabaseIndex {
-        [JsonConverter(typeof(JsonHexNumberArrayConverter))]
         public UInt32[] columnNumbers; //no usage for them?
         public string[] columnNames;
-        [JsonIgnore]
         public UInt32 columnCount { get { return (UInt32)columnNames.Length; } }
 
         public ZZDatabaseIndex(UInt32[] cnum, string[] cnam) {

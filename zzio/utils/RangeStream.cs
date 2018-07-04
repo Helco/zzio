@@ -60,7 +60,7 @@ namespace zzio.utils
             }
             set
             {
-                long clamped = Math.Clamp(value, 0, length);
+                long clamped = Math.Max(0, Math.Min(value, length));
                 long newLeft = length - clamped;
                 if (left != newLeft)
                 {

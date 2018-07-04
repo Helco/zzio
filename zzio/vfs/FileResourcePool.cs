@@ -18,8 +18,8 @@ namespace zzio.vfs
         {
             try
             {
-                if (File.GetAttributes(basePath.Combine(path).ToString())
-                        .HasFlag(FileAttributes.Directory))
+                var attr = File.GetAttributes(basePath.Combine(path).ToString());
+                if ((attr & FileAttributes.Directory) > 0)
                     return ResourceType.Directory;
                 return ResourceType.File;
             }

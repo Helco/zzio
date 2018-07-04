@@ -19,12 +19,12 @@ namespace zzio.utils {
             {
                 int intFlag = 1 << bit;
                 if ((value & intFlag) > 0 && Enum.IsDefined(typeof(T), intFlag))
-                    flagString += "," + Enum.Parse<T>(intFlag.ToString()).ToString();
+                    flagString += "," + Enum.Parse(typeof(T), intFlag.ToString()).ToString();
             }
             if (flagString.Length == 0)
                 return default(T);
             else
-                return Enum.Parse<T>(flagString.Substring(1));
+                return (T)Enum.Parse(typeof(T), flagString.Substring(1));
         }
     }
 }
