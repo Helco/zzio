@@ -88,8 +88,7 @@ namespace zzio.db
         {
             if (obj == null || GetType() != obj.GetType())
                 return false;
-            else
-                return Equals((Cell)obj);
+            return Equals((Cell)obj);
         }
 
         public bool Equals(Cell cell)
@@ -98,18 +97,28 @@ namespace zzio.db
                 return false;
             switch(Type)
             {
-                case CellDataType.String: return stringValue == cell.stringValue;
-                case CellDataType.Integer: return integerValue == cell.integerValue;
-                case CellDataType.Byte: return byteValue == cell.byteValue;
+                case CellDataType.String:     return stringValue == cell.stringValue;
+                case CellDataType.Integer:    return integerValue == cell.integerValue;
+                case CellDataType.Byte:       return byteValue == cell.byteValue;
                 case CellDataType.ForeignKey: return foreignKeyValue.Equals(cell.foreignKeyValue);
-                case CellDataType.Buffer: return bufferValue.SequenceEqual(cell.bufferValue);
+                case CellDataType.Buffer:     return bufferValue.SequenceEqual(cell.bufferValue);
                 default: return false;
             }
         }
         
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            int hashCode = (((int)Type * 0x81f5cab) << 8) ^ ((ColumnIndex * 0xabc3dfe) << 4);
+            switch(Type)
+            {
+                case CellDataType.String:     hashCode ^= stringValue.GetHashCode(); break;
+                case CellDataType.Integer:    hashCode ^= integerValue.GetHashCode(); break;
+                case CellDataType.Byte:       hashCode ^= byteValue.GetHashCode(); break;
+                case CellDataType.ForeignKey: hashCode ^= foreignKeyValue.GetHashCode(); break;
+                case CellDataType.Buffer:     hashCode ^= bufferValue.GetHashCode(); break;
+                default: break;
+            }
+            return hashCode;
         }
 
         private static void readFixedSize(BinaryReader reader, UInt32 expectedSize)
@@ -121,7 +130,7 @@ namespace zzio.db
         
         public static Cell ReadNew(BinaryReader reader)
         {
-            CellDataType type = EnumUtils.intToEnum<CellDataType>(reader.ReadInt32());
+            CellDataType type = EnumUtils.intToEnum<CellDataType>(reader.ReadInt32() + 1);
             int columnIndex = reader.ReadInt32();
 
             // We could do better with dynamic, but Unity can't
@@ -173,7 +182,7 @@ namespace zzio.db
 
         public void Write(BinaryWriter writer)
         {
-            writer.Write((int)Type);
+            writer.Write((int)Type - 1);
             writer.Write(ColumnIndex);
             dataWriters[Type](writer, this);
         }

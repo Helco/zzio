@@ -12,33 +12,33 @@ namespace zzio.tests.db
         private Cell stringCell = new Cell("Hello", 13);
         private readonly byte[] stringCellBytes = new byte[]
         {
-            0, 0, 0, 0, 42, 0, 0, 0, 5, 0, 0, 0,
+            0, 0, 0, 0, 13, 0, 0, 0, 5, 0, 0, 0,
             (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o'
         };
 
         private Cell integerCell = new Cell(123456, 13);
         private readonly byte[] integerCellBytes = new byte[]
         {
-            1, 0, 0, 0, 42, 42, 0, 0, 4, 0, 0, 0, 0x40, 0xE2, 0x01, 0x00
+            1, 0, 0, 0, 13, 0, 0, 0, 4, 0, 0, 0, 0x40, 0xE2, 0x01, 0x00
         };
 
         private Cell byteCell = new Cell((byte)0xcd, 13);
         private readonly byte[] byteCellBytes = new byte[]
         {
-            4, 0, 0, 0, 42, 42, 42, 42, 1, 0, 0, 0, 0xcd
+            4, 0, 0, 0, 13, 0, 0, 0, 1, 0, 0, 0, 0xcd
         };
 
         private Cell foreignKeyCell = new Cell(new ForeignKey(new UID(0xc0fffeee), new UID(0xbadc0de)));
         private readonly byte[] foreignKeyCellBytes = new byte[]
         {
-            3, 0, 0, 0, 42, 42, 42, 0, 8, 0, 0, 0,
+            3, 0, 0, 0, 255, 255, 255, 255, 8, 0, 0, 0,
             0xee, 0xfe, 0xff, 0xc0, 0xde, 0xc0, 0xad, 0xb
         };
 
         private Cell bufferCell = new Cell(new byte[] { 0x37, 0x53, 0x73 });
         private readonly byte[] bufferCellBytes = new byte[]
         {
-            5, 0, 0, 0, 24, 0, 0, 0, 3, 0, 0, 0, 0x37, 0x53, 0x73
+            5, 0, 0, 0, 255, 255, 255, 255, 3, 0, 0, 0, 0x37, 0x53, 0x73
         };
 
         private void testCellType(CellDataType expected, Cell cell)
@@ -81,10 +81,62 @@ namespace zzio.tests.db
             Assert.AreEqual(new byte[] { 0x37, 0x53, 0x73 }, bufferCell.Buffer);
         }
 
+        private void testCellEquality(bool expected, Cell compare, Cell actual)
+        {
+            Assert.AreEqual(expected, compare.Equals(actual));
+            bool hashEquality = compare.GetHashCode() == actual.GetHashCode();
+            Assert.AreEqual(expected, hashEquality);
+        }
+
+        [Test]
+        public void equals()
+        {
+            Cell cell = new Cell(13, 15);
+            testCellEquality(true, cell, cell);
+            testCellEquality(true, cell, new Cell(13, 15));
+
+            testCellEquality(false, cell, new Cell(15, 13));
+            testCellEquality(false, cell, new Cell(13, 17));
+            testCellEquality(false, cell, new Cell("abc", 15));
+            testCellEquality(false, cell, new Cell((byte)13, 15));
+            testCellEquality(false, cell, new Cell(new ForeignKey(), 15));
+            testCellEquality(false, cell, new Cell(new byte[] { 13, 0, 0, 0 }, 15));
+        }
+
+        private void testCellRead(Cell expected, byte[] sourceBytes)
+        {
+            MemoryStream stream = new MemoryStream(sourceBytes, false);
+            BinaryReader reader = new BinaryReader(stream);
+            Cell readCell = Cell.ReadNew(reader);
+            Assert.AreEqual(true, expected.Equals(readCell));
+        }
+
         [Test]
         public void read()
         {
+            testCellRead(integerCell, integerCellBytes);
+            testCellRead(stringCell, stringCellBytes);
+            testCellRead(byteCell, byteCellBytes);
+            testCellRead(foreignKeyCell, foreignKeyCellBytes);
+            testCellRead(bufferCell, bufferCellBytes);
+        }
 
+        private void testCellWrite(byte[] expected, Cell sourceCell)
+        {
+            MemoryStream stream = new MemoryStream();
+            BinaryWriter writer = new BinaryWriter(stream);
+            sourceCell.Write(writer);
+            Assert.AreEqual(expected, stream.ToArray());
+        }
+
+        [Test]
+        public void write()
+        {
+            testCellWrite(integerCellBytes, integerCell);
+            testCellWrite(stringCellBytes, stringCell);
+            testCellWrite(byteCellBytes, byteCell);
+            testCellWrite(foreignKeyCellBytes, foreignKeyCell);
+            testCellWrite(bufferCellBytes, bufferCell);
         }
     }
 }
