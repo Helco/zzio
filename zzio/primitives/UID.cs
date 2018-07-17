@@ -30,6 +30,11 @@ namespace zzio.primitives
             writer.Write(raw);
         }
 
+        public static UID Parse(string text)
+        {
+            return new UID(Convert.ToUInt32(text, 16));
+        }
+
         public override string ToString()
         {
             return raw.ToString("X").PadLeft(8, '0');
