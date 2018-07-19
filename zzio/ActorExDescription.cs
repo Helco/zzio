@@ -3,98 +3,120 @@ using System.IO;
 using System.Collections.Generic;
 using zzio.utils;
 
-namespace zzio {
-    [System.Serializable]
-    public class ActorExDescription {
-        //In Zanzarah everyone and everything has a body and the wings have to be explicitly disabled :)
-        public string bodyModel;
-        public int bodyAnimationPoolID;
-        public string[] bodyAnimations;
-        public int[] bodyAnimationData;
+namespace zzio
+{
+    [Serializable]
+    public class ActorPart
+    {
+        public string model = "";
+        public int animationPoolID = -1;
+        public string[] animations = new string[0];
+        public int[] animationData = new int[0];
 
-        public string wingsModel;
-        public int wingsAnimationPoolID;
-        public string[] wingsAnimations;
-        public int[] wingsAnimationData;
+        public void Write(BinaryWriter writer, string partName)
+        {
+            writer.WriteZString(String.Format("[ModelFilename_{0}]", partName));
+            writer.WriteZString(model);
+            writer.WriteZString(String.Format("[AnimationPoolID_{0}]", partName));
+            writer.Write(animationPoolID);
+
+            for (int i = 0; i < animations.Length; i++)
+            {
+                writer.WriteZString(String.Format("[AnimationFilename_{0}]", partName));
+                writer.WriteZString(animations[i]);
+                writer.Write(animationData[i]);
+            }
+        }
+    }
+
+    [Serializable]
+    public class ActorExDescription
+    {
+        // In Zanzarah everyone and everything has a body and wings.
+        // If a creature happens to not have wings, they have to be explicitly disabled :)
+        public ActorPart body, wings;
 
         public int attachWingsToBone, headBoneID, effectBoneID;
 
-        private ActorExDescription() {
-            bodyAnimationPoolID = wingsAnimationPoolID = attachWingsToBone = headBoneID = effectBoneID = -1;
+        private ActorExDescription()
+        {
+            body = new ActorPart();
+            wings = new ActorPart();
+            attachWingsToBone = headBoneID = effectBoneID = -1;
         }
 
-        public static ActorExDescription read(byte[] buffer) {
+        public static ActorExDescription ReadNew(Stream stream)
+        {
             ActorExDescription actor = new ActorExDescription();
-            BinaryReader reader = new BinaryReader(new MemoryStream(buffer));
-            List<string> bodyAnimations = new List<string>(), wingsAnimations = new List<string>();
-            List<int> bodyAnimData = new List<int>(), wingsAnimData = new List<int>();
+            BinaryReader reader = new BinaryReader(stream);
+            List<string> bodyAnimations = new List<string>(),
+                wingsAnimations = new List<string>();
+            List<int> bodyAnimData = new List<int>(),
+                wingsAnimData = new List<int>();
 
             if (reader.ReadZString() != "[ActorExDescriptionFile]")
                 throw new InvalidDataException("Not an actorex description file");
             bool stopParsing = false;
-            string sect;
-            while(!stopParsing) {
-                switch(sect = reader.ReadZString()) {
-                    case ("[ModelFilename_Body]"): { actor.bodyModel = reader.ReadZString(); }break;
-                    case ("[AnimationPoolID_Body]"): { actor.bodyAnimationPoolID = reader.ReadInt32(); }break;
-                    case ("[AnimationFilename_Body]"): {
-                            bodyAnimations.Add(reader.ReadZString());
-                            bodyAnimData.Add(reader.ReadInt32());
-                        }break;
-                    case ("[ModelFilename_Wings]"): { actor.wingsModel = reader.ReadZString(); }break;
-                    case ("[AnimationPoolID_Wings]"): { actor.wingsAnimationPoolID = reader.ReadInt32(); }break;
-                    case ("[AnimationFilename_Wings]"): {
-                            wingsAnimations.Add(reader.ReadZString());
-                            wingsAnimData.Add(reader.ReadInt32());
-                        }break;
-                    case ("[AttachWingsToBone]"): { actor.attachWingsToBone = reader.ReadInt32(); }break;
-                    case ("[HeadBoneID]"): { actor.headBoneID = reader.ReadInt32(); }break;
-                    case ("[EffectBoneID]"): { actor.effectBoneID = reader.ReadInt32(); }break;
-                    case ("[EOS]"): { stopParsing = true; }break;
-                    default: { throw new InvalidDataException("Invalid actorex description section \"" + sect + "\""); }
+            string sectionName;
+            while (!stopParsing)
+            {
+                switch (sectionName = reader.ReadZString())
+                {
+                    case ("[ModelFilename_Body]"):
+                        actor.body.model = reader.ReadZString();
+                        break;
+                    case ("[AnimationPoolID_Body]"):
+                        actor.body.animationPoolID = reader.ReadInt32();
+                        break;
+                    case ("[AnimationFilename_Body]"):
+                        bodyAnimations.Add(reader.ReadZString());
+                        bodyAnimData.Add(reader.ReadInt32());
+                        break;
+
+                    case ("[ModelFilename_Wings]"):
+                        actor.wings.model = reader.ReadZString();
+                        break;
+                    case ("[AnimationPoolID_Wings]"):
+                        actor.wings.animationPoolID = reader.ReadInt32();
+                        break;
+                    case ("[AnimationFilename_Wings]"):
+                        wingsAnimations.Add(reader.ReadZString());
+                        wingsAnimData.Add(reader.ReadInt32());
+                        break;
+
+                    case ("[AttachWingsToBone]"):
+                        actor.attachWingsToBone = reader.ReadInt32();
+                        break;
+                    case ("[HeadBoneID]"):
+                        actor.headBoneID = reader.ReadInt32();
+                        break;
+                    case ("[EffectBoneID]"):
+                        actor.effectBoneID = reader.ReadInt32();
+                        break;
+
+                    case ("[EOS]"):
+                        stopParsing = true;
+                        break;
+                    default:
+                        throw new InvalidDataException("Invalid actorex description section \"" + sectionName + "\"");
                 }
             }
 
-            actor.bodyAnimations = bodyAnimations.ToArray();
-            actor.bodyAnimationData = bodyAnimData.ToArray();
-            actor.wingsAnimations = wingsAnimations.ToArray();
-            actor.wingsAnimationData = wingsAnimData.ToArray();
+            actor.body.animations = bodyAnimations.ToArray();
+            actor.body.animationData = bodyAnimData.ToArray();
+            actor.wings.animations = wingsAnimations.ToArray();
+            actor.wings.animationData = wingsAnimData.ToArray();
             return actor;
         }
 
-        public byte[] write()
-        {
-            MemoryStream stream = new MemoryStream();
-            write(stream);
-            return stream.ToArray();
-        }
-
-        public void write(Stream stream)
+        public void Write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream);
             writer.WriteZString("[ActorExDescriptionFile]");
 
-            writer.WriteZString("[ModelFilename_Body]");
-            writer.WriteZString(bodyModel);
-            writer.WriteZString("[AnimationPoolID_Body]");
-            writer.Write(bodyAnimationPoolID);
-            for (int i=0; i<bodyAnimations.Length; i++)
-            {
-                writer.WriteZString("[AnimationFilename_Body]");
-                writer.WriteZString(bodyAnimations[i]);
-                writer.Write(bodyAnimationData[i]);
-            }
-
-            writer.WriteZString("[ModelFilename_Wings]");
-            writer.WriteZString(wingsModel);
-            writer.WriteZString("[AnimationPoolID_Wings]");
-            writer.Write(wingsAnimationPoolID);
-            for (int i = 0; i < wingsAnimations.Length; i++)
-            {
-                writer.WriteZString("[AnimationFilename_Wings]");
-                writer.WriteZString(wingsAnimations[i]);
-                writer.Write(wingsAnimationData[i]);
-            }
+            body.Write(writer, "Body");
+            if (wings.model.Length > 0)
+                wings.Write(writer, "Wings");
 
             writer.WriteZString("[AttachWingsToBone]");
             writer.Write(attachWingsToBone);

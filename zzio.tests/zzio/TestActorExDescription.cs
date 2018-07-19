@@ -1,0 +1,58 @@
+using System;
+using System.IO;
+using NUnit.Framework;
+using zzio;
+
+namespace zzio.tests
+{
+    [TestFixture]
+    public class TestActorExDescription
+    {
+        private readonly byte[] sampleData = File.ReadAllBytes(
+            Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/actorex_sample.aed")
+        );
+
+        private void testInstance(ActorExDescription aed)
+        {
+            Assert.NotNull(aed);
+            Assert.AreEqual(1337, aed.headBoneID);
+            Assert.AreEqual("hello.dff", aed.body.model);
+            Assert.AreEqual("wings.dff", aed.wings.model);
+
+            Assert.AreEqual(2, aed.body.animations.Length);
+            Assert.AreEqual(2, aed.body.animationData.Length);
+            Assert.AreEqual("first.ani", aed.body.animations[0]);
+            Assert.AreEqual(1, aed.body.animationData[0]);
+            Assert.AreEqual("second.ani", aed.body.animations[1]);
+            Assert.AreEqual(2, aed.body.animationData[1]);
+
+            Assert.AreEqual(1, aed.wings.animations.Length);
+            Assert.AreEqual(1, aed.wings.animationData.Length);
+            Assert.AreEqual("third.ani", aed.wings.animations[0]);
+            Assert.AreEqual(3, aed.wings.animationData[0]);
+        }
+
+        [Test]
+        public void read()
+        {
+            MemoryStream stream = new MemoryStream(sampleData, false);
+            ActorExDescription aed = ActorExDescription.ReadNew(stream);
+            testInstance(aed);
+        }
+
+        [Test]
+        public void write()
+        {
+            MemoryStream readStream = new MemoryStream(sampleData, false);
+            ActorExDescription aed = ActorExDescription.ReadNew(readStream);
+
+            MemoryStream writeStream = new MemoryStream();
+            aed.Write(writeStream);
+
+            MemoryStream rereadStream = new MemoryStream(writeStream.ToArray(), false);
+            ActorExDescription rereadAed = ActorExDescription.ReadNew(rereadStream);
+
+            testInstance(rereadAed);
+        }
+    }
+}
