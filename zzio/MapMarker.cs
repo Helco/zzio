@@ -2,12 +2,10 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using zzio.utils;
 
 namespace zzio
 {
-    [System.Serializable]
     public enum MapMarkerSection
     {
         FairyGarden = 1,
@@ -21,48 +19,46 @@ namespace zzio
         Unknown = -1
     }
 
-    [System.Serializable]
+    [Serializable]
     public struct MapMarker
     {
         public Int32 posX, posY;
         public MapMarkerSection section;
         public UInt32 sceneId;
 
-        public static MapMarker[] read(byte[] buffer)
+        public static MapMarker ReadNew(BinaryReader reader)
         {
-            BinaryReader reader = new BinaryReader(new MemoryStream(buffer));
-            UInt32 count = reader.ReadUInt32();
-            MapMarker[] markers = new MapMarker[count];
-            for (UInt32 i=0; i<count; i++)
-            {
-                MapMarker m;
-                m.posX = reader.ReadInt32();
-                m.posY = reader.ReadInt32();
-                m.section = EnumUtils.intToEnum<MapMarkerSection>(reader.ReadInt32());
-                m.sceneId = reader.ReadUInt32();
-                markers[i] = m;
-            }
-            return markers;
+            return new MapMarker {
+                posX = reader.ReadInt32(),
+                posY = reader.ReadInt32(),
+                section = EnumUtils.intToEnum<MapMarkerSection>(reader.ReadInt32()),
+                sceneId = reader.ReadUInt32()
+            };
         }
 
-        public static byte[] write(MapMarker[] markers)
+        public void Write(BinaryWriter writer)
         {
-            MemoryStream stream = new MemoryStream();
-            MapMarker.write(markers, stream);
-            return stream.ToArray();
+            writer.Write(posX);
+            writer.Write(posY);
+            writer.Write((int)section);
+            writer.Write(sceneId);
         }
 
-        public static void write(MapMarker[] markers, Stream stream)
+        public static MapMarker[] ReadFile(Stream stream)
+        {
+            BinaryReader reader = new BinaryReader(stream);
+            int count = reader.ReadInt32();
+            return Enumerable.Repeat(0, count)
+                .Select(i => ReadNew(reader))
+                .ToArray();
+        }
+        
+        public static void WriteFile(MapMarker[] markers, Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(markers.Length);
-            for (int i=0; i<markers.Length; i++)
-            {
-                writer.Write(markers[i].posX);
-                writer.Write(markers[i].posY);
-                writer.Write((int)markers[i].section);
-                writer.Write(markers[i].sceneId);
-            }
+            foreach (MapMarker mapMarker in markers)
+                mapMarker.Write(writer);
         }
     }
 }

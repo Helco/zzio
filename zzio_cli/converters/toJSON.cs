@@ -53,10 +53,8 @@ namespace zzio.cli.converters
         public FileType TypeTo { get { return FileType.JSON; } }
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
-            byte[] buffer = new byte[from.Length];
-            from.Read(buffer, 0, (int)from.Length);
-            var obj = MapMarker.read(buffer);
-            buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+            var obj = MapMarker.ReadFile(from);
+            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
             to.Write(buffer, 0, buffer.Length);
         }
     }
