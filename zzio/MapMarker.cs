@@ -28,7 +28,8 @@ namespace zzio
 
         public static MapMarker ReadNew(BinaryReader reader)
         {
-            return new MapMarker {
+            return new MapMarker
+            {
                 posX = reader.ReadInt32(),
                 posY = reader.ReadInt32(),
                 section = EnumUtils.intToEnum<MapMarkerSection>(reader.ReadInt32()),

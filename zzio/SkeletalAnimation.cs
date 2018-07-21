@@ -1,99 +1,109 @@
 ﻿using System;
+using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using zzio.primitives;
 
-namespace zzio {
-    [System.Serializable]
-    public class SkeletalAnimation {
-        [System.Serializable]
-        public struct KeyFrame {
-            public Quaternion rot;
-            public Vector pos;
-            public float time;
-            public UInt32 parentOffset;
+namespace zzio
+{
+    [Serializable]
+    public struct AnimationKeyFrame
+    {
+        public Quaternion rot;
+        public Vector pos;
+        public float time;
+
+        public static AnimationKeyFrame ReadNew(BinaryReader reader)
+        {
+            return new AnimationKeyFrame
+            {
+                rot = Quaternion.read(reader),
+                pos = Vector.read(reader),
+                time = reader.ReadSingle()
+            };
         }
 
-        public UInt32 flags;
-        public float duration;
-        public KeyFrame[][] frames; //for every bone a set of keyframes
-
-        public SkeletalAnimation(UInt32 f, float d, KeyFrame[][] fr) {
-            flags = f;
-            duration = d;
-            frames = fr;
+        public void Write(BinaryWriter writer)
+        {
+            rot.write(writer);
+            pos.write(writer);
+            writer.Write(time);
         }
+    }
 
-        public static SkeletalAnimation read(byte[] buffer) {
-            BinaryReader reader = new BinaryReader(new MemoryStream(buffer, false));
-            UInt32 frameCount = reader.ReadUInt32();
-            UInt32 flags = reader.ReadUInt32();
-            float duration = reader.ReadSingle();
-            List<List<KeyFrame>> keyframes = new List<List<KeyFrame>>();
-            int[] parents = new int[frameCount];
-            for (UInt32 i=0; i<frameCount; i++) {
-                KeyFrame f;
-                f.rot = Quaternion.read(reader);
-                f.pos = Vector.read(reader);
-                f.time = reader.ReadSingle();
-                f.parentOffset = reader.ReadUInt32();
+    [Serializable]
+    public class SkeletalAnimation
+    {
+        private static readonly int KEYFRAME_SIZE = (4 + 3 + 1 + 1) * 4;
 
-                uint index = f.parentOffset / 36; //convert offset to index;
-                List<KeyFrame> boneFrameSet;
-                if (f.parentOffset == 0xffffffff || index >= frameCount) {
-                    parents[i] = -1;
-                    keyframes.Add(boneFrameSet = new List<KeyFrame>());
+        public UInt32 flags = 0; // TODO: Format of flags are still unknown
+        public float duration = 0.0f;
+        public AnimationKeyFrame[][] boneFrames = new AnimationKeyFrame[0][]; // a set of keyframes for every bone
+
+        public int BoneCount => boneFrames.Length;
+
+        public static SkeletalAnimation ReadNew(Stream stream)
+        {
+            SkeletalAnimation anim = new SkeletalAnimation();
+            BinaryReader reader = new BinaryReader(stream);
+
+            uint frameCount = reader.ReadUInt32();
+            anim.flags = reader.ReadUInt32();
+            anim.duration = reader.ReadSingle();
+
+            List<List<AnimationKeyFrame>> boneSets = new List<List<AnimationKeyFrame>>();
+            int[] frameBones = new int[frameCount];
+            for (uint i = 0; i < frameCount; i++)
+            {
+                AnimationKeyFrame keyFrame = AnimationKeyFrame.ReadNew(reader);
+
+                int parentFrameOffset = reader.ReadInt32();
+                if (parentFrameOffset < 0)
+                {
+                    // new unknown bone
+                    frameBones[i] = boneSets.Count;
+                    boneSets.Add(new List<AnimationKeyFrame>() { keyFrame });
                 }
-                else {
-                    parents[i] = parents[index];
-                    if (parents[i] < 0)
-                        parents[i] = (int)index;
-                    boneFrameSet = keyframes[parents[i]];
+                else
+                {
+                    // known bone
+                    int parentFrame = parentFrameOffset / KEYFRAME_SIZE;
+                    frameBones[i] = frameBones[parentFrame];
+                    boneSets[frameBones[i]].Add(keyFrame);
                 }
-                boneFrameSet.Add(f);
             }
 
-            KeyFrame[][] frames = new KeyFrame[keyframes.Count][];
-            for (int i = 0; i < keyframes.Count; i++)
-                frames[i] = keyframes[i].ToArray();
-            return new SkeletalAnimation(flags, duration, frames);
+            anim.boneFrames = boneSets
+                .Select(keyFrameSet => keyFrameSet.ToArray())
+                .ToArray();
+            return anim;
         }
 
-        public void write(Stream s)
+        public void Write(Stream stream)
         {
-            uint frameCount = 0;
-            for (int i = 0; i < frames.Length; i++)
-                frameCount += (uint)frames[i].Length;
-
-            BinaryWriter writer = new BinaryWriter(s);
-            writer.Write(frameCount);
+            BinaryWriter writer = new BinaryWriter(stream);
+            writer.Write(boneFrames.Sum(frameSet => frameSet.Length));
             writer.Write(flags);
             writer.Write(duration);
 
-            //let just hope for the moment that there is no
-            //intrinsic meaning to the order of the frames
-            uint framesWritten = 0;
-            for (int i=0; i<frames.Length; i++)
+            // sort and interleave the keyframes
+            var sortedMapping = boneFrames
+                .SelectMany((frameSet, boneI) =>
+                    frameSet.Select((frame, frameI) => (
+                        boneI: boneI,
+                        frameI: frameI
+                    ))
+                ).OrderBy(pair => boneFrames[pair.boneI][pair.frameI].time)
+                .ToArray();
+            
+            var lastParentOffsets = Enumerable.Repeat(-1, BoneCount).ToArray();
+            for (int writtenI = 0; writtenI < sortedMapping.Length; writtenI++)
             {
-                for (int j=0; j<frames[i].Length; j++, framesWritten++)
-                {
-                    KeyFrame f = frames[i][j];
-                    f.rot.write(writer);
-                    f.pos.write(writer);
-                    writer.Write(f.time);
-                    if (j == 0)
-                        writer.Write((uint)0xffffffff);
-                    else
-                        writer.Write(framesWritten * 36); //the offset of the previous written frame
-                }
+                var mapping = sortedMapping[writtenI];
+                boneFrames[mapping.boneI][mapping.frameI].Write(writer);
+                writer.Write(lastParentOffsets[mapping.boneI]);
+                lastParentOffsets[mapping.boneI] = writtenI * KEYFRAME_SIZE;
             }
-        }
-
-        public byte[] write()
-        {
-            MemoryStream mem = new MemoryStream(2048);
-            write(mem);
-            return mem.ToArray();
         }
     }
 }
