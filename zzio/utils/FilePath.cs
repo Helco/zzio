@@ -254,14 +254,11 @@ namespace zzio.utils
             }
         }
 
+        /// <value>Wether a path is absolute (or relative)</value>
+        public bool IsAbsolute => type != PathType.Relative;
+
         /// <value>An array of all parts of this path without the separators</value>
-        public string[] Parts
-        {
-            get
-            {
-                return parts.ToArray();
-            }
-        }
+        public string[] Parts => parts.ToArray();
 
         /// <value>Whether the path stays in the boundary of its base</value>
         public bool StaysInbound
