@@ -2,7 +2,6 @@
 using System.IO;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using SQLite;
 using zzio;
 using zzio.rwbs;
 using zzio.scn;
@@ -195,12 +194,6 @@ namespace zzio.cli
                     ignoreDB = true;
                 }
             }
-            if (!ignoreDB && convMgr.getTargetFileType(FileType.FBS_Data) == FileType.SQLite &&
-                !converters.SQLiteConvHelper.initialize(paramParser))
-            {
-                Environment.Exit(-1);
-                return;
-            }
 
             string outDir = Path.GetFullPath(paramParser["output"] as string);
             for (int i=0; i<fs.Files.Count; i++)
@@ -226,19 +219,14 @@ namespace zzio.cli
                 {
                     //open files
                     fromStream = new FileStream(f, FileMode.Open, FileAccess.Read);
-                    if (targetType != FileType.SQLite)
+                    try
                     {
-                        try
-                        {
-                            toStream = new FileStream(outFn, FileMode.OpenOrCreate, FileAccess.Write);
-                        }
-                        catch (Exception)
-                        {
-                            Console.Error.WriteLine("Warning: Could not open output file: " + outFn);
-                        }
+                        toStream = new FileStream(outFn, FileMode.OpenOrCreate, FileAccess.Write);
                     }
-                    else
-                        toStream = null;
+                    catch (Exception)
+                    {
+                        Console.Error.WriteLine("Warning: Could not open output file: " + outFn);
+                    }
 
                     //convert
                     try
@@ -260,10 +248,6 @@ namespace zzio.cli
                     Console.Error.WriteLine("Warning: Could not open input file: " + f);
                 }
             }
-
-            //clean up
-            if (!ignoreDB && convMgr.getTargetFileType(FileType.FBS_Data) == FileType.SQLite)
-                converters.SQLiteConvHelper.finish();
         }
     }
 }

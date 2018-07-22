@@ -18,7 +18,6 @@ namespace zzio.cli
         CFG_Game, //not supported, RV required
         FBS_Index,
         FBS_Data, //we have the index already I hope?
-        SQLite,
         JSON,
 
         Unknown
@@ -50,7 +49,6 @@ namespace zzio.cli
                 case ("bsp"): { return FileType.RWBS_BSP; }
                 case ("dff"): { return FileType.RWBS_DFF; }
                 case ("scn"): { return FileType.SCN; }
-                case ("db"): { return FileType.SQLite; }
                 // no cfg or fbs as there are multiple formats 
                 default: { return FileType.Unknown; }
             }
@@ -72,7 +70,6 @@ namespace zzio.cli
                 case (FileType.RWBS_DFF): { return ".dff"; }
                 case (FileType.SCN): { return ".scn"; }
                 case (FileType.SKA): { return ".ska"; }
-                case (FileType.SQLite): { return ".db"; }
                 default: { return null; }
             }
         }
@@ -123,8 +120,6 @@ namespace zzio.cli
                 }
             }
         }
-
-        public ZZDatabaseIndex LastDBIndex { get; set; }
 
         public static FileType scanFile (Stream stream, FileType extType)
         {
