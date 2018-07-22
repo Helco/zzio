@@ -8,128 +8,120 @@ using zzio.utils;
 
 namespace zzio
 {
-    [System.Serializable]
-    public struct VarConfigVar
+    public struct VarConfigValue
     {
-        public string name;
-        public float floatValue;
-        public string stringValue;
-        public byte ignored;
+        public readonly float floatValue;
+        public readonly string stringValue;
+
+        private VarConfigValue(float floatValue, string stringValue)
+        {
+            this.floatValue = floatValue;
+            this.stringValue = stringValue;
+        }
+
+        public static VarConfigValue ReadNew(BinaryReader reader)
+        {
+            float floatValue = reader.ReadSingle();
+            byte isString = reader.ReadByte();
+            string stringValue = isString == 0 ? ""
+                : VarConfig.ReadEncryptedString(reader);
+            reader.ReadByte(); // ignored byte at the end
+            return new VarConfigValue(floatValue, stringValue);
+        }
+
+        public void Write(BinaryWriter writer)
+        {
+            writer.Write(floatValue);
+            writer.Write((byte)(stringValue.Length > 0 ? 1 : 0));
+            if (stringValue.Length > 0)
+                VarConfig.WriteEncryptedString(writer, stringValue);
+            writer.Write((byte)1);
+        }
     }
 
-    [System.Serializable]
+    [Serializable]
     public class VarConfig
     {
-        public byte[] checksum; //always 16 bytes
-        public UInt32 header; //3 bytes, meaning unknown
-        public VarConfigVar firstValue; //name is always null
-        public VarConfigVar[] vars;
+        private static readonly byte XOR_KEY = 0x75;
 
-        public VarConfig(byte[] chk, UInt32 h, VarConfigVar fV, VarConfigVar[] v)
+        public byte[] header; // 3 bytes, meaning unknown
+        public VarConfigValue firstValue; // name is always empty
+        public Dictionary<string, VarConfigValue> variables =
+            new Dictionary<string, VarConfigValue>();
+
+        public static VarConfig ReadNew(Stream stream)
         {
-            checksum = chk;
-            header = h;
-            firstValue = fV;
-            vars = v;
-        }
+            VarConfig config = new VarConfig();
 
-        public static VarConfig read(byte[] buffer)
-        {
-            BinaryReader reader = new BinaryReader(new MemoryStream(buffer));
-            byte[] checksum = reader.ReadBytes(16);
-            UInt32 header = ((UInt32)reader.ReadUInt16() << 8) | reader.ReadByte();
-            VarConfigVar firstValue = readVar(null, reader);
-            List<VarConfigVar> vars = new List<VarConfigVar>();
+            // Because of the Hash, two passes are necessary
+            byte[] buffer = new byte[stream.Length - stream.Position];
+            if (stream.Read(buffer, 0, buffer.Length) != buffer.Length)
+                throw new InvalidDataException("Could not read VarConfig buffer");
+            BinaryReader reader = new BinaryReader(new MemoryStream(buffer, false));
 
-            byte[] calculatedChecksum = MD5.Create().ComputeHash(buffer, 25, buffer.Length - 25);
-            for (int i=0; i<16; i++)
+            byte[] expectedChecksum = reader.ReadBytes(16);
+            config.header = reader.ReadBytes(3);
+            config.firstValue = VarConfigValue.ReadNew(reader);
+
+            int startOfHashed = (int)(reader.BaseStream.Position);
+            while (reader.PeekChar() >= 0)
             {
-                if (calculatedChecksum[i] != checksum[i])
-                    throw new Exception("Invalid checksum in configuration file");
+                string name = ReadEncryptedString(reader);
+                VarConfigValue value = VarConfigValue.ReadNew(reader);
+                config.variables[name] = value;
             }
 
-            while (reader.BaseStream.Position < reader.BaseStream.Length)
-            {
-                var name = new StringBuilder(reader.ReadSizedString(reader.ReadByte()));
-                for (int i = 0; i < name.Length; i++)
-                    name[i] = (char)(name[i] ^ 0x75);
-                if (reader.ReadByte() != 0)
-                    throw new Exception("Configuration variable name does not end with \\0");
-                vars.Add(readVar(name.ToString(), reader));
-            }
-
-            return new VarConfig(checksum, header, firstValue, vars.ToArray());
+            byte[] actualChecksum = MD5.Create().ComputeHash(buffer, startOfHashed, buffer.Length - startOfHashed);
+            if (!actualChecksum.SequenceEqual(expectedChecksum))
+                throw new InvalidDataException("VarConfig checksums do not match");
+            
+            return config;
         }
 
-        private static VarConfigVar readVar(string name, BinaryReader reader)
-        {
-            VarConfigVar v;
-            v.name = name;
-            v.floatValue = reader.ReadSingle();
-            byte isString = reader.ReadByte();
-            if (isString > 0)
-                v.stringValue = reader.ReadSizedString(reader.ReadByte());
-            else
-                v.stringValue = null;
-            v.ignored = reader.ReadByte();
-            return v;
-        }
-
-        public byte[] write()
-        {
-            MemoryStream stream = new MemoryStream();
-            write(stream);
-            return stream.ToArray();
-        }
-
-        public void write(Stream stream)
+        public void Write(Stream stream)
         {
             if (!stream.CanSeek)
-                //TODO: maybe write fallback with MemoryStream 
+                // TODO: maybe write fallback with MemoryStream 
                 throw new ArgumentException("Config.write needs a seekable stream");
             long startPosition = stream.Position;
             stream.Seek(16, SeekOrigin.Current);
 
-            BinaryWriter rawWriter = new BinaryWriter(stream);
-            rawWriter.Write(header);
-            writeVar(rawWriter, firstValue);
+            BinaryWriter writer = new BinaryWriter(stream);
+            writer.Write(header);
+            firstValue.Write(writer);
 
             MD5 md5 = MD5.Create();
             CryptoStream hashStream = new CryptoStream(stream, md5, CryptoStreamMode.Write);
-            BinaryWriter hashWriter = new BinaryWriter(hashStream);
-            for (int i=0; i<vars.Length; i++)
+            writer = new BinaryWriter(hashStream);
+            foreach (KeyValuePair<string, VarConfigValue> pair in variables)
             {
-                if (vars[i].name.Length > 255)
-                    throw new InvalidDataException("Config variable name is too long (>255)");
-                if (vars[i].stringValue != null && vars[i].stringValue.Length > 255)
-                    throw new InvalidDataException("Config string value is too long (>255)");
-
-                byte[] nameBytes = Encoding.Default.GetBytes(vars[i].name);
-                hashWriter.Write((byte)nameBytes.Length);
-                for (int j=0; j<nameBytes.Length; i++)
-                {
-                    if (nameBytes[j] == 0)
-                        throw new InvalidDataException("Config string value has invalid character ('\0')");
-                    hashWriter.Write((char)(nameBytes[j] ^ 0x75));
-                }
-                hashWriter.Write((byte)0);
-
-                writeVar(hashWriter, vars[i]);
+                WriteEncryptedString(writer, pair.Key);
+                pair.Value.Write(writer);
             }
-            hashStream.FlushFinalBlock();
 
+            hashStream.FlushFinalBlock();
             stream.Seek(startPosition, SeekOrigin.Begin);
-            rawWriter.Write(md5.Hash, 0, 16);
+            stream.Write(md5.Hash, 0, 16);
         }
 
-        private static void writeVar(BinaryWriter writer, VarConfigVar var)
+        public static string ReadEncryptedString(BinaryReader reader)
         {
-            writer.Write(var.floatValue);
-            if (var.stringValue != null)
-            {
-                byte[] valueBytes = Encoding.Default.GetBytes(var.stringValue);
-                writer.Write(valueBytes, 0, valueBytes.Length);
-            }
+            byte stringLen = reader.ReadByte();
+            byte[] buffer = reader.ReadBytes((int)stringLen)
+                .Select(b => (byte)(b ^ XOR_KEY))
+                .ToArray();
+            reader.ReadByte(); // ignored terminator byte
+            return Encoding.UTF8.GetString(buffer);
+        }
+
+        public static void WriteEncryptedString(BinaryWriter writer, string str)
+        {
+            if (str.Length > 255)
+                throw new InvalidOperationException("String is too long for VarConfig");
+            writer.Write((byte)str.Length);
+            writer.Write(Encoding.UTF8.GetBytes(str)
+                .Select(b => (byte)(b ^ XOR_KEY))
+                .ToArray());
             writer.Write((byte)0);
         }
     }
