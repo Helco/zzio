@@ -43,11 +43,11 @@ namespace zzio.db
         public CellDataType Type { get; }
         public int ColumnIndex { get; }
 
-        public string String { get { checkType(CellDataType.String); return stringValue; } }
-        public int Integer { get { checkType(CellDataType.Integer); return integerValue; } }
-        public byte Byte { get { checkType(CellDataType.Byte); return byteValue; } }
+        public string String         { get { checkType(CellDataType.String); return stringValue; } }
+        public int Integer           { get { checkType(CellDataType.Integer); return integerValue; } }
+        public byte Byte             { get { checkType(CellDataType.Byte); return byteValue; } }
         public ForeignKey ForeignKey { get { checkType(CellDataType.ForeignKey); return foreignKeyValue; } }
-        public byte[] Buffer { get { checkType(CellDataType.Buffer); return bufferValue.ToArray(); } }
+        public byte[] Buffer         { get { checkType(CellDataType.Buffer); return bufferValue.ToArray(); } }
 
         public Cell(string value, int columnIndex = -1) : this()
         {

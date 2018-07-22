@@ -39,11 +39,11 @@ namespace zzio
                 UInt32 count = reader.ReadUInt32();
                 T[] result = new T[count];
                 for (UInt32 i = 0; i < count; i++)
-                    (result[i] = ctor()).read(reader.BaseStream);
+                    (result[i] = ctor()).Read(reader.BaseStream);
                 return result;
             }
 
-            public void read(Stream stream, bool shouldClose = true)
+            public void Read(Stream stream, bool shouldClose = true)
             {
                 bool shouldReadNext = true;
                 BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, !shouldClose);
@@ -52,11 +52,11 @@ namespace zzio
 
                 Dictionary<string, Action> sectionHandlers = new Dictionary<string, Action>()
                 {
-                    { "[Version]",           () => (version =          new Version()).read(stream) },
-                    { "[Misc]",              () => (misc =             new Misc()).read(stream) },
-                    { "[WaypointSystem]",    () => (waypointSystem =   new WaypointSystem()).read(stream) },
-                    { "[Dataset]",           () => (dataset =          new Dataset()).read(stream) },
-                    { "[SceneOrigin]",       () => sceneOrigin =       Vector.read(reader) },
+                    { "[Version]",           () => (version =          new Version()).Read(stream) },
+                    { "[Misc]",              () => (misc =             new Misc()).Read(stream) },
+                    { "[WaypointSystem]",    () => (waypointSystem =   new WaypointSystem()).Read(stream) },
+                    { "[Dataset]",           () => (dataset =          new Dataset()).Read(stream) },
+                    { "[SceneOrigin]",       () => sceneOrigin =       Vector.ReadNew(reader) },
                     { "[Backdrop]",          () => backdropFile =      reader.ReadZString() },
                     { "[AmbientSound]",      () => ambientSound =      reader.ReadUInt32() },
                     { "[Music]",             () => music =             reader.ReadUInt32() },

@@ -16,8 +16,8 @@ namespace zzio.effect.parts
     [System.Serializable]
     public class ParticleBeam : IEffectPart
     {
-        public EffectPartType Type { get { return EffectPartType.ParticleBeam; } }
-        public string Name { get { return name; } }
+        public EffectPartType Type => EffectPartType.ParticleBeam;
+        public string Name => name;
 
         public uint
             phase1 = 1000,

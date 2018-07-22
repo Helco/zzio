@@ -8,8 +8,8 @@ namespace zzio.effect.parts
     [System.Serializable]
     public class RandomPlanes : IEffectPart
     {
-        public EffectPartType Type { get { return EffectPartType.RandomPlanes; } }
-        public string Name { get { return name; } }
+        public EffectPartType Type => EffectPartType.RandomPlanes;
+        public string Name => name;
 
         public uint
             phase1 = 1000,

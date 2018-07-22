@@ -20,14 +20,14 @@ namespace zzio.scn
             loopCount,
             falloff;
 
-        public void read(Stream stream)
+        public void Read(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
             idx = reader.ReadUInt32();
             filename = reader.ReadZString();
-            pos = Vector.read(reader);
-            forward = Vector.read(reader);
-            up = Vector.read(reader);
+            pos = Vector.ReadNew(reader);
+            forward = Vector.ReadNew(reader);
+            up = Vector.ReadNew(reader);
             minDist = reader.ReadSingle();
             maxDist = reader.ReadSingle();
             volume = reader.ReadUInt32();
@@ -35,14 +35,14 @@ namespace zzio.scn
             falloff = reader.ReadUInt32();
         }
 
-        public void write(Stream stream)
+        public void Write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
             writer.Write(idx);
             writer.WriteZString(filename);
-            pos.write(writer);
-            forward.write(writer);
-            up.write(writer);
+            pos.Write(writer);
+            forward.Write(writer);
+            up.Write(writer);
             writer.Write(minDist);
             writer.Write(maxDist);
             writer.Write(volume);

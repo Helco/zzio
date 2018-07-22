@@ -8,8 +8,8 @@ namespace zzio.effect.parts
     [System.Serializable]
     public class ParticleCollector : IEffectPart
     {
-        public EffectPartType Type { get { return EffectPartType.ParticleCollector; } }
-        public string Name { get { return name; } }
+        public EffectPartType Type => EffectPartType.ParticleCollector;
+        public string Name => name;
 
         public uint
             maxCount = 0,

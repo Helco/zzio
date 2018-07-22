@@ -26,17 +26,17 @@ namespace zzio.scn
         public UInt32 ii1, ii2;
         public DynModelData[] data; //always three
 
-        public void read(Stream stream)
+        public void Read(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
             idx = reader.ReadUInt32();
             c1 = reader.ReadUInt32();
             c2 = reader.ReadUInt32();
-            pos = Vector.read(reader);
-            rot = Vector.read(reader);
+            pos = Vector.ReadNew(reader);
+            rot = Vector.ReadNew(reader);
             f1 = reader.ReadSingle();
             f2 = reader.ReadSingle();
-            v1 = Vector.read(reader);
+            v1 = Vector.ReadNew(reader);
             ii1 = reader.ReadUInt32();
             ii2 = reader.ReadUInt32();
             data = new DynModelData[3];
@@ -50,24 +50,24 @@ namespace zzio.scn
                 data[i].a6 = reader.ReadSingle();
                 data[i].a7 = reader.ReadSingle();
                 data[i].someFlag = reader.ReadByte();
-                data[i].someColor = IColor.read(reader);
+                data[i].someColor = IColor.ReadNew(reader);
                 data[i].cc = reader.ReadUInt32();
                 data[i].s1 = reader.ReadZString();
                 data[i].s2 = reader.ReadZString();
             }
         }
 
-        public void write(Stream stream)
+        public void Write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
             writer.Write(idx);
             writer.Write(c1);
             writer.Write(c2);
-            pos.write(writer);
-            rot.write(writer);
+            pos.Write(writer);
+            rot.Write(writer);
             writer.Write(f1);
             writer.Write(f2);
-            v1.write(writer);
+            v1.Write(writer);
             writer.Write(ii1);
             writer.Write(ii2);
             for (int i = 0; i < 3; i++)
@@ -80,7 +80,7 @@ namespace zzio.scn
                 writer.Write(data[i].a6);
                 writer.Write(data[i].a7);
                 writer.Write(data[i].someFlag);
-                data[i].someColor.write(writer);
+                data[i].someColor.Write(writer);
                 writer.Write(data[i].cc);
                 writer.WriteZString(data[i].s1);
                 writer.WriteZString(data[i].s2);

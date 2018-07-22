@@ -38,19 +38,19 @@ namespace zzio.scn
         public byte ff3;
         public Int32 i7;
 
-        public void read(Stream stream)
+        public void Read(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
             idx = reader.ReadUInt32();
             filename = reader.ReadZString();
-            pos = Vector.read(reader);
-            rot = Vector.read(reader);
+            pos = Vector.ReadNew(reader);
+            rot = Vector.ReadNew(reader);
             f1 = reader.ReadSingle();
             f2 = reader.ReadSingle();
             f3 = reader.ReadSingle();
             f4 = reader.ReadSingle();
             f5 = reader.ReadSingle();
-            color = IColor.read(reader);
+            color = IColor.ReadNew(reader);
             worldDetailLevel = reader.ReadByte();
             ff2 = reader.ReadByte();
             renderType = EnumUtils.intToEnum<FOModelRenderType>(reader.ReadInt32());
@@ -58,19 +58,19 @@ namespace zzio.scn
             i7 = reader.ReadInt32();
         }
 
-        public void write(Stream stream)
+        public void Write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
             writer.Write(idx);
             writer.WriteZString(filename);
-            pos.write(writer);
-            rot.write(writer);
+            pos.Write(writer);
+            rot.Write(writer);
             writer.Write(f1);
             writer.Write(f2);
             writer.Write(f3);
             writer.Write(f4);
             writer.Write(f5);
-            color.write(writer);
+            color.Write(writer);
             writer.Write(worldDetailLevel);
             writer.Write(ff2);
             writer.Write((int)renderType);

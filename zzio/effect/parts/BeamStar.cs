@@ -24,8 +24,8 @@ namespace zzio.effect.parts
     [System.Serializable]
     public class BeamStar : IEffectPart
     {
-        public EffectPartType Type { get { return EffectPartType.BeamStar; } }
-        public string Name { get { return name; } }
+        public EffectPartType Type => EffectPartType.BeamStar;
+        public string Name => name;
 
         public uint
             phase1 = 1000,

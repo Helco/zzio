@@ -18,16 +18,16 @@ namespace zzio.rwbs
             // there might be padding bytes, check if a header would fit
             while (streamLength - stream.Position > 12)
             {
-                children.Add(Section.readNew(stream, this));
+                children.Add(Section.ReadNew(stream, this));
             }
         }
 
         protected override void writeBody(Stream stream)
         {
-            children.ForEach((section) => section.write(stream));
+            children.ForEach((section) => section.Write(stream));
         }
 
-        public override Section findChildById(SectionId sectionId, bool recursive)
+        public override Section FindChildById(SectionId sectionId, bool recursive)
         {
             foreach (Section child in children)
             {
@@ -38,7 +38,7 @@ namespace zzio.rwbs
             {
                 foreach (Section child in children)
                 {
-                    Section grandchild = child.findChildById(sectionId, recursive);
+                    Section grandchild = child.FindChildById(sectionId, recursive);
                     if (grandchild != null)
                         return grandchild;
                 }

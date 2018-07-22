@@ -18,7 +18,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWGeometry : StructSection
     {
-        public override SectionId sectionId { get { return SectionId.Geometry; } }
+        public override SectionId sectionId => SectionId.Geometry;
 
         public GeometryFormat format;
         public float ambient, specular, diffuse;
@@ -44,7 +44,7 @@ namespace zzio.rwbs
                 {
                     colors = new IColor[vertexCount];
                     for (int i = 0; i < colors.Length; i++)
-                        colors[i] = IColor.read(reader);
+                        colors[i] = IColor.ReadNew(reader);
                 }
 
                 if ((format & GeometryFormat.Textured) > 0 ||
@@ -58,7 +58,7 @@ namespace zzio.rwbs
                     for (int i = 0; i < texCount; i++)
                     {
                         for (int j = 0; j < vertexCount; j++)
-                            texCoords[i, j] = TexCoord.read(reader);
+                            texCoords[i, j] = TexCoord.ReadNew(reader);
                     }
                 }
 
@@ -73,7 +73,7 @@ namespace zzio.rwbs
             } // no native format
 
             for (int i = 0; i < morphTargets.Length; i++) {
-                morphTargets[i].bsphereCenter = Vector.read(reader);
+                morphTargets[i].bsphereCenter = Vector.ReadNew(reader);
                 morphTargets[i].bsphereRadius = reader.ReadSingle();
                 morphTargets[i].normals = morphTargets[i].vertices = null;
                 bool hasVertices = reader.ReadUInt32() > 0;
@@ -82,13 +82,13 @@ namespace zzio.rwbs
                 {
                     morphTargets[i].vertices = new Vector[vertexCount];
                     for (uint j = 0; j < vertexCount; j++)
-                        morphTargets[i].vertices[j] = Vector.read(reader);
+                        morphTargets[i].vertices[j] = Vector.ReadNew(reader);
                 }
                 if (hasNormals)
                 {
                     morphTargets[i].normals = new Vector[vertexCount];
                     for (uint j = 0; j < vertexCount; j++)
-                        morphTargets[i].vertices[j] = Vector.read(reader);
+                        morphTargets[i].vertices[j] = Vector.ReadNew(reader);
                 }
             }
         }
@@ -109,7 +109,7 @@ namespace zzio.rwbs
                 if ((format & GeometryFormat.Prelit) > 0)
                 {
                     foreach (IColor c in colors)
-                        c.write(writer);
+                        c.Write(writer);
                 }
 
                 if ((format & GeometryFormat.Textured) > 0 ||
@@ -122,7 +122,7 @@ namespace zzio.rwbs
                     for (int i = 0; i < texCount; i++)
                     {
                         for (int j = 0; j < vertexCount; j++)
-                            texCoords[i, j].write(writer);
+                            texCoords[i, j].Write(writer);
                     }
                 }
 
@@ -137,14 +137,14 @@ namespace zzio.rwbs
 
             foreach (MorphTarget mt in morphTargets)
             {
-                mt.bsphereCenter.write(writer);
+                mt.bsphereCenter.Write(writer);
                 writer.Write(mt.bsphereRadius);
                 writer.Write((UInt32)(mt.vertices == null ? 0 : 1));
                 writer.Write((UInt32)(mt.normals == null ? 0 : 1));
                 foreach (Vector v in mt.vertices)
-                    v.write(writer);
+                    v.Write(writer);
                 foreach (Vector n in mt.normals)
-                    n.write(writer);
+                    n.Write(writer);
             }
         }
     }

@@ -19,8 +19,8 @@ namespace zzio.effect.parts
     [System.Serializable]
     public class ParticleEmitter : IEffectPart
     {
-        public EffectPartType Type { get { return EffectPartType.ParticleEmitter; } }
-        public string Name { get { return name; } }
+        public EffectPartType Type => EffectPartType.ParticleEmitter;
+        public string Name => name;
 
         public uint
             head1 = 1000,
@@ -92,8 +92,8 @@ namespace zzio.effect.parts
             life.width = r.ReadSingle();
             acc.width = r.ReadSingle();
             scale.width = r.ReadSingle();
-            gravity = Vector.read(r);
-            gravityMod = Vector.read(r);
+            gravity = Vector.ReadNew(r);
+            gravityMod = Vector.ReadNew(r);
             type = EnumUtils.intToEnum<ParticleType>(r.ReadInt32());
             texName = r.ReadSizedCString(32);
             tileW = r.ReadUInt32();

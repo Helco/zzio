@@ -15,7 +15,7 @@ namespace zzio.primitives
             this.z = z;
         }
 
-        public static Vector read(BinaryReader r)
+        public static Vector ReadNew(BinaryReader r)
         {
             Vector v;
             v.x = r.ReadSingle();
@@ -24,7 +24,7 @@ namespace zzio.primitives
             return v;
         }
 
-        public void write(BinaryWriter w)
+        public void Write(BinaryWriter w)
         {
             w.Write(x);
             w.Write(y);

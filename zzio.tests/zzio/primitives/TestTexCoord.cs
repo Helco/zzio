@@ -23,7 +23,7 @@ namespace zzio.tests.primitives {
         public void read() {
             MemoryStream stream = new MemoryStream(expected, false);
             BinaryReader reader = new BinaryReader(stream);
-            TexCoord tex = TexCoord.read(reader);
+            TexCoord tex = TexCoord.ReadNew(reader);
             Assert.AreEqual(-345.0f, tex.u);
             Assert.AreEqual(678.0f, tex.v);
         }
@@ -33,7 +33,7 @@ namespace zzio.tests.primitives {
             MemoryStream stream = new MemoryStream();
             BinaryWriter writer = new BinaryWriter(stream);
             TexCoord tex = new TexCoord(-345.0f, 678.0f);
-            tex.write(writer);
+            tex.Write(writer);
 
             byte[] actual = stream.ToArray();
             Assert.AreEqual(actual, expected);

@@ -17,29 +17,29 @@ namespace zzio.scn
         public Int32 i15;
         public byte i2;
 
-        public void read(Stream stream)
+        public void Read(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
             idx = reader.ReadUInt32();
             filename = reader.ReadZString();
-            pos = Vector.read(reader);
-            rot = Vector.read(reader);
-            scale = Vector.read(reader);
-            color = IColor.read(reader);
+            pos = Vector.ReadNew(reader);
+            rot = Vector.ReadNew(reader);
+            scale = Vector.ReadNew(reader);
+            color = IColor.ReadNew(reader);
             i1 = reader.ReadByte();
             i15 = reader.ReadInt32();
             i2 = reader.ReadByte();
         }
 
-        public void write(Stream stream)
+        public void Write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
             writer.Write(idx);
             writer.WriteZString(filename);
-            pos.write(writer);
-            rot.write(writer);
-            scale.write(writer);
-            color.write(writer);
+            pos.Write(writer);
+            rot.Write(writer);
+            scale.Write(writer);
+            color.Write(writer);
             writer.Write(i1);
             writer.Write(i15);
             writer.Write(i2);

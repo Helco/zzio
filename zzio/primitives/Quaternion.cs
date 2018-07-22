@@ -16,7 +16,7 @@ namespace zzio.primitives
             this.w = w;
         }
 
-        public static Quaternion read(BinaryReader r)
+        public static Quaternion ReadNew(BinaryReader r)
         {
             Quaternion q;
             q.x = r.ReadSingle();
@@ -26,7 +26,7 @@ namespace zzio.primitives
             return q;
         }
 
-        public void write(BinaryWriter w)
+        public void Write(BinaryWriter w)
         {
             w.Write(x);
             w.Write(y);

@@ -10,7 +10,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWWorld : StructSection
     {
-        public override SectionId sectionId { get { return SectionId.World; } }
+        public override SectionId sectionId => SectionId.World;
 
         public bool rootIsWorldSector;
         public Vector origin;
@@ -27,7 +27,7 @@ namespace zzio.rwbs
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
             rootIsWorldSector = reader.ReadUInt32() > 0;
-            origin = Vector.read(reader);
+            origin = Vector.ReadNew(reader);
             ambient = reader.ReadSingle();
             specular = reader.ReadSingle();
             diffuse = reader.ReadSingle();
@@ -43,7 +43,7 @@ namespace zzio.rwbs
         {
             BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
             writer.Write((UInt32)(rootIsWorldSector ? 1 : 0));
-            origin.write(writer);
+            origin.Write(writer);
             writer.Write(ambient);
             writer.Write(specular);
             writer.Write(diffuse);

@@ -27,7 +27,7 @@ namespace zzio.tests.primitives {
         public void read() {
             MemoryStream stream = new MemoryStream(expected, false);
             BinaryReader reader = new BinaryReader(stream);
-            FColor color = FColor.read(reader);
+            FColor color = FColor.ReadNew(reader);
             Assert.AreEqual(0.1f, color.r);
             Assert.AreEqual(0.3f, color.g);
             Assert.AreEqual(0.7f, color.b);
@@ -39,7 +39,7 @@ namespace zzio.tests.primitives {
             MemoryStream stream = new MemoryStream();
             BinaryWriter writer = new BinaryWriter(stream);
             FColor color = new FColor(0.1f, 0.3f, 0.7f, 1.0f);
-            color.write(writer);
+            color.Write(writer);
 
             byte[] actual = stream.ToArray();
             Assert.AreEqual(actual, expected);

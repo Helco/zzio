@@ -9,8 +9,8 @@ namespace zzio.effect.parts
     [System.Serializable]
     public class Models : IEffectPart
     {
-        public EffectPartType Type { get { return EffectPartType.Models; } }
-        public string Name { get { return name; } }
+        public EffectPartType Type => EffectPartType.Models;
+        public string Name => name;
 
         public uint
             phase1 = 1000,
@@ -44,8 +44,8 @@ namespace zzio.effect.parts
             phase1 = r.ReadUInt32();
             phase2 = r.ReadUInt32();
             rotationSpeed = r.ReadSingle();
-            rotationAxis = Vector.read(r);
-            scaleSpeed = Vector.read(r);
+            rotationAxis = Vector.ReadNew(r);
+            scaleSpeed = Vector.ReadNew(r);
             texShift = r.ReadSingle();
             modelName = r.ReadSizedCString(32);
             ignoreHead = r.ReadBoolean();

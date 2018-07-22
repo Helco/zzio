@@ -18,7 +18,7 @@ namespace zzio.rwbs
         {
             SectionId structSectionId;
             UInt32 structSize;
-            Section.readHead(stream, out structSectionId, out structSize, out structVersion);
+            Section.ReadHead(stream, out structSectionId, out structSize, out structVersion);
             if (structSectionId != SectionId.Struct)
                 throw new InvalidDataException("Struct list section does not contain struct section");
             

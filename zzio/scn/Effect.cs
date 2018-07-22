@@ -29,7 +29,7 @@ namespace zzio.scn
         public UInt32 param;
         public string effectFile;
 
-        public void read(Stream stream)
+        public void Read(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream);
             idx = reader.ReadUInt32();
@@ -44,29 +44,29 @@ namespace zzio.scn
                 case EffectType.Unknown6:
                 case EffectType.Unknown10:
                     param = reader.ReadUInt32();
-                    v1 = Vector.read(reader);
-                    v2 = Vector.read(reader);
+                    v1 = Vector.ReadNew(reader);
+                    v2 = Vector.ReadNew(reader);
                     break;
                 case EffectType.Unknown4:
                     param = reader.ReadUInt32();
-                    v1 = Vector.read(reader);
+                    v1 = Vector.ReadNew(reader);
                     break;
                 case EffectType.Unknown7:
                     effectFile = reader.ReadZString();
-                    v1 = Vector.read(reader);
+                    v1 = Vector.ReadNew(reader);
                     break;
                 case EffectType.Unknown13:
                     effectFile = reader.ReadZString();
-                    v1 = Vector.read(reader);
-                    v2 = Vector.read(reader);
-                    v3 = Vector.read(reader);
+                    v1 = Vector.ReadNew(reader);
+                    v2 = Vector.ReadNew(reader);
+                    v3 = Vector.ReadNew(reader);
                     param = reader.ReadUInt32();
                     break;
                 default: { throw new InvalidDataException("Invalid effect type"); }
             }
         }
 
-        public void write(Stream stream)
+        public void Write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(idx);
@@ -78,22 +78,22 @@ namespace zzio.scn
                 case EffectType.Unknown6:
                 case EffectType.Unknown10:
                     writer.Write(param);
-                    v1.write(writer);
-                    v2.write(writer);
+                    v1.Write(writer);
+                    v2.Write(writer);
                     break;
                 case EffectType.Unknown4:
                     writer.Write(param);
-                    v1.write(writer);
+                    v1.Write(writer);
                     break;
                 case EffectType.Unknown7:
                     writer.WriteZString(effectFile);
-                    v1.write(writer);
+                    v1.Write(writer);
                     break;
                 case EffectType.Unknown13:
                     writer.WriteZString(effectFile);
-                    v1.write(writer);
-                    v2.write(writer);
-                    v3.write(writer);
+                    v1.Write(writer);
+                    v2.Write(writer);
+                    v3.Write(writer);
                     writer.Write(param);
                     break;
             }

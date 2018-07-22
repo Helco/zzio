@@ -8,7 +8,7 @@ namespace zzio.primitives
     public struct UID
     {
         public readonly UInt32 raw;
-        public int Module { get { return (int)(raw % 16); } }
+        public int Module => (int)(raw % 16);
 
         public UID(UInt32 raw = 0)
         {

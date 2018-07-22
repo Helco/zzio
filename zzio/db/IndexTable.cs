@@ -11,7 +11,7 @@ namespace zzio.db
         public string[] columnNames = new string[0];
         public UInt32[] columnNumbers = new UInt32[0];
 
-        public int ColumnCount { get { return columnNames.Length; } }
+        public int ColumnCount => columnNames.Length;
 
         public void Read(Stream stream)
         {

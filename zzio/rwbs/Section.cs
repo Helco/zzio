@@ -39,7 +39,7 @@ namespace zzio.rwbs
         protected abstract void readBody(Stream stream);
         protected abstract void writeBody(Stream stream);
 
-        public static void readHead(Stream stream, out SectionId sectionId, out UInt32 size, out UInt32 version)
+        public static void ReadHead(Stream stream, out SectionId sectionId, out UInt32 size, out UInt32 version)
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
             sectionId = EnumUtils.intToEnum<SectionId>(reader.ReadInt32());
@@ -47,7 +47,7 @@ namespace zzio.rwbs
             version = reader.ReadUInt32();
         }
 
-        public static Section createSection(SectionId id)
+        public static Section CreateSection(SectionId id)
         {
             if (sectionTypeCtors.ContainsKey(id))
                 return sectionTypeCtors[id]();
@@ -55,11 +55,11 @@ namespace zzio.rwbs
                 return new UnknownSection(id);
         }
 
-        public void read(Stream stream)
+        public void Read(Stream stream)
         {
             SectionId readSectionId;
             UInt32 readSize, readVersion;
-            readHead(stream, out readSectionId, out readSize, out readVersion);
+            ReadHead(stream, out readSectionId, out readSize, out readVersion);
 
             if (readSectionId != sectionId) {
                 String msg = String.Format("Trying to read a \"{0}\" from a \"{1}\"", readSectionId, sectionId);
@@ -71,7 +71,7 @@ namespace zzio.rwbs
             readBody(rangeStream);
         }
 
-        public void write(Stream stream, ListSection parent = null)
+        public void Write(Stream stream, ListSection parent = null)
         {
             BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
             writer.Write((Int32)sectionId);
@@ -87,22 +87,22 @@ namespace zzio.rwbs
             stream.Seek(afterBodyPos, SeekOrigin.Begin);
         }
 
-        public static Section readNew(Stream stream, ListSection parent = null)
+        public static Section ReadNew(Stream stream, ListSection parent = null)
         {
             SectionId sectionId;
             UInt32 size, version;
             long oldPosition = stream.Position;
-            readHead(stream, out sectionId, out size, out version);
+            ReadHead(stream, out sectionId, out size, out version);
             stream.Seek(oldPosition, SeekOrigin.Begin);
             long afterPosition = oldPosition + 12 + size;
 
-            Section section = createSection(sectionId);
+            Section section = CreateSection(sectionId);
             section.parent = parent;
-            section.read(stream);
+            section.Read(stream);
             return section;
         }
 
-        public ListSection findParentById(SectionId sectionId)
+        public ListSection FindParentById(SectionId sectionId)
         {
             ListSection current = parent;
             while (current != null)
@@ -114,6 +114,6 @@ namespace zzio.rwbs
             return null;
         }
 
-        public abstract Section findChildById(SectionId sectionId, bool recursive = true);
+        public abstract Section FindChildById(SectionId sectionId, bool recursive = true);
     }
 }

@@ -41,7 +41,7 @@ namespace zzio.scn
         public string date, time;
         public UInt32 year, vv2;
 
-        public void read(Stream stream)
+        public void Read(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
             author = reader.ReadZString();
@@ -55,7 +55,7 @@ namespace zzio.scn
             vv2 = reader.ReadUInt32();
         }
 
-        public void write(Stream stream)
+        public void Write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
             writer.WriteZString(author);

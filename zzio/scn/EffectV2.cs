@@ -29,7 +29,7 @@ namespace zzio.scn
         public UInt32 param;
         public string s;
 
-        public void read(Stream stream)
+        public void Read(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
             idx = reader.ReadUInt32();
@@ -47,24 +47,24 @@ namespace zzio.scn
                 case (EffectV2Type.Unknown6):
                 case (EffectV2Type.Unknown10):
                     param = reader.ReadUInt32();
-                    v1 = Vector.read(reader);
-                    v2 = Vector.read(reader);
+                    v1 = Vector.ReadNew(reader);
+                    v2 = Vector.ReadNew(reader);
                     break;
                 case (EffectV2Type.Snowflakes):
                     param = reader.ReadUInt32();
                     break;
                 case (EffectV2Type.Unknown13):
                     s = reader.ReadZString();
-                    v1 = Vector.read(reader);
-                    v2 = Vector.read(reader);
-                    v3 = Vector.read(reader);
+                    v1 = Vector.ReadNew(reader);
+                    v2 = Vector.ReadNew(reader);
+                    v3 = Vector.ReadNew(reader);
                     param = reader.ReadUInt32();
                     break;
                 default: { throw new InvalidDataException("Invalid effect v2 type"); }
             }
         }
 
-        public void write(Stream stream)
+        public void Write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
             writer.Write(idx);
@@ -80,17 +80,17 @@ namespace zzio.scn
                 case EffectV2Type.Unknown6:
                 case EffectV2Type.Unknown10:
                     writer.Write(param);
-                    v1.write(writer);
-                    v2.write(writer);
+                    v1.Write(writer);
+                    v2.Write(writer);
                     break;
                 case EffectV2Type.Snowflakes:
                     writer.Write(param);
                     break;
                 case EffectV2Type.Unknown13:
                     writer.WriteZString(s);
-                    v1.write(writer);
-                    v2.write(writer);
-                    v3.write(writer);
+                    v1.Write(writer);
+                    v2.Write(writer);
+                    v3.Write(writer);
                     writer.Write(param);
                     break;
             }

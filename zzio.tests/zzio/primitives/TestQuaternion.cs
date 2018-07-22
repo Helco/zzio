@@ -27,7 +27,7 @@ namespace zzio.tests.primitives {
         public void read() {
             MemoryStream stream = new MemoryStream(expected, false);
             BinaryReader reader = new BinaryReader(stream);
-            Quaternion quat = Quaternion.read(reader);
+            Quaternion quat = Quaternion.ReadNew(reader);
             Assert.AreEqual(-345.0f, quat.x);
             Assert.AreEqual(678.0f, quat.y);
             Assert.AreEqual(23.8f, quat.z);
@@ -39,7 +39,7 @@ namespace zzio.tests.primitives {
             MemoryStream stream = new MemoryStream();
             BinaryWriter writer = new BinaryWriter(stream);
             Quaternion quat = new Quaternion(-345.0f, 678.0f, 23.8f, 89.12f);
-            quat.write(writer);
+            quat.Write(writer);
 
             byte[] actual = stream.ToArray();
             Assert.AreEqual(actual, expected);

@@ -8,8 +8,8 @@ namespace zzio.effect.parts
     [System.Serializable]
     public class Sound : IEffectPart
     {
-        public EffectPartType Type { get { return EffectPartType.Sound; } }
-        public string Name { get { return name; } }
+        public EffectPartType Type => EffectPartType.Sound;
+        public string Name => name;
 
         public uint
             volume = 100;

@@ -16,7 +16,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWAtomic : StructSection
     {
-        public override SectionId sectionId { get { return SectionId.Atomic; } }
+        public override SectionId sectionId => SectionId.Atomic;
 
         public UInt32 frameIndex, geometryIndex;
         public AtomicFlags flags;

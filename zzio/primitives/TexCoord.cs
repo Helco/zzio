@@ -14,7 +14,7 @@ namespace zzio.primitives
             this.v = v;
         }
 
-        public static TexCoord read(BinaryReader r)
+        public static TexCoord ReadNew(BinaryReader r)
         {
             TexCoord t;
             t.u = r.ReadSingle();
@@ -22,7 +22,7 @@ namespace zzio.primitives
             return t;
         }
 
-        public void write(BinaryWriter w)
+        public void Write(BinaryWriter w)
         {
             w.Write(u);
             w.Write(v);

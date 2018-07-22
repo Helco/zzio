@@ -24,7 +24,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWBinMeshPLG : Section
     {
-        public override SectionId sectionId { get { return SectionId.BinMeshPLG; } }
+        public override SectionId sectionId => SectionId.BinMeshPLG;
 
         public BinMeshType type;
         public UInt32 totalIndexCount;
@@ -64,7 +64,7 @@ namespace zzio.rwbs
             }
         }
 
-        public override Section findChildById(SectionId sectionId, bool recursive)
+        public override Section FindChildById(SectionId sectionId, bool recursive)
         {
             return null;
         }

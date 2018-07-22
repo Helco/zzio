@@ -33,7 +33,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWTexture : StructSection
     {
-        public override SectionId sectionId { get { return SectionId.Texture; } }
+        public override SectionId sectionId => SectionId.Texture;
 
         public TextureFilterMode filterMode;
         public TextureAddressingMode uAddressingMode;

@@ -17,16 +17,16 @@ namespace zzio
         {
             return new AnimationKeyFrame
             {
-                rot = Quaternion.read(reader),
-                pos = Vector.read(reader),
+                rot = Quaternion.ReadNew(reader),
+                pos = Vector.ReadNew(reader),
                 time = reader.ReadSingle()
             };
         }
 
         public void Write(BinaryWriter writer)
         {
-            rot.write(writer);
-            pos.write(writer);
+            rot.Write(writer);
+            pos.Write(writer);
             writer.Write(time);
         }
     }

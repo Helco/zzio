@@ -46,11 +46,11 @@ namespace zzio.utils
                 parent.Close();
         }
 
-        public override bool CanRead { get { return parent.CanRead; } }
-        public override bool CanWrite { get { return canWrite; } }
-        public override bool CanSeek { get { return parent.CanSeek; } }
-        public override bool CanTimeout { get { return parent.CanTimeout; } }
-        public override long Length { get { return length; } }
+        public override bool CanRead => parent.CanRead;
+        public override bool CanWrite => canWrite;
+        public override bool CanSeek => parent.CanSeek;
+        public override bool CanTimeout => parent.CanTimeout;
+        public override long Length => length;
 
         public override long Position
         {

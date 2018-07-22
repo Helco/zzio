@@ -9,7 +9,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWMorphPLG : Section
     {
-        public override SectionId sectionId { get { return SectionId.MorphPLG; } }
+        public override SectionId sectionId => SectionId.MorphPLG;
 
         public UInt32 morphTargetIndex;
 
@@ -25,7 +25,7 @@ namespace zzio.rwbs
             writer.Write(morphTargetIndex);
         }
 
-        public override Section findChildById(SectionId sectionId, bool recursive)
+        public override Section FindChildById(SectionId sectionId, bool recursive)
         {
             return null;
         }

@@ -16,30 +16,30 @@ namespace zzio.scn
         public UInt32 ii;
         public byte c;
 
-        public void read(Stream stream)
+        public void Read(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
             idx = reader.ReadUInt32();
             type = reader.ReadUInt32();
-            v = Vector.read(reader);
-            color = IColor.read(reader);
+            v = Vector.ReadNew(reader);
+            color = IColor.ReadNew(reader);
             if (type == 1)
-                vv = Vector.read(reader);
+                vv = Vector.ReadNew(reader);
             else
                 vv = new Vector();
             ii = reader.ReadUInt32();
             c = reader.ReadByte();
         }
 
-        public void write(Stream stream)
+        public void Write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
             writer.Write(idx);
             writer.Write(type);
-            v.write(writer);
-            color.write(writer);
+            v.Write(writer);
+            color.Write(writer);
             if (type == 1)
-                vv.write(writer);
+                vv.Write(writer);
             writer.Write(ii);
             writer.Write(c);
         }

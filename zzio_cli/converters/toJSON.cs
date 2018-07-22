@@ -102,7 +102,7 @@ namespace zzio.cli.converters
         public FileType TypeTo { get { return FileType.JSON; } }
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
-            var obj = zzio.rwbs.Section.readNew(from);
+            var obj = zzio.rwbs.Section.ReadNew(from);
             byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
             to.Write(buffer, 0, buffer.Length);
         }
@@ -114,7 +114,7 @@ namespace zzio.cli.converters
         public FileType TypeTo { get { return FileType.JSON; } }
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
-            var obj = zzio.rwbs.Section.readNew(from);
+            var obj = zzio.rwbs.Section.ReadNew(from);
             byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
             to.Write(buffer, 0, buffer.Length);
         }
@@ -128,7 +128,7 @@ namespace zzio.cli.converters
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var obj = new scn.Scene();
-            obj.read(from, false);
+            obj.Read(from, false);
             byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
             to.Write(buffer, 0, buffer.Length);
         }

@@ -25,7 +25,7 @@ namespace zzio.tests.primitives {
         public void read() {
             MemoryStream stream = new MemoryStream(expected, false);
             BinaryReader reader = new BinaryReader(stream);
-            Vector vec = Vector.read(reader);
+            Vector vec = Vector.ReadNew(reader);
             Assert.AreEqual(-345.0f, vec.x);
             Assert.AreEqual(678.0f, vec.y);
             Assert.AreEqual(23.8f, vec.z);
@@ -36,7 +36,7 @@ namespace zzio.tests.primitives {
             MemoryStream stream = new MemoryStream();
             BinaryWriter writer = new BinaryWriter(stream);
             Vector vec = new Vector(-345.0f, 678.0f, 23.8f);
-            vec.write(writer);
+            vec.Write(writer);
 
             byte[] actual = stream.ToArray();
             Assert.AreEqual(actual, expected);

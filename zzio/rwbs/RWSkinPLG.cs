@@ -28,7 +28,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWSkinPLG : Section
     {
-        public override SectionId sectionId { get { return SectionId.SkinPLG; } }
+        public override SectionId sectionId => SectionId.SkinPLG;
 
         public byte[,] vertexIndices = new byte[0,0]; // 4 per vertex
         public float[,] vertexWeights = new float[0,0]; // 4 per vertex
@@ -60,13 +60,13 @@ namespace zzio.rwbs
                 bones[i].idx = reader.ReadUInt32();
                 bones[i].type = EnumUtils.intToEnum<BoneType>(reader.ReadInt32());
 
-                bones[i].right = Vector.read(reader);
+                bones[i].right = Vector.ReadNew(reader);
                 bones[i].p1 = reader.ReadUInt32();
-                bones[i].up = Vector.read(reader);
+                bones[i].up = Vector.ReadNew(reader);
                 bones[i].p2 = reader.ReadUInt32();
-                bones[i].at = Vector.read(reader);
+                bones[i].at = Vector.ReadNew(reader);
                 bones[i].p3 = reader.ReadUInt32();
-                bones[i].pos = Vector.read(reader);
+                bones[i].pos = Vector.ReadNew(reader);
                 bones[i].p4 = reader.ReadUInt32();
             }
         }
@@ -96,18 +96,18 @@ namespace zzio.rwbs
                 writer.Write(b.idx);
                 writer.Write((int)b.type);
 
-                b.right.write(writer);
+                b.right.Write(writer);
                 writer.Write(b.p1);
-                b.up.write(writer);
+                b.up.Write(writer);
                 writer.Write(b.p2);
-                b.at.write(writer);
+                b.at.Write(writer);
                 writer.Write(b.p3);
-                b.pos.write(writer);
+                b.pos.Write(writer);
                 writer.Write(b.p4);
             }
         }
 
-        public override Section findChildById(SectionId sectionId, bool recursive)
+        public override Section FindChildById(SectionId sectionId, bool recursive)
         {
             return null;
         }

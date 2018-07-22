@@ -5,7 +5,7 @@ namespace zzio.scn
 {
     public interface ISceneSection
     {
-        void read(Stream stream);
-        void write(Stream stream);
+        void Read(Stream stream);
+        void Write(Stream stream);
     }
 }

@@ -10,7 +10,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWPlaneSection : StructSection
     {
-        public override SectionId sectionId { get { return SectionId.PlaneSection; } }
+        public override SectionId sectionId => SectionId.PlaneSection;
 
         public UInt32 sectorType; // unknown enum
         public float value, leftValue, rightValue;

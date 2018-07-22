@@ -8,8 +8,8 @@ namespace zzio.effect.parts
     [System.Serializable]
     public class ElectricBolt : IEffectPart
     {
-        public EffectPartType Type { get { return EffectPartType.ElectricBolt; } }
-        public string Name { get { return name; } }
+        public EffectPartType Type => EffectPartType.ElectricBolt;
+        public string Name => name;
 
         public uint
             phase1 = 1000,

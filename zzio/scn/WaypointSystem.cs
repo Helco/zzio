@@ -31,7 +31,7 @@ namespace zzio.scn
         public WaypointData[] waypointData;
         public WaypointInnerData[] inner2data1;
 
-        public void read(Stream stream)
+        public void Read(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
             version = reader.ReadUInt32();
@@ -46,7 +46,7 @@ namespace zzio.scn
                 d[i].ii1 = reader.ReadUInt32();
                 if (version >= 4)
                     d[i].ii1ext = reader.ReadUInt32();
-                d[i].v1 = Vector.read(reader);
+                d[i].v1 = Vector.ReadNew(reader);
 
                 UInt32 ci1 = reader.ReadUInt32();
                 d[i].innerdata1 = new UInt32[ci1];
@@ -88,7 +88,7 @@ namespace zzio.scn
             UInt32 mustBeFFFF = reader.ReadUInt32();
         }
 
-        public void write(Stream stream)
+        public void Write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
             writer.Write(version);
@@ -102,7 +102,7 @@ namespace zzio.scn
                 writer.Write(d[i].ii1);
                 if (version >= 4)
                     writer.Write(d[i].ii1ext);
-                d[i].v1.write(writer);
+                d[i].v1.Write(writer);
 
                 writer.Write(d[i].innerdata1.Length);
                 for (int j = 0; j < d[i].innerdata1.Length; j++)

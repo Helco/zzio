@@ -9,7 +9,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWGeometryList : StructSection
     {
-        public override SectionId sectionId { get { return SectionId.GeometryList; } }
+        public override SectionId sectionId => SectionId.GeometryList;
 
         public UInt32 geometryCount;
 

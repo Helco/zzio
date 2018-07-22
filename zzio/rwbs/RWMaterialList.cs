@@ -9,7 +9,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWMaterialList : StructSection
     {
-        public override SectionId sectionId { get { return SectionId.MaterialList; } }
+        public override SectionId sectionId => SectionId.MaterialList;
 
         public Int32[] materialIndices = new Int32[0];
 

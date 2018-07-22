@@ -10,7 +10,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWAtomicSection : StructSection
     {
-        public override SectionId sectionId { get { return SectionId.AtomicSection; } }
+        public override SectionId sectionId => SectionId.AtomicSection;
 
         public UInt32 matIdBase;
         public Vector bbox1, bbox2;
@@ -24,7 +24,7 @@ namespace zzio.rwbs
 
         protected override void readStruct(Stream stream)
         {
-            RWWorld world = findParentById(SectionId.World) as RWWorld;
+            RWWorld world = FindParentById(SectionId.World) as RWWorld;
             if (world == null)
                 throw new InvalidDataException("RWAtomicSection has to be child of RWWorld");
             GeometryFormat worldFormat = world.format;
@@ -33,26 +33,26 @@ namespace zzio.rwbs
             matIdBase = reader.ReadUInt32();
             triangles = new Triangle[reader.ReadUInt32()];
             vertices = new Vector[reader.ReadUInt32()];
-            bbox1 = Vector.read(reader);
-            bbox2 = Vector.read(reader);
+            bbox1 = Vector.ReadNew(reader);
+            bbox2 = Vector.ReadNew(reader);
             reader.ReadUInt32(); // unused
             reader.ReadUInt32();
 
             for (int i = 0; i < vertices.Length; i++)
-                vertices[i] = Vector.read(reader);
+                vertices[i] = Vector.ReadNew(reader);
 
             if ((worldFormat & GeometryFormat.Normals) > 0)
             {
                 normals = new Normal[vertices.Length];
                 for (int i = 0; i < normals.Length; i++)
-                    normals[i] = Normal.read(reader);
+                    normals[i] = Normal.ReadNew(reader);
             }
 
             if ((worldFormat & GeometryFormat.Prelit) > 0)
             {
                 colors = new IColor[vertices.Length];
                 for (int i = 0; i < colors.Length; i++)
-                    colors[i] = IColor.read(reader);   
+                    colors[i] = IColor.ReadNew(reader);   
             }
 
             if ((worldFormat & GeometryFormat.Textured) > 0 ||
@@ -60,23 +60,23 @@ namespace zzio.rwbs
             {
                 texCoords1 = new TexCoord[vertices.Length];
                 for (int i = 0; i < texCoords1.Length; i++)
-                    texCoords1[i] = TexCoord.read(reader);
+                    texCoords1[i] = TexCoord.ReadNew(reader);
             }
 
             if ((worldFormat & GeometryFormat.Textured2) > 0)
             {
                 texCoords2 = new TexCoord[vertices.Length];
                 for (int i = 0; i < texCoords2.Length; i++)
-                    texCoords2[i] = TexCoord.read(reader);
+                    texCoords2[i] = TexCoord.ReadNew(reader);
             }
 
             for (int i = 0; i < triangles.Length; i++)
-                triangles[i] = Triangle.read(reader);
+                triangles[i] = Triangle.ReadNew(reader);
         }
 
         protected override void writeStruct(Stream stream)
         {
-            RWWorld world = findParentById(SectionId.World) as RWWorld;
+            RWWorld world = FindParentById(SectionId.World) as RWWorld;
             if (world == null)
                 throw new InvalidDataException("RWAtomicSection has to be child of RWWorld");
             GeometryFormat worldFormat = world.format;
@@ -85,41 +85,41 @@ namespace zzio.rwbs
             writer.Write(matIdBase);
             writer.Write(triangles.Length);
             writer.Write(vertices.Length);
-            bbox1.write(writer);
-            bbox2.write(writer);
+            bbox1.Write(writer);
+            bbox2.Write(writer);
             writer.Write(0U);
             writer.Write(0U);
             
             foreach (Vector v in vertices)
-                v.write(writer);
+                v.Write(writer);
 
             if ((worldFormat & GeometryFormat.Normals) > 0)
             {
                 foreach (Normal n in normals)
-                    n.write(writer);
+                    n.Write(writer);
             }
 
             if ((worldFormat & GeometryFormat.Prelit) > 0)
             {
                 foreach (IColor c in colors)
-                    c.write(writer);
+                    c.Write(writer);
             }
 
             if ((worldFormat & GeometryFormat.Textured) > 0 ||
                 (worldFormat & GeometryFormat.Textured2) > 0)
             {
                 foreach (TexCoord t in texCoords1)
-                    t.write(writer);
+                    t.Write(writer);
             }
 
             if ((worldFormat & GeometryFormat.Textured2) > 0)
             {
                 foreach (TexCoord t in texCoords2)
-                    t.write(writer);
+                    t.Write(writer);
             }
 
             foreach (Triangle t in triangles)
-                t.write(writer);
+                t.Write(writer);
         }
     }
 }

@@ -17,7 +17,7 @@ namespace zzio.primitives
             this.p = p;
         }
 
-        public static Normal read(BinaryReader r)
+        public static Normal ReadNew(BinaryReader r)
         {
             Normal n;
             n.x = r.ReadByte();
@@ -27,7 +27,7 @@ namespace zzio.primitives
             return n;
         }
 
-        public void write(BinaryWriter w)
+        public void Write(BinaryWriter w)
         {
             w.Write(x);
             w.Write(y);

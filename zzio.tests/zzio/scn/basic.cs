@@ -41,7 +41,7 @@ namespace zzio.tests.scn
         {
             MemoryStream stream = new MemoryStream(sampleData, false);
             Scene scene = new Scene();
-            scene.read(stream);
+            scene.Read(stream);
             testScene(scene);
         }
     }

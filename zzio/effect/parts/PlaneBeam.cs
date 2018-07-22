@@ -8,8 +8,8 @@ namespace zzio.effect.parts
     [System.Serializable]
     public class PlaneBeam : IEffectPart
     {
-        public EffectPartType Type { get { return EffectPartType.PlaneBeam; } }
-        public string Name { get { return name; } }
+        public EffectPartType Type => EffectPartType.PlaneBeam;
+        public string Name => name;
 
         public uint
             phase1 = 1000,

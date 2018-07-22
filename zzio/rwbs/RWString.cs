@@ -9,7 +9,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWString : Section
     {
-        public override SectionId sectionId { get { return SectionId.String; } }
+        public override SectionId sectionId => SectionId.String;
         public string value = "";
 
         protected override void readBody(Stream stream)
@@ -26,7 +26,7 @@ namespace zzio.rwbs
             writer.Write(buffer);
         }
 
-        public override Section findChildById(SectionId sectionId, bool recursive)
+        public override Section FindChildById(SectionId sectionId, bool recursive)
         {
             return null;
         }

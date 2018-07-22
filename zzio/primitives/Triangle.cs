@@ -16,7 +16,7 @@ namespace zzio.primitives
             this.v3 = v3;
         }
 
-        public static Triangle read(BinaryReader r)
+        public static Triangle ReadNew(BinaryReader r)
         {
             Triangle t;
             t.m = r.ReadUInt16();
@@ -26,7 +26,7 @@ namespace zzio.primitives
             return t;
         }
 
-        public void write(BinaryWriter w)
+        public void Write(BinaryWriter w)
         {
             w.Write(m);
             w.Write(v1);

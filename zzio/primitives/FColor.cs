@@ -16,7 +16,7 @@ namespace zzio.primitives
             this.a = a;
         }
 
-        public static FColor read(BinaryReader r)
+        public static FColor ReadNew(BinaryReader r)
         {
             FColor c;
             c.r = r.ReadSingle();
@@ -26,7 +26,7 @@ namespace zzio.primitives
             return c;
         }
 
-        public void write(BinaryWriter w)
+        public void Write(BinaryWriter w)
         {
             w.Write(r);
             w.Write(g);

@@ -42,9 +42,9 @@ namespace zzio.effect
                     r.BaseStream.Seek(2 * 12, SeekOrigin.Current);
                 } },
                 { "Effect_Combiner_Form", (eff, r) => {
-                    eff.upwards = Vector.read(r);
-                    eff.forwards = Vector.read(r);
-                    eff.position = Vector.read(r);
+                    eff.upwards = Vector.ReadNew(r);
+                    eff.forwards = Vector.ReadNew(r);
+                    eff.position = Vector.ReadNew(r);
                 } }
             };
 

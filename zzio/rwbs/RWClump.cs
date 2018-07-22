@@ -9,7 +9,7 @@ namespace zzio.rwbs
     [Serializable]
     public class RWClump : StructSection
     {
-        public override SectionId sectionId { get { return SectionId.Clump; } }
+        public override SectionId sectionId => SectionId.Clump;
 
         public UInt32 atomicCount, lightCount, camCount;
 

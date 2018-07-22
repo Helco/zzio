@@ -60,7 +60,7 @@ namespace zzio.tests.rwbs
         public void read()
         {
             MemoryStream stream = new MemoryStream(sampleData, false);
-            Section section = Section.readNew(stream);
+            Section section = Section.ReadNew(stream);
             testSection(section);
         }
     }

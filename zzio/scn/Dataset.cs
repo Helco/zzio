@@ -28,7 +28,7 @@ namespace zzio.scn
         public bool unk5, unk6;
         public string s1, s2;
 
-        public void read(Stream stream)
+        public void Read(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
             UInt32 dataSize = reader.ReadUInt32();
@@ -52,7 +52,7 @@ namespace zzio.scn
             s2 = reader.ReadZString();
         }
 
-        public void write(Stream stream)
+        public void Write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
             writer.Write(0x24);

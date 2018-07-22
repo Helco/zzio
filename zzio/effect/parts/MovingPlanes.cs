@@ -8,8 +8,8 @@ namespace zzio.effect.parts
     [System.Serializable]
     public class MovingPlanes : IEffectPart
     {
-        public EffectPartType Type { get { return EffectPartType.MovingPlanes; } }
-        public string Name { get { return name; } }
+        public EffectPartType Type => EffectPartType.MovingPlanes;
+        public string Name => name;
 
         public uint
             phase1 = 1000,
