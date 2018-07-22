@@ -19,7 +19,7 @@ namespace zzio.rwbs
 
         protected override void readStruct(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
+            BinaryReader reader = new BinaryReader(stream);
             flags = reader.ReadUInt32();
             color = IColor.ReadNew(reader);
             reader.ReadUInt32(); // unused
@@ -34,7 +34,7 @@ namespace zzio.rwbs
 
         protected override void writeStruct(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(flags);
             writer.Write((UInt32)0);
             color.Write(writer);

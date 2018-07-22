@@ -33,7 +33,7 @@ namespace zzio.scn
 
         public void Read(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
+            BinaryReader reader = new BinaryReader(stream);
             version = reader.ReadUInt32();
             UInt32 mustBeZero = reader.ReadUInt32();
 
@@ -90,7 +90,7 @@ namespace zzio.scn
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(version);
             writer.Write(0);
             if (version >= 5)

@@ -18,7 +18,7 @@ namespace zzio.rwbs
         {
             SectionId structSectionId;
             UInt32 structSize;
-            Section.ReadHead(stream, out structSectionId, out structSize, out structVersion);
+            Section.ReadHead(new GatekeeperStream(stream), out structSectionId, out structSize, out structVersion);
             if (structSectionId != SectionId.Struct)
                 throw new InvalidDataException("Struct list section does not contain struct section");
             
@@ -32,13 +32,13 @@ namespace zzio.rwbs
 
         protected override void writeBody(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            BinaryWriter writer = new BinaryWriter(stream);
             writer.Write((Int32)sectionId);
             long sectionSizePos = stream.Position;
             writer.Write((UInt32)0);
             writer.Write(version);
 
-            writeStruct(stream);
+            writeStruct(new GatekeeperStream(stream));
 
             long afterStructPos = stream.Position;
             stream.Seek(sectionSizePos, SeekOrigin.Begin);

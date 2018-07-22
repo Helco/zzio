@@ -41,7 +41,7 @@ namespace zzio.rwbs
 
         public static void ReadHead(Stream stream, out SectionId sectionId, out UInt32 size, out UInt32 version)
         {
-            BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
+            BinaryReader reader = new BinaryReader(stream);
             sectionId = EnumUtils.intToEnum<SectionId>(reader.ReadInt32());
             size = reader.ReadUInt32();
             version = reader.ReadUInt32();
@@ -73,13 +73,13 @@ namespace zzio.rwbs
 
         public void Write(Stream stream, ListSection parent = null)
         {
-            BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            BinaryWriter writer = new BinaryWriter(stream);
             writer.Write((Int32)sectionId);
             long sectionSizePos = stream.Position;
             writer.Write((UInt32)0);
             writer.Write(version);
 
-            writeBody(stream);
+            writeBody(new GatekeeperStream(stream));
 
             long afterBodyPos = stream.Position;
             stream.Seek(sectionSizePos, SeekOrigin.Begin);

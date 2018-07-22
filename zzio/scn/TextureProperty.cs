@@ -14,14 +14,14 @@ namespace zzio.scn
 
         public void Read(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
+            BinaryReader reader = new BinaryReader(stream);
             fileName = reader.ReadZString();
             footstepType = reader.ReadInt32();
         }
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            BinaryWriter writer = new BinaryWriter(stream);
             writer.WriteZString(fileName);
             writer.Write(footstepType);
         }

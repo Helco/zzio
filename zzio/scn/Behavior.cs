@@ -14,14 +14,14 @@ namespace zzio.scn
 
         public void Read(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
+            BinaryReader reader = new BinaryReader(stream);
             type = EnumUtils.intToEnum<BehaviourType>(reader.ReadInt32());
             modelId = reader.ReadUInt32();
         }
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            BinaryWriter writer = new BinaryWriter(stream);
             writer.Write((int)type);
             writer.Write(modelId);
         }

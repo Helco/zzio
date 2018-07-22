@@ -14,14 +14,14 @@ namespace zzio.rwbs
 
         protected override void readBody(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
+            BinaryReader reader = new BinaryReader(stream);
             byte[] buffer = reader.ReadBytes((int)stream.Length);
             value = Encoding.UTF8.GetString(buffer).Replace("\u0000", "");
         }
 
         protected override void writeBody(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            BinaryWriter writer = new BinaryWriter(stream);
             byte[] buffer = Encoding.UTF8.GetBytes(value);
             writer.Write(buffer);
         }

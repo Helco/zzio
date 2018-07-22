@@ -29,7 +29,7 @@ namespace zzio.rwbs
                 throw new InvalidDataException("RWAtomicSection has to be child of RWWorld");
             GeometryFormat worldFormat = world.format;
 
-            BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
+            BinaryReader reader = new BinaryReader(stream);
             matIdBase = reader.ReadUInt32();
             triangles = new Triangle[reader.ReadUInt32()];
             vertices = new Vector[reader.ReadUInt32()];
@@ -81,7 +81,7 @@ namespace zzio.rwbs
                 throw new InvalidDataException("RWAtomicSection has to be child of RWWorld");
             GeometryFormat worldFormat = world.format;
 
-            BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(matIdBase);
             writer.Write(triangles.Length);
             writer.Write(vertices.Length);

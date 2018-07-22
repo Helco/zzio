@@ -18,13 +18,13 @@ namespace zzio.rwbs
             // there might be padding bytes, check if a header would fit
             while (streamLength - stream.Position > 12)
             {
-                children.Add(Section.ReadNew(stream, this));
+                children.Add(Section.ReadNew(new GatekeeperStream(stream), this));
             }
         }
 
         protected override void writeBody(Stream stream)
         {
-            children.ForEach((section) => section.Write(stream));
+            children.ForEach((section) => section.Write(new GatekeeperStream(stream)));
         }
 
         public override Section FindChildById(SectionId sectionId, bool recursive)

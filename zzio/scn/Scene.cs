@@ -39,7 +39,7 @@ namespace zzio
                 UInt32 count = reader.ReadUInt32();
                 T[] result = new T[count];
                 for (UInt32 i = 0; i < count; i++)
-                    (result[i] = ctor()).Read(reader.BaseStream);
+                    (result[i] = ctor()).Read(new GatekeeperStream(reader.BaseStream));
                 return result;
             }
 
@@ -52,10 +52,10 @@ namespace zzio
 
                 Dictionary<string, Action> sectionHandlers = new Dictionary<string, Action>()
                 {
-                    { "[Version]",           () => (version =          new Version()).Read(stream) },
-                    { "[Misc]",              () => (misc =             new Misc()).Read(stream) },
-                    { "[WaypointSystem]",    () => (waypointSystem =   new WaypointSystem()).Read(stream) },
-                    { "[Dataset]",           () => (dataset =          new Dataset()).Read(stream) },
+                    { "[Version]",           () => (version =          new Version()).Read(new GatekeeperStream(stream)) },
+                    { "[Misc]",              () => (misc =             new Misc()).Read(new GatekeeperStream(stream)) },
+                    { "[WaypointSystem]",    () => (waypointSystem =   new WaypointSystem()).Read(new GatekeeperStream(stream)) },
+                    { "[Dataset]",           () => (dataset =          new Dataset()).Read(new GatekeeperStream(stream)) },
                     { "[SceneOrigin]",       () => sceneOrigin =       Vector.ReadNew(reader) },
                     { "[Backdrop]",          () => backdropFile =      reader.ReadZString() },
                     { "[AmbientSound]",      () => ambientSound =      reader.ReadUInt32() },

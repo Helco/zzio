@@ -23,7 +23,7 @@ namespace zzio.rwbs
 
         protected override void readStruct(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
+            BinaryReader reader = new BinaryReader(stream);
             frameIndex = reader.ReadUInt32();
             geometryIndex = reader.ReadUInt32();
             flags = EnumUtils.intToFlags<AtomicFlags>(reader.ReadUInt32());
@@ -31,7 +31,7 @@ namespace zzio.rwbs
 
         protected override void writeStruct(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(frameIndex);
             writer.Write(geometryIndex);
             writer.Write((UInt32)flags);

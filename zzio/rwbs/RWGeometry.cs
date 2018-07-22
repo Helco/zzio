@@ -29,7 +29,7 @@ namespace zzio.rwbs
 
         protected override void readStruct(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
+            BinaryReader reader = new BinaryReader(stream);
             format = EnumUtils.intToEnum<GeometryFormat>(reader.ReadInt32());
             triangles = new Triangle[reader.ReadUInt32()];
             UInt32 vertexCount = reader.ReadUInt32();
@@ -95,7 +95,7 @@ namespace zzio.rwbs
 
         protected override void writeStruct(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(triangles.Length);
             int vertexCount = morphTargets.Length == 0 ? 0 : morphTargets[0].vertices.Length;
             writer.Write(vertexCount);

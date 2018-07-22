@@ -30,12 +30,12 @@ namespace zzio.scn
         public LightType type;
         public FColor color;
         public LightFlags flags;
-        public Vector pos, vec; //vec is either dir or a lookAt point
+        public Vector pos, vec; // vec is either dir or a lookAt point
         public float radius;
 
         public void Read(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true);
+            BinaryReader reader = new BinaryReader(stream);
             idx = reader.ReadUInt32();
             type = EnumUtils.intToEnum<LightType>(reader.ReadInt32());
             color = FColor.ReadNew(reader);
@@ -63,7 +63,7 @@ namespace zzio.scn
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(idx);
             writer.Write((int)type);
             color.Write(writer);
