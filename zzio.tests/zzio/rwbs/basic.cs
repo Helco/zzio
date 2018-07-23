@@ -63,5 +63,19 @@ namespace zzio.tests.rwbs
             Section section = Section.ReadNew(stream);
             testSection(section);
         }
+
+        [Test]
+        public void write()
+        {
+            MemoryStream readStream = new MemoryStream(sampleData, false);
+            Section section = Section.ReadNew(readStream);
+
+            MemoryStream writeStream = new MemoryStream();
+            section.Write(writeStream);
+
+            MemoryStream rereadStream = new MemoryStream(writeStream.ToArray(), false);
+            Section rereadSection = Section.ReadNew(rereadStream);
+            testSection(rereadSection);
+        }
     }
 }
