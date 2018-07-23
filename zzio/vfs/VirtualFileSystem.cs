@@ -11,7 +11,8 @@ namespace zzio.vfs
         private static readonly Dictionary<string, Func<string, IResourcePool>> resourcePoolTypes =
             new Dictionary<string, Func<string, IResourcePool>>()
             {
-                { "file", (path) => new FileResourcePool(path) }
+                { "file", (path) => new FileResourcePool(path) },
+                { "pak",  (path) => new PAKResourcePool(path) }
             };
 
         private List<IResourcePool> pools = new List<IResourcePool>();
@@ -104,7 +105,9 @@ namespace zzio.vfs
                     pool.GetDirectoryContent(casePath.ToPOSIXString())
                 );
             }
-            return content.ToArray();
+            return content
+                .Select(filename => filename.ToLowerInvariant())
+                .ToArray();
         }
     }
 }
