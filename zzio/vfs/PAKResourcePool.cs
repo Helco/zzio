@@ -12,7 +12,7 @@ namespace zzio.vfs
 
         public PAKResourcePool(string archivePath)
         {
-            string[] parts = archivePath.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = archivePath.Split(new char[] { '?' }, StringSplitOptions.RemoveEmptyEntries);
             FileStream stream = new FileStream(parts[0], FileMode.Open, FileAccess.Read);
             archive = PAKArchive.ReadNew(stream);
             basePath = new FilePath(parts.Length > 1 ? parts[1] : "");

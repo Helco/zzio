@@ -14,7 +14,7 @@ namespace zzio.tests.vfs
             new FilePath(TestContext.CurrentContext.TestDirectory)
             .Combine("../../../resources/archive_sample.pak");
         private readonly static PAKResourcePool pool =
-            new PAKResourcePool(baseDir.ToPOSIXString() + ":../a");
+            new PAKResourcePool(baseDir.ToPOSIXString() + "?../a");
 
         [Test]
         public void getresourcetype()
