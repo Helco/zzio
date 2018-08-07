@@ -44,5 +44,21 @@ namespace zzio.tests.scn
             scene.Read(stream);
             testScene(scene);
         }
+
+        [Test]
+        public void write()
+        {
+            MemoryStream readStream = new MemoryStream(sampleData, false);
+            Scene scene = new Scene();
+            scene.Read(readStream);
+
+            MemoryStream writeStream = new MemoryStream();
+            scene.Write(writeStream);
+
+            MemoryStream rereadStream = new MemoryStream(writeStream.ToArray(), false);
+            Scene rereadScene = new Scene();
+            rereadScene.Read(rereadStream);
+            testScene(rereadScene);
+        }
     }
 }
