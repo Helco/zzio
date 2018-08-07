@@ -50,10 +50,11 @@ namespace zzio.effect
 
         public string description = "";
         public bool isLooping = false;
-        public Vector upwards = new Vector(),
+        public Vector
+            upwards = new Vector(),
             forwards = new Vector(),
             position = new Vector();
-        public IEffectPart[] parts = null;
+        public IEffectPart[] parts = new IEffectPart[0];
 
         public EffectCombiner() { }
 
