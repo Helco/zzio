@@ -89,20 +89,17 @@ namespace zzio
             // sort and interleave the keyframes
             var sortedMapping = boneFrames
                 .SelectMany((frameSet, boneI) =>
-                    frameSet.Select((frame, frameI) => (
-                        boneI: boneI,
-                        frameI: frameI
-                    ))
-                ).OrderBy(pair => boneFrames[pair.boneI][pair.frameI].time)
+                    frameSet.Select((frame, frameI) => new KeyValuePair<int, int>(boneI, frameI))
+                ).OrderBy(pair => boneFrames[pair.Key][pair.Value].time)
                 .ToArray();
             
             var lastParentOffsets = Enumerable.Repeat(-1, BoneCount).ToArray();
             for (int writtenI = 0; writtenI < sortedMapping.Length; writtenI++)
             {
                 var mapping = sortedMapping[writtenI];
-                boneFrames[mapping.boneI][mapping.frameI].Write(writer);
-                writer.Write(lastParentOffsets[mapping.boneI]);
-                lastParentOffsets[mapping.boneI] = writtenI * KEYFRAME_SIZE;
+                boneFrames[mapping.Key][mapping.Value].Write(writer);
+                writer.Write(lastParentOffsets[mapping.Key]);
+                lastParentOffsets[mapping.Key] = writtenI * KEYFRAME_SIZE;
             }
         }
     }
