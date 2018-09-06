@@ -23,7 +23,7 @@ namespace zzio.rwbs
         public GeometryFormat format;
         public float ambient, specular, diffuse;
         public IColor[] colors = new IColor[0];
-        public TexCoord[,] texCoords = new TexCoord[0, 0];
+        public TexCoord[][] texCoords = new TexCoord[0][];
         public Triangle[] triangles = new Triangle[0];
         public MorphTarget[] morphTargets = new MorphTarget[0];
 
@@ -54,11 +54,12 @@ namespace zzio.rwbs
                     if (texCount == 0)
                         texCount = ((format & GeometryFormat.Textured2) > 0 ? 2 : 1);
                     
-                    texCoords = new TexCoord[texCount, vertexCount];
+                    texCoords = new TexCoord[texCount][];
                     for (int i = 0; i < texCount; i++)
                     {
+                        texCoords[i] = new TexCoord[vertexCount];
                         for (int j = 0; j < vertexCount; j++)
-                            texCoords[i, j] = TexCoord.ReadNew(reader);
+                            texCoords[i][j] = TexCoord.ReadNew(reader);
                     }
                 }
 
@@ -75,7 +76,8 @@ namespace zzio.rwbs
             for (int i = 0; i < morphTargets.Length; i++) {
                 morphTargets[i].bsphereCenter = Vector.ReadNew(reader);
                 morphTargets[i].bsphereRadius = reader.ReadSingle();
-                morphTargets[i].normals = morphTargets[i].vertices = null;
+                morphTargets[i].vertices = new Vector[0];
+                morphTargets[i].normals = new Vector[0];
                 bool hasVertices = reader.ReadUInt32() > 0;
                 bool hasNormals = reader.ReadUInt32() > 0;
                 if (hasVertices)
@@ -122,7 +124,7 @@ namespace zzio.rwbs
                     for (int i = 0; i < texCount; i++)
                     {
                         for (int j = 0; j < vertexCount; j++)
-                            texCoords[i, j].Write(writer);
+                            texCoords[i][j].Write(writer);
                     }
                 }
 
@@ -139,8 +141,8 @@ namespace zzio.rwbs
             {
                 mt.bsphereCenter.Write(writer);
                 writer.Write(mt.bsphereRadius);
-                writer.Write((UInt32)(mt.vertices == null ? 0 : 1));
-                writer.Write((UInt32)(mt.normals == null ? 0 : 1));
+                writer.Write((UInt32)(mt.vertices.Length == 0 ? 0 : 1));
+                writer.Write((UInt32)(mt.normals.Length == 0 ? 0 : 1));
                 foreach (Vector v in mt.vertices)
                     v.Write(writer);
                 foreach (Vector n in mt.normals)
