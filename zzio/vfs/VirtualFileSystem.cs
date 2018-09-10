@@ -15,7 +15,7 @@ namespace zzio.vfs
                 { "pak",  (path) => new PAKResourcePool(path) }
             };
 
-        private List<IResourcePool> pools = new List<IResourcePool>();
+        protected List<IResourcePool> pools = new List<IResourcePool>();
 
         public void AddResourcePool(string type, string path)
         {
@@ -31,7 +31,7 @@ namespace zzio.vfs
 
         /// finds a case-insensitive resource in a (possibly) case-sensitive pool
         /// <returns>UB if `resourceType == NonExistant`</returns>
-        private static FilePath findResourceIn(string pathString, IResourcePool pool, out ResourceType resourceType)
+        protected static FilePath findResourceIn(string pathString, IResourcePool pool, out ResourceType resourceType)
         {
             FilePath path = new FilePath(pathString).Normalized;
             // naive try
@@ -65,7 +65,7 @@ namespace zzio.vfs
             return curPath;
         }
 
-        public ResourceType GetResourceType(string path)
+        public virtual ResourceType GetResourceType(string path)
         {
             foreach (IResourcePool pool in pools)
             {
@@ -77,7 +77,7 @@ namespace zzio.vfs
             return ResourceType.NonExistant;
         }
 
-        public Stream GetFileContent(string path)
+        public virtual Stream GetFileContent(string path)
         {
             foreach (IResourcePool pool in pools)
             {
@@ -92,7 +92,7 @@ namespace zzio.vfs
             return null;
         }
 
-        public string[] GetDirectoryContent(string path)
+        public virtual string[] GetDirectoryContent(string path)
         {
             IEnumerable<string> content = new HashSet<string>();
             foreach (IResourcePool pool in pools)

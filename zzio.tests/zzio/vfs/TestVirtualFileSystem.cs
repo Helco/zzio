@@ -8,11 +8,15 @@ namespace zzio.tests.vfs
     [TestFixture]
     public class TestVirtualFileSystem
     {
-        private readonly VirtualFileSystem vfs;
-        private readonly DummyResourcePool pool1;
-        private readonly DummyResourcePool pool2;
+        private static readonly VirtualFileSystem uncached;
+        private static readonly DummyResourcePool pool1;
+        private static readonly DummyResourcePool pool2;
+        private static readonly CachedVirtualFileSystem cached;
 
-        public TestVirtualFileSystem()
+        public static VirtualFileSystem[] testSystems => 
+            new VirtualFileSystem[] { uncached, cached };
+
+        static TestVirtualFileSystem()
         {
             pool1 = new DummyResourcePool(new string[]
             {
@@ -32,13 +36,17 @@ namespace zzio.tests.vfs
                 "b/a.txt"
             }, new byte[] { 5, 6, 7, 8 });
 
-            vfs = new VirtualFileSystem();
-            vfs.AddResourcePool(pool1);
-            vfs.AddResourcePool(pool2);
+            uncached = new VirtualFileSystem();
+            uncached.AddResourcePool(pool1);
+            uncached.AddResourcePool(pool2);
+
+            cached = new CachedVirtualFileSystem();
+            cached.AddResourcePool(pool1);
+            cached.AddResourcePool(pool2);
         }
 
-        [Test]
-        public void getresourcetype()
+        [Test, Combinatorial]
+        public void getresourcetype([ValueSource("testSystems")] VirtualFileSystem vfs)
         {
             Assert.AreEqual(ResourceType.File, vfs.GetResourceType("content.txt"));
             Assert.AreEqual(ResourceType.File, vfs.GetResourceType("a/d.txt"));
@@ -67,8 +75,8 @@ namespace zzio.tests.vfs
             Assert.AreEqual(-1, stream.ReadByte());
         }
 
-        [Test]
-        public void getfilecontent()
+        [Test, Combinatorial]
+        public void getfilecontent([ValueSource("testSystems")] VirtualFileSystem vfs)
         {
             testStream(new byte[] { 1, 2, 3, 4 }, vfs.GetFileContent("a/d.txt"));
             testStream(new byte[] { 1, 2, 3, 4 }, vfs.GetFileContent("c/a.txt"));
@@ -88,8 +96,8 @@ namespace zzio.tests.vfs
             Assert.IsNull(vfs.GetFileContent("a/../b/../d/e/j.txt"));
         }
 
-        [Test]
-        public void getdirectorycontent()
+        [Test, Combinatorial]
+        public void getdirectorycontent([ValueSource("testSystems")] VirtualFileSystem vfs)
         {
             string[] rootDirContent = new string[]
             {
