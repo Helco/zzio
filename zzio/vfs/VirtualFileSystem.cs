@@ -24,7 +24,7 @@ namespace zzio.vfs
             pools.Add(resourcePoolTypes[type](path));
         }
 
-        public void AddResourcePool(IResourcePool pool)
+        public virtual void AddResourcePool(IResourcePool pool)
         {
             pools.Add(pool);
         }
