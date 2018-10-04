@@ -69,7 +69,7 @@ namespace zzio.rwbs
                     triangles[i].v2 = reader.ReadUInt16();
                     triangles[i].v1 = reader.ReadUInt16();
                     triangles[i].m = reader.ReadUInt16();
-                    triangles[i].v1 = reader.ReadUInt16();
+                    triangles[i].v3 = reader.ReadUInt16();
                 }
             } // no native format
 
@@ -90,7 +90,7 @@ namespace zzio.rwbs
                 {
                     morphTargets[i].normals = new Vector[vertexCount];
                     for (uint j = 0; j < vertexCount; j++)
-                        morphTargets[i].vertices[j] = Vector.ReadNew(reader);
+                        morphTargets[i].normals[j] = Vector.ReadNew(reader);
                 }
             }
         }
