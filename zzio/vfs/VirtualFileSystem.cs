@@ -21,7 +21,7 @@ namespace zzio.vfs
         {
             if (!resourcePoolTypes.ContainsKey(type.ToLower()))
                 throw new NotSupportedException("Resource pool type \"" + type + "\" is not supported");
-            pools.Add(resourcePoolTypes[type](path));
+            AddResourcePool(resourcePoolTypes[type](path));
         }
 
         public virtual void AddResourcePool(IResourcePool pool)
@@ -108,6 +108,32 @@ namespace zzio.vfs
             return content
                 .Select(filename => filename.ToLowerInvariant())
                 .ToArray();
+        }
+
+        public virtual string[] SearchFiles(Predicate<string> filter, string basePathString = "")
+        {
+            return SearchFiles(filter, new FilePath(basePathString));
+        }
+
+        public virtual string[] SearchFiles(Predicate<string> filter, FilePath basePath)
+        {
+            IEnumerable<string> result = Enumerable.Empty<string>();
+            FilePath[] contentPaths = GetDirectoryContent(basePath.ToPOSIXString())
+                .Select(fileName => basePath.Combine(fileName))
+                .ToArray();
+            ResourceType[] types = contentPaths
+                .Select(contentPath => GetResourceType(contentPath.ToPOSIXString()))
+                .ToArray();
+            
+            for (int i = 0; i < contentPaths.Length; i++)
+            {
+                if (types[i] == ResourceType.Directory)
+                    result = result.Concat(SearchFiles(filter, contentPaths[i]));
+                else if (filter(contentPaths[i].ToPOSIXString()))
+                    result = result.Append(contentPaths[i].ToPOSIXString().ToLowerInvariant());
+            }
+
+            return result.ToArray();
         }
     }
 }

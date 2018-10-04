@@ -129,5 +129,49 @@ namespace zzio.tests.vfs
             Assert.AreEqual(new string[0], vfs.GetDirectoryContent(".."));
             Assert.AreEqual(new string[0], vfs.GetDirectoryContent("a/b/../c//d"));
         }
+
+        [Test, Combinatorial]
+        public void searchfiles([ValueSource("testSystems")] VirtualFileSystem vfs)
+        {
+            Assert.That(new string[]
+            {
+                "content.txt",
+                "a/d.txt",
+                "c/a.txt",
+                "d/e/f.txt",
+                "d/e/g.txt",
+                "d/h/i.txt",
+                "a/b.txt",
+                "a/c.txt",
+                "b/a.txt"
+            }, Is.EquivalentTo(
+                vfs.SearchFiles(fn => fn.EndsWith(".txt"))
+            ));
+
+            Assert.That(new string[]
+            {
+                "a/d.txt",
+                "a/b.txt",
+                "a/c.txt"
+            }, Is.EquivalentTo(
+                vfs.SearchFiles(fn => fn.EndsWith(".txt"), "a")
+            ));
+
+            Assert.That(new string[]
+            {
+                "content.txt",
+                "d/e/f.txt",
+                "d/e/g.txt"
+            }, Is.EquivalentTo(
+                vfs.SearchFiles(fn => fn.Contains("e"))
+            ));
+
+            Assert.That(new string[]
+            {
+                "d/h/i.txt"
+            }, Is.EquivalentTo(
+                vfs.SearchFiles(fn => fn.Contains(".txt"), "a/../D/H//.\\J\\../")
+            ));
+        }
     }
 }
