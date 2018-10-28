@@ -6,12 +6,18 @@ using zzio.utils;
 namespace zzio
 {
     [Serializable]
+    public struct AnimationRef
+    {
+        public string filename;
+        public AnimationType type;
+    }
+
+    [Serializable]
     public class ActorPart
     {
         public string model = "";
         public int animationPoolID = -1;
-        public string[] animations = new string[0];
-        public int[] animationData = new int[0];
+        public AnimationRef[] animations = new AnimationRef[0];
 
         public void Write(BinaryWriter writer, string partName)
         {
@@ -20,11 +26,11 @@ namespace zzio
             writer.WriteZString(String.Format("[AnimationPoolID_{0}]", partName));
             writer.Write(animationPoolID);
 
-            for (int i = 0; i < animations.Length; i++)
+            foreach (AnimationRef animRef in animations)
             {
                 writer.WriteZString(String.Format("[AnimationFilename_{0}]", partName));
-                writer.WriteZString(animations[i]);
-                writer.Write(animationData[i]);
+                writer.WriteZString(animRef.filename);
+                writer.Write((int)animRef.type);
             }
         }
     }
@@ -49,10 +55,9 @@ namespace zzio
         {
             ActorExDescription actor = new ActorExDescription();
             BinaryReader reader = new BinaryReader(stream);
-            List<string> bodyAnimations = new List<string>(),
-                wingsAnimations = new List<string>();
-            List<int> bodyAnimData = new List<int>(),
-                wingsAnimData = new List<int>();
+            List<AnimationRef>
+                bodyAnimations = new List<AnimationRef>(),
+                wingsAnimations = new List<AnimationRef>();
 
             if (reader.ReadZString() != "[ActorExDescriptionFile]")
                 throw new InvalidDataException("Not an actorex description file");
@@ -69,8 +74,11 @@ namespace zzio
                         actor.body.animationPoolID = reader.ReadInt32();
                         break;
                     case ("[AnimationFilename_Body]"):
-                        bodyAnimations.Add(reader.ReadZString());
-                        bodyAnimData.Add(reader.ReadInt32());
+                        bodyAnimations.Add(new AnimationRef
+                        {
+                            filename = reader.ReadZString(),
+                            type = EnumUtils.intToEnum<AnimationType>(reader.ReadInt32())
+                        });
                         break;
 
                     case ("[ModelFilename_Wings]"):
@@ -80,8 +88,11 @@ namespace zzio
                         actor.wings.animationPoolID = reader.ReadInt32();
                         break;
                     case ("[AnimationFilename_Wings]"):
-                        wingsAnimations.Add(reader.ReadZString());
-                        wingsAnimData.Add(reader.ReadInt32());
+                        wingsAnimations.Add(new AnimationRef
+                        {
+                            filename = reader.ReadZString(),
+                            type = EnumUtils.intToEnum<AnimationType>(reader.ReadInt32())
+                        });
                         break;
 
                     case ("[AttachWingsToBone]"):
@@ -103,9 +114,7 @@ namespace zzio
             }
 
             actor.body.animations = bodyAnimations.ToArray();
-            actor.body.animationData = bodyAnimData.ToArray();
             actor.wings.animations = wingsAnimations.ToArray();
-            actor.wings.animationData = wingsAnimData.ToArray();
             return actor;
         }
 

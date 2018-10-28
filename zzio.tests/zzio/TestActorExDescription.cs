@@ -20,16 +20,14 @@ namespace zzio.tests
             Assert.AreEqual("wings.dff", aed.wings.model);
 
             Assert.AreEqual(2, aed.body.animations.Length);
-            Assert.AreEqual(2, aed.body.animationData.Length);
-            Assert.AreEqual("first.ani", aed.body.animations[0]);
-            Assert.AreEqual(1, aed.body.animationData[0]);
-            Assert.AreEqual("second.ani", aed.body.animations[1]);
-            Assert.AreEqual(2, aed.body.animationData[1]);
+            Assert.AreEqual("first.ani", aed.body.animations[0].filename);
+            Assert.AreEqual(AnimationType.Jump, aed.body.animations[0].type);
+            Assert.AreEqual("second.ani", aed.body.animations[1].filename);
+            Assert.AreEqual(AnimationType.Run, aed.body.animations[1].type);
 
             Assert.AreEqual(1, aed.wings.animations.Length);
-            Assert.AreEqual(1, aed.wings.animationData.Length);
-            Assert.AreEqual("third.ani", aed.wings.animations[0]);
-            Assert.AreEqual(3, aed.wings.animationData[0]);
+            Assert.AreEqual("third.ani", aed.wings.animations[0].filename);
+            Assert.AreEqual(AnimationType.RunForwardLeft, aed.wings.animations[0].type);
         }
 
         [Test]
