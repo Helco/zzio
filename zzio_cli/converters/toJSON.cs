@@ -3,12 +3,14 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using System.Reflection;
 
 namespace zzio.cli.converters
 {
     static class Utils
     {
-        public static string convertToJSON(object obj)
+        public static string convertToJSON(object obj, IContractResolver resolver = null)
         {
             return JsonConvert.SerializeObject(obj, new JsonSerializerSettings
             {
@@ -16,7 +18,8 @@ namespace zzio.cli.converters
                 Formatting = Formatting.Indented,
                 Converters = new JsonConverter[] {
                             new Newtonsoft.Json.Converters.StringEnumConverter()
-                        }
+                        },
+                ContractResolver = resolver
             });
         }
     }
@@ -96,6 +99,17 @@ namespace zzio.cli.converters
         }
     }
 
+    public class RWBSContractResolver : DefaultContractResolver
+    {
+        protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
+        {
+            JsonProperty property = base.CreateProperty(member, memberSerialization);
+            if (property.DeclaringType == typeof(rwbs.Section) && property.PropertyName == "parent")
+                property.ShouldSerialize = (o) => false;
+            return property;
+        }
+    }
+
     public class RWBS_DFFtoJSON : IConverter
     {
         public FileType TypeFrom { get { return FileType.RWBS_DFF; } }
@@ -103,7 +117,7 @@ namespace zzio.cli.converters
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var obj = zzio.rwbs.Section.ReadNew(from);
-            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj, new RWBSContractResolver()));
             to.Write(buffer, 0, buffer.Length);
         }
     }
@@ -115,7 +129,7 @@ namespace zzio.cli.converters
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var obj = zzio.rwbs.Section.ReadNew(from);
-            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj, new RWBSContractResolver()));
             to.Write(buffer, 0, buffer.Length);
         }
     }

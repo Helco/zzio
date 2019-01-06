@@ -30,7 +30,7 @@ namespace zzio.rwbs
         protected override void readStruct(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream);
-            format = EnumUtils.intToEnum<GeometryFormat>(reader.ReadInt32());
+            format = EnumUtils.intToFlags<GeometryFormat>(reader.ReadUInt32());
             triangles = new Triangle[reader.ReadUInt32()];
             UInt32 vertexCount = reader.ReadUInt32();
             morphTargets = new MorphTarget[reader.ReadUInt32()];
