@@ -7,20 +7,22 @@ using zzio.primitives;
 
 namespace zzio.rwbs
 {
-    public enum BoneType
+    [Flags]
+    public enum BoneFlags
     {
-        ParentNoSibling = 8,
-        NoParentNoSibling = 9,
-        ParentAndSibling = 10,
+        // the naming might be weird as it was intended
+        // by RenderWare to represent matrix operations
+        IsChildless = (1 << 0),
+        HasNextSibling = (1 << 1),
 
-        Unknown = -1
+        UnknownFlag3 = (1 << 3)
     }
 
     [System.Serializable]
     public struct Bone
     {
         public UInt32 id, idx;
-        public BoneType type;
+        public BoneFlags flags;
         public Vector right, up, at, pos;
         public UInt32 p1, p2, p3, p4;
     }
@@ -58,7 +60,7 @@ namespace zzio.rwbs
             {
                 bones[i].id = reader.ReadUInt32();
                 bones[i].idx = reader.ReadUInt32();
-                bones[i].type = EnumUtils.intToEnum<BoneType>(reader.ReadInt32());
+                bones[i].flags = EnumUtils.intToFlags<BoneFlags>(reader.ReadUInt32());
 
                 bones[i].right = Vector.ReadNew(reader);
                 bones[i].p1 = reader.ReadUInt32();
@@ -94,7 +96,7 @@ namespace zzio.rwbs
             {
                 writer.Write(b.id);
                 writer.Write(b.idx);
-                writer.Write((int)b.type);
+                writer.Write((uint)b.flags);
 
                 b.right.Write(writer);
                 writer.Write(b.p1);
