@@ -16,7 +16,10 @@ namespace zzio.rwbs
         {
             BinaryReader reader = new BinaryReader(stream);
             byte[] buffer = reader.ReadBytes((int)stream.Length);
-            value = Encoding.UTF8.GetString(buffer).Replace("\u0000", "");
+            value = Encoding.UTF8.GetString(buffer);
+            int terminator = value.IndexOf('\0');
+            if (terminator >= 0)
+                value = value.Substring(0, terminator);
         }
 
         protected override void writeBody(Stream stream)
