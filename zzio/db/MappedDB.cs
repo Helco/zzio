@@ -72,7 +72,7 @@ namespace zzio.db
             return new TextRow(this, modules[ModuleType.Text][uid]);
         }
 
-        public IEnumerable<SpellRow> Spell
+        public IEnumerable<SpellRow> Spells
         {
             get
             {

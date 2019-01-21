@@ -29,5 +29,10 @@ namespace zzio.primitives
             uid.Write(writer);
             type.Write(writer);
         }
+
+        public override string ToString()
+        {
+            return uid.ToString() + "|" + type.ToString();
+        }
     }
 }

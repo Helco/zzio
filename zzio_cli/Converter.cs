@@ -19,6 +19,7 @@ namespace zzio.cli
         FBS_Index,
         FBS_Data, //we have the index already I hope?
         JSON,
+        CSV,
 
         Unknown
     }
@@ -46,6 +47,7 @@ namespace zzio.cli
                 case ("aed"): { return FileType.AED; }
                 case ("ed"): { return FileType.ED; }
                 case ("json"): { return FileType.JSON; } //actually a special-case :(
+                case ("csv"): { return FileType.CSV; }
                 case ("bsp"): { return FileType.RWBS_BSP; }
                 case ("dff"): { return FileType.RWBS_DFF; }
                 case ("scn"): { return FileType.SCN; }
@@ -66,6 +68,7 @@ namespace zzio.cli
                 case (FileType.FBS_Data):
                 case (FileType.FBS_Index): { return ".fbs"; }
                 case (FileType.JSON): { return ".json"; }
+                case (FileType.CSV): { return ".csv"; }
                 case (FileType.RWBS_BSP): { return ".bsp"; }
                 case (FileType.RWBS_DFF): { return ".dff"; }
                 case (FileType.SCN): { return ".scn"; }

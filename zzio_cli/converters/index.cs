@@ -15,7 +15,8 @@ namespace zzio.cli
             new RWBS_BSPtoJSON(),
             new RWBS_DFFtoJSON(),
             new SCNtoJSON(),
-            new SKAtoJSON()
+            new SKAtoJSON(),
+            new FBStoCSV()
         };
 
         private static IConverter findConverter(FileType from, FileType to)

@@ -7,11 +7,11 @@ namespace zzio.db
         public SpellRow(MappedDB mappedDB, Row row) : base(ModuleType.Spell, mappedDB, row) {}
 
         public string Name       => foreignText(0);
-        
+
         public int Type          => row.cells[1].Integer;
 
         public int CardId        => row.cells[2].Integer;
-        
+
         public int[] Prices      => integerRange(3, 3);
         public int PriceA        => row.cells[3].Integer;
         public int PriceB        => row.cells[4].Integer;
@@ -31,6 +31,6 @@ namespace zzio.db
 
         public int Damage        => row.cells[12].Integer;
 
-        public int Behaviour     => row.cells[13].Integer;
+        public int Behavior     => row.cells[13].Integer;
     }
 }
