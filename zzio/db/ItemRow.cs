@@ -1,4 +1,5 @@
 using System;
+using zzio.primitives;
 
 namespace zzio.db
 {
@@ -8,7 +9,7 @@ namespace zzio.db
 
         public string Name   => foreignText(0);
 
-        public int CardId    => row.cells[1].Integer;
+        public CardId CardId => new CardId(row.cells[1].Integer);
 
         public string Info   => foreignText(2);
 

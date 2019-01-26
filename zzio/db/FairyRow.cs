@@ -1,4 +1,5 @@
 using System;
+using zzio.primitives;
 
 namespace zzio.db
 {
@@ -12,7 +13,7 @@ namespace zzio.db
 
         public int Class0      => row.cells[2].Integer;
 
-        public int CardId      => row.cells[3].Integer;
+        public CardId CardId   => new CardId(row.cells[3].Integer);
 
         public int Unknown     => row.cells[4].Integer;
 
