@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using zzio.primitives;
 using zzio.utils;
 
 namespace zzio.effect.parts
@@ -16,8 +17,8 @@ namespace zzio.effect.parts
             phase2 = 1000,
             tileId = 0,
             tileW = 64,
-            tileH = 64,
-            color = 0xffffffff;
+            tileH = 64;
+        public IColor color = new IColor(255, 255, 255, 255);
         public float
             width = 0.1f,
             height = 0.1f,
@@ -58,7 +59,7 @@ namespace zzio.effect.parts
             tileW = r.ReadUInt32();
             tileH = r.ReadUInt32();
             manualProgress = r.ReadBoolean();
-            color = r.ReadUInt32();
+            color = IColor.ReadNew(r);
             name = r.ReadSizedCString(32);
             r.BaseStream.Seek(3, SeekOrigin.Current);
             minProgress = r.ReadSingle();

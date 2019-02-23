@@ -16,6 +16,14 @@ namespace zzio.primitives
             this.a = a;
         }
 
+        public IColor(uint c)
+        {
+            this.r = (byte)((c >> 0) & 0xff);
+            this.g = (byte)((c >> 8) & 0xff);
+            this.b = (byte)((c >> 16) & 0xff);
+            this.a = (byte)((c >> 24) & 0xff);
+        }
+
         public static IColor ReadNew(BinaryReader r)
         {
             IColor c;

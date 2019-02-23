@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using zzio.primitives;
 using zzio.utils;
 
 namespace zzio.effect.parts
@@ -29,8 +30,8 @@ namespace zzio.effect.parts
 
         public uint
             phase1 = 1000,
-            phase2 = 1000,
-            color = 0xffffffff;
+            phase2 = 1000;
+        public IColor color = new IColor(255, 255, 255, 255);
         public float
             width = 1.0f,
             scaleSpeedXY = 0.0f,
@@ -65,7 +66,7 @@ namespace zzio.effect.parts
             rotationSpeed = r.ReadSingle();
             texShiftVStart = r.ReadSingle();
             r.BaseStream.Seek(1, SeekOrigin.Current);
-            color = r.ReadUInt32();
+            color = IColor.ReadNew(r);
             name = r.ReadSizedCString(32);
             r.BaseStream.Seek(3, SeekOrigin.Current);
             endTexVEnd = r.ReadSingle();

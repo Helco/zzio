@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using zzio.primitives;
 using zzio.utils;
 
 namespace zzio.effect.parts
@@ -18,9 +19,9 @@ namespace zzio.effect.parts
             mode = 1, // TODO: Put this in an enum
             tileId = 0,
             tileW = 256,
-            tileH = 256,
-            color = 0xffffffff,
-            mode2 = 0; // TODO: Also this
+            tileH = 256;
+        public IColor color = new IColor(255, 255, 255, 255);
+        public uint mode2 = 0; // TODO: Also this
         public float
             width = 1.0f,
             height = 1.0f,
@@ -54,7 +55,7 @@ namespace zzio.effect.parts
             tileId = r.ReadUInt32();
             tileW = r.ReadUInt32();
             tileH = r.ReadUInt32();
-            color = r.ReadUInt32();
+            color = IColor.ReadNew(r);
             name = r.ReadSizedCString(32);
             renderMode = EnumUtils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
             speed = r.ReadSingle();

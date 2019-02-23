@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using zzio.primitives;
 using zzio.utils;
 
 namespace zzio.effect.parts
@@ -27,9 +28,9 @@ namespace zzio.effect.parts
             tileCount = 1,
             tileDuration = 1,
             tileW = 32,
-            tileH = 32,
-            color = 0xffffffff,
-            fadeMode = 0; // TODO: Put this in an enum
+            tileH = 32;
+        public IColor color = new IColor(255, 255, 255, 255);
+        public uint fadeMode = 0; // TODO: Put this in an enum
         public float
             parWidth = 0.1f,
             parHeight = 0.1f,
@@ -69,7 +70,7 @@ namespace zzio.effect.parts
             tileDuration = r.ReadUInt32();
             tileW = r.ReadUInt32();
             tileH = r.ReadUInt32();
-            color = r.ReadUInt32();
+            color = IColor.ReadNew(r);
             name = r.ReadSizedCString(32);
             mode = EnumUtils.intToEnum<ParticleBeamMode>(r.ReadInt32());
             fadeMode = r.ReadUInt32();

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using zzio.primitives;
 using zzio.utils;
 
 namespace zzio.effect.parts
@@ -21,9 +22,9 @@ namespace zzio.effect.parts
             tileCount = 1,
             tileDuration = 50,
             tileW = 16,
-            tileH = 16,
-            color = 0xffffffff,
-            amplColor = 0;
+            tileH = 16;
+        public IColor color = new IColor(255, 255, 255, 255);
+        public uint amplColor = 0;
         public float
             minProgress = 1.0f,
             amplPosX = 1.0f,
@@ -78,7 +79,7 @@ namespace zzio.effect.parts
             tileDuration = r.ReadUInt32();
             tileW = r.ReadUInt32();
             tileH = r.ReadUInt32();
-            color = r.ReadUInt32();
+            color = IColor.ReadNew(r);
             name = r.ReadSizedCString(32);
             amplColor = r.ReadUInt32();
             circlesAround = r.ReadBoolean();

@@ -14,8 +14,8 @@ namespace zzio.effect.parts
 
         public uint
             phase1 = 1000,
-            phase2 = 1000,
-            color = 0xffffffff;
+            phase2 = 1000;
+        public IColor color = new IColor(255, 255, 255, 255);
         public float
             rotationSpeed = 0.0f,
             texShift = 0.0f,
@@ -49,7 +49,7 @@ namespace zzio.effect.parts
             texShift = r.ReadSingle();
             modelName = r.ReadSizedCString(32);
             ignoreHead = r.ReadBoolean();
-            color = r.ReadUInt32();
+            color = IColor.ReadNew(r);
             name = r.ReadSizedCString(32);
             r.BaseStream.Seek(3, SeekOrigin.Current);
             minProgress = r.ReadSingle();
