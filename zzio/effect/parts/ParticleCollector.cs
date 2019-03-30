@@ -6,6 +6,15 @@ using zzio.utils;
 
 namespace zzio.effect.parts
 {
+    public enum ParticleCollectorMode
+    {
+        Tornado = 0,
+        Cycle = 1,
+        Standard = 2,
+
+        Unknown = -1
+    }
+
     [System.Serializable]
     public class ParticleCollector : IEffectPart
     {
@@ -20,7 +29,7 @@ namespace zzio.effect.parts
             tileCount = 1,
             tileId = 0;
         public IColor color = new IColor(255, 255, 255, 255);
-        public uint mode = 0; // TODO: Into an enum with this!
+        public ParticleCollectorMode mode = ParticleCollectorMode.Tornado;
         public float
             speed = 1.0f,
             radius = 1.0f,
@@ -52,7 +61,7 @@ namespace zzio.effect.parts
             tileId = r.ReadUInt32();
             color = IColor.ReadNew(r);
             name = r.ReadSizedCString(32);
-            mode = r.ReadUInt32();
+            mode = EnumUtils.intToEnum<ParticleCollectorMode>(r.ReadInt32());
             minProgress = r.ReadSingle();
             r.BaseStream.Seek(4, SeekOrigin.Current);
         }
