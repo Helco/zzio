@@ -13,18 +13,19 @@ namespace zzio.script
         public string[] Arguments { get; }
 
         private string regexArgumentSource =>
-            "\\.(\\w+)|" + // simple case
+            @"\.(\w+)|" + // simple case
+
             // string constant
-            "\\.\\\"" +
+            @"\.\""" +
                 // between the quotes
                 "((" +
-                    "[^\\\\\\\"\\n]|" +   // any old character except
-                    "\\\\[\\w\\\\\\\"]" + // escape sequences
+                    @"[^\\\""\n]|" +   // any old character except
+                    @"\\[\w\\\""]" + // escape sequences
                 ")*)" +
-            "\\\"";
+            @"\""";
         private Regex regexArgument => new Regex(regexArgumentSource);
         private Regex regexInstruction => new Regex(
-            "^(.\\w*)((" +                   // command
+            @"^(.\w*)((" +                   // command
                 regexArgumentSource + ")*" + // arguments
             ")$"
         );
