@@ -173,7 +173,7 @@ namespace zzio.db
         private static readonly Dictionary<CellDataType, Action<BinaryWriter, Cell>> dataWriters =
             new Dictionary<CellDataType, Action<BinaryWriter, Cell>>()
             {
-                { CellDataType.String,     (w, c) => { w.WriteZString(c.stringValue); } },
+                { CellDataType.String,     (w, c) => { w.WriteTZString(c.stringValue); } },
                 { CellDataType.Integer,    (w, c) => { w.Write(4); w.Write(c.integerValue); } },
                 { CellDataType.Byte,       (w, c) => { w.Write(1); w.Write(c.byteValue); } },
                 { CellDataType.ForeignKey, (w, c) => { w.Write(8); c.foreignKeyValue.Write(w); } },

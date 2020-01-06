@@ -6,6 +6,8 @@ namespace zzio.utils
 {
     public static class BinaryIOExtension
     {
+        private static readonly Encoding encoding = Encoding.GetEncoding("Latin1");
+
         /// <summary>Reads a 32-bit size prefixed string</summary>
         public static string ReadZString(this BinaryReader reader)
         {
@@ -19,7 +21,7 @@ namespace zzio.utils
             if (len == 0)
                 return "";
             byte[] buf = reader.ReadBytes(len);
-            return Encoding.UTF8.GetString(buf).Replace("\u0000", "");
+            return encoding.GetString(buf).Replace("\u0000", "");
         }
 
         /// <summary>Reads a fixed sized string</summary>
@@ -33,22 +35,30 @@ namespace zzio.utils
                 if (buf[len] == 0)
                     break;
             }
-            return len == 0 ? "" : Encoding.UTF8.GetString(buf, 0, len);
+            return len == 0 ? "" : encoding.GetString(buf, 0, len);
+        }
+
+        /// <summary>Writes a 32-bit prefixed, not-0-terminated string</summary>
+        public static void WriteZString(this BinaryWriter writer, string text)
+        {
+            byte[] buf = encoding.GetBytes(text);
+            writer.Write(buf.Length);
+            writer.WriteSizedString(buf, buf.Length);
         }
 
         /// <summary>Writes a 32-bit prefixed, 0-terminated string</summary>
-        public static void WriteZString(this BinaryWriter writer, string text)
+        public static void WriteTZString(this BinaryWriter writer, string text)
         {
-            byte[] buf = Encoding.UTF8.GetBytes(text);
-            writer.Write(buf.Length); // zstrings are not null-terminated
-            writer.WriteSizedString(buf, buf.Length);
+            byte[] buf = encoding.GetBytes(text);
+            writer.Write(buf.Length + 1);
+            writer.WriteSizedString(buf, buf.Length + 1);
         }
 
         /// <summary>Writes a fixed sized, 0-terminated string</summary>
         /// <param name="maxLen">Max byte count to write, including the 0-terminator</param>
         public static void WriteSizedCString(this BinaryWriter writer, String text, int maxLen)
         {
-            writer.WriteSizedString(Encoding.UTF8.GetBytes(text), maxLen - 1);
+            writer.WriteSizedString(encoding.GetBytes(text), maxLen - 1);
             writer.Write((byte)0);
         }
 
