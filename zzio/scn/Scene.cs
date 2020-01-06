@@ -67,6 +67,7 @@ namespace zzio
                     { "[DynamicModels]",     () => dynModels =         readArray(reader, () => new DynModel()) },
                     { "[Triggers]",          () => triggers =          readArray(reader, () => new Trigger()) },
                     { "[2DSamples_v2]",      () => samples2D =         readArray(reader, () => new Sample2D()) },
+                    { "[3DSamples_v2]",      () => samples3D =         readArray(reader, () => new Sample3D()) },
                     { "[3DSamples_v3]",      () => samples3D =         readArray(reader, () => new Sample3D()) },
                     { "[Effects]",           () => effects =           readArray(reader, () => new Effect()) },
                     { "[Effects_v2]",        () => effects2 =          readArray(reader, () => new EffectV2()) },
