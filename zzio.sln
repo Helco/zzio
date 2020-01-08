@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29326.143
 MinimumVisualStudioVersion = 15.0.26124.0
@@ -7,6 +7,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zzio_cli", "zzio_cli\zzio_cli.csproj", "{4B96DAA7-5577-4706-826D-652CC6D151CF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zzio.tests", "zzio.tests\zzio.tests.csproj", "{29A2E64F-8041-4D0E-B1BF-5E1A9BA17351}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zzio_dbsqlite", "zzio_dbsqlite\zzio_dbsqlite.csproj", "{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,6 +56,18 @@ Global
 		{29A2E64F-8041-4D0E-B1BF-5E1A9BA17351}.Release|x64.Build.0 = Release|Any CPU
 		{29A2E64F-8041-4D0E-B1BF-5E1A9BA17351}.Release|x86.ActiveCfg = Release|Any CPU
 		{29A2E64F-8041-4D0E-B1BF-5E1A9BA17351}.Release|x86.Build.0 = Release|Any CPU
+		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Debug|x64.Build.0 = Debug|Any CPU
+		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Debug|x86.Build.0 = Debug|Any CPU
+		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Release|x64.ActiveCfg = Release|Any CPU
+		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Release|x64.Build.0 = Release|Any CPU
+		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Release|x86.ActiveCfg = Release|Any CPU
+		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

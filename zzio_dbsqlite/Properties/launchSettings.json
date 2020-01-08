@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "zzio_dbsqlite": {
+      "commandName": "Project",
+      "commandLineArgs": "exportraw zz.db _fb0x01 _fb0x02 _fb0x03 _fb0x04 _fb0x05 _fb0x06",
+      "workingDirectory": "C:\\dev\\zanzarah"
+    }
+  }
+}
