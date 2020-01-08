@@ -13,7 +13,7 @@ namespace zzio.tests.db
         {
             0xef, 0xbe, 0xad, 0xde, 3, 0, 0, 0,
             // string cell
-            0, 0, 0, 0, 1, 0, 0, 0, 4, 0, 0, 0, (byte)'z', (byte)'z', (byte)'i', (byte)'o',
+            0, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0, (byte)'z', (byte)'z', (byte)'i', (byte)'o', (byte)'\0',
             // integer cell
             1, 0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, 0xff, 0xff, 0x00, 0x00,
             // buffer cell

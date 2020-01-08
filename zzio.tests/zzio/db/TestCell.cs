@@ -12,8 +12,8 @@ namespace zzio.tests.db
         private Cell stringCell = new Cell("Hello", 13);
         private readonly byte[] stringCellBytes = new byte[]
         {
-            0, 0, 0, 0, 13, 0, 0, 0, 5, 0, 0, 0,
-            (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o'
+            0, 0, 0, 0, 13, 0, 0, 0, 6, 0, 0, 0,
+            (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o', (byte)'\0'
         };
 
         private Cell integerCell = new Cell(123456, 13);
