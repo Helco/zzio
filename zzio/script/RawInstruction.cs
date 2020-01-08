@@ -42,7 +42,10 @@ namespace zzio.script
                 Arguments = new string[0];
                 return;
             }
-            var argumentMatches = regexArgument.Matches(fullMatch.Groups[2].Value);
+            var argumentMatchesColl = regexArgument.Matches(fullMatch.Groups[2].Value);
+            var argumentMatches = new Match[argumentMatchesColl.Count]; // copy manually to be able to use LINQ, remove with .NET Standard 2.1
+            argumentMatchesColl.CopyTo(argumentMatches, 0);
+
             if (!argumentMatches.Any() || argumentMatches.Any(m => !m.Success))
                 throw new Exception("Assertion failed during syntax error");
             Arguments = argumentMatches
