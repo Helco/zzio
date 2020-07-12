@@ -10,6 +10,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zzio.tests", "zzio.tests\zz
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zzio_dbsqlite", "zzio_dbsqlite\zzio_dbsqlite.csproj", "{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zzsc", "zzsc\zzsc.csproj", "{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,6 +70,18 @@ Global
 		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Release|x64.Build.0 = Release|Any CPU
 		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Release|x86.ActiveCfg = Release|Any CPU
 		{EB62CEEA-164C-4BC8-8CF9-87828B5E4C58}.Release|x86.Build.0 = Release|Any CPU
+		{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}.Debug|x64.Build.0 = Debug|Any CPU
+		{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}.Debug|x86.Build.0 = Debug|Any CPU
+		{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}.Release|x64.ActiveCfg = Release|Any CPU
+		{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}.Release|x64.Build.0 = Release|Any CPU
+		{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}.Release|x86.ActiveCfg = Release|Any CPU
+		{DB4D2E5B-1E6E-4AAC-A1C2-1D97CFA09D9B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

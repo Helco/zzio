@@ -23,6 +23,9 @@ namespace zzio.tests.script
             Assert.DoesNotThrow(() => new RawInstruction("."));
             Assert.DoesNotThrow(() => new RawInstruction("..adef"));
             Assert.DoesNotThrow(() => new RawInstruction("..\"sdf\""));
+            Assert.DoesNotThrow(() => new RawInstruction("\\.-1.-1.0"));
+            Assert.DoesNotThrow(() => new RawInstruction("$.0"));
+            Assert.DoesNotThrow(() => new RawInstruction("=.19"));
 
             Assert.Throws<InvalidInstructionException>(() => new RawInstruction("a."));
             Assert.Throws<InvalidInstructionException>(() => new RawInstruction(" a.bcd."));

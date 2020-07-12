@@ -13,7 +13,7 @@ namespace zzio.script
         public string[] Arguments { get; }
 
         private string regexArgumentSource =>
-            @"\.(\w+)|" + // simple case
+            @"\.(-?\w+)|" + // simple case
 
             // string constant
             @"\.\""" +
@@ -55,6 +55,12 @@ namespace zzio.script
                 .ToArray();
         }
 
+        public RawInstruction(string command, string[] arguments)
+        {
+            Command = command;
+            Arguments = arguments.ToArray();
+        }
+
         public static bool TryParse(string line, out RawInstruction parsed)
         {
             try
@@ -67,6 +73,13 @@ namespace zzio.script
                 parsed = null;
                 return false;
             }
+        }
+
+        public override string ToString()
+        {
+            if (Arguments.Length == 0)
+                return Command;
+            return Command + "." + string.Join(".", Arguments);
         }
     }
 }
