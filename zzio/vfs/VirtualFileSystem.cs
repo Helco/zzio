@@ -110,27 +110,30 @@ namespace zzio.vfs
                 .ToArray();
         }
 
-        public virtual string[] SearchFiles(Predicate<string> filter, string basePathString = "")
-        {
-            return SearchFiles(filter, new FilePath(basePathString));
-        }
+        public virtual string[] SearchFiles(Predicate<string> filter, string basePathString = "") =>
+            SearchFiles(filter, new FilePath(basePathString));
 
-        public virtual string[] SearchFiles(Predicate<string> filter, FilePath basePath)
+        public virtual string[] SearchFiles(Predicate<string> filter, FilePath basePath) =>
+            SearchFilePaths(path => filter(path.ToPOSIXString().ToLowerInvariant()), basePath)
+            .Select(path => path.ToPOSIXString().ToLowerInvariant())
+            .ToArray();
+
+        public virtual IEnumerable<FilePath> SearchFilePaths(Predicate<FilePath> filter, FilePath basePath)
         {
-            IEnumerable<string> result = Enumerable.Empty<string>();
+            var result = Enumerable.Empty<FilePath>();
             FilePath[] contentPaths = GetDirectoryContent(basePath.ToPOSIXString())
                 .Select(fileName => basePath.Combine(fileName))
                 .ToArray();
             ResourceType[] types = contentPaths
                 .Select(contentPath => GetResourceType(contentPath.ToPOSIXString()))
                 .ToArray();
-            
+
             for (int i = 0; i < contentPaths.Length; i++)
             {
                 if (types[i] == ResourceType.Directory)
-                    result = result.Concat(SearchFiles(filter, contentPaths[i]));
-                else if (filter(contentPaths[i].ToPOSIXString()))
-                    result = result.Append(contentPaths[i].ToPOSIXString().ToLowerInvariant());
+                    result = result.Concat(SearchFilePaths(filter, contentPaths[i]));
+                else if (filter(contentPaths[i]))
+                    result = result.Append(contentPaths[i]);
             }
 
             return result.ToArray();

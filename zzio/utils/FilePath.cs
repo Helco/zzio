@@ -9,6 +9,8 @@ namespace zzio.utils
     /// <remarks>This supports windows and POSIX paths and tries to ignore as much inconsistencies as possible</remarks> 
     public class FilePath : IEquatable<FilePath>, IEquatable<string>
     {
+        public const bool DefaultsToCaseSensitive = false;
+
         /// <value>The platform-dependant path separator</value>
         public static string Separator
         {
@@ -95,12 +97,7 @@ namespace zzio.utils
         }
 
         /// <summary>Compares two paths for equality</summary>
-        /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public bool Equals(FilePath path)
-        {
-            bool caseSensitive = Environment.OSVersion.Platform != PlatformID.Win32NT;
-            return Equals(path, caseSensitive);
-        }
+        public bool Equals(FilePath path) => Equals(path, DefaultsToCaseSensitive);
 
         /// <summary>Compares two paths for equality</summary>
         public bool Equals(FilePath path, bool caseSensitive)
@@ -315,15 +312,7 @@ namespace zzio.utils
         }
 
         /// <summary>Returns the normalized path navigating to `this` from `basePath`</summary>
-        /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public FilePath RelativeTo(FilePath basePath)
-        {
-            bool caseSensitive = Environment.OSVersion.Platform != PlatformID.Win32NT;
-            return RelativeTo(basePath, caseSensitive);
-        }
-
-        /// <summary>Returns the normalized path navigating to `this` from `basePath`</summary>
-        public FilePath RelativeTo(FilePath basePath, bool caseSensitive)
+        public FilePath RelativeTo(FilePath basePath, bool caseSensitive = DefaultsToCaseSensitive)
         {
             FilePath me = Absolute;
             basePath = basePath.Absolute;

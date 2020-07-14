@@ -12,9 +12,10 @@ namespace zzio.tests.vfs
         private static readonly DummyResourcePool pool1;
         private static readonly DummyResourcePool pool2;
         private static readonly CachedVirtualFileSystem cached;
+        private static readonly FastVirtualFileSystem fast;
 
         public static VirtualFileSystem[] testSystems => 
-            new VirtualFileSystem[] { uncached, cached };
+            new VirtualFileSystem[] { uncached, cached, fast };
 
         static TestVirtualFileSystem()
         {
@@ -37,12 +38,13 @@ namespace zzio.tests.vfs
             }, new byte[] { 5, 6, 7, 8 });
 
             uncached = new VirtualFileSystem();
-            uncached.AddResourcePool(pool1);
-            uncached.AddResourcePool(pool2);
-
             cached = new CachedVirtualFileSystem();
-            cached.AddResourcePool(pool1);
-            cached.AddResourcePool(pool2);
+            fast = new FastVirtualFileSystem();
+            foreach (var vfs in testSystems)
+            {
+                vfs.AddResourcePool(pool1);
+                vfs.AddResourcePool(pool2);
+            }
         }
 
         [Test, Combinatorial]
