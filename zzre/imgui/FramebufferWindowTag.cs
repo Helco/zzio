@@ -8,7 +8,7 @@ using Veldrid;
 
 namespace zzre.imgui
 {
-    public class FramebufferWindow : BaseDisposable
+    public class FramebufferWindowTag : BaseDisposable
     {
         private GraphicsDevice Device { get; }
         private ResourceFactory Factory => Device.ResourceFactory;
@@ -25,9 +25,9 @@ namespace zzre.imgui
         public bool IsDirty { get; set; } = true;
         public event Action<CommandList> OnRender = _ => { };
 
-        public FramebufferWindow(WindowContainer container, GraphicsDevice device, string title = "FramebufferWindow")
+        public FramebufferWindowTag(Window parent, GraphicsDevice device)
         {
-            Window = container.NewWindow(title);
+            Window = parent;
             Device = device;
             Window.AddTag(this);
             Window.OnBeforeContent += HandleBeforeContent;

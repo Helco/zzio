@@ -60,9 +60,10 @@ namespace zzre
                 resourceLayout,
                 new OutputDescription(new OutputAttachmentDescription(PixelFormat.D24_UNorm_S8_UInt), new OutputAttachmentDescription(PixelFormat.R8_G8_B8_A8_UNorm))));
             var windowContainer = new WindowContainer(graphicsDevice);
-            var fbWindow = new FramebufferWindow(windowContainer, graphicsDevice);
-            fbWindow.Pipeline = colorPipeline;
-            fbWindow.OnRender += cmdList => cmdList.ClearColorTarget(0, RgbaFloat.Red);
+            var fbWindow = windowContainer.NewWindow("Framebuffer Window");
+            var fbWindowTag = new FramebufferWindowTag(fbWindow, graphicsDevice);
+            fbWindowTag.Pipeline = colorPipeline;
+            fbWindowTag.OnRender += cmdList => cmdList.ClearColorTarget(0, RgbaFloat.Red);
 
             LoadShaders(factory, "color");
 
