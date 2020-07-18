@@ -76,7 +76,15 @@ namespace Veldrid
             _windowWidth = width;
             _windowHeight = height;
 
-            IntPtr context = ImGui.CreateContext();
+            ResetContext(gd, outputDescription);
+        }
+
+        public void ResetContext(GraphicsDevice gd, OutputDescription outputDescription)
+        {
+            var context = ImGui.GetCurrentContext();
+            if (context != IntPtr.Zero)
+                ImGui.DestroyContext(context);
+            context = ImGui.CreateContext();
             ImGui.SetCurrentContext(context);
 
             ImGui.GetIO().Fonts.AddFontDefault();
