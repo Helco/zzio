@@ -64,6 +64,10 @@ namespace zzre
             var fbWindowTag = new FramebufferWindowTag(fbWindow, graphicsDevice);
             fbWindowTag.Pipeline = colorPipeline;
             fbWindowTag.OnRender += cmdList => cmdList.ClearColorTarget(0, RgbaFloat.Red);
+            var fbWindowMenu = new MenuBarWindowTag(fbWindow);
+            fbWindowMenu.AddItem("Root Clicky", () => { Console.WriteLine("root clicky"); });
+            fbWindowMenu.AddItem("Not/So/Root/Clicky", () => { Console.WriteLine("not so root clicky"); });
+            fbWindowMenu.AddItem("Not/So/Fast", () => { Console.WriteLine("not so fast"); });
 
             LoadShaders(factory, "color");
 

@@ -93,8 +93,9 @@ namespace zzre.imgui
                 Resize(size);
 
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.Zero);
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
             ImGui.ImageButton(bindingHandle, size);
-            ImGui.PopStyleVar(2);
+            ImGui.PopStyleVar(3);
         }
 
         private void HandleRender()
