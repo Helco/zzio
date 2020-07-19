@@ -10,5 +10,11 @@ namespace zzre
 
         public static IEnumerable<T> Generate<T>(int count, Func<int, T> generator) =>
             Enumerable.Range(0, count).Select(generator);
+
+        public static IEnumerable<(T Value, int Index)> Indexed<T>(this IEnumerable<T> set) =>
+            set.Select((Value, Index) => (Value, Index));
+
+        public static bool Any<T>(this IEnumerable<T> set, Func<T, int, bool> predicate) =>
+            set.Indexed().Any(p => predicate(p.Value, p.Index));
     }
 }
