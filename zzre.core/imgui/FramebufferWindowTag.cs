@@ -88,7 +88,7 @@ namespace zzre.imgui
         private void HandleContent()
         {
             // Do not resize in render, otherwise the queued up Image has an invalid binding id
-            var size = ImGui.GetContentRegionAvail(); //Window.ContentBounds.Size;
+            var size = ImGui.GetContentRegionAvail();
             if (Framebuffer.Width != (uint)size.X || Framebuffer.Height != (uint)size.Y)
                 Resize(size);
 

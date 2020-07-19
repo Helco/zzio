@@ -6,6 +6,7 @@ using ImGuiNET;
 using static ImGuiNET.ImGui;
 using System.IO;
 using zzre.imgui;
+using zzre.core;
 
 namespace zzre
 {
@@ -45,31 +46,23 @@ namespace zzre
             }, GraphicsBackend.Vulkan);
 
             var factory = graphicsDevice.ResourceFactory;
-            var vertexLayoutDescr = new VertexLayoutDescription(
-                new VertexElementDescription("Position", VertexElementFormat.Float3, VertexElementSemantic.Position));
-            var resourceLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("UniformBlock", ResourceKind.UniformBuffer, ShaderStages.Fragment)));
-            var colorPipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
-                BlendStateDescription.SingleOverrideBlend,
-                DepthStencilStateDescription.DepthOnlyLessEqual,
-                RasterizerStateDescription.Default,
-                PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(
-                    new[] { vertexLayoutDescr },
-                    LoadShaders(factory, "color")),
-                resourceLayout,
-                new OutputDescription(new OutputAttachmentDescription(PixelFormat.D24_UNorm_S8_UInt), new OutputAttachmentDescription(PixelFormat.R8_G8_B8_A8_UNorm))));
+            var pipelineCollection = new PipelineCollection(factory);
+            pipelineCollection.AddShaderResourceAssemblyOf<Program>();
             var windowContainer = new WindowContainer(graphicsDevice);
             var fbWindow = windowContainer.NewWindow("Framebuffer Window");
             var fbWindowTag = new FramebufferWindowTag(fbWindow, graphicsDevice);
-            fbWindowTag.Pipeline = colorPipeline;
+            fbWindowTag.Pipeline = pipelineCollection.GetPipeline()
+                .WithShaderSet("color")
+                .WithDepthTarget(PixelFormat.D24_UNorm_S8_UInt)
+                .WithColorTarget(PixelFormat.R8_G8_B8_A8_UNorm)
+                .With("Position", VertexElementFormat.Float3, VertexElementSemantic.Position)
+                .With("UniformBuffer", ResourceKind.UniformBuffer, ShaderStages.Fragment)
+                .Build().Pipeline;
             fbWindowTag.OnRender += cmdList => cmdList.ClearColorTarget(0, RgbaFloat.Red);
             var fbWindowMenu = new MenuBarWindowTag(fbWindow);
             fbWindowMenu.AddItem("Root Clicky", () => { Console.WriteLine("root clicky"); });
             fbWindowMenu.AddItem("Not/So/Root/Clicky", () => { Console.WriteLine("not so root clicky"); });
             fbWindowMenu.AddItem("Not/So/Fast", () => { Console.WriteLine("not so fast"); });
-
-            LoadShaders(factory, "color");
 
             window.Resized += () =>
             {
@@ -99,6 +92,7 @@ namespace zzre
                 time.EndFrame();
             }
 
+            pipelineCollection.Dispose();
             graphicsDevice.Dispose();
         }
     }
