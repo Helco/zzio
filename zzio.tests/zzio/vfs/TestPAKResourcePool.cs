@@ -14,7 +14,7 @@ namespace zzio.tests.vfs
             new FilePath(TestContext.CurrentContext.TestDirectory)
             .Combine("../../../resources/archive_sample.pak");
         private readonly static PAKResourcePool pool =
-            new PAKResourcePool(baseDir.ToPOSIXString() + "?../a");
+            new PAKResourcePool(baseDir.ToPOSIXString() + "?a");
 
         [Test]
         public void getresourcetype()
@@ -61,7 +61,7 @@ namespace zzio.tests.vfs
         {
             Assert.AreEqual(new string[]
             {
-                "a.txt", "B.txt"
+                "a.txt", "B.txt", "c/", "e/"
             }, pool.GetDirectoryContent("."));
 
             Assert.AreEqual(new string[]

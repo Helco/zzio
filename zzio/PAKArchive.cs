@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using zzio.utils;
+using System.Reflection.PortableExecutable;
 
 namespace zzio
 {
@@ -21,7 +22,7 @@ namespace zzio
         public static PAKArchiveEntry ReadNew(BinaryReader reader)
         {
             return new PAKArchiveEntry(
-                new FilePath(reader.ReadZString()),
+                new FilePath("pak/").Combine(reader.ReadZString()).Normalized, // DATA_0.pak has a "../" prefix for every file...
                 reader.ReadUInt32() + 4, // a file is surrounded by 4 bytes each
                 reader.ReadUInt32() - 8
             );
@@ -32,24 +33,16 @@ namespace zzio
     {
         private readonly Stream stream;
         private Dictionary<string, PAKArchiveEntry> entries = new Dictionary<string, PAKArchiveEntry>();
+        private Dictionary<string, FilePath> directories = new Dictionary<string, FilePath>(); // use Dictionary to preserve case
         private uint baseOffset;
 
         private PAKArchive(Stream str)
         {
             stream = str;
-        }
+        }   
 
         // transform a path into a comparable path string as key to the entry map
-        private static string getPathKey(FilePath path)
-        {
-            if (path.IsAbsolute)
-                return path.ToString(); // bound to never be found as deserved
-            return new FilePath("/pak/")
-                .Combine(path)
-                .Absolute
-                .ToPOSIXString()
-                .ToLowerInvariant();
-        }
+        private static string getPathKey(FilePath path) => path.Normalized.ToPOSIXString().ToLowerInvariant();
 
         public static PAKArchive ReadNew(Stream baseStream)
         {
@@ -66,6 +59,13 @@ namespace zzio
                 PAKArchiveEntry entry = PAKArchiveEntry.ReadNew(reader);
                 string key = getPathKey(entry.path);
                 archive.entries[key] = entry;
+
+                var parent = entry.path.Parent;
+                while (parent?.StaysInbound ?? false)
+                {
+                    archive.directories[getPathKey(parent)] = parent;
+                    parent = parent.Parent;
+                }
             }
             archive.baseOffset = (UInt32)baseStream.Position;
             return archive;
@@ -76,6 +76,8 @@ namespace zzio
             string pathKey = getPathKey(new FilePath(pathString));
             return entries.ContainsKey(pathKey);
         }
+
+        public bool ContainsDirectory(string pathString) => directories.ContainsKey(getPathKey(new FilePath(pathString).Normalized));
 
         public Stream ReadFile(string pathString)
         {
@@ -88,12 +90,20 @@ namespace zzio
         public string[] GetDirectoryContent(string pathString, bool recursive = true)
         {
             FilePath dirPath = new FilePath(pathString);
-            var files = entries.Values
+            if (!dirPath.StaysInbound)
+                throw new InvalidOperationException("Queried path does not stay inbounds");
+
+            var results = entries.Values
                 .Select(entry => entry.path.RelativeTo(pathString, false))
-                .Where(filePath => filePath.StaysInbound);
+                .Concat(directories.Values
+                    .Select(entry => entry.RelativeTo(pathString, false))
+                    .Where(filePath => filePath.StaysInbound)
+                )
+                .Where(filePath => filePath.StaysInbound && filePath.Parts.Length > 0);
+
             if (!recursive)
-                files = files.Where(filePath => filePath.Parts.Length == 1);
-            return files
+                results = results.Where(filePath => filePath.Parts.Length == 1);
+            return results
                 .Select(filePath => filePath.ToPOSIXString())
                 .ToArray();
         }
