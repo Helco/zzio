@@ -16,5 +16,19 @@ namespace zzre
 
         public static bool Any<T>(this IEnumerable<T> set, Func<T, int, bool> predicate) =>
             set.Indexed().Any(p => predicate(p.Value, p.Index));
+
+        public static int IndexOf<T>(this IEnumerable<T> set, Func<T, bool> predicate) => set
+            .Indexed()
+            .Where(p => predicate(p.Value))
+            .Select(p => p.Index)
+            .Append(-1)
+            .First();
+
+        public static int IndexOf<T>(this IEnumerable<T> set, T value) => set
+            .Indexed()
+            .Where(p => value?.Equals(p.Value) ?? false)
+            .Select(prop => prop.Index)
+            .Append(-1)
+            .First();
     }
 }

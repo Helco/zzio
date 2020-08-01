@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using zzre.core;
 
 namespace zzre
 {
-    public class TagContainer<TBase> : BaseDisposable where TBase : class
+    public class TagContainer<TBase> : BaseDisposable, ITagContainer<TBase> where TBase : class
     {
         private Dictionary<Type, TBase> tags = new Dictionary<Type, TBase>();
 
@@ -46,10 +47,11 @@ namespace zzre
             .Where(pair => typeof(TTag).IsAssignableFrom(pair.Key))
             .Select(pair => pair.Value);
 
-        public void AddTag<TTag>(TTag tag) where TTag : TBase
+        public ITagContainer<TBase> AddTag<TTag>(TTag tag) where TTag : TBase
         {
             if (!tags.TryAdd(typeof(TTag), tag))
                 throw new ArgumentException(nameof(TTag), $"A tag of type {typeof(TTag).Name} is already attached");
+            return this;
         }
 
         public bool RemoveTag<TTag>() where TTag : TBase
@@ -61,5 +63,5 @@ namespace zzre
         }
     }
 
-    public class TagContainer : TagContainer<object> { }
+    public class TagContainer : TagContainer<object>, ITagContainer { }
 }

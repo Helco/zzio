@@ -24,6 +24,7 @@ namespace zzre.imgui
         public Pipeline? Pipeline { get; set; }
         public bool IsDirty { get; set; } = true;
         public event Action<CommandList> OnRender = _ => { };
+        public event Action OnResize = () => { };
 
         public FramebufferWindowTag(Window parent, GraphicsDevice device)
         {
@@ -78,6 +79,7 @@ namespace zzre.imgui
 
             bindingHandle = ImGuiRenderer.GetOrCreateImGuiBinding(Factory, targetColor);
             IsDirty = true;
+            OnResize();
         }
 
         private void HandleBeforeContent()

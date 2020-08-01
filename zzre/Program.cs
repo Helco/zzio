@@ -7,6 +7,8 @@ using static ImGuiNET.ImGui;
 using System.IO;
 using zzre.imgui;
 using zzre.core;
+using zzio.vfs;
+using zzre.tools;
 
 namespace zzre
 {
@@ -49,20 +51,19 @@ namespace zzre
             var pipelineCollection = new PipelineCollection(factory);
             pipelineCollection.AddShaderResourceAssemblyOf<Program>();
             var windowContainer = new WindowContainer(graphicsDevice);
-            var fbWindow = windowContainer.NewWindow("Framebuffer Window");
-            var fbWindowTag = new FramebufferWindowTag(fbWindow, graphicsDevice);
-            fbWindowTag.Pipeline = pipelineCollection.GetPipeline()
-                .WithShaderSet("color")
-                .WithDepthTarget(PixelFormat.D24_UNorm_S8_UInt)
-                .WithColorTarget(PixelFormat.R8_G8_B8_A8_UNorm)
-                .With("Position", VertexElementFormat.Float3, VertexElementSemantic.Position)
-                .With("UniformBuffer", ResourceKind.UniformBuffer, ShaderStages.Fragment)
-                .Build().Pipeline;
-            fbWindowTag.OnRender += cmdList => cmdList.ClearColorTarget(0, RgbaFloat.Red);
-            var fbWindowMenu = new MenuBarWindowTag(fbWindow);
-            fbWindowMenu.AddItem("Root Clicky", () => { Console.WriteLine("root clicky"); });
-            fbWindowMenu.AddItem("Not/So/Root/Clicky", () => { Console.WriteLine("not so root clicky"); });
-            fbWindowMenu.AddItem("Not/So/Fast", () => { Console.WriteLine("not so fast"); });
+            var vfs = new VirtualFileSystem();
+            vfs.AddResourcePool(new PAKResourcePool(@"C:\dev\zanzarah\Resources\DATA_0.PAK?resources/"));
+            vfs.AddResourcePool(new FileResourcePool(@"C:\dev\zanzarah\Resources\"));
+            vfs.AddResourcePool(new FileResourcePool(@"C:\dev\zanzarah\Data\"));
+            var diContainer = new TagContainer();
+            diContainer
+                .AddTag(windowContainer)
+                .AddTag(graphicsDevice)
+                .AddTag(vfs)
+                .AddTag(new StandardPipelines(pipelineCollection));
+
+            var modelViewer = new ModelViewer(diContainer);
+            modelViewer.LoadModel("models/actorsex/chr01.dff");
 
             window.Resized += () =>
             {

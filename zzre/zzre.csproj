@@ -11,14 +11,19 @@
   <ItemGroup>
     <None Remove="shaders\color.frag" />
     <None Remove="shaders\color.vert" />
+    <None Remove="shaders\ModelStandard.frag" />
+    <None Remove="shaders\ModelStandard.vert" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="shaders\ModelStandard.frag" />
+    <EmbeddedResource Include="shaders\ModelStandard.vert" />
     <EmbeddedResource Include="shaders\color.frag" />
     <EmbeddedResource Include="shaders\color.vert" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Veldrid" Version="4.8.0" />
+    <PackageReference Include="Veldrid.ImageSharp" Version="4.8.0" />
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.13" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="4.8.0" />
   </ItemGroup>
