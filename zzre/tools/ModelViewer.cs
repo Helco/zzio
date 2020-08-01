@@ -8,6 +8,7 @@ using zzio.rwbs;
 using zzre.core;
 using zzio.utils;
 using System.Numerics;
+using ImGuiNET;
 
 namespace zzre.tools
 {
@@ -26,6 +27,8 @@ namespace zzre.tools
         private ModelStandardUniforms geometryUniforms;
         private bool isGeometryUniformsDirty = true;
         private ResourceSet[] resourceSets = new ResourceSet[0];
+        private float distance = 2.0f;
+        private Vector2 cameraAngle = Vector2.Zero;
 
         public Window Window { get; }
 
@@ -35,9 +38,9 @@ namespace zzre.tools
             device = diContainer.GetTag<GraphicsDevice>();
             vfs = diContainer.GetTag<zzio.vfs.VirtualFileSystem>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
+            Window.OnDrag += HandleDrag;
             builtPipeline = diContainer.GetTag<StandardPipelines>().ModelStandard;
             fbWindow = new FramebufferWindowTag(Window, device);
-            fbWindow.Pipeline = builtPipeline.Pipeline;
             fbWindow.OnRender += HandleRender;
             fbWindow.OnResize += HandleResize;
 
@@ -152,6 +155,7 @@ namespace zzre.tools
                 cl.UpdateBuffer(geometryUniformBuffer, 0, ref geometryUniforms);
             }
 
+            cl.SetPipeline(builtPipeline.Pipeline);
             geometryBuffers.SetBuffers(cl);
             foreach (var (subMesh, index) in geometryBuffers.SubMeshes.Indexed())
             {
@@ -170,6 +174,25 @@ namespace zzre.tools
             float ratio = fbWindow.Framebuffer.Width / (float)fbWindow.Framebuffer.Height;
             geometryUniforms.projection = Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, ratio, 0.01f, 100.0f);
             isGeometryUniformsDirty = true;
+        }
+
+        private void HandleDrag(ImGuiMouseButton button, Vector2 delta)
+        {
+            if (button != ImGuiMouseButton.Right)
+                return;
+
+            cameraAngle += delta * 0.01f;
+            while (cameraAngle.X > MathF.PI) cameraAngle.X -= 2 * MathF.PI;
+            while (cameraAngle.X < -MathF.PI) cameraAngle.X += 2 * MathF.PI;
+            cameraAngle.Y = Math.Clamp(cameraAngle.Y, -MathF.PI / 2.0f, MathF.PI / 2.0f);
+
+            var cameraPosition = distance * new Vector3(
+                MathF.Sin(cameraAngle.Y) * MathF.Cos(cameraAngle.X),
+                MathF.Cos(cameraAngle.Y),
+                MathF.Sin(cameraAngle.Y) * MathF.Sin(cameraAngle.X));
+            geometryUniforms.view = Matrix4x4.CreateRotationY(cameraAngle.X) * Matrix4x4.CreateRotationX(cameraAngle.Y) * Matrix4x4.CreateTranslation(0.0f, 0.0f, -distance);
+            isGeometryUniformsDirty = true;
+            fbWindow.IsDirty = true;
         }
     }
 }

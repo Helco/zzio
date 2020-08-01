@@ -50,6 +50,7 @@ namespace zzre
                 .With("Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)
                 .With("Sampler", ResourceKind.Sampler, ShaderStages.Fragment)
                 .With("UniformBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment)
+                .With(FrontFace.CounterClockwise)
                 .Build());
         }
     }

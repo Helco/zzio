@@ -21,7 +21,6 @@ namespace zzre.imgui
 
         public Window Window { get; }
         public Framebuffer Framebuffer { get; private set; }
-        public Pipeline? Pipeline { get; set; }
         public bool IsDirty { get; set; } = true;
         public event Action<CommandList> OnRender = _ => { };
         public event Action OnResize = () => { };
@@ -94,23 +93,25 @@ namespace zzre.imgui
             if (Framebuffer.Width != (uint)size.X || Framebuffer.Height != (uint)size.Y)
                 Resize(size);
 
+            Vector4 normalColor;
+            unsafe { normalColor = *ImGui.GetStyleColorVec4(ImGuiCol.Button); }
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.Zero);
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, normalColor);
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, normalColor);
             ImGui.ImageButton(bindingHandle, size);
+            ImGui.PopStyleColor(2);
             ImGui.PopStyleVar(3);
         }
 
         private void HandleRender()
         {
-            if (Pipeline == null)
-                return;
             if (!IsDirty)
                 return;
             IsDirty = false;
 
             fence.Reset();
             commandList.Begin();
-            commandList.SetPipeline(Pipeline);
             commandList.SetFramebuffer(Framebuffer);
             commandList.ClearColorTarget(0, RgbaFloat.Clear);
             commandList.ClearDepthStencil(1f);
