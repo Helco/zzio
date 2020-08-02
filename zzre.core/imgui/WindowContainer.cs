@@ -86,7 +86,7 @@ namespace zzre.imgui
                 if (window.IsFocused)
                 {
                     FocusedWindow = window;
-                    window.HandleDragEvent();
+                    window.HandleMouseEvents();
                 }
             }
         }

@@ -39,6 +39,7 @@ namespace zzre.tools
             vfs = diContainer.GetTag<zzio.vfs.VirtualFileSystem>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
             Window.OnDrag += HandleDrag;
+            Window.OnScroll += HandleScroll;
             builtPipeline = diContainer.GetTag<StandardPipelines>().ModelStandard;
             fbWindow = new FramebufferWindowTag(Window, device);
             fbWindow.OnRender += HandleRender;
@@ -185,11 +186,21 @@ namespace zzre.tools
             while (cameraAngle.X > MathF.PI) cameraAngle.X -= 2 * MathF.PI;
             while (cameraAngle.X < -MathF.PI) cameraAngle.X += 2 * MathF.PI;
             cameraAngle.Y = Math.Clamp(cameraAngle.Y, -MathF.PI / 2.0f, MathF.PI / 2.0f);
+            UpdateCamera();
+        }
 
-            var cameraPosition = distance * new Vector3(
-                MathF.Sin(cameraAngle.Y) * MathF.Cos(cameraAngle.X),
-                MathF.Cos(cameraAngle.Y),
-                MathF.Sin(cameraAngle.Y) * MathF.Sin(cameraAngle.X));
+        private void HandleScroll(float scroll)
+        {
+            distance = distance * MathF.Pow(2.0f, scroll * 0.1f);
+            UpdateCamera();
+        }
+
+        private void UpdateCamera()
+        {
+            var cameraPosition = distance * new Vector3( // TODO: Maybe move this formula to some utility/extension?
+                            MathF.Sin(cameraAngle.Y) * MathF.Cos(cameraAngle.X),
+                            MathF.Cos(cameraAngle.Y),
+                            MathF.Sin(cameraAngle.Y) * MathF.Sin(cameraAngle.X));
             geometryUniforms.view = Matrix4x4.CreateRotationY(cameraAngle.X) * Matrix4x4.CreateRotationX(cameraAngle.Y) * Matrix4x4.CreateTranslation(0.0f, 0.0f, -distance);
             isGeometryUniformsDirty = true;
             fbWindow.IsDirty = true;

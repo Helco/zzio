@@ -34,6 +34,7 @@ namespace zzre.imgui
         public event Action OnBeforeContent = () => { };
         public event Action OnContent = () => { };
         public event Action<ImGuiMouseButton, Vector2> OnDrag = (_, __) => { };
+        public event Action<float> OnScroll = _ => { };
         public event Action<Key> OnKeyDown = _ => { };
         public event Action<Key> OnKeyUp = _ => { };
 
@@ -76,8 +77,13 @@ namespace zzre.imgui
             End();
         }
 
-        public void HandleDragEvent()
+        public void HandleMouseEvents()
         {
+            // Scroll event
+            if (Bounds.IsInside(GetIO().MousePos) && MathF.Abs(GetIO().MouseWheel) > 0.01f)
+                OnScroll(GetIO().MouseWheel);
+
+            // Drag event
             for (int i = 0; i < (int)ImGuiMouseButton.COUNT; i++)
             {
                 var button = (ImGuiMouseButton)i;
