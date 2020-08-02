@@ -10,7 +10,7 @@ namespace zzio.tests
     public class TestPAKArchive
     {
         private readonly byte[] sampleData = File.ReadAllBytes(
-            Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/archive_sample2.pak")
+            Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/archive_sample2.pak")
         );
 
         [Test]

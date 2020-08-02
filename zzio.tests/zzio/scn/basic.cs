@@ -10,7 +10,7 @@ namespace zzio.tests.scn
     public class TestSceneBasic
     {
         private readonly byte[] sampleData = File.ReadAllBytes(
-            Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/scene_sample.scn")
+            Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/scene_sample.scn")
         );
 
         private void testScene(Scene scn)

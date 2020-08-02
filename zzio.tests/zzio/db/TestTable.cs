@@ -11,7 +11,7 @@ namespace zzio.tests.db
     public class TestTable
     {
         private readonly byte[] sampleData = File.ReadAllBytes(
-            Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/table.fbs")
+            Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/table.fbs")
         );
 
         private void testTable(Table table)

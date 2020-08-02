@@ -11,7 +11,7 @@ namespace zzio.tests.db
     public class TestIndexTable
     {
         private readonly byte[] sampleData = File.ReadAllBytes(
-            Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/indextable.fbs")
+            Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/indextable.fbs")
         );
 
         private void testIndexTable(IndexTable table)

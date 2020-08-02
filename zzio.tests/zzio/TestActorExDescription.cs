@@ -9,7 +9,7 @@ namespace zzio.tests
     public class TestActorExDescription
     {
         private readonly byte[] sampleData = File.ReadAllBytes(
-            Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/actorex_sample.aed")
+            Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/actorex_sample.aed")
         );
 
         private void testInstance(ActorExDescription aed)

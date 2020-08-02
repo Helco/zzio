@@ -9,7 +9,7 @@ namespace zzio.tests
     public class TestVarConfig
     {
         private readonly byte[] sampleData = File.ReadAllBytes(
-            Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/varconfig_sample.cfg")
+            Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/varconfig_sample.cfg")
         );
 
         private readonly float TOLERANCE = 0.0001f;

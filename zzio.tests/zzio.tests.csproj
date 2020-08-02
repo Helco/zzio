@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\zzio\zzio.csproj" />
+    <None Include="$(ProjectDir)resources\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

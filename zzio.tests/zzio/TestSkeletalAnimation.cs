@@ -9,7 +9,7 @@ namespace zzio.tests
     public class TestSkeletalAnimation
     {
         private readonly byte[] sampleData = File.ReadAllBytes(
-            Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/animation_sample.ani")
+            Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/animation_sample.ani")
         );
 
         private readonly float TOLERANCE = 0.0001f;

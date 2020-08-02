@@ -9,7 +9,7 @@ namespace zzio.tests
     public class TestMapMarker
     {
         private readonly byte[] sampleData = File.ReadAllBytes(
-            Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/mapmarker_sample.cfg")
+            Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/mapmarker_sample.cfg")
         );
 
         private void testMarkers(MapMarker[] mapMarkers)

@@ -8,7 +8,7 @@ namespace zzio.tests.vfs
 {
     public static class PoolResources
     {
-        private readonly static FilePath resourceDir = new FilePath(TestContext.CurrentContext.TestDirectory).Combine("../../../resources/");
+        private readonly static FilePath resourceDir = new FilePath(TestContext.CurrentContext.TestDirectory).Combine("resources/");
 
         public static IResourcePool[] AllResourcePools => new IResourcePool[]
         {

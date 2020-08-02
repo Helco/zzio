@@ -10,7 +10,7 @@ namespace zzio.tests.rwbs
     public class TestRWBSBasic
     {
         private readonly byte[] sampleData = File.ReadAllBytes(
-            Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/rwbs_sample.dff")
+            Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/rwbs_sample.dff")
         );
 
         private void testSection(Section section)
