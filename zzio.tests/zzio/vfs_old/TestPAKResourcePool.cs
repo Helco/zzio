@@ -5,31 +5,31 @@ using NUnit.Framework;
 using zzio.vfs;
 using zzio.utils;
 
-namespace zzio.tests.vfs
+namespace zzio.tests.vfs_old
 {
     [TestFixture]
     public class TestPAKResourcePool
     {
         private readonly static FilePath baseDir =
             new FilePath(TestContext.CurrentContext.TestDirectory)
-            .Combine("../../../resources/archive_sample.pak");
-        private readonly static PAKResourcePool pool =
-            new PAKResourcePool(baseDir.ToPOSIXString() + "?a");
+            .Combine("../../../resources/archive_sample2.pak");
+        private readonly static PAKResourcePool_OLD pool =
+            new PAKResourcePool_OLD(baseDir.ToPOSIXString() + "?a");
 
         [Test]
         public void getresourcetype()
         {
-            Assert.AreEqual(ResourceType.File, pool.GetResourceType("a.txt"));
-            Assert.AreEqual(ResourceType.File, pool.GetResourceType("b.txt"));
-            Assert.AreEqual(ResourceType.File, pool.GetResourceType("c/D.txt"));
-            Assert.AreEqual(ResourceType.File, pool.GetResourceType("e/f/g.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, pool.GetResourceType("a.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, pool.GetResourceType("b.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, pool.GetResourceType("c/D.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, pool.GetResourceType("e/f/g.txt"));
             
-            Assert.AreEqual(ResourceType.Directory, pool.GetResourceType("."));
-            Assert.AreEqual(ResourceType.Directory, pool.GetResourceType("c"));
-            Assert.AreEqual(ResourceType.Directory, pool.GetResourceType("e/F/"));
+            Assert.AreEqual(ResourceType_OLD.Directory, pool.GetResourceType("."));
+            Assert.AreEqual(ResourceType_OLD.Directory, pool.GetResourceType("c"));
+            Assert.AreEqual(ResourceType_OLD.Directory, pool.GetResourceType("e/F/"));
 
-            Assert.AreEqual(ResourceType.NonExistant, pool.GetResourceType("Z"));
-            Assert.AreEqual(ResourceType.NonExistant, pool.GetResourceType("BLA/z.txt"));
+            Assert.AreEqual(ResourceType_OLD.NonExistant, pool.GetResourceType("Z"));
+            Assert.AreEqual(ResourceType_OLD.NonExistant, pool.GetResourceType("BLA/z.txt"));
         }
         
         private void testStream(string expected, Stream stream)
@@ -61,7 +61,7 @@ namespace zzio.tests.vfs
         {
             Assert.AreEqual(new string[]
             {
-                "a.txt", "B.txt", "c/", "e/"
+                "a.txt", "B.txt", "c", "e"
             }, pool.GetDirectoryContent("."));
 
             Assert.AreEqual(new string[]

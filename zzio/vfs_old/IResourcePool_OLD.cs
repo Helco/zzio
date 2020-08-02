@@ -3,7 +3,7 @@ using System.IO;
 
 namespace zzio.vfs
 {
-    public enum ResourceType
+    public enum ResourceType_OLD
     {
         NonExistant,
         File,
@@ -13,11 +13,11 @@ namespace zzio.vfs
     /// <summary>An interface to a mounted set of resources</summary>
     /// Paths will always be relative, normalized, case-sensitive POSIX strings.
     /// A resource pool may be case-sensitive or case-insensitive.
-    public interface IResourcePool
+    public interface IResourcePool_OLD
     {
         /// <summary>Returns the type of resource</summary>
         /// <param name="path">A normalized path string</param>
-        ResourceType GetResourceType(string path);
+        ResourceType_OLD GetResourceType(string path);
 
         /// <summary>Loads a readable file by path</summary>
         /// <remarks>While the returned stream is opened, no other file may be opened</remarks>

@@ -8,14 +8,14 @@ namespace zzio.vfs
 {
     public class VirtualFileSystem
     {
-        private static readonly Dictionary<string, Func<string, IResourcePool>> resourcePoolTypes =
-            new Dictionary<string, Func<string, IResourcePool>>()
+        private static readonly Dictionary<string, Func<string, IResourcePool_OLD>> resourcePoolTypes =
+            new Dictionary<string, Func<string, IResourcePool_OLD>>()
             {
-                { "file", (path) => new FileResourcePool(path) },
-                { "pak",  (path) => new PAKResourcePool(path) }
+                { "file", (path) => new FileResourcePool_OLD(path) },
+                { "pak",  (path) => new PAKResourcePool_OLD(path) }
             };
 
-        protected List<IResourcePool> pools = new List<IResourcePool>();
+        protected List<IResourcePool_OLD> pools = new List<IResourcePool_OLD>();
 
         public void AddResourcePool(string type, string path)
         {
@@ -24,19 +24,19 @@ namespace zzio.vfs
             AddResourcePool(resourcePoolTypes[type](path));
         }
 
-        public virtual void AddResourcePool(IResourcePool pool)
+        public virtual void AddResourcePool(IResourcePool_OLD pool)
         {
             pools.Add(pool);
         }
 
         /// finds a case-insensitive resource in a (possibly) case-sensitive pool
         /// <returns>UB if `resourceType == NonExistant`</returns>
-        protected static FilePath findResourceIn(string pathString, IResourcePool pool, out ResourceType resourceType)
+        protected static FilePath findResourceIn(string pathString, IResourcePool_OLD pool, out ResourceType_OLD resourceType)
         {
             FilePath path = new FilePath(pathString).Normalized;
             // naive try
             resourceType = pool.GetResourceType(path.ToPOSIXString());
-            if (resourceType != ResourceType.NonExistant)
+            if (resourceType != ResourceType_OLD.NonExistant)
                 return path;
 
             // combine parts one by one
@@ -65,25 +65,25 @@ namespace zzio.vfs
             return curPath;
         }
 
-        public virtual ResourceType GetResourceType(string path)
+        public virtual ResourceType_OLD GetResourceType(string path)
         {
-            foreach (IResourcePool pool in pools)
+            foreach (IResourcePool_OLD pool in pools)
             {
-                ResourceType type;
+                ResourceType_OLD type;
                 findResourceIn(path, pool, out type);
-                if (type != ResourceType.NonExistant)
+                if (type != ResourceType_OLD.NonExistant)
                     return type;
             }
-            return ResourceType.NonExistant;
+            return ResourceType_OLD.NonExistant;
         }
 
         public virtual Stream GetFileContent(string path)
         {
-            foreach (IResourcePool pool in pools)
+            foreach (IResourcePool_OLD pool in pools)
             {
-                ResourceType type;
+                ResourceType_OLD type;
                 FilePath casePath = findResourceIn(path, pool, out type);
-                if (type != ResourceType.File)
+                if (type != ResourceType_OLD.File)
                     continue;
                 Stream stream = pool.GetFileContent(casePath.ToPOSIXString());
                 if (stream != null)
@@ -95,11 +95,11 @@ namespace zzio.vfs
         public virtual string[] GetDirectoryContent(string path)
         {
             IEnumerable<string> content = new HashSet<string>();
-            foreach (IResourcePool pool in pools)
+            foreach (IResourcePool_OLD pool in pools)
             {
-                ResourceType type;
+                ResourceType_OLD type;
                 FilePath casePath = findResourceIn(path, pool, out type);
-                if (type != ResourceType.Directory)
+                if (type != ResourceType_OLD.Directory)
                     continue;
                 content = content.Union(
                     pool.GetDirectoryContent(casePath.ToPOSIXString())
@@ -124,13 +124,13 @@ namespace zzio.vfs
             FilePath[] contentPaths = GetDirectoryContent(basePath.ToPOSIXString())
                 .Select(fileName => basePath.Combine(fileName))
                 .ToArray();
-            ResourceType[] types = contentPaths
+            ResourceType_OLD[] types = contentPaths
                 .Select(contentPath => GetResourceType(contentPath.ToPOSIXString()))
                 .ToArray();
 
             for (int i = 0; i < contentPaths.Length; i++)
             {
-                if (types[i] == ResourceType.Directory)
+                if (types[i] == ResourceType_OLD.Directory)
                     result = result.Concat(SearchFilePaths(filter, contentPaths[i]));
                 else if (filter(contentPaths[i]))
                     result = result.Append(contentPaths[i]);

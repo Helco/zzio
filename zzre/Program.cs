@@ -53,9 +53,9 @@ namespace zzre
             pipelineCollection.AddShaderResourceAssemblyOf<Program>();
             var windowContainer = new WindowContainer(graphicsDevice);
             var vfs = new VirtualFileSystem();
-            vfs.AddResourcePool(new PAKResourcePool(@"C:\dev\zanzarah\Resources\DATA_0.PAK?resources/"));
-            vfs.AddResourcePool(new FileResourcePool(@"C:\dev\zanzarah\Resources\"));
-            vfs.AddResourcePool(new FileResourcePool(@"C:\dev\zanzarah\Data\"));
+            vfs.AddResourcePool(new PAKResourcePool_OLD(@"C:\dev\zanzarah\Resources\DATA_0.PAK?resources/"));
+            vfs.AddResourcePool(new FileResourcePool_OLD(@"C:\dev\zanzarah\Resources\"));
+            vfs.AddResourcePool(new FileResourcePool_OLD(@"C:\dev\zanzarah\Data\"));
             var diContainer = new TagContainer();
             diContainer
                 .AddTag(windowContainer)

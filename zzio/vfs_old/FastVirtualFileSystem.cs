@@ -9,9 +9,9 @@ namespace zzio.vfs
 {
     public class FastVirtualFileSystem : VirtualFileSystem
     {
-        private Dictionary<FilePath, IResourcePool> files = new Dictionary<FilePath, IResourcePool>();
+        private Dictionary<FilePath, IResourcePool_OLD> files = new Dictionary<FilePath, IResourcePool_OLD>();
 
-        public override void AddResourcePool(IResourcePool pool)
+        public override void AddResourcePool(IResourcePool_OLD pool)
         {
             base.AddResourcePool(pool);
 
@@ -25,9 +25,9 @@ namespace zzio.vfs
                 {
                     var fullPath = dir.Combine(content);
                     var type = pool.GetResourceType(fullPath.ToPOSIXString());
-                    if (type == ResourceType.Directory)
+                    if (type == ResourceType_OLD.Directory)
                         dirQueue.Enqueue(fullPath);
-                    else if (type == ResourceType.File)
+                    else if (type == ResourceType_OLD.File)
                         files.TryAdd(fullPath, pool);
                     else
                         throw new InvalidProgramException("Invalid IResourcePool implementation");
@@ -35,10 +35,10 @@ namespace zzio.vfs
             }
         }
 
-        public override ResourceType GetResourceType(string searchPath)
+        public override ResourceType_OLD GetResourceType(string searchPath)
         {
             if (files.ContainsKey(new FilePath(searchPath).Normalized))
-                return ResourceType.File;
+                return ResourceType_OLD.File;
 
             // either it is a directory or does not actually exist
             return base.GetResourceType(searchPath);

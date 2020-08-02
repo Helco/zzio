@@ -10,7 +10,7 @@ namespace zzio.tests
     public class TestPAKArchive
     {
         private readonly byte[] sampleData = File.ReadAllBytes(
-            Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/archive_sample.pak")
+            Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../resources/archive_sample2.pak")
         );
 
         [Test]
@@ -71,13 +71,13 @@ namespace zzio.tests
             Assert.AreEqual(new string[]
             {
                 "A/a.txt", "a/B.txt", "a/c/d.txt", "a/e/f/g.txt",
-                "a/", "a/c/", "a/e/f/", "a/e/"
+                "a", "a/c", "a/e/f", "a/e"
             }, archive.GetDirectoryContent("", true));
 
             Assert.AreEqual(new string[]
             {
                 "a.txt", "B.txt", "c/d.txt", "e/f/g.txt",
-                "c/", "e/f/", "e/"
+                "c", "e/f", "e"
             }, archive.GetDirectoryContent("A", true));
 
             Assert.AreEqual(new string[]
@@ -87,12 +87,12 @@ namespace zzio.tests
 
             Assert.AreEqual(new string[]
             {
-                "f/g.txt", "f/"
+                "f/g.txt", "f"
             }, archive.GetDirectoryContent("A/E", true));
 
             Assert.AreEqual(new string[]
             {
-                "a.txt", "B.txt", "c/", "e/"
+                "a.txt", "B.txt", "c", "e"
             }, archive.GetDirectoryContent("a", false));
         }
     }

@@ -3,7 +3,7 @@ using System.IO;
 using NUnit.Framework;
 using zzio.vfs;
 
-namespace zzio.tests.vfs
+namespace zzio.tests.vfs_old
 {
     [TestFixture]
     public class TestVirtualFileSystem
@@ -50,22 +50,22 @@ namespace zzio.tests.vfs
         [Test, Combinatorial]
         public void getresourcetype([ValueSource("testSystems")] VirtualFileSystem vfs)
         {
-            Assert.AreEqual(ResourceType.File, vfs.GetResourceType("content.txt"));
-            Assert.AreEqual(ResourceType.File, vfs.GetResourceType("a/d.txt"));
-            Assert.AreEqual(ResourceType.File, vfs.GetResourceType("c/a.txt"));
-            Assert.AreEqual(ResourceType.File, vfs.GetResourceType("d/E\\f.txt"));
-            Assert.AreEqual(ResourceType.File, vfs.GetResourceType("d/e/sdf\\\\.././g.txt"));
-            Assert.AreEqual(ResourceType.File, vfs.GetResourceType("d/h/i.txt"));
-            Assert.AreEqual(ResourceType.File, vfs.GetResourceType("a/b.txt"));
-            Assert.AreEqual(ResourceType.File, vfs.GetResourceType("a/c.txt"));
-            Assert.AreEqual(ResourceType.File, vfs.GetResourceType("b/a.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, vfs.GetResourceType("content.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, vfs.GetResourceType("a/d.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, vfs.GetResourceType("c/a.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, vfs.GetResourceType("d/E\\f.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, vfs.GetResourceType("d/e/sdf\\\\.././g.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, vfs.GetResourceType("d/h/i.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, vfs.GetResourceType("a/b.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, vfs.GetResourceType("a/c.txt"));
+            Assert.AreEqual(ResourceType_OLD.File, vfs.GetResourceType("b/a.txt"));
 
-            Assert.AreEqual(ResourceType.Directory, vfs.GetResourceType("a/"));
-            Assert.AreEqual(ResourceType.Directory, vfs.GetResourceType("d/e"));
-            Assert.AreEqual(ResourceType.Directory, vfs.GetResourceType("b"));
+            Assert.AreEqual(ResourceType_OLD.Directory, vfs.GetResourceType("a/"));
+            Assert.AreEqual(ResourceType_OLD.Directory, vfs.GetResourceType("d/e"));
+            Assert.AreEqual(ResourceType_OLD.Directory, vfs.GetResourceType("b"));
 
-            Assert.AreEqual(ResourceType.NonExistant, vfs.GetResourceType("asd"));
-            Assert.AreEqual(ResourceType.NonExistant, vfs.GetResourceType("d/e/asldkj"));
+            Assert.AreEqual(ResourceType_OLD.NonExistant, vfs.GetResourceType("asd"));
+            Assert.AreEqual(ResourceType_OLD.NonExistant, vfs.GetResourceType("d/e/asldkj"));
         }
 
         private void testStream(byte[] expected, Stream stream)

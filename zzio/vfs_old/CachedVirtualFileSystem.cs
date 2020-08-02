@@ -9,7 +9,7 @@ namespace zzio.vfs
 {
     public class CachedVirtualFileSystem : VirtualFileSystem
     {
-        public override void AddResourcePool(IResourcePool pool)
+        public override void AddResourcePool(IResourcePool_OLD pool)
         {
             if (!(pool is CachedResourcePool))
                 pool = new CachedResourcePool(pool);

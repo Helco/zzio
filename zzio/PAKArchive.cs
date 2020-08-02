@@ -60,11 +60,11 @@ namespace zzio
                 string key = getPathKey(entry.path);
                 archive.entries[key] = entry;
 
-                var parent = entry.path.Parent;
+                var parent = entry.path.Parent.WithoutDirectoryMarker();
                 while (parent?.StaysInbound ?? false)
                 {
                     archive.directories[getPathKey(parent)] = parent;
-                    parent = parent.Parent;
+                    parent = parent.Parent.WithoutDirectoryMarker();
                 }
             }
             archive.baseOffset = (UInt32)baseStream.Position;
@@ -87,18 +87,23 @@ namespace zzio
             return new RangeStream(stream, entry.length, false, false);
         }
 
-        public string[] GetDirectoryContent(string pathString, bool recursive = true)
+        public string[] GetDirectoryContent(string pathString, bool recursive = true) =>
+            GetContentIn(entries.Values.Select(e => e.path).Concat(directories.Values), pathString, recursive);
+
+        public string[] GetFilesIn(string pathString, bool recursive = true) =>
+            GetContentIn(entries.Values.Select(e => e.path), pathString, recursive);
+
+        public string[] GetDirectoriesIn(string pathString, bool recursive = true) =>
+            GetContentIn(directories.Values, pathString, recursive);
+
+        private string[] GetContentIn(IEnumerable<FilePath> set, string pathString, bool recursive)
         {
             FilePath dirPath = new FilePath(pathString);
             if (!dirPath.StaysInbound)
                 throw new InvalidOperationException("Queried path does not stay inbounds");
 
-            var results = entries.Values
-                .Select(entry => entry.path.RelativeTo(pathString, false))
-                .Concat(directories.Values
-                    .Select(entry => entry.RelativeTo(pathString, false))
-                    .Where(filePath => filePath.StaysInbound)
-                )
+            var results = set
+                .Select(filePath => filePath.RelativeTo(pathString, false))
                 .Where(filePath => filePath.StaysInbound && filePath.Parts.Length > 0);
 
             if (!recursive)

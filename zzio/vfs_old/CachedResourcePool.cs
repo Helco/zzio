@@ -6,14 +6,14 @@ using zzio.utils;
 
 namespace zzio.vfs
 {
-    public class CachedResourcePool : IResourcePool
+    public class CachedResourcePool : IResourcePool_OLD
     {
-        private IResourcePool pool;
+        private IResourcePool_OLD pool;
         
         private OrderedDictionary resourceTypes = new OrderedDictionary(256); // string to ResourceType
         private OrderedDictionary directoryContents = new OrderedDictionary(16); // string to string[]
 
-        public CachedResourcePool(IResourcePool pool)
+        public CachedResourcePool(IResourcePool_OLD pool)
         {
             this.pool = pool;
         }
@@ -23,8 +23,8 @@ namespace zzio.vfs
             if (directoryContents.Contains(path))
                 return (string[])directoryContents[path];
             
-            ResourceType type = GetResourceType(path);
-            if (type == ResourceType.Directory)
+            ResourceType_OLD type = GetResourceType(path);
+            if (type == ResourceType_OLD.Directory)
             {
                 string[] content = pool.GetDirectoryContent(path);
                 directoryContents.Add(path, content);
@@ -35,18 +35,18 @@ namespace zzio.vfs
 
         public Stream GetFileContent(string path)
         {
-            ResourceType type = GetResourceType(path);
-            if (type == ResourceType.File)
+            ResourceType_OLD type = GetResourceType(path);
+            if (type == ResourceType_OLD.File)
                 return pool.GetFileContent(path);
             return null;
         }
 
-        public ResourceType GetResourceType(string path)
+        public ResourceType_OLD GetResourceType(string path)
         {
             if (resourceTypes.Contains(path))
-                return (ResourceType)resourceTypes[path];
+                return (ResourceType_OLD)resourceTypes[path];
             
-            ResourceType type = pool.GetResourceType(path);
+            ResourceType_OLD type = pool.GetResourceType(path);
             resourceTypes.Add(path, type);
             return type;
         }

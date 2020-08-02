@@ -1,56 +1,63 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using zzio;
+using System.Linq;
 using zzio.utils;
 
 namespace zzio.vfs
 {
     public class PAKResourcePool : IResourcePool
     {
-        private readonly FilePath basePath;
         private readonly PAKArchive archive;
+        public IResource Root => new PAKDirectory(this, null, "");
 
-        public PAKResourcePool(string archivePath)
+        public PAKResourcePool(PAKArchive archive)
         {
-            string[] parts = archivePath.Split(new char[] { '?' }, StringSplitOptions.RemoveEmptyEntries);
-            FileStream stream = new FileStream(parts[0], FileMode.Open, FileAccess.Read);
-            archive = PAKArchive.ReadNew(stream);
-            basePath = new FilePath(parts.Length > 1 ? parts[1] : "");
+            this.archive = archive;
         }
 
-        public string[] GetDirectoryContent(string pathString)
+        private class PAKDirectory : IResource
         {
-            FilePath path = basePath.Combine(pathString);
-            return archive.GetDirectoryContent(path.ToWin32String(), false);
+            private readonly PAKResourcePool pool;
+            public ResourceType Type => ResourceType.Directory;
+            public FilePath Path { get; }
+            public IResourcePool Pool => pool;
+            public IResource Parent { get; }
+            public Stream? OpenContent() => null;
+
+            public PAKDirectory(PAKResourcePool pool, IResource parent, string pathText) : this(pool, parent, new FilePath(pathText)) { }
+            public PAKDirectory(PAKResourcePool pool, IResource parent, FilePath path)
+            {
+                this.pool = pool;
+                Path = path;
+                Parent = parent;
+            }
+
+            public IEnumerable<IResource> Files => pool.archive
+                .GetFilesIn(Path.ToPOSIXString(), false)
+                .Select(fileName => new PAKFile(pool, this, Path.Combine(fileName)));
+            public IEnumerable<IResource> Directories => pool.archive
+                .GetDirectoriesIn(Path.ToPOSIXString(), false)
+                .Select(fileName => new PAKDirectory(pool, this, Path.Combine(fileName)));
         }
 
-        public Stream GetFileContent(string pathString)
+        private class PAKFile : IResource
         {
-            try
-            {
-                FilePath path = basePath.Combine(pathString);
-                return archive.ReadFile(path.ToWin32String());
-            }
-            catch(Exception)
-            {
-                return null;
-            }
-        }
+            private readonly PAKResourcePool pool;
+            public ResourceType Type => ResourceType.File;
+            public FilePath Path { get; }
+            public IResourcePool Pool => pool;
+            public IResource Parent { get; }
+            public IEnumerator<IResource> GetEnumerator() => Enumerable.Empty<IResource>().GetEnumerator();
 
-        public ResourceType GetResourceType(string path)
-        {
-            Stream fileContent = GetFileContent(path);
-            if (fileContent != null)
+            public PAKFile(PAKResourcePool pool, IResource parent, FilePath path)
             {
-                fileContent.Close();
-                return ResourceType.File;
+                this.pool = pool;
+                Path = path;
+                Parent = parent;
             }
 
-            string[] dirContent = GetDirectoryContent(path);
-            if (dirContent.Length != 0)
-                return ResourceType.Directory;
-
-            return ResourceType.NonExistant;
+            public Stream OpenContent() => pool.archive.ReadFile(Path.ToPOSIXString());
         }
     }
 }

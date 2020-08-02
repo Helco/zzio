@@ -1,60 +1,78 @@
-using System;
-using System.IO;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using zzio.utils;
+using System.Collections;
 
 namespace zzio.vfs
 {
     public class FileResourcePool : IResourcePool
     {
         private readonly FilePath basePath;
+        public IResource Root => new DirectoryResource(this, null, "");
 
-        public FileResourcePool(string basePathString)
+        public FileResourcePool(string pathText) : this(new FilePath(pathText)) { }
+        public FileResourcePool(FilePath basePath)
         {
-            this.basePath = new FilePath(basePathString).Absolute;
+            this.basePath = basePath.Absolute;
         }
 
-        public ResourceType GetResourceType(string path)
+        private class DirectoryResource : IResource
         {
-            try
+            private readonly FileResourcePool pool;
+            public FilePath Path { get; }
+            public ResourceType Type => ResourceType.Directory;
+            public IResourcePool Pool => pool;
+            public IResource? Parent { get; }
+            public Stream? OpenContent() => null;
+
+            public DirectoryResource(FileResourcePool pool, IResource? parent, string pathText) : this(pool, parent, new FilePath(pathText)) { }
+            public DirectoryResource(FileResourcePool pool, IResource? parent, FilePath path)
             {
-                var attr = File.GetAttributes(basePath.Combine(path).ToString());
-                if ((attr & FileAttributes.Directory) > 0)
-                    return ResourceType.Directory;
-                return ResourceType.File;
+                Path = path;
+                Parent = parent;
+                this.pool = pool;
             }
-            catch (IOException)
-            {
-                return ResourceType.NonExistant;
-            }
+
+            public IEnumerable<IResource> Files => Directory
+                .GetFiles(pool.basePath.Combine(Path).ToString())
+                .Select(fullPath => Path.Combine(System.IO.Path.GetFileName(fullPath)))
+                .Select(relativePath => new FileResource(pool, this, relativePath));
+
+            public IEnumerable<IResource> Directories => Directory
+                .GetDirectories(pool.basePath.Combine(Path).ToString())
+                .Select(fullPath => Path.Combine(System.IO.Path.GetFileName(fullPath)))
+                .Select(relativePath => new DirectoryResource(pool, this, relativePath));
         }
 
-        public Stream GetFileContent(string path)
+        private class FileResource : IResource
         {
-            try
-            {
-                return new FileStream(basePath.Combine(path).ToString(),
-                    FileMode.Open, FileAccess.Read);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
+            private readonly FileResourcePool pool;
+            public FilePath Path { get; }
+            public ResourceType Type => ResourceType.File;
+            public IResourcePool Pool => pool;
+            public IResource? Parent { get; }
+            public IEnumerator<IResource> GetEnumerator() => Enumerable.Empty<IResource>().GetEnumerator();
 
-        public string[] GetDirectoryContent(string path)
-        {
-            try
+            public FileResource(FileResourcePool pool, IResource? parent, FilePath path)
             {
-                string realPath = basePath.Combine(path).ToString();
-                return Directory.GetFiles(realPath)
-                    .Concat(Directory.GetDirectories(realPath))
-                    .Select(absPath => new FilePath(absPath).RelativeTo(realPath).ToPOSIXString())
-                    .ToArray();
+                Path = path;
+                Parent = parent;
+                this.pool = pool;
             }
-            catch (Exception)
+
+            public Stream? OpenContent()
             {
-                return new string[0];
+                try
+                {
+                    var fullPath = pool.basePath.Combine(Path).ToString();
+                    return new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+                }
+                catch(IOException)
+                {
+                    return null;
+                }
             }
         }
     }

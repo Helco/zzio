@@ -31,13 +31,13 @@ namespace zzio.utils
 
         private readonly string[] parts;
         private readonly PathType type;
-        private readonly bool isDirectory;
+        public bool IsDirectory { get; }
 
         private FilePath(string[] parts, PathType type, bool isDirectory)
         {
             this.parts = parts;
             this.type = type;
-            this.isDirectory = isDirectory;
+            this.IsDirectory = isDirectory;
         }
 
         private static bool hasDrivePart(string[] parts)
@@ -63,7 +63,7 @@ namespace zzio.utils
             {
                 parts = new string[0];
                 type = PathType.Relative;
-                isDirectory = false;
+                IsDirectory = false;
                 return;
             }
             parts = path.Split(separators, StringSplitOptions.RemoveEmptyEntries);
@@ -73,13 +73,13 @@ namespace zzio.utils
                 type = PathType.Root;
             else if (hasDrivePart(parts))
                 type = PathType.Drive;
-            isDirectory =
+            IsDirectory =
                 path.LastIndexOfAny(separators) == path.Length - 1 ||
                 (parts.Length > 0 && isDirectoryPart(parts.Last()));
         }
 
         /// <summary>Constructs a new path as copy of another one</summary> 
-        public FilePath(FilePath path) : this(path.parts.ToArray(), path.type, path.isDirectory)
+        public FilePath(FilePath path) : this(path.parts.ToArray(), path.type, path.IsDirectory)
         {
         }
 
@@ -150,9 +150,9 @@ namespace zzio.utils
             // simple hash combine with XOR and some random constants
             int hash = 0;
             foreach (string part in parts)
-                hash = (hash << 2) ^ part.GetHashCode();
+                hash = (hash << 2) ^ part.ToLowerInvariant().GetHashCode();
             hash = (hash << 2) ^ ((int)type * 0x3fa5bde0);
-            hash = (hash << 2) ^ ((isDirectory ? 2 : 1) * 0x73abc00e);
+            hash = (hash << 2) ^ ((IsDirectory ? 2 : 1) * 0x73abc00e);
             return hash;
         }
 
@@ -202,13 +202,13 @@ namespace zzio.utils
         public FilePath Combine(IEnumerable<FilePath> paths)
         {
             List<string> newParts = new List<string>(parts);
-            bool lastIsDirectory = isDirectory;
+            bool lastIsDirectory = IsDirectory;
             foreach (FilePath path in paths)
             {
                 if (path.type != PathType.Relative)
                     throw new InvalidOperationException("Only relative paths can be combined");
                 newParts.AddRange(path.parts);
-                lastIsDirectory = path.isDirectory;
+                lastIsDirectory = path.IsDirectory;
             }
             return new FilePath(newParts.ToArray(), type, lastIsDirectory).Normalized;
         }
@@ -233,7 +233,7 @@ namespace zzio.utils
                     else
                         newParts.Add(part);
                 }
-                bool newIsDirectory = isDirectory ||
+                bool newIsDirectory = IsDirectory ||
                     (newParts.Count > 0 && isDirectoryPart(newParts.Last()));
                 return new FilePath(newParts.ToArray(), type, newIsDirectory);
             }
@@ -338,12 +338,12 @@ namespace zzio.utils
                 for (int i = partI; i < basePath.parts.Length; i++)
                     newParts.Add("..");
                 newParts.AddRange(me.parts.Skip(partI));
-                return new FilePath(newParts.ToArray(), PathType.Relative, isDirectory);
+                return new FilePath(newParts.ToArray(), PathType.Relative, IsDirectory);
             }
             // Case 2: "a/b/c/d" relative to "a/b" should return "c/d"
             else if (partI < me.parts.Length)
             {
-                return new FilePath(me.parts.Skip(partI).ToArray(), PathType.Relative, isDirectory);
+                return new FilePath(me.parts.Skip(partI).ToArray(), PathType.Relative, IsDirectory);
             }
             // Case 3: "a/b" relative to "a/b/c/d" should return "../../"
             else if (partI < basePath.parts.Length)
@@ -361,6 +361,8 @@ namespace zzio.utils
             throw new InvalidOperationException("This should never happen");
         }
 
+        public FilePath WithoutDirectoryMarker() => new FilePath(parts, type, false);
+
         /// <summary>Returns this path as windows path string ('\' as separator)</summary>
         /// <remarks>POSIX rooted paths (e.g. '/a/b') cannot be printed as windows path</remarks>
         public string ToWin32String()
@@ -374,7 +376,7 @@ namespace zzio.utils
                     result.Append('\\');
                 result.Append(part);
             }
-            if (isDirectory && parts.Length > 0)
+            if (IsDirectory && parts.Length > 0)
                 result.Append('\\');
             return result.ToString();
         }
@@ -389,7 +391,7 @@ namespace zzio.utils
                     result.Append('/');
                 result.Append(part);
             }
-            if (isDirectory && parts.Length > 0)
+            if (IsDirectory && parts.Length > 0)
                 result.Append('/');
 
             if (type == PathType.Root && parts.Length == 0)

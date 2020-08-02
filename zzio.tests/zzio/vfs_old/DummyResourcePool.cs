@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using zzio.vfs;
 using zzio.utils;
 
-namespace zzio.tests.vfs
+namespace zzio.tests.vfs_old
 {
-    public class DummyResourcePool : IResourcePool
+    public class DummyResourcePool : IResourcePool_OLD
     {
         private readonly byte[] fileContent;
         private readonly HashSet<string> files, directories;
@@ -30,14 +30,14 @@ namespace zzio.tests.vfs
             this.fileContent = fileContent.ToArray();
         }
 
-        public ResourceType GetResourceType(string path)
+        public ResourceType_OLD GetResourceType(string path)
         {
             if (files.Contains(path))
-                return ResourceType.File;
+                return ResourceType_OLD.File;
             if (directories.Contains(path) ||
                 directories.Contains(path + "/"))
-                return ResourceType.Directory;
-            return ResourceType.NonExistant;
+                return ResourceType_OLD.Directory;
+            return ResourceType_OLD.NonExistant;
         }
 
         public Stream GetFileContent(string path)
