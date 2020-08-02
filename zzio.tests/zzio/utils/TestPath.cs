@@ -21,7 +21,7 @@ namespace zzio.tests.utils
             Assert.AreEqual(true, path == new FilePath(path));
             Assert.AreEqual(true, path == "a/b/c/d");
             Assert.AreEqual(false, path.Equals("a/c/e/d"));
-            Assert.AreEqual(Env(true, false), path == "A/B/c/d");
+            Assert.AreEqual(true, path == "A/B/c/d");
             Assert.AreEqual(false, path != "a/b/c/d");
             Assert.AreEqual(true, path != "a/c/e/d");
 
