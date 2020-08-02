@@ -36,16 +36,17 @@ namespace zzre
             {
                 X = 100,
                 Y = 100,
-                WindowWidth = 1024,
-                WindowHeight = 768,
+                WindowWidth = 1024 * 3 / 2,
+                WindowHeight = 768 * 3 / 2,
                 WindowTitle = "Zanzarah"
             });
             var graphicsDevice = VeldridStartup.CreateGraphicsDevice(window, new GraphicsDeviceOptions
             {
                 PreferDepthRangeZeroToOne = true,
                 PreferStandardClipSpaceYDirection = true,
-                SyncToVerticalBlank = true
-            }, GraphicsBackend.Vulkan);
+                SyncToVerticalBlank = true,
+                Debug = true
+            }, GraphicsBackend.Direct3D11);
 
             var factory = graphicsDevice.ResourceFactory;
             var pipelineCollection = new PipelineCollection(factory);
