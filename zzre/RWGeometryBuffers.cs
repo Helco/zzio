@@ -26,6 +26,8 @@ namespace zzre
         private DeviceBuffer indexBuffer;
         private SubMesh[] subMeshes;
 
+        public int VertexCount => (int)(vertexBuffer.SizeInBytes / 4);
+        public int TriangleCount => (int)(indexBuffer.SizeInBytes / (2 * 3));
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
 
         public RWGeometryBuffers(ITagContainer diContainer, IBuiltPipeline pipeline, RWGeometry geometry)

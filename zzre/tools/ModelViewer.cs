@@ -23,6 +23,7 @@ namespace zzre.tools
         private readonly IBuiltPipeline builtPipeline;
         private readonly zzio.vfs.VirtualFileSystem vfs;
         private readonly DeviceBuffer geometryUniformBuffer;
+        private readonly (string name, Action content)[] infoSections;
 
         private RWGeometryBuffers? geometryBuffers;
         private ModelStandardUniforms geometryUniforms;
@@ -57,6 +58,11 @@ namespace zzre.tools
             geometryUniforms.world = Matrix4x4.Identity;
             geometryUniforms.tint = Vector4.One;
             AddDisposable(geometryUniformBuffer);
+
+            infoSections = new (string, Action)[]
+            {
+                ("Statistics", HandleStatistics)
+            };
         }
 
         public void LoadModel(string pathText)
@@ -160,8 +166,15 @@ namespace zzre.tools
                 didSetColumnWidth = true;
             }
             ImGui.BeginChild("LeftColumn", ImGui.GetContentRegionAvail(), false, ImGuiWindowFlags.HorizontalScrollbar);
-            for (int i = 0; i < 100; i++)
-                ImGui.Text($"This is some line {i}");
+            foreach (var (name, content) in infoSections)
+            {
+                if (!ImGui.CollapsingHeader(name))
+                    continue;
+                ImGui.Indent();
+                ImGui.BeginGroup();
+                content();
+                ImGui.EndGroup();
+            }
             ImGui.EndChild();
 
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
@@ -229,6 +242,13 @@ namespace zzre.tools
             geometryUniforms.view = Matrix4x4.CreateRotationY(cameraAngle.X) * Matrix4x4.CreateRotationX(cameraAngle.Y) * Matrix4x4.CreateTranslation(0.0f, 0.0f, -distance);
             isGeometryUniformsDirty = true;
             fbArea.IsDirty = true;
+        }
+
+        private void HandleStatistics()
+        {
+            ImGui.Text($"Vertices: {geometryBuffers?.VertexCount}");
+            ImGui.Text($"Triangles: {geometryBuffers?.TriangleCount}");
+            ImGui.Text($"Submeshes: {geometryBuffers?.SubMeshes.Count}");
         }
     }
 }
