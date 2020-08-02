@@ -17,13 +17,9 @@ namespace zzre.imgui
 
     public class Window : TagContainer
     {
-        private Vector2[] lastDragDelta = new Vector2[(int)ImGuiMouseButton.COUNT];
-        private float toolbarHeight;
-
         public WindowContainer Container { get; }
         public Rect InitialBounds { get; set; } = new Rect(new Vector2(float.NaN, float.NaN), Vector2.One * 300);
         public Rect Bounds { get; set; }
-        public Rect ContentBounds => Bounds.GrownBy(0.0f, -toolbarHeight);
         public string Title { get; set; }
         public ImGuiWindowFlags Flags { get; set; }
         public WindowOpenState OpenState { get; set; } = WindowOpenState.Open;
@@ -33,8 +29,6 @@ namespace zzre.imgui
         public event Action OnRender = () => { };
         public event Action OnBeforeContent = () => { };
         public event Action OnContent = () => { };
-        public event Action<ImGuiMouseButton, Vector2> OnDrag = (_, __) => { };
-        public event Action<float> OnScroll = _ => { };
         public event Action<Key> OnKeyDown = _ => { };
         public event Action<Key> OnKeyUp = _ => { };
 
@@ -71,29 +65,9 @@ namespace zzre.imgui
             newBounds.Max = newBounds.Min + GetWindowSize();
             Bounds = newBounds;
             IsFocused = IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
-            toolbarHeight = GetItemRectSize().Y;
 
             OnContent();
             End();
-        }
-
-        public void HandleMouseEvents()
-        {
-            // Scroll event
-            if (Bounds.IsInside(GetIO().MousePos) && MathF.Abs(GetIO().MouseWheel) > 0.01f)
-                OnScroll(GetIO().MouseWheel);
-
-            // Drag event
-            for (int i = 0; i < (int)ImGuiMouseButton.COUNT; i++)
-            {
-                var button = (ImGuiMouseButton)i;
-                if (!IsMouseDragging(button) || !Bounds.IsInside(GetIO().MouseClickedPos[i]))
-                    continue;
-
-                var delta = GetMouseDragDelta(button);
-                OnDrag(button, delta - lastDragDelta[i]);
-                lastDragDelta[i] = delta;
-            }
         }
 
         public void HandleKeyEvent(Key sym, bool isDown) => (isDown ? OnKeyDown : OnKeyUp)(sym);

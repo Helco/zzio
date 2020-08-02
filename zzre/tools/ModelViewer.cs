@@ -18,7 +18,8 @@ namespace zzre.tools
 
         private readonly ITagContainer diContainer;
         private readonly GraphicsDevice device;
-        private readonly FramebufferWindowTag fbWindow;
+        private readonly MouseEventArea mouseArea;
+        private readonly FramebufferArea fbArea;
         private readonly IBuiltPipeline builtPipeline;
         private readonly zzio.vfs.VirtualFileSystem vfs;
         private readonly DeviceBuffer geometryUniformBuffer;
@@ -29,6 +30,7 @@ namespace zzre.tools
         private ResourceSet[] resourceSets = new ResourceSet[0];
         private float distance = 2.0f;
         private Vector2 cameraAngle = Vector2.Zero;
+        private bool didSetColumnWidth = false;
 
         public Window Window { get; }
 
@@ -38,12 +40,15 @@ namespace zzre.tools
             device = diContainer.GetTag<GraphicsDevice>();
             vfs = diContainer.GetTag<zzio.vfs.VirtualFileSystem>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
-            Window.OnDrag += HandleDrag;
-            Window.OnScroll += HandleScroll;
+            Window.OnContent += HandleContent;
             builtPipeline = diContainer.GetTag<StandardPipelines>().ModelStandard;
-            fbWindow = new FramebufferWindowTag(Window, device);
-            fbWindow.OnRender += HandleRender;
-            fbWindow.OnResize += HandleResize;
+            fbArea = new FramebufferArea(Window, device);
+            fbArea.OnRender += HandleRender;
+            fbArea.OnResize += HandleResize;
+            AddDisposable(fbArea);
+            mouseArea = new MouseEventArea(Window);
+            mouseArea.OnDrag += HandleDrag;
+            mouseArea.OnScroll += HandleScroll;
 
             geometryUniformBuffer = device.ResourceFactory.CreateBuffer(
                 new BufferDescription(ModelStandardUniforms.Stride, BufferUsage.UniformBuffer));
@@ -91,7 +96,7 @@ namespace zzre.tools
                 AddDisposable(resourceSets[index]);
             }
 
-            fbWindow.IsDirty = true;
+            fbArea.IsDirty = true;
         }
 
         private FilePath GetTexturePathFromModel(FilePath modelPath)
@@ -146,6 +151,27 @@ namespace zzre.tools
             _ => throw new NotImplementedException(),
         };
 
+        private void HandleContent()
+        {
+            ImGui.Columns(2, null, true);
+            if (!didSetColumnWidth)
+            {
+                ImGui.SetColumnWidth(0, 200.0f);
+                didSetColumnWidth = true;
+            }
+            ImGui.BeginChild("LeftColumn", ImGui.GetContentRegionAvail(), false, ImGuiWindowFlags.HorizontalScrollbar);
+            for (int i = 0; i < 100; i++)
+                ImGui.Text($"This is some line {i}");
+            ImGui.EndChild();
+
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+            ImGui.NextColumn();
+            mouseArea.Content();
+            fbArea.Content();
+            ImGui.PopStyleVar(1);
+
+        }
+
         private void HandleRender(CommandList cl)
         {
             if (geometryBuffers == null)
@@ -172,8 +198,7 @@ namespace zzre.tools
 
         private void HandleResize()
         {
-            float ratio = fbWindow.Framebuffer.Width / (float)fbWindow.Framebuffer.Height;
-            geometryUniforms.projection = Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, ratio, 0.01f, 100.0f);
+            geometryUniforms.projection = Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, fbArea.Ratio, 0.01f, 100.0f);
             isGeometryUniformsDirty = true;
         }
 
@@ -191,7 +216,7 @@ namespace zzre.tools
 
         private void HandleScroll(float scroll)
         {
-            distance = distance * MathF.Pow(2.0f, scroll * 0.1f);
+            distance = distance * MathF.Pow(2.0f, -scroll * 0.1f);
             UpdateCamera();
         }
 
@@ -203,7 +228,7 @@ namespace zzre.tools
                             MathF.Sin(cameraAngle.Y) * MathF.Sin(cameraAngle.X));
             geometryUniforms.view = Matrix4x4.CreateRotationY(cameraAngle.X) * Matrix4x4.CreateRotationX(cameraAngle.Y) * Matrix4x4.CreateTranslation(0.0f, 0.0f, -distance);
             isGeometryUniformsDirty = true;
-            fbWindow.IsDirty = true;
+            fbArea.IsDirty = true;
         }
     }
 }
