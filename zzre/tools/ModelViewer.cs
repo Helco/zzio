@@ -9,6 +9,7 @@ using zzre.core;
 using zzio.utils;
 using System.Numerics;
 using ImGuiNET;
+using zzio.vfs;
 
 namespace zzre.tools
 {
@@ -21,7 +22,7 @@ namespace zzre.tools
         private readonly MouseEventArea mouseArea;
         private readonly FramebufferArea fbArea;
         private readonly IBuiltPipeline builtPipeline;
-        private readonly zzio.vfs.VirtualFileSystem vfs;
+        private readonly IResourcePool resourcePool;
         private readonly DeviceBuffer geometryUniformBuffer;
         private readonly (string name, Action content)[] infoSections;
 
@@ -39,7 +40,7 @@ namespace zzre.tools
         {
             this.diContainer = diContainer;
             device = diContainer.GetTag<GraphicsDevice>();
-            vfs = diContainer.GetTag<zzio.vfs.VirtualFileSystem>();
+            resourcePool = diContainer.GetTag<IResourcePool>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
             Window.OnContent += HandleContent;
             builtPipeline = diContainer.GetTag<StandardPipelines>().ModelStandard;
@@ -70,7 +71,7 @@ namespace zzre.tools
             var path = new FilePath(pathText);
             var texturePath = GetTexturePathFromModel(path);
 
-            using var contentStream = vfs.GetFileContent(pathText);
+            using var contentStream = resourcePool.FindAndOpen(pathText);
             if (contentStream == null)
                 throw new FileNotFoundException($"Could not find model at {pathText}");
             var clump = Section.ReadNew(contentStream);
@@ -109,7 +110,7 @@ namespace zzre.tools
         {
             var modelDirPartI = modelPath.Parts.IndexOf(p => p.ToLowerInvariant() == "models");
             var context = modelPath.Parts[modelDirPartI + 1];
-            return new FilePath("textures").Combine(context);
+            return new FilePath("resources/textures").Combine(context);
         }
 
         private (Texture, Sampler) LoadTextureFromMaterial(FilePath basePath, RWMaterial material)
@@ -124,7 +125,7 @@ namespace zzre.tools
             };
 
             var nameSection = (RWString)texSection.FindChildById(SectionId.String, true);
-            using var textureStream = vfs.GetFileContent(basePath.Combine(nameSection.value + ".bmp").ToPOSIXString());
+            using var textureStream = resourcePool.FindAndOpen(basePath.Combine(nameSection.value + ".bmp").ToPOSIXString());
             var texture = new Veldrid.ImageSharp.ImageSharpTexture(textureStream, false);
             return (
                 texture.CreateDeviceTexture(device, device.ResourceFactory),

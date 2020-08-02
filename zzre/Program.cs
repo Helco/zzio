@@ -9,6 +9,7 @@ using zzre.imgui;
 using zzre.core;
 using zzio.vfs;
 using zzre.tools;
+using zzio;
 
 namespace zzre
 {
@@ -52,19 +53,20 @@ namespace zzre
             var pipelineCollection = new PipelineCollection(factory);
             pipelineCollection.AddShaderResourceAssemblyOf<Program>();
             var windowContainer = new WindowContainer(graphicsDevice);
-            var vfs = new VirtualFileSystem();
-            vfs.AddResourcePool(new PAKResourcePool_OLD(@"C:\dev\zanzarah\Resources\DATA_0.PAK?resources/"));
-            vfs.AddResourcePool(new FileResourcePool_OLD(@"C:\dev\zanzarah\Resources\"));
-            vfs.AddResourcePool(new FileResourcePool_OLD(@"C:\dev\zanzarah\Data\"));
+            var resourcePool = new CombinedResourcePool(new IResourcePool[]
+            {
+                new PAKResourcePool(PAKArchive.ReadNew(new FileStream(@"C:\dev\zanzarah\Resources\DATA_0.PAK", FileMode.Open, FileAccess.Read))),
+                new FileResourcePool(@"C:\dev\zanzarah")
+            });
             var diContainer = new TagContainer();
             diContainer
                 .AddTag(windowContainer)
                 .AddTag(graphicsDevice)
-                .AddTag(vfs)
+                .AddTag<IResourcePool>(resourcePool)
                 .AddTag(new StandardPipelines(pipelineCollection));
 
             var modelViewer = new ModelViewer(diContainer);
-            modelViewer.LoadModel("models/actorsex/chr01.dff");
+            modelViewer.LoadModel("resources/models/actorsex/chr01.dff");
 
             window.Resized += () =>
             {
