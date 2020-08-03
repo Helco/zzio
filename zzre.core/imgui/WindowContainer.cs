@@ -9,19 +9,19 @@ using static ImGuiNET.ImGui;
 
 namespace zzre.imgui
 {
-    public class WindowContainer : BaseDisposable, IReadOnlyCollection<Window>
+    public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
     {
         private GraphicsDevice Device { get; }
         private ResourceFactory Factory => Device.ResourceFactory;
-        private List<Window> windows = new List<Window>();
+        private List<BaseWindow> windows = new List<BaseWindow>();
         private List<Fence> onceFences = new List<Fence>();
         private CommandList commandList;
         private Fence fence;
 
-        public Window? FocusedWindow { get; private set; } = null;
+        public BaseWindow? FocusedWindow { get; private set; } = null;
         public int Count => windows.Count;
         public ImGuiRenderer ImGuiRenderer { get; }
-        public Action OnMenuBar = () => { };
+        public MenuBar MenuBar { get; } = new MenuBar();
 
         public WindowContainer(GraphicsDevice device)
         {
@@ -50,6 +50,13 @@ namespace zzre.imgui
             return window;
         }
 
+        public Modal NewModal(string title = "Modal")
+        {
+            var modal = new Modal(this, title);
+            windows.Add(modal);
+            return modal;
+        }
+
         public void Update(GameTime time, InputSnapshot input)
         {
             ImGuiRenderer.Update(time.Delta, input);
@@ -71,11 +78,7 @@ namespace zzre.imgui
                 ImGuiWindowFlags.MenuBar);
             PopStyleVar(3);
             DockSpace(GetID("MasterDockSpace"));
-            if (BeginMenuBar())
-            {
-                OnMenuBar();
-                EndMenuBar();
-            }
+            MenuBar.Update();
             End();
 
             ShowDemoWindow();
@@ -116,11 +119,11 @@ namespace zzre.imgui
             ImGuiRenderer.WindowResized(width, height);
         }
 
-        public void RemoveWindow(Window window) => windows.Remove(window);
+        public void RemoveWindow(BaseWindow window) => windows.Remove(window);
         public void AddFenceOnce(Fence fence) => onceFences.Add(fence);
-        public Window? WithTag<TTag>() where TTag : class => windows.FirstOrDefault(w => w.HasTag<TTag>());
-        public IEnumerable<Window> AllWithTag<TTag>() where TTag : class => windows.Where(w => w.HasTag<TTag>());
-        public IEnumerator<Window> GetEnumerator() => windows.GetEnumerator();
+        public BaseWindow? WithTag<TTag>() where TTag : class => windows.FirstOrDefault(w => w.HasTag<TTag>());
+        public IEnumerable<BaseWindow> AllWithTag<TTag>() where TTag : class => windows.Where(w => w.HasTag<TTag>());
+        public IEnumerator<BaseWindow> GetEnumerator() => windows.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => windows.GetEnumerator();
     }
 }

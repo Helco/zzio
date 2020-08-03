@@ -4,7 +4,6 @@ using System.Linq;
 using System.Numerics;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
-using Veldrid;
 
 namespace zzre.imgui
 {
@@ -15,40 +14,21 @@ namespace zzre.imgui
         Unclosable
     }
 
-    public class Window : TagContainer
+    public class Window : BaseWindow
     {
-        public WindowContainer Container { get; }
         public Rect InitialBounds { get; set; } = new Rect(new Vector2(float.NaN, float.NaN), Vector2.One * 300);
         public Rect Bounds { get; set; }
-        public string Title { get; set; }
-        public ImGuiWindowFlags Flags { get; set; }
         public WindowOpenState OpenState { get; set; } = WindowOpenState.Open;
-        public bool IsOpen => OpenState != WindowOpenState.Closed;
-        public bool IsFocused { get; set; } = false;
+        public override bool IsOpen => OpenState != WindowOpenState.Closed;
 
-        public event Action OnRender = () => { };
-        public event Action OnBeforeContent = () => { };
-        public event Action OnContent = () => { };
-        public event Action<Key> OnKeyDown = _ => { };
-        public event Action<Key> OnKeyUp = _ => { };
+        public Window(WindowContainer container, string title = "Window") : base(container, title) { }
 
-        public Window(WindowContainer container, string title = "Window")
+        public override void Update()
         {
-            Container = container;
-            Title = title;
-        }
-
-        protected override void DisposeManaged()
-        {
-            base.DisposeManaged();
-            Container.RemoveWindow(this);
-        }
-
-        public void Update()
-        {
+            IsFocused = false;
             if (OpenState == WindowOpenState.Closed)
                 return;
-            OnBeforeContent();
+            RaiseBeforeContent();
 
             bool isOpen = true;
             if (float.IsFinite(InitialBounds.Min.X) && float.IsFinite(InitialBounds.Min.Y))
@@ -66,11 +46,8 @@ namespace zzre.imgui
             Bounds = newBounds;
             IsFocused = IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
 
-            OnContent();
+            RaiseContent();
             End();
         }
-
-        public void HandleKeyEvent(Key sym, bool isDown) => (isDown ? OnKeyDown : OnKeyUp)(sym);
-        public void HandleRender() => OnRender();
     }
 }
