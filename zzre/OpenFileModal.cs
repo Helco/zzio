@@ -72,7 +72,6 @@ namespace zzre
             PushItemWidth(-1.0f);
             InputText("", ref selectedName, 512, ImGuiInputTextFlags.ReadOnly);
             PopItemWidth();
-            Columns(1);
             SetNextWindowSizeConstraints(Vector2.One * FileTreeSize, Vector2.One * FileTreeSize * 10);
             var initialTreeSize = GetContentRegionAvail() - GetTextLineHeightWithSpacing() * 2 * Vector2.UnitY;
             BeginChild("TreeChildWindow", initialTreeSize, true, ImGuiWindowFlags.HorizontalScrollbar);
