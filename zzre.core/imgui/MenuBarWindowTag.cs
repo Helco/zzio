@@ -4,9 +4,9 @@ namespace zzre.imgui
 {
     public class MenuBarWindowTag : MenuBar
     {
-        public Window Window { get; }
+        public BaseWindow Window { get; }
 
-        public MenuBarWindowTag(Window parent)
+        public MenuBarWindowTag(BaseWindow parent)
         {
             Window = parent;
             Window.AddTag(this);

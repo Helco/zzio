@@ -22,8 +22,10 @@ namespace zzre.imgui
         private string FullTitle => Title + uniqueId;
         private bool isOpen = false;
         private NextAction nextAction = NextAction.None;
+
         public override bool IsOpen => isOpen && nextAction != NextAction.Close;
         public bool HasCloseButton { get; set; } = true;
+        public event Action OnOpen = () => { };
 
         public Modal(WindowContainer container, string title = "Modal") : base(container, title) { }
 
@@ -48,6 +50,7 @@ namespace zzre.imgui
             {
                 OpenPopup(FullTitle);
                 isOpen = true;
+                OnOpen();
             }
 
             if (isOpen)
@@ -56,7 +59,7 @@ namespace zzre.imgui
             SetNextWindowPos(GetIO().DisplaySize / 2, ImGuiCond.Appearing, Vector2.One / 2);
             isOpen = HasCloseButton
                 ? BeginPopupModal(FullTitle, ref isOpen, Flags)
-                : MyBeginPopupModal(FullTitle, Flags);
+                : ImGuiEx.BeginPopupModal(FullTitle, Flags);
             if (!isOpen)
                 return;
             IsFocused = IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
@@ -71,16 +74,5 @@ namespace zzre.imgui
         }
         public void Close() => nextAction = NextAction.Close;
 
-        // This should have been done by mellinoe/ImGui.NET#135 long ago D:
-        public static unsafe bool MyBeginPopupModal(string name, ImGuiWindowFlags flags)
-        {
-            byte[] nameBytes = Encoding.UTF8.GetBytes(name);
-            byte ret;
-            fixed (byte* nameBytePtr = nameBytes)
-            {
-                ret = ImGuiNative.igBeginPopupModal(nameBytePtr, null, flags);
-            }
-            return ret != 0;
-        }
     }
 }

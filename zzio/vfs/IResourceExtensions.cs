@@ -8,10 +8,10 @@ namespace zzio.vfs
 {
     public static class IResourceExtensions
     {
-        public static Stream? FindAndOpen(this IResourcePool pool, string pathText) => FindAndOpen(pool.Root, new FilePath(pathText));
-        public static Stream? FindAndOpen(this IResourcePool pool, FilePath path) => FindAndOpen(pool.Root, path);
-        public static Stream? FindAndOpen(this IResource res, string pathText) => FindAndOpen(res, new FilePath(pathText));
-        public static Stream? FindAndOpen(this IResource res, FilePath path)
+        public static IResource? FindFile(this IResourcePool pool, string pathText) => FindFile(pool.Root, new FilePath(pathText));
+        public static IResource? FindFile(this IResourcePool pool, FilePath path) => FindFile(pool.Root, path);
+        public static IResource? FindFile(this IResource res, string pathText) => FindFile(res, new FilePath(pathText));
+        public static IResource? FindFile(this IResource res, FilePath path)
         {
             if (path.IsAbsolute || !path.StaysInbound)
                 throw new ArgumentException("Invalid file path", nameof(path));
@@ -29,8 +29,12 @@ namespace zzio.vfs
             }
 
             var fileName = path.Parts.Last();
-            var file = curDir.Files.FirstOrDefault(r => r.Name.Equals(fileName, comparison));
-            return file?.OpenContent();
+            return curDir.Files.FirstOrDefault(r => r.Name.Equals(fileName, comparison));
         }
+
+        public static Stream? FindAndOpen(this IResourcePool pool, string pathText) => FindAndOpen(pool.Root, new FilePath(pathText));
+        public static Stream? FindAndOpen(this IResourcePool pool, FilePath path) => FindAndOpen(pool.Root, path);
+        public static Stream? FindAndOpen(this IResource res, string pathText) => FindAndOpen(res, new FilePath(pathText));
+        public static Stream? FindAndOpen(this IResource res, FilePath path) => FindFile(res, path)?.OpenContent();
     }
 }

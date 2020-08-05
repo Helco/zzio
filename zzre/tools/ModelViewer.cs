@@ -24,6 +24,7 @@ namespace zzre.tools
         private readonly IBuiltPipeline builtPipeline;
         private readonly IResourcePool resourcePool;
         private readonly DeviceBuffer geometryUniformBuffer;
+        private readonly OpenFileModal openFileModal;
         private readonly (string name, Action content)[] infoSections;
 
         private RWGeometryBuffers? geometryBuffers;
@@ -35,6 +36,7 @@ namespace zzre.tools
         private bool didSetColumnWidth = false;
 
         public Window Window { get; }
+        public IResource? CurrentResource { get; private set; }
 
         public ModelViewer(ITagContainer diContainer)
         {
@@ -43,6 +45,8 @@ namespace zzre.tools
             resourcePool = diContainer.GetTag<IResourcePool>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
             Window.OnContent += HandleContent;
+            var menuBar = new MenuBarWindowTag(Window);
+            menuBar.AddItem("Open", HandleMenuOpen);
             builtPipeline = diContainer.GetTag<StandardPipelines>().ModelStandard;
             fbArea = new FramebufferArea(Window, device);
             fbArea.OnRender += HandleRender;
@@ -51,6 +55,10 @@ namespace zzre.tools
             mouseArea = new MouseEventArea(Window);
             mouseArea.OnDrag += HandleDrag;
             mouseArea.OnScroll += HandleScroll;
+            openFileModal = new OpenFileModal(diContainer);
+            openFileModal.Filter = "*.dff";
+            openFileModal.IsFilterChangeable = false;
+            openFileModal.OnOpenedResource += LoadModel;
 
             geometryUniformBuffer = device.ResourceFactory.CreateBuffer(
                 new BufferDescription(ModelStandardUniforms.Stride, BufferUsage.UniformBuffer));
@@ -68,12 +76,22 @@ namespace zzre.tools
 
         public void LoadModel(string pathText)
         {
-            var path = new FilePath(pathText);
-            var texturePath = GetTexturePathFromModel(path);
-
-            using var contentStream = resourcePool.FindAndOpen(pathText);
-            if (contentStream == null)
+            var resource = resourcePool.FindFile(pathText);
+            if (resource == null)
                 throw new FileNotFoundException($"Could not find model at {pathText}");
+            LoadModel(resource);
+        }
+
+        public void LoadModel(IResource resource)
+        {
+            if (resource.Equals(CurrentResource))
+                return;
+            CurrentResource = null;
+            var texturePath = GetTexturePathFromModel(resource.Path);
+
+            using var contentStream = resource.OpenContent();
+            if (contentStream == null)
+                throw new IOException($"Could not open model at {resource.Path.ToPOSIXString()}");
             var clump = Section.ReadNew(contentStream);
             if (clump.sectionId != SectionId.Clump)
                 throw new InvalidDataException($"Expected a root clump section, got a {clump.sectionId}");
@@ -104,6 +122,7 @@ namespace zzre.tools
             }
 
             fbArea.IsDirty = true;
+            CurrentResource = resource;
         }
 
         private FilePath GetTexturePathFromModel(FilePath modelPath)
@@ -250,6 +269,12 @@ namespace zzre.tools
             ImGui.Text($"Vertices: {geometryBuffers?.VertexCount}");
             ImGui.Text($"Triangles: {geometryBuffers?.TriangleCount}");
             ImGui.Text($"Submeshes: {geometryBuffers?.SubMeshes.Count}");
+        }
+
+        private void HandleMenuOpen()
+        {
+            openFileModal.InitialSelectedResource = CurrentResource;
+            openFileModal.Modal.Open();
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace zzre.core
+namespace zzre
 {
     public interface ITagContainer<TBase> where TBase : class
     {
