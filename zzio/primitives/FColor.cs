@@ -33,5 +33,12 @@ namespace zzio.primitives
             w.Write(b);
             w.Write(a);
         }
+
+        public static FColor White => new FColor(1.0f, 1.0f, 1.0f, 1.0f);
+        public static FColor Black => new FColor(0.0f, 0.0f, 0.0f, 1.0f);
+        public static FColor Clear => new FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        public static FColor Red => new FColor(1.0f, 0.0f, 0.0f, 1.0f);
+        public static FColor Green => new FColor(0.0f, 1.0f, 0.0f, 1.0f);
+        public static FColor Blue => new FColor(0.0f, 0.0f, 1.0f, 1.0f);
     }
 }

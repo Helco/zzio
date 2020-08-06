@@ -7,18 +7,25 @@ layout(location = 1) in vec4 fsin_color;
 layout(location = 0) out vec4 fsout_color;
 
 layout(set = 0, binding = 0) uniform sampler2D mainTexture;
-layout (set = 0, binding = 2) uniform UniformBlock
+layout (set = 0, binding = 3) uniform MaterialUniforms
 {
-	mat4 projection;
-	mat4 view;
-	mat4 world;
 	vec4 tint;
+	float vectorColorFactor;
+	float tintFactor;
+	float alphaReference;
 };
+
+vec4 weighColor(vec4 color, float factor)
+{
+	return color * factor + vec4(1,1,1,1) * (1 - factor);
+}
 
 void main()
 {
-	vec4 color = texture(mainTexture, fsin_uv) * fsin_color * tint;
-	if (color.a < 0.03) // TODO: put alpha reference in uniforms
+	vec4 color = texture(mainTexture, fsin_uv)
+		* weighColor(fsin_color, vectorColorFactor)
+		* weighColor(tint, tintFactor);
+	if (color.a < alphaReference) // TODO: put alpha reference in uniforms
 		discard;
 	fsout_color = color;
 }

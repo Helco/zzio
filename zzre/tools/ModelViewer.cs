@@ -23,13 +23,12 @@ namespace zzre.tools
         private readonly FramebufferArea fbArea;
         private readonly IBuiltPipeline builtPipeline;
         private readonly IResourcePool resourcePool;
-        private readonly DeviceBuffer geometryUniformBuffer;
         private readonly OpenFileModal openFileModal;
+        private readonly UniformBuffer<ModelStandardTransformationUniforms> transformUniforms;
+        private readonly UniformBuffer<ModelStandardMaterialUniforms> materialUniforms;
         private readonly (string name, Action content)[] infoSections;
 
         private RWGeometryBuffers? geometryBuffers;
-        private ModelStandardUniforms geometryUniforms;
-        private bool isGeometryUniformsDirty = true;
         private ResourceSet[] resourceSets = new ResourceSet[0];
         private float distance = 2.0f;
         private Vector2 cameraAngle = Vector2.Zero;
@@ -60,17 +59,20 @@ namespace zzre.tools
             openFileModal.IsFilterChangeable = false;
             openFileModal.OnOpenedResource += LoadModel;
 
-            geometryUniformBuffer = device.ResourceFactory.CreateBuffer(
-                new BufferDescription(ModelStandardUniforms.Stride, BufferUsage.UniformBuffer));
+            transformUniforms = new UniformBuffer<ModelStandardTransformationUniforms>(device.ResourceFactory);
+            materialUniforms = new UniformBuffer<ModelStandardMaterialUniforms>(device.ResourceFactory);
+            materialUniforms.Ref = ModelStandardMaterialUniforms.Default;
+            materialUniforms.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
+            transformUniforms.Ref.view = Matrix4x4.CreateTranslation(Vector3.UnitZ * -2.0f);
+            transformUniforms.Ref.world = Matrix4x4.Identity;
             HandleResize(); // sets the projection matrix
-            geometryUniforms.view = Matrix4x4.CreateTranslation(Vector3.UnitZ * -2.0f);
-            geometryUniforms.world = Matrix4x4.Identity;
-            geometryUniforms.tint = Vector4.One;
-            AddDisposable(geometryUniformBuffer);
+            AddDisposable(transformUniforms);
+            AddDisposable(materialUniforms);
 
             infoSections = new (string, Action)[]
             {
-                ("Statistics", HandleStatistics)
+                ("Statistics", HandleStatisticsContent),
+                ("Materials", HandleMaterialsContent),
             };
         }
 
@@ -115,7 +117,8 @@ namespace zzre.tools
                     {
                         texture,
                         device.PointSampler,
-                        geometryUniformBuffer
+                        transformUniforms.Buffer,
+                        materialUniforms.Buffer
                     }
                 });
                 AddDisposable(resourceSets[index]);
@@ -188,12 +191,14 @@ namespace zzre.tools
             ImGui.BeginChild("LeftColumn", ImGui.GetContentRegionAvail(), false, ImGuiWindowFlags.HorizontalScrollbar);
             foreach (var (name, content) in infoSections)
             {
-                if (!ImGui.CollapsingHeader(name))
+                if (!ImGui.CollapsingHeader(name, ImGuiTreeNodeFlags.DefaultOpen))
                     continue;
-                ImGui.Indent();
+                
                 ImGui.BeginGroup();
+                ImGui.Indent();
                 content();
                 ImGui.EndGroup();
+
             }
             ImGui.EndChild();
 
@@ -209,11 +214,8 @@ namespace zzre.tools
         {
             if (geometryBuffers == null)
                 return;
-            if (isGeometryUniformsDirty)
-            {
-                isGeometryUniformsDirty = false;
-                cl.UpdateBuffer(geometryUniformBuffer, 0, ref geometryUniforms);
-            }
+            transformUniforms.Update(cl);
+            materialUniforms.Update(cl);
 
             cl.SetPipeline(builtPipeline.Pipeline);
             geometryBuffers.SetBuffers(cl);
@@ -231,8 +233,7 @@ namespace zzre.tools
 
         private void HandleResize()
         {
-            geometryUniforms.projection = Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, fbArea.Ratio, 0.01f, 100.0f);
-            isGeometryUniformsDirty = true;
+            transformUniforms.Ref.projection = Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, fbArea.Ratio, 0.01f, 100.0f);
         }
 
         private void HandleDrag(ImGuiMouseButton button, Vector2 delta)
@@ -259,16 +260,31 @@ namespace zzre.tools
                             MathF.Sin(cameraAngle.Y) * MathF.Cos(cameraAngle.X),
                             MathF.Cos(cameraAngle.Y),
                             MathF.Sin(cameraAngle.Y) * MathF.Sin(cameraAngle.X));
-            geometryUniforms.view = Matrix4x4.CreateRotationY(cameraAngle.X) * Matrix4x4.CreateRotationX(cameraAngle.Y) * Matrix4x4.CreateTranslation(0.0f, 0.0f, -distance);
-            isGeometryUniformsDirty = true;
+            transformUniforms.Ref.view = Matrix4x4.CreateRotationY(cameraAngle.X) * Matrix4x4.CreateRotationX(cameraAngle.Y) * Matrix4x4.CreateTranslation(0.0f, 0.0f, -distance);
             fbArea.IsDirty = true;
         }
 
-        private void HandleStatistics()
+        private void HandleStatisticsContent()
         {
             ImGui.Text($"Vertices: {geometryBuffers?.VertexCount}");
             ImGui.Text($"Triangles: {geometryBuffers?.TriangleCount}");
             ImGui.Text($"Submeshes: {geometryBuffers?.SubMeshes.Count}");
+        }
+
+        private void HandleMaterialsContent()
+        {
+            var mat = materialUniforms.Value;
+            var tintColor = mat.tint.ToNumerics();
+            bool didChange = false;
+            didChange |= ImGui.SliderFloat("Vertex Color Factor", ref mat.vertexColorFactor, 0.0f, 1.0f);
+            didChange |= ImGui.SliderFloat("Global Tint Factor", ref mat.tintFactor, 0.0f, 1.0f);
+            didChange |= ImGui.ColorEdit4("Global Tint", ref tintColor, ImGuiColorEditFlags.Float);
+            if (didChange)
+            {
+                mat.tint.CopyFromNumerics(tintColor);
+                materialUniforms.Ref = mat;
+                fbArea.IsDirty = true;
+            }
         }
 
         private void HandleMenuOpen()

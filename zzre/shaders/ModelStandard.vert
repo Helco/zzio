@@ -7,7 +7,7 @@ layout(location = 2) in vec4 vsin_color;
 layout(location = 0) out vec2 fsin_uv;
 layout(location = 1) out vec4 fsin_color;
 
-layout(set = 0, binding = 2) uniform UniformBlock
+layout(set = 0, binding = 2) uniform TransformationUniforms
 {
 	mat4 projection;
 	mat4 view;

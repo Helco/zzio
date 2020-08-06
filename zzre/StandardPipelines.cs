@@ -21,15 +21,30 @@ namespace zzre
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct ModelStandardUniforms
+    public struct ModelStandardTransformationUniforms
     {
         public Matrix4x4 projection;
         public Matrix4x4 view;
         public Matrix4x4 world;
-        public Vector4 tint;
-        public static uint Stride =
-            (3 * 4 * 4) * sizeof(float) +
-            4 * sizeof(float);
+        public static uint Stride = (3 * 4 * 4) * sizeof(float);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ModelStandardMaterialUniforms
+    {
+        public FColor tint;
+        public float vertexColorFactor;
+        public float tintFactor;
+        public float alphaReference;
+        public static uint Stride = (4 + 3) * sizeof(float);
+
+        public static readonly ModelStandardMaterialUniforms Default = new ModelStandardMaterialUniforms
+        {
+            tint = FColor.White,
+            vertexColorFactor = 1f,
+            tintFactor = 1f,
+            alphaReference = 0.03f
+        };
     }
 
     public class StandardPipelines
@@ -49,7 +64,8 @@ namespace zzre
                 .With("Color", VertexElementFormat.Byte4_Norm, VertexElementSemantic.Color)
                 .With("Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)
                 .With("Sampler", ResourceKind.Sampler, ShaderStages.Fragment)
-                .With("UniformBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment)
+                .With("TransformationBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+                .With("MaterialBuffer", ResourceKind.UniformBuffer, ShaderStages.Fragment)
                 .With(FrontFace.CounterClockwise)
                 .Build());
         }
