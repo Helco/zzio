@@ -41,5 +41,7 @@ namespace zzio.primitives
             w.Write(b);
             w.Write(a);
         }
+
+        public FColor ToFColor() => new FColor(r / 255f, g / 255f, b / 255f, a / 255f);
     }
 }

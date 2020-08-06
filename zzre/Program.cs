@@ -96,8 +96,7 @@ namespace zzre
                 time.EndFrame();
             }
 
-            pipelineCollection.Dispose();
-            graphicsDevice.Dispose();
+            diContainer.Dispose();
         }
     }
 }

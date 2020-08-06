@@ -25,11 +25,11 @@ namespace zzre.tools
         private readonly IResourcePool resourcePool;
         private readonly OpenFileModal openFileModal;
         private readonly UniformBuffer<ModelStandardTransformationUniforms> transformUniforms;
-        private readonly UniformBuffer<ModelStandardMaterialUniforms> materialUniforms;
         private readonly (string name, Action content)[] infoSections;
 
         private RWGeometryBuffers? geometryBuffers;
         private ResourceSet[] resourceSets = new ResourceSet[0];
+        private UniformBuffer<ModelStandardMaterialUniforms>[] materialUniforms = new UniformBuffer<ModelStandardMaterialUniforms>[0];
         private float distance = 2.0f;
         private Vector2 cameraAngle = Vector2.Zero;
         private bool didSetColumnWidth = false;
@@ -43,6 +43,7 @@ namespace zzre.tools
             device = diContainer.GetTag<GraphicsDevice>();
             resourcePool = diContainer.GetTag<IResourcePool>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
+            Window.AddTag(this);
             Window.OnContent += HandleContent;
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddItem("Open", HandleMenuOpen);
@@ -60,14 +61,10 @@ namespace zzre.tools
             openFileModal.OnOpenedResource += LoadModel;
 
             transformUniforms = new UniformBuffer<ModelStandardTransformationUniforms>(device.ResourceFactory);
-            materialUniforms = new UniformBuffer<ModelStandardMaterialUniforms>(device.ResourceFactory);
-            materialUniforms.Ref = ModelStandardMaterialUniforms.Default;
-            materialUniforms.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
             transformUniforms.Ref.view = Matrix4x4.CreateTranslation(Vector3.UnitZ * -2.0f);
             transformUniforms.Ref.world = Matrix4x4.Identity;
             HandleResize(); // sets the projection matrix
             AddDisposable(transformUniforms);
-            AddDisposable(materialUniforms);
 
             infoSections = new (string, Action)[]
             {
@@ -105,11 +102,16 @@ namespace zzre.tools
             AddDisposable(geometryBuffers);
 
             resourceSets = new ResourceSet[geometryBuffers.SubMeshes.Count];
+            materialUniforms = new UniformBuffer<ModelStandardMaterialUniforms>[geometryBuffers.SubMeshes.Count];
             foreach (var (rwMaterial, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
             {
                 var (texture, sampler) = LoadTextureFromMaterial(texturePath, rwMaterial);
-                AddDisposable(texture);
-                AddDisposable(sampler);
+                var matUniform = materialUniforms[index] = new UniformBuffer<ModelStandardMaterialUniforms>(device.ResourceFactory);
+                matUniform.Ref = ModelStandardMaterialUniforms.Default;
+                matUniform.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
+                matUniform.Ref.tint = rwMaterial.color.ToFColor();
+                AddDisposable(matUniform);
+
                 resourceSets[index] = device.ResourceFactory.CreateResourceSet(new ResourceSetDescription
                 {
                     Layout = builtPipeline.ResourceLayouts.First(),
@@ -118,7 +120,7 @@ namespace zzre.tools
                         texture,
                         device.PointSampler,
                         transformUniforms.Buffer,
-                        materialUniforms.Buffer
+                        matUniform.Buffer
                     }
                 });
                 AddDisposable(resourceSets[index]);
@@ -149,9 +151,13 @@ namespace zzre.tools
             var nameSection = (RWString)texSection.FindChildById(SectionId.String, true);
             using var textureStream = resourcePool.FindAndOpen(basePath.Combine(nameSection.value + ".bmp").ToPOSIXString());
             var texture = new Veldrid.ImageSharp.ImageSharpTexture(textureStream, false);
-            return (
+            var result = (
                 texture.CreateDeviceTexture(device, device.ResourceFactory),
                 device.ResourceFactory.CreateSampler(samplerDescription));
+            result.Item1.Name = nameSection.value;
+            AddDisposable(result.Item1);
+            AddDisposable(result.Item2);
+            return result;
         }
 
         private SamplerAddressMode ConvertAddressMode(TextureAddressingMode mode, SamplerAddressMode? altMode = null) => mode switch
@@ -215,12 +221,12 @@ namespace zzre.tools
             if (geometryBuffers == null)
                 return;
             transformUniforms.Update(cl);
-            materialUniforms.Update(cl);
 
             cl.SetPipeline(builtPipeline.Pipeline);
             geometryBuffers.SetBuffers(cl);
             foreach (var (subMesh, index) in geometryBuffers.SubMeshes.Indexed())
             {
+                materialUniforms[index].Update(cl);
                 cl.SetGraphicsResourceSet(0, resourceSets[index]);
                 cl.DrawIndexed(
                     indexStart: (uint)subMesh.IndexOffset,
@@ -273,17 +279,40 @@ namespace zzre.tools
 
         private void HandleMaterialsContent()
         {
-            var mat = materialUniforms.Value;
-            var tintColor = mat.tint.ToNumerics();
+            if (geometryBuffers == null)
+                return;
+
+            ImGui.Text("Globals");
+            var mat = materialUniforms.First().Value;
             bool didChange = false;
             didChange |= ImGui.SliderFloat("Vertex Color Factor", ref mat.vertexColorFactor, 0.0f, 1.0f);
             didChange |= ImGui.SliderFloat("Global Tint Factor", ref mat.tintFactor, 0.0f, 1.0f);
-            didChange |= ImGui.ColorEdit4("Global Tint", ref tintColor, ImGuiColorEditFlags.Float);
             if (didChange)
             {
-                mat.tint.CopyFromNumerics(tintColor);
-                materialUniforms.Ref = mat;
+                foreach (var matUniform in materialUniforms)
+                    matUniform.Ref = mat;
                 fbArea.IsDirty = true;
+            }
+
+            ImGui.NewLine();
+            ImGui.Text("Materials");
+            foreach (var (rwMat, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
+            {
+                bool isVisible = materialUniforms[index].Value.alphaReference < 2f;
+                ImGui.PushID(index);
+                if (ImGui.SmallButton(isVisible ? "V" : "H"))
+                {
+                    isVisible = !isVisible;
+                    materialUniforms[index].Ref.alphaReference = isVisible ? 0.03f : 2.0f;
+                    fbArea.IsDirty = true;
+                }
+                ImGui.PopID();
+                ImGui.SameLine();
+                if (!ImGui.TreeNodeEx($"Material #{index}", ImGuiTreeNodeFlags.DefaultOpen))
+                    continue;
+                var color = rwMat.color.ToFColor().ToNumerics();
+                ImGui.ColorEdit4("Color", ref color, ImGuiColorEditFlags.NoPicker | ImGuiColorEditFlags.Float);
+                ImGui.TreePop();
             }
         }
 

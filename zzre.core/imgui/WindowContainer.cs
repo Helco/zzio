@@ -36,7 +36,7 @@ namespace zzre.imgui
         protected override void DisposeManaged()
         {
             base.DisposeManaged();
-            foreach (var window in this)
+            foreach (var window in this.ToArray())
                 window.Dispose();
             ImGuiRenderer.Dispose();
             commandList.Dispose();
