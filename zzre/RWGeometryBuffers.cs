@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
-using Veldrid.MetalBindings;
 using zzio.primitives;
 using zzio.rwbs;
 using zzre.core;
-using zzre.rendering;
+using zzre.materials;
 
 namespace zzre
 {

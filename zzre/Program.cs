@@ -63,7 +63,7 @@ namespace zzre
                 .AddTag(windowContainer)
                 .AddTag(graphicsDevice)
                 .AddTag<IResourcePool>(resourcePool)
-                .AddTag(new StandardPipelines(pipelineCollection));
+                .AddTag(pipelineCollection);
 
             var modelViewer = new ModelViewer(diContainer);
             modelViewer.LoadModel("resources/models/actorsex/chr01.dff");
