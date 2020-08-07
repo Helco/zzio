@@ -18,8 +18,11 @@ namespace zzre.tools
     public class ModelViewer : ListDisposable
     {
         private const float FieldOfView = 60.0f * 3.141592653f / 180.0f;
+        private const float TexturePreviewSize = 5.0f;
+        private const float TextureHoverSizeFactor = 0.4f;
 
         private readonly ITagContainer diContainer;
+        private readonly ImGuiRenderer imGuiRenderer;
         private readonly GraphicsDevice device;
         private readonly MouseEventArea mouseArea;
         private readonly FramebufferArea fbArea;
@@ -30,6 +33,7 @@ namespace zzre.tools
 
         private RWGeometryBuffers? geometryBuffers;
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
+        private IntPtr[] textureBindings = new IntPtr[0];
         
         private float distance = 2.0f;
         private Vector2 cameraAngle = Vector2.Zero;
@@ -59,6 +63,7 @@ namespace zzre.tools
             openFileModal.Filter = "*.dff";
             openFileModal.IsFilterChangeable = false;
             openFileModal.OnOpenedResource += LoadModel;
+            imGuiRenderer = Window.Container.ImGuiRenderer;
 
             transformUniforms = new UniformBuffer<ModelStandardTransformationUniforms>(device.ResourceFactory);
             transformUniforms.Ref.view = Matrix4x4.CreateTranslation(Vector3.UnitZ * -2.0f);
@@ -101,7 +106,11 @@ namespace zzre.tools
             geometryBuffers = new RWGeometryBuffers(diContainer, (RWGeometry)geometry);
             AddDisposable(geometryBuffers);
 
+            foreach (var oldTexture in materials.Select(m => m.MainTexture.Texture))
+                imGuiRenderer.RemoveImGuiBinding(oldTexture);
+
             materials = new ModelStandardMaterial[geometryBuffers.SubMeshes.Count];
+            textureBindings = new IntPtr[materials.Length];
             foreach (var (rwMaterial, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
             {
                 var material = materials[index] = new ModelStandardMaterial(diContainer);
@@ -111,6 +120,8 @@ namespace zzre.tools
                 material.Uniforms.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
                 material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
                 AddDisposable(material);
+
+                textureBindings[index] = imGuiRenderer.GetOrCreateImGuiBinding(device.ResourceFactory, material.MainTexture.Texture);
             }
 
             fbArea.IsDirty = true;
@@ -178,7 +189,7 @@ namespace zzre.tools
             ImGui.Columns(2, null, true);
             if (!didSetColumnWidth)
             {
-                ImGui.SetColumnWidth(0, 200.0f);
+                ImGui.SetColumnWidth(0, ImGui.GetWindowSize().X * 0.3f);
                 didSetColumnWidth = true;
             }
             ImGui.BeginChild("LeftColumn", ImGui.GetContentRegionAvail(), false, ImGuiWindowFlags.HorizontalScrollbar);
@@ -209,11 +220,10 @@ namespace zzre.tools
                 return;
             transformUniforms.Update(cl);
 
-            (materials[0] as IMaterial).ApplyPipeline(cl);
             geometryBuffers.SetBuffers(cl);
             foreach (var (subMesh, index) in geometryBuffers.SubMeshes.Indexed())
             {
-                (materials[index] as IMaterial).ApplyBindings(cl);
+                (materials[index] as IMaterial).Apply(cl);
                 cl.DrawIndexed(
                     indexStart: (uint)subMesh.IndexOffset,
                     indexCount: (uint)subMesh.IndexCount,
@@ -301,8 +311,33 @@ namespace zzre.tools
                     continue;
                 var color = rwMat.color.ToFColor().ToNumerics();
                 ImGui.ColorEdit4("Color", ref color, ImGuiColorEditFlags.NoPicker | ImGuiColorEditFlags.Float);
+                TexturePreview(materials[index].MainTexture.Texture, textureBindings[index]);
+
                 ImGui.TreePop();
             }
+        }
+
+        private void TexturePreview(Texture? texture, IntPtr binding)
+        {
+            if (texture == null)
+                return;
+            ImGui.Columns(2, null, false);
+            var previewTexSize = ImGui.GetTextLineHeight() * TexturePreviewSize;
+            ImGui.SetColumnWidth(0, previewTexSize + ImGui.GetStyle().FramePadding.X * 3);
+            ImGui.Image(binding, Vector2.One * previewTexSize);
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.BeginTooltip();
+                var viewportSize = ImGui.GetWindowViewport().Size;
+                var hoverTexSize = Math.Min(viewportSize.X, viewportSize.Y) * TextureHoverSizeFactor * Vector2.One;
+                ImGui.Image(binding, hoverTexSize);
+                ImGui.EndTooltip();
+            }
+            ImGui.NextColumn();
+            ImGui.Text(texture?.Name);
+            ImGui.Text($"{texture?.Width}x{texture?.Height}");
+            ImGui.Text($"{texture?.Format}");
+            ImGui.Columns(1);
         }
 
         private void HandleMenuOpen()
