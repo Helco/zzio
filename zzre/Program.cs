@@ -50,8 +50,7 @@ namespace zzre
                 Debug = true
             }, GraphicsBackend.Direct3D11);
 
-            var factory = graphicsDevice.ResourceFactory;
-            var pipelineCollection = new PipelineCollection(factory);
+            var pipelineCollection = new PipelineCollection(graphicsDevice);
             pipelineCollection.AddShaderResourceAssemblyOf<Program>();
             var windowContainer = new WindowContainer(graphicsDevice);
             var resourcePool = new CombinedResourcePool(new IResourcePool[]

@@ -30,11 +30,12 @@ namespace zzre.rendering
         private List<Assembly> shaderResourceAssemblies = new List<Assembly>();
         private Dictionary<string, Shader[]> loadedShaders = new Dictionary<string, Shader[]>();
 
-        public ResourceFactory Factory { get; }
+        public GraphicsDevice Device { get; }
+        public ResourceFactory Factory => Device.ResourceFactory;
 
-        public PipelineCollection(ResourceFactory factory)
+        public PipelineCollection(GraphicsDevice device)
         {
-            Factory = factory;
+            Device = device;
             AddShaderResourceAssemblyOf<PipelineCollection>();
         }
 

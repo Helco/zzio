@@ -31,7 +31,7 @@ namespace zzre
         public int TriangleCount => (int)(indexBuffer.SizeInBytes / (2 * 3));
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
 
-        public RWGeometryBuffers(ITagContainer diContainer, IBuiltPipeline pipeline, RWGeometry geometry)
+        public RWGeometryBuffers(ITagContainer diContainer, RWGeometry geometry)
         {
             device = diContainer.GetTag<GraphicsDevice>();
             var materialList = (RWMaterialList)geometry.FindChildById(SectionId.MaterialList, false);

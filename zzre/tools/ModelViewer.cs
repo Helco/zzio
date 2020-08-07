@@ -11,6 +11,7 @@ using System.Numerics;
 using ImGuiNET;
 using zzio.vfs;
 using zzre.rendering;
+using zzre.materials;
 
 namespace zzre.tools
 {
@@ -22,15 +23,14 @@ namespace zzre.tools
         private readonly GraphicsDevice device;
         private readonly MouseEventArea mouseArea;
         private readonly FramebufferArea fbArea;
-        private readonly IBuiltPipeline builtPipeline;
         private readonly IResourcePool resourcePool;
-        private readonly OpenFileModal openFileModal;
         private readonly UniformBuffer<ModelStandardTransformationUniforms> transformUniforms;
+        private readonly OpenFileModal openFileModal;
         private readonly (string name, Action content)[] infoSections;
 
         private RWGeometryBuffers? geometryBuffers;
-        private ResourceSet[] resourceSets = new ResourceSet[0];
-        private UniformBuffer<ModelStandardMaterialUniforms>[] materialUniforms = new UniformBuffer<ModelStandardMaterialUniforms>[0];
+        private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
+        
         private float distance = 2.0f;
         private Vector2 cameraAngle = Vector2.Zero;
         private bool didSetColumnWidth = false;
@@ -48,7 +48,6 @@ namespace zzre.tools
             Window.OnContent += HandleContent;
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddItem("Open", HandleMenuOpen);
-            builtPipeline = diContainer.GetTag<StandardPipelines>().ModelStandard;
             fbArea = new FramebufferArea(Window, device);
             fbArea.OnRender += HandleRender;
             fbArea.OnResize += HandleResize;
@@ -99,32 +98,19 @@ namespace zzre.tools
             if (geometry == null)
                 throw new InvalidDataException("Could not find a geometry section in clump");
 
-            geometryBuffers = new RWGeometryBuffers(diContainer, builtPipeline, (RWGeometry)geometry);
+            geometryBuffers = new RWGeometryBuffers(diContainer, (RWGeometry)geometry);
             AddDisposable(geometryBuffers);
 
-            resourceSets = new ResourceSet[geometryBuffers.SubMeshes.Count];
-            materialUniforms = new UniformBuffer<ModelStandardMaterialUniforms>[geometryBuffers.SubMeshes.Count];
+            materials = new ModelStandardMaterial[geometryBuffers.SubMeshes.Count];
             foreach (var (rwMaterial, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
             {
-                var (texture, sampler) = LoadTextureFromMaterial(texturePath, rwMaterial);
-                var matUniform = materialUniforms[index] = new UniformBuffer<ModelStandardMaterialUniforms>(device.ResourceFactory);
-                matUniform.Ref = ModelStandardMaterialUniforms.Default;
-                matUniform.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
-                matUniform.Ref.tint = rwMaterial.color.ToFColor();
-                AddDisposable(matUniform);
-
-                resourceSets[index] = device.ResourceFactory.CreateResourceSet(new ResourceSetDescription
-                {
-                    Layout = builtPipeline.ResourceLayouts.First(),
-                    BoundResources = new BindableResource[]
-                    {
-                        texture,
-                        device.PointSampler,
-                        transformUniforms.Buffer,
-                        matUniform.Buffer
-                    }
-                });
-                AddDisposable(resourceSets[index]);
+                var material = materials[index] = new ModelStandardMaterial(diContainer);
+                (material.MainTexture.Texture, material.Sampler.Sampler) = LoadTextureFromMaterial(texturePath, rwMaterial);
+                material.Transformation.Buffer = transformUniforms.Buffer;
+                material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
+                material.Uniforms.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
+                material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
+                AddDisposable(material);
             }
 
             fbArea.IsDirty = true;
@@ -223,12 +209,11 @@ namespace zzre.tools
                 return;
             transformUniforms.Update(cl);
 
-            cl.SetPipeline(builtPipeline.Pipeline);
+            (materials[0] as IMaterial).ApplyPipeline(cl);
             geometryBuffers.SetBuffers(cl);
             foreach (var (subMesh, index) in geometryBuffers.SubMeshes.Indexed())
             {
-                materialUniforms[index].Update(cl);
-                cl.SetGraphicsResourceSet(0, resourceSets[index]);
+                (materials[index] as IMaterial).ApplyBindings(cl);
                 cl.DrawIndexed(
                     indexStart: (uint)subMesh.IndexOffset,
                     indexCount: (uint)subMesh.IndexCount,
@@ -284,14 +269,17 @@ namespace zzre.tools
                 return;
 
             ImGui.Text("Globals");
-            var mat = materialUniforms.First().Value;
+            var mat = materials.First().Uniforms.Value;
             bool didChange = false;
             didChange |= ImGui.SliderFloat("Vertex Color Factor", ref mat.vertexColorFactor, 0.0f, 1.0f);
             didChange |= ImGui.SliderFloat("Global Tint Factor", ref mat.tintFactor, 0.0f, 1.0f);
             if (didChange)
             {
-                foreach (var matUniform in materialUniforms)
-                    matUniform.Ref = mat;
+                foreach (var material in materials)
+                {
+                    material.Uniforms.Ref.vertexColorFactor = mat.vertexColorFactor;
+                    material.Uniforms.Ref.tintFactor = mat.tintFactor;
+                }
                 fbArea.IsDirty = true;
             }
 
@@ -299,12 +287,12 @@ namespace zzre.tools
             ImGui.Text("Materials");
             foreach (var (rwMat, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
             {
-                bool isVisible = materialUniforms[index].Value.alphaReference < 2f;
+                bool isVisible = materials[index].Uniforms.Value.alphaReference < 2f;
                 ImGui.PushID(index);
                 if (ImGui.SmallButton(isVisible ? "V" : "H"))
                 {
                     isVisible = !isVisible;
-                    materialUniforms[index].Ref.alphaReference = isVisible ? 0.03f : 2.0f;
+                    materials[index].Uniforms.Ref.alphaReference = isVisible ? 0.03f : 2.0f;
                     fbArea.IsDirty = true;
                 }
                 ImGui.PopID();
