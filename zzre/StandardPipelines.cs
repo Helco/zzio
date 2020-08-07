@@ -6,6 +6,7 @@ using System.Text;
 using Veldrid;
 using zzio.primitives;
 using zzre.core;
+using zzre.rendering;
 
 namespace zzre
 {

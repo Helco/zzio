@@ -7,6 +7,7 @@ using Veldrid.MetalBindings;
 using zzio.primitives;
 using zzio.rwbs;
 using zzre.core;
+using zzre.rendering;
 
 namespace zzre
 {

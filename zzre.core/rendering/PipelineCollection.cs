@@ -6,7 +6,7 @@ using System.Reflection;
 using Veldrid;
 using Veldrid.SPIRV;
 
-namespace zzre.core
+namespace zzre.rendering
 {
     public partial class PipelineCollection : BaseDisposable
     {

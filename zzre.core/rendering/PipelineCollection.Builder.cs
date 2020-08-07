@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Veldrid;
 
-namespace zzre.core
+namespace zzre.rendering
 {
     public partial class PipelineCollection
     {

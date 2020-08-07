@@ -10,6 +10,7 @@ using zzre.core;
 using zzio.vfs;
 using zzre.tools;
 using zzio;
+using zzre.rendering;
 
 namespace zzre
 {

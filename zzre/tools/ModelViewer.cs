@@ -10,6 +10,7 @@ using zzio.utils;
 using System.Numerics;
 using ImGuiNET;
 using zzio.vfs;
+using zzre.rendering;
 
 namespace zzre.tools
 {

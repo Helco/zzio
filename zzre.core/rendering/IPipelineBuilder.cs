@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Veldrid;
 
-namespace zzre.core
+namespace zzre.rendering
 {
     public interface IBuiltPipeline
     {

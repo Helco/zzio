@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using Veldrid;
 
-namespace zzre
+namespace zzre.rendering
 {
     public class UniformBuffer<T> : BaseDisposable where T : struct
     {
