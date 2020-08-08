@@ -21,9 +21,6 @@ namespace zzre.tools
         private const float FieldOfView = 60.0f * 3.141592653f / 180.0f;
         private const float TexturePreviewSize = 5.0f;
         private const float TextureHoverSizeFactor = 0.4f;
-        private const int GridSize = 5;
-        private readonly IColor GridThickColor = new IColor(0xFF333333);
-        private readonly IColor GridThinColor = new IColor(0xFF777777);
 
         private readonly ITagContainer diContainer;
         private readonly ImGuiRenderer imGuiRenderer;
@@ -32,12 +29,9 @@ namespace zzre.tools
         private readonly FramebufferArea fbArea;
         private readonly IResourcePool resourcePool;
         private readonly UniformBuffer<TransformUniforms> transformUniforms;
+        private readonly DebugGridRenderer gridRenderer;
         private readonly OpenFileModal openFileModal;
         private readonly (string name, Action content)[] infoSections;
-
-        private readonly DeviceBuffer gridVertexBuffer;
-        private readonly uint gridVertexCount;
-        private readonly DebugLinesMaterial gridMaterial;
 
         private RWGeometryBuffers? geometryBuffers;
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
@@ -78,43 +72,15 @@ namespace zzre.tools
             transformUniforms.Ref.world = Matrix4x4.Identity;
             HandleResize(); // sets the projection matrix
             AddDisposable(transformUniforms);
+            gridRenderer = new DebugGridRenderer(diContainer);
+            gridRenderer.Material.Transformation.Buffer = transformUniforms.Buffer;
+            AddDisposable(gridRenderer);
 
             infoSections = new (string, Action)[]
             {
                 ("Statistics", HandleStatisticsContent),
                 ("Materials", HandleMaterialsContent),
             };
-
-            int lineCountPerDir = GridSize * 2 + 1;
-            var gridVertices = Enumerable
-                .Range(-GridSize, lineCountPerDir)
-                .SelectMany(dist => new[] { Vector3.UnitX, Vector3.UnitZ }
-                    .SelectMany(dir =>
-                    {
-                        var altDir = Vector3.One - Vector3.UnitY - dir;
-                        return new[]
-                        {
-                            dir * dist - altDir * GridSize,
-                            dir * dist + altDir * GridSize
-                        };
-                    })
-                    .Select(p => new DebugLineVertex(p, GridThinColor))
-                ).Concat(new[]
-                {
-                    Vector3.Zero, Vector3.UnitY * GridSize,
-                    Vector3.Zero, Vector3.UnitX * GridSize,
-                    Vector3.Zero, Vector3.UnitZ * GridSize
-                }.Select(p => new DebugLineVertex(p, GridThickColor)))
-                .ToArray();
-            gridVertexCount = (uint)gridVertices.Length;
-            gridVertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
-                (uint)gridVertices.Length * DebugLineVertex.Stride, BufferUsage.VertexBuffer));
-            device.UpdateBuffer(gridVertexBuffer, 0, gridVertices);
-            AddDisposable(gridVertexBuffer);
-
-            gridMaterial = new DebugLinesMaterial(diContainer);
-            gridMaterial.Transformation.Buffer = transformUniforms.Buffer;
-            AddDisposable(gridMaterial);
         }
 
         public void LoadModel(string pathText)
@@ -255,10 +221,7 @@ namespace zzre.tools
             if (geometryBuffers == null)
                 return;
             transformUniforms.Update(cl);
-
-            (gridMaterial as IMaterial).Apply(cl);
-            cl.SetVertexBuffer(0, gridVertexBuffer);
-            cl.Draw(gridVertexCount);
+            gridRenderer.Render(cl);
 
             geometryBuffers.SetBuffers(cl);
             foreach (var (subMesh, index) in geometryBuffers.SubMeshes.Indexed())
