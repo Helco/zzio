@@ -18,9 +18,13 @@
     <None Remove="shaders\color.vert" />
     <None Remove="shaders\ModelStandard.frag" />
     <None Remove="shaders\ModelStandard.vert" />
+    <None Remove="shaders\VertexColor.frag" />
+    <None Remove="shaders\VertexColor.vert" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="shaders\VertexColor.vert" />
+    <EmbeddedResource Include="shaders\VertexColor.frag" />
     <EmbeddedResource Include="shaders\ModelStandard.frag" />
     <EmbeddedResource Include="shaders\ModelStandard.vert" />
     <EmbeddedResource Include="shaders\color.frag" />

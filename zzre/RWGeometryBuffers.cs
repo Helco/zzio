@@ -25,14 +25,17 @@ namespace zzre
         private DeviceBuffer vertexBuffer;
         private DeviceBuffer indexBuffer;
         private SubMesh[] subMeshes;
+        private Bone[] bones = new Bone[0];
 
         public int VertexCount => (int)(vertexBuffer.SizeInBytes / 4);
         public int TriangleCount => (int)(indexBuffer.SizeInBytes / (2 * 3));
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
+        public IReadOnlyList<Bone> Bones => bones;
 
-        public RWGeometryBuffers(ITagContainer diContainer, RWGeometry geometry)
+        public RWGeometryBuffers(ITagContainer diContainer, RWClump clump)
         {
             device = diContainer.GetTag<GraphicsDevice>();
+            var geometry = (RWGeometry)clump.FindChildById(SectionId.Geometry, true);
             var materialList = (RWMaterialList)geometry.FindChildById(SectionId.MaterialList, false);
             var materials = materialList.children.Where(s => s is RWMaterial).Cast<RWMaterial>().ToArray();
             var morphTarget = geometry.morphTargets[0]; // TODO: morph support for the one model that uses it?
@@ -61,6 +64,9 @@ namespace zzre
             }
             indexBuffer = Factory.CreateBuffer(new BufferDescription((uint)indices.Length * 2, BufferUsage.IndexBuffer));
             device.UpdateBuffer(indexBuffer, 0, indices);
+
+            var skin = (RWSkinPLG)clump.FindChildById(SectionId.SkinPLG, true);
+            bones = skin.bones;
         }
 
         protected override void DisposeManaged()

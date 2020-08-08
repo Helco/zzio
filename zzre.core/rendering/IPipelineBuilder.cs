@@ -26,6 +26,9 @@ namespace zzre.rendering
         IPipelineBuilder With(FrontFace frontFace);
         IPipelineBuilder WithDepthClip(bool enabled = true);
         IPipelineBuilder WithScissorTest(bool enabled = true);
+        IPipelineBuilder WithDepthTest(bool enabled = true);
+        IPipelineBuilder WithDepthWrite(bool enabled = true);
+        IPipelineBuilder With(ComparisonKind depthComparison);
         IPipelineBuilder With(BlendStateDescription blendStateDescr);
         IPipelineBuilder With(DepthStencilStateDescription depthStencilStateDescr);
         IPipelineBuilder With(PrimitiveTopology primitiveTopology);

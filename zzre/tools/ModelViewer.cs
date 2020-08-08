@@ -12,6 +12,7 @@ using ImGuiNET;
 using zzio.vfs;
 using zzre.rendering;
 using zzre.materials;
+using zzio.primitives;
 
 namespace zzre.tools
 {
@@ -20,6 +21,9 @@ namespace zzre.tools
         private const float FieldOfView = 60.0f * 3.141592653f / 180.0f;
         private const float TexturePreviewSize = 5.0f;
         private const float TextureHoverSizeFactor = 0.4f;
+        private const int GridSize = 5;
+        private readonly IColor GridThickColor = new IColor(0xFF333333);
+        private readonly IColor GridThinColor = new IColor(0xFF777777);
 
         private readonly ITagContainer diContainer;
         private readonly ImGuiRenderer imGuiRenderer;
@@ -27,9 +31,13 @@ namespace zzre.tools
         private readonly MouseEventArea mouseArea;
         private readonly FramebufferArea fbArea;
         private readonly IResourcePool resourcePool;
-        private readonly UniformBuffer<ModelStandardTransformationUniforms> transformUniforms;
+        private readonly UniformBuffer<TransformUniforms> transformUniforms;
         private readonly OpenFileModal openFileModal;
         private readonly (string name, Action content)[] infoSections;
+
+        private readonly DeviceBuffer gridVertexBuffer;
+        private readonly uint gridVertexCount;
+        private readonly DebugLinesMaterial gridMaterial;
 
         private RWGeometryBuffers? geometryBuffers;
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
@@ -65,7 +73,7 @@ namespace zzre.tools
             openFileModal.OnOpenedResource += LoadModel;
             imGuiRenderer = Window.Container.ImGuiRenderer;
 
-            transformUniforms = new UniformBuffer<ModelStandardTransformationUniforms>(device.ResourceFactory);
+            transformUniforms = new UniformBuffer<TransformUniforms>(device.ResourceFactory);
             transformUniforms.Ref.view = Matrix4x4.CreateTranslation(Vector3.UnitZ * -2.0f);
             transformUniforms.Ref.world = Matrix4x4.Identity;
             HandleResize(); // sets the projection matrix
@@ -76,6 +84,37 @@ namespace zzre.tools
                 ("Statistics", HandleStatisticsContent),
                 ("Materials", HandleMaterialsContent),
             };
+
+            int lineCountPerDir = GridSize * 2 + 1;
+            var gridVertices = Enumerable
+                .Range(-GridSize, lineCountPerDir)
+                .SelectMany(dist => new[] { Vector3.UnitX, Vector3.UnitZ }
+                    .SelectMany(dir =>
+                    {
+                        var altDir = Vector3.One - Vector3.UnitY - dir;
+                        return new[]
+                        {
+                            dir * dist - altDir * GridSize,
+                            dir * dist + altDir * GridSize
+                        };
+                    })
+                    .Select(p => new DebugLineVertex(p, GridThinColor))
+                ).Concat(new[]
+                {
+                    Vector3.Zero, Vector3.UnitY * GridSize,
+                    Vector3.Zero, Vector3.UnitX * GridSize,
+                    Vector3.Zero, Vector3.UnitZ * GridSize
+                }.Select(p => new DebugLineVertex(p, GridThickColor)))
+                .ToArray();
+            gridVertexCount = (uint)gridVertices.Length;
+            gridVertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
+                (uint)gridVertices.Length * DebugLineVertex.Stride, BufferUsage.VertexBuffer));
+            device.UpdateBuffer(gridVertexBuffer, 0, gridVertices);
+            AddDisposable(gridVertexBuffer);
+
+            gridMaterial = new DebugLinesMaterial(diContainer);
+            gridMaterial.Transformation.Buffer = transformUniforms.Buffer;
+            AddDisposable(gridMaterial);
         }
 
         public void LoadModel(string pathText)
@@ -99,11 +138,8 @@ namespace zzre.tools
             var clump = Section.ReadNew(contentStream);
             if (clump.sectionId != SectionId.Clump)
                 throw new InvalidDataException($"Expected a root clump section, got a {clump.sectionId}");
-            var geometry = clump.FindChildById(SectionId.Geometry);
-            if (geometry == null)
-                throw new InvalidDataException("Could not find a geometry section in clump");
 
-            geometryBuffers = new RWGeometryBuffers(diContainer, (RWGeometry)geometry);
+            geometryBuffers = new RWGeometryBuffers(diContainer, (RWClump)clump);
             AddDisposable(geometryBuffers);
 
             foreach (var oldTexture in materials.Select(m => m.MainTexture.Texture))
@@ -220,6 +256,10 @@ namespace zzre.tools
                 return;
             transformUniforms.Update(cl);
 
+            (gridMaterial as IMaterial).Apply(cl);
+            cl.SetVertexBuffer(0, gridVertexBuffer);
+            cl.Draw(gridVertexCount);
+
             geometryBuffers.SetBuffers(cl);
             foreach (var (subMesh, index) in geometryBuffers.SubMeshes.Indexed())
             {
@@ -258,10 +298,6 @@ namespace zzre.tools
 
         private void UpdateCamera()
         {
-            var cameraPosition = distance * new Vector3( // TODO: Maybe move this formula to some utility/extension?
-                            MathF.Sin(cameraAngle.Y) * MathF.Cos(cameraAngle.X),
-                            MathF.Cos(cameraAngle.Y),
-                            MathF.Sin(cameraAngle.Y) * MathF.Sin(cameraAngle.X));
             transformUniforms.Ref.view = Matrix4x4.CreateRotationY(cameraAngle.X) * Matrix4x4.CreateRotationX(cameraAngle.Y) * Matrix4x4.CreateTranslation(0.0f, 0.0f, -distance);
             fbArea.IsDirty = true;
         }
@@ -271,6 +307,7 @@ namespace zzre.tools
             ImGui.Text($"Vertices: {geometryBuffers?.VertexCount}");
             ImGui.Text($"Triangles: {geometryBuffers?.TriangleCount}");
             ImGui.Text($"Submeshes: {geometryBuffers?.SubMeshes.Count}");
+            ImGui.Text($"Bones: {geometryBuffers?.Bones.Count}");
         }
 
         private void HandleMaterialsContent()

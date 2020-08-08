@@ -20,15 +20,6 @@ namespace zzre.materials
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct ModelStandardTransformationUniforms
-    {
-        public Matrix4x4 projection;
-        public Matrix4x4 view;
-        public Matrix4x4 world;
-        public static uint Stride = (3 * 4 * 4) * sizeof(float);
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
     public struct ModelStandardMaterialUniforms
     {
         public FColor tint;
@@ -50,7 +41,7 @@ namespace zzre.materials
     {
         public TextureBinding MainTexture { get; }
         public SamplerBinding Sampler { get; }
-        public UniformBinding<ModelStandardTransformationUniforms> Transformation { get; }
+        public UniformBinding<TransformUniforms> Transformation { get; }
         public UniformBinding<ModelStandardMaterialUniforms> Uniforms { get; }
 
         public ModelStandardMaterial(ITagContainer diContainer) : base(diContainer.GetTag<GraphicsDevice>(), GetPipeline(diContainer))
@@ -58,7 +49,7 @@ namespace zzre.materials
             Configure()
                 .Add(MainTexture = new TextureBinding(this))
                 .Add(Sampler = new SamplerBinding(this))
-                .Add(Transformation = new UniformBinding<ModelStandardTransformationUniforms>(this))
+                .Add(Transformation = new UniformBinding<TransformUniforms>(this))
                 .Add(Uniforms = new UniformBinding<ModelStandardMaterialUniforms>(this))
                 .NextBindingSet();
         }

@@ -118,6 +118,24 @@ namespace zzre.rendering
                 return this;
             }
 
+            public IPipelineBuilder WithDepthTest(bool enabled = true)
+            {
+                depthStencil.DepthTestEnabled = enabled;
+                return this;
+            }
+
+            public IPipelineBuilder WithDepthWrite(bool enabled = true)
+            {
+                depthStencil.DepthWriteEnabled = enabled;
+                return this;
+            }
+
+            public IPipelineBuilder With(ComparisonKind kind)
+            {
+                depthStencil.DepthComparison = kind;
+                return this;
+            }
+
             public IPipelineBuilder With(BlendStateDescription blendStateDescr)
             {
                 blendState = blendStateDescr;
