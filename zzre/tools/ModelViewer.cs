@@ -13,6 +13,8 @@ using zzio.vfs;
 using zzre.rendering;
 using zzre.materials;
 using zzio.primitives;
+using SixLabors.ImageSharp.ColorSpaces;
+using SixLabors.ImageSharp;
 
 namespace zzre.tools
 {
@@ -36,10 +38,12 @@ namespace zzre.tools
         private RWGeometryBuffers? geometryBuffers;
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
         private IntPtr[] textureBindings = new IntPtr[0];
-        
+        private DebugSkeletonRenderer? skeletonRenderer;
         private float distance = 2.0f;
         private Vector2 cameraAngle = Vector2.Zero;
         private bool didSetColumnWidth = false;
+        private bool isSkeletonVisible = false;
+        private int highlightedBoneI = -1;
 
         public Window Window { get; }
         public IResource? CurrentResource { get; private set; }
@@ -80,6 +84,7 @@ namespace zzre.tools
             {
                 ("Statistics", HandleStatisticsContent),
                 ("Materials", HandleMaterialsContent),
+                ("Skeleton", HandleSkeleton)
             };
         }
 
@@ -124,6 +129,16 @@ namespace zzre.tools
                 AddDisposable(material);
 
                 textureBindings[index] = imGuiRenderer.GetOrCreateImGuiBinding(device.ResourceFactory, material.MainTexture.Texture);
+            }
+
+            var skin = clump.FindChildById(SectionId.SkinPLG, true);
+            skeletonRenderer = null;
+            highlightedBoneI = -1;
+            if (skin != null)
+            {
+                skeletonRenderer = new DebugSkeletonRenderer(diContainer, new Skeleton((RWSkinPLG)skin));
+                skeletonRenderer.Material.Transformation.Buffer = transformUniforms.Buffer;
+                AddDisposable(skeletonRenderer);
             }
 
             fbArea.IsDirty = true;
@@ -222,6 +237,7 @@ namespace zzre.tools
                 return;
             transformUniforms.Update(cl);
             gridRenderer.Render(cl);
+            
 
             geometryBuffers.SetBuffers(cl);
             foreach (var (subMesh, index) in geometryBuffers.SubMeshes.Indexed())
@@ -234,6 +250,9 @@ namespace zzre.tools
                     vertexOffset: 0,
                     instanceStart: 0);
             }
+
+            if (isSkeletonVisible)
+                skeletonRenderer?.Render(cl);
         }
 
         private void HandleResize()
@@ -344,6 +363,53 @@ namespace zzre.tools
         {
             openFileModal.InitialSelectedResource = CurrentResource;
             openFileModal.Modal.Open();
+        }
+
+        private void HandleSkeleton()
+        {
+            if (skeletonRenderer == null)
+            {
+                ImGui.Text("This model has no skeleton.");
+                return;
+            }
+
+            if (ImGui.Checkbox("Visible", ref isSkeletonVisible))
+                fbArea.IsDirty = true;
+
+            var skeleton = skeletonRenderer.Skeleton;
+            var boneDepths = new int[skeleton.BoneCount];
+            for (int i = 0; i < skeleton.BoneCount; i++)
+                boneDepths[i] = skeleton.Parents[i] < 0 ? 0 : boneDepths[skeleton.Parents[i]] + 1;
+
+            int curDepth = 0;
+            for (int i = 0; i < skeleton.BoneCount; i++)
+            {
+                if (curDepth < boneDepths[i])
+                    continue;
+                while (curDepth > boneDepths[i])
+                {
+                    curDepth--;
+                    ImGui.TreePop();
+                }
+
+                var flags = (i == highlightedBoneI ? ImGuiTreeNodeFlags.Selected : 0) |
+                    ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow |
+                    ImGuiTreeNodeFlags.DefaultOpen;
+                if (ImGui.TreeNodeEx($"Bone \"{skeleton.UserIds[i]}\"", flags))
+                    curDepth++;
+                if (ImGui.IsItemClicked() && i != highlightedBoneI)
+                {
+                    if (highlightedBoneI >= 0)
+                        skeletonRenderer.SetBoneAlpha(highlightedBoneI, 120);
+                    skeletonRenderer.SetBoneAlpha(highlightedBoneI = i, 255);
+                    fbArea.IsDirty = true;
+                }
+            }
+            while (curDepth > 0)
+            {
+                curDepth--;
+                ImGui.TreePop();
+            }
         }
     }
 }

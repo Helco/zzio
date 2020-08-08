@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
-namespace zzre.core
+
+namespace zzre
 {
     public static class ZZIOExtensions
     {
@@ -15,5 +16,18 @@ namespace zzre.core
             c.b = v.Z;
             c.a = v.W;
         }
+
+        public static Matrix4x4 ToNumerics(this zzio.primitives.Matrix m) => new Matrix4x4(
+            m.right.x, m.right.y, m.right.z, m.right.w,
+            m.up.x, m.up.y, m.up.z, m.up.w,
+            m.forward.x, m.forward.y, m.forward.z, m.forward.w,
+            m.pos.x, m.pos.y, m.pos.z, m.pos.w);
+
+        // because I am still not all that sure...
+        public static Matrix4x4 ToNumericsTransposed(this zzio.primitives.Matrix m) => new Matrix4x4(
+            m.right.x, m.up.x, m.forward.x, m.pos.x,
+            m.right.y, m.up.y, m.forward.y, m.pos.y,
+            m.right.z, m.up.z, m.forward.z, m.pos.z,
+            m.right.w, m.up.w, m.forward.w, m.pos.w);
     }
 }

@@ -59,19 +59,19 @@ namespace zzre
             var o = origin.GetValueOrDefault(Vector3.Zero);
             var oColor = originColor.GetValueOrDefault(gridColor);
 
-            IEnumerable<DebugLineVertex> GenerateFor(Vector3 dir, Vector3 reach, int count, float cellSize) => Enumerable
+            IEnumerable<ColoredVertex> GenerateFor(Vector3 dir, Vector3 reach, int count, float cellSize) => Enumerable
                 .Range(-count, count * 2 + 1)
                 .SelectMany(dist => new[]
                 {
                     o + dir * dist * cellSize - reach,
                     o + dir * dist * cellSize + reach
                 })
-                .Select(p => new DebugLineVertex(p, gridColor));
+                .Select(p => new ColoredVertex(p, gridColor));
 
             Vector3 xReach = Vector3.UnitX * cellCountX * cellSize.X;
             Vector3 yReach = Vector3.UnitY * cellCountY * cellSize.Y;
             Vector3 zReach = Vector3.UnitZ * cellCountZ * cellSize.Z;
-            var newVertices = Enumerable.Empty<DebugLineVertex>();
+            var newVertices = Enumerable.Empty<ColoredVertex>();
             if (planes.HasFlag(AxisPlanes.XY))
             {
                 newVertices = newVertices
@@ -96,12 +96,12 @@ namespace zzre
                     o, o + Vector3.UnitX * originSize.Value.X,
                     o, o + Vector3.UnitY * originSize.Value.Y,
                     o, o + Vector3.UnitZ * originSize.Value.Z
-                }.Select(p => new DebugLineVertex(p, oColor)));
+                }.Select(p => new ColoredVertex(p, oColor)));
             var vertices = newVertices.ToArray();
 
             vertexBuffer?.Dispose();
             vertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
-                (uint)vertices.Length * DebugLineVertex.Stride, BufferUsage.VertexBuffer));
+                (uint)vertices.Length * ColoredVertex.Stride, BufferUsage.VertexBuffer));
             device.UpdateBuffer(vertexBuffer, 0, vertices);
         }
 
@@ -109,7 +109,7 @@ namespace zzre
         {
             (Material as IMaterial).Apply(cl);
             cl.SetVertexBuffer(0, vertexBuffer);
-            cl.Draw(vertexBuffer.SizeInBytes / DebugLineVertex.Stride);
+            cl.Draw(vertexBuffer.SizeInBytes / ColoredVertex.Stride);
         }
     }
 }

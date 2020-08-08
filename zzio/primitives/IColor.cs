@@ -43,5 +43,14 @@ namespace zzio.primitives
         }
 
         public FColor ToFColor() => new FColor(r / 255f, g / 255f, b / 255f, a / 255f);
+
+        public IColor WithA(byte newAlpha) => new IColor(r, g, b, newAlpha);
+
+        public static readonly IColor White = new IColor(0xFFFFFFFF);
+        public static readonly IColor Black = new IColor(0xFF000000);
+        public static readonly IColor Clear = new IColor(0x00000000);
+        public static readonly IColor Red = new IColor(0xFF0000FF);
+        public static readonly IColor Green = new IColor(0xFF00FF00);
+        public static readonly IColor Blue = new IColor(0xFFFF0000);
     }
 }

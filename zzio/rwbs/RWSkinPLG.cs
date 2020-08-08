@@ -23,8 +23,7 @@ namespace zzio.rwbs
     {
         public UInt32 id, idx;
         public BoneFlags flags;
-        public Vector right, up, at, pos;
-        public UInt32 p1, p2, p3, p4;
+        public Matrix objectToBone;
     }
 
     [Serializable]
@@ -61,15 +60,7 @@ namespace zzio.rwbs
                 bones[i].id = reader.ReadUInt32();
                 bones[i].idx = reader.ReadUInt32();
                 bones[i].flags = EnumUtils.intToFlags<BoneFlags>(reader.ReadUInt32());
-
-                bones[i].right = Vector.ReadNew(reader);
-                bones[i].p1 = reader.ReadUInt32();
-                bones[i].up = Vector.ReadNew(reader);
-                bones[i].p2 = reader.ReadUInt32();
-                bones[i].at = Vector.ReadNew(reader);
-                bones[i].p3 = reader.ReadUInt32();
-                bones[i].pos = Vector.ReadNew(reader);
-                bones[i].p4 = reader.ReadUInt32();
+                bones[i].objectToBone = Matrix.ReadNew(reader);
             }
         }
 
@@ -97,15 +88,7 @@ namespace zzio.rwbs
                 writer.Write(b.id);
                 writer.Write(b.idx);
                 writer.Write((uint)b.flags);
-
-                b.right.Write(writer);
-                writer.Write(b.p1);
-                b.up.Write(writer);
-                writer.Write(b.p2);
-                b.at.Write(writer);
-                writer.Write(b.p3);
-                b.pos.Write(writer);
-                writer.Write(b.p4);
+                b.objectToBone.Write(writer);
             }
         }
 
