@@ -33,6 +33,7 @@ namespace zzre.tools
         private readonly UniformBuffer<TransformUniforms> transformUniforms;
         private readonly DebugGridRenderer gridRenderer;
         private readonly OpenFileModal openFileModal;
+        private readonly DeferredCaller deferredCaller = new DeferredCaller();
         private readonly (string name, Action content)[] infoSections;
 
         private RWGeometryBuffers? geometryBuffers;
@@ -96,7 +97,10 @@ namespace zzre.tools
             LoadModel(resource);
         }
 
-        public void LoadModel(IResource resource)
+        public void LoadModel(IResource resource) => 
+            deferredCaller.Next += () => LoadModelNow(resource);
+
+        private void LoadModelNow(IResource resource)
         {
             if (resource.Equals(CurrentResource))
                 return;
@@ -203,6 +207,8 @@ namespace zzre.tools
 
         private void HandleContent()
         {
+            deferredCaller.Call();
+
             ImGui.Columns(2, null, true);
             if (!didSetColumnWidth)
             {
