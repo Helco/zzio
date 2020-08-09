@@ -13,7 +13,7 @@ using static ImGuiNET.ImGui;
 
 namespace zzre.tools
 {
-    public class ActorEditor : ListDisposable
+    public partial class ActorEditor : ListDisposable
     {
         private readonly ITagContainer diContainer;
         private readonly SimpleEditorTag editor;
@@ -24,6 +24,8 @@ namespace zzre.tools
         private readonly OpenFileModal openFileModal;
 
         private ActorExDescription? description;
+        private Part? body;
+        private Part? wings;
 
         public Window Window { get; }
         public IResource? CurrentResource { get; private set; }
@@ -53,6 +55,8 @@ namespace zzre.tools
             AddDisposable(gridRenderer);
 
             editor.AddInfoSection("Info", HandleInfoContent);
+            editor.AddInfoSection("Body Skeleton", HandleBodySkeletonContent, false);
+            editor.AddInfoSection("Wings Skeleton", HandleWingsSkeletonContent, false);
         }
 
         public void LoadActor(string pathText)
@@ -72,11 +76,23 @@ namespace zzre.tools
                 return;
             CurrentResource = null;
 
+            using var contentStream = resource.OpenContent();
+            if (contentStream == null)
+                throw new IOException($"Could not open actor at {resource.Path.ToPOSIXString()}");
+            description = ActorExDescription.ReadNew(contentStream);
+
+            body = new Part(this, description.body.model);
+            wings = description.HasWings || false ? new Part(this, description.wings.model) : null;
         }
 
         private void HandleRender(CommandList cl)
         {
             gridRenderer.Render(cl);
+            body?.Render(cl);
+            wings?.Render(cl);
+
+            body?.RenderDebug(cl);
+            wings?.RenderDebug(cl);
         }
 
         private void HandleMenuOpen()
@@ -97,9 +113,27 @@ namespace zzre.tools
             Text($"Wings animations: {description?.wings.animations.Length ?? 0}");
 
             // TODO: Add buttons to highlight bone
-            Text($"Body bone ID: {NoneIfEmptyOrNull(description?.headBoneID.ToString())}");
-            Text($"Effect bone ID: {NoneIfEmptyOrNull(description?.effectBoneID.ToString())}");
-            Text($"Attach bone ID: {NoneIfEmptyOrNull(description?.attachWingsToBone.ToString())}");
+            Text($"Head bone index: {NoneIfEmptyOrNull(description?.headBoneID.ToString())}");
+            Text($"Effect bone index: {NoneIfEmptyOrNull(description?.effectBoneID.ToString())}");
+            Text($"Attach bone index: {NoneIfEmptyOrNull(description?.attachWingsToBone.ToString())}");
+        }
+
+        private void HandleBodySkeletonContent()
+        {
+            if (body == null)
+                Text("No actor is loaded.");
+            else if (body.skeletonRenderer.Content())
+                fbArea.IsDirty = true;
+        }
+
+        private void HandleWingsSkeletonContent()
+        {
+            if (body == null)
+                Text("No actor is loaded.");
+            else if (wings == null)
+                Text("This actor has no wings.");
+            else if (wings.skeletonRenderer.Content())
+                fbArea.IsDirty = true;
         }
     }
 }

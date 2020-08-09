@@ -17,22 +17,6 @@ namespace zzre
 {
     class Program
     {
-        static byte[] LoadShaderText(string name)
-        {
-            using var stream = typeof(Program).Assembly.GetManifestResourceStream("zzre.shaders." + name);
-            if (stream == null)
-                throw new FileNotFoundException($"Could not find embedded shader resource: {name}");
-            var data = new byte[stream.Length];
-            stream.Read(data.AsSpan());
-            return data;
-        }
-
-        static Shader[] LoadShaders(ResourceFactory factory, string name) => new[]
-        {
-            factory.CreateShader(new ShaderDescription { EntryPoint = "main", ShaderBytes = LoadShaderText(name + ".frag"), Stage = ShaderStages.Fragment }),
-            factory.CreateShader(new ShaderDescription { EntryPoint = "main", ShaderBytes = LoadShaderText(name + ".vert"), Stage = ShaderStages.Vertex })
-        };
-
         static void Main(string[] args)
         {
             var window = VeldridStartup.CreateWindow(new WindowCreateInfo
@@ -67,10 +51,8 @@ namespace zzre
                 .AddTag(pipelineCollection)
                 .AddTag(new TextureLoader(diContainer));
 
-            //var actorEditor = new ActorEditor(diContainer);
-            //actorEditor.LoadActor(@"resources/models/actorsex/chr01.aed");
-            var modelViewer = new ModelViewer(diContainer);
-            modelViewer.LoadModel(@"resources/models/actorsex/chr01.dff");
+            var actorEditor = new ActorEditor(diContainer);
+            actorEditor.LoadActor(@"resources/models/actorsex/chr01.aed");
 
             window.Resized += () =>
             {

@@ -188,7 +188,7 @@ namespace zzre
                 var flags = (i == highlightedBoneI ? ImGuiTreeNodeFlags.Selected : 0) |
                     ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow |
                     ImGuiTreeNodeFlags.DefaultOpen;
-                if (TreeNodeEx($"Bone \"{Skeleton.UserIds[i]}\"", flags))
+                if (TreeNodeEx($"Bone {i} \"{Skeleton.UserIds[i]}\"", flags))
                     curDepth++;
                 if (IsItemClicked() && i != highlightedBoneI)
                 {

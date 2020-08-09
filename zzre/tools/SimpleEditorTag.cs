@@ -33,7 +33,7 @@ namespace zzre.tools
         private float distance = 2.0f;
         private Vector2 cameraAngle = Vector2.Zero;
         private bool didSetColumnWidth = false;
-        private List<(string name, Action content)> infoSections = new List<(string, Action)>();
+        private List<(string name, Action content, bool defaultOpen)> infoSections = new List<(string, Action, bool)>();
 
         public Window Window { get; }
         public UniformBuffer<TransformUniforms> Transform { get; }
@@ -60,8 +60,8 @@ namespace zzre.tools
             AddDisposable(Transform);
         }
 
-        public void AddInfoSection(string name, Action content) =>
-            infoSections.Add((name, content));
+        public void AddInfoSection(string name, Action content, bool defaultOpen = true) =>
+            infoSections.Add((name, content, defaultOpen));
 
         private void HandleContent()
         {
@@ -72,9 +72,10 @@ namespace zzre.tools
                 didSetColumnWidth = true;
             }
             ImGui.BeginChild("LeftColumn", ImGui.GetContentRegionAvail(), false, ImGuiWindowFlags.HorizontalScrollbar);
-            foreach (var (name, content) in infoSections)
+            foreach (var (name, content, isDefaultOpen) in infoSections)
             {
-                if (!ImGui.CollapsingHeader(name, ImGuiTreeNodeFlags.DefaultOpen))
+                var flags = isDefaultOpen ? ImGuiTreeNodeFlags.DefaultOpen : 0;
+                if (!ImGui.CollapsingHeader(name, flags))
                     continue;
                 
                 ImGui.BeginGroup();
