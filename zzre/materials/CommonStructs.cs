@@ -34,6 +34,6 @@ namespace zzre.materials
     {
         public Vector4 weights;
         public byte bone0, bone1, bone2, bone3;
-        public static uint Stride = 4 * sizeof(float) + 3 * sizeof(byte);
+        public static uint Stride = 4 * sizeof(float) + 4 * sizeof(byte);
     }
 }

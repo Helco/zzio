@@ -43,8 +43,6 @@ namespace zzre.tools
         private float distance = 2.0f;
         private Vector2 cameraAngle = Vector2.Zero;
         private bool didSetColumnWidth = false;
-        private bool isSkeletonVisible = false;
-        private int highlightedBoneI = -1;
 
         public Window Window { get; }
         public IResource? CurrentResource { get; private set; }
@@ -137,11 +135,12 @@ namespace zzre.tools
 
             var skin = clump.FindChildById(SectionId.SkinPLG, true);
             skeletonRenderer = null;
-            highlightedBoneI = -1;
             if (skin != null)
             {
-                skeletonRenderer = new DebugSkeletonRenderer(diContainer, new Skeleton((RWSkinPLG)skin));
-                skeletonRenderer.Material.Transformation.Buffer = transformUniforms.Buffer;
+                skeletonRenderer = new DebugSkeletonRenderer(diContainer, geometryBuffers, new Skeleton((RWSkinPLG)skin));
+                skeletonRenderer.BoneMaterial.Transformation.Buffer = transformUniforms.Buffer;
+                skeletonRenderer.SkinMaterial.Transformation.Buffer = transformUniforms.Buffer;
+                skeletonRenderer.SkinHighlightedMaterial.Transformation.Buffer = transformUniforms.Buffer;
                 AddDisposable(skeletonRenderer);
             }
 
@@ -257,8 +256,7 @@ namespace zzre.tools
                     instanceStart: 0);
             }
 
-            if (isSkeletonVisible)
-                skeletonRenderer?.Render(cl);
+            skeletonRenderer?.Render(cl);
         }
 
         private void HandleResize()
@@ -379,43 +377,8 @@ namespace zzre.tools
                 return;
             }
 
-            if (ImGui.Checkbox("Visible", ref isSkeletonVisible))
+            if (skeletonRenderer.Content())
                 fbArea.IsDirty = true;
-
-            var skeleton = skeletonRenderer.Skeleton;
-            var boneDepths = new int[skeleton.BoneCount];
-            for (int i = 0; i < skeleton.BoneCount; i++)
-                boneDepths[i] = skeleton.Parents[i] < 0 ? 0 : boneDepths[skeleton.Parents[i]] + 1;
-
-            int curDepth = 0;
-            for (int i = 0; i < skeleton.BoneCount; i++)
-            {
-                if (curDepth < boneDepths[i])
-                    continue;
-                while (curDepth > boneDepths[i])
-                {
-                    curDepth--;
-                    ImGui.TreePop();
-                }
-
-                var flags = (i == highlightedBoneI ? ImGuiTreeNodeFlags.Selected : 0) |
-                    ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow |
-                    ImGuiTreeNodeFlags.DefaultOpen;
-                if (ImGui.TreeNodeEx($"Bone \"{skeleton.UserIds[i]}\"", flags))
-                    curDepth++;
-                if (ImGui.IsItemClicked() && i != highlightedBoneI)
-                {
-                    if (highlightedBoneI >= 0)
-                        skeletonRenderer.SetBoneAlpha(highlightedBoneI, 120);
-                    skeletonRenderer.SetBoneAlpha(highlightedBoneI = i, 255);
-                    fbArea.IsDirty = true;
-                }
-            }
-            while (curDepth > 0)
-            {
-                curDepth--;
-                ImGui.TreePop();
-            }
         }
     }
 }

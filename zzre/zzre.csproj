@@ -16,6 +16,10 @@
   <ItemGroup>
     <None Remove="shaders\color.frag" />
     <None Remove="shaders\color.vert" />
+    <None Remove="shaders\DebugSkinAll.frag" />
+    <None Remove="shaders\DebugSkinAll.vert" />
+    <None Remove="shaders\DebugSkinSingle.frag" />
+    <None Remove="shaders\DebugSkinSingle.vert" />
     <None Remove="shaders\ModelStandard.frag" />
     <None Remove="shaders\ModelStandard.vert" />
     <None Remove="shaders\VertexColor.frag" />
@@ -23,6 +27,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="shaders\DebugSkinSingle.frag" />
+    <EmbeddedResource Include="shaders\DebugSkinSingle.vert" />
+    <EmbeddedResource Include="shaders\DebugSkinAll.frag" />
+    <EmbeddedResource Include="shaders\DebugSkinAll.vert" />
     <EmbeddedResource Include="shaders\VertexColor.vert" />
     <EmbeddedResource Include="shaders\VertexColor.frag" />
     <EmbeddedResource Include="shaders\ModelStandard.frag" />

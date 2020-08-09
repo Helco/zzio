@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
@@ -83,6 +84,23 @@ namespace zzre.imgui
             }
 
             return result != 0;
+        }
+
+        public static bool EnumRadioButtonGroup<T>(ref T value, string[]? labels = null) where T : Enum
+        {
+            var values = Enum.GetValues(typeof(T)).Cast<T>().ToArray();
+            labels = labels ?? Enum.GetNames(typeof(T));
+
+            bool hasChanged = false;
+            for (int i = 0; i < labels.Length; i++)
+            {
+                var isActive = value.Equals(values[i]);
+                if (!RadioButton(labels[i], isActive))
+                    continue;
+                hasChanged |= !isActive;
+                value = (T)values.GetValue(i)!;
+            }
+            return hasChanged;
         }
     }
 }

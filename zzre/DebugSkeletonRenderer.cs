@@ -8,9 +8,20 @@ using zzio.primitives;
 using zzre.materials;
 using zzre.rendering;
 using Quaternion = System.Numerics.Quaternion;
+using ImGuiNET;
+using static ImGuiNET.ImGui;
+using zzre.imgui;
 
 namespace zzre
 {
+    public enum DebugSkeletonRenderMode
+    {
+        Invisible,
+        Bones,
+        Skin,
+        SingleSkinBone
+    }
+
     public class DebugSkeletonRenderer : BaseDisposable
     {
         /* Rhombus indices
@@ -38,14 +49,27 @@ namespace zzre
         private readonly GraphicsDevice device;
         private readonly DeviceBuffer vertexBuffer;
         private readonly DeviceBuffer indexBuffer;
+        private readonly IReadOnlyList<int> boneDepths;
 
-        public DebugMaterial Material { get; }
+        private DebugSkeletonRenderMode renderMode = DebugSkeletonRenderMode.Invisible;
+        private int highlightedBoneI = -1;
+
+        public DebugMaterial BoneMaterial { get; }
+        public DebugSkinAllMaterial SkinMaterial { get; }
+        public DebugSkinSingleMaterial SkinHighlightedMaterial { get; }
+        public RWGeometryBuffers Geometry { get; }
         public Skeleton Skeleton { get; }
+        public ref DebugSkeletonRenderMode RenderMode => ref renderMode;
 
-        public DebugSkeletonRenderer(ITagContainer diContainer, Skeleton skeleton)
+        public DebugSkeletonRenderer(ITagContainer diContainer, RWGeometryBuffers geometryBuffers, Skeleton skeleton)
         {
+            Geometry = geometryBuffers;
             Skeleton = skeleton;
-            Material = new DebugMaterial(diContainer);
+            BoneMaterial = new DebugMaterial(diContainer);
+            SkinMaterial = new DebugSkinAllMaterial(diContainer);
+            SkinMaterial.Alpha.Ref = 1.0f;
+            SkinHighlightedMaterial = new DebugSkinSingleMaterial(diContainer);
+            SkinHighlightedMaterial.BoneIndex.Ref = -1;
             device = diContainer.GetTag<GraphicsDevice>();
 
             var vertices = Enumerable.Empty<ColoredVertex>();
@@ -84,6 +108,11 @@ namespace zzre
                 (uint)indexArray.Length * sizeof(ushort), BufferUsage.IndexBuffer));
             device.UpdateBuffer(vertexBuffer, 0, vertexArray);
             device.UpdateBuffer(indexBuffer, 0, indexArray);
+
+            var boneDepthsArr = new int[Skeleton.BoneCount];
+            for (int i = 0; i < Skeleton.BoneCount; i++)
+                boneDepthsArr[i] = Skeleton.Parents[i] < 0 ? 0 : boneDepthsArr[Skeleton.Parents[i]] + 1;
+            boneDepths = boneDepthsArr;
         }
 
         protected override void DisposeManaged()
@@ -91,13 +120,35 @@ namespace zzre
             base.DisposeManaged();
             vertexBuffer.Dispose();
             indexBuffer.Dispose();
+            BoneMaterial.Dispose();
+            SkinMaterial.Dispose();
+            SkinHighlightedMaterial.Dispose();
         }
 
         public void Render(CommandList cl)
         {
+            if (RenderMode == DebugSkeletonRenderMode.Invisible)
+                return;
+
+            if (RenderMode == DebugSkeletonRenderMode.Skin)
+            {
+                (SkinMaterial as IMaterial).Apply(cl);
+                Geometry.SetBuffers(cl);
+                Geometry.SetSkinBuffer(cl);
+                cl.DrawIndexed((uint)Geometry.SubMeshes.Sum(sm => sm.IndexCount));
+            }
+            if (RenderMode == DebugSkeletonRenderMode.SingleSkinBone)
+            {
+                (SkinHighlightedMaterial as IMaterial).Apply(cl);
+                Geometry.SetBuffers(cl);
+                Geometry.SetSkinBuffer(cl);
+                cl.DrawIndexed((uint)Geometry.SubMeshes.Sum(sm => sm.IndexCount));
+            }
+
+            // always draw bones when visible
             cl.SetVertexBuffer(0, vertexBuffer);
             cl.SetIndexBuffer(indexBuffer, IndexFormat.UInt16);
-            (Material as IMaterial).Apply(cl);
+            (BoneMaterial as IMaterial).Apply(cl);
             cl.DrawIndexed(indexBuffer.SizeInBytes / sizeof(ushort));
         }
 
@@ -115,6 +166,46 @@ namespace zzre
                     3 * sizeof(float) + 3 * sizeof(byte);
                 device.UpdateBuffer(vertexBuffer, (uint)offset, alpha);
             }
+        }
+
+        public bool Content()
+        {
+            var hasChanged = false;
+            hasChanged |= ImGuiEx.EnumRadioButtonGroup(ref renderMode);
+            NewLine();
+
+            int curDepth = 0;
+            for (int i = 0; i < Skeleton.BoneCount; i++)
+            {
+                if (curDepth < boneDepths[i])
+                    continue;
+                while (curDepth > boneDepths[i])
+                {
+                    curDepth--;
+                    TreePop();
+                }
+
+                var flags = (i == highlightedBoneI ? ImGuiTreeNodeFlags.Selected : 0) |
+                    ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow |
+                    ImGuiTreeNodeFlags.DefaultOpen;
+                if (TreeNodeEx($"Bone \"{Skeleton.UserIds[i]}\"", flags))
+                    curDepth++;
+                if (IsItemClicked() && i != highlightedBoneI)
+                {
+                    if (highlightedBoneI >= 0)
+                        SetBoneAlpha(highlightedBoneI, 120);
+                    SetBoneAlpha(highlightedBoneI = i, 255);
+                    SkinHighlightedMaterial.BoneIndex.Ref = highlightedBoneI;
+                    hasChanged = true;
+                }
+            }
+            while (curDepth > 0)
+            {
+                curDepth--;
+                TreePop();
+            }
+
+            return hasChanged;
         }
     }
 }

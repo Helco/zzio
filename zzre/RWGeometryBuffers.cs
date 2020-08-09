@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
@@ -24,10 +25,12 @@ namespace zzre
         private ResourceFactory Factory => device.ResourceFactory;
         private DeviceBuffer vertexBuffer;
         private DeviceBuffer indexBuffer;
+        private DeviceBuffer? skinBuffer;
         private SubMesh[] subMeshes;
 
         public int VertexCount => (int)(vertexBuffer.SizeInBytes / 4);
         public int TriangleCount => (int)(indexBuffer.SizeInBytes / (2 * 3));
+        public bool HasSkin => skinBuffer != null;
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
 
         public RWGeometryBuffers(ITagContainer diContainer, RWClump clump)
@@ -62,6 +65,27 @@ namespace zzre
             }
             indexBuffer = Factory.CreateBuffer(new BufferDescription((uint)indices.Length * 2, BufferUsage.IndexBuffer));
             device.UpdateBuffer(indexBuffer, 0, indices);
+
+            var skin = (RWSkinPLG)clump.FindChildById(SectionId.SkinPLG, true);
+            if (skin != null)
+            {
+                if (vertices.Length != skin.vertexWeights.GetLength(0))
+                    throw new InvalidDataException("Vertex count in skin is not equal to geometry");
+                var skinVertices = new SkinVertex[vertices.Length];
+                for (int i = 0; i < skinVertices.Length; i++)
+                {
+                    skinVertices[i].bone0 = skin.vertexIndices[i, 0];
+                    skinVertices[i].bone1 = skin.vertexIndices[i, 1];
+                    skinVertices[i].bone2 = skin.vertexIndices[i, 2];
+                    skinVertices[i].bone3 = skin.vertexIndices[i, 3];
+                    skinVertices[i].weights.X = skin.vertexWeights[i, 0];
+                    skinVertices[i].weights.Y = skin.vertexWeights[i, 1];
+                    skinVertices[i].weights.Z = skin.vertexWeights[i, 2];
+                    skinVertices[i].weights.W = skin.vertexWeights[i, 3];
+                }
+                skinBuffer = Factory.CreateBuffer(new BufferDescription((uint)skinVertices.Length * SkinVertex.Stride, BufferUsage.VertexBuffer));
+                device.UpdateBuffer(skinBuffer, 0, skinVertices);
+            }
         }
 
         protected override void DisposeManaged()
@@ -69,12 +93,19 @@ namespace zzre
             base.DisposeManaged();
             vertexBuffer.Dispose();
             indexBuffer.Dispose();
+            skinBuffer?.Dispose();
         }
 
         public void SetBuffers(CommandList commandList)
         {
             commandList.SetVertexBuffer(0, vertexBuffer);
             commandList.SetIndexBuffer(indexBuffer, IndexFormat.UInt16);
+        }
+
+        public void SetSkinBuffer(CommandList commandList)
+        {
+            if (skinBuffer != null)
+                commandList.SetVertexBuffer(1, skinBuffer);
         }
     }
 }
