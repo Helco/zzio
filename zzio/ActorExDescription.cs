@@ -5,19 +5,13 @@ using zzio.utils;
 
 namespace zzio
 {
-    [Serializable]
-    public struct AnimationRef
-    {
-        public string filename;
-        public AnimationType type;
-    }
 
     [Serializable]
-    public class ActorPart
+    public class ActorPartDescription
     {
         public string model = "";
         public int animationPoolID = -1;
-        public AnimationRef[] animations = new AnimationRef[0];
+        public (AnimationType type, string filename)[] animations = new (AnimationType, string)[0];
 
         public void Write(BinaryWriter writer, string partName)
         {
@@ -26,11 +20,11 @@ namespace zzio
             writer.WriteZString(String.Format("[AnimationPoolID_{0}]", partName));
             writer.Write(animationPoolID);
 
-            foreach (AnimationRef animRef in animations)
+            foreach (var (type, filename) in animations)
             {
                 writer.WriteZString(String.Format("[AnimationFilename_{0}]", partName));
-                writer.WriteZString(animRef.filename);
-                writer.Write((int)animRef.type);
+                writer.WriteZString(filename);
+                writer.Write((int)type);
             }
         }
     }
@@ -40,14 +34,14 @@ namespace zzio
     {
         // In Zanzarah everyone and everything has a body and wings.
         // If a creature happens to not have wings, they have to be explicitly disabled :)
-        public ActorPart body, wings;
+        public ActorPartDescription body, wings;
 
         public int attachWingsToBone, headBoneID, effectBoneID;
 
         private ActorExDescription()
         {
-            body = new ActorPart();
-            wings = new ActorPart();
+            body = new ActorPartDescription();
+            wings = new ActorPartDescription();
             attachWingsToBone = headBoneID = effectBoneID = -1;
         }
 
@@ -55,9 +49,8 @@ namespace zzio
         {
             ActorExDescription actor = new ActorExDescription();
             BinaryReader reader = new BinaryReader(stream);
-            List<AnimationRef>
-                bodyAnimations = new List<AnimationRef>(),
-                wingsAnimations = new List<AnimationRef>();
+            var bodyAnimations = new List<(AnimationType, string)>();
+            var wingsAnimations = new List<(AnimationType, string)>();
 
             if (reader.ReadZString() != "[ActorExDescriptionFile]")
                 throw new InvalidDataException("Not an actorex description file");
@@ -74,11 +67,10 @@ namespace zzio
                         actor.body.animationPoolID = reader.ReadInt32();
                         break;
                     case ("[AnimationFilename_Body]"):
-                        bodyAnimations.Add(new AnimationRef
-                        {
-                            filename = reader.ReadZString(),
-                            type = EnumUtils.intToEnum<AnimationType>(reader.ReadInt32())
-                        });
+                        var name = reader.ReadZString();
+                        bodyAnimations.Add((
+                            EnumUtils.intToEnum<AnimationType>(reader.ReadInt32()),
+                            name));
                         break;
 
                     case ("[ModelFilename_Wings]"):
@@ -88,11 +80,10 @@ namespace zzio
                         actor.wings.animationPoolID = reader.ReadInt32();
                         break;
                     case ("[AnimationFilename_Wings]"):
-                        wingsAnimations.Add(new AnimationRef
-                        {
-                            filename = reader.ReadZString(),
-                            type = EnumUtils.intToEnum<AnimationType>(reader.ReadInt32())
-                        });
+                        name = reader.ReadZString();
+                        wingsAnimations.Add((
+                            EnumUtils.intToEnum<AnimationType>(reader.ReadInt32()),
+                            name));
                         break;
 
                     case ("[AttachWingsToBone]"):
