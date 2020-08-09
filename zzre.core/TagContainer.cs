@@ -50,7 +50,7 @@ namespace zzre
         public ITagContainer<TBase> AddTag<TTag>(TTag tag) where TTag : TBase
         {
             if (!tags.TryAdd(typeof(TTag), tag))
-                throw new ArgumentException(nameof(TTag), $"A tag of type {typeof(TTag).Name} is already attached");
+                throw new ArgumentException($"A tag of type {typeof(TTag).Name} is already attached", nameof(TTag));
             return this;
         }
 

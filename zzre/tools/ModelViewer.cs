@@ -20,29 +20,22 @@ namespace zzre.tools
 {
     public class ModelViewer : ListDisposable
     {
-        private const float FieldOfView = 60.0f * 3.141592653f / 180.0f;
         private const float TexturePreviewSize = 5.0f;
         private const float TextureHoverSizeFactor = 0.4f;
 
         private readonly ITagContainer diContainer;
+        private readonly SimpleEditorTag editor;
         private readonly ImGuiRenderer imGuiRenderer;
         private readonly GraphicsDevice device;
-        private readonly MouseEventArea mouseArea;
         private readonly FramebufferArea fbArea;
         private readonly IResourcePool resourcePool;
-        private readonly UniformBuffer<TransformUniforms> transformUniforms;
         private readonly DebugGridRenderer gridRenderer;
         private readonly OpenFileModal openFileModal;
-        private readonly DeferredCaller deferredCaller = new DeferredCaller();
-        private readonly (string name, Action content)[] infoSections;
 
         private RWGeometryBuffers? geometryBuffers;
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
         private IntPtr[] textureBindings = new IntPtr[0];
         private DebugSkeletonRenderer? skeletonRenderer;
-        private float distance = 2.0f;
-        private Vector2 cameraAngle = Vector2.Zero;
-        private bool didSetColumnWidth = false;
 
         public Window Window { get; }
         public IResource? CurrentResource { get; private set; }
@@ -54,37 +47,27 @@ namespace zzre.tools
             resourcePool = diContainer.GetTag<IResourcePool>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
             Window.AddTag(this);
-            Window.OnContent += HandleContent;
+            editor = new SimpleEditorTag(Window, diContainer);
+            new DeferredCallerTag(Window);
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddItem("Open", HandleMenuOpen);
-            fbArea = new FramebufferArea(Window, device);
+            fbArea = Window.GetTag<FramebufferArea>();
             fbArea.OnRender += HandleRender;
-            fbArea.OnResize += HandleResize;
             AddDisposable(fbArea);
-            mouseArea = new MouseEventArea(Window);
-            mouseArea.OnDrag += HandleDrag;
-            mouseArea.OnScroll += HandleScroll;
+
             openFileModal = new OpenFileModal(diContainer);
             openFileModal.Filter = "*.dff";
             openFileModal.IsFilterChangeable = false;
             openFileModal.OnOpenedResource += LoadModel;
             imGuiRenderer = Window.Container.ImGuiRenderer;
 
-            transformUniforms = new UniformBuffer<TransformUniforms>(device.ResourceFactory);
-            transformUniforms.Ref.view = Matrix4x4.CreateTranslation(Vector3.UnitZ * -2.0f);
-            transformUniforms.Ref.world = Matrix4x4.Identity;
-            HandleResize(); // sets the projection matrix
-            AddDisposable(transformUniforms);
             gridRenderer = new DebugGridRenderer(diContainer);
-            gridRenderer.Material.Transformation.Buffer = transformUniforms.Buffer;
+            gridRenderer.Material.Transformation.Buffer = editor.Transform.Buffer;
             AddDisposable(gridRenderer);
 
-            infoSections = new (string, Action)[]
-            {
-                ("Statistics", HandleStatisticsContent),
-                ("Materials", HandleMaterialsContent),
-                ("Skeleton", HandleSkeleton)
-            };
+            editor.AddInfoSection("Statistics", HandleStatisticsContent);
+            editor.AddInfoSection("Materials", HandleMaterialsContent);
+            editor.AddInfoSection("Skeleton", HandleSkeleton);
         }
 
         public void LoadModel(string pathText)
@@ -96,7 +79,7 @@ namespace zzre.tools
         }
 
         public void LoadModel(IResource resource) => 
-            deferredCaller.Next += () => LoadModelNow(resource);
+            Window.GetTag<DeferredCallerTag>().Next += () => LoadModelNow(resource);
 
         private void LoadModelNow(IResource resource)
         {
@@ -124,7 +107,7 @@ namespace zzre.tools
             {
                 var material = materials[index] = new ModelStandardMaterial(diContainer);
                 (material.MainTexture.Texture, material.Sampler.Sampler) = LoadTextureFromMaterial(texturePath, rwMaterial);
-                material.Transformation.Buffer = transformUniforms.Buffer;
+                material.Transformation.Buffer = editor.Transform.Buffer;
                 material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
                 material.Uniforms.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
                 material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
@@ -138,12 +121,13 @@ namespace zzre.tools
             if (skin != null)
             {
                 skeletonRenderer = new DebugSkeletonRenderer(diContainer, geometryBuffers, new Skeleton((RWSkinPLG)skin));
-                skeletonRenderer.BoneMaterial.Transformation.Buffer = transformUniforms.Buffer;
-                skeletonRenderer.SkinMaterial.Transformation.Buffer = transformUniforms.Buffer;
-                skeletonRenderer.SkinHighlightedMaterial.Transformation.Buffer = transformUniforms.Buffer;
+                skeletonRenderer.BoneMaterial.Transformation.Buffer = editor.Transform.Buffer;
+                skeletonRenderer.SkinMaterial.Transformation.Buffer = editor.Transform.Buffer;
+                skeletonRenderer.SkinHighlightedMaterial.Transformation.Buffer = editor.Transform.Buffer;
                 AddDisposable(skeletonRenderer);
             }
 
+            editor.ResetView();
             fbArea.IsDirty = true;
             CurrentResource = resource;
         }
@@ -204,43 +188,10 @@ namespace zzre.tools
             _ => throw new NotImplementedException(),
         };
 
-        private void HandleContent()
-        {
-            deferredCaller.Call();
-
-            ImGui.Columns(2, null, true);
-            if (!didSetColumnWidth)
-            {
-                ImGui.SetColumnWidth(0, ImGui.GetWindowSize().X * 0.3f);
-                didSetColumnWidth = true;
-            }
-            ImGui.BeginChild("LeftColumn", ImGui.GetContentRegionAvail(), false, ImGuiWindowFlags.HorizontalScrollbar);
-            foreach (var (name, content) in infoSections)
-            {
-                if (!ImGui.CollapsingHeader(name, ImGuiTreeNodeFlags.DefaultOpen))
-                    continue;
-                
-                ImGui.BeginGroup();
-                ImGui.Indent();
-                content();
-                ImGui.EndGroup();
-
-            }
-            ImGui.EndChild();
-
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
-            ImGui.NextColumn();
-            mouseArea.Content();
-            fbArea.Content();
-            ImGui.PopStyleVar(1);
-
-        }
-
         private void HandleRender(CommandList cl)
         {
             if (geometryBuffers == null)
                 return;
-            transformUniforms.Update(cl);
             gridRenderer.Render(cl);
             
 
@@ -257,35 +208,6 @@ namespace zzre.tools
             }
 
             skeletonRenderer?.Render(cl);
-        }
-
-        private void HandleResize()
-        {
-            transformUniforms.Ref.projection = Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, fbArea.Ratio, 0.01f, 100.0f);
-        }
-
-        private void HandleDrag(ImGuiMouseButton button, Vector2 delta)
-        {
-            if (button != ImGuiMouseButton.Right)
-                return;
-
-            cameraAngle += delta * 0.01f;
-            while (cameraAngle.X > MathF.PI) cameraAngle.X -= 2 * MathF.PI;
-            while (cameraAngle.X < -MathF.PI) cameraAngle.X += 2 * MathF.PI;
-            cameraAngle.Y = Math.Clamp(cameraAngle.Y, -MathF.PI / 2.0f, MathF.PI / 2.0f);
-            UpdateCamera();
-        }
-
-        private void HandleScroll(float scroll)
-        {
-            distance = distance * MathF.Pow(2.0f, -scroll * 0.1f);
-            UpdateCamera();
-        }
-
-        private void UpdateCamera()
-        {
-            transformUniforms.Ref.view = Matrix4x4.CreateRotationY(cameraAngle.X) * Matrix4x4.CreateRotationX(cameraAngle.Y) * Matrix4x4.CreateTranslation(0.0f, 0.0f, -distance);
-            fbArea.IsDirty = true;
         }
 
         private void HandleStatisticsContent()
