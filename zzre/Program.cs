@@ -11,6 +11,7 @@ using zzio.vfs;
 using zzre.tools;
 using zzio;
 using zzre.rendering;
+using System.Net.WebSockets;
 
 namespace zzre
 {
@@ -65,8 +66,8 @@ namespace zzre
                 .AddTag<IResourcePool>(resourcePool)
                 .AddTag(pipelineCollection);
 
-            var modelViewer = new ModelViewer(diContainer);
-            modelViewer.LoadModel("resources/models/actorsex/chr01.dff");
+            var actorEditor = new ActorEditor(diContainer);
+            actorEditor.LoadActor(@"resources/models/actorsex/chr01.aed");
 
             window.Resized += () =>
             {

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using zzio.utils;
+using Microsoft.VisualBasic;
 
 namespace zzio
 {
@@ -37,6 +38,8 @@ namespace zzio
         public ActorPartDescription body, wings;
 
         public int attachWingsToBone, headBoneID, effectBoneID;
+
+        public bool HasWings => wings.model.Length > 0;
 
         private ActorExDescription()
         {

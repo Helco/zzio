@@ -53,7 +53,6 @@ namespace zzre.tools
             menuBar.AddItem("Open", HandleMenuOpen);
             fbArea = Window.GetTag<FramebufferArea>();
             fbArea.OnRender += HandleRender;
-            AddDisposable(fbArea);
 
             openFileModal = new OpenFileModal(diContainer);
             openFileModal.Filter = "*.dff";
@@ -67,7 +66,7 @@ namespace zzre.tools
 
             editor.AddInfoSection("Statistics", HandleStatisticsContent);
             editor.AddInfoSection("Materials", HandleMaterialsContent);
-            editor.AddInfoSection("Skeleton", HandleSkeleton);
+            editor.AddInfoSection("Skeleton", HandleSkeletonContent);
         }
 
         public void LoadModel(string pathText)
@@ -190,10 +189,9 @@ namespace zzre.tools
 
         private void HandleRender(CommandList cl)
         {
-            if (geometryBuffers == null)
-                return;
             gridRenderer.Render(cl);
-            
+            if (geometryBuffers == null)
+                return;            
 
             geometryBuffers.SetBuffers(cl);
             foreach (var (subMesh, index) in geometryBuffers.SubMeshes.Indexed())
@@ -291,7 +289,7 @@ namespace zzre.tools
             openFileModal.Modal.Open();
         }
 
-        private void HandleSkeleton()
+        private void HandleSkeletonContent()
         {
             if (skeletonRenderer == null)
             {
