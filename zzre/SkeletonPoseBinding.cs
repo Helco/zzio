@@ -42,7 +42,7 @@ namespace zzre.rendering
             poseBuffer?.Dispose();
         }
 
-        public void SetIsPoseDirty() => isContentDirty = true;
+        public void MarkPoseDirty() => isContentDirty = true;
 
         public override void Update(CommandList cl)
         {
@@ -50,14 +50,10 @@ namespace zzre.rendering
                 return;
             isContentDirty = false;
 
-            /*var map = Parent.Device.Map<Matrix4x4>(poseBuffer, MapMode.Write);
+            var map = Parent.Device.Map<Matrix4x4>(poseBuffer, MapMode.Write);
             for (int i = 0; i < Skeleton.BoneCount; i++)
-                map[i] = Skeleton.Pose[i] * Skeleton.BindingObjectToBone[i];
-            Parent.Device.Unmap(poseBuffer);*/
-            var mm = Enumerable.Range(0, Skeleton.BoneCount)
-                .Select(i => Skeleton.Pose[i] * Skeleton.BindingObjectToBone[i])
-                .ToArray();
-            cl.UpdateBuffer(PoseBuffer, 0, mm);
+                map[i] = Skeleton.BindingBoneToObject[i] * Skeleton.Pose[i];
+            Parent.Device.Unmap(poseBuffer);
         }
     }
 }

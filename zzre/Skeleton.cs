@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using zzio;
 using zzio.rwbs;
 
 namespace zzre
 {
-    public class Skeleton
+    public partial class Skeleton
     {
-        private readonly Matrix4x4[] pose, invPose;
+        private Matrix4x4[] pose, invPose;
+        private BoneAnimator[]? currentAnimators, nextAnimators;
 
         public int BoneCount => pose.Length;
         public IReadOnlyList<Matrix4x4> BindingObjectToBone;
@@ -18,6 +20,21 @@ namespace zzre
         public IReadOnlyList<int> UserIds { get; }
         public IReadOnlyList<int> Parents { get; }
         public IReadOnlyList<int> Roots { get; }
+
+        public SkeletalAnimation? CurrentAnimation { get; private set; }
+        public SkeletalAnimation? NextAnimation { get; private set; }
+        public float AnimationTime
+        {
+            get => currentAnimators == null ? 0.0f : currentAnimators[0].Time;
+            set
+            {
+                if (currentAnimators == null)
+                    return;
+                foreach (var a in currentAnimators)
+                    a.Time = value;
+            }
+        }
+        public float NormalizedAnimationTime => AnimationTime / (CurrentAnimation?.duration ?? 1.0f);
 
         public Skeleton(RWSkinPLG skin)
         {
@@ -60,6 +77,41 @@ namespace zzre
                 if (!Matrix4x4.Invert(pose[i], out invPose[i]))
                     throw new InvalidProgramException();
             }
+        }
+
+        public void ResetToBinding()
+        {
+            invPose = BindingBoneToObject.ToArray();
+            pose = BindingObjectToBone.ToArray();
+        }
+
+        public void JumpToAnimation(SkeletalAnimation animation)
+        {
+            CurrentAnimation = animation;
+            currentAnimators = animation.boneFrames
+                .Select(frameSet => new BoneAnimator(frameSet, animation.duration))
+                .ToArray();
+            NextAnimation = null;
+            AddTime(0.0f);
+        }
+
+        public void AddTime(float delta)
+        {
+            if (currentAnimators == null)
+                return;
+            for (int boneI = 0; boneI < BoneCount; boneI++)
+            {
+                currentAnimators[boneI].AddTime(delta);
+                if (nextAnimators != null)
+                    nextAnimators[boneI].AddTime(delta);
+
+                var rot = Quaternion.Conjugate(currentAnimators[boneI].CurRotation); // unfortunately no idea why the conjugate has to be used
+                var pos = currentAnimators[boneI].CurTranslation;
+                var parentPose = Parents[boneI] < 0 ? Matrix4x4.Identity : pose[Parents[boneI]];
+                pose[boneI] = Matrix4x4.CreateFromQuaternion(rot) * Matrix4x4.CreateTranslation(pos) * parentPose;
+            }
+
+            UpdateInvPose();
         }
     }
 }

@@ -43,8 +43,10 @@ namespace zzre
                 new PAKResourcePool(PAKArchive.ReadNew(new FileStream(@"C:\dev\zanzarah\Resources\DATA_0.PAK", FileMode.Open, FileAccess.Read))),
                 new FileResourcePool(@"C:\dev\zanzarah")
             });
+            var time = new GameTime();
             var diContainer = new TagContainer();
             diContainer
+                .AddTag(time)
                 .AddTag(windowContainer)
                 .AddTag(graphicsDevice)
                 .AddTag<IResourcePool>(resourcePool)
@@ -67,7 +69,6 @@ namespace zzre
                     windowContainer.ImGuiRenderer.ResetContext(graphicsDevice, graphicsDevice.MainSwapchain.Framebuffer.OutputDescription);
             };
 
-            var time = new GameTime();
             while (window.Exists)
             {
                 time.BeginFrame();

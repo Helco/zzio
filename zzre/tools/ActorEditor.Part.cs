@@ -4,11 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Veldrid;
+using zzio;
 using zzio.rwbs;
 using zzio.utils;
 using zzio.vfs;
 using zzre.materials;
 using zzre.rendering;
+using static ImGuiNET.ImGui;
 
 namespace zzre.tools
 {
@@ -18,16 +20,21 @@ namespace zzre.tools
         {
             private readonly ActorEditor parent;
             private readonly TextureLoader textureLoader;
+            private readonly GameTime gameTime;
+            private bool isPlaying = false;
+            private int currentAnimationI = -1;
 
             public RWGeometryBuffers geometry;
             public ModelSkinnedMaterial[] materials;
             public Skeleton skeleton;
             public DebugSkeletonRenderer skeletonRenderer;
+            public (AnimationType type, SkeletalAnimation ani)[] animations;
             
-            public Part(ActorEditor parent, string modelName)
+            public Part(ActorEditor parent, string modelName, (AnimationType type, string filename)[] animationNames)
             {
                 this.parent = parent;
                 textureLoader = parent.diContainer.GetTag<TextureLoader>();
+                gameTime = parent.diContainer.GetTag<GameTime>();
                 var modelPath = new FilePath("resources/models/actorsex/").Combine(modelName);
                 var texturePath = textureLoader.GetTexturePathFromModel(modelPath);
 
@@ -63,6 +70,20 @@ namespace zzre.tools
                     material.Pose.Skeleton = skeleton;
                     AddDisposable(material);
                 }
+
+                SkeletalAnimation LoadAnimation(string filename)
+                {
+                    var animationPath = new FilePath("resources/models/actorsex/").Combine(filename);
+                    using var contentStream = parent.resourcePool.FindAndOpen(animationPath);
+                    if (contentStream == null)
+                        throw new IOException($"Could not open animation at {animationPath.ToPOSIXString()}");
+                    var animation = SkeletalAnimation.ReadNew(contentStream);
+                    if (animation.BoneCount != skeleton.BoneCount)
+                        throw new InvalidDataException($"Animation {filename} is incompatible with actor skeleton {modelName}");
+                    return animation;
+                }
+                animations = animationNames.Select(t => (t.type, LoadAnimation(t.filename))).ToArray();
+                skeleton.ResetToBinding();
             }
 
             public void Render(CommandList cl)
@@ -82,6 +103,56 @@ namespace zzre.tools
             }
 
             public void RenderDebug(CommandList cl) => skeletonRenderer.Render(cl);
+
+            public bool PlaybackContent()
+            {
+                if (isPlaying)
+                {
+                    skeleton.AddTime(gameTime.Delta);
+                    foreach (var mat in materials)
+                        mat.Pose.MarkPoseDirty();
+                }
+
+                if (BeginCombo("Animation", currentAnimationI < 0 ? "" : animations[currentAnimationI].type.ToString()))
+                {
+                    foreach (var ((type, ani), index) in animations.Indexed())
+                    {
+                        PushID((int)type);
+                        if (Selectable(type.ToString(), index == currentAnimationI))
+                        {
+                            currentAnimationI = index;
+                            skeleton.JumpToAnimation(ani);
+                        }
+                        PopID();
+                    }
+                    EndCombo();
+                }
+
+                ProgressBar(skeleton.NormalizedAnimationTime);
+                if (skeleton.CurrentAnimation == null)
+                {
+                    SmallButton("|<");
+                    SameLine();
+                    SmallButton("|>");
+                    SameLine();
+                    SmallButton(">|");
+                }
+                else
+                {
+                    if (SmallButton("|<"))
+                        skeleton.JumpToAnimation(skeleton.CurrentAnimation);
+                    SameLine();
+                    if (isPlaying && SmallButton("||"))
+                        isPlaying = false;
+                    else if (!isPlaying && SmallButton("|>"))
+                        isPlaying = true;
+                    SameLine();
+                    if (SmallButton(">|"))
+                        skeleton.JumpToAnimation(skeleton.CurrentAnimation);
+                }
+
+                return isPlaying;
+            }
         }
     }
 }

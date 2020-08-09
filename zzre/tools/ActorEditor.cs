@@ -55,8 +55,10 @@ namespace zzre.tools
             AddDisposable(gridRenderer);
 
             editor.AddInfoSection("Info", HandleInfoContent);
-            editor.AddInfoSection("Body Skeleton", HandleBodySkeletonContent, false);
-            editor.AddInfoSection("Wings Skeleton", HandleWingsSkeletonContent, false);
+            editor.AddInfoSection("Body animations", () => HandlePartContent(false, () => body?.PlaybackContent() ?? false));
+            editor.AddInfoSection("Wings animations", () => HandlePartContent(true, () => wings?.PlaybackContent() ?? false));
+            editor.AddInfoSection("Body skeleton", () => HandlePartContent(false, () => body?.skeletonRenderer.Content() ?? false), false);
+            editor.AddInfoSection("Wings skeleton", () => HandlePartContent(true, () => wings?.skeletonRenderer.Content() ?? false), false);
         }
 
         public void LoadActor(string pathText)
@@ -81,8 +83,8 @@ namespace zzre.tools
                 throw new IOException($"Could not open actor at {resource.Path.ToPOSIXString()}");
             description = ActorExDescription.ReadNew(contentStream);
 
-            body = new Part(this, description.body.model);
-            wings = description.HasWings || false ? new Part(this, description.wings.model) : null;
+            body = new Part(this, description.body.model, description.body.animations);
+            wings = description.HasWings || false ? new Part(this, description.wings.model, description.wings.animations) : null;
 
             editor.ResetView();
             fbArea.IsDirty = true;
@@ -122,21 +124,13 @@ namespace zzre.tools
             Text($"Attach bone index: {NoneIfEmptyOrNull(description?.attachWingsToBone.ToString())}");
         }
 
-        private void HandleBodySkeletonContent()
+        private void HandlePartContent(bool isWingsAction, Func<bool> action)
         {
             if (body == null)
                 Text("No actor is loaded.");
-            else if (body.skeletonRenderer.Content())
-                fbArea.IsDirty = true;
-        }
-
-        private void HandleWingsSkeletonContent()
-        {
-            if (body == null)
-                Text("No actor is loaded.");
-            else if (wings == null)
+            else if (isWingsAction && wings == null)
                 Text("This actor has no wings.");
-            else if (wings.skeletonRenderer.Content())
+            else if (action())
                 fbArea.IsDirty = true;
         }
     }

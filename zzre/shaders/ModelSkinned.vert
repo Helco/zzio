@@ -22,17 +22,12 @@ layout(set = 0, binding = 4) readonly buffer PoseBuffer
 
 void main()
 {
-	/*vec4 pos =
-		(vec4(vsin_pos, 1) * pose[vsin_indices.x]) * vsin_weights.x +
-		(vec4(vsin_pos, 1) * pose[vsin_indices.y]) * vsin_weights.y +
-		(vec4(vsin_pos, 1) * pose[vsin_indices.z]) * vsin_weights.z +
-		(vec4(vsin_pos, 1) * pose[vsin_indices.w]) * vsin_weights.w;*/
 	vec4 pos =
 		(pose[vsin_indices.x] * vec4(vsin_pos, 1)) * vsin_weights.x +
 		(pose[vsin_indices.y] * vec4(vsin_pos, 1)) * vsin_weights.y +
 		(pose[vsin_indices.z] * vec4(vsin_pos, 1)) * vsin_weights.z +
 		(pose[vsin_indices.w] * vec4(vsin_pos, 1)) * vsin_weights.w;
-	pos = world * pos;
+	pos = world * vec4(pos.xyz, 1);
 	pos = view * pos;
 	pos = projection * pos;
 	fsin_uv = vsin_uv;
