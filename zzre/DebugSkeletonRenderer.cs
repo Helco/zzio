@@ -30,7 +30,7 @@ namespace zzre
             0, 2, 1,    0, 3, 2,    0, 4, 3,    0, 1, 4,
             5, 3, 4,    5, 2, 3,    5, 1, 2,    5, 4, 1
         };
-        private const float RhombusBaseSize = 0.05f; // based on a rhombus of length 1
+        private const float RhombusBaseSize = 0.075f; // based on a rhombus of length 1
         private const float RhombusBaseOffset = 0.1f; // ^
         private const byte Alpha = 120;
         private static readonly IColor[] Colors = new[] { IColor.Red.WithA(Alpha), IColor.Green.WithA(Alpha), IColor.Blue.WithA(Alpha) };
