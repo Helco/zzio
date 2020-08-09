@@ -20,7 +20,7 @@ namespace zzre.tools
             private readonly TextureLoader textureLoader;
 
             public RWGeometryBuffers geometry;
-            public ModelStandardMaterial[] materials;
+            public ModelSkinnedMaterial[] materials;
             public Skeleton skeleton;
             public DebugSkeletonRenderer skeletonRenderer;
             
@@ -44,24 +44,25 @@ namespace zzre.tools
                 geometry = new RWGeometryBuffers(parent.diContainer, (RWClump)clump);
                 AddDisposable(geometry);
 
-                materials = new ModelStandardMaterial[geometry.SubMeshes.Count];
-                foreach (var (rwMaterial, index) in geometry.SubMeshes.Select(s => s.Material).Indexed())
-                {
-                    var material = materials[index] = new ModelStandardMaterial(parent.diContainer);
-                    (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePath, rwMaterial);
-                    material.Transformation.Buffer = parent.editor.Transform.Buffer;
-                    material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
-                    material.Uniforms.Ref.vertexColorFactor = 0.0f;
-                    material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
-                    AddDisposable(material);
-                }
-
                 skeleton = new Skeleton(skin);
                 skeletonRenderer = new DebugSkeletonRenderer(parent.diContainer, geometry, skeleton);
                 skeletonRenderer.BoneMaterial.Transformation.Buffer = parent.editor.Transform.Buffer;
                 skeletonRenderer.SkinMaterial.Transformation.Buffer = parent.editor.Transform.Buffer;
                 skeletonRenderer.SkinHighlightedMaterial.Transformation.Buffer = parent.editor.Transform.Buffer;
                 AddDisposable(skeletonRenderer);
+
+                materials = new ModelSkinnedMaterial[geometry.SubMeshes.Count];
+                foreach (var (rwMaterial, index) in geometry.SubMeshes.Select(s => s.Material).Indexed())
+                {
+                    var material = materials[index] = new ModelSkinnedMaterial(parent.diContainer);
+                    (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePath, rwMaterial);
+                    material.Transformation.Buffer = parent.editor.Transform.Buffer;
+                    material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
+                    material.Uniforms.Ref.vertexColorFactor = 0.0f;
+                    material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
+                    material.Pose.Skeleton = skeleton;
+                    AddDisposable(material);
+                }
             }
 
             public void Render(CommandList cl)
@@ -70,6 +71,7 @@ namespace zzre.tools
                 foreach (var (subMesh, index) in geometry.SubMeshes.Indexed())
                 {
                     (materials[index] as IMaterial).Apply(cl);
+                    geometry.SetSkinBuffer(cl); // TODO: find a solution for the pipeline problem
                     cl.DrawIndexed(
                         indexStart: (uint)subMesh.IndexOffset,
                         indexCount: (uint)subMesh.IndexCount,

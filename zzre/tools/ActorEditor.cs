@@ -83,6 +83,10 @@ namespace zzre.tools
 
             body = new Part(this, description.body.model);
             wings = description.HasWings || false ? new Part(this, description.wings.model) : null;
+
+            editor.ResetView();
+            fbArea.IsDirty = true;
+            CurrentResource = resource;
         }
 
         private void HandleRender(CommandList cl)

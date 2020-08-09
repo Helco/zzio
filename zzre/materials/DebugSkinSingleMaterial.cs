@@ -27,7 +27,7 @@ namespace zzre.materials
             .WithColorTarget(PixelFormat.R8_G8_B8_A8_UNorm)
             .WithShaderSet("DebugSkinSingle")
             .With("Position", VertexElementFormat.Float3, VertexElementSemantic.Position)
-            .With("TexCoords", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate)
+            .With("DUMMYDebugSkinSingle", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate) // use one unique name because of Veldrid#294
             .With("Color", VertexElementFormat.Byte4_Norm, VertexElementSemantic.Color)
             .NextVertexLayout()
             .With("Weights", VertexElementFormat.Float4, VertexElementSemantic.TextureCoordinate)

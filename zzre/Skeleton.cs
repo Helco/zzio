@@ -8,10 +8,11 @@ namespace zzre
 {
     public class Skeleton
     {
-        private readonly IReadOnlyList<Matrix4x4> objectToBone; // also called binding pose
         private readonly Matrix4x4[] pose, invPose;
 
         public int BoneCount => pose.Length;
+        public IReadOnlyList<Matrix4x4> BindingObjectToBone;
+        public IReadOnlyList<Matrix4x4> BindingBoneToObject;
         public IReadOnlyList<Matrix4x4> Pose => pose;
         public IReadOnlyList<Matrix4x4> InvPose => invPose;
         public IReadOnlyList<int> UserIds { get; }
@@ -20,11 +21,12 @@ namespace zzre
 
         public Skeleton(RWSkinPLG skin)
         {
-            objectToBone = skin.bones.Select(b => b.objectToBone.ResetRow3().ToNumerics()).ToArray();
-            pose = objectToBone.ToArray();
+            pose = skin.bones.Select(b => b.objectToBone.ResetRow3().ToNumerics()).ToArray();
             invPose = new Matrix4x4[pose.Length];
             UserIds = skin.bones.Select(b => (int)b.id).ToArray();
             UpdateInvPose();
+            BindingBoneToObject = pose.ToArray();
+            BindingObjectToBone = invPose.ToArray();
 
             var roots = new List<int>();
             var parents = new int[BoneCount];

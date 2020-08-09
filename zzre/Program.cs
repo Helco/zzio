@@ -33,7 +33,7 @@ namespace zzre
                 PreferStandardClipSpaceYDirection = true,
                 SyncToVerticalBlank = true,
                 Debug = true
-            }, GraphicsBackend.Direct3D11);
+            }, GraphicsBackend.Vulkan);
 
             var pipelineCollection = new PipelineCollection(graphicsDevice);
             pipelineCollection.AddShaderResourceAssemblyOf<Program>();
@@ -82,7 +82,10 @@ namespace zzre
                 time.EndFrame();
             }
 
+            // dispose graphics device last, otherwise Vulkan will crash
+            diContainer.RemoveTag<GraphicsDevice>();
             diContainer.Dispose();
+            graphicsDevice.Dispose();
         }
     }
 }
