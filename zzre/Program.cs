@@ -64,10 +64,13 @@ namespace zzre
                 .AddTag(windowContainer)
                 .AddTag(graphicsDevice)
                 .AddTag<IResourcePool>(resourcePool)
-                .AddTag(pipelineCollection);
+                .AddTag(pipelineCollection)
+                .AddTag(new TextureLoader(diContainer));
 
-            var actorEditor = new ActorEditor(diContainer);
-            actorEditor.LoadActor(@"resources/models/actorsex/chr01.aed");
+            //var actorEditor = new ActorEditor(diContainer);
+            //actorEditor.LoadActor(@"resources/models/actorsex/chr01.aed");
+            var modelViewer = new ModelViewer(diContainer);
+            modelViewer.LoadModel(@"resources/models/actorsex/chr01.dff");
 
             window.Resized += () =>
             {

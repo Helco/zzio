@@ -28,6 +28,7 @@ namespace zzre.tools
         private readonly ImGuiRenderer imGuiRenderer;
         private readonly GraphicsDevice device;
         private readonly FramebufferArea fbArea;
+        private readonly TextureLoader textureLoader;
         private readonly IResourcePool resourcePool;
         private readonly DebugGridRenderer gridRenderer;
         private readonly OpenFileModal openFileModal;
@@ -45,6 +46,7 @@ namespace zzre.tools
             this.diContainer = diContainer;
             device = diContainer.GetTag<GraphicsDevice>();
             resourcePool = diContainer.GetTag<IResourcePool>();
+            textureLoader = diContainer.GetTag<TextureLoader>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
             Window.AddTag(this);
             editor = new SimpleEditorTag(Window, diContainer);
@@ -85,7 +87,7 @@ namespace zzre.tools
             if (resource.Equals(CurrentResource))
                 return;
             CurrentResource = null;
-            var texturePath = GetTexturePathFromModel(resource.Path);
+            var texturePath = textureLoader.GetTexturePathFromModel(resource.Path);
 
             using var contentStream = resource.OpenContent();
             if (contentStream == null)
@@ -105,7 +107,7 @@ namespace zzre.tools
             foreach (var (rwMaterial, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
             {
                 var material = materials[index] = new ModelStandardMaterial(diContainer);
-                (material.MainTexture.Texture, material.Sampler.Sampler) = LoadTextureFromMaterial(texturePath, rwMaterial);
+                (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePath, rwMaterial);
                 material.Transformation.Buffer = editor.Transform.Buffer;
                 material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
                 material.Uniforms.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
@@ -130,62 +132,6 @@ namespace zzre.tools
             fbArea.IsDirty = true;
             CurrentResource = resource;
         }
-
-        private FilePath GetTexturePathFromModel(FilePath modelPath)
-        {
-            var modelDirPartI = modelPath.Parts.IndexOf(p => p.ToLowerInvariant() == "models");
-            var context = modelPath.Parts[modelDirPartI + 1];
-            return new FilePath("resources/textures").Combine(context);
-        }
-
-        private (Texture, Sampler) LoadTextureFromMaterial(FilePath basePath, RWMaterial material)
-        {
-            var texSection = (RWTexture)material.FindChildById(SectionId.Texture, true);
-            var addressModeU = ConvertAddressMode(texSection.uAddressingMode);
-            var samplerDescription = new SamplerDescription()
-            {
-                AddressModeU = addressModeU,
-                AddressModeV = ConvertAddressMode(texSection.vAddressingMode, addressModeU),
-                Filter = ConvertFilterMode(texSection.filterMode)
-            };
-
-            var nameSection = (RWString)texSection.FindChildById(SectionId.String, true);
-            using var textureStream = resourcePool.FindAndOpen(basePath.Combine(nameSection.value + ".bmp").ToPOSIXString());
-            var texture = new Veldrid.ImageSharp.ImageSharpTexture(textureStream, false);
-            var result = (
-                texture.CreateDeviceTexture(device, device.ResourceFactory),
-                device.ResourceFactory.CreateSampler(samplerDescription));
-            result.Item1.Name = nameSection.value;
-            AddDisposable(result.Item1);
-            AddDisposable(result.Item2);
-            return result;
-        }
-
-        private SamplerAddressMode ConvertAddressMode(TextureAddressingMode mode, SamplerAddressMode? altMode = null) => mode switch
-        {
-            TextureAddressingMode.Wrap => SamplerAddressMode.Wrap,
-            TextureAddressingMode.Mirror => SamplerAddressMode.Mirror,
-            TextureAddressingMode.Clamp => SamplerAddressMode.Clamp,
-            TextureAddressingMode.Border => SamplerAddressMode.Border,
-
-            TextureAddressingMode.NATextureAddress => altMode ?? throw new NotImplementedException(),
-            TextureAddressingMode.Unknown => throw new NotImplementedException(),
-            _ => throw new NotImplementedException(),
-        };
-
-        private SamplerFilter ConvertFilterMode(TextureFilterMode mode) => mode switch
-        {
-            TextureFilterMode.Nearest => SamplerFilter.MinPoint_MagPoint_MipPoint,
-            TextureFilterMode.Linear => SamplerFilter.MinLinear_MagLinear_MipPoint,
-            TextureFilterMode.MipNearest => SamplerFilter.MinPoint_MagPoint_MipPoint,
-            TextureFilterMode.MipLinear => SamplerFilter.MinLinear_MagLinear_MipPoint,
-            TextureFilterMode.LinearMipNearest => SamplerFilter.MinPoint_MagPoint_MipLinear,
-            TextureFilterMode.LinearMipLinear => SamplerFilter.MinLinear_MagLinear_MipLinear,
-
-            TextureFilterMode.NAFilterMode => throw new NotImplementedException(),
-            TextureFilterMode.Unknown => throw new NotImplementedException(),
-            _ => throw new NotImplementedException(),
-        };
 
         private void HandleRender(CommandList cl)
         {
