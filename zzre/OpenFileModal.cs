@@ -127,6 +127,12 @@ namespace zzre
 
                 if (IsItemClicked())
                     SelectedResource = resource;
+                if (IsItemHovered() && IsMouseDoubleClicked(ImGuiMouseButton.Left))
+                {
+                    SelectedResource = resource;
+                    OnOpenedResource(resource);
+                    Modal.Close();
+                }
                 if (isNodeOpen != openDirectories.Contains(resource))
                 {
                     // overwrite to force only one modification at a time
