@@ -25,12 +25,10 @@ namespace zzre
         private DeviceBuffer vertexBuffer;
         private DeviceBuffer indexBuffer;
         private SubMesh[] subMeshes;
-        private Bone[] bones = new Bone[0];
 
         public int VertexCount => (int)(vertexBuffer.SizeInBytes / 4);
         public int TriangleCount => (int)(indexBuffer.SizeInBytes / (2 * 3));
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
-        public IReadOnlyList<Bone> Bones => bones;
 
         public RWGeometryBuffers(ITagContainer diContainer, RWClump clump)
         {
@@ -64,9 +62,6 @@ namespace zzre
             }
             indexBuffer = Factory.CreateBuffer(new BufferDescription((uint)indices.Length * 2, BufferUsage.IndexBuffer));
             device.UpdateBuffer(indexBuffer, 0, indices);
-
-            var skin = (RWSkinPLG)clump.FindChildById(SectionId.SkinPLG, true);
-            bones = skin.bones;
         }
 
         protected override void DisposeManaged()
