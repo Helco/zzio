@@ -84,7 +84,7 @@ namespace zzre.tools
             description = ActorExDescription.ReadNew(contentStream);
 
             body = new Part(this, description.body.model, description.body.animations);
-            wings = description.HasWings || false ? new Part(this, description.wings.model, description.wings.animations) : null;
+            wings = description.HasWings ? new Part(this, description.wings.model, description.wings.animations) : null;
 
             editor.ResetView();
             fbArea.IsDirty = true;

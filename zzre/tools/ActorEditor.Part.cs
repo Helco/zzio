@@ -21,6 +21,7 @@ namespace zzre.tools
             private readonly ActorEditor parent;
             private readonly TextureLoader textureLoader;
             private readonly GameTime gameTime;
+            private readonly string modelName; // used as ImGui ID
             private bool isPlaying = false;
             private int currentAnimationI = -1;
 
@@ -33,6 +34,7 @@ namespace zzre.tools
             public Part(ActorEditor parent, string modelName, (AnimationType type, string filename)[] animationNames)
             {
                 this.parent = parent;
+                this.modelName = modelName;
                 textureLoader = parent.diContainer.GetTag<TextureLoader>();
                 gameTime = parent.diContainer.GetTag<GameTime>();
                 var modelPath = new FilePath("resources/models/actorsex/").Combine(modelName);
@@ -113,6 +115,7 @@ namespace zzre.tools
                         mat.Pose.MarkPoseDirty();
                 }
 
+                PushID(modelName);
                 if (BeginCombo("Animation", currentAnimationI < 0 ? "" : animations[currentAnimationI].type.ToString()))
                 {
                     foreach (var ((type, ani), index) in animations.Indexed())
@@ -151,6 +154,7 @@ namespace zzre.tools
                         skeleton.JumpToAnimation(skeleton.CurrentAnimation);
                 }
 
+                PopID();
                 return isPlaying;
             }
         }
