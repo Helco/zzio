@@ -169,8 +169,57 @@ namespace zzre.tools
 
             public bool AnimationsContent()
             {
-                return false;
+                bool hasChanged = false;
+                PushID(modelName);
+                Separator();
+                Columns(2, null, true);
+                Text("Type");
+                NextColumn();
+                Text("File");
+                NextColumn();
+                Separator();
+                Separator();
+
+                foreach (var ((curType, _), index) in animations.Indexed())
+                {
+                    PushID(index);
+                    var selectableTypes = GetUnusedAnimationTypes().Append(curType).OrderBy(t => (int)t).ToArray();
+                    PushItemWidth(-1.0f);
+                    if (BeginCombo("##AnimationType", curType.ToString(), ImGuiNET.ImGuiComboFlags.HeightSmall))
+                    {
+                        foreach (var nextType in selectableTypes)
+                        {
+                            PushID((int)nextType);
+                            if (Selectable(nextType.ToString(), curType == nextType))
+                            {
+                                // Disabled for now to not actually change anything
+                                /*animations[index].type = nextType;
+                                skeleton.JumpToAnimation(null);
+                                isPlaying = false;
+                                hasChanged = true;*/
+                            }
+                            PopID();
+                        }
+                        EndCombo();
+                    }
+                    PopItemWidth();
+                    NextColumn();
+
+                    Text("I don't know yet");
+                    NextColumn();
+
+                    PopID();
+                    Separator();
+                }
+                Columns(1);
+                PopID();
+                return hasChanged;
             }
+
+            private IEnumerable<AnimationType> GetUnusedAnimationTypes() => Enum
+                .GetValues(typeof(AnimationType))
+                .Cast<AnimationType>()
+                .Except(animations.Select(t => t.type));
         }
     }
 }

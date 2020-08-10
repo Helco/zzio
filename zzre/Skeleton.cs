@@ -86,13 +86,21 @@ namespace zzre
             pose = BindingObjectToBone.ToArray();
         }
 
-        public void JumpToAnimation(SkeletalAnimation animation)
+        public void JumpToAnimation(SkeletalAnimation? animation)
         {
+            NextAnimation = null;
+            nextAnimators = null;
+            if (animation == null)
+            {
+                CurrentAnimation = null;
+                currentAnimators = null;
+                return;
+            }
+
             CurrentAnimation = animation;
             currentAnimators = animation.boneFrames
                 .Select(frameSet => new BoneAnimator(frameSet, animation.duration))
                 .ToArray();
-            NextAnimation = null;
             AddTime(0.0f);
         }
 
