@@ -108,6 +108,7 @@ namespace zzre.tools
 
             public bool PlaybackContent()
             {
+                bool hasChanged = isPlaying;
                 if (isPlaying)
                 {
                     skeleton.AddTime(gameTime.Delta);
@@ -131,9 +132,10 @@ namespace zzre.tools
                     EndCombo();
                 }
 
-                ProgressBar(skeleton.NormalizedAnimationTime);
+                float time = skeleton.AnimationTime;
                 if (skeleton.CurrentAnimation == null)
                 {
+                    SliderFloat("Time", ref time, 0.0f, 0.0f);
                     SmallButton("|<");
                     SameLine();
                     SmallButton("|>");
@@ -142,6 +144,13 @@ namespace zzre.tools
                 }
                 else
                 {
+                    if (SliderFloat("Time", ref time, 0.0f, skeleton.CurrentAnimation.duration))
+                    {
+                        skeleton.AnimationTime = time;
+                        foreach (var mat in materials)
+                            mat.Pose.MarkPoseDirty();
+                        hasChanged = true;
+                    }
                     if (SmallButton("|<"))
                         skeleton.JumpToAnimation(skeleton.CurrentAnimation);
                     SameLine();
@@ -155,7 +164,12 @@ namespace zzre.tools
                 }
 
                 PopID();
-                return isPlaying;
+                return hasChanged;
+            }
+
+            public bool AnimationsContent()
+            {
+                return false;
             }
         }
     }

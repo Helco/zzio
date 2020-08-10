@@ -55,8 +55,9 @@ namespace zzre.tools
             AddDisposable(gridRenderer);
 
             editor.AddInfoSection("Info", HandleInfoContent);
-            editor.AddInfoSection("Body animations", () => HandlePartContent(false, () => body?.PlaybackContent() ?? false));
-            editor.AddInfoSection("Wings animations", () => HandlePartContent(true, () => wings?.PlaybackContent() ?? false));
+            editor.AddInfoSection("Animation Playback", HandlePlaybackContent);
+            editor.AddInfoSection("Body animations", () => HandlePartContent(false, () => body?.AnimationsContent() ?? false), false);
+            editor.AddInfoSection("Wings animations", () => HandlePartContent(true, () => wings?.AnimationsContent() ?? false), false);
             editor.AddInfoSection("Body skeleton", () => HandlePartContent(false, () => body?.skeletonRenderer.Content() ?? false), false);
             editor.AddInfoSection("Wings skeleton", () => HandlePartContent(true, () => wings?.skeletonRenderer.Content() ?? false), false);
         }
@@ -114,14 +115,34 @@ namespace zzre.tools
 
             // TODO: Add buttons to open model viewer
             Text($"Body: {NoneIfEmptyOrNull(description?.body.model)}");
-            Text($"Wings: {NoneIfEmptyOrNull(description?.wings.model)}");
             Text($"Body animations: {description?.body.animations.Length ?? 0}");
+            Text($"Body bones: {body?.skeleton.BoneCount ?? 0}");
+            
+            NewLine();
+            Text($"Wings: {NoneIfEmptyOrNull(description?.wings.model)}");
             Text($"Wings animations: {description?.wings.animations.Length ?? 0}");
+            Text($"Wings bones: {wings?.skeleton.BoneCount ?? 0}");
 
             // TODO: Add buttons to highlight bone
+            NewLine();
             Text($"Head bone index: {NoneIfEmptyOrNull(description?.headBoneID.ToString())}");
             Text($"Effect bone index: {NoneIfEmptyOrNull(description?.effectBoneID.ToString())}");
             Text($"Attach bone index: {NoneIfEmptyOrNull(description?.attachWingsToBone.ToString())}");
+        }
+
+        private void HandlePlaybackContent()
+        {
+            if (body != null)
+            {
+                Text("Body:");
+                fbArea.IsDirty |= body.PlaybackContent();
+            }
+            if (wings != null)
+            {
+                NewLine();
+                Text("Wings:");
+                fbArea.IsDirty |= wings.PlaybackContent();
+            }
         }
 
         private void HandlePartContent(bool isWingsAction, Func<bool> action)

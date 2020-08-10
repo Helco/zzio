@@ -32,6 +32,7 @@ namespace zzre
                     return;
                 foreach (var a in currentAnimators)
                     a.Time = value;
+                AddTime(0.0f);
             }
         }
         public float NormalizedAnimationTime => AnimationTime / (CurrentAnimation?.duration ?? 1.0f);
