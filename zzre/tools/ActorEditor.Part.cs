@@ -55,9 +55,9 @@ namespace zzre.tools
 
                 skeleton = new Skeleton(skin);
                 skeletonRenderer = new DebugSkeletonRenderer(parent.diContainer, geometry, skeleton);
-                skeletonRenderer.BoneMaterial.Transformation.Buffer = parent.editor.Transform.Buffer;
-                skeletonRenderer.SkinMaterial.Transformation.Buffer = parent.editor.Transform.Buffer;
-                skeletonRenderer.SkinHighlightedMaterial.Transformation.Buffer = parent.editor.Transform.Buffer;
+                skeletonRenderer.BoneMaterial.LinkTransformsTo(parent.gridRenderer.Material);
+                skeletonRenderer.SkinMaterial.LinkTransformsTo(parent.gridRenderer.Material);
+                skeletonRenderer.SkinHighlightedMaterial.LinkTransformsTo(parent.gridRenderer.Material);
                 AddDisposable(skeletonRenderer);
 
                 materials = new ModelSkinnedMaterial[geometry.SubMeshes.Count];
@@ -65,7 +65,7 @@ namespace zzre.tools
                 {
                     var material = materials[index] = new ModelSkinnedMaterial(parent.diContainer);
                     (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePath, rwMaterial);
-                    material.Transformation.Buffer = parent.editor.Transform.Buffer;
+                    material.LinkTransformsTo(parent.gridRenderer.Material);
                     material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
                     material.Uniforms.Ref.vertexColorFactor = 0.0f;
                     material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();

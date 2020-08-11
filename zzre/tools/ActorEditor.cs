@@ -51,7 +51,7 @@ namespace zzre.tools
             openFileModal.OnOpenedResource += LoadActor;
 
             gridRenderer = new DebugGridRenderer(diContainer);
-            gridRenderer.Material.Transformation.Buffer = editor.Transform.Buffer;
+            gridRenderer.Material.LinkTransformsTo(editor.Projection, editor.View, editor.World);
             AddDisposable(gridRenderer);
 
             editor.AddInfoSection("Info", HandleInfoContent);

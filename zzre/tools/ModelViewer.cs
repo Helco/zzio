@@ -63,7 +63,7 @@ namespace zzre.tools
             imGuiRenderer = Window.Container.ImGuiRenderer;
 
             gridRenderer = new DebugGridRenderer(diContainer);
-            gridRenderer.Material.Transformation.Buffer = editor.Transform.Buffer;
+            gridRenderer.Material.LinkTransformsTo(editor.Projection, editor.View, editor.World);
             AddDisposable(gridRenderer);
 
             editor.AddInfoSection("Statistics", HandleStatisticsContent);
@@ -108,7 +108,7 @@ namespace zzre.tools
             {
                 var material = materials[index] = new ModelStandardMaterial(diContainer);
                 (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePath, rwMaterial);
-                material.Transformation.Buffer = editor.Transform.Buffer;
+                material.LinkTransformsTo(gridRenderer.Material);
                 material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
                 material.Uniforms.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
                 material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
@@ -122,9 +122,9 @@ namespace zzre.tools
             if (skin != null)
             {
                 skeletonRenderer = new DebugSkeletonRenderer(diContainer, geometryBuffers, new Skeleton((RWSkinPLG)skin));
-                skeletonRenderer.BoneMaterial.Transformation.Buffer = editor.Transform.Buffer;
-                skeletonRenderer.SkinMaterial.Transformation.Buffer = editor.Transform.Buffer;
-                skeletonRenderer.SkinHighlightedMaterial.Transformation.Buffer = editor.Transform.Buffer;
+                skeletonRenderer.BoneMaterial.LinkTransformsTo(gridRenderer.Material);
+                skeletonRenderer.SkinMaterial.LinkTransformsTo(gridRenderer.Material);
+                skeletonRenderer.SkinHighlightedMaterial.LinkTransformsTo(gridRenderer.Material);
                 AddDisposable(skeletonRenderer);
             }
 

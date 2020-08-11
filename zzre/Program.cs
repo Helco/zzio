@@ -54,7 +54,7 @@ namespace zzre
                 .AddTag(new TextureLoader(diContainer));
 
             var actorEditor = new ActorEditor(diContainer);
-            actorEditor.LoadActor(@"resources/models/actorsex/chr01.aed");
+            actorEditor.LoadActor(@"resources/models/actorsex/f014s03.aed");
 
             window.Resized += () =>
             {

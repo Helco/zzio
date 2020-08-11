@@ -8,11 +8,13 @@ using zzre.rendering;
 
 namespace zzre.materials
 {
-    public class ModelSkinnedMaterial : BaseMaterial
+    public class ModelSkinnedMaterial : BaseMaterial, IStandardTransformMaterial
     {
         public TextureBinding MainTexture { get; }
         public SamplerBinding Sampler { get; }
-        public UniformBinding<TransformUniforms> Transformation { get; }
+        public UniformBinding<Matrix4x4> Projection { get; }
+        public UniformBinding<Matrix4x4> View { get; }
+        public UniformBinding<Matrix4x4> World { get; }
         public UniformBinding<ModelStandardMaterialUniforms> Uniforms { get; }
         public SkeletonPoseBinding Pose { get; }
 
@@ -21,7 +23,9 @@ namespace zzre.materials
             Configure()
                 .Add(MainTexture = new TextureBinding(this))
                 .Add(Sampler = new SamplerBinding(this))
-                .Add(Transformation = new UniformBinding<TransformUniforms>(this))
+                .Add(Projection = new UniformBinding<Matrix4x4>(this))
+                .Add(View = new UniformBinding<Matrix4x4>(this))
+                .Add(World = new UniformBinding<Matrix4x4>(this))
                 .Add(Uniforms = new UniformBinding<ModelStandardMaterialUniforms>(this))
                 .Add(Pose = new SkeletonPoseBinding(this))
                 .NextBindingSet();
@@ -39,7 +43,9 @@ namespace zzre.materials
             .With("Indices", VertexElementFormat.Byte4, VertexElementSemantic.TextureCoordinate)
             .With("Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)
             .With("Sampler", ResourceKind.Sampler, ShaderStages.Fragment)
-            .With("TransformationBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+            .With("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+            .With("View", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+            .With("World", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With("MaterialBuffer", ResourceKind.UniformBuffer, ShaderStages.Fragment)
             .With("PoseBuffer", ResourceKind.StructuredBufferReadOnly, ShaderStages.Vertex)
             .With(FrontFace.CounterClockwise)

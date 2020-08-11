@@ -8,15 +8,19 @@ using zzre.rendering;
 
 namespace zzre.materials
 {
-    public class DebugSkinAllMaterial : BaseMaterial
+    public class DebugSkinAllMaterial : BaseMaterial, IStandardTransformMaterial
     {
-        public UniformBinding<TransformUniforms> Transformation { get; }
+        public UniformBinding<Matrix4x4> Projection { get; }
+        public UniformBinding<Matrix4x4> View { get; }
+        public UniformBinding<Matrix4x4> World { get; }
         public UniformBinding<float> Alpha { get; }
 
         public DebugSkinAllMaterial(ITagContainer diContainer) : base(diContainer.GetTag<GraphicsDevice>(), GetPipeline(diContainer))
         {
             Configure()
-                .Add(Transformation = new UniformBinding<TransformUniforms>(this))
+                .Add(Projection = new UniformBinding<Matrix4x4>(this))
+                .Add(View = new UniformBinding<Matrix4x4>(this))
+                .Add(World = new UniformBinding<Matrix4x4>(this))
                 .Add(Alpha = new UniformBinding<float>(this))
                 .NextBindingSet();
         }
@@ -31,7 +35,9 @@ namespace zzre.materials
             .NextVertexLayout()
             .With("Weights", VertexElementFormat.Float4, VertexElementSemantic.TextureCoordinate)
             .With("Indices", VertexElementFormat.Byte4, VertexElementSemantic.TextureCoordinate)
-            .With("TransformationBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+            .With("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+            .With("View", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+            .With("World", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With("UniformBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With(FrontFace.CounterClockwise)
             .With(BlendStateDescription.SingleAlphaBlend)

@@ -36,7 +36,9 @@ namespace zzre.tools
         private List<(string name, Action content, bool defaultOpen)> infoSections = new List<(string, Action, bool)>();
 
         public Window Window { get; }
-        public UniformBuffer<TransformUniforms> Transform { get; }
+        public UniformBuffer<Matrix4x4> Projection { get; }
+        public UniformBuffer<Matrix4x4> View { get; }
+        public UniformBuffer<Matrix4x4> World { get; }
 
         public SimpleEditorTag(Window window, ITagContainer diContainer)
         {
@@ -53,11 +55,15 @@ namespace zzre.tools
             mouseArea.OnDrag += HandleDrag;
             mouseArea.OnScroll += HandleScroll;
 
-            Transform = new UniformBuffer<TransformUniforms>(device.ResourceFactory);
-            Transform.Ref.world = Matrix4x4.Identity;
+            Projection = new UniformBuffer<Matrix4x4>(device.ResourceFactory);
+            View = new UniformBuffer<Matrix4x4>(device.ResourceFactory);
+            World = new UniformBuffer<Matrix4x4>(device.ResourceFactory);
+            World.Ref = Matrix4x4.Identity;
             ResetView();
             HandleResize();
-            AddDisposable(Transform);
+            AddDisposable(Projection);
+            AddDisposable(View);
+            AddDisposable(World);
         }
 
         public void AddInfoSection(string name, Action content, bool defaultOpen = true) =>
@@ -96,12 +102,14 @@ namespace zzre.tools
 
         private void HandleRender(CommandList cl)
         {
-            Transform.Update(cl);
+            Projection.Update(cl);
+            View.Update(cl);
+            World.Update(cl);
         }
 
         private void HandleResize()
         {
-            Transform.Ref.projection = Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, fbArea.Ratio, 0.01f, 100.0f);
+            Projection.Ref = Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, fbArea.Ratio, 0.01f, 100.0f);
         }
 
         private void HandleDrag(ImGuiMouseButton button, Vector2 delta)
@@ -131,7 +139,7 @@ namespace zzre.tools
 
         private void UpdateCamera()
         {
-            Transform.Ref.view = Matrix4x4.CreateRotationY(cameraAngle.X) * Matrix4x4.CreateRotationX(cameraAngle.Y) * Matrix4x4.CreateTranslation(0.0f, 0.0f, -distance);
+            View.Ref = Matrix4x4.CreateRotationY(cameraAngle.X) * Matrix4x4.CreateRotationX(cameraAngle.Y) * Matrix4x4.CreateTranslation(0.0f, 0.0f, -distance);
             fbArea.IsDirty = true;
         }
     }

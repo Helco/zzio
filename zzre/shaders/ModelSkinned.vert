@@ -9,13 +9,10 @@ layout(location = 4) in uvec4 vsin_indices;
 layout(location = 0) out vec2 fsin_uv;
 layout(location = 1) out vec4 fsin_color;
 
-layout(set = 0, binding = 2) uniform TransformationUniforms
-{
-	mat4 projection;
-	mat4 view;
-	mat4 world;
-};
-layout(set = 0, binding = 4) readonly buffer PoseBuffer
+layout(set = 0, binding = 2) uniform Projection { mat4 projection; };
+layout(set = 0, binding = 3) uniform View { mat4 view; };
+layout(set = 0, binding = 4) uniform World { mat4 world; };
+layout(set = 0, binding = 6) readonly buffer PoseBuffer
 {
 	mat4 pose[];
 };

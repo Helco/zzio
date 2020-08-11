@@ -8,14 +8,18 @@ using zzre.rendering;
 
 namespace zzre.materials
 {
-    public class DebugMaterial : BaseMaterial
+    public class DebugMaterial : BaseMaterial, IStandardTransformMaterial
     {
-        public UniformBinding<TransformUniforms> Transformation { get; }
+        public UniformBinding<Matrix4x4> Projection { get; }
+        public UniformBinding<Matrix4x4> View { get; }
+        public UniformBinding<Matrix4x4> World { get; }
 
         public DebugMaterial(ITagContainer diContainer) : base(diContainer.GetTag<GraphicsDevice>(), GetPipeline(diContainer))
         {
             Configure()
-                .Add(Transformation = new UniformBinding<TransformUniforms>(this))
+                .Add(Projection = new UniformBinding<Matrix4x4>(this))
+                .Add(View = new UniformBinding<Matrix4x4>(this))
+                .Add(World = new UniformBinding<Matrix4x4>(this))
                 .NextBindingSet();
         }
 
@@ -25,7 +29,9 @@ namespace zzre.materials
             .WithShaderSet("VertexColor")
             .With("Position", VertexElementFormat.Float3, VertexElementSemantic.Position)
             .With("Color", VertexElementFormat.Byte4_Norm, VertexElementSemantic.Color)
-            .With("TransformationBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+            .With("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+            .With("View", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+            .With("World", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With(BlendStateDescription.SingleAlphaBlend)
             .WithDepthWrite(false)
             .WithDepthTest(false)
