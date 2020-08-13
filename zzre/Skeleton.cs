@@ -110,8 +110,6 @@ namespace zzre
 
                 bone.LocalRotation = Quaternion.Conjugate(currentAnimators[boneI].CurRotation); // unfortunately no idea why the conjugate has to be used
                 bone.LocalPosition = currentAnimators[boneI].CurTranslation;
-                //var parentPose = Parents[boneI] < 0 ? Matrix4x4.Identity : pose[Parents[boneI]];
-                //pose[boneI] = Matrix4x4.CreateFromQuaternion(bone.LocalRotation) * Matrix4x4.CreateTranslation(bone.LocalPosition) * parentPose;
             }
         }
     }

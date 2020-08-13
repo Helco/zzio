@@ -26,6 +26,8 @@
     <None Remove="shaders\ModelStandard.vert" />
     <None Remove="shaders\VertexColor.frag" />
     <None Remove="shaders\VertexColor.vert" />
+    <None Remove="shaders\VertexColorSkinned.frag" />
+    <None Remove="shaders\VertexColorSkinned.vert" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,6 +37,8 @@
     <EmbeddedResource Include="shaders\DebugSkinAll.vert" />
     <EmbeddedResource Include="shaders\ModelSkinned.frag" />
     <EmbeddedResource Include="shaders\ModelSkinned.vert" />
+    <EmbeddedResource Include="shaders\VertexColorSkinned.frag" />
+    <EmbeddedResource Include="shaders\VertexColorSkinned.vert" />
     <EmbeddedResource Include="shaders\VertexColor.vert" />
     <EmbeddedResource Include="shaders\VertexColor.frag" />
     <EmbeddedResource Include="shaders\ModelStandard.frag" />

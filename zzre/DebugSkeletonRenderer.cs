@@ -49,12 +49,13 @@ namespace zzre
         private readonly GraphicsDevice device;
         private readonly DeviceBuffer vertexBuffer;
         private readonly DeviceBuffer indexBuffer;
+        private readonly DeviceBuffer skinBuffer;
         private readonly IReadOnlyList<int> boneDepths;
 
         private DebugSkeletonRenderMode renderMode = DebugSkeletonRenderMode.Invisible;
         private int highlightedBoneI = -1;
 
-        public DebugMaterial BoneMaterial { get; }
+        public DebugSkinnedMaterial BoneMaterial { get; }
         public DebugSkinAllMaterial SkinMaterial { get; }
         public DebugSkinSingleMaterial SkinHighlightedMaterial { get; }
         public RWGeometryBuffers Geometry { get; }
@@ -65,7 +66,7 @@ namespace zzre
         {
             Geometry = geometryBuffers;
             Skeleton = skeleton;
-            BoneMaterial = new DebugMaterial(diContainer);
+            BoneMaterial = new DebugSkinnedMaterial(diContainer);
             SkinMaterial = new DebugSkinAllMaterial(diContainer);
             SkinMaterial.Alpha.Ref = 1.0f;
             SkinHighlightedMaterial = new DebugSkinSingleMaterial(diContainer);
@@ -73,6 +74,7 @@ namespace zzre
             device = diContainer.GetTag<GraphicsDevice>();
 
             var vertices = Enumerable.Empty<ColoredVertex>();
+            var skinVertices = Enumerable.Empty<SkinVertex>();
             var indices = Enumerable.Empty<ushort>();
             foreach (var (bone, index) in skeleton.Bones.Indexed())
             {
@@ -95,16 +97,25 @@ namespace zzre
                     baseCenter - tangent + bitangent,
                     to
                 }.Select(p => new ColoredVertex(p, Colors[index % Colors.Length])));
+                skinVertices = skinVertices.Concat(Enumerable.Repeat(new SkinVertex()
+                {
+                    bone0 = (byte)Skeleton.Parents[index],
+                    weights = Vector4.UnitX
+                }, RhombusVertexCount));
                 indices = indices.Concat(RhombusIndices.Select(i => (ushort)(i + index * RhombusVertexCount)));
             }
 
             var vertexArray = vertices.ToArray();
+            var skinVertexArray = skinVertices.ToArray();
             var indexArray = indices.ToArray();
             vertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)vertexArray.Length * ColoredVertex.Stride, BufferUsage.VertexBuffer));
+            skinBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
+                (uint)skinVertexArray.Length * SkinVertex.Stride, BufferUsage.VertexBuffer));
             indexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)indexArray.Length * sizeof(ushort), BufferUsage.IndexBuffer));
             device.UpdateBuffer(vertexBuffer, 0, vertexArray);
+            device.UpdateBuffer(skinBuffer, 0, skinVertexArray);
             device.UpdateBuffer(indexBuffer, 0, indexArray);
 
             var boneDepthsArr = new int[Skeleton.Bones.Count];
@@ -117,6 +128,7 @@ namespace zzre
         {
             base.DisposeManaged();
             vertexBuffer.Dispose();
+            skinBuffer.Dispose();
             indexBuffer.Dispose();
             BoneMaterial.Dispose();
             SkinMaterial.Dispose();
@@ -144,9 +156,10 @@ namespace zzre
             }
 
             // always draw bones when visible
-            cl.SetVertexBuffer(0, vertexBuffer);
-            cl.SetIndexBuffer(indexBuffer, IndexFormat.UInt16);
             (BoneMaterial as IMaterial).Apply(cl);
+            cl.SetVertexBuffer(0, vertexBuffer);
+            cl.SetVertexBuffer(1, skinBuffer);
+            cl.SetIndexBuffer(indexBuffer, IndexFormat.UInt16);
             cl.DrawIndexed(indexBuffer.SizeInBytes / sizeof(ushort));
         }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using Veldrid;
 using zzio;
@@ -25,6 +26,8 @@ namespace zzre.tools
             private bool isPlaying = false;
             private int currentAnimationI = -1;
 
+            public Location location = new Location();
+            public DeviceBufferRange locationBufferRange;
             public RWGeometryBuffers geometry;
             public ModelSkinnedMaterial[] materials;
             public Skeleton skeleton;
@@ -53,11 +56,19 @@ namespace zzre.tools
                 geometry = new RWGeometryBuffers(parent.diContainer, (RWClump)clump);
                 AddDisposable(geometry);
 
+                locationBufferRange = parent.locationBuffer.Add(location);
+                void LinkTransformsFor(IStandardTransformMaterial material)
+                {
+                    material.LinkTransformsTo(parent.gridRenderer.Material);
+                    material.World.BufferRange = locationBufferRange;
+                }
+
                 skeleton = new Skeleton(skin);
                 skeletonRenderer = new DebugSkeletonRenderer(parent.diContainer, geometry, skeleton);
-                skeletonRenderer.BoneMaterial.LinkTransformsTo(parent.gridRenderer.Material);
-                skeletonRenderer.SkinMaterial.LinkTransformsTo(parent.gridRenderer.Material);
-                skeletonRenderer.SkinHighlightedMaterial.LinkTransformsTo(parent.gridRenderer.Material);
+                LinkTransformsFor(skeletonRenderer.BoneMaterial);
+                skeletonRenderer.BoneMaterial.Pose.Skeleton = skeleton;
+                LinkTransformsFor(skeletonRenderer.SkinMaterial);
+                LinkTransformsFor(skeletonRenderer.SkinHighlightedMaterial);
                 AddDisposable(skeletonRenderer);
 
                 materials = new ModelSkinnedMaterial[geometry.SubMeshes.Count];
@@ -65,11 +76,11 @@ namespace zzre.tools
                 {
                     var material = materials[index] = new ModelSkinnedMaterial(parent.diContainer);
                     (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePath, rwMaterial);
-                    material.LinkTransformsTo(parent.gridRenderer.Material);
                     material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
                     material.Uniforms.Ref.vertexColorFactor = 0.0f;
                     material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
                     material.Pose.Skeleton = skeleton;
+                    LinkTransformsFor(material);
                     AddDisposable(material);
                 }
 
@@ -86,6 +97,12 @@ namespace zzre.tools
                 }
                 animations = animationNames.Select(t => (t.type, LoadAnimation(t.filename))).ToArray();
                 skeleton.ResetToBinding();
+            }
+
+            protected override void DisposeManaged()
+            {
+                base.DisposeManaged();
+                parent.locationBuffer.Remove(locationBufferRange);
             }
 
             public void Render(CommandList cl)
@@ -114,6 +131,7 @@ namespace zzre.tools
                     skeleton.AddTime(gameTime.Delta);
                     foreach (var mat in materials)
                         mat.Pose.MarkPoseDirty();
+                    skeletonRenderer.BoneMaterial.Pose.MarkPoseDirty();
                 }
 
                 PushID(modelName);
@@ -149,6 +167,7 @@ namespace zzre.tools
                         skeleton.AnimationTime = time;
                         foreach (var mat in materials)
                             mat.Pose.MarkPoseDirty();
+                        skeletonRenderer.BoneMaterial.Pose.MarkPoseDirty();
                         hasChanged = true;
                     }
                     if (SmallButton("|<"))

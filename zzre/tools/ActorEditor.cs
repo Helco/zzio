@@ -26,6 +26,7 @@ namespace zzre.tools
         private ActorExDescription? description;
         private Part? body;
         private Part? wings;
+        private LocationBuffer locationBuffer;
 
         public Window Window { get; }
         public IResource? CurrentResource { get; private set; }
@@ -53,6 +54,9 @@ namespace zzre.tools
             gridRenderer = new DebugGridRenderer(diContainer);
             gridRenderer.Material.LinkTransformsTo(editor.Projection, editor.View, editor.World);
             AddDisposable(gridRenderer);
+
+            locationBuffer = new LocationBuffer(device.ResourceFactory);
+            AddDisposable(locationBuffer);
 
             editor.AddInfoSection("Info", HandleInfoContent);
             editor.AddInfoSection("Animation Playback", HandlePlaybackContent);
@@ -85,7 +89,12 @@ namespace zzre.tools
             description = ActorExDescription.ReadNew(contentStream);
 
             body = new Part(this, description.body.model, description.body.animations);
-            wings = description.HasWings ? new Part(this, description.wings.model, description.wings.animations) : null;
+            wings = null;
+            if (description.HasWings)
+            {
+                wings = new Part(this, description.wings.model, description.wings.animations);
+                wings.location.Parent = body.skeleton.Bones[description.attachWingsToBone];
+            }
 
             editor.ResetView();
             fbArea.IsDirty = true;
@@ -94,6 +103,7 @@ namespace zzre.tools
 
         private void HandleRender(CommandList cl)
         {
+            locationBuffer.Update(cl);
             gridRenderer.Render(cl);
             body?.Render(cl);
             wings?.Render(cl);
