@@ -23,7 +23,7 @@ namespace zzre.rendering
                 skeleton = value;
                 poseBuffer?.Dispose();
                 poseBuffer = Parent.Device.ResourceFactory.CreateBuffer(new BufferDescription(
-                    (uint)value.BoneCount * 4 * 4 * sizeof(float),
+                    (uint)value.Bones.Count * 4 * 4 * sizeof(float),
                     BufferUsage.StructuredBufferReadOnly | BufferUsage.Dynamic,
                     (uint)4 * 4 * sizeof(float)));
                 isContentDirty = true;
@@ -51,8 +51,8 @@ namespace zzre.rendering
             isContentDirty = false;
 
             var map = Parent.Device.Map<Matrix4x4>(poseBuffer, MapMode.Write);
-            for (int i = 0; i < Skeleton.BoneCount; i++)
-                map[i] = Skeleton.BindingBoneToObject[i] * Skeleton.Pose[i];
+            foreach (var (bone, i) in Skeleton.Bones.Indexed())
+                map[i] = Skeleton.BindingBoneToObject[i] * bone.WorldToLocal;
             Parent.Device.Unmap(poseBuffer);
         }
     }

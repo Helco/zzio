@@ -74,19 +74,17 @@ namespace zzre
 
             var vertices = Enumerable.Empty<ColoredVertex>();
             var indices = Enumerable.Empty<ushort>();
-            foreach (var (toMat, index) in skeleton.InvPose.Indexed())
+            foreach (var (bone, index) in skeleton.Bones.Indexed())
             {
-                if (skeleton.Parents[index] < 0)
+                if (bone.Parent == null)
                     continue;
-                var to = toMat.Translation;
-                var from = skeleton.InvPose[skeleton.Parents[index]].Translation;
+                var to = bone.GlobalPosition;
+                var from = bone.Parent.GlobalPosition;
                 var length = (to - from).Length();
                 var baseSize = length * RhombusBaseSize;
-                var rot = Quaternion.CreateFromRotationMatrix(toMat);
-                var normal = Vector3.Normalize(to - from);
-                var tangent = Vector3.Normalize(Vector3.Cross(normal, Vector3.Transform(Vector3.UnitY, rot))) * baseSize;
-                var bitangent = Vector3.Normalize(Vector3.Cross(normal, tangent)) * baseSize;
-                var baseCenter = from + normal * length * RhombusBaseOffset;
+                var tangent = bone.GlobalUp * baseSize;
+                var bitangent = bone.GlobalRight * baseSize;
+                var baseCenter = from + bone.GlobalForward * length * RhombusBaseOffset;
 
                 vertices = vertices.Concat(new[]
                 {
@@ -109,8 +107,8 @@ namespace zzre
             device.UpdateBuffer(vertexBuffer, 0, vertexArray);
             device.UpdateBuffer(indexBuffer, 0, indexArray);
 
-            var boneDepthsArr = new int[Skeleton.BoneCount];
-            for (int i = 0; i < Skeleton.BoneCount; i++)
+            var boneDepthsArr = new int[Skeleton.Bones.Count];
+            for (int i = 0; i < Skeleton.Bones.Count; i++)
                 boneDepthsArr[i] = Skeleton.Parents[i] < 0 ? 0 : boneDepthsArr[Skeleton.Parents[i]] + 1;
             boneDepths = boneDepthsArr;
         }
@@ -175,7 +173,7 @@ namespace zzre
             NewLine();
 
             int curDepth = 0;
-            for (int i = 0; i < Skeleton.BoneCount; i++)
+            for (int i = 0; i < Skeleton.Bones.Count; i++)
             {
                 if (curDepth < boneDepths[i])
                     continue;

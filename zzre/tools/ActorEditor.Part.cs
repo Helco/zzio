@@ -80,7 +80,7 @@ namespace zzre.tools
                     if (contentStream == null)
                         throw new IOException($"Could not open animation at {animationPath.ToPOSIXString()}");
                     var animation = SkeletalAnimation.ReadNew(contentStream);
-                    if (animation.BoneCount != skeleton.BoneCount)
+                    if (animation.BoneCount != skeleton.Bones.Count)
                         throw new InvalidDataException($"Animation {filename} is incompatible with actor skeleton {modelName}");
                     return animation;
                 }

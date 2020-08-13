@@ -9,17 +9,16 @@ namespace zzre
 {
     public partial class Skeleton
     {
-        private Matrix4x4[] pose, invPose;
+        //private Matrix4x4[] pose;
         private BoneAnimator[]? currentAnimators, nextAnimators;
 
-        public int BoneCount => pose.Length;
-        public IReadOnlyList<Matrix4x4> BindingObjectToBone;
-        public IReadOnlyList<Matrix4x4> BindingBoneToObject;
-        public IReadOnlyList<Matrix4x4> Pose => pose;
-        public IReadOnlyList<Matrix4x4> InvPose => invPose;
+        public IReadOnlyList<Matrix4x4> BindingObjectToBone { get; }
+        public IReadOnlyList<Matrix4x4> BindingBoneToObject { get; }
+        public IReadOnlyList<Location> Bones { get; }
         public IReadOnlyList<int> UserIds { get; }
         public IReadOnlyList<int> Parents { get; }
         public IReadOnlyList<int> Roots { get; }
+        //public IReadOnlyList<Matrix4x4> Pose => pose;
 
         public SkeletalAnimation? CurrentAnimation { get; private set; }
         public SkeletalAnimation? NextAnimation { get; private set; }
@@ -39,15 +38,12 @@ namespace zzre
 
         public Skeleton(RWSkinPLG skin)
         {
-            pose = skin.bones.Select(b => b.objectToBone.ResetRow3().ToNumerics()).ToArray();
-            invPose = new Matrix4x4[pose.Length];
-            UserIds = skin.bones.Select(b => (int)b.id).ToArray();
-            UpdateInvPose();
-            BindingBoneToObject = pose.ToArray();
-            BindingObjectToBone = invPose.ToArray();
+            BindingBoneToObject = skin.bones.Select(b => b.objectToBone.ResetRow3().ToNumerics()).ToArray();
+            UserIds = skin.bones.Select(b => (int)b.id).ToArray();            
 
             var roots = new List<int>();
-            var parents = new int[BoneCount];
+            var bones = new Location[skin.bones.Length];
+            var parents = new int[skin.bones.Length];
             var parentStack = new Stack<int>();
             foreach (var (bone, index) in skin.bones.Indexed())
             {
@@ -66,24 +62,22 @@ namespace zzre
                     while (parentStack.Any() &&
                         !skin.bones[parentStack.Pop()].flags.HasFlag(BoneFlags.HasNextSibling));
                 }
+
+                bones[index] = new Location();
+                bones[index].Parent = parents[index] < 0 ? null : bones[parents[index]];
+                bones[index].LocalToWorld = BindingBoneToObject[index];
             }
+            Bones = bones;
             Parents = parents;
             Roots = roots.ToArray();
-        }
-
-        private void UpdateInvPose()
-        {
-            for (int i = 0; i < pose.Length; i++)
-            {
-                if (!Matrix4x4.Invert(pose[i], out invPose[i]))
-                    throw new InvalidProgramException();
-            }
+            BindingObjectToBone = bones.Select(b => b.WorldToLocal).ToArray();
+            //pose = BindingObjectToBone.ToArray();
         }
 
         public void ResetToBinding()
         {
-            invPose = BindingBoneToObject.ToArray();
-            pose = BindingObjectToBone.ToArray();
+            foreach (var (bone, index) in Bones.Indexed())
+                bone.WorldToLocal = BindingObjectToBone[index];
         }
 
         public void JumpToAnimation(SkeletalAnimation? animation)
@@ -108,19 +102,17 @@ namespace zzre
         {
             if (currentAnimators == null)
                 return;
-            for (int boneI = 0; boneI < BoneCount; boneI++)
+            foreach (var (bone, boneI) in Bones.Indexed())
             {
                 currentAnimators[boneI].AddTime(delta);
                 if (nextAnimators != null)
                     nextAnimators[boneI].AddTime(delta);
 
-                var rot = Quaternion.Conjugate(currentAnimators[boneI].CurRotation); // unfortunately no idea why the conjugate has to be used
-                var pos = currentAnimators[boneI].CurTranslation;
-                var parentPose = Parents[boneI] < 0 ? Matrix4x4.Identity : pose[Parents[boneI]];
-                pose[boneI] = Matrix4x4.CreateFromQuaternion(rot) * Matrix4x4.CreateTranslation(pos) * parentPose;
+                bone.LocalRotation = Quaternion.Conjugate(currentAnimators[boneI].CurRotation); // unfortunately no idea why the conjugate has to be used
+                bone.LocalPosition = currentAnimators[boneI].CurTranslation;
+                //var parentPose = Parents[boneI] < 0 ? Matrix4x4.Identity : pose[Parents[boneI]];
+                //pose[boneI] = Matrix4x4.CreateFromQuaternion(bone.LocalRotation) * Matrix4x4.CreateTranslation(bone.LocalPosition) * parentPose;
             }
-
-            UpdateInvPose();
         }
     }
 }

@@ -159,7 +159,7 @@ namespace zzre.tools
             ImGui.Text($"Vertices: {geometryBuffers?.VertexCount}");
             ImGui.Text($"Triangles: {geometryBuffers?.TriangleCount}");
             ImGui.Text($"Submeshes: {geometryBuffers?.SubMeshes.Count}");
-            ImGui.Text($"Bones: {skeletonRenderer?.Skeleton.BoneCount}");
+            ImGui.Text($"Bones: {skeletonRenderer?.Skeleton.Bones.Count}");
         }
 
         private void HandleMaterialsContent()

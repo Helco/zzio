@@ -116,12 +116,12 @@ namespace zzre.tools
             // TODO: Add buttons to open model viewer
             Text($"Body: {NoneIfEmptyOrNull(description?.body.model)}");
             Text($"Body animations: {description?.body.animations.Length ?? 0}");
-            Text($"Body bones: {body?.skeleton.BoneCount ?? 0}");
+            Text($"Body bones: {body?.skeleton.Bones.Count ?? 0}");
             
             NewLine();
             Text($"Wings: {NoneIfEmptyOrNull(description?.wings.model)}");
             Text($"Wings animations: {description?.wings.animations.Length ?? 0}");
-            Text($"Wings bones: {wings?.skeleton.BoneCount ?? 0}");
+            Text($"Wings bones: {wings?.skeleton.Bones.Count ?? 0}");
 
             // TODO: Add buttons to highlight bone
             NewLine();
