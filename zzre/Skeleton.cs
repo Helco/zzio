@@ -9,7 +9,6 @@ namespace zzre
 {
     public partial class Skeleton
     {
-        //private Matrix4x4[] pose;
         private BoneAnimator[]? currentAnimators, nextAnimators;
 
         public IReadOnlyList<Matrix4x4> BindingObjectToBone { get; }
@@ -18,7 +17,6 @@ namespace zzre
         public IReadOnlyList<int> UserIds { get; }
         public IReadOnlyList<int> Parents { get; }
         public IReadOnlyList<int> Roots { get; }
-        //public IReadOnlyList<Matrix4x4> Pose => pose;
 
         public SkeletalAnimation? CurrentAnimation { get; private set; }
         public SkeletalAnimation? NextAnimation { get; private set; }
@@ -71,7 +69,6 @@ namespace zzre
             Parents = parents;
             Roots = roots.ToArray();
             BindingObjectToBone = bones.Select(b => b.WorldToLocal).ToArray();
-            //pose = BindingObjectToBone.ToArray();
         }
 
         public void ResetToBinding()

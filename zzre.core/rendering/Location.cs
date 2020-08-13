@@ -38,9 +38,7 @@ namespace zzre
 
         public Matrix4x4 WorldToLocal
         {
-            get =>
-                ParentToLocal *
-                (Parent?.WorldToLocal ?? Matrix4x4.Identity);
+            get => ParentToLocal * (Parent?.WorldToLocal ?? Matrix4x4.Identity);
             set => ParentToLocal = Parent == null ? value : value * Parent.LocalToWorld;
         }
 
