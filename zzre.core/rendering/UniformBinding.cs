@@ -49,6 +49,15 @@ namespace zzre.rendering
             }
         }
 
+        protected void UseOwnBuffer()
+        {
+            if (!OwnsBuffer)
+            {
+                buffer = null;
+                range = null;
+            }
+        }
+
         public override BindableResource? Resource => range as BindableResource ?? Buffer;
 
         public UniformBinding(IMaterial parent) : base(parent) { }
@@ -71,6 +80,7 @@ namespace zzre.rendering
         {
             get
             {
+                UseOwnBuffer();
                 isContentDirty = true;
                 return ref value;
             }

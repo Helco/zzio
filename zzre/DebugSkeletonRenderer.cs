@@ -44,6 +44,7 @@ namespace zzre
         private const float RhombusBaseSize = 0.075f; // based on a rhombus of length 1
         private const float RhombusBaseOffset = 0.1f; // ^
         private const byte Alpha = 120;
+        private const float LineLength = 0.1f;
         private static readonly IColor[] Colors = new[] { IColor.Red.WithA(Alpha), IColor.Green.WithA(Alpha), IColor.Blue.WithA(Alpha) };
 
         private readonly LocationBuffer locationBuffer;
@@ -51,6 +52,7 @@ namespace zzre
         private readonly DeviceBuffer vertexBuffer;
         private readonly DeviceBuffer indexBuffer;
         private readonly DeviceBuffer skinBuffer;
+        private readonly DeviceBuffer lineBuffer;
         private readonly IReadOnlyList<int> boneDepths;
         private readonly DeviceBufferRange worldBufferRange;
 
@@ -138,6 +140,19 @@ namespace zzre
             device.UpdateBuffer(skinBuffer, 0, skinVertexArray);
             device.UpdateBuffer(indexBuffer, 0, indexArray);
 
+            var lineVertices = new ColoredVertex[]
+            {
+                new ColoredVertex(Vector3.Zero, Colors[0]),
+                new ColoredVertex(Vector3.UnitX * LineLength, Colors[0]),
+                new ColoredVertex(Vector3.Zero, Colors[1]),
+                new ColoredVertex(Vector3.UnitY * LineLength, Colors[1]),
+                new ColoredVertex(Vector3.Zero, Colors[2]),
+                new ColoredVertex(Vector3.UnitZ * LineLength, Colors[2])
+            };
+            lineBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
+                (uint)lineVertices.Length * ColoredVertex.Stride, BufferUsage.VertexBuffer));
+            device.UpdateBuffer(lineBuffer, 0, lineVertices);
+
             var boneDepthsArr = new int[Skeleton.Bones.Count];
             for (int i = 0; i < Skeleton.Bones.Count; i++)
                 boneDepthsArr[i] = Skeleton.Parents[i] < 0 ? 0 : boneDepthsArr[Skeleton.Parents[i]] + 1;
@@ -150,6 +165,7 @@ namespace zzre
             vertexBuffer.Dispose();
             skinBuffer.Dispose();
             indexBuffer.Dispose();
+            lineBuffer.Dispose();
             BoneMaterial.Dispose();
             SkinMaterial.Dispose();
             SkinHighlightedMaterial.Dispose();
@@ -183,13 +199,20 @@ namespace zzre
             cl.SetVertexBuffer(1, skinBuffer);
             cl.SetIndexBuffer(indexBuffer, IndexFormat.UInt16);
             cl.DrawIndexed(indexBuffer.SizeInBytes / sizeof(ushort));
+
+            if (highlightedBoneI >= 0)
+            {
+                LinesMaterial.World.Ref = Skeleton.Bones[highlightedBoneI].WorldToLocal;
+                (LinesMaterial as IMaterial).Apply(cl);
+                cl.SetVertexBuffer(0, lineBuffer);
+                cl.Draw(lineBuffer.SizeInBytes / ColoredVertex.Stride);
+            }
         }
 
         private void SetBoneAlpha(int boneI, byte alpha)
         {
             if (boneI < 1)
                 return;
-            boneI--; // the first bone has no rhombus
 
             // this is probably a terrible but also very lazy way of doing this
             for (int vertexI = 0; vertexI < RhombusVertexCount; vertexI++)
