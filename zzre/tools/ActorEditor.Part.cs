@@ -154,11 +154,11 @@ namespace zzre.tools
                 if (skeleton.CurrentAnimation == null)
                 {
                     SliderFloat("Time", ref time, 0.0f, 0.0f);
-                    SmallButton("|<");
+                    SmallButton(IconFonts.ForkAwesome.FastBackward);
                     SameLine();
-                    SmallButton("|>");
+                    SmallButton(IconFonts.ForkAwesome.Play);
                     SameLine();
-                    SmallButton(">|");
+                    SmallButton(IconFonts.ForkAwesome.FastForward);
                 }
                 else
                 {
@@ -170,15 +170,15 @@ namespace zzre.tools
                         skeletonRenderer.BoneMaterial.Pose.MarkPoseDirty();
                         hasChanged = true;
                     }
-                    if (SmallButton("|<"))
+                    if (SmallButton(IconFonts.ForkAwesome.FastBackward))
                         skeleton.JumpToAnimation(skeleton.CurrentAnimation);
                     SameLine();
-                    if (isPlaying && SmallButton("||"))
+                    if (isPlaying && SmallButton(IconFonts.ForkAwesome.Pause))
                         isPlaying = false;
-                    else if (!isPlaying && SmallButton("|>"))
+                    else if (!isPlaying && SmallButton(IconFonts.ForkAwesome.Play))
                         isPlaying = true;
                     SameLine();
-                    if (SmallButton(">|"))
+                    if (SmallButton(IconFonts.ForkAwesome.FastForward))
                         skeleton.JumpToAnimation(skeleton.CurrentAnimation);
                 }
 
