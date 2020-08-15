@@ -24,7 +24,7 @@ namespace zzre
             tag = default;
             TBase? tagBase = default;
             if (!tags.TryGetValue(typeof(TTag), out tagBase))
-                tagBase = tags.FirstOrDefault(p => typeof(TTag).IsAssignableFrom(p.Key)).Value;
+                tagBase = tags.FirstOrDefault(p => typeof(TTag).IsAssignableFrom(p.Value.GetType())).Value;
             if (tagBase == null)
                 return false;
 
