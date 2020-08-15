@@ -131,6 +131,7 @@ namespace zzre.tools
             editor.ResetView();
             fbArea.IsDirty = true;
             CurrentResource = resource;
+            Window.Title = $"Model Viewer - {resource.Path.ToPOSIXString()}";
         }
 
         private void HandleRender(CommandList cl)

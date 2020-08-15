@@ -123,13 +123,25 @@ namespace zzre.tools
             string NoneIfEmptyOrNull(string? s) =>
                 (s == null || s.Length <= 0) ? "<none>" : s;
 
-            // TODO: Add buttons to open model viewer 
-            Text($"Body: {NoneIfEmptyOrNull(description?.body.model)}");
+            void ModelLink(string label, string? modelName)
+            {
+                Text(label);
+                SameLine(0.0f, GetStyle().ItemInnerSpacing.X);
+                if (modelName == null || modelName.Length <= 0)
+                    Text("<none>");
+                else if (ImGuiEx.Hyperlink(modelName))
+                {
+                    var modelViewer = new ModelViewer(diContainer);
+                    modelViewer.LoadModel("resources/models/actorsex/" + modelName);
+                }
+            }
+
+            ModelLink("Body: ", description?.body.model);
             Text($"Body animations: {description?.body.animations.Length ?? 0}");
             Text($"Body bones: {body?.skeleton.Bones.Count ?? 0}");
             
             NewLine();
-            Text($"Wings: {NoneIfEmptyOrNull(description?.wings.model)}");
+            ModelLink("Wings: ", description?.wings.model);
             Text($"Wings animations: {description?.wings.animations.Length ?? 0}");
             Text($"Wings bones: {wings?.skeleton.Bones.Count ?? 0}");
 

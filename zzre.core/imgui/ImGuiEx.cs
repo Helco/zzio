@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
@@ -101,6 +102,31 @@ namespace zzre.imgui
                 value = (T)values.GetValue(i)!;
             }
             return hasChanged;
+        }
+
+        public static uint ToUintColor(this ImColor col) => ColorConvertFloat4ToU32(col.Value);
+
+        public static void AddUnderLine(ImColor col) => AddUnderLine(col.Value);
+        public static void AddUnderLine(Vector4 col)
+        {
+            var min = GetItemRectMin();
+            var max = GetItemRectMax();
+            min.Y = max.Y;
+            GetWindowDrawList().AddLine(min, max, ColorConvertFloat4ToU32(col), 2.0f);
+        }
+
+        public static bool Hyperlink(string text, bool addIcon = true)
+        {
+            PushStyleColor(ImGuiCol.Text, GetStyle().Colors[(int)ImGuiCol.ButtonHovered]);
+            Text(text + (addIcon ? " " + IconFonts.ForkAwesome.ExternalLink : ""));
+            PopStyleColor();
+            AddUnderLine(GetStyle().Colors[(int)(IsItemHovered()
+                ? IsMouseDown(ImGuiMouseButton.Left)
+                ? ImGuiCol.ButtonActive
+                : ImGuiCol.ButtonHovered
+                : ImGuiCol.Button)]);
+
+            return IsItemHovered() && IsMouseClicked(ImGuiMouseButton.Left);
         }
     }
 }

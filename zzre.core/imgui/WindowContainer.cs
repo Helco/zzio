@@ -25,6 +25,8 @@ namespace zzre.imgui
         public int Count => windows.Count;
         public ImGuiRenderer ImGuiRenderer { get; }
         public MenuBar MenuBar { get; } = new MenuBar();
+        private bool isInUpdateEnumeration = false;
+        private Action onceAfterUpdate = () => { }; // used for deferred modification of windows list
 
         public WindowContainer(GraphicsDevice device)
         {
@@ -59,17 +61,25 @@ namespace zzre.imgui
             }
         }
 
+        private void AddSafelyToWindows(BaseWindow window)
+        {
+            if (isInUpdateEnumeration)
+                onceAfterUpdate += () => windows.Add(window);
+            else
+                windows.Add(window);
+        }
+
         public Window NewWindow(string title = "Window")
         {
             var window = new Window(this, title);
-            windows.Add(window);
+            AddSafelyToWindows(window);
             return window;
         }
 
         public Modal NewModal(string title = "Modal")
         {
             var modal = new Modal(this, title);
-            windows.Add(modal);
+            AddSafelyToWindows(modal);
             return modal;
         }
 
@@ -99,12 +109,16 @@ namespace zzre.imgui
 
             ShowDemoWindow();
             FocusedWindow = null;
+            isInUpdateEnumeration = true;
             foreach (var window in this)
             {
                 window.Update();
                 if (window.IsFocused)
                     FocusedWindow = window;
             }
+            isInUpdateEnumeration = false;
+            onceAfterUpdate();
+            onceAfterUpdate = () => { };
         }
 
         public void Render()
