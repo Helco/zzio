@@ -4,7 +4,7 @@ using System.IO;
 using zzio.primitives;
 using zzio.utils;
 
-// TODO: Merge this to Effect
+// TODO: Merge this to Effect 
 namespace zzio.scn
 {
     [Serializable]

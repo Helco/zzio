@@ -39,7 +39,7 @@ namespace zzre
             var geometry = (RWGeometry)clump.FindChildById(SectionId.Geometry, true);
             var materialList = (RWMaterialList)geometry.FindChildById(SectionId.MaterialList, false);
             var materials = materialList.children.Where(s => s is RWMaterial).Cast<RWMaterial>().ToArray();
-            var morphTarget = geometry.morphTargets[0]; // TODO: morph support for the one model that uses it?
+            var morphTarget = geometry.morphTargets[0]; // TODO: morph support for the one model that uses it? 
 
             var vertices = new ModelStandardVertex[morphTarget.vertices.Length];
             for (int i = 0; i < vertices.Length; i++)
@@ -51,7 +51,7 @@ namespace zzre
             vertexBuffer = Factory.CreateBuffer(new BufferDescription((uint)vertices.Length * ModelStandardVertex.Stride, BufferUsage.VertexBuffer));
             device.UpdateBuffer(vertexBuffer, 0, vertices);
 
-            // TODO: might have to correlate to the materialIndices member of materialList
+            // TODO: might have to correlate to the materialIndices member of materialList 
             var trianglesByMatIdx = geometry.triangles.GroupBy(t => t.m).Where(g => g.Count() > 0);
             var indices = trianglesByMatIdx.SelectMany(
                 g => g.SelectMany(t => new[] { t.v1, t.v2, t.v3 })

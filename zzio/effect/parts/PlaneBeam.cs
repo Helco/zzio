@@ -16,12 +16,12 @@ namespace zzio.effect.parts
             phase1 = 1000,
             phase2 = 500,
             planeCount = 10,
-            mode = 1, // TODO: Put this in an enum
+            mode = 1, // TODO: Put this in an enum 
             tileId = 0,
             tileW = 256,
             tileH = 256;
         public IColor color = new IColor(255, 255, 255, 255);
-        public uint mode2 = 0; // TODO: Also this
+        public uint mode2 = 0; // TODO: Also this 
         public float
             width = 1.0f,
             height = 1.0f,

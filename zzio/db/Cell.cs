@@ -15,7 +15,7 @@ namespace zzio.db
 
         String = 1,
         Integer = 2,
-        // TODO: Figure out what 3 was
+        // TODO: Figure out what 3 was 
         ForeignKey = 4,
         Byte = 5,
         Buffer = 6,

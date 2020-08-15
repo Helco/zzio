@@ -30,7 +30,7 @@ namespace zzre.core
         }
 
         public IEnumerable<TTag> GetTags<TTag>() where TTag : TBase =>
-            // TODO: Add test about override behaviour
+            // TODO: Add test about override behaviour 
             extension.GetTags<TTag>().Union(parent.GetTags<TTag>());
 
         public bool HasTag<TTag>() where TTag : TBase =>

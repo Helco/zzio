@@ -59,7 +59,7 @@ namespace zzre
             }
         }
 
-        // TODO: We might want setters for these three as well
+        // TODO: We might want setters for these three as well 
 
         public Vector3 GlobalPosition => WorldToLocal.Translation;
         public Quaternion GlobalRotation => Quaternion.CreateFromRotationMatrix(WorldToLocal);

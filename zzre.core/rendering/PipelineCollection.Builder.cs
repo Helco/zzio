@@ -70,7 +70,7 @@ namespace zzre.rendering
             public IPipelineBuilder With(VertexElementDescription vertexElementDescr)
             {
                 if (Collection.Factory.BackendType == GraphicsBackend.Direct3D11)
-                    vertexElementDescr.Semantic = VertexElementSemantic.TextureCoordinate; // TODO: Maybe watch the Veldrid bug for that?
+                    vertexElementDescr.Semantic = VertexElementSemantic.TextureCoordinate; // TODO: Maybe watch the Veldrid bug for that? 
 
                 vertexElements.Last().Add(vertexElementDescr);
                 return this;

@@ -7,7 +7,7 @@ using zzio.utils;
 namespace zzio.effect.parts
 {
     [System.Serializable]
-    public enum ParticleBeamMode // TODO: Check if this actually applies...
+    public enum ParticleBeamMode // TODO: Check if this actually applies... 
     {
         Tornado = 0,
         Cycle,
@@ -30,7 +30,7 @@ namespace zzio.effect.parts
             tileW = 32,
             tileH = 32;
         public IColor color = new IColor(255, 255, 255, 255);
-        public uint fadeMode = 0; // TODO: Put this in an enum
+        public uint fadeMode = 0; // TODO: Put this in an enum 
         public float
             parWidth = 0.1f,
             parHeight = 0.1f,

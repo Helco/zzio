@@ -31,7 +31,7 @@ namespace zzre.rendering
             }
         }
 
-        public DeviceBuffer PoseBuffer => poseBuffer!; // TODO: this is not the cleanest way...
+        public DeviceBuffer PoseBuffer => poseBuffer!; // TODO: this is not the cleanest way... 
         public override BindableResource? Resource => poseBuffer;
 
         public SkeletonPoseBinding(IMaterial material) : base(material) { }

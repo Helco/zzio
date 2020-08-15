@@ -66,7 +66,7 @@ namespace zzio.tests
 
             Assert.AreEqual(new string[0], archive.GetDirectoryContent("G/H/I"));
 
-            // TODO: these tests should not rely on item order
+            // TODO: these tests should not rely on item order 
 
             Assert.AreEqual(new string[]
             {

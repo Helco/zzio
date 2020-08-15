@@ -25,7 +25,7 @@ namespace zzio.scn
         public TriggerType type;
         public UInt32 ii1, ii2, ii3, ii4;
         public string s;
-        public Vector // TODO: Move Collider out
+        public Vector // TODO: Move Collider out 
             pos,
             size; // only if type == Box
         public float radius; // only if type == Sphere

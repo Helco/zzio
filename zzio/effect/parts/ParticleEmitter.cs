@@ -32,7 +32,7 @@ namespace zzio.effect.parts
             tileId = 0,
             tileCount = 1,
             tileDuration = 1,
-            mode = 2; // TODO: Put this into an enum
+            mode = 2; // TODO: Put this into an enum 
         public float
             minVel = 1.0f,
             verticalDir = 90.0f,

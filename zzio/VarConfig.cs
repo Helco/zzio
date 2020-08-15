@@ -81,7 +81,7 @@ namespace zzio
         public void Write(Stream stream)
         {
             if (!stream.CanSeek)
-                // TODO: maybe write fallback with MemoryStream 
+                // TODO: maybe write fallback with MemoryStream  
                 throw new ArgumentException("Config.write needs a seekable stream");
             long startPosition = stream.Position;
             stream.Seek(16, SeekOrigin.Current);
