@@ -96,7 +96,10 @@ namespace Veldrid
 
             ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
             ImGui.GetIO().ConfigWindowsResizeFromEdges = true;
+        }
 
+        public void Start()
+        {
             ImGui.NewFrame();
             _frameBegun = true;
         }

@@ -6,6 +6,14 @@
     <WarningsAsErrors>NU1605;nullable</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="assets\forkawesome-webfont.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="assets\forkawesome-webfont.ttf" />
+  </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />

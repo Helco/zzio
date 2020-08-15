@@ -2,8 +2,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Veldrid;
 using static ImGuiNET.ImGui;
 
@@ -17,6 +19,7 @@ namespace zzre.imgui
         private List<Fence> onceFences = new List<Fence>();
         private CommandList commandList;
         private Fence fence;
+        private IntPtr glyphRangePtr = IntPtr.Zero;
 
         public BaseWindow? FocusedWindow { get; private set; } = null;
         public int Count => windows.Count;
@@ -31,6 +34,9 @@ namespace zzre.imgui
             ImGuiRenderer = new ImGuiRenderer(device, fb.OutputDescription, (int)fb.Width, (int)fb.Height);
             commandList = Factory.CreateCommandList();
             fence = Factory.CreateFence(true);
+
+            LoadForkAwesomeFont();
+            ImGuiRenderer.Start();
         }
 
         protected override void DisposeManaged()
@@ -41,6 +47,16 @@ namespace zzre.imgui
             ImGuiRenderer.Dispose();
             commandList.Dispose();
             fence.Dispose();
+        }
+
+        protected override void DisposeNative()
+        {
+            base.DisposeNative();
+            if (glyphRangePtr != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(glyphRangePtr);
+                glyphRangePtr = IntPtr.Zero;
+            }
         }
 
         public Window NewWindow(string title = "Window")
@@ -125,5 +141,32 @@ namespace zzre.imgui
         public IEnumerable<BaseWindow> AllWithTag<TTag>() where TTag : class => windows.Where(w => w.HasTag<TTag>());
         public IEnumerator<BaseWindow> GetEnumerator() => windows.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => windows.GetEnumerator();
+
+        private unsafe void LoadForkAwesomeFont()
+        {
+            var assembly = typeof(WindowContainer).Assembly;
+            using var stream = assembly.GetManifestResourceStream("zzre.core.assets.forkawesome-webfont.ttf");
+            if (stream == null)
+                throw new FileNotFoundException("Could not find embedded ForkAwesome font");
+            var data = new byte[stream.Length];
+            stream.Read(data, 0, data.Length);
+            stream.Close();
+
+            glyphRangePtr = Marshal.AllocHGlobal(sizeof(ushort) * 3);
+            var fontConfig = ImGuiNative.ImFontConfig_ImFontConfig();
+            fontConfig->MergeMode = 1;
+            fontConfig->GlyphMinAdvanceX = 13.0f;
+            fontConfig->FontDataOwnedByAtlas = 0;
+            fixed (byte* fontPtr = data)
+            {
+                ushort* glyphRanges = (ushort*)glyphRangePtr.ToPointer();
+                glyphRanges[0] = IconFonts.ForkAwesome.IconMin;
+                glyphRanges[1] = IconFonts.ForkAwesome.IconMax;
+                glyphRanges[2] = 0;
+                GetIO().Fonts.AddFontFromMemoryTTF(new IntPtr(fontPtr), data.Length, 15.0f, fontConfig, glyphRangePtr);
+            }
+            ImGuiRenderer.RecreateFontDeviceTexture();
+            ImGuiNative.ImFontConfig_destroy(fontConfig);
+        }
     }
 }
