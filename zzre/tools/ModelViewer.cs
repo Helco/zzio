@@ -191,7 +191,7 @@ namespace zzre.tools
             {
                 bool isVisible = materials[index].Uniforms.Value.alphaReference < 2f;
                 ImGui.PushID(index);
-                if (ImGui.SmallButton(isVisible ? "V" : "H"))
+                if (ImGui.SmallButton(isVisible ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash))
                 {
                     isVisible = !isVisible;
                     materials[index].Uniforms.Ref.alphaReference = isVisible ? 0.03f : 2.0f;
