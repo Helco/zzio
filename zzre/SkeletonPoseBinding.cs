@@ -52,7 +52,7 @@ namespace zzre.rendering
 
             var map = Parent.Device.Map<Matrix4x4>(poseBuffer, MapMode.Write);
             foreach (var (bone, i) in Skeleton.Bones.Indexed())
-                map[i] = Skeleton.BindingBoneToObject[i] * bone.WorldToLocal;
+                map[i] = Skeleton.BindingBoneToObject[i] * bone.WorldToLocal * (Skeleton.Parent?.LocalToWorld ?? Matrix4x4.Identity);
             Parent.Device.Unmap(poseBuffer);
         }
     }

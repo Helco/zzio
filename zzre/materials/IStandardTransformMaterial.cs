@@ -22,11 +22,14 @@ namespace zzre.materials
             me.World.Buffer = other.World.Buffer;
         }
 
-        public static void LinkTransformsTo(this IStandardTransformMaterial me, UniformBuffer<Matrix4x4> projection, UniformBuffer<Matrix4x4> view, UniformBuffer<Matrix4x4> world)
+        public static void LinkTransformsTo(this IStandardTransformMaterial me, UniformBuffer<Matrix4x4>? projection = null, UniformBuffer<Matrix4x4>? view = null, UniformBuffer<Matrix4x4>? world = null)
         {
-            me.Projection.Buffer = projection.Buffer;
-            me.View.Buffer = view.Buffer;
-            me.World.Buffer = world.Buffer;
+            if (projection != null)
+                me.Projection.Buffer = projection.Buffer;
+            if (view != null)
+                me.View.Buffer = view.Buffer;
+            if (world != null)
+                me.World.Buffer = world.Buffer;
         }
     }
 }

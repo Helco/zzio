@@ -9,6 +9,7 @@ using zzio;
 using zzio.rwbs;
 using zzio.utils;
 using zzio.vfs;
+using zzre.core;
 using zzre.materials;
 using zzre.rendering;
 using static ImGuiNET.ImGui;
@@ -19,7 +20,7 @@ namespace zzre.tools
     {
         private class Part : ListDisposable
         {
-            private readonly ActorEditor parent;
+            private readonly ITagContainer diContainer;
             private readonly TextureLoader textureLoader;
             private readonly GameTime gameTime;
             private readonly string modelName; // used as ImGui ID
@@ -34,16 +35,17 @@ namespace zzre.tools
             public DebugSkeletonRenderer skeletonRenderer;
             public (AnimationType type, SkeletalAnimation ani)[] animations;
             
-            public Part(ActorEditor parent, string modelName, (AnimationType type, string filename)[] animationNames)
+            public Part(ITagContainer diContainer, string modelName, (AnimationType type, string filename)[] animationNames)
             {
-                this.parent = parent;
+                this.diContainer = diContainer;
                 this.modelName = modelName;
-                textureLoader = parent.diContainer.GetTag<TextureLoader>();
-                gameTime = parent.diContainer.GetTag<GameTime>();
+                textureLoader = diContainer.GetTag<TextureLoader>();
+                gameTime = diContainer.GetTag<GameTime>();
                 var modelPath = new FilePath("resources/models/actorsex/").Combine(modelName);
                 var texturePath = textureLoader.GetTexturePathFromModel(modelPath);
 
-                using var contentStream = parent.resourcePool.FindAndOpen(modelPath);
+                var resourcePool = diContainer.GetTag<IResourcePool>();
+                using var contentStream = resourcePool.FindAndOpen(modelPath);
                 if (contentStream == null)
                     throw new IOException($"Could not open model at {modelPath.ToPOSIXString()}");
                 var clump = Section.ReadNew(contentStream);
@@ -53,18 +55,20 @@ namespace zzre.tools
                 if (skin == null)
                     throw new InvalidDataException($"Attached actor part model does not have a skin");
 
-                geometry = new RWGeometryBuffers(parent.diContainer, (RWClump)clump);
+                geometry = new RWGeometryBuffers(diContainer, (RWClump)clump);
                 AddDisposable(geometry);
 
-                locationBufferRange = parent.locationBuffer.Add(location);
+                locationBufferRange = diContainer.GetTag<LocationBuffer>().Add(location);
+                var materialLinkTarget = diContainer.GetTag<IStandardTransformMaterial>();
                 void LinkTransformsFor(IStandardTransformMaterial material)
                 {
-                    material.LinkTransformsTo(parent.gridRenderer.Material);
+                    material.LinkTransformsTo(materialLinkTarget);
                     material.World.BufferRange = locationBufferRange;
                 }
 
                 skeleton = new Skeleton(skin);
-                skeletonRenderer = new DebugSkeletonRenderer(parent.diContainer, geometry, skeleton);
+                skeleton.Parent = location;
+                skeletonRenderer = new DebugSkeletonRenderer(diContainer, geometry, skeleton);
                 LinkTransformsFor(skeletonRenderer.BoneMaterial);
                 skeletonRenderer.BoneMaterial.Pose.Skeleton = skeleton;
                 LinkTransformsFor(skeletonRenderer.SkinMaterial);
@@ -74,7 +78,7 @@ namespace zzre.tools
                 materials = new ModelSkinnedMaterial[geometry.SubMeshes.Count];
                 foreach (var (rwMaterial, index) in geometry.SubMeshes.Select(s => s.Material).Indexed())
                 {
-                    var material = materials[index] = new ModelSkinnedMaterial(parent.diContainer);
+                    var material = materials[index] = new ModelSkinnedMaterial(diContainer);
                     (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePath, rwMaterial);
                     material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
                     material.Uniforms.Ref.vertexColorFactor = 0.0f;
@@ -87,7 +91,7 @@ namespace zzre.tools
                 SkeletalAnimation LoadAnimation(string filename)
                 {
                     var animationPath = new FilePath("resources/models/actorsex/").Combine(filename);
-                    using var contentStream = parent.resourcePool.FindAndOpen(animationPath);
+                    using var contentStream = resourcePool.FindAndOpen(animationPath);
                     if (contentStream == null)
                         throw new IOException($"Could not open animation at {animationPath.ToPOSIXString()}");
                     var animation = SkeletalAnimation.ReadNew(contentStream);
@@ -102,7 +106,7 @@ namespace zzre.tools
             protected override void DisposeManaged()
             {
                 base.DisposeManaged();
-                parent.locationBuffer.Remove(locationBufferRange);
+                diContainer.GetTag<LocationBuffer>().Remove(locationBufferRange);
             }
 
             public void Render(CommandList cl)

@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using Veldrid;
 using zzio;
 using zzio.vfs;
+using zzre.core;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
@@ -16,6 +18,7 @@ namespace zzre.tools
     public partial class ActorEditor : ListDisposable
     {
         private readonly ITagContainer diContainer;
+        private readonly ITagContainer localDiContainer;
         private readonly SimpleEditorTag editor;
         private readonly GraphicsDevice device;
         private readonly FramebufferArea fbArea;
@@ -26,6 +29,7 @@ namespace zzre.tools
         private ActorExDescription? description;
         private Part? body;
         private Part? wings;
+        private Location actorLocation = new Location();
         private LocationBuffer locationBuffer;
 
         public Window Window { get; }
@@ -51,12 +55,14 @@ namespace zzre.tools
             openFileModal.IsFilterChangeable = false;
             openFileModal.OnOpenedResource += LoadActor;
 
+            locationBuffer = new LocationBuffer(device.ResourceFactory);
+            AddDisposable(locationBuffer);
+            localDiContainer = diContainer.ExtendedWith(locationBuffer);
+
             gridRenderer = new DebugGridRenderer(diContainer);
             gridRenderer.Material.LinkTransformsTo(editor.Projection, editor.View, editor.World);
             AddDisposable(gridRenderer);
-
-            locationBuffer = new LocationBuffer(device.ResourceFactory);
-            AddDisposable(locationBuffer);
+            localDiContainer.AddTag<IStandardTransformMaterial>(gridRenderer.Material);
 
             editor.AddInfoSection("Info", HandleInfoContent);
             editor.AddInfoSection("Animation Playback", HandlePlaybackContent);
@@ -88,11 +94,12 @@ namespace zzre.tools
                 throw new IOException($"Could not open actor at {resource.Path.ToPOSIXString()}");
             description = ActorExDescription.ReadNew(contentStream);
 
-            body = new Part(this, description.body.model, description.body.animations);
+            body = new Part(localDiContainer, description.body.model, description.body.animations);
+            body.location.Parent = actorLocation;
             wings = null;
             if (description.HasWings)
             {
-                wings = new Part(this, description.wings.model, description.wings.animations);
+                wings = new Part(localDiContainer, description.wings.model, description.wings.animations);
                 wings.location.Parent = body.skeleton.Bones[description.attachWingsToBone];
             }
 
