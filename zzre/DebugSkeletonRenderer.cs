@@ -163,7 +163,7 @@ namespace zzre
             cl.DrawIndexed(indexBuffer.SizeInBytes / sizeof(ushort));
         }
 
-        public void SetBoneAlpha(int boneI, byte alpha)
+        private void SetBoneAlpha(int boneI, byte alpha)
         {
             if (boneI < 1)
                 return;
@@ -177,6 +177,14 @@ namespace zzre
                     3 * sizeof(float) + 3 * sizeof(byte);
                 device.UpdateBuffer(vertexBuffer, (uint)offset, alpha);
             }
+        }
+
+        public void HighlightBone(int boneIdx)
+        {
+            if (highlightedBoneI >= 0)
+                SetBoneAlpha(highlightedBoneI, 120);
+            SetBoneAlpha(highlightedBoneI = boneIdx, 255);
+            SkinHighlightedMaterial.BoneIndex.Ref = highlightedBoneI;
         }
 
         public bool Content()
@@ -203,10 +211,7 @@ namespace zzre
                     curDepth++;
                 if (IsItemClicked() && i != highlightedBoneI)
                 {
-                    if (highlightedBoneI >= 0)
-                        SetBoneAlpha(highlightedBoneI, 120);
-                    SetBoneAlpha(highlightedBoneI = i, 255);
-                    SkinHighlightedMaterial.BoneIndex.Ref = highlightedBoneI;
+                    HighlightBone(i);
                     hasChanged = true;
                 }
             }

@@ -115,8 +115,18 @@ namespace zzre.imgui
             GetWindowDrawList().AddLine(min, max, ColorConvertFloat4ToU32(col), 2.0f);
         }
 
-        public static bool Hyperlink(string text, bool addIcon = true)
+        public static bool Hyperlink(string label, string text, bool addIcon = true, bool isEnabled = true)
         {
+            if (label.Length > 0)
+            {
+                Text(label);
+                SameLine();
+            }
+            if (!isEnabled)
+            {
+                Text(text);
+                return false;
+            }
             PushStyleColor(ImGuiCol.Text, GetStyle().Colors[(int)ImGuiCol.ButtonHovered]);
             Text(text + (addIcon ? " " + IconFonts.ForkAwesome.ExternalLink : ""));
             PopStyleColor();
@@ -128,5 +138,6 @@ namespace zzre.imgui
 
             return IsItemHovered() && IsMouseClicked(ImGuiMouseButton.Left);
         }
+        public static bool Hyperlink(string text, bool addIcon = true) => Hyperlink("", text, addIcon);
     }
 }

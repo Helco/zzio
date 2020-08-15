@@ -120,20 +120,11 @@ namespace zzre.tools
 
         private void HandleInfoContent()
         {
-            string NoneIfEmptyOrNull(string? s) =>
-                (s == null || s.Length <= 0) ? "<none>" : s;
-
             void ModelLink(string label, string? modelName)
             {
-                Text(label);
-                SameLine(0.0f, GetStyle().ItemInnerSpacing.X);
-                if (modelName == null || modelName.Length <= 0)
-                    Text("<none>");
-                else if (ImGuiEx.Hyperlink(modelName))
-                {
-                    var modelViewer = new ModelViewer(diContainer);
-                    modelViewer.LoadModel("resources/models/actorsex/" + modelName);
-                }
+                bool isEnabled = modelName != null && modelName.Length > 0;
+                if (ImGuiEx.Hyperlink(label, isEnabled ? modelName! : "<none>", true, isEnabled))
+                    new ModelViewer(diContainer).LoadModel("resources/models/actorsex/" + modelName);
             }
 
             ModelLink("Body: ", description?.body.model);
@@ -145,11 +136,20 @@ namespace zzre.tools
             Text($"Wings animations: {description?.wings.animations.Length ?? 0}");
             Text($"Wings bones: {wings?.skeleton.Bones.Count ?? 0}");
 
-            // TODO: Add buttons to highlight bone 
             NewLine();
-            Text($"Head bone index: {NoneIfEmptyOrNull(description?.headBoneID.ToString())}");
-            Text($"Effect bone index: {NoneIfEmptyOrNull(description?.effectBoneID.ToString())}");
-            Text($"Attach bone index: {NoneIfEmptyOrNull(description?.attachWingsToBone.ToString())}");
+            void BoneLink(string label, int? boneIdx)
+            {
+                if (ImGuiEx.Hyperlink(label, boneIdx?.ToString() ?? "<none>", false, boneIdx != null))
+                {
+                    body?.skeletonRenderer.HighlightBone(boneIdx!.Value);
+                    fbArea.IsDirty = true;
+                    if (body != null && body.skeletonRenderer.RenderMode == DebugSkeletonRenderMode.Invisible)
+                        body.skeletonRenderer.RenderMode = DebugSkeletonRenderMode.Bones;
+                }
+            }
+            BoneLink("Head bone: ", description?.headBoneID);
+            BoneLink("Effect bone: ", description?.effectBoneID);
+            BoneLink("Wing attach bone: ", description?.attachWingsToBone);
         }
 
         private void HandlePlaybackContent()
