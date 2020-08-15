@@ -121,8 +121,10 @@ namespace zzre.tools
             skeletonRenderer = null;
             if (skin != null)
             {
-                skeletonRenderer = new DebugSkeletonRenderer(diContainer, geometryBuffers, new Skeleton((RWSkinPLG)skin));
+                var skeleton = new Skeleton((RWSkinPLG)skin);
+                skeletonRenderer = new DebugSkeletonRenderer(diContainer, geometryBuffers, skeleton);
                 skeletonRenderer.BoneMaterial.LinkTransformsTo(gridRenderer.Material);
+                skeletonRenderer.BoneMaterial.Pose.Skeleton = skeleton;
                 skeletonRenderer.SkinMaterial.LinkTransformsTo(gridRenderer.Material);
                 skeletonRenderer.SkinHighlightedMaterial.LinkTransformsTo(gridRenderer.Material);
                 AddDisposable(skeletonRenderer);
