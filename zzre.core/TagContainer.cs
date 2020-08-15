@@ -6,9 +6,9 @@ using zzre.core;
 
 namespace zzre
 {
-    public class TagContainer<TBase> : BaseDisposable, ITagContainer<TBase> where TBase : class
+    public class TagContainer : BaseDisposable, ITagContainer
     {
-        private Dictionary<Type, TBase> tags = new Dictionary<Type, TBase>();
+        private Dictionary<Type, object> tags = new Dictionary<Type, object>();
 
         protected override void DisposeManaged()
         {
@@ -17,12 +17,12 @@ namespace zzre
                 (disposableTag as IDisposable)?.Dispose();
         }
 
-        public bool HasTag<TTag>() where TTag : TBase => TryGetTag<TTag>(out var _);
+        public bool HasTag<TTag>() where TTag : class => TryGetTag<TTag>(out var _);
         
-        public bool TryGetTag<TTag>([MaybeNullWhen(false)] out TTag tag) where TTag : TBase
+        public bool TryGetTag<TTag>([MaybeNullWhen(false)] out TTag tag) where TTag : class
         {
             tag = default;
-            TBase? tagBase = default;
+            object? tagBase = default;
             if (!tags.TryGetValue(typeof(TTag), out tagBase))
                 tagBase = tags.FirstOrDefault(p => typeof(TTag).IsAssignableFrom(p.Value.GetType())).Value;
             if (tagBase == null)
@@ -32,29 +32,29 @@ namespace zzre
             return true;
         }
 
-        public TTag GetTag<TTag>() where TTag : TBase
+        public TTag GetTag<TTag>() where TTag : class
         {
             if (TryGetTag<TTag>(out var tag))
                 return tag;
             throw new ArgumentOutOfRangeException(nameof(TTag), $"No tag of type {typeof(TTag).Name} is attached");
         }
 
-        public IEnumerable<TTag> GetTags<TTag>() where TTag : TBase => tags
+        public IEnumerable<TTag> GetTags<TTag>() where TTag : class => tags
             .Where(pair => typeof(TTag).IsAssignableFrom(pair.Key))
             .Select(pair => (TTag)pair.Value);
 
-        public IEnumerable<TBase> GetRawTags<TTag>() => tags
+        public IEnumerable<object> GetRawTags<TTag>() => tags
             .Where(pair => typeof(TTag).IsAssignableFrom(pair.Key))
             .Select(pair => pair.Value);
 
-        public ITagContainer<TBase> AddTag<TTag>(TTag tag) where TTag : TBase
+        public ITagContainer AddTag<TTag>(TTag tag) where TTag : class
         {
             if (!tags.TryAdd(typeof(TTag), tag))
                 throw new ArgumentException($"A tag of type {typeof(TTag).Name} is already attached", nameof(TTag));
             return this;
         }
 
-        public bool RemoveTag<TTag>() where TTag : TBase
+        public bool RemoveTag<TTag>() where TTag : class
         {
             if (tags.Remove(typeof(TTag)))
                 return true;
@@ -62,6 +62,4 @@ namespace zzre
             return pair.Key != null && tags.Remove(pair.Key);
         }
     }
-
-    public class TagContainer : TagContainer<object>, ITagContainer { }
 }

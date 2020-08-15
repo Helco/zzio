@@ -3,14 +3,12 @@ using System.Collections.Generic;
 
 namespace zzre
 {
-    public interface ITagContainer<TBase> where TBase : class
+    public interface ITagContainer
     {
-        bool HasTag<TTag>() where TTag : TBase;
-        TTag GetTag<TTag>() where TTag : TBase;
-        IEnumerable<TTag> GetTags<TTag>() where TTag : TBase;
-        ITagContainer<TBase> AddTag<TTag>(TTag tag) where TTag : TBase;
-        bool RemoveTag<TTag>() where TTag : TBase;
+        bool HasTag<TTag>() where TTag : class;
+        TTag GetTag<TTag>() where TTag : class;
+        IEnumerable<TTag> GetTags<TTag>() where TTag : class;
+        ITagContainer AddTag<TTag>(TTag tag) where TTag : class;
+        bool RemoveTag<TTag>() where TTag : class;
     }
-
-    public interface ITagContainer : ITagContainer<object> { }
 }
