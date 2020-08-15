@@ -84,9 +84,11 @@ namespace zzre
                 var from = bone.Parent.GlobalPosition;
                 var length = (to - from).Length();
                 var baseSize = length * RhombusBaseSize;
-                var tangent = bone.GlobalUp * baseSize;
-                var bitangent = bone.GlobalRight * baseSize;
-                var baseCenter = from + bone.GlobalForward * length * RhombusBaseOffset;
+
+                var normal = (to - from) / length;
+                var tangent =  Vector3.Normalize(normal.SomeOrthogonal()) * baseSize;
+                var bitangent = Vector3.Normalize(Vector3.Cross(normal, tangent)) * baseSize;
+                var baseCenter = from + normal * length * RhombusBaseOffset; 
 
                 vertices = vertices.Concat(new[]
                 {
