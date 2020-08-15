@@ -32,6 +32,7 @@ namespace zzre.tools
         private readonly IResourcePool resourcePool;
         private readonly DebugGridRenderer gridRenderer;
         private readonly OpenFileModal openFileModal;
+        private readonly LocationBuffer locationBuffer;
 
         private RWGeometryBuffers? geometryBuffers;
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
@@ -62,6 +63,8 @@ namespace zzre.tools
             openFileModal.OnOpenedResource += LoadModel;
             imGuiRenderer = Window.Container.ImGuiRenderer;
 
+            locationBuffer = new LocationBuffer(device.ResourceFactory);
+            AddDisposable(locationBuffer);
             gridRenderer = new DebugGridRenderer(diContainer);
             gridRenderer.Material.LinkTransformsTo(editor.Projection, editor.View, editor.World);
             AddDisposable(gridRenderer);
@@ -122,11 +125,7 @@ namespace zzre.tools
             if (skin != null)
             {
                 var skeleton = new Skeleton((RWSkinPLG)skin);
-                skeletonRenderer = new DebugSkeletonRenderer(diContainer, geometryBuffers, skeleton);
-                skeletonRenderer.BoneMaterial.LinkTransformsTo(gridRenderer.Material);
-                skeletonRenderer.BoneMaterial.Pose.Skeleton = skeleton;
-                skeletonRenderer.SkinMaterial.LinkTransformsTo(gridRenderer.Material);
-                skeletonRenderer.SkinHighlightedMaterial.LinkTransformsTo(gridRenderer.Material);
+                skeletonRenderer = new DebugSkeletonRenderer(diContainer.ExtendedWith(gridRenderer.Material as IStandardTransformMaterial, locationBuffer), geometryBuffers, skeleton);
                 AddDisposable(skeletonRenderer);
             }
 
@@ -138,6 +137,7 @@ namespace zzre.tools
 
         private void HandleRender(CommandList cl)
         {
+            locationBuffer.Update(cl);
             gridRenderer.Render(cl);
             if (geometryBuffers == null)
                 return;            

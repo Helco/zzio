@@ -67,12 +67,8 @@ namespace zzre.tools
                 }
 
                 skeleton = new Skeleton(skin);
-                skeleton.Parent = location;
+                skeleton.Location.Parent = location;
                 skeletonRenderer = new DebugSkeletonRenderer(diContainer, geometry, skeleton);
-                LinkTransformsFor(skeletonRenderer.BoneMaterial);
-                skeletonRenderer.BoneMaterial.Pose.Skeleton = skeleton;
-                LinkTransformsFor(skeletonRenderer.SkinMaterial);
-                LinkTransformsFor(skeletonRenderer.SkinHighlightedMaterial);
                 AddDisposable(skeletonRenderer);
 
                 materials = new ModelSkinnedMaterial[geometry.SubMeshes.Count];

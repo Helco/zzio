@@ -46,11 +46,13 @@ namespace zzre
         private const byte Alpha = 120;
         private static readonly IColor[] Colors = new[] { IColor.Red.WithA(Alpha), IColor.Green.WithA(Alpha), IColor.Blue.WithA(Alpha) };
 
+        private readonly LocationBuffer locationBuffer;
         private readonly GraphicsDevice device;
         private readonly DeviceBuffer vertexBuffer;
         private readonly DeviceBuffer indexBuffer;
         private readonly DeviceBuffer skinBuffer;
         private readonly IReadOnlyList<int> boneDepths;
+        private readonly DeviceBufferRange worldBufferRange;
 
         private DebugSkeletonRenderMode renderMode = DebugSkeletonRenderMode.Invisible;
         private int highlightedBoneI = -1;
@@ -58,6 +60,7 @@ namespace zzre
         public DebugSkinnedMaterial BoneMaterial { get; }
         public DebugSkinAllMaterial SkinMaterial { get; }
         public DebugSkinSingleMaterial SkinHighlightedMaterial { get; }
+        public DebugLinesMaterial LinesMaterial { get; }
         public RWGeometryBuffers Geometry { get; }
         public Skeleton Skeleton { get; }
         public ref DebugSkeletonRenderMode RenderMode => ref renderMode;
@@ -66,11 +69,26 @@ namespace zzre
         {
             Geometry = geometryBuffers;
             Skeleton = skeleton;
+            var materialLinkTarget = diContainer.GetTag<IStandardTransformMaterial>();
+            locationBuffer = diContainer.GetTag<LocationBuffer>();
+            worldBufferRange = locationBuffer.Add(skeleton.Location);
+
+            void LinkTransformsFor(IStandardTransformMaterial m)
+            {
+                m.LinkTransformsTo(materialLinkTarget);
+                m.World.BufferRange = worldBufferRange;
+            }
             BoneMaterial = new DebugSkinnedMaterial(diContainer);
+            LinkTransformsFor(BoneMaterial);
+            BoneMaterial.Pose.Skeleton = skeleton;
             SkinMaterial = new DebugSkinAllMaterial(diContainer);
+            LinkTransformsFor(SkinMaterial);
             SkinMaterial.Alpha.Ref = 1.0f;
             SkinHighlightedMaterial = new DebugSkinSingleMaterial(diContainer);
+            LinkTransformsFor(SkinHighlightedMaterial);
             SkinHighlightedMaterial.BoneIndex.Ref = -1;
+            LinesMaterial = new DebugLinesMaterial(diContainer);
+            LinkTransformsFor(LinesMaterial);
             device = diContainer.GetTag<GraphicsDevice>();
 
             var vertices = Enumerable.Empty<ColoredVertex>();
@@ -135,6 +153,8 @@ namespace zzre
             BoneMaterial.Dispose();
             SkinMaterial.Dispose();
             SkinHighlightedMaterial.Dispose();
+            LinesMaterial.Dispose();
+            locationBuffer.Remove(worldBufferRange);
         }
 
         public void Render(CommandList cl)
