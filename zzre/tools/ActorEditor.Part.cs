@@ -10,6 +10,7 @@ using zzio.rwbs;
 using zzio.utils;
 using zzio.vfs;
 using zzre.core;
+using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
 using static ImGuiNET.ImGui;
@@ -33,7 +34,7 @@ namespace zzre.tools
             public ModelSkinnedMaterial[] materials;
             public Skeleton skeleton;
             public DebugSkeletonRenderer skeletonRenderer;
-            public (AnimationType type, SkeletalAnimation ani)[] animations;
+            public (AnimationType type, string fileName, SkeletalAnimation ani)[] animations;
             
             public Part(ITagContainer diContainer, string modelName, (AnimationType type, string filename)[] animationNames)
             {
@@ -95,7 +96,7 @@ namespace zzre.tools
                         throw new InvalidDataException($"Animation {filename} is incompatible with actor skeleton {modelName}");
                     return animation;
                 }
-                animations = animationNames.Select(t => (t.type, LoadAnimation(t.filename))).ToArray();
+                animations = animationNames.Select(t => (t.type, t.filename, LoadAnimation(t.filename))).ToArray();
                 skeleton.ResetToBinding();
             }
 
@@ -137,7 +138,7 @@ namespace zzre.tools
                 PushID(modelName);
                 if (BeginCombo("Animation", currentAnimationI < 0 ? "" : animations[currentAnimationI].type.ToString()))
                 {
-                    foreach (var ((type, ani), index) in animations.Indexed())
+                    foreach (var ((type, _, ani), index) in animations.Indexed())
                     {
                         PushID((int)type);
                         if (Selectable(type.ToString(), index == currentAnimationI))
@@ -199,7 +200,7 @@ namespace zzre.tools
                 Separator();
                 Separator();
 
-                foreach (var ((curType, _), index) in animations.Indexed())
+                foreach (var ((curType, filename, _), index) in animations.Indexed())
                 {
                     PushID(index);
                     var selectableTypes = GetUnusedAnimationTypes().Append(curType).OrderBy(t => (int)t).ToArray();
@@ -224,7 +225,17 @@ namespace zzre.tools
                     PopItemWidth();
                     NextColumn();
 
-                    Text("I don't know yet");
+                    
+                    var nameDummy = filename;
+                    InputText("##name", ref nameDummy, 256, ImGuiNET.ImGuiInputTextFlags.ReadOnly);
+                    SameLine();
+                    PushStyleVar(ImGuiNET.ImGuiStyleVar.Alpha, 0.6f);
+                    if (Button(IconFonts.ForkAwesome.Pencil))
+                    {
+                        // not yet
+                    }
+                    PopStyleVar();
+
                     NextColumn();
 
                     PopID();
