@@ -51,7 +51,8 @@ namespace zzre
                 .AddTag(graphicsDevice)
                 .AddTag<IResourcePool>(resourcePool)
                 .AddTag(pipelineCollection)
-                .AddTag(new TextureLoader(diContainer));
+                .AddTag(new TextureLoader(diContainer))
+                .AddTag(new OpenDocumentSet());
 
             var actorEditor = new ActorEditor(diContainer);
             actorEditor.LoadActor(@"resources/models/actorsex/f014s03.aed");

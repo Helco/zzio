@@ -18,8 +18,22 @@ namespace zzre.imgui
     {
         public Rect InitialBounds { get; set; } = new Rect(new Vector2(float.NaN, float.NaN), Vector2.One * 300);
         public Rect Bounds { get; set; }
-        public WindowOpenState OpenState { get; set; } = WindowOpenState.Open;
         public override bool IsOpen => OpenState != WindowOpenState.Closed;
+
+        private WindowOpenState _openState = WindowOpenState.Open;
+        public WindowOpenState OpenState
+        {
+            get => _openState;
+            set
+            {
+                var prevOpenState = _openState;
+                _openState = value;
+
+                if (prevOpenState != value && value == WindowOpenState.Closed)
+                    OnClose();
+            }
+        }
+        public event Action OnClose = () => { };
 
         public Window(WindowContainer container, string title = "Window") : base(container, title) { }
 
@@ -49,5 +63,7 @@ namespace zzre.imgui
             RaiseContent();
             End();
         }
+
+        public void Focus() => Container.SetNextFocusedWindow(this);
     }
 }

@@ -6,19 +6,15 @@ using Veldrid;
 using zzre.imgui;
 using zzio.rwbs;
 using zzre.core;
-using zzio.utils;
 using System.Numerics;
 using ImGuiNET;
 using zzio.vfs;
 using zzre.rendering;
 using zzre.materials;
-using zzio.primitives;
-using SixLabors.ImageSharp.ColorSpaces;
-using SixLabors.ImageSharp;
 
 namespace zzre.tools
 {
-    public class ModelViewer : ListDisposable
+    public class ModelViewer : ListDisposable, IDocumentEditor
     {
         private const float TexturePreviewSize = 5.0f;
         private const float TextureHoverSizeFactor = 0.4f;
@@ -56,6 +52,7 @@ namespace zzre.tools
             menuBar.AddItem("Open", HandleMenuOpen);
             fbArea = Window.GetTag<FramebufferArea>();
             fbArea.OnRender += HandleRender;
+            diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
 
             openFileModal = new OpenFileModal(diContainer);
             openFileModal.Filter = "*.dff";
@@ -72,6 +69,28 @@ namespace zzre.tools
             editor.AddInfoSection("Statistics", HandleStatisticsContent);
             editor.AddInfoSection("Materials", HandleMaterialsContent);
             editor.AddInfoSection("Skeleton", HandleSkeletonContent);
+        }
+
+        public static ModelViewer OpenFor(ITagContainer diContainer, string pathText)
+        {
+            var resourcePool = diContainer.GetTag<IResourcePool>();
+            var resource = resourcePool.FindFile(pathText);
+            if (resource == null)
+                throw new FileNotFoundException($"Could not find model at {pathText}");
+            return OpenFor(diContainer, resource);
+        }
+
+        public static ModelViewer OpenFor(ITagContainer diContainer, IResource resource)
+        {
+            var openDocumentSet = diContainer.GetTag<OpenDocumentSet>();
+            if (openDocumentSet.TryGetEditorFor(resource, out var prevEditor))
+            {
+                prevEditor.Window.Focus();
+                return (ModelViewer)prevEditor;
+            }
+            var newEditor = new ModelViewer(diContainer);
+            newEditor.LoadModel(resource);
+            return newEditor;
         }
 
         public void LoadModel(string pathText)

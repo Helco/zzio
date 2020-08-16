@@ -27,6 +27,7 @@ namespace zzre.imgui
         public MenuBar MenuBar { get; } = new MenuBar();
         private bool isInUpdateEnumeration = false;
         private Action onceAfterUpdate = () => { }; // used for deferred modification of windows list
+        private BaseWindow? nextFocusedWindow = null;
 
         public WindowContainer(GraphicsDevice device)
         {
@@ -108,6 +109,9 @@ namespace zzre.imgui
             End();
 
             ShowDemoWindow();
+            if (nextFocusedWindow != null)
+                SetWindowFocus(nextFocusedWindow.Title);
+            nextFocusedWindow = null;
             FocusedWindow = null;
             isInUpdateEnumeration = true;
             foreach (var window in this)
@@ -182,5 +186,7 @@ namespace zzre.imgui
             ImGuiRenderer.RecreateFontDeviceTexture();
             ImGuiNative.ImFontConfig_destroy(fontConfig);
         }
+
+        public void SetNextFocusedWindow(BaseWindow window) => nextFocusedWindow = window;
     }
 }

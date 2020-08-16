@@ -131,7 +131,7 @@ namespace zzre.tools
             {
                 bool isEnabled = modelName != null && modelName.Length > 0;
                 if (ImGuiEx.Hyperlink(label, isEnabled ? modelName! : "<none>", true, isEnabled))
-                    new ModelViewer(diContainer).LoadModel("resources/models/actorsex/" + modelName);
+                    ModelViewer.OpenFor(diContainer, "resources/models/actorsex/" + modelName);
             }
 
             ModelLink("Body: ", description?.body.model);
