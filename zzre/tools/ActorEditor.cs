@@ -15,7 +15,7 @@ using static ImGuiNET.ImGui;
 
 namespace zzre.tools
 {
-    public partial class ActorEditor : ListDisposable
+    public partial class ActorEditor : ListDisposable, IDocumentEditor
     {
         private readonly ITagContainer diContainer;
         private readonly ITagContainer localDiContainer;
@@ -49,6 +49,7 @@ namespace zzre.tools
             menuBar.AddItem("Open", HandleMenuOpen);
             fbArea = Window.GetTag<FramebufferArea>();
             fbArea.OnRender += HandleRender;
+            diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
 
             openFileModal = new OpenFileModal(diContainer);
             openFileModal.Filter = "*.aed";
@@ -70,6 +71,28 @@ namespace zzre.tools
             editor.AddInfoSection("Wings animations", () => HandlePartContent(true, () => wings?.AnimationsContent() ?? false), false);
             editor.AddInfoSection("Body skeleton", () => HandlePartContent(false, () => body?.skeletonRenderer.Content() ?? false), false);
             editor.AddInfoSection("Wings skeleton", () => HandlePartContent(true, () => wings?.skeletonRenderer.Content() ?? false), false);
+        }
+
+        public static ActorEditor OpenFor(ITagContainer diContainer, string pathText)
+        {
+            var resourcePool = diContainer.GetTag<IResourcePool>();
+            var resource = resourcePool.FindFile(pathText);
+            if (resource == null)
+                throw new FileNotFoundException($"Could not find model at {pathText}");
+            return OpenFor(diContainer, resource);
+        }
+
+        public static ActorEditor OpenFor(ITagContainer diContainer, IResource resource)
+        {
+            var openDocumentSet = diContainer.GetTag<OpenDocumentSet>();
+            if (openDocumentSet.TryGetEditorFor(resource, out var prevEditor))
+            {
+                prevEditor.Window.Focus();
+                return (ActorEditor)prevEditor;
+            }
+            var newEditor = new ActorEditor(diContainer);
+            newEditor.LoadActor(resource);
+            return newEditor;
         }
 
         public void LoadActor(string pathText)
