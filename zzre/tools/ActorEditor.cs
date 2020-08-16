@@ -19,7 +19,8 @@ namespace zzre.tools
     {
         private readonly ITagContainer diContainer;
         private readonly ITagContainer localDiContainer;
-        private readonly SimpleEditorTag editor;
+        private readonly TwoColumnEditorTag editor;
+        private readonly OrbitControlsTag controls;
         private readonly GraphicsDevice device;
         private readonly FramebufferArea fbArea;
         private readonly IResourcePool resourcePool;
@@ -43,7 +44,8 @@ namespace zzre.tools
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Actor Editor");
             Window.InitialBounds = new Rect(float.NaN, float.NaN, 1100.0f, 600.0f);
             Window.AddTag(this);
-            editor = new SimpleEditorTag(Window, diContainer);
+            editor = new TwoColumnEditorTag(Window, diContainer);
+            controls = new OrbitControlsTag(Window, diContainer);
             new DeferredCallerTag(Window);
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddItem("Open", HandleMenuOpen);
@@ -61,7 +63,7 @@ namespace zzre.tools
             localDiContainer = diContainer.ExtendedWith(locationBuffer);
 
             gridRenderer = new DebugGridRenderer(diContainer);
-            gridRenderer.Material.LinkTransformsTo(editor.Projection, editor.View, editor.World);
+            gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
             AddDisposable(gridRenderer);
             localDiContainer.AddTag<IStandardTransformMaterial>(gridRenderer.Material);
 
@@ -126,7 +128,7 @@ namespace zzre.tools
                 wings.location.Parent = body.skeleton.Bones[description.attachWingsToBone];
             }
 
-            editor.ResetView();
+            controls.ResetView();
             fbArea.IsDirty = true;
             CurrentResource = resource;
         }

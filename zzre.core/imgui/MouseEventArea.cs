@@ -17,6 +17,7 @@ namespace zzre.imgui
         public MouseEventArea(Window parent)
         {
             window = parent;
+            parent.AddTag(this);
         }
 
         public void Content()

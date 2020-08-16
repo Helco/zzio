@@ -7,10 +7,9 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using zzio.vfs;
-using zzre.imgui;
 using static ImGuiNET.ImGui;
 
-namespace zzre
+namespace zzre.imgui
 {
     public class OpenFileModal
     {
@@ -117,7 +116,7 @@ namespace zzre
                     continue;
 
                 var flags =
-                    (ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick) |
+                    ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick |
                     (resource.Equals(SelectedResource) ? ImGuiTreeNodeFlags.Selected : 0) |
                     (resource.Type == ResourceType.File ? ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.NoTreePushOnOpen | ImGuiTreeNodeFlags.Bullet : 0) |
                     (openDirectories.Contains(resource) ? ImGuiTreeNodeFlags.DefaultOpen : 0);

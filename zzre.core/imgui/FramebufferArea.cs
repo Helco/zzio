@@ -31,6 +31,7 @@ namespace zzre.imgui
         {
             WindowContainer = parent.Container;
             Device = device;
+            parent.AddTag(this);
             parent.OnRender += HandleRender;
 
             Framebuffer = null!; // Remove when Roslyn got a bit more clever

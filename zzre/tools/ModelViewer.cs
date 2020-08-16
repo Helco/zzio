@@ -20,7 +20,8 @@ namespace zzre.tools
         private const float TextureHoverSizeFactor = 0.4f;
 
         private readonly ITagContainer diContainer;
-        private readonly SimpleEditorTag editor;
+        private readonly TwoColumnEditorTag editor;
+        private readonly OrbitControlsTag controls;
         private readonly ImGuiRenderer imGuiRenderer;
         private readonly GraphicsDevice device;
         private readonly FramebufferArea fbArea;
@@ -46,7 +47,8 @@ namespace zzre.tools
             textureLoader = diContainer.GetTag<TextureLoader>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
             Window.AddTag(this);
-            editor = new SimpleEditorTag(Window, diContainer);
+            editor = new TwoColumnEditorTag(Window, diContainer);
+            controls = new OrbitControlsTag(Window, diContainer);
             new DeferredCallerTag(Window);
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddItem("Open", HandleMenuOpen);
@@ -63,7 +65,7 @@ namespace zzre.tools
             locationBuffer = new LocationBuffer(device.ResourceFactory);
             AddDisposable(locationBuffer);
             gridRenderer = new DebugGridRenderer(diContainer);
-            gridRenderer.Material.LinkTransformsTo(editor.Projection, editor.View, editor.World);
+            gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
             AddDisposable(gridRenderer);
 
             editor.AddInfoSection("Statistics", HandleStatisticsContent);
@@ -148,7 +150,7 @@ namespace zzre.tools
                 AddDisposable(skeletonRenderer);
             }
 
-            editor.ResetView();
+            controls.ResetView();
             fbArea.IsDirty = true;
             CurrentResource = resource;
             Window.Title = $"Model Viewer - {resource.Path.ToPOSIXString()}";
