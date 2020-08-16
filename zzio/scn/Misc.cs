@@ -9,7 +9,7 @@ namespace zzio.scn
     [Serializable]
     public class Misc : ISceneSection
     {
-        public string worldFile, worldPath, texturePath;
+        public string worldFile = "", worldPath = "", texturePath = "";
         public FColor ambientLight;
         public Vector v1, v2;
         public IColor clearColor;

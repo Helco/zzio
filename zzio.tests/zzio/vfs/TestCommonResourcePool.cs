@@ -77,7 +77,7 @@ namespace zzio.tests.vfs
             if (res.Type == ResourceType.File)
             {
                 Assert.IsNotNull(stream);
-                Assert.IsTrue(stream.CanRead);
+                Assert.IsTrue(stream!.CanRead);
             }
             else
                 Assert.IsNull(stream);

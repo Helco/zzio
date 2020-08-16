@@ -12,7 +12,7 @@ namespace zzre.core.tests
         private class SubTag1Of1 : Tag1 { }
         private class SubTag2Of1 : Tag1 { }
 
-        private ITagContainer container;
+        private ITagContainer container = null!;
 
         [SetUp]
         public void Setup()

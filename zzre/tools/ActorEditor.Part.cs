@@ -45,14 +45,14 @@ namespace zzre.tools
                 var modelPath = new FilePath("resources/models/actorsex/").Combine(modelName);
                 var texturePath = textureLoader.GetTexturePathFromModel(modelPath);
 
-                var resourcePool = diContainer.GetTag<IResourcePool>();
+                IResourcePool resourcePool = diContainer.GetTag<IResourcePool>();
                 using var contentStream = resourcePool.FindAndOpen(modelPath);
                 if (contentStream == null)
                     throw new IOException($"Could not open model at {modelPath.ToPOSIXString()}");
                 var clump = Section.ReadNew(contentStream);
                 if (clump.sectionId != SectionId.Clump)
                     throw new InvalidDataException($"Expected a root clump section, got a {clump.sectionId}");
-                var skin = (RWSkinPLG)clump.FindChildById(SectionId.SkinPLG);
+                var skin = clump.FindChildById(SectionId.SkinPLG) as RWSkinPLG;
                 if (skin == null)
                     throw new InvalidDataException($"Attached actor part model does not have a skin");
 

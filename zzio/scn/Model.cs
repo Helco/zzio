@@ -10,7 +10,7 @@ namespace zzio.scn
     public class Model : ISceneSection
     {
         public UInt32 idx;
-        public string filename;
+        public string filename = "";
         public Vector pos, rot, scale;
         public IColor color;
         public byte i1;

@@ -28,10 +28,5 @@ namespace zzio.rwbs
             byte[] buffer = Encoding.UTF8.GetBytes(value);
             writer.Write(buffer);
         }
-
-        public override Section FindChildById(SectionId sectionId, bool recursive)
-        {
-            return null;
-        }
     }
 }

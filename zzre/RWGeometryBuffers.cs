@@ -36,10 +36,12 @@ namespace zzre
         public RWGeometryBuffers(ITagContainer diContainer, RWClump clump)
         {
             device = diContainer.GetTag<GraphicsDevice>();
-            var geometry = (RWGeometry)clump.FindChildById(SectionId.Geometry, true);
-            var materialList = (RWMaterialList)geometry.FindChildById(SectionId.MaterialList, false);
-            var materials = materialList.children.Where(s => s is RWMaterial).Cast<RWMaterial>().ToArray();
-            var morphTarget = geometry.morphTargets[0]; // TODO: morph support for the one model that uses it? 
+            var geometry = clump.FindChildById(SectionId.Geometry, true) as RWGeometry;
+            var materialList = geometry?.FindChildById(SectionId.MaterialList, false) as RWMaterialList;
+            var materials = materialList?.children.Where(s => s is RWMaterial).Cast<RWMaterial>().ToArray();
+            var morphTarget = geometry?.morphTargets[0]; // TODO: morph support for the one model that uses it? 
+            if (geometry == null || morphTarget == null || materials == null)
+                throw new InvalidDataException("Could not find valid section structure in clump");
 
             var vertices = new ModelStandardVertex[morphTarget.vertices.Length];
             for (int i = 0; i < vertices.Length; i++)
@@ -66,7 +68,7 @@ namespace zzre
             indexBuffer = Factory.CreateBuffer(new BufferDescription((uint)indices.Length * 2, BufferUsage.IndexBuffer));
             device.UpdateBuffer(indexBuffer, 0, indices);
 
-            var skin = (RWSkinPLG)clump.FindChildById(SectionId.SkinPLG, true);
+            var skin = clump.FindChildById(SectionId.SkinPLG, true) as RWSkinPLG;
             if (skin != null)
             {
                 if (vertices.Length != skin.vertexWeights.GetLength(0))

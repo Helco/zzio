@@ -23,11 +23,11 @@ namespace zzio.vfs
             public ResourceType Type => ResourceType.Directory;
             public FilePath Path { get; }
             public IResourcePool Pool { get; }
-            public IResource Parent { get; }
-            public Stream OpenContent() => null;
+            public IResource? Parent { get; }
+            public Stream? OpenContent() => null;
 
-            public CombinedDirectory(IResourcePool pool, IResource parent, string pathText, IEnumerable<IResource> sources) : this(pool, parent, new FilePath(pathText), sources) { }
-            public CombinedDirectory(IResourcePool pool, IResource parent, FilePath path, IEnumerable<IResource> sources)
+            public CombinedDirectory(IResourcePool pool, IResource? parent, string pathText, IEnumerable<IResource> sources) : this(pool, parent, new FilePath(pathText), sources) { }
+            public CombinedDirectory(IResourcePool pool, IResource? parent, FilePath path, IEnumerable<IResource> sources)
             {
                 this.sources = sources.ToArray();
                 Path = path;

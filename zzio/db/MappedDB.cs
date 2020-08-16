@@ -14,7 +14,7 @@ namespace zzio.db
 
         public MappedDB()
         {
-            foreach (ModuleType moduleType in Enum.GetValues(typeof(ModuleType)))
+            foreach (var moduleType in Enum.GetValues(typeof(ModuleType)).Cast<ModuleType>())
                 modules.Add(moduleType, new Dictionary<UID, Row>());
         }
 

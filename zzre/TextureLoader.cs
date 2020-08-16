@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using Veldrid;
 using zzio.rwbs;
@@ -28,7 +29,7 @@ namespace zzre
 
         public (Texture, Sampler) LoadTexture(FilePath basePath, RWMaterial material)
         {
-            var texSection = (RWTexture)material.FindChildById(SectionId.Texture, true);
+            var texSection = material.FindChildById(SectionId.Texture, true) as RWTexture;
             if (texSection == null)
                 throw new InvalidOperationException($"Given material is not textured");
             return LoadTexture(basePath, texSection);
@@ -44,7 +45,9 @@ namespace zzre
                 Filter = ConvertFilterMode(texSection.filterMode)
             };
 
-            var nameSection = (RWString)texSection.FindChildById(SectionId.String, true);
+            var nameSection = texSection.FindChildById(SectionId.String, true) as RWString;
+            if (nameSection == null)
+                throw new InvalidDataException("Could not find filename section in RWTexture");
             using var textureStream = resourcePool.FindAndOpen(basePath.Combine(nameSection.value + ".bmp").ToPOSIXString());
             var texture = new Veldrid.ImageSharp.ImageSharpTexture(textureStream, false);
             var result = (

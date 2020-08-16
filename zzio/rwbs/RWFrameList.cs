@@ -42,7 +42,7 @@ namespace zzio.rwbs
     {
         public override SectionId sectionId => SectionId.FrameList;
 
-        public Frame[] frames;
+        public Frame[] frames = new Frame[0];
 
         protected override void readStruct(Stream stream)
         {

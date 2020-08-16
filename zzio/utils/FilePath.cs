@@ -85,23 +85,25 @@ namespace zzio.utils
 
         /// <summary>Compares two paths for equality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public bool Equals(string path)
+        public bool Equals(string? path)
         {
-            return Equals(new FilePath(path));
+            return path != null && Equals(new FilePath(path));
         }
 
         /// <summary>Compares two paths for equality</summary>
-        public bool Equals(string path, bool caseSensitive)
+        public bool Equals(string? path, bool caseSensitive)
         {
-            return Equals(new FilePath(path), caseSensitive);
+            return path != null && Equals(new FilePath(path), caseSensitive);
         }
 
         /// <summary>Compares two paths for equality</summary>
-        public bool Equals(FilePath path) => Equals(path, DefaultsToCaseSensitive);
+        public bool Equals(FilePath? path) => path != null && Equals(path, DefaultsToCaseSensitive);
 
         /// <summary>Compares two paths for equality</summary>
-        public bool Equals(FilePath path, bool caseSensitive)
+        public bool Equals(FilePath? path, bool caseSensitive)
         {
+            if (path == null)
+                return false;
             FilePath me = this.Absolute;
             path = path.Absolute;
             if (me.parts.Length != path.parts.Length || me.type != path.type)
@@ -119,24 +121,24 @@ namespace zzio.utils
 
         /// <summary>Compares two paths for equality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator ==(FilePath pathA, object pathB)
+        public static bool operator ==(FilePath? pathA, object? pathB)
         {
-            if (object.ReferenceEquals(pathA, null))
-                return object.ReferenceEquals(pathB, null);
+            if (ReferenceEquals(pathA, null))
+                return ReferenceEquals(pathB, null);
             return pathA.Equals(pathB);
         }
 
 
         /// <summary>Compares two paths for inequality</summary>
         /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
-        public static bool operator !=(FilePath pathA, object pathB)
+        public static bool operator !=(FilePath? pathA, object? pathB)
         {
-            if (object.ReferenceEquals(pathA, null))
-                return !object.ReferenceEquals(pathB, null);
+            if (ReferenceEquals(pathA, null))
+                return !ReferenceEquals(pathB, null);
             return !pathA.Equals(pathB);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is FilePath)
                 return Equals(obj as FilePath);
@@ -280,7 +282,7 @@ namespace zzio.utils
         }
 
         /// <value>The containing normalized path of this one or `null` if rooted</value>
-        public FilePath Parent
+        public FilePath? Parent
         {
             get
             {

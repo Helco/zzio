@@ -2,6 +2,7 @@ using System;
 using System.Text.RegularExpressions;
 using System.Linq;
 using zzio.utils;
+using System.Diagnostics.CodeAnalysis;
 
 namespace zzio.script
 {
@@ -61,7 +62,7 @@ namespace zzio.script
             Arguments = arguments.ToArray();
         }
 
-        public static bool TryParse(string line, out RawInstruction parsed)
+        public static bool TryParse(string line, [NotNullWhen(true)] out RawInstruction? parsed)
         {
             try
             {

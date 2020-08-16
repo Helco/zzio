@@ -29,11 +29,11 @@ namespace zzio.rwbs
                 { SectionId.Struct,        () => new RWStruct() },
                 { SectionId.Texture,       () => new RWTexture() },
                 { SectionId.World,         () => new RWWorld() },
-                { SectionId.Unknown,       () => new UnknownSection(SectionId.Unknown) }
+                { SectionId.Unknown,       () => new UnknownSection() }
             };
 
         public abstract SectionId sectionId { get; }
-        public ListSection parent = null;
+        public ListSection? parent = null;
         public uint version;
 
         protected abstract void readBody(Stream stream);
@@ -71,7 +71,7 @@ namespace zzio.rwbs
             readBody(rangeStream);
         }
 
-        public void Write(Stream stream, ListSection parent = null)
+        public void Write(Stream stream)
         {
             BinaryWriter writer = new BinaryWriter(stream);
             writer.Write((Int32)sectionId);
@@ -87,7 +87,7 @@ namespace zzio.rwbs
             stream.Seek(afterBodyPos, SeekOrigin.Begin);
         }
 
-        public static Section ReadNew(Stream stream, ListSection parent = null)
+        public static Section ReadNew(Stream stream, ListSection? parent = null)
         {
             SectionId sectionId;
             UInt32 size, version;
@@ -102,9 +102,9 @@ namespace zzio.rwbs
             return section;
         }
 
-        public ListSection FindParentById(SectionId sectionId)
+        public ListSection? FindParentById(SectionId sectionId)
         {
-            ListSection current = parent;
+            var current = parent;
             while (current != null)
             {
                 if (current.sectionId == sectionId)
@@ -114,6 +114,6 @@ namespace zzio.rwbs
             return null;
         }
 
-        public abstract Section FindChildById(SectionId sectionId, bool recursive = true);
+        public virtual Section? FindChildById(SectionId sectionId, bool recursive = true) => null;
     }
 }

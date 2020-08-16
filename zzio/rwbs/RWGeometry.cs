@@ -8,11 +8,11 @@ using zzio.primitives;
 namespace zzio.rwbs
 {
     [Serializable]
-    public struct MorphTarget
+    public class MorphTarget
     {
         public Vector bsphereCenter;
         public float bsphereRadius;
-        public Vector[] vertices, normals;
+        public Vector[] vertices = new Vector[0], normals = new Vector[0];
     }
 
     [Serializable]
@@ -74,6 +74,7 @@ namespace zzio.rwbs
             } // no native format
 
             for (int i = 0; i < morphTargets.Length; i++) {
+                morphTargets[i] = new MorphTarget();
                 morphTargets[i].bsphereCenter = Vector.ReadNew(reader);
                 morphTargets[i].bsphereRadius = reader.ReadSingle();
                 morphTargets[i].vertices = new Vector[0];

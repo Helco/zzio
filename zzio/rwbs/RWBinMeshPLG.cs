@@ -28,7 +28,7 @@ namespace zzio.rwbs
 
         public BinMeshType type;
         public UInt32 totalIndexCount;
-        public SubMesh[] subMeshes;
+        public SubMesh[] subMeshes = new SubMesh[0];
 
         protected override void readBody(Stream stream)
         {
@@ -62,11 +62,6 @@ namespace zzio.rwbs
                 foreach (UInt32 i in m.indices)
                     writer.Write(i);
             }
-        }
-
-        public override Section FindChildById(SectionId sectionId, bool recursive)
-        {
-            return null;
         }
     }
 }

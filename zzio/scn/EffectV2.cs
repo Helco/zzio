@@ -27,7 +27,7 @@ namespace zzio.scn
         public UInt32 i1, i2, i3, i4, i5;
         public Vector v1, v2, v3;
         public UInt32 param;
-        public string s;
+        public string s = "";
 
         public void Read(Stream stream)
         {
@@ -40,7 +40,6 @@ namespace zzio.scn
             i4 = reader.ReadUInt32();
             i5 = reader.ReadUInt32();
             v1 = v2 = v3 = new Vector();
-            s = null;
             switch (type)
             {
                 case (EffectV2Type.Unknown1):

@@ -10,7 +10,7 @@ namespace zzio.scn
     public class Sample3D : ISceneSection
     {
         public UInt32 idx;
-        public string filename;
+        public string filename = "";
         public Vector pos, forward, up;
         public float
             minDist,

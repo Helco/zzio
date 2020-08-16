@@ -60,11 +60,11 @@ namespace zzio
                 string key = getPathKey(entry.path);
                 archive.entries[key] = entry;
 
-                var parent = entry.path.Parent.WithoutDirectoryMarker();
+                var parent = entry.path.Parent?.WithoutDirectoryMarker();
                 while (parent?.StaysInbound ?? false)
                 {
                     archive.directories[getPathKey(parent)] = parent;
-                    parent = parent.Parent.WithoutDirectoryMarker();
+                    parent = parent.Parent?.WithoutDirectoryMarker();
                 }
             }
             archive.baseOffset = (UInt32)baseStream.Position;

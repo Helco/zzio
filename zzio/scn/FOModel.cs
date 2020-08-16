@@ -29,7 +29,7 @@ namespace zzio.scn
     public class FOModel : ISceneSection
     {
         public UInt32 idx;
-        public string filename;
+        public string filename = "";
         public Vector pos, rot;
         public float f1, f2, f3, f4, f5;
         public IColor color;

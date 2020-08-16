@@ -24,10 +24,5 @@ namespace zzio.rwbs
             BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(morphTargetIndex);
         }
-
-        public override Section FindChildById(SectionId sectionId, bool recursive)
-        {
-            return null;
-        }
     }
 }

@@ -26,7 +26,7 @@ namespace zzio.scn
         public bool unk2, isLondon;
         public uint unk4;
         public bool unk5, unk6;
-        public string s1, s2;
+        public string s1 = "", s2 = "";
 
         public void Read(Stream stream)
         {
@@ -61,12 +61,12 @@ namespace zzio.scn
             writer.Write(nameUID);
             writer.Write(unk1);
             writer.Write((UInt16)0); // padding
-            writer.Write(unk2);
+            writer.Write((uint)(unk2 ? 1 : 0));
             writer.Write(isLondon);
             writer.Write((UInt16)0); // padding
             writer.Write((byte)0);
             writer.Write(unk4);
-            writer.Write(unk5);
+            writer.Write((uint)(unk5 ? 1 : 0));
             writer.Write((uint)(unk6 ? 1 : 0));
             writer.WriteZString(s1);
             writer.WriteZString(s2);

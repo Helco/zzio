@@ -12,10 +12,10 @@ namespace zzio
         [Serializable]
         public partial class Scene
         {
-            public Version version;
-            public Misc misc;
-            public WaypointSystem waypointSystem;
-            public Dataset dataset;
+            public Version version = new Version();
+            public Misc misc = new Misc();
+            public WaypointSystem waypointSystem = new WaypointSystem();
+            public Dataset dataset = new Dataset();
             public Vector sceneOrigin;
             public string backdropFile = "";
             public Light[] lights                       = new Light[0];

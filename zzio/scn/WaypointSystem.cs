@@ -27,9 +27,9 @@ namespace zzio.scn
     public class WaypointSystem : ISceneSection
     {
         public UInt32 version;
-        public byte[] data;
-        public WaypointData[] waypointData;
-        public WaypointInnerData[] inner2data1;
+        public byte[] data = new byte[0x18];
+        public WaypointData[] waypointData = new WaypointData[0];
+        public WaypointInnerData[] inner2data1 = new WaypointInnerData[0];
 
         public void Read(Stream stream)
         {

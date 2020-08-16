@@ -24,7 +24,7 @@ namespace zzio.scn
         public float f1, f2;
         public Vector v1;
         public UInt32 ii1, ii2;
-        public DynModelData[] data; //always three
+        public DynModelData[] data = new DynModelData[0]; //always three
 
         public void Read(Stream stream)
         {

@@ -27,7 +27,7 @@ namespace zzio.scn
         public EffectType type;
         public Vector v1, v2, v3;
         public UInt32 param;
-        public string effectFile;
+        public string effectFile = "";
 
         public void Read(Stream stream)
         {
@@ -36,7 +36,6 @@ namespace zzio.scn
             type = EnumUtils.intToEnum<EffectType>(reader.ReadInt32());
             v1 = v2 = v3 = new Vector();
             param = 0;
-            effectFile = null;
             switch (type)
             {
                 case EffectType.Unknown1:

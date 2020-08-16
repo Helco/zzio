@@ -91,10 +91,5 @@ namespace zzio.rwbs
                 b.objectToBone.Write(writer);
             }
         }
-
-        public override Section FindChildById(SectionId sectionId, bool recursive)
-        {
-            return null;
-        }
     }
 }

@@ -22,11 +22,11 @@ namespace zzio.vfs
             public ResourceType Type => ResourceType.Directory;
             public FilePath Path { get; }
             public IResourcePool Pool => pool;
-            public IResource Parent { get; }
+            public IResource? Parent { get; }
             public Stream? OpenContent() => null;
 
-            public PAKDirectory(PAKResourcePool pool, IResource parent, string pathText) : this(pool, parent, new FilePath(pathText)) { }
-            public PAKDirectory(PAKResourcePool pool, IResource parent, FilePath path)
+            public PAKDirectory(PAKResourcePool pool, IResource? parent, string pathText) : this(pool, parent, new FilePath(pathText)) { }
+            public PAKDirectory(PAKResourcePool pool, IResource? parent, FilePath path)
             {
                 this.pool = pool;
                 Path = path;

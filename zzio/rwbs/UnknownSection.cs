@@ -12,6 +12,8 @@ namespace zzio.rwbs
         public override SectionId sectionId => _sectionId;
         public byte[] data = new byte[0];
 
+        public UnknownSection() : this(SectionId.Unknown) { }
+
         public UnknownSection(SectionId id)
         {
             _sectionId = id;
@@ -28,11 +30,6 @@ namespace zzio.rwbs
         protected override void writeBody(Stream stream)
         {
             stream.Write(data, 0, data.Length);
-        }
-
-        public override Section FindChildById(SectionId sectionId, bool recursive)
-        {
-            return null;
         }
     }
 }

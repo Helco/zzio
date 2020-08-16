@@ -31,7 +31,7 @@ namespace zzio.tests.utils
             Assert.AreEqual(true, path.Equals("a/../a/b/.//c///d\\e/.."));
             Assert.AreEqual(false, path.Equals("a/b/c/d/../e/"));
 
-            FilePath nullPath = null;
+            FilePath? nullPath = null;
             Assert.AreEqual(false, nullPath == "a/b");
             Assert.AreEqual(true, nullPath != "a/b");
             Assert.AreEqual(true, nullPath == nullPath);
@@ -104,20 +104,20 @@ namespace zzio.tests.utils
         [Test]
         public void parent()
         {
-            FilePath path = new FilePath("a/b/c");
-            Assert.AreEqual("a/b/", (path = path.Parent));
-            Assert.AreEqual("a/", (path = path.Parent));
-            Assert.AreEqual("./", (path = path.Parent));
-            Assert.AreEqual("../", (path = path.Parent));
-            Assert.AreEqual("../../", (path = path.Parent));
+            FilePath? path = new FilePath("a/b/c");
+            Assert.AreEqual("a/b/", (path = path?.Parent));
+            Assert.AreEqual("a/", (path = path?.Parent));
+            Assert.AreEqual("./", (path = path?.Parent));
+            Assert.AreEqual("../", (path = path?.Parent));
+            Assert.AreEqual("../../", (path = path?.Parent));
 
             Assert.AreEqual("a/", new FilePath("a/b/../c/.//").Parent);
 
             Assert.AreEqual("c:", new FilePath("c:/a").Parent);
-            Assert.AreEqual(null, new FilePath("c:/a/").Parent.Parent);
+            Assert.AreEqual(null, new FilePath("c:/a/").Parent?.Parent);
 
             Assert.AreEqual("/d", new FilePath("/d/e").Parent);
-            Assert.AreEqual(null, new FilePath("/d/e").Parent.Parent);
+            Assert.AreEqual(null, new FilePath("/d/e").Parent?.Parent);
         }
 
         [Test]

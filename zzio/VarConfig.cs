@@ -44,7 +44,7 @@ namespace zzio
     {
         private static readonly byte XOR_KEY = 0x75;
 
-        public byte[] header; // 3 bytes, meaning unknown
+        public byte[] header = new byte[3]; // 3 bytes, meaning unknown
         public VarConfigValue firstValue; // name is always empty
         public Dictionary<string, VarConfigValue> variables =
             new Dictionary<string, VarConfigValue>();

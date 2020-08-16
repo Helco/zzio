@@ -34,11 +34,11 @@ namespace zzio.scn
     [System.Serializable]
     public class Version : ISceneSection
     {
-        public string author;
+        public string author = "";
         public VersionBuildCountry country;
         public VersionBuildType type;
         public UInt32 v3, buildVersion;
-        public string date, time;
+        public string date = "", time = "";
         public UInt32 year, vv2;
 
         public void Read(Stream stream)

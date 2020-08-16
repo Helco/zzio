@@ -54,13 +54,13 @@ namespace zzio.vfs
             public ResourceType Type => ResourceType.Directory;
             public FilePath Path { get; }
             public IResourcePool Pool { get; }
-            public IResource Parent { get; }
+            public IResource? Parent { get; }
             public Stream? OpenContent() => null;
             public IEnumerable<IResource> Files => files;
             public IEnumerable<IResource> Directories => directories;
 
-            public InMemoryDirectory(IResourcePool pool, IResource parent, string pathText) : this(pool, parent, new FilePath(pathText)) { }
-            public InMemoryDirectory(IResourcePool pool, IResource parent, FilePath path)
+            public InMemoryDirectory(IResourcePool pool, IResource? parent, string pathText) : this(pool, parent, new FilePath(pathText)) { }
+            public InMemoryDirectory(IResourcePool pool, IResource? parent, FilePath path)
             {
                 Pool = pool;
                 Path = path;

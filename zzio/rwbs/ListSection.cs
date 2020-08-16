@@ -27,7 +27,7 @@ namespace zzio.rwbs
             children.ForEach((section) => section.Write(new GatekeeperStream(stream)));
         }
 
-        public override Section FindChildById(SectionId sectionId, bool recursive)
+        public override Section? FindChildById(SectionId sectionId, bool recursive)
         {
             foreach (Section child in children)
             {
@@ -38,7 +38,7 @@ namespace zzio.rwbs
             {
                 foreach (Section child in children)
                 {
-                    Section grandchild = child.FindChildById(sectionId, recursive);
+                    var grandchild = child.FindChildById(sectionId, recursive);
                     if (grandchild != null)
                         return grandchild;
                 }

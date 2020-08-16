@@ -9,7 +9,7 @@ namespace zzio.scn
     [Serializable]
     public class SceneItem : ISceneSection
     {
-        public string name;
+        public string name = "";
         public UInt32 index, type;
 
         public void Read(Stream stream)

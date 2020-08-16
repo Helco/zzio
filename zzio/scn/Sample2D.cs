@@ -10,7 +10,7 @@ namespace zzio.scn
     public class Sample2D : ISceneSection
     {
         public UInt32 idx;
-        public string filename;
+        public string filename = "";
         public UInt32 volume, // between 0-100
             loopCount;
         public byte c;
