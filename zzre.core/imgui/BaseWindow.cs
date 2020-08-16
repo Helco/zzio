@@ -6,8 +6,6 @@ using Veldrid;
 
 namespace zzre.imgui
 {
-    
-
     public abstract class BaseWindow : TagContainer
     {
         public WindowContainer Container { get; }
