@@ -54,8 +54,8 @@ namespace zzre
                 .AddTag(new TextureLoader(diContainer))
                 .AddTag(new OpenDocumentSet());
 
-            var actorEditor = new ActorEditor(diContainer);
-            actorEditor.LoadActor(@"resources/models/actorsex/f014s03.aed");
+            var worldViewer = new WorldViewer(diContainer);
+            worldViewer.LoadWorld("resources/worlds/sc_2411.bsp");
 
             window.Resized += () =>
             {
