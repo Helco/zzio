@@ -66,34 +66,32 @@ namespace zzio.tests
 
             Assert.AreEqual(new string[0], archive.GetDirectoryContent("G/H/I"));
 
-            // TODO: these tests should not rely on item order 
-
-            Assert.AreEqual(new string[]
+            Assert.That(archive.GetDirectoryContent("", true), Is.EquivalentTo(new string[]
             {
+                "a", "a/c", "a/e/f", "a/e",
                 "A/a.txt", "a/B.txt", "a/c/d.txt", "a/e/f/g.txt",
-                "a", "a/c", "a/e/f", "a/e"
-            }, archive.GetDirectoryContent("", true));
+            }));
 
-            Assert.AreEqual(new string[]
+            Assert.That(archive.GetDirectoryContent("A", true), Is.EquivalentTo(new string[]
             {
                 "a.txt", "B.txt", "c/d.txt", "e/f/g.txt",
                 "c", "e/f", "e"
-            }, archive.GetDirectoryContent("A", true));
+            }));
 
-            Assert.AreEqual(new string[]
+            Assert.That(archive.GetDirectoryContent("a/c/", true), Is.EquivalentTo(new string[]
             {
                 "d.txt"
-            }, archive.GetDirectoryContent("a/c/", true));
+            }));
 
-            Assert.AreEqual(new string[]
+            Assert.That(archive.GetDirectoryContent("A/E", true), Is.EquivalentTo(new string[]
             {
                 "f/g.txt", "f"
-            }, archive.GetDirectoryContent("A/E", true));
+            }));
 
-            Assert.AreEqual(new string[]
+            Assert.That(archive.GetDirectoryContent("a", false), Is.EquivalentTo(new string[]
             {
                 "a.txt", "B.txt", "c", "e"
-            }, archive.GetDirectoryContent("a", false));
+            }));
         }
     }
 }
