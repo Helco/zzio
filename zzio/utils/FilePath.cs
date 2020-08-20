@@ -151,10 +151,9 @@ namespace zzio.utils
         {
             // simple hash combine with XOR and some random constants
             int hash = 0;
-            foreach (string part in parts)
+            foreach (string part in Normalized.Parts)
                 hash = (hash << 2) ^ part.ToLowerInvariant().GetHashCode();
             hash = (hash << 2) ^ ((int)type * 0x3fa5bde0);
-            hash = (hash << 2) ^ ((IsDirectory ? 2 : 1) * 0x73abc00e);
             return hash;
         }
 

@@ -151,6 +151,9 @@ namespace zzio.tests.utils
             Assert.AreEqual(new FilePath("").GetHashCode(), new FilePath("").GetHashCode());
             Assert.AreEqual(new FilePath("/a/b/c").GetHashCode(), new FilePath("/a/b/c").GetHashCode());
             Assert.AreNotEqual(new FilePath("c:/d/e").GetHashCode(), new FilePath("d\\b/c").GetHashCode());
+            Assert.AreEqual(new FilePath("").GetHashCode(), new FilePath(".").GetHashCode());
+            Assert.AreEqual(new FilePath("a/").GetHashCode(), new FilePath("a").GetHashCode());
+            Assert.AreEqual(new FilePath("a").GetHashCode(), new FilePath("a/b/./c/../././../").GetHashCode());
         }
     }
 }
