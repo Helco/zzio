@@ -24,6 +24,7 @@ namespace zzre.tools
         private readonly FramebufferArea fbArea;
         private readonly IResourcePool resourcePool;
         private readonly OpenFileModal openFileModal;
+        private readonly ModelMaterialEdit modelMaterialEdit;
 
         private UniformBuffer<Matrix4x4> worldTransform;
         private RWWorldBuffers? worldBuffers;
@@ -47,6 +48,8 @@ namespace zzre.tools
             menuBar.AddItem("Open", HandleMenuOpen);
             fbArea = Window.GetTag<FramebufferArea>();
             fbArea.OnRender += HandleRender;
+            modelMaterialEdit = new ModelMaterialEdit(Window, diContainer);
+            modelMaterialEdit.OpenEntriesByDefault = false;
             diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
 
             openFileModal = new OpenFileModal(diContainer);
@@ -122,6 +125,7 @@ namespace zzre.tools
                 material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
                 AddDisposable(material);
             }
+            modelMaterialEdit.Materials = materials;
 
             worldTransform.Ref = Matrix4x4.CreateTranslation(rwWorld.origin.ToNumerics());
 
@@ -168,7 +172,10 @@ namespace zzre.tools
 
         private void HandleMaterialsContent()
         {
-            // TODO: Add WorldViewer materials info section
+            if (worldBuffers == null)
+                return;
+            else if (modelMaterialEdit.Content())
+                fbArea.IsDirty = true;
         }
 
         private void HandleBSPCollisionContent()

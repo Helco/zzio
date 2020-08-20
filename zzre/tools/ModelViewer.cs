@@ -16,9 +16,6 @@ namespace zzre.tools
 {
     public class ModelViewer : ListDisposable, IDocumentEditor
     {
-        private const float TexturePreviewSize = 5.0f;
-        private const float TextureHoverSizeFactor = 0.4f;
-
         private readonly ITagContainer diContainer;
         private readonly TwoColumnEditorTag editor;
         private readonly OrbitControlsTag controls;
@@ -29,11 +26,11 @@ namespace zzre.tools
         private readonly IResourcePool resourcePool;
         private readonly DebugGridRenderer gridRenderer;
         private readonly OpenFileModal openFileModal;
+        private readonly ModelMaterialEdit modelMaterialEdit;
         private readonly LocationBuffer locationBuffer;
 
         private RWGeometryBuffers? geometryBuffers;
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
-        private IntPtr[] textureBindings = new IntPtr[0];
         private DebugSkeletonRenderer? skeletonRenderer;
 
         public Window Window { get; }
@@ -46,6 +43,7 @@ namespace zzre.tools
             resourcePool = diContainer.GetTag<IResourcePool>();
             textureLoader = diContainer.GetTag<TextureLoader>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
+            Window.InitialBounds = new Rect(float.NaN, float.NaN, 1100.0f, 600.0f);
             Window.AddTag(this);
             editor = new TwoColumnEditorTag(Window, diContainer);
             controls = new OrbitControlsTag(Window, diContainer);
@@ -54,6 +52,7 @@ namespace zzre.tools
             menuBar.AddItem("Open", HandleMenuOpen);
             fbArea = Window.GetTag<FramebufferArea>();
             fbArea.OnRender += HandleRender;
+            modelMaterialEdit = new ModelMaterialEdit(Window, diContainer);
             diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
 
             openFileModal = new OpenFileModal(diContainer);
@@ -127,7 +126,6 @@ namespace zzre.tools
                 imGuiRenderer.RemoveImGuiBinding(oldTexture);
 
             materials = new ModelStandardMaterial[geometryBuffers.SubMeshes.Count];
-            textureBindings = new IntPtr[materials.Length];
             foreach (var (rwMaterial, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
             {
                 var material = materials[index] = new ModelStandardMaterial(diContainer);
@@ -137,9 +135,8 @@ namespace zzre.tools
                 material.Uniforms.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
                 material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
                 AddDisposable(material);
-
-                textureBindings[index] = imGuiRenderer.GetOrCreateImGuiBinding(device.ResourceFactory, material.MainTexture.Texture);
             }
+            modelMaterialEdit.Materials = materials;
 
             var skin = clump.FindChildById(SectionId.SkinPLG, true);
             skeletonRenderer = null;
@@ -190,67 +187,8 @@ namespace zzre.tools
         {
             if (geometryBuffers == null)
                 return;
-
-            ImGui.Text("Globals");
-            var mat = materials.First().Uniforms.Value;
-            bool didChange = false;
-            didChange |= ImGui.SliderFloat("Vertex Color Factor", ref mat.vertexColorFactor, 0.0f, 1.0f);
-            didChange |= ImGui.SliderFloat("Global Tint Factor", ref mat.tintFactor, 0.0f, 1.0f);
-            if (didChange)
-            {
-                foreach (var material in materials)
-                {
-                    material.Uniforms.Ref.vertexColorFactor = mat.vertexColorFactor;
-                    material.Uniforms.Ref.tintFactor = mat.tintFactor;
-                }
+            else if (modelMaterialEdit.Content())
                 fbArea.IsDirty = true;
-            }
-
-            ImGui.NewLine();
-            ImGui.Text("Materials");
-            foreach (var (rwMat, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
-            {
-                bool isVisible = materials[index].Uniforms.Value.alphaReference < 2f;
-                ImGui.PushID(index);
-                if (ImGui.SmallButton(isVisible ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash))
-                {
-                    isVisible = !isVisible;
-                    materials[index].Uniforms.Ref.alphaReference = isVisible ? 0.03f : 2.0f;
-                    fbArea.IsDirty = true;
-                }
-                ImGui.PopID();
-                ImGui.SameLine();
-                if (!ImGui.TreeNodeEx($"Material #{index}", ImGuiTreeNodeFlags.DefaultOpen))
-                    continue;
-                var color = rwMat.color.ToFColor().ToNumerics();
-                ImGui.ColorEdit4("Color", ref color, ImGuiColorEditFlags.NoPicker | ImGuiColorEditFlags.Float);
-                TexturePreview(materials[index].MainTexture.Texture, textureBindings[index]);
-
-                ImGui.TreePop();
-            }
-        }
-
-        private void TexturePreview(Texture? texture, IntPtr binding)
-        {
-            if (texture == null)
-                return;
-            ImGui.Columns(2, null, false);
-            var previewTexSize = ImGui.GetTextLineHeight() * TexturePreviewSize;
-            ImGui.SetColumnWidth(0, previewTexSize + ImGui.GetStyle().FramePadding.X * 3);
-            ImGui.Image(binding, Vector2.One * previewTexSize);
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.BeginTooltip();
-                var viewportSize = ImGui.GetWindowViewport().Size;
-                var hoverTexSize = Math.Min(viewportSize.X, viewportSize.Y) * TextureHoverSizeFactor * Vector2.One;
-                ImGui.Image(binding, hoverTexSize);
-                ImGui.EndTooltip();
-            }
-            ImGui.NextColumn();
-            ImGui.Text(texture?.Name);
-            ImGui.Text($"{texture?.Width}x{texture?.Height}");
-            ImGui.Text($"{texture?.Format}");
-            ImGui.Columns(1);
         }
 
         private void HandleMenuOpen()
@@ -262,12 +200,8 @@ namespace zzre.tools
         private void HandleSkeletonContent()
         {
             if (skeletonRenderer == null)
-            {
                 ImGui.Text("This model has no skeleton.");
-                return;
-            }
-
-            if (skeletonRenderer.Content())
+            else if (skeletonRenderer.Content())
                 fbArea.IsDirty = true;
         }
     }
