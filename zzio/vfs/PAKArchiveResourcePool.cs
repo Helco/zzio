@@ -6,27 +6,27 @@ using zzio.utils;
 
 namespace zzio.vfs
 {
-    public class PAKResourcePool : IResourcePool
+    public class PAKArchiveResourcePool : IResourcePool
     {
         private readonly PAKArchive archive;
         public IResource Root => new PAKDirectory(this, null, "");
 
-        public PAKResourcePool(PAKArchive archive)
+        public PAKArchiveResourcePool(PAKArchive archive)
         {
             this.archive = archive;
         }
 
         private class PAKDirectory : IResource
         {
-            private readonly PAKResourcePool pool;
+            private readonly PAKArchiveResourcePool pool;
             public ResourceType Type => ResourceType.Directory;
             public FilePath Path { get; }
             public IResourcePool Pool => pool;
             public IResource? Parent { get; }
             public Stream? OpenContent() => null;
 
-            public PAKDirectory(PAKResourcePool pool, IResource? parent, string pathText) : this(pool, parent, new FilePath(pathText)) { }
-            public PAKDirectory(PAKResourcePool pool, IResource? parent, FilePath path)
+            public PAKDirectory(PAKArchiveResourcePool pool, IResource? parent, string pathText) : this(pool, parent, new FilePath(pathText)) { }
+            public PAKDirectory(PAKArchiveResourcePool pool, IResource? parent, FilePath path)
             {
                 this.pool = pool;
                 Path = path;
@@ -43,14 +43,14 @@ namespace zzio.vfs
 
         private class PAKFile : IResource
         {
-            private readonly PAKResourcePool pool;
+            private readonly PAKArchiveResourcePool pool;
             public ResourceType Type => ResourceType.File;
             public FilePath Path { get; }
             public IResourcePool Pool => pool;
             public IResource Parent { get; }
             public IEnumerator<IResource> GetEnumerator() => Enumerable.Empty<IResource>().GetEnumerator();
 
-            public PAKFile(PAKResourcePool pool, IResource parent, FilePath path)
+            public PAKFile(PAKArchiveResourcePool pool, IResource parent, FilePath path)
             {
                 this.pool = pool;
                 Path = path;

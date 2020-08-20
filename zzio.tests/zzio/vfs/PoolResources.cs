@@ -27,7 +27,7 @@ namespace zzio.tests.vfs
         
         public static FileResourcePool FileResourcePool => new FileResourcePool(resourceDir.Combine("vfs"));
 
-        public static PAKResourcePool PAKResourcePool => new PAKResourcePool(PAKArchive.ReadNew(
+        public static PAKArchiveResourcePool PAKResourcePool => new PAKArchiveResourcePool(PAKArchive.ReadNew(
             new FileStream(resourceDir.Combine("archive_sample.pak").ToString(), FileMode.Open, FileAccess.Read)));
 
         public static InMemoryResourcePool InMemoryResourcePool
