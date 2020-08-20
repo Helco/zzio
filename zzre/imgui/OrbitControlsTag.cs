@@ -55,7 +55,7 @@ namespace zzre.imgui
 
         private void HandleResize()
         {
-            Projection.Ref = Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, fbArea.Ratio, 0.01f, 100.0f);
+            Projection.Ref = Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, fbArea.Ratio, 0.01f, 1000.0f);
         }
 
         private void HandleDrag(ImGuiMouseButton button, Vector2 delta)

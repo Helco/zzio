@@ -58,6 +58,7 @@ namespace zzre.tools
             editor.AddInfoSection("BSP collision", HandleBSPCollisionContent);
 
             worldTransform = new UniformBuffer<Matrix4x4>(diContainer.GetTag<GraphicsDevice>().ResourceFactory);
+            worldTransform.Ref = Matrix4x4.Identity;
             AddDisposable(worldTransform);
         }
 
@@ -103,11 +104,11 @@ namespace zzre.tools
             using var contentStream = resource.OpenContent();
             if (contentStream == null)
                 throw new IOException($"Could not open model at {resource.Path.ToPOSIXString()}");
-            var rwWorld = Section.ReadNew(contentStream);
-            if (rwWorld.sectionId != SectionId.World)
-                throw new InvalidDataException($"Expected a root world section got a {rwWorld.sectionId}");
+            var rwWorld = Section.ReadNew(contentStream) as RWWorld;
+            if (rwWorld?.sectionId != SectionId.World)
+                throw new InvalidDataException($"Expected a root world section got a {rwWorld?.sectionId.ToString() ?? "read error"}");
 
-            worldBuffers = new RWWorldBuffers(diContainer, (RWWorld)rwWorld);
+            worldBuffers = new RWWorldBuffers(diContainer, rwWorld);
             AddDisposable(worldBuffers);
 
             var textureBase = new FilePath("resources/textures/worlds");
@@ -121,6 +122,8 @@ namespace zzre.tools
                 AddDisposable(material);
             }
 
+            worldTransform.Ref = Matrix4x4.CreateTranslation(rwWorld.origin.ToNumerics());
+
             CurrentResource = resource;
             controls.ResetView();
             fbArea.IsDirty = true;
@@ -129,7 +132,21 @@ namespace zzre.tools
 
         private void HandleRender(CommandList cl)
         {
-            // TODO: Add BSP world rendering
+            worldTransform.Update(cl);
+
+            if (worldBuffers == null)
+                return;
+            worldBuffers.SetBuffers(cl);
+            foreach (var subMesh in worldBuffers.SubMeshes)
+            {
+                (materials[subMesh.MaterialIndex] as IMaterial).Apply(cl);
+                cl.DrawIndexed(
+                    indexStart: (uint)subMesh.IndexOffset,
+                    indexCount: (uint)subMesh.IndexCount,
+                    instanceCount: 1,
+                    vertexOffset: 0,
+                    instanceStart: 0);
+            }
         }
 
         private void HandleMenuOpen()

@@ -49,11 +49,11 @@ namespace zzre.rendering
                 (IndexOffset, IndexCount, MaterialIndex) = (indexOffset, indexCount, materialIndex);
         }
 
-        private DeviceBuffer vertexBuffer;
-        private DeviceBuffer indexBuffer;
-        private RWMaterial[] materials;
-        private BaseSection[] sections;
-        private SubMesh[] subMeshes;
+        private readonly DeviceBuffer vertexBuffer;
+        private readonly DeviceBuffer indexBuffer;
+        private readonly ImmutableArray<RWMaterial> materials;
+        private readonly ImmutableArray<BaseSection> sections;
+        private readonly ImmutableArray<SubMesh> subMeshes;
 
         public int VertexCount => (int)(vertexBuffer.SizeInBytes / ModelStandardVertex.Stride);
         public int TriangleCount => (int)(indexBuffer.SizeInBytes / (sizeof(ushort) * 3));
@@ -65,7 +65,7 @@ namespace zzre.rendering
         {
             var device = diContainer.GetTag<GraphicsDevice>();
             var materialList = world.FindChildById(SectionId.MaterialList, false) as RWMaterialList;
-            materials = materialList?.children.OfType<RWMaterial>().ToArray() ??
+            materials = materialList?.children.OfType<RWMaterial>().ToImmutableArray() ??
                 throw new InvalidDataException("RWWorld has no materials");
 
             var sectionList = new List<BaseSection>();
@@ -116,13 +116,17 @@ namespace zzre.rendering
                     .GroupBy(t => t.m)
                     .Where(g => g.Any())
                     .ToImmutableArray();
-                var subMeshCount = trianglesByMaterial.Count();
+                var subMeshCount = trianglesByMaterial.Length;
                 var subMeshStart = subMeshList.Count;
-                subMeshList.AddRange(trianglesByMaterial.Select(group => new SubMesh(
-                    indexOffset: indexCount,
-                    indexCount: group.Count() * 3,
-                    materialIndex: (int)(group.Key + atomic.matIdBase)
-                )));
+                int offset = 0;
+                foreach (var group in trianglesByMaterial)
+                {
+                    subMeshList.Add(new SubMesh(
+                        indexOffset: indexCount + offset,
+                        indexCount: group.Count() * 3,
+                        materialIndex: (int)(group.Key + atomic.matIdBase)));
+                    offset += group.Count() * 3;
+                }
 
                 vertices = vertices.Concat(Enumerable
                     .Range(0, atomic.vertices.Count())
@@ -132,10 +136,11 @@ namespace zzre.rendering
                         tex = atomic.texCoords1[i].ToNumerics(),
                         color = atomic.colors[i]
                     }));
+                int vertexBase = vertexCount;
                 vertexCount += atomic.vertices.Count();
 
                 indices = indices.Concat(trianglesByMaterial.SelectMany(
-                    group => group.SelectMany(t => new[] { t.v1, t.v2, t.v3 }.Select(i => (ushort)(i + indexCount)))
+                    group => group.SelectMany(t => new[] { t.v1, t.v2, t.v3 }.Select(i => (ushort)(i + vertexBase)))
                 ));
                 indexCount += trianglesByMaterial.Sum(group => group.Count() * 3);
 
@@ -144,16 +149,29 @@ namespace zzre.rendering
                 return result;
             }
 
-            var vertexArray = vertices.ToImmutableArray();
+            var vertexArray = vertices.ToArray();
             vertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)(vertexArray.Count() * ModelStandardVertex.Stride), BufferUsage.VertexBuffer));
             device.UpdateBuffer(vertexBuffer, 0, vertexArray);
-            var indexArray = indices.ToImmutableArray();
+            var indexArray = indices.ToArray();
             indexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)(indexArray.Count() * sizeof(ushort)), BufferUsage.IndexBuffer));
             device.UpdateBuffer(indexBuffer, 0, indexArray);
-            sections = sectionList.ToArray();
-            subMeshes = subMeshList.ToArray();
+            sections = sectionList.ToImmutableArray();
+            subMeshes = subMeshList.ToImmutableArray();
+        }
+
+        protected override void DisposeManaged()
+        {
+            base.DisposeManaged();
+            vertexBuffer.Dispose();
+            indexBuffer.Dispose();
+        }
+
+        public void SetBuffers(CommandList commandList)
+        {
+            commandList.SetVertexBuffer(0, vertexBuffer);
+            commandList.SetIndexBuffer(indexBuffer, IndexFormat.UInt16);
         }
     }
 }

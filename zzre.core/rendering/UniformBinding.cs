@@ -11,7 +11,7 @@ namespace zzre.rendering
         private DeviceBuffer? buffer; // if set, this buffer is owned
         private DeviceBufferRange? range = null;
 
-        public bool OwnsBuffer => buffer != null;
+        public bool OwnsBuffer => buffer != null || range?.Buffer == null;
 
         public DeviceBuffer Buffer
         {
