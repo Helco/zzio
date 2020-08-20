@@ -6,6 +6,7 @@ using zzio.utils;
 
 namespace zzio.vfs
 {
+    [Obsolete("PAKArchiveResourcePool was superseded by PAKResourcePool, it is much faster")]
     public class PAKArchiveResourcePool : IResourcePool
     {
         private readonly PAKArchive archive;

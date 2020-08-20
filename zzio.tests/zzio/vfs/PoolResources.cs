@@ -14,6 +14,7 @@ namespace zzio.tests.vfs
         {
             FileResourcePool,
             InMemoryResourcePool,
+            PAKArchiveResourcePool,
             PAKResourcePool,
             CombinedResourcePool
         };
@@ -22,13 +23,19 @@ namespace zzio.tests.vfs
         {
             FileResourcePool,
             InMemoryResourcePool,
+            PAKArchiveResourcePool,
             PAKResourcePool
         };
         
         public static FileResourcePool FileResourcePool => new FileResourcePool(resourceDir.Combine("vfs"));
 
-        public static PAKArchiveResourcePool PAKResourcePool => new PAKArchiveResourcePool(PAKArchive.ReadNew(
+        public static PAKResourcePool PAKResourcePool = new PAKResourcePool(
+            new FileStream(resourceDir.Combine("archive_sample.pak").ToString(), FileMode.Open, FileAccess.Read));
+
+#pragma warning disable CS0618 // Type or member is obsolete
+        public static PAKArchiveResourcePool PAKArchiveResourcePool => new PAKArchiveResourcePool(PAKArchive.ReadNew(
             new FileStream(resourceDir.Combine("archive_sample.pak").ToString(), FileMode.Open, FileAccess.Read)));
+#pragma warning restore CS0618 // Type or member is obsolete
 
         public static InMemoryResourcePool InMemoryResourcePool
         {

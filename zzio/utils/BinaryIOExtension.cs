@@ -6,7 +6,7 @@ namespace zzio.utils
 {
     public static class BinaryIOExtension
     {
-        private static readonly Encoding encoding = Encoding.GetEncoding("Latin1");
+        public static readonly Encoding Encoding = Encoding.GetEncoding("Latin1");
 
         /// <summary>Reads a 32-bit size prefixed string</summary>
         public static string ReadZString(this BinaryReader reader)
@@ -21,7 +21,7 @@ namespace zzio.utils
             if (len == 0)
                 return "";
             byte[] buf = reader.ReadBytes(len);
-            return encoding.GetString(buf).Replace("\u0000", "");
+            return Encoding.GetString(buf).Replace("\u0000", "");
         }
 
         /// <summary>Reads a fixed sized string</summary>
@@ -35,13 +35,13 @@ namespace zzio.utils
                 if (buf[len] == 0)
                     break;
             }
-            return len == 0 ? "" : encoding.GetString(buf, 0, len);
+            return len == 0 ? "" : Encoding.GetString(buf, 0, len);
         }
 
         /// <summary>Writes a 32-bit prefixed, not-0-terminated string</summary>
         public static void WriteZString(this BinaryWriter writer, string text)
         {
-            byte[] buf = encoding.GetBytes(text);
+            byte[] buf = Encoding.GetBytes(text);
             writer.Write(buf.Length);
             writer.WriteSizedString(buf, buf.Length);
         }
@@ -49,7 +49,7 @@ namespace zzio.utils
         /// <summary>Writes a 32-bit prefixed, 0-terminated string</summary>
         public static void WriteTZString(this BinaryWriter writer, string text)
         {
-            byte[] buf = encoding.GetBytes(text);
+            byte[] buf = Encoding.GetBytes(text);
             writer.Write(buf.Length + 1);
             writer.WriteSizedString(buf, buf.Length + 1);
         }
@@ -58,7 +58,7 @@ namespace zzio.utils
         /// <param name="maxLen">Max byte count to write, including the 0-terminator</param>
         public static void WriteSizedCString(this BinaryWriter writer, String text, int maxLen)
         {
-            writer.WriteSizedString(encoding.GetBytes(text), maxLen - 1);
+            writer.WriteSizedString(Encoding.GetBytes(text), maxLen - 1);
             writer.Write((byte)0);
         }
 
