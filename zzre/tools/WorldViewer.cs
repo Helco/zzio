@@ -1,21 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Numerics;
 using System.Text;
 using Veldrid;
+using zzio.rwbs;
+using zzio.utils;
 using zzio.vfs;
 using zzre.imgui;
+using zzre.materials;
+using zzre.rendering;
 
 namespace zzre.tools
 {
     public class WorldViewer : ListDisposable, IDocumentEditor
     {
         private readonly ITagContainer diContainer;
+        private readonly TextureLoader textureLoader;
         private readonly TwoColumnEditorTag editor;
         private readonly OrbitControlsTag controls;
         private readonly FramebufferArea fbArea;
         private readonly IResourcePool resourcePool;
         private readonly OpenFileModal openFileModal;
+
+        private UniformBuffer<Matrix4x4> worldTransform;
+        private RWWorldBuffers? worldBuffers;
+        private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
 
         public IResource? CurrentResource { get; private set; }
         public Window Window { get; }
@@ -23,6 +34,7 @@ namespace zzre.tools
         public WorldViewer(ITagContainer diContainer)
         {
             this.diContainer = diContainer;
+            textureLoader = diContainer.GetTag<TextureLoader>();
             resourcePool = diContainer.GetTag<IResourcePool>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("World Viewer");
             Window.AddTag(this);
@@ -44,6 +56,9 @@ namespace zzre.tools
             editor.AddInfoSection("Statistics", HandleStatisticsContent);
             editor.AddInfoSection("Materials", HandleMaterialsContent);
             editor.AddInfoSection("BSP collision", HandleBSPCollisionContent);
+
+            worldTransform = new UniformBuffer<Matrix4x4>(diContainer.GetTag<GraphicsDevice>().ResourceFactory);
+            AddDisposable(worldTransform);
         }
 
         public static WorldViewer OpenFor(ITagContainer diContainer, string pathText)
@@ -85,7 +100,26 @@ namespace zzre.tools
                 return;
             CurrentResource = null;
 
-            // TODO: Add BSP world loading
+            using var contentStream = resource.OpenContent();
+            if (contentStream == null)
+                throw new IOException($"Could not open model at {resource.Path.ToPOSIXString()}");
+            var rwWorld = Section.ReadNew(contentStream);
+            if (rwWorld.sectionId != SectionId.World)
+                throw new InvalidDataException($"Expected a root world section got a {rwWorld.sectionId}");
+
+            worldBuffers = new RWWorldBuffers(diContainer, (RWWorld)rwWorld);
+            AddDisposable(worldBuffers);
+
+            var textureBase = new FilePath("resources/textures/worlds");
+            materials = new ModelStandardMaterial[worldBuffers.Materials.Count];
+            foreach (var (rwMaterial, index) in worldBuffers.Materials.Indexed())
+            {
+                var material = materials[index] = new ModelStandardMaterial(diContainer);
+                (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBase, rwMaterial);
+                material.LinkTransformsTo(controls.Projection, controls.View, worldTransform);
+                material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
+                AddDisposable(material);
+            }
 
             CurrentResource = resource;
             controls.ResetView();

@@ -6,7 +6,6 @@ using System.Numerics;
 using Veldrid;
 using zzio.primitives;
 using zzio.rwbs;
-using zzre.core;
 using zzre.materials;
 
 namespace zzre
@@ -21,21 +20,19 @@ namespace zzre
             public SubMesh(int io, int ic, RWMaterial m) => (IndexOffset, IndexCount, Material) = (io, ic, m);
         }
 
-        private readonly GraphicsDevice device;
-        private ResourceFactory Factory => device.ResourceFactory;
         private DeviceBuffer vertexBuffer;
         private DeviceBuffer indexBuffer;
         private DeviceBuffer? skinBuffer;
         private SubMesh[] subMeshes;
 
-        public int VertexCount => (int)(vertexBuffer.SizeInBytes / 4);
-        public int TriangleCount => (int)(indexBuffer.SizeInBytes / (2 * 3));
+        public int VertexCount => (int)(vertexBuffer.SizeInBytes / ModelStandardVertex.Stride);
+        public int TriangleCount => (int)(indexBuffer.SizeInBytes / (sizeof(ushort) * 3));
         public bool HasSkin => skinBuffer != null;
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
 
         public RWGeometryBuffers(ITagContainer diContainer, RWClump clump)
         {
-            device = diContainer.GetTag<GraphicsDevice>();
+            var device = diContainer.GetTag<GraphicsDevice>();
             var geometry = clump.FindChildById(SectionId.Geometry, true) as RWGeometry;
             var materialList = geometry?.FindChildById(SectionId.MaterialList, false) as RWMaterialList;
             var materials = materialList?.children.Where(s => s is RWMaterial).Cast<RWMaterial>().ToArray();
@@ -50,7 +47,7 @@ namespace zzre
                 vertices[i].color = geometry.colors.Length > 0 ? geometry.colors[i] : new IColor(255);
                 vertices[i].tex = geometry.texCoords.Length > 0 ? geometry.texCoords[0][i].ToNumerics() : Vector2.Zero;
             }
-            vertexBuffer = Factory.CreateBuffer(new BufferDescription((uint)vertices.Length * ModelStandardVertex.Stride, BufferUsage.VertexBuffer));
+            vertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription((uint)vertices.Length * ModelStandardVertex.Stride, BufferUsage.VertexBuffer));
             device.UpdateBuffer(vertexBuffer, 0, vertices);
 
             // TODO: might have to correlate to the materialIndices member of materialList 
@@ -65,7 +62,7 @@ namespace zzre
                 subMeshes[idx] = new SubMesh(nextIndexPtr, group.Count() * 3, materials[group.Key]);
                 nextIndexPtr += subMeshes[idx].IndexCount;
             }
-            indexBuffer = Factory.CreateBuffer(new BufferDescription((uint)indices.Length * 2, BufferUsage.IndexBuffer));
+            indexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription((uint)indices.Length * 2, BufferUsage.IndexBuffer));
             device.UpdateBuffer(indexBuffer, 0, indices);
 
             var skin = clump.FindChildById(SectionId.SkinPLG, true) as RWSkinPLG;
@@ -85,7 +82,7 @@ namespace zzre
                     skinVertices[i].weights.Z = skin.vertexWeights[i, 2];
                     skinVertices[i].weights.W = skin.vertexWeights[i, 3];
                 }
-                skinBuffer = Factory.CreateBuffer(new BufferDescription((uint)skinVertices.Length * SkinVertex.Stride, BufferUsage.VertexBuffer));
+                skinBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription((uint)skinVertices.Length * SkinVertex.Stride, BufferUsage.VertexBuffer));
                 device.UpdateBuffer(skinBuffer, 0, skinVertices);
             }
         }
