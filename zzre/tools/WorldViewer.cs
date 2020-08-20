@@ -19,7 +19,7 @@ namespace zzre.tools
         private readonly ITagContainer diContainer;
         private readonly TextureLoader textureLoader;
         private readonly TwoColumnEditorTag editor;
-        private readonly OrbitControlsTag controls;
+        private readonly FlyControlsTag controls;
         private readonly FramebufferArea fbArea;
         private readonly IResourcePool resourcePool;
         private readonly OpenFileModal openFileModal;
@@ -40,7 +40,7 @@ namespace zzre.tools
             Window.AddTag(this);
             Window.InitialBounds = new Rect(float.NaN, float.NaN, 1100.0f, 600.0f);
             editor = new TwoColumnEditorTag(Window, diContainer);
-            controls = new OrbitControlsTag(Window, diContainer);
+            controls = new FlyControlsTag(Window, diContainer);
             new DeferredCallerTag(Window);
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddItem("Open", HandleMenuOpen);
