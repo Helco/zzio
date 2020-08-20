@@ -11,6 +11,7 @@ using zzio.vfs;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
+using static ImGuiNET.ImGui;
 
 namespace zzre.tools
 {
@@ -157,7 +158,12 @@ namespace zzre.tools
 
         private void HandleStatisticsContent()
         {
-            // TODO: Add WorldViewer statistics info section
+            Text($"Vertices: {worldBuffers?.VertexCount ?? 0}");
+            Text($"Triangles: {worldBuffers?.TriangleCount ?? 0}");
+            Text($"Planes: {worldBuffers?.Sections.Count(s => s.IsPlane) ?? 0}");
+            Text($"Atomics: {worldBuffers?.Sections.Count(s => s.IsMesh) ?? 0}");
+            Text($"SubMeshes: {worldBuffers?.SubMeshes.Count ?? 0}");
+            Text($"Materials: {worldBuffers?.Materials.Count ?? 0}");
         }
 
         private void HandleMaterialsContent()
