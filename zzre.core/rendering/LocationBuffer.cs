@@ -97,7 +97,7 @@ namespace zzre.rendering
                 if (minIndex < 0)
                     minIndex = i;
                 maxIndex = i;
-                matrices[i] = location!.WorldToLocal;
+                matrices[i] = location!.LocalToWorld;
             }
             return (minIndex, maxIndex);
         }

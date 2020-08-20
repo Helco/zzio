@@ -50,9 +50,9 @@ namespace zzre.core.tests
             var location = SomeLocation();
             var origPoint = new Vector3(12.0f, -34.0f, 0.023f);
 
-            var expPoint = Vector3.Transform(origPoint, location.WorldToLocal);
+            var expPoint = Vector3.Transform(origPoint, location.LocalToWorld);
             location.ParentToLocal = location.ParentToLocal;
-            var actPoint = Vector3.Transform(origPoint, location.WorldToLocal);
+            var actPoint = Vector3.Transform(origPoint, location.LocalToWorld);
 
             Assert.AreEqual(expPoint.X, actPoint.X, EPS);
             Assert.AreEqual(expPoint.Y, actPoint.Y, EPS);
@@ -60,13 +60,13 @@ namespace zzre.core.tests
         }
 
         [Test]
-        public void WorldToLocalToWorld()
+        public void LocalToWorldToLocal()
         {
             var location = SomeLocation();
             var prevPoint = new Vector3(10.0f, -23.45f, 89.0f);
 
-            var newPoint = Vector3.Transform(prevPoint, location.WorldToLocal);
-            newPoint = Vector3.Transform(newPoint, location.LocalToWorld);
+            var newPoint = Vector3.Transform(prevPoint, location.LocalToWorld);
+            newPoint = Vector3.Transform(newPoint, location.WorldToLocal);
 
             Assert.AreEqual(prevPoint.X, newPoint.X, EPS);
             Assert.AreEqual(prevPoint.Y, newPoint.Y, EPS);
@@ -83,11 +83,11 @@ namespace zzre.core.tests
 
             var part3 = new Location();
             part3.Parent = part2;
-            part3.LocalToWorld = final.LocalToWorld;
+            part3.WorldToLocal = final.WorldToLocal;
 
             var origPoint = new Vector3(12.0f, -34.0f, 0.023f);
-            var expPoint = Vector3.Transform(origPoint, final.WorldToLocal);
-            var actPoint = Vector3.Transform(origPoint, part3.WorldToLocal);
+            var expPoint = Vector3.Transform(origPoint, final.LocalToWorld);
+            var actPoint = Vector3.Transform(origPoint, part3.LocalToWorld);
 
             Assert.AreEqual(expPoint.X, actPoint.X, EPS * 10);
             Assert.AreEqual(expPoint.Y, actPoint.Y, EPS * 10);
@@ -100,9 +100,9 @@ namespace zzre.core.tests
             var location = SomeLocation();
             var origPoint = new Vector3(10.0f, -23.45f, 89.0f);
 
-            var expPoint = Vector3.Transform(origPoint, location.WorldToLocal);
-            location.WorldToLocal = location.WorldToLocal;
-            var actPoint = Vector3.Transform(origPoint, location.WorldToLocal);
+            var expPoint = Vector3.Transform(origPoint, location.LocalToWorld);
+            location.LocalToWorld = location.LocalToWorld;
+            var actPoint = Vector3.Transform(origPoint, location.LocalToWorld);
 
             Assert.AreEqual(expPoint.X, actPoint.X, EPS * 10);
             Assert.AreEqual(expPoint.Y, actPoint.Y, EPS * 10);
@@ -115,9 +115,9 @@ namespace zzre.core.tests
             var location = SomeLocation();
             var origPoint = new Vector3(10.0f, -23.45f, 89.0f);
 
-            var expPoint = Vector3.Transform(origPoint, location.WorldToLocal);
-            location.LocalToWorld = location.LocalToWorld;
-            var actPoint = Vector3.Transform(origPoint, location.WorldToLocal);
+            var expPoint = Vector3.Transform(origPoint, location.LocalToWorld);
+            location.WorldToLocal = location.WorldToLocal;
+            var actPoint = Vector3.Transform(origPoint, location.LocalToWorld);
 
             Assert.AreEqual(expPoint.X, actPoint.X, EPS * 10);
             Assert.AreEqual(expPoint.Y, actPoint.Y, EPS * 10);

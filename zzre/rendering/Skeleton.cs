@@ -11,8 +11,8 @@ namespace zzre
     {
         private BoneAnimator[]? currentAnimators, nextAnimators;
 
-        public IReadOnlyList<Matrix4x4> BindingObjectToBone { get; }
         public IReadOnlyList<Matrix4x4> BindingBoneToObject { get; }
+        public IReadOnlyList<Matrix4x4> BindingObjectToBone { get; }
         public IReadOnlyList<Location> Bones { get; }
         public IReadOnlyList<int> UserIds { get; }
         public IReadOnlyList<int> Parents { get; }
@@ -37,7 +37,7 @@ namespace zzre
 
         public Skeleton(RWSkinPLG skin)
         {
-            BindingBoneToObject = skin.bones.Select(b => b.objectToBone.ResetRow3().ToNumerics()).ToArray();
+            BindingObjectToBone = skin.bones.Select(b => b.objectToBone.ResetRow3().ToNumerics()).ToArray();
             UserIds = skin.bones.Select(b => (int)b.id).ToArray();            
 
             var roots = new List<int>();
@@ -64,18 +64,18 @@ namespace zzre
 
                 bones[index] = new Location();
                 bones[index].Parent = parents[index] < 0 ? Location : bones[parents[index]];
-                bones[index].LocalToWorld = BindingBoneToObject[index];
+                bones[index].WorldToLocal = BindingObjectToBone[index];
             }
             Bones = bones;
             Parents = parents;
             Roots = roots.ToArray();
-            BindingObjectToBone = bones.Select(b => b.WorldToLocal).ToArray();
+            BindingBoneToObject = bones.Select(b => b.LocalToWorld).ToArray();
         }
 
         public void ResetToBinding()
         {
             foreach (var (bone, index) in Bones.Indexed())
-                bone.WorldToLocal = BindingObjectToBone[index] * Location.WorldToLocal;
+                bone.LocalToWorld = BindingBoneToObject[index] * Location.LocalToWorld;
         }
 
         public void JumpToAnimation(SkeletalAnimation? animation)

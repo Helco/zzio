@@ -202,7 +202,7 @@ namespace zzre
 
             if (highlightedBoneI >= 0)
             {
-                LinesMaterial.World.Ref = Skeleton.Bones[highlightedBoneI].WorldToLocal;
+                LinesMaterial.World.Ref = Skeleton.Bones[highlightedBoneI].LocalToWorld;
                 (LinesMaterial as IMaterial).Apply(cl);
                 cl.SetVertexBuffer(0, lineBuffer);
                 cl.Draw(lineBuffer.SizeInBytes / ColoredVertex.Stride);

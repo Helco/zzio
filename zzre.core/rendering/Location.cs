@@ -36,23 +36,23 @@ namespace zzre
             }
         }
 
-        public Matrix4x4 WorldToLocal
+        public Matrix4x4 LocalToWorld
         {
-            get => ParentToLocal * (Parent?.WorldToLocal ?? Matrix4x4.Identity);
-            set => ParentToLocal = Parent == null ? value : value * Parent.LocalToWorld;
+            get => ParentToLocal * (Parent?.LocalToWorld ?? Matrix4x4.Identity);
+            set => ParentToLocal = Parent == null ? value : value * Parent.WorldToLocal;
         }
 
-        public Matrix4x4 LocalToWorld
+        public Matrix4x4 WorldToLocal
         {
             get
             {
-                if (!Matrix4x4.Invert(WorldToLocal, out var localToWorld))
+                if (!Matrix4x4.Invert(LocalToWorld, out var worldToLocal))
                     throw new InvalidOperationException();
-                return localToWorld;
+                return worldToLocal;
             }
             set
             {
-                var localToParent = (Parent?.WorldToLocal ?? Matrix4x4.Identity) * value;
+                var localToParent = (Parent?.LocalToWorld ?? Matrix4x4.Identity) * value;
                 if (!Matrix4x4.Invert(localToParent, out var parentToLocal))
                     throw new InvalidOperationException();
                 ParentToLocal = parentToLocal;
@@ -61,8 +61,8 @@ namespace zzre
 
         // TODO: We might want setters for these three as well 
 
-        public Vector3 GlobalPosition => WorldToLocal.Translation;
-        public Quaternion GlobalRotation => Quaternion.CreateFromRotationMatrix(WorldToLocal);
+        public Vector3 GlobalPosition => LocalToWorld.Translation;
+        public Quaternion GlobalRotation => Quaternion.CreateFromRotationMatrix(LocalToWorld);
         public Vector3 GlobalScale => (Parent?.LocalScale ?? Vector3.One) * LocalScale;
 
         public Vector3 GlobalForward => Vector3.Transform(Vector3.UnitZ, GlobalRotation);
