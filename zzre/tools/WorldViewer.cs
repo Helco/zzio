@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ImGuiNET;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -29,6 +30,9 @@ namespace zzre.tools
         private UniformBuffer<Matrix4x4> worldTransform;
         private RWWorldBuffers? worldBuffers;
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
+        private int[] sectionDepths = new int[0];
+        private bool[] sectionVisibility = new bool[0];
+        private int highlightedSectionI = -1;
 
         public IResource? CurrentResource { get; private set; }
         public Window Window { get; }
@@ -46,7 +50,11 @@ namespace zzre.tools
             new DeferredCallerTag(Window);
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddItem("Open", HandleMenuOpen);
+            var gridRenderer = new DebugGridRenderer(diContainer);
+            gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
+            AddDisposable(gridRenderer);
             fbArea = Window.GetTag<FramebufferArea>();
+            fbArea.OnRender += gridRenderer.Render;
             fbArea.OnRender += HandleRender;
             modelMaterialEdit = new ModelMaterialEdit(Window, diContainer);
             modelMaterialEdit.OpenEntriesByDefault = false;
@@ -58,8 +66,8 @@ namespace zzre.tools
             openFileModal.OnOpenedResource += LoadWorld;
 
             editor.AddInfoSection("Statistics", HandleStatisticsContent);
-            editor.AddInfoSection("Materials", HandleMaterialsContent);
-            editor.AddInfoSection("BSP collision", HandleBSPCollisionContent);
+            editor.AddInfoSection("Materials", HandleMaterialsContent, false);
+            editor.AddInfoSection("Sections", HandleSectionsContent);
 
             worldTransform = new UniformBuffer<Matrix4x4>(diContainer.GetTag<GraphicsDevice>().ResourceFactory);
             worldTransform.Ref = Matrix4x4.Identity;
@@ -130,9 +138,31 @@ namespace zzre.tools
             worldTransform.Ref = Matrix4x4.CreateTranslation(rwWorld.origin.ToNumerics());
 
             CurrentResource = resource;
+            UpdateSectionDepths();
+            sectionVisibility = Enumerable.Repeat(true, worldBuffers.Sections.Count).ToArray();
+            highlightedSectionI = -1;
             controls.ResetView();
             fbArea.IsDirty = true;
             Window.Title = $"World Viewer - {resource.Path.ToPOSIXString()}";
+        }
+
+        private void UpdateSectionDepths()
+        {
+            // the section depth makes the ImGui tree content much easier
+            if (worldBuffers == null)
+                throw new InvalidOperationException();
+            sectionDepths = new int[worldBuffers.Sections.Count];
+            foreach (var (section, index) in worldBuffers.Sections.Indexed())
+            {
+                int depth = 0;
+                var curSection = section;
+                while (curSection.Parent != null)
+                {
+                    depth++;
+                    curSection = curSection.Parent;
+                }
+                sectionDepths[index] = depth;
+            }
         }
 
         private void HandleRender(CommandList cl)
@@ -142,15 +172,22 @@ namespace zzre.tools
             if (worldBuffers == null)
                 return;
             worldBuffers.SetBuffers(cl);
-            foreach (var subMesh in worldBuffers.SubMeshes)
+            foreach (var (section, index) in worldBuffers.Sections.Indexed().Where(t => t.Value.IsMesh))
             {
-                (materials[subMesh.MaterialIndex] as IMaterial).Apply(cl);
-                cl.DrawIndexed(
-                    indexStart: (uint)subMesh.IndexOffset,
-                    indexCount: (uint)subMesh.IndexCount,
-                    instanceCount: 1,
-                    vertexOffset: 0,
-                    instanceStart: 0);
+                if (!sectionVisibility[index])
+                    continue; // not as where clause for future visibility methods
+
+                var meshSection = (RWWorldBuffers.MeshSection)section;
+                foreach (var subMesh in worldBuffers.SubMeshes.Skip(meshSection.SubMeshStart).Take(meshSection.SubMeshCount))
+                {
+                    (materials[subMesh.MaterialIndex] as IMaterial).Apply(cl);
+                    cl.DrawIndexed(
+                        indexStart: (uint)subMesh.IndexOffset,
+                        indexCount: (uint)subMesh.IndexCount,
+                        instanceCount: 1,
+                        vertexOffset: 0,
+                        instanceStart: 0);
+                }
             }
         }
 
@@ -178,9 +215,77 @@ namespace zzre.tools
                 fbArea.IsDirty = true;
         }
 
-        private void HandleBSPCollisionContent()
+        private void HandleSectionsContent()
         {
-            // TODO: Add WorldViewer BSP collision info section
+            if (worldBuffers == null)
+                return;
+
+            int curDepth = 0;
+            foreach (var (section, index) in worldBuffers.Sections.Indexed())
+            {
+                if (curDepth < sectionDepths[index])
+                    continue;
+                while (curDepth > sectionDepths[index])
+                {
+                    TreePop();
+                    curDepth--;
+                }
+
+                if (section is RWWorldBuffers.MeshSection)
+                    MeshSectionContent((RWWorldBuffers.MeshSection)section, index);
+                else if (section is RWWorldBuffers.PlaneSection)
+                    PlaneSectionContent((RWWorldBuffers.PlaneSection)section, index);
+                else
+                    throw new NotImplementedException("Unknown world section type");
+            }
+            while (curDepth > 0)
+            {
+                TreePop();
+                curDepth--;
+            }
+
+            bool SectionHeaderContent(string title, int index)
+            {
+                var flags = (index == highlightedSectionI ? ImGuiTreeNodeFlags.Selected : 0) |
+                        ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow |
+                        ImGuiTreeNodeFlags.DefaultOpen;
+                var isOpen = TreeNodeEx(title, flags);
+                if (isOpen)
+                    curDepth++;
+                if (IsItemClicked() && index != highlightedSectionI)
+                    HighlightSection(index);
+                return isOpen;
+            }
+
+            void MeshSectionContent(RWWorldBuffers.MeshSection section, int index)
+            {
+                PushID(index);
+                bool isVisible = sectionVisibility[index];
+                if (SmallButton(isVisible ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash))
+                {
+                    sectionVisibility[index] = !isVisible;
+                    fbArea.IsDirty = true;
+                }
+                PopID();
+
+                SameLine();
+                if (!SectionHeaderContent($"MeshSection #{index}", index))
+                    return;
+                Text($"Vertices: {section.VertexCount}");
+                Text($"Triangles: {section.TriangleCount}");
+                Text($"SubMeshes: {section.SubMeshCount}");
+            }
+
+            void PlaneSectionContent(RWWorldBuffers.PlaneSection section, int index)
+            {
+                if (!SectionHeaderContent($"{section.PlaneType} at {section.CenterValue}", index))
+                    return;
+            }
+        }
+
+        private void HighlightSection(int index)
+        {
+            // TODO: Add WorldViewer section highlighting
         }
     }
 }

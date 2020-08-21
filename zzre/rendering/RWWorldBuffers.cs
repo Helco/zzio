@@ -25,19 +25,25 @@ namespace zzre.rendering
         {
             public override bool IsMesh => true;
             public readonly int SubMeshStart, SubMeshCount;
+            public readonly int VertexCount, TriangleCount;
 
-            public MeshSection(int sms, int smc) => (SubMeshStart, SubMeshCount) = (sms, smc);
+            public MeshSection(int sms, int smc, int vc, int tc) =>
+                (SubMeshStart, SubMeshCount, VertexCount, TriangleCount) = (sms, smc, vc, tc);
         }
         
         public class PlaneSection : BaseSection
         {
             public override bool IsMesh => false;
-            public readonly BaseSection LeftChild;
-            public readonly BaseSection RightChild;
-            public readonly float LeftValue, RightValue;
+            public readonly BaseSection LeftChild, RightChild;
+            public readonly float CenterValue, LeftValue, RightValue;
+            public readonly RWPlaneSectionType PlaneType;
 
-            public PlaneSection(BaseSection lc, BaseSection rc, float lv, float rv)  =>
-                (LeftChild, RightChild, LeftValue, RightValue) = (lc, rc, lv, rv);
+            public PlaneSection(BaseSection lc, BaseSection rc, float cv, float lv, float rv, RWPlaneSectionType t)
+            {
+                (LeftChild, RightChild) = (lc, rc);
+                (CenterValue, LeftValue, RightValue) = (cv, lv, rv);
+                PlaneType = t;
+            }
         }
 
         public struct SubMesh
@@ -103,7 +109,11 @@ namespace zzre.rendering
                         throw new InvalidDataException($"Unexpected {section.sectionId} section in RWPlaneSection");
                 }
 
-                var result = new PlaneSection(LoadChild(0), LoadChild(1), plane.leftValue, plane.rightValue);
+                var result = new PlaneSection(
+                    LoadChild(0), LoadChild(1),
+                    plane.centerValue, plane.leftValue, plane.rightValue,
+                    plane.sectorType
+                );
                 sectionList[index] = result;
                 result.LeftChild.Parent = result;
                 result.RightChild.Parent = result;
@@ -142,9 +152,10 @@ namespace zzre.rendering
                 indices = indices.Concat(trianglesByMaterial.SelectMany(
                     group => group.SelectMany(t => new[] { t.v1, t.v2, t.v3 }.Select(i => (ushort)(i + vertexBase)))
                 ));
-                indexCount += trianglesByMaterial.Sum(group => group.Count() * 3);
+                int triangleCount = trianglesByMaterial.Sum(group => group.Count());
+                indexCount += triangleCount * 3;
 
-                var result = new MeshSection(subMeshStart, subMeshCount);
+                var result = new MeshSection(subMeshStart, subMeshCount, atomic.vertices.Count(), triangleCount);
                 sectionList.Add(result);
                 return result;
             }
