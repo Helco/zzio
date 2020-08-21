@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -20,6 +21,8 @@ namespace zzre
 
     public class DebugGridRenderer : BaseDisposable
     {
+        private static readonly ImmutableArray<IColor> OriginColors = ImmutableArray.Create(IColor.Red, IColor.Green, IColor.Blue);
+
         private readonly GraphicsDevice device;
         private DeviceBuffer vertexBuffer;
 
@@ -31,7 +34,7 @@ namespace zzre
             device = diContainer.GetTag<GraphicsDevice>();
             
             vertexBuffer = null!;
-            GenerateGrid(cellCount: 5, originSize: 5f, gridColor: new IColor(0xFF888888), originColor: new IColor(0xFF222222));
+            GenerateGrid(cellCount: 5, originSize: 5f, gridColor: new IColor(0xFF888888));
         }
 
         public void GenerateGrid(
@@ -39,10 +42,9 @@ namespace zzre
             int cellCount,
             float cellSize = 1.0f,
             Vector3? origin = null,
-            IColor? originColor = null,
             float originSize = float.NaN) =>
             GenerateGrid(gridColor, cellCount, cellCount, cellCount, Vector3.One * cellSize,
-                originColor: originColor, origin: origin,
+                origin: origin,
                 originSize: float.IsNaN(originSize) ? null : new Vector3?(Vector3.One * originSize));
 
         public void GenerateGrid(
@@ -52,12 +54,10 @@ namespace zzre
             int cellCountZ,
             Vector3 cellSize,
             AxisPlanes planes = AxisPlanes.XZ,
-            IColor? originColor = null,
             Vector3? origin = null,
             Vector3? originSize = null)
         {
             var o = origin.GetValueOrDefault(Vector3.Zero);
-            var oColor = originColor.GetValueOrDefault(gridColor);
 
             IEnumerable<ColoredVertex> GenerateFor(Vector3 dir, Vector3 reach, int count, float cellSize) => Enumerable
                 .Range(-count, count * 2 + 1)
@@ -96,7 +96,7 @@ namespace zzre
                     o, o + Vector3.UnitX * originSize.Value.X,
                     o, o + Vector3.UnitY * originSize.Value.Y,
                     o, o + Vector3.UnitZ * originSize.Value.Z
-                }.Select(p => new ColoredVertex(p, oColor)));
+                }.Select((p, i) => new ColoredVertex(p, OriginColors[i/2])));
             var vertices = newVertices.ToArray();
 
             vertexBuffer?.Dispose();
