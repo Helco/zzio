@@ -20,6 +20,7 @@ namespace zzre.imgui
         private Texture targetDepth;
         private CommandList commandList;
         private Fence fence;
+        private Action once = () => { }; // TODO: Refactor DeferredCaller to be more applicable
 
         public Framebuffer Framebuffer { get; private set; }
         public float Ratio => Framebuffer.Width / (float)Framebuffer.Height;
@@ -58,9 +59,17 @@ namespace zzre.imgui
                 return;
             if (bindingHandle != IntPtr.Zero)
                 ImGuiRenderer.RemoveImGuiBinding(targetColor);
-            targetColor?.Dispose();
-            targetDepth?.Dispose();
-            Framebuffer?.Dispose();
+            var oldTargetColor = targetColor;
+            var oldTargetDepth = targetDepth;
+            var oldFramebuffer = Framebuffer;
+            once += () =>
+            {
+                // delaying the disposal works around a freeze bug related to Vulkan
+                oldTargetColor?.Dispose();
+                oldTargetDepth?.Dispose();
+                oldFramebuffer?.Dispose();
+            };
+
             targetColor = Factory.CreateTexture(new TextureDescription(
                 (uint)newSize.X, (uint)newSize.Y,
                 1, 1, 1,
@@ -82,6 +91,9 @@ namespace zzre.imgui
 
         public void Content()
         {
+            once();
+            once = () => { };
+
             // Do not resize in render, otherwise the queued up Image has an invalid binding id
             var offset = GetCursorScreenPos();
             var size = GetContentRegionAvail();
