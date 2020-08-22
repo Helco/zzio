@@ -26,7 +26,7 @@ namespace zzre.imgui
         public ImGuiRenderer ImGuiRenderer { get; }
         public MenuBar MenuBar { get; } = new MenuBar();
         private bool isInUpdateEnumeration = false;
-        private Action onceAfterUpdate = () => { }; // used for deferred modification of windows list
+        private OnceAction onceAfterUpdate = new OnceAction();
         private BaseWindow? nextFocusedWindow = null;
 
         public WindowContainer(GraphicsDevice device)
@@ -65,7 +65,7 @@ namespace zzre.imgui
         private void AddSafelyToWindows(BaseWindow window)
         {
             if (isInUpdateEnumeration)
-                onceAfterUpdate += () => windows.Add(window);
+                onceAfterUpdate.Next += () => windows.Add(window);
             else
                 windows.Add(window);
         }
@@ -121,8 +121,7 @@ namespace zzre.imgui
                     FocusedWindow = window;
             }
             isInUpdateEnumeration = false;
-            onceAfterUpdate();
-            onceAfterUpdate = () => { };
+            onceAfterUpdate.Invoke();
         }
 
         public void Render()

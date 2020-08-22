@@ -47,7 +47,9 @@ namespace zzre.tools
             Window.AddTag(this);
             editor = new TwoColumnEditorTag(Window, diContainer);
             controls = new OrbitControlsTag(Window, diContainer);
-            new DeferredCallerTag(Window);
+            var onceAction = new OnceAction();
+            Window.AddTag(onceAction);
+            Window.OnContent += onceAction.Invoke;
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddItem("Open", HandleMenuOpen);
             fbArea = Window.GetTag<FramebufferArea>();
@@ -103,7 +105,7 @@ namespace zzre.tools
         }
 
         public void LoadModel(IResource resource) => 
-            Window.GetTag<DeferredCallerTag>().Next += () => LoadModelNow(resource);
+            Window.GetTag<OnceAction>().Next += () => LoadModelNow(resource);
 
         private void LoadModelNow(IResource resource)
         {

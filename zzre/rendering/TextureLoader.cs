@@ -71,7 +71,7 @@ namespace zzre
                 return new Veldrid.ImageSharp.ImageSharpTexture(textureStream, true)
                     .CreateDeviceTexture(device, device.ResourceFactory);
             }
-            catch(Exception _)
+            catch(Exception)
             {
                 return null;
             }

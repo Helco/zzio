@@ -20,7 +20,7 @@ namespace zzre.imgui
         private Texture targetDepth;
         private CommandList commandList;
         private Fence fence;
-        private Action once = () => { }; // TODO: Refactor DeferredCaller to be more applicable
+        private OnceAction onceBeforeContent = new OnceAction();
 
         public Framebuffer Framebuffer { get; private set; }
         public float Ratio => Framebuffer.Width / (float)Framebuffer.Height;
@@ -62,7 +62,7 @@ namespace zzre.imgui
             var oldTargetColor = targetColor;
             var oldTargetDepth = targetDepth;
             var oldFramebuffer = Framebuffer;
-            once += () =>
+            onceBeforeContent.Next += () =>
             {
                 // delaying the disposal works around a freeze bug related to Vulkan
                 oldTargetColor?.Dispose();
@@ -91,8 +91,7 @@ namespace zzre.imgui
 
         public void Content()
         {
-            once();
-            once = () => { };
+            onceBeforeContent.Invoke();
 
             // Do not resize in render, otherwise the queued up Image has an invalid binding id
             var offset = GetCursorScreenPos();

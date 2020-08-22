@@ -53,7 +53,9 @@ namespace zzre.tools
             Window.InitialBounds = new Rect(float.NaN, float.NaN, 1100.0f, 600.0f);
             editor = new TwoColumnEditorTag(Window, diContainer);
             controls = new FlyControlsTag(Window, diContainer);
-            new DeferredCallerTag(Window);
+            var onceAction = new OnceAction();
+            Window.AddTag(onceAction);
+            Window.OnContent += onceAction.Invoke;
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddItem("Open", HandleMenuOpen);
             var gridRenderer = new DebugGridRenderer(diContainer);
@@ -120,7 +122,7 @@ namespace zzre.tools
         }
 
         public void LoadWorld(IResource resource) =>
-            Window.GetTag<DeferredCallerTag>().Next += () => LoadWorldNow(resource);
+            Window.GetTag<OnceAction>().Next += () => LoadWorldNow(resource);
 
         private void LoadWorldNow(IResource resource)
         {
