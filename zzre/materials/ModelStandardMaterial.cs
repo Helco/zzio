@@ -33,7 +33,7 @@ namespace zzre.materials
             tint = FColor.White,
             vertexColorFactor = 1f,
             tintFactor = 1f,
-            alphaReference = 0.03f
+            alphaReference = 0.6f
         };
     }
 
