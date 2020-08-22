@@ -18,6 +18,17 @@ namespace zzio.rwbs
         Unknown = -1
     }
 
+    public static class RWPlaneSectionTypeExtensions
+    {
+        public static Vector AsNormal(this RWPlaneSectionType t) => t switch
+        {
+            RWPlaneSectionType.XPlane => new Vector(1.0f, 0.0f, 0.0f),
+            RWPlaneSectionType.YPlane => new Vector(0.0f, 1.0f, 0.0f),
+            RWPlaneSectionType.ZPlane => new Vector(0.0f, 0.0f, 1.0f),
+            _ => throw new NotImplementedException("Unknown plane section type")
+        };
+    }
+
     public class RWPlaneSection : StructSection
     {
         public override SectionId sectionId => SectionId.PlaneSection;

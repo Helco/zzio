@@ -35,6 +35,7 @@ namespace zzre.materials
             .With(BlendStateDescription.SingleAlphaBlend)
             .WithDepthWrite(false)
             .WithDepthTest(false)
+            .With(FaceCullMode.None)
             .Build());
     }
 }

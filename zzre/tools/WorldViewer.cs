@@ -10,6 +10,7 @@ using zzio.primitives;
 using zzio.rwbs;
 using zzio.utils;
 using zzio.vfs;
+using zzre.debug;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
@@ -19,6 +20,8 @@ namespace zzre.tools
 {
     public class WorldViewer : ListDisposable, IDocumentEditor
     {
+        private const byte DebugPlaneAlpha = 0xA0;
+
         private readonly ITagContainer diContainer;
         private readonly TextureLoader textureLoader;
         private readonly TwoColumnEditorTag editor;
@@ -28,6 +31,7 @@ namespace zzre.tools
         private readonly OpenFileModal openFileModal;
         private readonly ModelMaterialEdit modelMaterialEdit;
         private readonly DebugBoundsRenderer boundsRenderer;
+        private readonly DebugPlaneRenderer planeRenderer;
 
         private UniformBuffer<Matrix4x4> worldTransform;
         private RWWorldBuffers? worldBuffers;
@@ -79,6 +83,10 @@ namespace zzre.tools
             boundsRenderer.Color = IColor.Red;
             boundsRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, worldTransform);
             AddDisposable(boundsRenderer);
+
+            planeRenderer = new DebugPlaneRenderer(diContainer);
+            planeRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, worldTransform);
+            AddDisposable(planeRenderer);
         }
 
         public static WorldViewer OpenFor(ITagContainer diContainer, string pathText)
@@ -198,7 +206,10 @@ namespace zzre.tools
             }
 
             if (highlightedSectionI >= 0)
+            {
                 boundsRenderer.Render(cl);
+                planeRenderer.Render(cl);
+            }
         }
 
         private void HandleMenuOpen()
@@ -302,7 +313,41 @@ namespace zzre.tools
             if (worldBuffers == null)
                 return;
             boundsRenderer.Bounds = worldBuffers.Sections[index].Bounds;
-            // TODO: Visualize highlighted world section planes better (center, left, right)
+            planeRenderer.Planes = new DebugPlane[0];
+
+            if (worldBuffers.Sections[index].IsPlane)
+            {
+                var section = (RWWorldBuffers.PlaneSection)worldBuffers.Sections[index];
+                var normal = section.PlaneType.AsNormal().ToNumerics();
+                var planarCenter = section.Bounds.Center * (Vector3.One - normal);
+                var otherSizes = section.Bounds.Size * (Vector3.One - normal);
+                var size = Math.Max(Math.Max(otherSizes.X, otherSizes.Y), otherSizes.Z) * 0.5f;
+                planeRenderer.Planes = new[]
+                {
+                    new DebugPlane()
+                    {
+                        center = planarCenter + normal * section.CenterValue,
+                        normal = normal,
+                        size = size,
+                        color = IColor.Green.WithA(DebugPlaneAlpha)
+                    },
+                    new DebugPlane()
+                    {
+                        center = planarCenter + normal * section.LeftValue,
+                        normal = normal,
+                        size = size * 0.7f,
+                        color = IColor.Red.WithA(DebugPlaneAlpha)
+                    },
+                    new DebugPlane()
+                    {
+                        center = planarCenter + normal * section.RightValue,
+                        normal = normal,
+                        size = size * 0.7f,
+                        color = IColor.Blue.WithA(DebugPlaneAlpha)
+                    }
+                };
+            }
+
             fbArea.IsDirty = true;
         }
     }

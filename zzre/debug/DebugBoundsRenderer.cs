@@ -46,6 +46,13 @@ namespace zzre
                 12 * 2 * ColoredVertex.Stride, BufferUsage.VertexBuffer));
         }
 
+        protected override void DisposeManaged()
+        {
+            base.DisposeManaged();
+            Material.Dispose();
+            vertexBuffer.Dispose();
+        }
+
         private void Regenerate(CommandList cl)
         {
             isDirty = false;
