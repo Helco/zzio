@@ -25,7 +25,7 @@ void main()
 	vec4 color = texture(mainTexture, fsin_uv)
 		* weighColor(fsin_color, vectorColorFactor)
 		* weighColor(tint, tintFactor);
-	if (color.a < alphaReference) // TODO: put alpha reference in uniforms
+	if (color.a < alphaReference)
 		discard;
 	fsout_color = color;
 }

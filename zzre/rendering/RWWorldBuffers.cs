@@ -19,6 +19,9 @@ namespace zzre.rendering
             public PlaneSection? Parent { get; set; }
             public abstract bool IsMesh { get; }
             public bool IsPlane => !IsMesh;
+            public Bounds Bounds { get; }
+
+            protected BaseSection(Bounds b) => Bounds = b;
         }
 
         public class MeshSection : BaseSection
@@ -27,7 +30,7 @@ namespace zzre.rendering
             public readonly int SubMeshStart, SubMeshCount;
             public readonly int VertexCount, TriangleCount;
 
-            public MeshSection(int sms, int smc, int vc, int tc) =>
+            public MeshSection(Bounds b, int sms, int smc, int vc, int tc) : base(b) =>
                 (SubMeshStart, SubMeshCount, VertexCount, TriangleCount) = (sms, smc, vc, tc);
         }
         
@@ -38,7 +41,7 @@ namespace zzre.rendering
             public readonly float CenterValue, LeftValue, RightValue;
             public readonly RWPlaneSectionType PlaneType;
 
-            public PlaneSection(BaseSection lc, BaseSection rc, float cv, float lv, float rv, RWPlaneSectionType t)
+            public PlaneSection(Bounds b, BaseSection lc, BaseSection rc, float cv, float lv, float rv, RWPlaneSectionType t) : base(b)
             {
                 (LeftChild, RightChild) = (lc, rc);
                 (CenterValue, LeftValue, RightValue) = (cv, lv, rv);
@@ -66,6 +69,7 @@ namespace zzre.rendering
         public IReadOnlyList<RWMaterial> Materials => materials;
         public IReadOnlyList<BaseSection> Sections => sections;
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
+        public Bounds Bounds { get; }
 
         public RWWorldBuffers(ITagContainer diContainer, RWWorld world)
         {
@@ -109,8 +113,12 @@ namespace zzre.rendering
                         throw new InvalidDataException($"Unexpected {section.sectionId} section in RWPlaneSection");
                 }
 
+                var leftChild = LoadChild(0);
+                var rightChild = LoadChild(1);
+                var bounds = Bounds.Union(leftChild.Bounds, rightChild.Bounds);
                 var result = new PlaneSection(
-                    LoadChild(0), LoadChild(1),
+                    bounds,
+                    leftChild, rightChild,
                     plane.centerValue, plane.leftValue, plane.rightValue,
                     plane.sectorType
                 );
@@ -155,7 +163,8 @@ namespace zzre.rendering
                 int triangleCount = trianglesByMaterial.Sum(group => group.Count());
                 indexCount += triangleCount * 3;
 
-                var result = new MeshSection(subMeshStart, subMeshCount, atomic.vertices.Count(), triangleCount);
+                var bounds = Bounds.FromMinMax(atomic.bbox1.ToNumerics(), atomic.bbox2.ToNumerics());
+                var result = new MeshSection(bounds, subMeshStart, subMeshCount, atomic.vertices.Count(), triangleCount);
                 sectionList.Add(result);
                 return result;
             }

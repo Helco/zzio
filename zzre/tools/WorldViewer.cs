@@ -6,6 +6,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using Veldrid;
+using zzio.primitives;
 using zzio.rwbs;
 using zzio.utils;
 using zzio.vfs;
@@ -26,6 +27,7 @@ namespace zzre.tools
         private readonly IResourcePool resourcePool;
         private readonly OpenFileModal openFileModal;
         private readonly ModelMaterialEdit modelMaterialEdit;
+        private readonly DebugBoundsRenderer boundsRenderer;
 
         private UniformBuffer<Matrix4x4> worldTransform;
         private RWWorldBuffers? worldBuffers;
@@ -67,11 +69,16 @@ namespace zzre.tools
 
             editor.AddInfoSection("Statistics", HandleStatisticsContent);
             editor.AddInfoSection("Materials", HandleMaterialsContent, false);
-            editor.AddInfoSection("Sections", HandleSectionsContent);
+            editor.AddInfoSection("Sections", HandleSectionsContent, false);
 
             worldTransform = new UniformBuffer<Matrix4x4>(diContainer.GetTag<GraphicsDevice>().ResourceFactory);
             worldTransform.Ref = Matrix4x4.Identity;
             AddDisposable(worldTransform);
+
+            boundsRenderer = new DebugBoundsRenderer(diContainer);
+            boundsRenderer.Color = IColor.Red;
+            boundsRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, worldTransform);
+            AddDisposable(boundsRenderer);
         }
 
         public static WorldViewer OpenFor(ITagContainer diContainer, string pathText)
@@ -189,6 +196,9 @@ namespace zzre.tools
                         instanceStart: 0);
                 }
             }
+
+            if (highlightedSectionI >= 0)
+                boundsRenderer.Render(cl);
         }
 
         private void HandleMenuOpen()
@@ -231,12 +241,10 @@ namespace zzre.tools
                     curDepth--;
                 }
 
-                if (section is RWWorldBuffers.MeshSection)
+                if (section.IsMesh)
                     MeshSectionContent((RWWorldBuffers.MeshSection)section, index);
-                else if (section is RWWorldBuffers.PlaneSection)
-                    PlaneSectionContent((RWWorldBuffers.PlaneSection)section, index);
                 else
-                    throw new NotImplementedException("Unknown world section type");
+                    PlaneSectionContent((RWWorldBuffers.PlaneSection)section, index);
             }
             while (curDepth > 0)
             {
@@ -278,14 +286,24 @@ namespace zzre.tools
 
             void PlaneSectionContent(RWWorldBuffers.PlaneSection section, int index)
             {
-                if (!SectionHeaderContent($"{section.PlaneType} at {section.CenterValue}", index))
+                var icon = section.PlaneType == RWPlaneSectionType.XPlane
+                    ? IconFonts.ForkAwesome.ArrowsH
+                    : section.PlaneType == RWPlaneSectionType.YPlane
+                    ? IconFonts.ForkAwesome.ArrowsV
+                    : IconFonts.ForkAwesome.Expand;
+                if (!SectionHeaderContent($"{icon} {section.PlaneType} at {section.CenterValue}", index))
                     return;
             }
         }
 
         private void HighlightSection(int index)
         {
-            // TODO: Add WorldViewer section highlighting
+            highlightedSectionI = index;
+            if (worldBuffers == null)
+                return;
+            boundsRenderer.Bounds = worldBuffers.Sections[index].Bounds;
+            // TODO: Visualize highlighted world section planes better (center, left, right)
+            fbArea.IsDirty = true;
         }
     }
 }

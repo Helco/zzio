@@ -55,7 +55,7 @@ namespace zzre
                 .AddTag(new OpenDocumentSet());
 
             var worldViewer = new WorldViewer(diContainer);
-            worldViewer.LoadWorld("resources/worlds/sc_2411.bsp");
+            worldViewer.LoadWorld("resources/worlds/sc_3455.bsp");
 
             window.Resized += () =>
             {

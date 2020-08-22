@@ -12,6 +12,7 @@ namespace zzio.rwbs
         // *Plane has a *normal* vector in * direction
 
         XPlane = 0,
+        YPlane = 4,
         ZPlane = 8,
 
         Unknown = -1
