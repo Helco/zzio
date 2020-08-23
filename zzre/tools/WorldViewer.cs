@@ -77,7 +77,7 @@ namespace zzre.tools
             openFileModal = new OpenFileModal(diContainer);
             openFileModal.Filter = "*.bsp";
             openFileModal.IsFilterChangeable = false;
-            openFileModal.OnOpenedResource += LoadWorld;
+            openFileModal.OnOpenedResource += Load;
 
             editor.AddInfoSection("Statistics", HandleStatisticsContent);
             editor.AddInfoSection("Materials", HandleMaterialsContent, false);
@@ -105,37 +105,15 @@ namespace zzre.tools
             AddDisposable(worldRenderer);
         }
 
-        public static WorldViewer OpenFor(ITagContainer diContainer, string pathText)
-        {
-            var resourcePool = diContainer.GetTag<IResourcePool>();
-            var resource = resourcePool.FindFile(pathText);
-            if (resource == null)
-                throw new FileNotFoundException($"Could not find world at {pathText}");
-            return OpenFor(diContainer, resource);
-        }
-
-        public static WorldViewer OpenFor(ITagContainer diContainer, IResource resource)
-        {
-            var openDocumentSet = diContainer.GetTag<OpenDocumentSet>();
-            if (openDocumentSet.TryGetEditorFor(resource, out var prevEditor))
-            {
-                prevEditor.Window.Focus();
-                return (WorldViewer)prevEditor;
-            }
-            var newEditor = new WorldViewer(diContainer);
-            newEditor.LoadWorld(resource);
-            return newEditor;
-        }
-
-        public void LoadWorld(string pathText)
+        public void Load(string pathText)
         {
             var resource = resourcePool.FindFile(pathText);
             if (resource == null)
                 throw new FileNotFoundException($"Could not find world at {pathText}");
-            LoadWorld(resource);
+            Load(resource);
         }
 
-        public void LoadWorld(IResource resource) =>
+        public void Load(IResource resource) =>
             Window.GetTag<OnceAction>().Next += () => LoadWorldNow(resource);
 
         private void LoadWorldNow(IResource resource)

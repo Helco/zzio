@@ -60,7 +60,7 @@ namespace zzre.tools
             openFileModal = new OpenFileModal(diContainer);
             openFileModal.Filter = "*.dff";
             openFileModal.IsFilterChangeable = false;
-            openFileModal.OnOpenedResource += LoadModel;
+            openFileModal.OnOpenedResource += Load;
             imGuiRenderer = Window.Container.ImGuiRenderer;
 
             locationBuffer = new LocationBuffer(device);
@@ -74,37 +74,15 @@ namespace zzre.tools
             editor.AddInfoSection("Skeleton", HandleSkeletonContent);
         }
 
-        public static ModelViewer OpenFor(ITagContainer diContainer, string pathText)
-        {
-            var resourcePool = diContainer.GetTag<IResourcePool>();
-            var resource = resourcePool.FindFile(pathText);
-            if (resource == null)
-                throw new FileNotFoundException($"Could not find model at {pathText}");
-            return OpenFor(diContainer, resource);
-        }
-
-        public static ModelViewer OpenFor(ITagContainer diContainer, IResource resource)
-        {
-            var openDocumentSet = diContainer.GetTag<OpenDocumentSet>();
-            if (openDocumentSet.TryGetEditorFor(resource, out var prevEditor))
-            {
-                prevEditor.Window.Focus();
-                return (ModelViewer)prevEditor;
-            }
-            var newEditor = new ModelViewer(diContainer);
-            newEditor.LoadModel(resource);
-            return newEditor;
-        }
-
-        public void LoadModel(string pathText)
+        public void Load(string pathText)
         {
             var resource = resourcePool.FindFile(pathText);
             if (resource == null)
                 throw new FileNotFoundException($"Could not find model at {pathText}");
-            LoadModel(resource);
+            Load(resource);
         }
 
-        public void LoadModel(IResource resource) => 
+        public void Load(IResource resource) => 
             Window.GetTag<OnceAction>().Next += () => LoadModelNow(resource);
 
         private void LoadModelNow(IResource resource)

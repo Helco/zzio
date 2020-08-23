@@ -58,7 +58,7 @@ namespace zzre.tools
             openFileModal = new OpenFileModal(diContainer);
             openFileModal.Filter = "*.aed";
             openFileModal.IsFilterChangeable = false;
-            openFileModal.OnOpenedResource += LoadActor;
+            openFileModal.OnOpenedResource += Load;
 
             locationBuffer = new LocationBuffer(device);
             AddDisposable(locationBuffer);
@@ -77,37 +77,15 @@ namespace zzre.tools
             editor.AddInfoSection("Wings skeleton", () => HandlePartContent(true, () => wings?.skeletonRenderer.Content() ?? false), false);
         }
 
-        public static ActorEditor OpenFor(ITagContainer diContainer, string pathText)
-        {
-            var resourcePool = diContainer.GetTag<IResourcePool>();
-            var resource = resourcePool.FindFile(pathText);
-            if (resource == null)
-                throw new FileNotFoundException($"Could not find model at {pathText}");
-            return OpenFor(diContainer, resource);
-        }
-
-        public static ActorEditor OpenFor(ITagContainer diContainer, IResource resource)
-        {
-            var openDocumentSet = diContainer.GetTag<OpenDocumentSet>();
-            if (openDocumentSet.TryGetEditorFor(resource, out var prevEditor))
-            {
-                prevEditor.Window.Focus();
-                return (ActorEditor)prevEditor;
-            }
-            var newEditor = new ActorEditor(diContainer);
-            newEditor.LoadActor(resource);
-            return newEditor;
-        }
-
-        public void LoadActor(string pathText)
+        public void Load(string pathText)
         {
             var resource = resourcePool.FindFile(pathText);
             if (resource == null)
                 throw new FileNotFoundException($"Could not find actor at {pathText}");
-            LoadActor(resource);
+            Load(resource);
         }
 
-        public void LoadActor(IResource resource) =>
+        public void Load(IResource resource) =>
             Window.GetTag<OnceAction>().Next += () => LoadActorNow(resource);
 
         private void LoadActorNow(IResource resource)
@@ -158,7 +136,7 @@ namespace zzre.tools
             {
                 bool isEnabled = modelName != null && modelName.Length > 0;
                 if (ImGuiEx.Hyperlink(label, isEnabled ? modelName! : "<none>", true, isEnabled))
-                    ModelViewer.OpenFor(diContainer, "resources/models/actorsex/" + modelName);
+                    diContainer.GetTag<OpenDocumentSet>().OpenWith<ModelViewer>("resources/models/actorsex/" + modelName);
             }
 
             ModelLink("Body: ", description?.body.model);

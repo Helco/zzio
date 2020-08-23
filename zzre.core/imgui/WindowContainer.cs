@@ -29,6 +29,12 @@ namespace zzre.imgui
         private OnceAction onceAfterUpdate = new OnceAction();
         private BaseWindow? nextFocusedWindow = null;
 
+        public event Action OnceAfterUpdate
+        {
+            add => onceAfterUpdate.Next += value;
+            remove => onceAfterUpdate.Next -= value;
+        }
+
         public WindowContainer(GraphicsDevice device)
         {
             Device = device;
@@ -65,7 +71,7 @@ namespace zzre.imgui
         private void AddSafelyToWindows(BaseWindow window)
         {
             if (isInUpdateEnumeration)
-                onceAfterUpdate.Next += () => windows.Add(window);
+                OnceAfterUpdate += () => windows.Add(window);
             else
                 windows.Add(window);
         }
@@ -109,9 +115,11 @@ namespace zzre.imgui
             End();
 
             ShowDemoWindow();
-            if (nextFocusedWindow != null)
+            if (nextFocusedWindow != null && !IsMouseDown(ImGuiMouseButton.Left))
+            {
                 SetWindowFocus(nextFocusedWindow.Title);
-            nextFocusedWindow = null;
+                nextFocusedWindow = null;
+            }
             FocusedWindow = null;
             isInUpdateEnumeration = true;
             foreach (var window in this)

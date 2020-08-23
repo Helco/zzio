@@ -8,5 +8,7 @@ namespace zzre.tools
     {
         IResource? CurrentResource { get; }
         Window Window { get; }
+
+        void Load(IResource resource);
     }
 }

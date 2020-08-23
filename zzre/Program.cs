@@ -52,14 +52,14 @@ namespace zzre
                 .AddTag<IResourcePool>(resourcePool)
                 .AddTag(pipelineCollection)
                 .AddTag(new TextureLoader(diContainer))
-                .AddTag(new OpenDocumentSet());
+                .AddTag(new OpenDocumentSet(diContainer));
 
             windowContainer.MenuBar.AddItem("Tools/Model Viewer", () => new ModelViewer(diContainer));
             windowContainer.MenuBar.AddItem("Tools/Actor Viewer", () => new ActorEditor(diContainer));
             windowContainer.MenuBar.AddItem("Tools/World Viewer", () => new WorldViewer(diContainer));
 
             var worldViewer = new WorldViewer(diContainer);
-            worldViewer.LoadWorld("resources/worlds/sc_2411.bsp");
+            worldViewer.Load("resources/worlds/sc_2411.bsp");
 
             window.Resized += () =>
             {
