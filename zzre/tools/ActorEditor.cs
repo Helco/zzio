@@ -60,7 +60,7 @@ namespace zzre.tools
             openFileModal.IsFilterChangeable = false;
             openFileModal.OnOpenedResource += LoadActor;
 
-            locationBuffer = new LocationBuffer(device.ResourceFactory);
+            locationBuffer = new LocationBuffer(device);
             AddDisposable(locationBuffer);
             localDiContainer = diContainer.ExtendedWith(locationBuffer);
 

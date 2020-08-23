@@ -63,7 +63,7 @@ namespace zzre.tools
             openFileModal.OnOpenedResource += LoadModel;
             imGuiRenderer = Window.Container.ImGuiRenderer;
 
-            locationBuffer = new LocationBuffer(device.ResourceFactory);
+            locationBuffer = new LocationBuffer(device);
             AddDisposable(locationBuffer);
             gridRenderer = new DebugGridRenderer(diContainer);
             gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
