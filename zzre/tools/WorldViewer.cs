@@ -61,7 +61,7 @@ namespace zzre.tools
             Window.AddTag(onceAction);
             Window.OnContent += onceAction.Invoke;
             var menuBar = new MenuBarWindowTag(Window);
-            menuBar.AddItem("Open", HandleMenuOpen);
+            menuBar.AddButton("Open", HandleMenuOpen);
             var gridRenderer = new DebugGridRenderer(diContainer);
             gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
             AddDisposable(gridRenderer);

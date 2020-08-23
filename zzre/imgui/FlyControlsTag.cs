@@ -38,6 +38,7 @@ namespace zzre.imgui
 
         public FlyControlsTag(Window window, ITagContainer diContainer)
         {
+            window.AddTag(this);
             var device = diContainer.GetTag<GraphicsDevice>();
             gameTime = diContainer.GetTag<GameTime>();
             fbArea = window.GetTag<FramebufferArea>();

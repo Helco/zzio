@@ -12,22 +12,22 @@ namespace zzre.imgui
         private class MenuBarItem
         {
             public string Name { get; }
-            public Action? OnClick { get; }
+            public Action<string>? OnContent { get; }
             public MenuBarItem? Parent { get; }
             public List<MenuBarItem> Children { get; } = new List<MenuBarItem>(); 
 
-            public MenuBarItem(MenuBarItem? parent, string name, Action? onClick)
+            public MenuBarItem(MenuBarItem? parent, string name, Action<string>? onClick)
             {
                 Parent = parent;
                 Name = name;
-                OnClick = onClick;
+                OnContent = onClick;
                 Parent?.Children.Add(this);
             }
         }
 
         private MenuBarItem RootItem = new MenuBarItem(null, "", null);
 
-        public void AddItem(string path, Action onClick)
+        public void AddItem(string path, Action<string> onContent)
         {
             var comp = StringComparison.InvariantCultureIgnoreCase;
             var curParent = RootItem;
@@ -43,8 +43,22 @@ namespace zzre.imgui
             var item = curParent.Children.FirstOrDefault(i => i.Name.Equals(parts.Last(), comp));
             if (item != null)
                 throw new InvalidOperationException($"Item of path {path} is already defined");
-            new MenuBarItem(curParent, parts.Last(), onClick);
+            new MenuBarItem(curParent, parts.Last(), onContent);
         }
+
+        public void AddButton(string path, Action onClick) => AddItem(path, name =>
+        {
+            if (MenuItem(name))
+                onClick();
+        });
+
+        public delegate ref bool IsCheckedFunc();
+
+        public void AddCheckbox(string path, IsCheckedFunc isChecked, Action? onChanged = null) => AddItem(path, name =>
+        {
+            if (MenuItem(name, "", ref isChecked()))
+                onChanged?.Invoke();
+        });
 
         public void Update()
         {
@@ -57,10 +71,9 @@ namespace zzre.imgui
 
         private void UpdateItem(MenuBarItem item)
         {
-            if (item.OnClick != null)
+            if (item.OnContent != null)
             {
-                if (MenuItem(item.Name))
-                    item.OnClick();
+                item.OnContent(item.Name);
                 return;
             }
 

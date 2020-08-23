@@ -50,7 +50,7 @@ namespace zzre.tools
             Window.AddTag(onceAction);
             Window.OnContent += onceAction.Invoke;
             var menuBar = new MenuBarWindowTag(Window);
-            menuBar.AddItem("Open", HandleMenuOpen);
+            menuBar.AddButton("Open", HandleMenuOpen);
             fbArea = Window.GetTag<FramebufferArea>();
             fbArea.OnRender += HandleRender;
             diContainer.GetTag<OpenDocumentSet>().AddEditor(this);

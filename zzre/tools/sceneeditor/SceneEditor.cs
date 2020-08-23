@@ -25,7 +25,7 @@ namespace zzre.tools
         private readonly LocationBuffer locationBuffer;
         private readonly DebugGridRenderer gridRenderer;
 
-        private event Action OnLoadedScene = () => { };
+        private event Action OnLoadScene = () => { };
 
         private ITagContainer localDiContainer;
         private Scene? scene;
@@ -49,7 +49,7 @@ namespace zzre.tools
             gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
             AddDisposable(gridRenderer);
             var menuBar = new MenuBarWindowTag(Window);
-            menuBar.AddItem("Open", HandleMenuOpen);
+            menuBar.AddButton("Open", HandleMenuOpen);
             fbArea = Window.GetTag<FramebufferArea>();
             fbArea.OnRender += gridRenderer.Render;
             openFileModal = new OpenFileModal(diContainer);
@@ -58,7 +58,10 @@ namespace zzre.tools
             openFileModal.OnOpenedResource += Load;
             locationBuffer = new LocationBuffer(diContainer.GetTag<GraphicsDevice>());
 
-            localDiContainer = diContainer.ExtendedWith(this, Window, gridRenderer, locationBuffer);
+            localDiContainer = diContainer
+                .ExtendedWith(this, Window, gridRenderer, locationBuffer)
+                .AddTag<IStandardTransformMaterial>(gridRenderer.Material);
+            new WorldComponent(localDiContainer);
         }
 
         public void Load(string pathText)
@@ -88,7 +91,7 @@ namespace zzre.tools
             controls.ResetView();
             fbArea.IsDirty = true;
             Window.Title = $"Scene Editor - {resource.Path.ToPOSIXString()}";
-            OnLoadedScene();
+            OnLoadScene();
         }
 
         private void HandleMenuOpen()
