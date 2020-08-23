@@ -57,9 +57,10 @@ namespace zzre
             windowContainer.MenuBar.AddItem("Tools/Model Viewer", () => new ModelViewer(diContainer));
             windowContainer.MenuBar.AddItem("Tools/Actor Viewer", () => new ActorEditor(diContainer));
             windowContainer.MenuBar.AddItem("Tools/World Viewer", () => new WorldViewer(diContainer));
+            windowContainer.MenuBar.AddItem("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
-            var worldViewer = new WorldViewer(diContainer);
-            worldViewer.Load("resources/worlds/sc_2411.bsp");
+            diContainer.GetTag<OpenDocumentSet>()
+                .OpenWith<SceneEditor>("resources/worlds/sc_2411.scn");
 
             window.Resized += () =>
             {

@@ -24,7 +24,6 @@ namespace zzre.tools
         private const byte DebugPlaneAlpha = 0xA0;
 
         private readonly ITagContainer diContainer;
-        private readonly TextureLoader textureLoader;
         private readonly TwoColumnEditorTag editor;
         private readonly FlyControlsTag controls;
         private readonly FramebufferArea fbArea;
@@ -52,7 +51,6 @@ namespace zzre.tools
         public WorldViewer(ITagContainer diContainer)
         {
             this.diContainer = diContainer;
-            textureLoader = diContainer.GetTag<TextureLoader>();
             resourcePool = diContainer.GetTag<IResourcePool>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("World Viewer");
             Window.AddTag(this);
