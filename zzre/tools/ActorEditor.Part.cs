@@ -108,11 +108,11 @@ namespace zzre.tools
 
             public void Render(CommandList cl)
             {
-                geometry.SetBuffers(cl);
                 foreach (var (subMesh, index) in geometry.SubMeshes.Indexed())
                 {
                     (materials[index] as IMaterial).Apply(cl);
-                    geometry.SetSkinBuffer(cl); // TODO: find a solution for the pipeline problem 
+                    geometry.SetBuffers(cl);
+                    geometry.SetSkinBuffer(cl);
                     cl.DrawIndexed(
                         indexStart: (uint)subMesh.IndexOffset,
                         indexCount: (uint)subMesh.IndexCount,
