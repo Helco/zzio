@@ -244,7 +244,8 @@ namespace Veldrid
         {
             if (!_viewsById.TryGetValue(imGuiBinding, out ResourceSetInfo rsi))
             {
-                throw new InvalidOperationException("No registered ImGui binding with id " + imGuiBinding.ToString());
+                // throw new InvalidOperationException("No registered ImGui binding with id " + imGuiBinding.ToString());
+                return null;
             }
 
             return rsi.ResourceSet;
@@ -607,7 +608,9 @@ namespace Veldrid
                             }
                             else
                             {
-                                cl.SetGraphicsResourceSet(1, GetImageResourceSet(pcmd.TextureId));
+                                var resourceSet = GetImageResourceSet(pcmd.TextureId);
+                                if (resourceSet != null)
+                                    cl.SetGraphicsResourceSet(1, resourceSet);
                             }
                         }
 
