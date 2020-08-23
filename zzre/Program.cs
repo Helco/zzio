@@ -54,6 +54,10 @@ namespace zzre
                 .AddTag(new TextureLoader(diContainer))
                 .AddTag(new OpenDocumentSet());
 
+            windowContainer.MenuBar.AddItem("Tools/Model Viewer", () => new ModelViewer(diContainer));
+            windowContainer.MenuBar.AddItem("Tools/Actor Viewer", () => new ActorEditor(diContainer));
+            windowContainer.MenuBar.AddItem("Tools/World Viewer", () => new WorldViewer(diContainer));
+
             var worldViewer = new WorldViewer(diContainer);
             worldViewer.LoadWorld("resources/worlds/sc_2411.bsp");
 
