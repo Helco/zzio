@@ -9,22 +9,21 @@ using zzre.rendering;
 
 namespace zzre
 {
-    public class DebugBoundsRenderer : BaseDisposable
+    public class DebugHexahedronLineRenderer : BaseDisposable
     {
         private readonly DeviceBuffer vertexBuffer;
-        private Bounds bounds;
         private IColor color = IColor.White;
         private bool isDirty = false;
+        private Vector3[] corners = new Vector3[8];
 
         public DebugLinesMaterial Material { get; }
 
-        public Bounds Bounds
+        public Vector3[] Corners
         {
-            get => bounds;
-            set
+            get
             {
-                bounds = value;
                 isDirty = true;
+                return corners;
             }
         }
 
@@ -38,7 +37,7 @@ namespace zzre
             }
         }
 
-        public DebugBoundsRenderer(ITagContainer diContainer)
+        public DebugHexahedronLineRenderer(ITagContainer diContainer)
         {
             Material = new DebugLinesMaterial(diContainer);
             var device = diContainer.GetTag<GraphicsDevice>();
@@ -56,37 +55,22 @@ namespace zzre
         private void Regenerate(CommandList cl)
         {
             isDirty = false;
-            var min = bounds.Min;
-            var right = Vector3.UnitX * bounds.Size;
-            var up = Vector3.UnitY * bounds.Size;
-            var forward = Vector3.UnitZ * bounds.Size;
-            var corners = new[]
-            {
-                min,
-                min + right,
-                min + up,
-                min + right + up,
-                min + forward,
-                min + right + forward,
-                min + up + forward,
-                min + right + up + forward,
-            };
             var vertices = new[]
             {
-                corners[0], corners[1],
-                corners[0], corners[2],
-                corners[3], corners[1],
-                corners[3], corners[2],
+                Corners[0], Corners[1],
+                Corners[0], Corners[2],
+                Corners[3], Corners[1],
+                Corners[3], Corners[2],
 
-                corners[4], corners[5],
-                corners[4], corners[6],
-                corners[7], corners[5],
-                corners[7], corners[6],
+                Corners[4], Corners[5],
+                Corners[4], Corners[6],
+                Corners[7], Corners[5],
+                Corners[7], Corners[6],
 
-                corners[0], corners[4],
-                corners[1], corners[5],
-                corners[2], corners[6],
-                corners[3], corners[7],
+                Corners[0], Corners[4],
+                Corners[1], Corners[5],
+                Corners[2], Corners[6],
+                Corners[3], Corners[7],
             }.Select(pos => new ColoredVertex(pos, Color)).ToArray();
             cl.UpdateBuffer(vertexBuffer, 0, vertices);
         }

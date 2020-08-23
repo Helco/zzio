@@ -10,6 +10,7 @@ using zzio.primitives;
 using zzio.rwbs;
 using zzio.utils;
 using zzio.vfs;
+using zzre.core;
 using zzre.debug;
 using zzre.imgui;
 using zzre.materials;
@@ -30,15 +31,20 @@ namespace zzre.tools
         private readonly IResourcePool resourcePool;
         private readonly OpenFileModal openFileModal;
         private readonly ModelMaterialEdit modelMaterialEdit;
-        private readonly DebugBoundsRenderer boundsRenderer;
+        private readonly DebugBoundsLineRenderer boundsRenderer;
         private readonly DebugPlaneRenderer planeRenderer;
+        private readonly DebugHexahedronLineRenderer frustumRenderer;
+        private readonly WorldRenderer worldRenderer;
+
+        private ViewFrustumCulling viewFrustumCulling => worldRenderer.ViewFrustumCulling;
+        private IReadOnlyList<ModelStandardMaterial> materials => worldRenderer.Materials;
 
         private UniformBuffer<Matrix4x4> worldTransform;
         private RWWorldBuffers? worldBuffers;
-        private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
         private int[] sectionDepths = new int[0];
-        private bool[] sectionVisibility = new bool[0];
         private int highlightedSectionI = -1;
+        private bool updateViewFrustumCulling = true;
+        private bool renderCulledSections = false;
 
         public IResource? CurrentResource { get; private set; }
         public Window Window { get; }
@@ -76,12 +82,13 @@ namespace zzre.tools
             editor.AddInfoSection("Statistics", HandleStatisticsContent);
             editor.AddInfoSection("Materials", HandleMaterialsContent, false);
             editor.AddInfoSection("Sections", HandleSectionsContent, false);
+            editor.AddInfoSection("ViewFrustum Culling", HandleViewFrustumCulling, false);
 
             worldTransform = new UniformBuffer<Matrix4x4>(diContainer.GetTag<GraphicsDevice>().ResourceFactory);
             worldTransform.Ref = Matrix4x4.Identity;
             AddDisposable(worldTransform);
 
-            boundsRenderer = new DebugBoundsRenderer(diContainer);
+            boundsRenderer = new DebugBoundsLineRenderer(diContainer);
             boundsRenderer.Color = IColor.Red;
             boundsRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, worldTransform);
             AddDisposable(boundsRenderer);
@@ -89,6 +96,13 @@ namespace zzre.tools
             planeRenderer = new DebugPlaneRenderer(diContainer);
             planeRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, worldTransform);
             AddDisposable(planeRenderer);
+
+            frustumRenderer = new DebugHexahedronLineRenderer(diContainer);
+            frustumRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
+            AddDisposable(frustumRenderer);
+
+            worldRenderer = new WorldRenderer(diContainer.ExtendedWith<IStandardTransformMaterial>(boundsRenderer.Material));
+            AddDisposable(worldRenderer);
         }
 
         public static WorldViewer OpenFor(ITagContainer diContainer, string pathText)
@@ -139,26 +153,14 @@ namespace zzre.tools
 
             worldBuffers = new RWWorldBuffers(diContainer, rwWorld);
             AddDisposable(worldBuffers);
-
-            var textureBase = new FilePath("resources/textures/worlds");
-            materials = new ModelStandardMaterial[worldBuffers.Materials.Count];
-            foreach (var (rwMaterial, index) in worldBuffers.Materials.Indexed())
-            {
-                var material = materials[index] = new ModelStandardMaterial(diContainer);
-                (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBase, rwMaterial);
-                material.LinkTransformsTo(controls.Projection, controls.View, worldTransform);
-                material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
-                AddDisposable(material);
-            }
+            worldRenderer.WorldBuffers = worldBuffers;
             modelMaterialEdit.Materials = materials;
-
-            worldTransform.Ref = Matrix4x4.CreateTranslation(rwWorld.origin.ToNumerics());
 
             CurrentResource = resource;
             UpdateSectionDepths();
-            sectionVisibility = Enumerable.Repeat(true, worldBuffers.Sections.Count).ToArray();
             highlightedSectionI = -1;
             controls.ResetView();
+            controls.Position = rwWorld.origin.ToNumerics();
             fbArea.IsDirty = true;
             Window.Title = $"World Viewer - {resource.Path.ToPOSIXString()}";
         }
@@ -185,33 +187,28 @@ namespace zzre.tools
         private void HandleRender(CommandList cl)
         {
             worldTransform.Update(cl);
-
             if (worldBuffers == null)
                 return;
-            worldBuffers.SetBuffers(cl);
-            foreach (var (section, index) in worldBuffers.Sections.Indexed().Where(t => t.Value.IsMesh))
-            {
-                if (!sectionVisibility[index])
-                    continue; // not as where clause for future visibility methods
 
-                var meshSection = (RWWorldBuffers.MeshSection)section;
-                foreach (var subMesh in worldBuffers.SubMeshes.Skip(meshSection.SubMeshStart).Take(meshSection.SubMeshCount))
-                {
-                    (materials[subMesh.MaterialIndex] as IMaterial).Apply(cl);
-                    cl.DrawIndexed(
-                        indexStart: (uint)subMesh.IndexOffset,
-                        indexCount: (uint)subMesh.IndexCount,
-                        instanceCount: 1,
-                        vertexOffset: 0,
-                        instanceStart: 0);
-                }
+            if (updateViewFrustumCulling)
+            {
+                viewFrustumCulling.SetViewProjection(controls.View.Value, controls.Projection.Value);
+                worldRenderer.UpdateVisibility();
             }
+
+            if (renderCulledSections)
+                worldRenderer.RenderForceAll(cl);
+            else
+                worldRenderer.Render(cl);
 
             if (highlightedSectionI >= 0)
             {
                 boundsRenderer.Render(cl);
                 planeRenderer.Render(cl);
             }
+
+            if (!updateViewFrustumCulling)
+                frustumRenderer.Render(cl);
         }
 
         private void HandleMenuOpen()
@@ -242,6 +239,12 @@ namespace zzre.tools
         {
             if (worldBuffers == null)
                 return;
+
+            if (Button("Clear selection"))
+            {
+                HighlightSection(-1);
+                fbArea.IsDirty = true;
+            }
 
             int curDepth = 0;
             foreach (var (section, index) in worldBuffers.Sections.Indexed())
@@ -280,14 +283,8 @@ namespace zzre.tools
 
             void MeshSectionContent(RWWorldBuffers.MeshSection section, int index)
             {
-                PushID(index);
-                bool isVisible = sectionVisibility[index];
-                if (SmallButton(isVisible ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash))
-                {
-                    sectionVisibility[index] = !isVisible;
-                    fbArea.IsDirty = true;
-                }
-                PopID();
+                bool isVisible = worldRenderer.VisibleMeshSections.Contains(section);
+                Text(isVisible ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash);
 
                 SameLine();
                 if (!SectionHeaderContent($"MeshSection #{index}", index))
@@ -312,7 +309,7 @@ namespace zzre.tools
         private void HighlightSection(int index)
         {
             highlightedSectionI = index;
-            if (worldBuffers == null)
+            if (worldBuffers == null || highlightedSectionI < 0)
                 return;
             boundsRenderer.Bounds = worldBuffers.Sections[index].Bounds;
             planeRenderer.Planes = new DebugPlane[0];
@@ -351,6 +348,24 @@ namespace zzre.tools
             }
 
             fbArea.IsDirty = true;
+        }
+
+        private void HandleViewFrustumCulling()
+        {
+            Text($"Visible meshes: {worldRenderer.VisibleMeshSections.Count}/{worldBuffers?.Sections.OfType<RWWorldBuffers.MeshSection>().Count() ?? 0}");
+            var visibleTriangleCount = worldRenderer.VisibleMeshSections.Sum(s => s.TriangleCount);
+            Text($"Visible triangles: {visibleTriangleCount}/{worldBuffers?.TriangleCount ?? 0}");
+            NewLine();
+
+            bool didChange = false;
+            didChange |= Checkbox("Update ViewFrustum", ref updateViewFrustumCulling);
+            didChange |= Checkbox("Render culled sections", ref renderCulledSections);
+
+            if (didChange)
+            {
+                viewFrustumCulling.FrustumCorners.ToArray().CopyTo(frustumRenderer.Corners, 0);
+                fbArea.IsDirty = true;
+            }
         }
     }
 }
