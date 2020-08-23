@@ -6,6 +6,8 @@ using System.Numerics;
 using Veldrid;
 using zzio.primitives;
 using zzio.rwbs;
+using zzio.utils;
+using zzio.vfs;
 using zzre.materials;
 
 namespace zzre
@@ -27,8 +29,13 @@ namespace zzre
 
         public int VertexCount => (int)(vertexBuffer.SizeInBytes / ModelStandardVertex.Stride);
         public int TriangleCount => (int)(indexBuffer.SizeInBytes / (sizeof(ushort) * 3));
-        public bool HasSkin => skinBuffer != null;
+        public RWSkinPLG? Skin { get; }
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
+
+        public RWGeometryBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
+            throw new FileNotFoundException($"Could not find model at {path.ToPOSIXString()}"))
+        { }
+        public RWGeometryBuffers(ITagContainer diContainer, IResource resource) : this(diContainer, resource.OpenAsRWBS<RWClump>()) { }
 
         public RWGeometryBuffers(ITagContainer diContainer, RWClump clump)
         {
@@ -65,22 +72,22 @@ namespace zzre
             indexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription((uint)indices.Length * 2, BufferUsage.IndexBuffer));
             device.UpdateBuffer(indexBuffer, 0, indices);
 
-            var skin = clump.FindChildById(SectionId.SkinPLG, true) as RWSkinPLG;
-            if (skin != null)
+            Skin = clump.FindChildById(SectionId.SkinPLG, true) as RWSkinPLG;
+            if (Skin != null)
             {
-                if (vertices.Length != skin.vertexWeights.GetLength(0))
+                if (vertices.Length != Skin.vertexWeights.GetLength(0))
                     throw new InvalidDataException("Vertex count in skin is not equal to geometry");
                 var skinVertices = new SkinVertex[vertices.Length];
                 for (int i = 0; i < skinVertices.Length; i++)
                 {
-                    skinVertices[i].bone0 = skin.vertexIndices[i, 0];
-                    skinVertices[i].bone1 = skin.vertexIndices[i, 1];
-                    skinVertices[i].bone2 = skin.vertexIndices[i, 2];
-                    skinVertices[i].bone3 = skin.vertexIndices[i, 3];
-                    skinVertices[i].weights.X = skin.vertexWeights[i, 0];
-                    skinVertices[i].weights.Y = skin.vertexWeights[i, 1];
-                    skinVertices[i].weights.Z = skin.vertexWeights[i, 2];
-                    skinVertices[i].weights.W = skin.vertexWeights[i, 3];
+                    skinVertices[i].bone0 = Skin.vertexIndices[i, 0];
+                    skinVertices[i].bone1 = Skin.vertexIndices[i, 1];
+                    skinVertices[i].bone2 = Skin.vertexIndices[i, 2];
+                    skinVertices[i].bone3 = Skin.vertexIndices[i, 3];
+                    skinVertices[i].weights.X = Skin.vertexWeights[i, 0];
+                    skinVertices[i].weights.Y = Skin.vertexWeights[i, 1];
+                    skinVertices[i].weights.Z = Skin.vertexWeights[i, 2];
+                    skinVertices[i].weights.W = Skin.vertexWeights[i, 3];
                 }
                 skinBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription((uint)skinVertices.Length * SkinVertex.Stride, BufferUsage.VertexBuffer));
                 device.UpdateBuffer(skinBuffer, 0, skinVertices);

@@ -114,14 +114,7 @@ namespace zzre.tools
             CurrentResource = null;
             var texturePath = textureLoader.GetTexturePathFromModel(resource.Path);
 
-            using var contentStream = resource.OpenContent();
-            if (contentStream == null)
-                throw new IOException($"Could not open model at {resource.Path.ToPOSIXString()}");
-            var clump = Section.ReadNew(contentStream);
-            if (clump.sectionId != SectionId.Clump)
-                throw new InvalidDataException($"Expected a root clump section, got a {clump.sectionId}");
-
-            geometryBuffers = new RWGeometryBuffers(diContainer, (RWClump)clump);
+            geometryBuffers = new RWGeometryBuffers(diContainer, resource);
             AddDisposable(geometryBuffers);
 
             foreach (var oldTexture in materials.Select(m => m.MainTexture.Texture))
@@ -140,11 +133,10 @@ namespace zzre.tools
             }
             modelMaterialEdit.Materials = materials;
 
-            var skin = clump.FindChildById(SectionId.SkinPLG, true);
             skeletonRenderer = null;
-            if (skin != null)
+            if (geometryBuffers.Skin != null)
             {
-                var skeleton = new Skeleton((RWSkinPLG)skin);
+                var skeleton = new Skeleton(geometryBuffers.Skin);
                 skeletonRenderer = new DebugSkeletonRenderer(diContainer.ExtendedWith(gridRenderer.Material as IStandardTransformMaterial, locationBuffer), geometryBuffers, skeleton);
                 AddDisposable(skeletonRenderer);
             }

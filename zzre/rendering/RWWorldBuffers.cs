@@ -8,6 +8,8 @@ using System.Numerics;
 using Veldrid;
 using zzio.primitives;
 using zzio.rwbs;
+using zzio.utils;
+using zzio.vfs;
 using zzre.materials;
 
 namespace zzre.rendering
@@ -69,7 +71,12 @@ namespace zzre.rendering
         public IReadOnlyList<RWMaterial> Materials => materials;
         public IReadOnlyList<BaseSection> Sections => sections;
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
-        public Bounds Bounds { get; }
+        public Vector3 Origin { get; }
+
+        public RWWorldBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
+            throw new FileNotFoundException($"Could not find world at {path.ToPOSIXString()}"))
+        { }
+        public RWWorldBuffers(ITagContainer diContainer, IResource resource) : this(diContainer, resource.OpenAsRWBS<RWWorld>()) { }
 
         public RWWorldBuffers(ITagContainer diContainer, RWWorld world)
         {
@@ -77,6 +84,7 @@ namespace zzre.rendering
             var materialList = world.FindChildById(SectionId.MaterialList, false) as RWMaterialList;
             materials = materialList?.children.OfType<RWMaterial>().ToImmutableArray() ??
                 throw new InvalidDataException("RWWorld has no materials");
+            Origin = world.origin.ToNumerics();
 
             var sectionList = new List<BaseSection>();
             var subMeshList = new List<SubMesh>();

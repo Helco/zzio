@@ -144,14 +144,7 @@ namespace zzre.tools
                 return;
             CurrentResource = null;
 
-            using var contentStream = resource.OpenContent();
-            if (contentStream == null)
-                throw new IOException($"Could not open model at {resource.Path.ToPOSIXString()}");
-            var rwWorld = Section.ReadNew(contentStream) as RWWorld;
-            if (rwWorld?.sectionId != SectionId.World)
-                throw new InvalidDataException($"Expected a root world section got a {rwWorld?.sectionId.ToString() ?? "read error"}");
-
-            worldBuffers = new RWWorldBuffers(diContainer, rwWorld);
+            worldBuffers = new RWWorldBuffers(diContainer, resource);
             AddDisposable(worldBuffers);
             worldRenderer.WorldBuffers = worldBuffers;
             modelMaterialEdit.Materials = materials;
@@ -160,7 +153,7 @@ namespace zzre.tools
             UpdateSectionDepths();
             highlightedSectionI = -1;
             controls.ResetView();
-            controls.Position = rwWorld.origin.ToNumerics();
+            controls.Position = worldBuffers.Origin;
             fbArea.IsDirty = true;
             Window.Title = $"World Viewer - {resource.Path.ToPOSIXString()}";
         }
