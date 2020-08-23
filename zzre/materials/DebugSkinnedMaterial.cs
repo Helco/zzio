@@ -34,7 +34,7 @@ namespace zzre.materials
             .With("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With("View", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With("World", ResourceKind.UniformBuffer, ShaderStages.Vertex)
-            .With("PoseBuffer", ResourceKind.StructuredBufferReadOnly, ShaderStages.Vertex)
+            .With("PoseBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With(FrontFace.CounterClockwise)
             .With(BlendStateDescription.SingleAlphaBlend)
             .WithDepthWrite(false)

@@ -10,9 +10,9 @@ layout(location = 0) out vec4 fsin_color;
 layout(set = 0, binding = 0) uniform Projection { mat4 projection; };
 layout(set = 0, binding = 1) uniform View { mat4 view; };
 layout(set = 0, binding = 2) uniform World { mat4 world; };
-layout(set = 0, binding = 3) readonly buffer PoseBuffer
+layout(set = 0, binding = 3) uniform PoseBuffer
 {
-	mat4 pose[];
+	mat4 pose[128];
 };
 
 void main()

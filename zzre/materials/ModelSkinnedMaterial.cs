@@ -47,7 +47,7 @@ namespace zzre.materials
             .With("View", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With("World", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With("MaterialBuffer", ResourceKind.UniformBuffer, ShaderStages.Fragment)
-            .With("PoseBuffer", ResourceKind.StructuredBufferReadOnly, ShaderStages.Vertex)
+            .With("PoseBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With(FrontFace.CounterClockwise)
             .Build());
     }
