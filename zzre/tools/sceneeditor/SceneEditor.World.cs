@@ -17,7 +17,7 @@ namespace zzre.tools
             private readonly SceneEditor editor;
             private readonly WorldRenderer renderer;
             private readonly FlyControlsTag controls;
-            private RWWorldBuffers? buffers;
+            private WorldBuffers? buffers;
             private bool isVisible = true;
 
             public WorldComponent(ITagContainer diContainer)
@@ -42,7 +42,7 @@ namespace zzre.tools
                     return;
 
                 var fullPath = new FilePath("resources").Combine(editor.scene.misc.worldPath, editor.scene.misc.worldFile + ".bsp");
-                buffers = new RWWorldBuffers(diContainer, fullPath);
+                buffers = new WorldBuffers(diContainer, fullPath);
                 renderer.WorldBuffers = buffers;
                 controls.Position = buffers.Origin;
             }

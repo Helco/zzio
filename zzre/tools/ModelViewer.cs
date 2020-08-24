@@ -29,7 +29,7 @@ namespace zzre.tools
         private readonly ModelMaterialEdit modelMaterialEdit;
         private readonly LocationBuffer locationBuffer;
 
-        private RWGeometryBuffers? geometryBuffers;
+        private ClumpBuffers? geometryBuffers;
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
         private DebugSkeletonRenderer? skeletonRenderer;
 
@@ -92,7 +92,7 @@ namespace zzre.tools
             CurrentResource = null;
             var texturePath = textureLoader.GetTexturePathFromModel(resource.Path);
 
-            geometryBuffers = new RWGeometryBuffers(diContainer, resource);
+            geometryBuffers = new ClumpBuffers(diContainer, resource);
             AddDisposable(geometryBuffers);
 
             foreach (var oldTexture in materials.Select(m => m.MainTexture.Texture))

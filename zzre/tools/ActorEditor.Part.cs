@@ -30,7 +30,7 @@ namespace zzre.tools
 
             public Location location = new Location();
             public DeviceBufferRange locationBufferRange;
-            public RWGeometryBuffers geometry;
+            public ClumpBuffers geometry;
             public ModelSkinnedMaterial[] materials;
             public Skeleton skeleton;
             public DebugSkeletonRenderer skeletonRenderer;
@@ -56,7 +56,7 @@ namespace zzre.tools
                 if (skin == null)
                     throw new InvalidDataException($"Attached actor part model does not have a skin");
 
-                geometry = new RWGeometryBuffers(diContainer, (RWClump)clump);
+                geometry = new ClumpBuffers(diContainer, (RWClump)clump);
                 AddDisposable(geometry);
 
                 locationBufferRange = diContainer.GetTag<LocationBuffer>().Add(location);

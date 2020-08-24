@@ -63,11 +63,11 @@ namespace zzre
         public DebugSkinAllMaterial SkinMaterial { get; }
         public DebugSkinSingleMaterial SkinHighlightedMaterial { get; }
         public DebugLinesMaterial LinesMaterial { get; }
-        public RWGeometryBuffers Geometry { get; }
+        public ClumpBuffers Geometry { get; }
         public Skeleton Skeleton { get; }
         public ref DebugSkeletonRenderMode RenderMode => ref renderMode;
 
-        public DebugSkeletonRenderer(ITagContainer diContainer, RWGeometryBuffers geometryBuffers, Skeleton skeleton)
+        public DebugSkeletonRenderer(ITagContainer diContainer, ClumpBuffers geometryBuffers, Skeleton skeleton)
         {
             Geometry = geometryBuffers;
             Skeleton = skeleton;

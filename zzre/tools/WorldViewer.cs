@@ -39,7 +39,7 @@ namespace zzre.tools
         private IReadOnlyList<ModelStandardMaterial> materials => worldRenderer.Materials;
 
         private UniformBuffer<Matrix4x4> worldTransform;
-        private RWWorldBuffers? worldBuffers;
+        private WorldBuffers? worldBuffers;
         private int[] sectionDepths = new int[0];
         private int highlightedSectionI = -1;
         private bool updateViewFrustumCulling = true;
@@ -120,7 +120,7 @@ namespace zzre.tools
                 return;
             CurrentResource = null;
 
-            worldBuffers = new RWWorldBuffers(diContainer, resource);
+            worldBuffers = new WorldBuffers(diContainer, resource);
             AddDisposable(worldBuffers);
             worldRenderer.WorldBuffers = worldBuffers;
             modelMaterialEdit.Materials = materials;
@@ -227,9 +227,9 @@ namespace zzre.tools
                 }
 
                 if (section.IsMesh)
-                    MeshSectionContent((RWWorldBuffers.MeshSection)section, index);
+                    MeshSectionContent((WorldBuffers.MeshSection)section, index);
                 else
-                    PlaneSectionContent((RWWorldBuffers.PlaneSection)section, index);
+                    PlaneSectionContent((WorldBuffers.PlaneSection)section, index);
             }
             while (curDepth > 0)
             {
@@ -250,7 +250,7 @@ namespace zzre.tools
                 return isOpen;
             }
 
-            void MeshSectionContent(RWWorldBuffers.MeshSection section, int index)
+            void MeshSectionContent(WorldBuffers.MeshSection section, int index)
             {
                 bool isVisible = worldRenderer.VisibleMeshSections.Contains(section);
                 Text(isVisible ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash);
@@ -263,7 +263,7 @@ namespace zzre.tools
                 Text($"SubMeshes: {section.SubMeshCount}");
             }
 
-            void PlaneSectionContent(RWWorldBuffers.PlaneSection section, int index)
+            void PlaneSectionContent(WorldBuffers.PlaneSection section, int index)
             {
                 var icon = section.PlaneType == RWPlaneSectionType.XPlane
                     ? IconFonts.ForkAwesome.ArrowsH
@@ -285,7 +285,7 @@ namespace zzre.tools
 
             if (worldBuffers.Sections[index].IsPlane)
             {
-                var section = (RWWorldBuffers.PlaneSection)worldBuffers.Sections[index];
+                var section = (WorldBuffers.PlaneSection)worldBuffers.Sections[index];
                 var normal = section.PlaneType.AsNormal().ToNumerics();
                 var planarCenter = section.Bounds.Center * (Vector3.One - normal);
                 var otherSizes = section.Bounds.Size * (Vector3.One - normal);
@@ -321,7 +321,7 @@ namespace zzre.tools
 
         private void HandleViewFrustumCulling()
         {
-            Text($"Visible meshes: {worldRenderer.VisibleMeshSections.Count}/{worldBuffers?.Sections.OfType<RWWorldBuffers.MeshSection>().Count() ?? 0}");
+            Text($"Visible meshes: {worldRenderer.VisibleMeshSections.Count}/{worldBuffers?.Sections.OfType<WorldBuffers.MeshSection>().Count() ?? 0}");
             var visibleTriangleCount = worldRenderer.VisibleMeshSections.Sum(s => s.TriangleCount);
             Text($"Visible triangles: {visibleTriangleCount}/{worldBuffers?.TriangleCount ?? 0}");
             NewLine();

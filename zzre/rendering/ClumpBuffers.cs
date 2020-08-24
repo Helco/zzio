@@ -12,7 +12,7 @@ using zzre.materials;
 
 namespace zzre
 {
-    public class RWGeometryBuffers : BaseDisposable
+    public class ClumpBuffers : BaseDisposable
     {
         public readonly struct SubMesh
         {
@@ -32,12 +32,12 @@ namespace zzre
         public RWSkinPLG? Skin { get; }
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
 
-        public RWGeometryBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
+        public ClumpBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
             throw new FileNotFoundException($"Could not find model at {path.ToPOSIXString()}"))
         { }
-        public RWGeometryBuffers(ITagContainer diContainer, IResource resource) : this(diContainer, resource.OpenAsRWBS<RWClump>()) { }
+        public ClumpBuffers(ITagContainer diContainer, IResource resource) : this(diContainer, resource.OpenAsRWBS<RWClump>()) { }
 
-        public RWGeometryBuffers(ITagContainer diContainer, RWClump clump)
+        public ClumpBuffers(ITagContainer diContainer, RWClump clump)
         {
             var device = diContainer.GetTag<GraphicsDevice>();
             var geometry = clump.FindChildById(SectionId.Geometry, true) as RWGeometry;

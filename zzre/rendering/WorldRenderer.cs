@@ -13,8 +13,8 @@ namespace zzre.rendering
     {
         private readonly ITagContainer diContainer;
 
-        private RWWorldBuffers? worldBuffers;
-        public RWWorldBuffers? WorldBuffers
+        private WorldBuffers? worldBuffers;
+        public WorldBuffers? WorldBuffers
         {
             get => worldBuffers;
             set
@@ -28,8 +28,8 @@ namespace zzre.rendering
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
         public IReadOnlyList<ModelStandardMaterial> Materials => materials;
 
-        private List<RWWorldBuffers.MeshSection> visibleMeshSections = new List<RWWorldBuffers.MeshSection>();
-        public IReadOnlyList<RWWorldBuffers.MeshSection> VisibleMeshSections => visibleMeshSections;
+        private List<WorldBuffers.MeshSection> visibleMeshSections = new List<WorldBuffers.MeshSection>();
+        public IReadOnlyList<WorldBuffers.MeshSection> VisibleMeshSections => visibleMeshSections;
 
         public ViewFrustumCulling ViewFrustumCulling { get; } = new ViewFrustumCulling();
 
@@ -72,18 +72,18 @@ namespace zzre.rendering
                 return;
 
             visibleMeshSections.Clear();
-            var sectionQueue = new Queue<RWWorldBuffers.BaseSection>();
+            var sectionQueue = new Queue<WorldBuffers.BaseSection>();
             sectionQueue.Enqueue(worldBuffers.Sections.First());
             while (sectionQueue.Any())
             {
                 var section = sectionQueue.Dequeue();
                 if (section.IsMesh)
                 {
-                    visibleMeshSections.Add((RWWorldBuffers.MeshSection)section);
+                    visibleMeshSections.Add((WorldBuffers.MeshSection)section);
                     continue;
                 }
 
-                var plane = (RWWorldBuffers.PlaneSection)section;
+                var plane = (WorldBuffers.PlaneSection)section;
                 var intersection = ViewFrustumCulling.Test(plane.PlaneType.AsNormal().ToNumerics(), plane.CenterValue);
                 if (intersection.HasFlag(ViewFrustumIntersection.Inside))
                     sectionQueue.Enqueue(plane.RightChild);
@@ -92,7 +92,7 @@ namespace zzre.rendering
             }
         }
 
-        public void Render(CommandList cl, IEnumerable<RWWorldBuffers.MeshSection>? sections = null)
+        public void Render(CommandList cl, IEnumerable<WorldBuffers.MeshSection>? sections = null)
         {
             if (worldBuffers == null)
                 return;
@@ -119,6 +119,6 @@ namespace zzre.rendering
         }
 
         public void RenderForceAll(CommandList cl) =>
-            Render(cl, worldBuffers?.Sections.OfType<RWWorldBuffers.MeshSection>());
+            Render(cl, worldBuffers?.Sections.OfType<WorldBuffers.MeshSection>());
     }
 }

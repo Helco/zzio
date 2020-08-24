@@ -14,7 +14,7 @@ using zzre.materials;
 
 namespace zzre.rendering
 {
-    public class RWWorldBuffers : BaseDisposable
+    public class WorldBuffers : BaseDisposable
     {
         public abstract class BaseSection
         {
@@ -73,12 +73,12 @@ namespace zzre.rendering
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
         public Vector3 Origin { get; }
 
-        public RWWorldBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
+        public WorldBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
             throw new FileNotFoundException($"Could not find world at {path.ToPOSIXString()}"))
         { }
-        public RWWorldBuffers(ITagContainer diContainer, IResource resource) : this(diContainer, resource.OpenAsRWBS<RWWorld>()) { }
+        public WorldBuffers(ITagContainer diContainer, IResource resource) : this(diContainer, resource.OpenAsRWBS<RWWorld>()) { }
 
-        public RWWorldBuffers(ITagContainer diContainer, RWWorld world)
+        public WorldBuffers(ITagContainer diContainer, RWWorld world)
         {
             var device = diContainer.GetTag<GraphicsDevice>();
             var materialList = world.FindChildById(SectionId.MaterialList, false) as RWMaterialList;
