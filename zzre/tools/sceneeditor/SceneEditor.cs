@@ -48,20 +48,23 @@ namespace zzre.tools
             gridRenderer = new DebugGridRenderer(diContainer);
             gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
             AddDisposable(gridRenderer);
+            locationBuffer = new LocationBuffer(diContainer.GetTag<GraphicsDevice>());
+            AddDisposable(locationBuffer);
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddButton("Open", HandleMenuOpen);
             fbArea = Window.GetTag<FramebufferArea>();
             fbArea.OnRender += gridRenderer.Render;
+            fbArea.OnRender += locationBuffer.Update;
             openFileModal = new OpenFileModal(diContainer);
             openFileModal.Filter = "*.scn";
             openFileModal.IsFilterChangeable = false;
             openFileModal.OnOpenedResource += Load;
-            locationBuffer = new LocationBuffer(diContainer.GetTag<GraphicsDevice>());
 
             localDiContainer = diContainer
                 .ExtendedWith(this, Window, gridRenderer, locationBuffer)
                 .AddTag<IStandardTransformMaterial>(gridRenderer.Material);
             new WorldComponent(localDiContainer);
+            new ModelComponent(localDiContainer);
         }
 
         public void Load(string pathText)

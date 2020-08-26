@@ -34,6 +34,13 @@ namespace zzre.tools
                 editor.OnLoadScene += HandleLoadScene;
             }
 
+            protected override void DisposeManaged()
+            {
+                base.DisposeManaged();
+                buffers?.Dispose();
+                renderer?.Dispose();
+            }
+
             private void HandleLoadScene()
             {
                 buffers?.Dispose();

@@ -17,6 +17,9 @@ namespace zzre
             c.a = v.W;
         }
 
+        public static Quaternion ToNumericsRotation(this zzio.primitives.Vector v) =>
+            Quaternion.Conjugate(Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateLookAt(Vector3.Zero, v.ToNumerics() * -1f, Vector3.UnitY)));
+
         public static Matrix4x4 ToNumerics(this zzio.primitives.Matrix m) => new Matrix4x4(
             m.right.x, m.right.y, m.right.z, m.right.w,
             m.up.x, m.up.y, m.up.z, m.up.w,

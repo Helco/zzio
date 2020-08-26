@@ -45,6 +45,7 @@ namespace zzio.primitives
         public FColor ToFColor() => new FColor(r / 255f, g / 255f, b / 255f, a / 255f);
 
         public IColor WithA(byte newAlpha) => new IColor(r, g, b, newAlpha);
+        public static implicit operator FColor(IColor c) => new FColor(c.r / 255f, c.g / 255f, c.b / 255f, c.a/255f);
 
         public static readonly IColor White = new IColor(0xFFFFFFFF);
         public static readonly IColor Black = new IColor(0xFF000000);

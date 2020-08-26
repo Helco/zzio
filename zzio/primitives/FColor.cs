@@ -34,6 +34,8 @@ namespace zzio.primitives
             w.Write(a);
         }
 
+        public static FColor operator *(FColor a, FColor b) => new FColor(a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a);
+
         public static FColor White => new FColor(1.0f, 1.0f, 1.0f, 1.0f);
         public static FColor Black => new FColor(0.0f, 0.0f, 0.0f, 1.0f);
         public static FColor Clear => new FColor(0.0f, 0.0f, 0.0f, 0.0f);

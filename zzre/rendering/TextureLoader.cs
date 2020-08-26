@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Veldrid;
 using zzio.rwbs;
@@ -27,15 +28,21 @@ namespace zzre
             return new FilePath("resources/textures").Combine(context);
         }
 
-        public (Texture, Sampler) LoadTexture(FilePath basePath, RWMaterial material)
+        public (Texture, Sampler) LoadTexture(FilePath basePath, RWMaterial material) =>
+            LoadTexture(new[] { basePath }, material);
+
+        public (Texture, Sampler) LoadTexture(IEnumerable<FilePath> basePaths, RWMaterial material)
         {
             var texSection = material.FindChildById(SectionId.Texture, true) as RWTexture;
             if (texSection == null)
                 throw new InvalidOperationException($"Given material is not textured");
-            return LoadTexture(basePath, texSection);
+            return LoadTexture(basePaths, texSection);
         }
 
-        public (Texture, Sampler) LoadTexture(FilePath basePath, RWTexture texSection)
+        public (Texture, Sampler) LoadTexture(FilePath basePath, RWTexture texSection) =>
+            LoadTexture(new[] { basePath }, texSection);
+        
+        public (Texture, Sampler) LoadTexture(IEnumerable<FilePath> basePaths, RWTexture texSection)
         {
             var addressModeU = ConvertAddressMode(texSection.uAddressingMode);
             var samplerDescription = new SamplerDescription()
@@ -48,14 +55,15 @@ namespace zzre
             var nameSection = texSection.FindChildById(SectionId.String, true) as RWString;
             if (nameSection == null)
                 throw new InvalidDataException("Could not find filename section in RWTexture");
-            var fullPath = basePath.Combine(nameSection.value);
 
-            var texture =
-                TryLoadDDSTexture(fullPath) ??
-                TryLoadBMPTexture(fullPath) ??
-                null;
+            var texture = basePaths
+                .Select(basePath => basePath.Combine(nameSection.value))
+                .Select(fullPath =>
+                    TryLoadDDSTexture(fullPath) ??
+                    TryLoadBMPTexture(fullPath))
+                .FirstOrDefault(t => t != null);
             if (texture == null)
-                throw new InvalidDataException($"Could not load texture at {fullPath.ToPOSIXString()}");
+                throw new InvalidDataException($"Could not load texture {nameSection.value}");
 
             texture.Name = nameSection.value;
             return (texture, device.ResourceFactory.CreateSampler(samplerDescription));
