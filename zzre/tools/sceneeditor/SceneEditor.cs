@@ -29,6 +29,8 @@ namespace zzre.tools
 
         private ITagContainer localDiContainer;
         private Scene? scene;
+        private Type? selectedType;
+        private int selectedIndex = -1;
 
         public IResource? CurrentResource { get; private set; }
         public Window Window { get; }
@@ -102,5 +104,20 @@ namespace zzre.tools
             openFileModal.InitialSelectedResource = CurrentResource;
             openFileModal.Modal.Open();
         }
+
+        private void ClearSelection()
+        {
+            selectedType = null;
+            selectedIndex = -1;
+        }
+
+        private void SetSelection<T>(int index)
+        {
+            selectedType = typeof(T);
+            selectedIndex = index;
+        }
+
+        private bool IsSelected<T>(int index) =>
+            selectedType == typeof(T) && selectedIndex == index;
     }
 }

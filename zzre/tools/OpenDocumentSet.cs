@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
+using zzio.utils;
 using zzio.vfs;
 using zzre.imgui;
 
@@ -45,12 +46,15 @@ namespace zzre.tools
             return false;
         }
 
-        public TEditor OpenWith<TEditor>(string pathText) where TEditor : IDocumentEditor
+        public TEditor OpenWith<TEditor>(string pathText) where TEditor : IDocumentEditor =>
+            OpenWith<TEditor>(new FilePath(pathText));
+
+        public TEditor OpenWith<TEditor>(FilePath path) where TEditor : IDocumentEditor
         {
             var resourcePool = diContainer.GetTag<IResourcePool>();
-            var resource = resourcePool.FindFile(pathText);
+            var resource = resourcePool.FindFile(path.ToPOSIXString());
             if (resource == null)
-                throw new FileNotFoundException($"Could not find resource at {pathText}");
+                throw new FileNotFoundException($"Could not find resource at {path.ToPOSIXString()}");
             return OpenWith<TEditor>(resource);
         }
 

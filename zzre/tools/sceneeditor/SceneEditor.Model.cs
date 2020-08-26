@@ -9,6 +9,8 @@ using zzio.utils;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
+using ImGuiNET;
+using static ImGuiNET.ImGui;
 
 namespace zzre.tools
 {
@@ -19,7 +21,7 @@ namespace zzre.tools
             private readonly ITagContainer diContainer;
             private readonly DeviceBufferRange locationRange;
             private readonly ClumpBuffers clumpBuffers;
-            private readonly IMaterial[] materials;
+            private readonly ModelStandardMaterial[] materials;
 
             public Location Location { get; } = new Location();
             public zzio.scn.Model SceneModel { get; }
@@ -69,7 +71,7 @@ namespace zzre.tools
                 clumpBuffers.SetBuffers(cl);
                 foreach (var (subMesh, index) in clumpBuffers.SubMeshes.Indexed())
                 {
-                    materials[index].Apply(cl);
+                    (materials[index] as IMaterial).Apply(cl);
                     cl.DrawIndexed(
                         indexStart: (uint)subMesh.IndexOffset,
                         indexCount: (uint)subMesh.IndexCount,
@@ -78,6 +80,45 @@ namespace zzre.tools
                         vertexOffset: 0);
                 }
             }
+
+            public void Content()
+            {
+                bool hasChanged = false;
+                if (ImGuiEx.Hyperlink("Model", SceneModel.filename))
+                {
+                    var fullPath = new FilePath("resources/models/models").Combine(SceneModel.filename + ".dff");
+                    diContainer.GetTag<OpenDocumentSet>().OpenWith<ModelViewer>(fullPath);
+                }
+                var color = SceneModel.color.ToFColor().ToNumerics();
+                ColorEdit4("Color", ref color, ImGuiColorEditFlags.NoPicker);
+                NewLine();
+                
+                var pos = Location.LocalPosition;
+                var rotEuler = Location.LocalRotation.ToEuler() * 180.0f / MathF.PI;
+                var scale = Location.LocalScale;
+                hasChanged |= DragFloat3("Position", ref pos);
+                hasChanged |= DragFloat3("Rotation", ref rotEuler);
+                hasChanged |= DragFloat3("Scale", ref scale);
+                NewLine();
+
+                int i1 = SceneModel.i1;
+                int i2 = SceneModel.i2;
+                int i15 = SceneModel.i15;
+                InputInt("I1", ref i1);
+                InputInt("I2", ref i2);
+                InputInt("I15", ref i15);
+
+                if (hasChanged)
+                {
+                    Location.LocalPosition = pos;
+                    Location.LocalRotation = Quaternion.CreateFromYawPitchRoll(rotEuler.Y, rotEuler.X, rotEuler.Z);
+                    Location.LocalScale = scale;
+                    diContainer.GetTag<FramebufferArea>().IsDirty = true;
+                }
+            }
+
+            public override string ToString() =>
+                $"#{SceneModel.idx} - {SceneModel.filename}";
         }
         
         private class ModelComponent : BaseDisposable
@@ -96,6 +137,7 @@ namespace zzre.tools
                 editor.fbArea.OnRender += HandleRender;
                 editor.OnLoadScene += HandleLoadScene;
                 editor.Window.GetTag<MenuBarWindowTag>().AddCheckbox("View/Models", () => ref isVisible, () => editor.fbArea.IsDirty = true);
+                editor.editor.AddInfoSection("Models", HandleInfoSection, false);
             }
 
             protected override void DisposeManaged()
@@ -122,6 +164,25 @@ namespace zzre.tools
                     return;
                 foreach (var model in models)
                     model.Render(cl);
+            }
+
+            private void HandleInfoSection()
+            {
+                foreach (var (model, index) in models.Indexed())
+                {
+                    var flags =
+                        ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick |
+                        (editor.IsSelected<Model>(index) ? ImGuiTreeNodeFlags.Selected : 0);
+                    var isOpen = TreeNodeEx(model.ToString(), flags);
+                    if (IsItemClicked())
+                        editor.SetSelection<Model>(index);
+                    if (!isOpen)
+                        continue;
+                    PushID(index);
+                    model.Content();
+                    PopID();
+                    TreePop();
+                }
             }
         }
     }

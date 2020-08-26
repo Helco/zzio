@@ -27,7 +27,7 @@ namespace zzre.imgui
         private readonly MouseEventArea mouseArea;
         private readonly FramebufferArea fbArea;
 
-        private bool didSetColumnWidth = false;
+        private int didSetColumnWidth = 0;
         private List<(string name, Action content, bool defaultOpen)> infoSections = new List<(string, Action, bool)>();
 
         public Window Window { get; }
@@ -49,10 +49,10 @@ namespace zzre.imgui
         private void HandleContent()
         {
             ImGui.Columns(2, null, true);
-            if (!didSetColumnWidth)
+            if (didSetColumnWidth < 2) // Why not, ImGui is weird
             {
-                ImGui.SetColumnWidth(0, ImGui.GetWindowSize().X * 0.3f);
-                didSetColumnWidth = true;
+                ImGui.SetColumnWidth(0, Window.InitialBounds.Size.X * 0.3f);
+                didSetColumnWidth++;
             }
             ImGui.BeginChild("LeftColumn", ImGui.GetContentRegionAvail(), false, ImGuiWindowFlags.HorizontalScrollbar);
             foreach (var (name, content, isDefaultOpen) in infoSections)
