@@ -16,7 +16,7 @@ namespace zzre.tools
 {
     public partial class SceneEditor
     {
-        private class Model : BaseDisposable
+        private class Model : BaseDisposable, ISelectable
         {
             private readonly ITagContainer diContainer;
             private readonly DeviceBufferRange locationRange;
@@ -25,6 +25,9 @@ namespace zzre.tools
 
             public Location Location { get; } = new Location();
             public zzio.scn.Model SceneModel { get; }
+
+            public string Title => $"#{SceneModel.idx} - {SceneModel.filename}";
+            public Bounds Bounds => clumpBuffers.Bounds;
 
             public Model(ITagContainer diContainer, zzio.scn.Model sceneModel)
             {
@@ -116,9 +119,6 @@ namespace zzre.tools
                     diContainer.GetTag<FramebufferArea>().IsDirty = true;
                 }
             }
-
-            public override string ToString() =>
-                $"#{SceneModel.idx} - {SceneModel.filename}";
         }
         
         private class ModelComponent : BaseDisposable
@@ -172,10 +172,10 @@ namespace zzre.tools
                 {
                     var flags =
                         ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick |
-                        (editor.IsSelected<Model>(index) ? ImGuiTreeNodeFlags.Selected : 0);
-                    var isOpen = TreeNodeEx(model.ToString(), flags);
+                        (model == editor.Selected ? ImGuiTreeNodeFlags.Selected : 0);
+                    var isOpen = TreeNodeEx(model.Title, flags);
                     if (IsItemClicked())
-                        editor.SetSelection<Model>(index);
+                        editor.Selected = model;
                     if (!isOpen)
                         continue;
                     PushID(index);

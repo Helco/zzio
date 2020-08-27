@@ -31,6 +31,9 @@ namespace zzre
         public int TriangleCount => (int)(indexBuffer.SizeInBytes / (sizeof(ushort) * 3));
         public RWSkinPLG? Skin { get; }
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
+        public Vector3 BSphereCenter { get; }
+        public float BSphereRadius { get; }
+        public Bounds Bounds => new Bounds(BSphereCenter, Vector3.One * BSphereRadius / 2.0f);
 
         public ClumpBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
             throw new FileNotFoundException($"Could not find model at {path.ToPOSIXString()}"))
@@ -46,6 +49,8 @@ namespace zzre
             var morphTarget = geometry?.morphTargets[0]; // TODO: morph support for the one model that uses it? 
             if (geometry == null || morphTarget == null || materials == null)
                 throw new InvalidDataException("Could not find valid section structure in clump");
+            BSphereCenter = morphTarget.bsphereCenter.ToNumerics();
+            BSphereRadius = morphTarget.bsphereRadius;
 
             var vertices = new ModelStandardVertex[morphTarget.vertices.Length];
             for (int i = 0; i < vertices.Length; i++)
