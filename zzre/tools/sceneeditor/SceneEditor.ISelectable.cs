@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Veldrid;
 using zzio.primitives;
+using zzre.core.rendering;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
@@ -50,11 +51,11 @@ namespace zzre.tools
                 this.diContainer = diContainer;
                 editor = diContainer.GetTag<SceneEditor>();
                 locationBuffer = diContainer.GetTag<LocationBuffer>();
-                var parentMaterial = diContainer.GetTag<IStandardTransformMaterial>();
+                var camera = diContainer.GetTag<Camera>();
                 var fbArea = editor.Window.GetTag<FramebufferArea>();
 
                 boundsRenderer = new DebugBoundsLineRenderer(diContainer);
-                boundsRenderer.Material.LinkTransformsTo(parentMaterial);
+                boundsRenderer.Material.LinkTransformsTo(camera);
                 boundsRenderer.Color = IColor.Red;
                 editor.OnNewSelection += HandleNewSelection;
                 fbArea.OnRender += HandleRender;

@@ -11,6 +11,7 @@ using zzio.rwbs;
 using zzio.utils;
 using zzio.vfs;
 using zzre.core;
+using zzre.core.rendering;
 using zzre.debug;
 using zzre.imgui;
 using zzre.materials;
@@ -34,6 +35,8 @@ namespace zzre.tools
         private readonly DebugPlaneRenderer planeRenderer;
         private readonly DebugHexahedronLineRenderer frustumRenderer;
         private readonly WorldRenderer worldRenderer;
+        private readonly Camera camera;
+        private readonly LocationBuffer locationBuffer;
 
         private ViewFrustumCulling viewFrustumCulling => worldRenderer.ViewFrustumCulling;
         private IReadOnlyList<ModelStandardMaterial> materials => worldRenderer.Materials;
@@ -56,50 +59,59 @@ namespace zzre.tools
             Window.AddTag(this);
             Window.InitialBounds = new Rect(float.NaN, float.NaN, 1100.0f, 600.0f);
             editor = new TwoColumnEditorTag(Window, diContainer);
-            controls = new FlyControlsTag(Window, diContainer);
             var onceAction = new OnceAction();
             Window.AddTag(onceAction);
             Window.OnContent += onceAction.Invoke;
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddButton("Open", HandleMenuOpen);
             var gridRenderer = new DebugGridRenderer(diContainer);
-            gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
+            //gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
             AddDisposable(gridRenderer);
-            fbArea = Window.GetTag<FramebufferArea>();
-            fbArea.OnRender += gridRenderer.Render;
-            fbArea.OnRender += HandleRender;
             modelMaterialEdit = new ModelMaterialEdit(Window, diContainer);
             modelMaterialEdit.OpenEntriesByDefault = false;
             diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
-
             openFileModal = new OpenFileModal(diContainer);
             openFileModal.Filter = "*.bsp";
             openFileModal.IsFilterChangeable = false;
             openFileModal.OnOpenedResource += Load;
+
+            locationBuffer = new LocationBuffer(diContainer.GetTag<GraphicsDevice>());
+            AddDisposable(locationBuffer);
+            camera = new Camera(diContainer.ExtendedWith(locationBuffer));
+            AddDisposable(camera);
+            controls = new FlyControlsTag(Window, camera.Location, diContainer);
+            worldTransform = new UniformBuffer<Matrix4x4>(diContainer.GetTag<GraphicsDevice>().ResourceFactory);
+            worldTransform.Ref = Matrix4x4.Identity;
+            AddDisposable(worldTransform);
+            fbArea = Window.GetTag<FramebufferArea>();
+            fbArea.OnRender += locationBuffer.Update;
+            fbArea.OnRender += worldTransform.Update;
+            fbArea.OnRender += camera.Update;
+            fbArea.OnRender += gridRenderer.Render;
+            fbArea.OnRender += HandleRender;
 
             editor.AddInfoSection("Statistics", HandleStatisticsContent);
             editor.AddInfoSection("Materials", HandleMaterialsContent, false);
             editor.AddInfoSection("Sections", HandleSectionsContent, false);
             editor.AddInfoSection("ViewFrustum Culling", HandleViewFrustumCulling, false);
 
-            worldTransform = new UniformBuffer<Matrix4x4>(diContainer.GetTag<GraphicsDevice>().ResourceFactory);
-            worldTransform.Ref = Matrix4x4.Identity;
-            AddDisposable(worldTransform);
-
             boundsRenderer = new DebugBoundsLineRenderer(diContainer);
             boundsRenderer.Color = IColor.Red;
-            boundsRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, worldTransform);
+            boundsRenderer.Material.LinkTransformsTo(camera);
+            boundsRenderer.Material.LinkTransformsTo(world: worldTransform);
             AddDisposable(boundsRenderer);
 
             planeRenderer = new DebugPlaneRenderer(diContainer);
-            planeRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, worldTransform);
+            planeRenderer.Material.LinkTransformsTo(camera);
+            planeRenderer.Material.LinkTransformsTo(world: worldTransform);
             AddDisposable(planeRenderer);
 
             frustumRenderer = new DebugHexahedronLineRenderer(diContainer);
-            frustumRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
+            frustumRenderer.Material.LinkTransformsTo(camera);
+            frustumRenderer.Material.LinkTransformsTo(world: worldTransform);
             AddDisposable(frustumRenderer);
 
-            worldRenderer = new WorldRenderer(diContainer.ExtendedWith<IStandardTransformMaterial>(boundsRenderer.Material));
+            worldRenderer = new WorldRenderer(diContainer.ExtendedWith(camera, locationBuffer));
             AddDisposable(worldRenderer);
         }
 
@@ -129,7 +141,7 @@ namespace zzre.tools
             UpdateSectionDepths();
             highlightedSectionI = -1;
             controls.ResetView();
-            controls.Position = worldBuffers.Origin;
+            camera.Location.LocalPosition = -worldBuffers.Origin;
             fbArea.IsDirty = true;
             Window.Title = $"World Viewer - {resource.Path.ToPOSIXString()}";
         }
@@ -155,13 +167,12 @@ namespace zzre.tools
 
         private void HandleRender(CommandList cl)
         {
-            worldTransform.Update(cl);
             if (worldBuffers == null)
                 return;
 
             if (updateViewFrustumCulling)
             {
-                viewFrustumCulling.SetViewProjection(controls.View.Value, controls.Projection.Value);
+                viewFrustumCulling.SetViewProjection(camera.View, camera.Projection);
                 worldRenderer.UpdateVisibility();
             }
 

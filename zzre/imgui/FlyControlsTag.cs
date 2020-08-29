@@ -7,73 +7,28 @@ using zzre.rendering;
 
 namespace zzre.imgui
 {
-    public class FlyControlsTag : BaseDisposable
+    public class FlyControlsTag
     {
-        private const float FieldOfView = 60.0f * 3.141592653f / 180.0f;
         private const float DefaultSpeed = 10.0f;
 
         private readonly FramebufferArea fbArea;
         private readonly MouseEventArea mouseArea;
         private readonly GameTime gameTime;
-        private Vector3 position = Vector3.Zero;
-        private Vector2 cameraAngle = Vector2.Zero;
+        private readonly Location location;
         private float speed = DefaultSpeed;
+        private Vector2 cameraAngle;
 
-        private Matrix4x4 RotationMatrix => Matrix4x4.CreateRotationY(cameraAngle.X) * Matrix4x4.CreateRotationX(cameraAngle.Y);
-        private Matrix4x4 InvRotationMatrix => Matrix4x4.CreateRotationX(-cameraAngle.Y) * Matrix4x4.CreateRotationY(-cameraAngle.X);
-
-        public UniformBuffer<Matrix4x4> Projection { get; }
-        public UniformBuffer<Matrix4x4> View { get; }
-        public UniformBuffer<Matrix4x4> World { get; }
-
-        public Vector3 Position
-        {
-            get => position;
-            set
-            {
-                position = value;
-                UpdateCamera();
-            }
-        }
-
-        public FlyControlsTag(Window window, ITagContainer diContainer)
+        public FlyControlsTag(Window window, Location location, ITagContainer diContainer)
         {
             window.AddTag(this);
+            this.location = location;
             var device = diContainer.GetTag<GraphicsDevice>();
             gameTime = diContainer.GetTag<GameTime>();
             fbArea = window.GetTag<FramebufferArea>();
-            fbArea.OnRender += HandleRender;
-            fbArea.OnResize += HandleResize;
             mouseArea = window.GetTag<MouseEventArea>();
             mouseArea.OnDrag += HandleDrag;
             mouseArea.OnScroll += HandleScroll;
-
-            Projection = new UniformBuffer<Matrix4x4>(device.ResourceFactory);
-            View = new UniformBuffer<Matrix4x4>(device.ResourceFactory);
-            World = new UniformBuffer<Matrix4x4>(device.ResourceFactory);
-            World.Ref = Matrix4x4.Identity;
             ResetView();
-            HandleResize();
-        }
-
-        protected override void DisposeManaged()
-        {
-            base.DisposeManaged();
-            Projection.Dispose();
-            View.Dispose();
-            World.Dispose();
-        }
-
-        private void HandleRender(CommandList cl)
-        {
-            Projection.Update(cl);
-            View.Update(cl);
-            World.Update(cl);
-        }
-
-        private void HandleResize()
-        {
-            Projection.Ref = Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, fbArea.Ratio, 0.1f, 300.0f);
         }
 
         private void HandleDrag(ImGuiMouseButton button, Vector2 delta)
@@ -81,21 +36,26 @@ namespace zzre.imgui
             if (button != ImGuiMouseButton.Right)
                 return;
 
-            cameraAngle += delta * 0.01f;
-            while (cameraAngle.X > MathF.PI) cameraAngle.X -= 2 * MathF.PI;
-            while (cameraAngle.X < -MathF.PI) cameraAngle.X += 2 * MathF.PI;
-            cameraAngle.Y = Math.Clamp(cameraAngle.Y, -MathF.PI / 2.0f, MathF.PI / 2.0f);
+            cameraAngle.Y -= delta.X * 0.01f;
+            cameraAngle.X -= delta.Y * 0.01f;
+            while (cameraAngle.Y > MathF.PI) cameraAngle.Y -= 2 * MathF.PI;
+            while (cameraAngle.Y < -MathF.PI) cameraAngle.Y += 2 * MathF.PI;
+            cameraAngle.X = Math.Clamp(cameraAngle.X, -MathF.PI / 2.0f, MathF.PI / 2.0f);
+            location.LocalRotation = Quaternion.CreateFromYawPitchRoll(cameraAngle.Y, cameraAngle.X, 0.0f);
 
-            var moveDelta = gameTime.Delta * speed;
-            if (ImGui.IsKeyDown((int)Key.ShiftLeft)) moveDelta *= 2.0f;
-            if (ImGui.IsKeyDown((int)Key.W)) position += Vector3.Transform(Vector3.UnitZ * moveDelta, InvRotationMatrix);
-            if (ImGui.IsKeyDown((int)Key.S)) position += Vector3.Transform(-Vector3.UnitZ * moveDelta, InvRotationMatrix);
-            if (ImGui.IsKeyDown((int)Key.D)) position += Vector3.Transform(-Vector3.UnitX * moveDelta, InvRotationMatrix);
-            if (ImGui.IsKeyDown((int)Key.A)) position += Vector3.Transform(Vector3.UnitX * moveDelta, InvRotationMatrix);
-            if (ImGui.IsKeyDown((int)Key.E)) position += Vector3.Transform(-Vector3.UnitY * moveDelta, InvRotationMatrix);
-            if (ImGui.IsKeyDown((int)Key.Q)) position += Vector3.Transform(Vector3.UnitY * moveDelta, InvRotationMatrix);
+            var moveDir = Vector3.Zero;
+            var speedFactor = 1.0f;
+            if (ImGui.IsKeyDown((int)Key.ShiftLeft)) speedFactor *= 2.0f;
+            if (ImGui.IsKeyDown((int)Key.ControlLeft)) speedFactor /= 2.0f;
+            if (ImGui.IsKeyDown((int)Key.W)) moveDir += location.GlobalForward;
+            if (ImGui.IsKeyDown((int)Key.S)) moveDir -= location.GlobalForward;
+            if (ImGui.IsKeyDown((int)Key.D)) moveDir += location.GlobalRight;
+            if (ImGui.IsKeyDown((int)Key.A)) moveDir -= location.GlobalRight;
+            if (ImGui.IsKeyDown((int)Key.E)) moveDir += location.GlobalUp;
+            if (ImGui.IsKeyDown((int)Key.Q)) moveDir -= location.GlobalUp;
+            location.LocalPosition = location.LocalPosition + moveDir * gameTime.Delta * speed * speedFactor;
 
-            UpdateCamera();
+            fbArea.IsDirty = true;
         }
 
         private void HandleScroll(float scroll)
@@ -105,15 +65,10 @@ namespace zzre.imgui
 
         public void ResetView()
         {
-            position = Vector3.Zero;
             cameraAngle = Vector2.Zero;
+            location.LocalPosition = Vector3.Zero;
+            location.LocalRotation = Quaternion.Identity;
             speed = DefaultSpeed;
-            UpdateCamera();
-        }
-
-        private void UpdateCamera()
-        {
-            View.Ref = Matrix4x4.CreateTranslation(position) * RotationMatrix;
             fbArea.IsDirty = true;
         }
     }

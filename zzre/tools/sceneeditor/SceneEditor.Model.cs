@@ -11,6 +11,7 @@ using zzre.materials;
 using zzre.rendering;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
+using zzre.core.rendering;
 
 namespace zzre.tools
 {
@@ -38,7 +39,7 @@ namespace zzre.tools
                     new FilePath("resources/textures/models"),
                     new FilePath("resources/textures/worlds")
                 };
-                var parentMaterial = diContainer.GetTag<IStandardTransformMaterial>();
+                var camera = diContainer.GetTag<Camera>();
                 SceneModel = sceneModel;
                 locationRange = diContainer.GetTag<LocationBuffer>().Add(Location);
                 Location.LocalPosition = sceneModel.pos.ToNumerics();
@@ -51,7 +52,7 @@ namespace zzre.tools
                     var rwMaterial = subMesh.Material;
                     var material = new ModelStandardMaterial(diContainer);
                     (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBasePaths, rwMaterial);
-                    material.LinkTransformsTo(parentMaterial);
+                    material.LinkTransformsTo(camera);
                     material.World.BufferRange = locationRange;
                     material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
                     material.Uniforms.Ref.vertexColorFactor = 0.0f;

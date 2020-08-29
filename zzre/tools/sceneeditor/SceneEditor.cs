@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Veldrid;
 using zzio.scn;
 using zzio.vfs;
 using zzre.core;
+using zzre.core.rendering;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
@@ -24,6 +24,7 @@ namespace zzre.tools
         private readonly OpenFileModal openFileModal;
         private readonly LocationBuffer locationBuffer;
         private readonly DebugGridRenderer gridRenderer;
+        private readonly Camera camera;
 
         private event Action OnLoadScene = () => { };
 
@@ -41,28 +42,33 @@ namespace zzre.tools
             Window.AddTag(this);
             Window.InitialBounds = new Rect(float.NaN, float.NaN, 1100.0f, 600.0f);
             editor = new TwoColumnEditorTag(Window, diContainer);
-            controls = new FlyControlsTag(Window, diContainer);
             var onceAction = new OnceAction();
             Window.AddTag(onceAction);
             Window.OnContent += onceAction.Invoke;
-            gridRenderer = new DebugGridRenderer(diContainer);
-            gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
-            AddDisposable(gridRenderer);
             locationBuffer = new LocationBuffer(diContainer.GetTag<GraphicsDevice>());
             AddDisposable(locationBuffer);
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddButton("Open", HandleMenuOpen);
-            fbArea = Window.GetTag<FramebufferArea>();
-            fbArea.OnRender += gridRenderer.Render;
-            fbArea.OnRender += locationBuffer.Update;
             openFileModal = new OpenFileModal(diContainer);
             openFileModal.Filter = "*.scn";
             openFileModal.IsFilterChangeable = false;
             openFileModal.OnOpenedResource += Load;
 
+            camera = new Camera(diContainer.ExtendedWith(locationBuffer));
+            AddDisposable(camera);
+            controls = new FlyControlsTag(Window, camera.Location, diContainer);
+            gridRenderer = new DebugGridRenderer(diContainer);
+            gridRenderer.Material.LinkTransformsTo(camera);
+            gridRenderer.Material.World.Ref = Matrix4x4.Identity;
+            AddDisposable(gridRenderer);
+            fbArea = Window.GetTag<FramebufferArea>();
+            fbArea.OnRender += camera.Update;
+            fbArea.OnRender += locationBuffer.Update;
+            fbArea.OnRender += gridRenderer.Render;
+
             localDiContainer = diContainer
                 .ExtendedWith(this, Window, gridRenderer, locationBuffer)
-                .AddTag<IStandardTransformMaterial>(gridRenderer.Material);
+                .AddTag(camera);
             new WorldComponent(localDiContainer);
             new ModelComponent(localDiContainer);
             new SelectionComponent(localDiContainer);

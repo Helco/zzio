@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
+using zzre.core.rendering;
 using zzre.rendering;
 
 namespace zzre.materials
@@ -30,6 +31,12 @@ namespace zzre.materials
                 me.View.Buffer = view.Buffer;
             if (world != null)
                 me.World.Buffer = world.Buffer;
+        }
+
+        public static void LinkTransformsTo(this IStandardTransformMaterial me, Camera camera)
+        {
+            me.Projection.BufferRange = camera.ProjectionRange;
+            me.View.BufferRange = camera.ViewRange;
         }
     }
 }

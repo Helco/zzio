@@ -14,6 +14,7 @@ namespace zzre.rendering
         private uint matrixStride;
         private int matrixStrideAsMultiple;
         private WeakReference<Location>?[] locations;
+        private bool[] isInverted;
         private Matrix4x4[] matrices;
         private int nextFreeIndex = 0;
         private DeviceBuffer buffer;
@@ -30,6 +31,7 @@ namespace zzre.rendering
             matrixStrideAsMultiple = (int)(matrixStride / MatrixSize);
 
             locations = new WeakReference<Location>?[capacity];
+            isInverted = new bool[capacity];
             matrices = new Matrix4x4[capacity];
             buffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)capacity * matrixStride, BufferUsage.UniformBuffer));
@@ -41,7 +43,7 @@ namespace zzre.rendering
             buffer.Dispose();
         }
 
-        public DeviceBufferRange Add(Location location)
+        public DeviceBufferRange Add(Location location, bool inverted = false)
         {
             if (IsFull && !FindSlotToCleanup())
                 throw new InvalidOperationException("LocationBuffer has no available slot free");
@@ -49,6 +51,7 @@ namespace zzre.rendering
             Count++;
             int usedIndex = nextFreeIndex++;
             locations[usedIndex] = new WeakReference<Location>(location);
+            isInverted[usedIndex] = inverted;
             if (!IsFull)
             {
                 while (locations[nextFreeIndex]?.TryGetTarget(out _) ?? false)
@@ -105,7 +108,9 @@ namespace zzre.rendering
                 if (minIndex < 0)
                     minIndex = i;
                 maxIndex = i;
-                matrices[i * matrixStrideAsMultiple] = location!.LocalToWorld;
+                matrices[i * matrixStrideAsMultiple] = isInverted[i]
+                    ? location!.WorldToLocal
+                    : location!.LocalToWorld;
             }
             return (minIndex, maxIndex);
         }

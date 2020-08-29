@@ -65,7 +65,7 @@ namespace zzre
         public Quaternion GlobalRotation => Quaternion.CreateFromRotationMatrix(LocalToWorld);
         public Vector3 GlobalScale => (Parent?.LocalScale ?? Vector3.One) * LocalScale;
 
-        public Vector3 GlobalForward => Vector3.Transform(Vector3.UnitZ, GlobalRotation);
+        public Vector3 GlobalForward => Vector3.Transform(-Vector3.UnitZ, GlobalRotation);
         public Vector3 GlobalUp => Vector3.Transform(Vector3.UnitY, GlobalRotation);
         public Vector3 GlobalRight => Vector3.Transform(Vector3.UnitX, GlobalRotation);
     }

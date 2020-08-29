@@ -6,6 +6,7 @@ using zzio.rwbs;
 using zzio.utils;
 using zzre.materials;
 using Veldrid;
+using zzre.core.rendering;
 
 namespace zzre.rendering
 {
@@ -25,22 +26,27 @@ namespace zzre.rendering
             }
         }
 
+        private readonly DeviceBufferRange locationRange;
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
         public IReadOnlyList<ModelStandardMaterial> Materials => materials;
 
         private List<WorldBuffers.MeshSection> visibleMeshSections = new List<WorldBuffers.MeshSection>();
         public IReadOnlyList<WorldBuffers.MeshSection> VisibleMeshSections => visibleMeshSections;
 
+        public Location Location { get; } = new Location();
         public ViewFrustumCulling ViewFrustumCulling { get; } = new ViewFrustumCulling();
 
         public WorldRenderer(ITagContainer diContainer)
         {
             this.diContainer = diContainer;
+            var locationBuffer = diContainer.GetTag<LocationBuffer>();
+            locationRange = locationBuffer.Add(Location);
         }
 
         protected override void DisposeManaged()
         {
             base.DisposeManaged();
+            diContainer.GetTag<LocationBuffer>().Remove(locationRange);
             foreach (var material in materials)
                 material.Dispose();
         }
@@ -54,14 +60,15 @@ namespace zzre.rendering
 
             var textureBase = new FilePath("resources/textures/worlds");
             var textureLoader = diContainer.GetTag<TextureLoader>();
-            var parentMaterial = diContainer.GetTag<IStandardTransformMaterial>();
+            var camera = diContainer.GetTag<Camera>();
 
             materials = new ModelStandardMaterial[worldBuffers.Materials.Count];
             foreach (var (rwMaterial, index) in worldBuffers.Materials.Indexed())
             {
                 var material = materials[index] = new ModelStandardMaterial(diContainer);
                 (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBase, rwMaterial);
-                material.LinkTransformsTo(parentMaterial);
+                material.LinkTransformsTo(camera);
+                material.World.BufferRange = locationRange;
                 material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
             }
         }
