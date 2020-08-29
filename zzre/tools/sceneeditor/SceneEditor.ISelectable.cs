@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Veldrid;
 using zzio.primitives;
@@ -35,6 +36,9 @@ namespace zzre.tools
         }
 
         private event Action<ISelectable?> OnNewSelection = _ => { };
+
+        private void MoveCameraToSelected() =>
+            localDiContainer.GetTag<SelectionComponent>().MoveCameraToSelected();
 
         private class SelectionComponent : BaseDisposable
         {
@@ -86,6 +90,20 @@ namespace zzre.tools
                 if (selectedBounds == null)
                     return;
                 boundsRenderer.Render(cl);
+            }
+
+            public void MoveCameraToSelected()
+            {
+                if (editor.Selected == null)
+                    return;
+                var selected = editor.Selected;
+                var camera = editor.camera;
+                var size = selected.Bounds.Size;
+                var maxSize = Math.Max(Math.Max(size.X, size.Y), size.Z);
+                var distance = Math.Abs(maxSize / MathF.Sin(camera.VFoV / 2f));
+                camera.Location.LocalPosition =
+                    Vector3.Transform(selected.Bounds.Center, selected.Location.LocalToWorld) -
+                    camera.Location.GlobalForward * distance;
             }
         }
     }

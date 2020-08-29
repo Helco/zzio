@@ -177,6 +177,8 @@ namespace zzre.tools
                     var isOpen = TreeNodeEx(model.Title, flags);
                     if (IsItemClicked())
                         editor.Selected = model;
+                    if (IsItemClicked() && IsMouseDoubleClicked(ImGuiMouseButton.Left))
+                        editor.MoveCameraToSelected();
                     if (!isOpen)
                         continue;
                     PushID(index);
