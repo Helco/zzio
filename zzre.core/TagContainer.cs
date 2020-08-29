@@ -19,9 +19,9 @@ namespace zzre
 
         public bool HasTag<TTag>() where TTag : class => TryGetTag<TTag>(out var _);
         
-        public bool TryGetTag<TTag>([MaybeNullWhen(false)] out TTag tag) where TTag : class
+        public bool TryGetTag<TTag>([NotNullWhen(true)] out TTag tag) where TTag : class
         {
-            tag = default;
+            tag = default!;
             object? tagBase = default;
             if (!tags.TryGetValue(typeof(TTag), out tagBase))
                 tagBase = tags.FirstOrDefault(p => typeof(TTag).IsAssignableFrom(p.Value.GetType())).Value;

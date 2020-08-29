@@ -52,7 +52,7 @@ namespace zzre.tools
                 editor = diContainer.GetTag<SceneEditor>();
                 locationBuffer = diContainer.GetTag<LocationBuffer>();
                 var camera = diContainer.GetTag<Camera>();
-                var fbArea = editor.Window.GetTag<FramebufferArea>();
+                var fbArea = diContainer.GetTag<FramebufferArea>();
 
                 boundsRenderer = new DebugBoundsLineRenderer(diContainer);
                 boundsRenderer.Material.LinkTransformsTo(camera);

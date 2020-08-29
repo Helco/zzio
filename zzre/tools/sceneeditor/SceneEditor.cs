@@ -67,6 +67,7 @@ namespace zzre.tools
             fbArea.OnRender += gridRenderer.Render;
 
             localDiContainer = diContainer
+                .FallbackTo(Window)
                 .ExtendedWith(this, Window, gridRenderer, locationBuffer)
                 .AddTag(camera);
             new WorldComponent(localDiContainer);

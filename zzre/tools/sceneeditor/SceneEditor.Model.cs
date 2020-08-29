@@ -137,7 +137,7 @@ namespace zzre.tools
                 editor = diContainer.GetTag<SceneEditor>();
                 editor.fbArea.OnRender += HandleRender;
                 editor.OnLoadScene += HandleLoadScene;
-                editor.Window.GetTag<MenuBarWindowTag>().AddCheckbox("View/Models", () => ref isVisible, () => editor.fbArea.IsDirty = true);
+                diContainer.GetTag<MenuBarWindowTag>().AddCheckbox("View/Models", () => ref isVisible, () => editor.fbArea.IsDirty = true);
                 editor.editor.AddInfoSection("Models", HandleInfoSection, false);
             }
 

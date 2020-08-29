@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace zzre.core
@@ -21,6 +22,9 @@ namespace zzre.core
             extension.AddTag(tag);
             return this;
         }
+
+        public bool TryGetTag<TTag>([NotNullWhen(true)] out TTag tag) where TTag : class =>
+            extension.TryGetTag(out tag) || parent.TryGetTag(out tag);
 
         public TTag GetTag<TTag>() where TTag : class
         {

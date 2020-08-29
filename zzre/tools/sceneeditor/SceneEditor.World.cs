@@ -24,11 +24,10 @@ namespace zzre.tools
             {
                 diContainer.AddTag(this);
                 this.diContainer = diContainer;
-                var window = diContainer.GetTag<Window>();
-                var fbArea = window.GetTag<FramebufferArea>();
+                var fbArea = diContainer.GetTag<FramebufferArea>();
                 fbArea.OnRender += HandleRender;
                 renderer = new WorldRenderer(diContainer);
-                window.GetTag<MenuBarWindowTag>().AddCheckbox("View/World", () => ref isVisible, () => fbArea.IsDirty = true);
+                diContainer.GetTag<MenuBarWindowTag>().AddCheckbox("View/World", () => ref isVisible, () => fbArea.IsDirty = true);
                 editor = diContainer.GetTag<SceneEditor>();
                 editor.OnLoadScene += HandleLoadScene;
             }
