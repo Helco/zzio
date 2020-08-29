@@ -33,7 +33,7 @@ namespace zzre
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
         public Vector3 BSphereCenter { get; }
         public float BSphereRadius { get; }
-        public Bounds Bounds => new Bounds(BSphereCenter, Vector3.One * BSphereRadius / 2.0f);
+        public Bounds Bounds => new Bounds(BSphereCenter, Vector3.One * BSphereRadius * 2.0f);
 
         public ClumpBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
             throw new FileNotFoundException($"Could not find model at {path.ToPOSIXString()}"))
