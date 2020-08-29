@@ -1,6 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using Veldrid;
+using zzio.primitives;
+using zzre.imgui;
+using zzre.materials;
+using zzre.rendering;
 
 namespace zzre.tools
 {
@@ -28,5 +34,58 @@ namespace zzre.tools
         }
 
         private event Action<ISelectable?> OnNewSelection = _ => { };
+
+        private class SelectionComponent : BaseDisposable
+        {
+            private readonly SceneEditor editor;
+            private readonly ITagContainer diContainer;
+            private readonly LocationBuffer locationBuffer;
+            private readonly DebugBoundsLineRenderer boundsRenderer;
+
+            private DeviceBufferRange? selectedBounds;
+
+            public SelectionComponent(ITagContainer diContainer)
+            {
+                diContainer.AddTag(this);
+                this.diContainer = diContainer;
+                editor = diContainer.GetTag<SceneEditor>();
+                locationBuffer = diContainer.GetTag<LocationBuffer>();
+                var parentMaterial = diContainer.GetTag<IStandardTransformMaterial>();
+                var fbArea = editor.Window.GetTag<FramebufferArea>();
+
+                boundsRenderer = new DebugBoundsLineRenderer(diContainer);
+                boundsRenderer.Material.LinkTransformsTo(parentMaterial);
+                boundsRenderer.Color = IColor.Red;
+                editor.OnNewSelection += HandleNewSelection;
+                fbArea.OnRender += HandleRender;
+            }
+
+            protected override void DisposeManaged()
+            {
+                base.DisposeManaged();
+                boundsRenderer.Dispose();
+                if (selectedBounds != null)
+                    locationBuffer.Remove(selectedBounds.Value);
+            }
+
+            private void HandleNewSelection(ISelectable? newSelected)
+            {
+                if (selectedBounds != null)
+                    locationBuffer.Remove(selectedBounds.Value);
+                if (newSelected == null)
+                    return;
+                selectedBounds = locationBuffer.Add(newSelected.Location);
+                boundsRenderer.Bounds = newSelected.Bounds;
+                boundsRenderer.Material.World.BufferRange = selectedBounds.Value;
+                editor.fbArea.IsDirty = true;
+            }
+
+            private void HandleRender(CommandList cl)
+            {
+                if (selectedBounds == null)
+                    return;
+                boundsRenderer.Render(cl);
+            }
+        }
     }
 }

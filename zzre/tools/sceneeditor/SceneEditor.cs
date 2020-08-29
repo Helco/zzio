@@ -65,6 +65,7 @@ namespace zzre.tools
                 .AddTag<IStandardTransformMaterial>(gridRenderer.Material);
             new WorldComponent(localDiContainer);
             new ModelComponent(localDiContainer);
+            new SelectionComponent(localDiContainer);
         }
 
         public void Load(string pathText)
