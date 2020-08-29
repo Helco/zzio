@@ -66,7 +66,8 @@ namespace zzre
         public Bounds ScaledBy(Vector3 s) => new Bounds(Center, Vector3.Multiply(Size, s));
         public Bounds At(Vector3 newCenter) => new Bounds(newCenter, Size);
         public Bounds WithSizeOf(Vector3 newSize) => new Bounds(Center, newSize);
-        public Bounds Union(Bounds other) => Bounds.FromMinMax(Vector3.Min(Min, other.Min), Vector3.Max(Max, other.Max));
+        public Bounds Union(Bounds other) => FromMinMax(Vector3.Min(Min, other.Min), Vector3.Max(Max, other.Max));
+        public Bounds Union(Vector3 v) => Union(new Bounds(v, Vector3.Zero));
 
         public bool IsInside(Vector3 pos) =>
             pos.X >= Min.X && pos.X < Max.X &&

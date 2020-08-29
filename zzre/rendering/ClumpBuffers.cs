@@ -33,7 +33,7 @@ namespace zzre
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
         public Vector3 BSphereCenter { get; }
         public float BSphereRadius { get; }
-        public Bounds Bounds => new Bounds(BSphereCenter, Vector3.One * BSphereRadius * 2.0f);
+        public Bounds Bounds { get; }
 
         public ClumpBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
             throw new FileNotFoundException($"Could not find model at {path.ToPOSIXString()}"))
@@ -53,12 +53,15 @@ namespace zzre
             BSphereRadius = morphTarget.bsphereRadius;
 
             var vertices = new ModelStandardVertex[morphTarget.vertices.Length];
+            var bounds = new Bounds(morphTarget.vertices.First().ToNumerics(), Vector3.Zero);
             for (int i = 0; i < vertices.Length; i++)
             {
                 vertices[i].pos = morphTarget.vertices[i].ToNumerics();
                 vertices[i].color = geometry.colors.Length > 0 ? geometry.colors[i] : new IColor(255);
                 vertices[i].tex = geometry.texCoords.Length > 0 ? geometry.texCoords[0][i].ToNumerics() : Vector2.Zero;
+                bounds = bounds.Union(vertices[i].pos);
             }
+            Bounds = bounds;
             vertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription((uint)vertices.Length * ModelStandardVertex.Stride, BufferUsage.VertexBuffer));
             device.UpdateBuffer(vertexBuffer, 0, vertices);
 
