@@ -58,7 +58,6 @@ namespace zzre.tools
                 if (!isVisible)
                     return;
 
-                renderer.ViewFrustumCulling.SetViewProjection(editor.camera.View, editor.camera.Projection);
                 renderer.UpdateVisibility();
                 renderer.Render(cl);
             }

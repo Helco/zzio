@@ -172,7 +172,6 @@ namespace zzre.tools
 
             if (updateViewFrustumCulling)
             {
-                viewFrustumCulling.SetViewProjection(camera.View, camera.Projection);
                 worldRenderer.UpdateVisibility();
             }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using zzre.core.rendering;
 
 namespace zzre.rendering
 {
@@ -31,9 +32,16 @@ namespace zzre.rendering
 
         public IReadOnlyList<Vector3> FrustumCorners => frustumCorners;
 
-        public void SetViewProjection(Matrix4x4 view, Matrix4x4 projection)
+        public Camera Camera { get; set; }
+
+        public ViewFrustumCulling(Camera camera)
         {
-            if (!Matrix4x4.Invert(view * projection, out inverseViewProjection))
+            Camera = camera;
+        }
+
+        public void UpateFrustum()
+        {
+            if (!Matrix4x4.Invert(Camera.View * Camera.Projection, out inverseViewProjection))
                 throw new ArgumentException();
             for (int i = 0; i < 8; i++)
             {

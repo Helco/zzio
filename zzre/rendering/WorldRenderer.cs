@@ -34,13 +34,14 @@ namespace zzre.rendering
         public IReadOnlyList<WorldBuffers.MeshSection> VisibleMeshSections => visibleMeshSections;
 
         public Location Location { get; } = new Location();
-        public ViewFrustumCulling ViewFrustumCulling { get; } = new ViewFrustumCulling();
+        public ViewFrustumCulling ViewFrustumCulling { get; }
 
         public WorldRenderer(ITagContainer diContainer)
         {
             this.diContainer = diContainer;
             var locationBuffer = diContainer.GetTag<LocationBuffer>();
             locationRange = locationBuffer.Add(Location);
+            ViewFrustumCulling = new ViewFrustumCulling(diContainer.GetTag<Camera>());
         }
 
         protected override void DisposeManaged()
@@ -78,6 +79,7 @@ namespace zzre.rendering
             if (worldBuffers == null)
                 return;
 
+            ViewFrustumCulling.UpateFrustum();
             visibleMeshSections.Clear();
             var sectionQueue = new Queue<WorldBuffers.BaseSection>();
             sectionQueue.Enqueue(worldBuffers.Sections.First());
