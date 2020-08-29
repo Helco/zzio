@@ -90,7 +90,12 @@ namespace zzre.tools
             if (resource.Equals(CurrentResource))
                 return;
             CurrentResource = null;
-            var texturePath = textureLoader.GetTexturePathFromModel(resource.Path);
+            var texturePaths = new[]
+            {
+                textureLoader.GetTexturePathFromModel(resource.Path),
+                new zzio.utils.FilePath("resources/textures/models"),
+                new zzio.utils.FilePath("resources/textures/worlds"),
+            };
 
             geometryBuffers = new ClumpBuffers(diContainer, resource);
             AddDisposable(geometryBuffers);
@@ -102,7 +107,7 @@ namespace zzre.tools
             foreach (var (rwMaterial, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
             {
                 var material = materials[index] = new ModelStandardMaterial(diContainer);
-                (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePath, rwMaterial);
+                (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePaths, rwMaterial);
                 material.LinkTransformsTo(gridRenderer.Material);
                 material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
                 material.Uniforms.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
