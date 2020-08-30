@@ -12,6 +12,7 @@ using zzre.rendering;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
 using zzre.core.rendering;
+using System.Security.Cryptography.X509Certificates;
 
 namespace zzre.tools
 {
@@ -26,11 +27,12 @@ namespace zzre.tools
 
             public Location Location { get; } = new Location();
             public zzio.scn.Model SceneModel { get; }
+            public zzio.scn.Behavior? SceneBehaviour { get; }
 
             public string Title => $"#{SceneModel.idx} - {SceneModel.filename}";
             public Bounds Bounds => clumpBuffers.Bounds;
 
-            public Model(ITagContainer diContainer, zzio.scn.Model sceneModel)
+            public Model(ITagContainer diContainer, zzio.scn.Model sceneModel, Behavior? sceneBehavior)
             {
                 this.diContainer = diContainer;
                 var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
@@ -41,6 +43,7 @@ namespace zzre.tools
                 };
                 var camera = diContainer.GetTag<Camera>();
                 SceneModel = sceneModel;
+                SceneBehaviour = sceneBehavior;
                 locationRange = diContainer.GetTag<LocationBuffer>().Add(Location);
                 Location.LocalPosition = sceneModel.pos.ToNumerics();
                 Location.LocalRotation = sceneModel.rot.ToNumericsRotation();
@@ -113,6 +116,10 @@ namespace zzre.tools
                 InputInt("I2", ref i2);
                 InputInt("I15", ref i15);
 
+                NewLine();
+                var behaviorType = SceneBehaviour?.type ?? BehaviourType.Unknown;
+                ImGuiEx.EnumCombo("Behavior", ref behaviorType);
+
                 if (hasChanged)
                 {
                     rotEuler = (rotEuler * MathF.PI / 180.0f) - Location.LocalRotation.ToEuler();
@@ -158,7 +165,7 @@ namespace zzre.tools
                 if (editor.scene == null)
                     return;
 
-                models = editor.scene.models.Select(m => new Model(diContainer, m)).ToArray();
+                models = editor.scene.models.Select(m => new Model(diContainer, m, editor.scene.behaviors.FirstOrDefault(b => b.modelId == m.idx))).ToArray();
             }
 
             private void HandleRender(CommandList cl)
