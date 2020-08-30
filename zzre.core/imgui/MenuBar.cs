@@ -52,12 +52,28 @@ namespace zzre.imgui
                 onClick();
         });
 
-        public delegate ref bool IsCheckedFunc();
+        public delegate ref T GetRefValueFunc<T>();
 
-        public void AddCheckbox(string path, IsCheckedFunc isChecked, Action? onChanged = null) => AddItem(path, name =>
+        public void AddCheckbox(string path, GetRefValueFunc<bool> isChecked, Action? onChanged = null) => AddItem(path, name =>
         {
             if (MenuItem(name, "", ref isChecked()))
                 onChanged?.Invoke();
+        });
+
+        public void AddRadio(string path, string[] labels, GetRefValueFunc<int> getValue, Action? onChanged = null) => AddItem(path, name =>
+        {
+            if (!BeginMenu(name))
+                return;
+            ref int curValue = ref getValue();
+            for (int i = 0; i < labels.Length; i++)
+            {
+                if (MenuItem(labels[i], "", curValue == i))
+                {
+                    curValue = i;
+                    onChanged?.Invoke();
+                }
+            }
+            EndMenu();
         });
 
         public void Update()

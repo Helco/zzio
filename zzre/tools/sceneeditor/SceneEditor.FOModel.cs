@@ -143,7 +143,7 @@ namespace zzre.tools
             private readonly SceneEditor editor;
 
             private FOModel[] models = new FOModel[0];
-            private bool isVisible = true;
+            private int detailLevel = 4; // Detail levels from 1, invisible is 0
 
             public FOModelComponent(ITagContainer diContainer)
             {
@@ -152,7 +152,14 @@ namespace zzre.tools
                 editor = diContainer.GetTag<SceneEditor>();
                 editor.fbArea.OnRender += HandleRender;
                 editor.OnLoadScene += HandleLoadScene;
-                diContainer.GetTag<MenuBarWindowTag>().AddCheckbox("View/FOModels", () => ref isVisible, () => editor.fbArea.IsDirty = true);
+                diContainer.GetTag<MenuBarWindowTag>().AddRadio("View/FOModels", new[]
+                {
+                    "Invisible",
+                    "Detail Level 0",
+                    "Detail Level 1",
+                    "Detail Level 2",
+                    "Detail Level 3"
+                }, () => ref detailLevel, () => editor.fbArea.IsDirty = true);
                 editor.editor.AddInfoSection("FOModels", HandleInfoSection, false);
             }
 
@@ -176,10 +183,13 @@ namespace zzre.tools
 
             private void HandleRender(CommandList cl)
             {
-                if (!isVisible)
+                if (detailLevel == 0)
                     return;
                 foreach (var model in models)
-                    model.Render(cl);
+                {
+                    if (model.SceneFOModel.worldDetailLevel <= detailLevel - 1)
+                        model.Render(cl);
+                }
             }
 
             private void HandleInfoSection()
