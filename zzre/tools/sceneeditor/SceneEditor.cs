@@ -72,6 +72,7 @@ namespace zzre.tools
                 .AddTag<IAssetLoader<Texture>>(new CachedAssetLoader<Texture>(diContainer.GetTag<IAssetLoader<Texture>>()))
                 .AddTag<IAssetLoader<ClumpBuffers>>(new CachedClumpAssetLoader(diContainer))
                 .AddTag(camera);
+            new DatasetComponent(localDiContainer);
             new WorldComponent(localDiContainer);
             new ModelComponent(localDiContainer);
             new FOModelComponent(localDiContainer);
