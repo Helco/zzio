@@ -11,11 +11,24 @@ namespace zzre
             ? Vector3.Cross(v, Vector3.UnitY)
             : Vector3.Cross(v, Vector3.UnitX);
 
-        // from https://stackoverflow.com/questions/11492299/quaternion-to-euler-angles-algorithm-how-to-convert-to-y-up-and-between-ha
-        public static Vector3 ToEuler(this Quaternion q) => new Vector3(
-            (float)Math.Asin(2f * (q.X * q.Z - q.W * q.Y)),                                         // Pitch
-            (float)Math.Atan2(2f * q.X * q.W + 2f * q.Y * q.Z, 1 - 2f * (q.Z * q.Z + q.W * q.W)),   // Yaw 
-            (float)Math.Atan2(2f * q.X * q.Y + 2f * q.Z * q.W, 1 - 2f * (q.Y * q.Y + q.Z * q.Z))    // Roll 
-        );
+        // from https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+        public static Vector3 ToEuler(this Quaternion q)
+        {
+            var euler = Vector3.Zero;
+            double sinr_cosp = 2 * (q.W * q.X + q.Y * q.Z);
+            double cosr_cosp = 1 - 2 * (q.X * q.X + q.Y * q.Y);
+            euler.Z = (float)Math.Atan2(sinr_cosp, cosr_cosp);
+
+            double sinp = 2 * (q.W * q.Y - q.Z * q.X);
+            euler.X = Math.Abs(sinp) >= 1
+                ? (float)Math.CopySign(Math.PI / 2, sinp) // use 90 degrees if out of range
+                : (float)Math.Asin(sinp);
+
+            double siny_cosp = 2 * (q.W * q.Z + q.X * q.Y);
+            double cosy_cosp = 1 - 2 * (q.Y * q.Y + q.Z * q.Z);
+            euler.Y = (float)Math.Atan2(siny_cosp, cosy_cosp);
+
+            return euler;
+        }
     }
 }

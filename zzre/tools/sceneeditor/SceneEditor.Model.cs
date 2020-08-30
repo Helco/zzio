@@ -115,8 +115,9 @@ namespace zzre.tools
 
                 if (hasChanged)
                 {
+                    rotEuler = (rotEuler * MathF.PI / 180.0f) - Location.LocalRotation.ToEuler();
                     Location.LocalPosition = pos;
-                    Location.LocalRotation = Quaternion.CreateFromYawPitchRoll(rotEuler.Y, rotEuler.X, rotEuler.Z);
+                    Location.LocalRotation *= Quaternion.CreateFromYawPitchRoll(rotEuler.Y, rotEuler.X, rotEuler.Z);
                     Location.LocalScale = scale;
                     diContainer.GetTag<FramebufferArea>().IsDirty = true;
                 }
