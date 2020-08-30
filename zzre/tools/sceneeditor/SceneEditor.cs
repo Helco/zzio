@@ -69,6 +69,8 @@ namespace zzre.tools
             localDiContainer = diContainer
                 .FallbackTo(Window)
                 .ExtendedWith(this, Window, gridRenderer, locationBuffer)
+                .AddTag<IAssetLoader<Texture>>(new CachedAssetLoader<Texture>(diContainer.GetTag<IAssetLoader<Texture>>()))
+                .AddTag<IAssetLoader<ClumpBuffers>>(new CachedClumpAssetLoader(diContainer))
                 .AddTag(camera);
             new WorldComponent(localDiContainer);
             new ModelComponent(localDiContainer);
@@ -92,6 +94,8 @@ namespace zzre.tools
             if (resource.Equals(CurrentResource))
                 return;
             CurrentResource = null;
+            localDiContainer.GetTag<IAssetLoader<Texture>>().Clear();
+            localDiContainer.GetTag<IAssetLoader<ClumpBuffers>>().Clear();
 
             using var contentStream = resource.OpenContent();
             if (contentStream == null)

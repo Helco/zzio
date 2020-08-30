@@ -22,7 +22,7 @@ namespace zzre.tools
         private class Part : ListDisposable
         {
             private readonly ITagContainer diContainer;
-            private readonly TextureLoader textureLoader;
+            private readonly IAssetLoader<Texture> textureLoader;
             private readonly GameTime gameTime;
             private readonly string modelName; // used as ImGui ID
             private bool isPlaying = false;
@@ -40,7 +40,7 @@ namespace zzre.tools
             {
                 this.diContainer = diContainer;
                 this.modelName = modelName;
-                textureLoader = diContainer.GetTag<TextureLoader>();
+                textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
                 gameTime = diContainer.GetTag<GameTime>();
                 var modelPath = new FilePath("resources/models/actorsex/").Combine(modelName);
                 var texturePath = textureLoader.GetTexturePathFromModel(modelPath);

@@ -155,5 +155,21 @@ namespace zzio.tests.utils
             Assert.AreEqual(new FilePath("a/").GetHashCode(), new FilePath("a").GetHashCode());
             Assert.AreEqual(new FilePath("a").GetHashCode(), new FilePath("a/b/./c/../././../").GetHashCode());
         }
+
+        [Test]
+        public void extension()
+        {
+            Assert.IsNull(new FilePath("").Extension);
+            Assert.IsNull(new FilePath("/").Extension);
+            Assert.IsNull(new FilePath("resources/").Extension);
+            Assert.IsNull(new FilePath("a/b.cdef/g").Extension);
+            Assert.IsNull(new FilePath("a/b.").Extension);
+
+            Assert.AreEqual("txt", new FilePath("a.txt").Extension);
+            Assert.AreEqual("txt", new FilePath("c:/b.cedf/asd/a.txt").Extension);
+            Assert.AreEqual("txt", new FilePath("c:/b.cedf/asd/a.qwe.rtz.yxc.txt").Extension);
+            Assert.AreEqual("t", new FilePath("c:/b.cedf/asd/a.qwe.rtz.yxc.t").Extension);
+            Assert.AreEqual("abcdefghijkl", new FilePath("c:/b.cedf/asd/a.qwe.rtz.yxc.abcdefghijkl").Extension);
+        }
     }
 }

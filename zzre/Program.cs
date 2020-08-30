@@ -51,7 +51,7 @@ namespace zzre
                 .AddTag(graphicsDevice)
                 .AddTag<IResourcePool>(resourcePool)
                 .AddTag(pipelineCollection)
-                .AddTag(new TextureLoader(diContainer))
+                .AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(diContainer))
                 .AddTag(new OpenDocumentSet(diContainer));
 
             windowContainer.MenuBar.AddButton("Tools/Model Viewer", () => new ModelViewer(diContainer));

@@ -33,7 +33,7 @@ namespace zzre.tools
             public Model(ITagContainer diContainer, zzio.scn.Model sceneModel)
             {
                 this.diContainer = diContainer;
-                var textureLoader = diContainer.GetTag<TextureLoader>();
+                var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
                 var textureBasePaths = new[]
                 {
                     new FilePath("resources/textures/models"),
@@ -46,7 +46,8 @@ namespace zzre.tools
                 Location.LocalRotation = sceneModel.rot.ToNumericsRotation();
                 //Location.LocalScale = sceneModel.scale.ToNumerics(); // TODO: SceneModel scale seems bugged for some models (e.g. z == 0)
 
-                clumpBuffers = new ClumpBuffers(diContainer, new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
+                var clumpLoader = diContainer.GetTag<IAssetLoader<ClumpBuffers>>();
+                clumpBuffers = clumpLoader.Load(new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
                 materials = clumpBuffers.SubMeshes.Select(subMesh =>
                 {
                     var rwMaterial = subMesh.Material;

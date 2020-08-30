@@ -22,7 +22,7 @@ namespace zzre.tools
         private readonly ImGuiRenderer imGuiRenderer;
         private readonly GraphicsDevice device;
         private readonly FramebufferArea fbArea;
-        private readonly TextureLoader textureLoader;
+        private readonly IAssetLoader<Texture> textureLoader;
         private readonly IResourcePool resourcePool;
         private readonly DebugGridRenderer gridRenderer;
         private readonly OpenFileModal openFileModal;
@@ -41,7 +41,7 @@ namespace zzre.tools
             this.diContainer = diContainer;
             device = diContainer.GetTag<GraphicsDevice>();
             resourcePool = diContainer.GetTag<IResourcePool>();
-            textureLoader = diContainer.GetTag<TextureLoader>();
+            textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
             Window.InitialBounds = new Rect(float.NaN, float.NaN, 1100.0f, 600.0f);
             Window.AddTag(this);

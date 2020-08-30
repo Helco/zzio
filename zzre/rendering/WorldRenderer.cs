@@ -60,7 +60,7 @@ namespace zzre.rendering
                 return;
 
             var textureBase = new FilePath("resources/textures/worlds");
-            var textureLoader = diContainer.GetTag<TextureLoader>();
+            var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
             var camera = diContainer.GetTag<Camera>();
 
             materials = new ModelStandardMaterial[worldBuffers.Materials.Count];

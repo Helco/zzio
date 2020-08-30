@@ -33,7 +33,7 @@ namespace zzre.tools
             public FOModel(ITagContainer diContainer, zzio.scn.FOModel sceneModel)
             {
                 this.diContainer = diContainer;
-                var textureLoader = diContainer.GetTag<TextureLoader>();
+                var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
                 var textureBasePaths = new[]
                 {
                     new FilePath("resources/textures/models"),

@@ -17,13 +17,12 @@ namespace zzio.rwbs
         {
             BinaryReader reader = new BinaryReader(stream);
             atomicCount = lightCount = camCount = 0;
-            try
-            {
+            if (stream.Length >= 4)
                 atomicCount = reader.ReadUInt32();
+            if (stream.Length >= 8)
                 lightCount = reader.ReadUInt32();
+            if (stream.Length >= 12)
                 camCount = reader.ReadUInt32();
-            }
-            catch(EndOfStreamException) { } // We don't really care...
         }
 
         protected override void writeStruct(Stream stream)

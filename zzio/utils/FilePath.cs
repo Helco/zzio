@@ -364,6 +364,19 @@ namespace zzio.utils
 
         public FilePath WithoutDirectoryMarker() => new FilePath(parts, type, false);
 
+        public string? Extension
+        {
+            get
+            {
+                if (IsDirectory || parts.Length == 0)
+                    return null;
+                int extensionMarker = parts.Last().LastIndexOf('.');
+                if (extensionMarker < 0 || extensionMarker + 1 == parts.Last().Length)
+                    return null;
+                return parts.Last().Substring(extensionMarker + 1);
+            }
+        }
+
         /// <summary>Returns this path as windows path string ('\' as separator)</summary>
         /// <remarks>POSIX rooted paths (e.g. '/a/b') cannot be printed as windows path</remarks>
         public string ToWin32String()
