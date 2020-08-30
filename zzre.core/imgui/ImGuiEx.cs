@@ -104,6 +104,26 @@ namespace zzre.imgui
             return hasChanged;
         }
 
+        public static bool EnumCombo<T>(string label, ref T value, string[]? labels = null) where T : Enum
+        {
+            var values = Enum.GetValues(typeof(T)).Cast<T>().ToArray();
+            labels = labels ?? Enum.GetNames(typeof(T));
+
+            if (!BeginCombo(label, value.ToString()))
+                return false;
+            bool hasChanged = false;
+            for (int i = 0; i < labels.Length; i++)
+            {
+                if (Selectable(labels[i], value.Equals(values[i])))
+                {
+                    value = values[i];
+                    hasChanged = true;
+                }
+            }
+            EndCombo();
+            return hasChanged;
+        }
+
         public static uint ToUintColor(this ImColor col) => ColorConvertFloat4ToU32(col.Value);
 
         public static void AddUnderLine(ImColor col) => AddUnderLine(col.Value);

@@ -23,7 +23,7 @@ namespace zzre.rendering
         public int Count { get; private set; } = 0;
         public bool IsFull => Capacity == Count;
 
-        public LocationBuffer(GraphicsDevice device, int capacity = 64)
+        public LocationBuffer(GraphicsDevice device, int capacity = 1024)
         {
             matrixStride = Math.Max(MinimalMatrixStride, device.UniformBufferMinOffsetAlignment);
             if (matrixStride % MatrixSize != 0)

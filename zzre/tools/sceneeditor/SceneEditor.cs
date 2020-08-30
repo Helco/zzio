@@ -72,6 +72,7 @@ namespace zzre.tools
                 .AddTag(camera);
             new WorldComponent(localDiContainer);
             new ModelComponent(localDiContainer);
+            new FOModelComponent(localDiContainer);
             new SelectionComponent(localDiContainer);
         }
 
