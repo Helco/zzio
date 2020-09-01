@@ -1,4 +1,5 @@
 ﻿using ImGuiNET;
+using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -10,6 +11,7 @@ namespace zzre.imgui
     public class FlyControlsTag
     {
         private const float DefaultSpeed = 10.0f;
+        private const float DragSpeedFactor = 0.025f;
 
         private readonly FramebufferArea fbArea;
         private readonly MouseEventArea mouseArea;
@@ -33,6 +35,15 @@ namespace zzre.imgui
 
         private void HandleDrag(ImGuiMouseButton button, Vector2 delta)
         {
+            if (button == ImGuiMouseButton.Middle)
+            {
+                location.LocalPosition +=
+                    delta.Y * speed * DragSpeedFactor * location.GlobalUp -
+                    delta.X * speed * DragSpeedFactor * location.GlobalRight;
+                fbArea.IsDirty = true;
+                return;
+            }
+
             if (button != ImGuiMouseButton.Right)
                 return;
 
