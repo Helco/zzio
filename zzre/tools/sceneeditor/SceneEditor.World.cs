@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using Veldrid;
 using zzio.utils;
-using zzre.core.rendering;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;

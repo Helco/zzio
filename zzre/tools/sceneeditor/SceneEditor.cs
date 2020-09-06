@@ -7,7 +7,6 @@ using Veldrid;
 using zzio.scn;
 using zzio.vfs;
 using zzre.core;
-using zzre.core.rendering;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;

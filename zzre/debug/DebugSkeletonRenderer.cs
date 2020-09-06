@@ -71,13 +71,13 @@ namespace zzre
         {
             Geometry = geometryBuffers;
             Skeleton = skeleton;
-            var materialLinkTarget = diContainer.GetTag<IStandardTransformMaterial>();
+            var camera = diContainer.GetTag<Camera>();
             locationBuffer = diContainer.GetTag<LocationBuffer>();
             worldBufferRange = locationBuffer.Add(skeleton.Location);
 
             void LinkTransformsFor(IStandardTransformMaterial m)
             {
-                m.LinkTransformsTo(materialLinkTarget);
+                m.LinkTransformsTo(camera);
                 m.World.BufferRange = worldBufferRange;
             }
             BoneMaterial = new DebugSkinnedMaterial(diContainer);

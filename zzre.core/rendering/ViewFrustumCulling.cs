@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using zzre.core.rendering;
 
 namespace zzre.rendering
 {

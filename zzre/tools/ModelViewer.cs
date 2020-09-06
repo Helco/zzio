@@ -18,6 +18,7 @@ namespace zzre.tools
     {
         private readonly ITagContainer diContainer;
         private readonly TwoColumnEditorTag editor;
+        private readonly Camera camera;
         private readonly OrbitControlsTag controls;
         private readonly ImGuiRenderer imGuiRenderer;
         private readonly GraphicsDevice device;
@@ -46,7 +47,6 @@ namespace zzre.tools
             Window.InitialBounds = new Rect(float.NaN, float.NaN, 1100.0f, 600.0f);
             Window.AddTag(this);
             editor = new TwoColumnEditorTag(Window, diContainer);
-            controls = new OrbitControlsTag(Window, diContainer);
             var onceAction = new OnceAction();
             Window.AddTag(onceAction);
             Window.OnContent += onceAction.Invoke;
@@ -65,8 +65,14 @@ namespace zzre.tools
 
             locationBuffer = new LocationBuffer(device);
             AddDisposable(locationBuffer);
+            var localDiContainer = diContainer.ExtendedWith(locationBuffer);
+            camera = new Camera(localDiContainer);
+            AddDisposable(camera);
+            controls = new OrbitControlsTag(Window, camera.Location, localDiContainer);
+            AddDisposable(controls);
             gridRenderer = new DebugGridRenderer(diContainer);
-            gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
+            gridRenderer.Material.LinkTransformsTo(camera);
+            gridRenderer.Material.World.Ref = Matrix4x4.Identity;
             AddDisposable(gridRenderer);
 
             editor.AddInfoSection("Statistics", HandleStatisticsContent);
@@ -108,7 +114,8 @@ namespace zzre.tools
             {
                 var material = materials[index] = new ModelStandardMaterial(diContainer);
                 (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePaths, rwMaterial);
-                material.LinkTransformsTo(gridRenderer.Material);
+                material.LinkTransformsTo(camera);
+                material.World.Ref = Matrix4x4.Identity;
                 material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
                 material.Uniforms.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
                 material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
@@ -120,7 +127,7 @@ namespace zzre.tools
             if (geometryBuffers.Skin != null)
             {
                 var skeleton = new Skeleton(geometryBuffers.Skin);
-                skeletonRenderer = new DebugSkeletonRenderer(diContainer.ExtendedWith(gridRenderer.Material as IStandardTransformMaterial, locationBuffer), geometryBuffers, skeleton);
+                skeletonRenderer = new DebugSkeletonRenderer(diContainer.ExtendedWith(camera, locationBuffer), geometryBuffers, skeleton);
                 AddDisposable(skeletonRenderer);
             }
 
@@ -133,6 +140,7 @@ namespace zzre.tools
         private void HandleRender(CommandList cl)
         {
             locationBuffer.Update(cl);
+            camera.Update(cl);
             gridRenderer.Render(cl);
             if (geometryBuffers == null)
                 return;            

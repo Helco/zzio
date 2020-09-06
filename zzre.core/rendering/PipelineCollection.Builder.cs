@@ -169,6 +169,7 @@ namespace zzre.rendering
                 if (vertexElements.Last().Count() == 0)
                     throw new InvalidOperationException("Last vertex layout has no elements");
                 vertexElements.Add(new List<VertexElementDescription>());
+                vertexLayoutInstanceStepRates.Add(0);
                 return this;
             }
 

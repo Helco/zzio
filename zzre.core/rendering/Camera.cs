@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using Veldrid;
-using zzre.rendering;
 
-namespace zzre.core.rendering
+namespace zzre.rendering
 {
     public class Camera : BaseDisposable
     {

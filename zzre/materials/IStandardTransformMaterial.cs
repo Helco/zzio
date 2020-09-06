@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
-using zzre.core.rendering;
 using zzre.rendering;
 
 namespace zzre.materials

@@ -11,7 +11,6 @@ using zzre.materials;
 using zzre.rendering;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
-using zzre.core.rendering;
 
 namespace zzre.tools
 {

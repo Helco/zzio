@@ -5,7 +5,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using Veldrid;
 using zzio.primitives;
-using zzre.core.rendering;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;

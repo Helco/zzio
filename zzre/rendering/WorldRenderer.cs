@@ -6,7 +6,6 @@ using zzio.rwbs;
 using zzio.utils;
 using zzre.materials;
 using Veldrid;
-using zzre.core.rendering;
 
 namespace zzre.rendering
 {

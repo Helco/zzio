@@ -11,7 +11,6 @@ using zzre.materials;
 using zzre.rendering;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
-using zzre.core.rendering;
 using System.Security.Cryptography.X509Certificates;
 
 namespace zzre.tools

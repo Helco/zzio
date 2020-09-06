@@ -49,6 +49,8 @@ namespace zzre
 
         public ITagContainer AddTag<TTag>(TTag tag) where TTag : class
         {
+            if (tag == null)
+                throw new NullReferenceException();
             if (!tags.TryAdd(typeof(TTag), tag))
                 throw new ArgumentException($"A tag of type {typeof(TTag).Name} is already attached", nameof(TTag));
             return this;

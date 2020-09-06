@@ -16,14 +16,14 @@ namespace zzre.imgui
         private readonly FramebufferArea fbArea;
         private readonly MouseEventArea mouseArea;
         private readonly GameTime gameTime;
-        private readonly Location location;
+        private readonly Location target;
         private float speed = DefaultSpeed;
         private Vector2 cameraAngle;
 
-        public FlyControlsTag(Window window, Location location, ITagContainer diContainer)
+        public FlyControlsTag(Window window, Location target, ITagContainer diContainer)
         {
             window.AddTag(this);
-            this.location = location;
+            this.target = target;
             var device = diContainer.GetTag<GraphicsDevice>();
             gameTime = diContainer.GetTag<GameTime>();
             fbArea = window.GetTag<FramebufferArea>();
@@ -37,9 +37,9 @@ namespace zzre.imgui
         {
             if (button == ImGuiMouseButton.Middle)
             {
-                location.LocalPosition +=
-                    delta.Y * speed * DragSpeedFactor * location.GlobalUp -
-                    delta.X * speed * DragSpeedFactor * location.GlobalRight;
+                target.LocalPosition +=
+                    delta.Y * speed * DragSpeedFactor * target.GlobalUp -
+                    delta.X * speed * DragSpeedFactor * target.GlobalRight;
                 fbArea.IsDirty = true;
                 return;
             }
@@ -52,19 +52,19 @@ namespace zzre.imgui
             while (cameraAngle.Y > MathF.PI) cameraAngle.Y -= 2 * MathF.PI;
             while (cameraAngle.Y < -MathF.PI) cameraAngle.Y += 2 * MathF.PI;
             cameraAngle.X = Math.Clamp(cameraAngle.X, -MathF.PI / 2.0f, MathF.PI / 2.0f);
-            location.LocalRotation = Quaternion.CreateFromYawPitchRoll(cameraAngle.Y, cameraAngle.X, 0.0f);
+            target.LocalRotation = Quaternion.CreateFromYawPitchRoll(cameraAngle.Y, cameraAngle.X, 0.0f);
 
             var moveDir = Vector3.Zero;
             var speedFactor = 1.0f;
             if (ImGui.IsKeyDown((int)Key.ShiftLeft)) speedFactor *= 2.0f;
             if (ImGui.IsKeyDown((int)Key.ControlLeft)) speedFactor /= 2.0f;
-            if (ImGui.IsKeyDown((int)Key.W)) moveDir += location.GlobalForward;
-            if (ImGui.IsKeyDown((int)Key.S)) moveDir -= location.GlobalForward;
-            if (ImGui.IsKeyDown((int)Key.D)) moveDir += location.GlobalRight;
-            if (ImGui.IsKeyDown((int)Key.A)) moveDir -= location.GlobalRight;
-            if (ImGui.IsKeyDown((int)Key.E)) moveDir += location.GlobalUp;
-            if (ImGui.IsKeyDown((int)Key.Q)) moveDir -= location.GlobalUp;
-            location.LocalPosition = location.LocalPosition + moveDir * gameTime.Delta * speed * speedFactor;
+            if (ImGui.IsKeyDown((int)Key.W)) moveDir += target.GlobalForward;
+            if (ImGui.IsKeyDown((int)Key.S)) moveDir -= target.GlobalForward;
+            if (ImGui.IsKeyDown((int)Key.D)) moveDir += target.GlobalRight;
+            if (ImGui.IsKeyDown((int)Key.A)) moveDir -= target.GlobalRight;
+            if (ImGui.IsKeyDown((int)Key.E)) moveDir += target.GlobalUp;
+            if (ImGui.IsKeyDown((int)Key.Q)) moveDir -= target.GlobalUp;
+            target.LocalPosition = target.LocalPosition + moveDir * gameTime.Delta * speed * speedFactor;
 
             fbArea.IsDirty = true;
         }
@@ -77,8 +77,8 @@ namespace zzre.imgui
         public void ResetView()
         {
             cameraAngle = Vector2.Zero;
-            location.LocalPosition = Vector3.Zero;
-            location.LocalRotation = Quaternion.Identity;
+            target.LocalPosition = Vector3.Zero;
+            target.LocalRotation = Quaternion.Identity;
             speed = DefaultSpeed;
             fbArea.IsDirty = true;
         }

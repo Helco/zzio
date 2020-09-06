@@ -60,10 +60,10 @@ namespace zzre.tools
                 AddDisposable(geometry);
 
                 locationBufferRange = diContainer.GetTag<LocationBuffer>().Add(location);
-                var materialLinkTarget = diContainer.GetTag<IStandardTransformMaterial>();
+                var camera = diContainer.GetTag<Camera>();
                 void LinkTransformsFor(IStandardTransformMaterial material)
                 {
-                    material.LinkTransformsTo(materialLinkTarget);
+                    material.LinkTransformsTo(camera);
                     material.World.BufferRange = locationBufferRange;
                 }
 

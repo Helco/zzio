@@ -9,53 +9,35 @@ namespace zzre.imgui
 {
     public class OrbitControlsTag : BaseDisposable
     {
-        private const float FieldOfView = 60.0f * 3.141592653f / 180.0f;
-
         private readonly FramebufferArea fbArea;
         private readonly MouseEventArea mouseArea;
+        private readonly LocationBuffer locationBuffer;
+        private readonly Location target;
+        private readonly Location rotationLoc = new Location();
+        private readonly DeviceBufferRange rotationLocRange;
         private float distance = 2.0f;
         private Vector2 cameraAngle = Vector2.Zero;
 
-        public UniformBuffer<Matrix4x4> Projection { get; }
-        public UniformBuffer<Matrix4x4> View { get; }
-        public UniformBuffer<Matrix4x4> World { get; }
-
-        public OrbitControlsTag(Window window, ITagContainer diContainer)
+        public OrbitControlsTag(Window window, Location target, ITagContainer diContainer)
         {
+            window.AddTag(this);
+            this.target = target;
             var device = diContainer.GetTag<GraphicsDevice>();
             fbArea = window.GetTag<FramebufferArea>();
-            fbArea.OnRender += HandleRender;
-            fbArea.OnResize += HandleResize;
             mouseArea = window.GetTag<MouseEventArea>();
             mouseArea.OnDrag += HandleDrag;
             mouseArea.OnScroll += HandleScroll;
+            locationBuffer = diContainer.GetTag<LocationBuffer>();
+            rotationLocRange = locationBuffer.Add(rotationLoc);
+            target.Parent = rotationLoc;
 
-            Projection = new UniformBuffer<Matrix4x4>(device.ResourceFactory);
-            View = new UniformBuffer<Matrix4x4>(device.ResourceFactory);
-            World = new UniformBuffer<Matrix4x4>(device.ResourceFactory);
-            World.Ref = Matrix4x4.Identity;
             ResetView();
-            HandleResize();
         }
 
         protected override void DisposeManaged()
         {
             base.DisposeManaged();
-            Projection.Dispose();
-            View.Dispose();
-            World.Dispose();
-        }
-
-        private void HandleRender(CommandList cl)
-        {
-            Projection.Update(cl);
-            View.Update(cl);
-            World.Update(cl);
-        }
-
-        private void HandleResize()
-        {
-            Projection.Ref = Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, fbArea.Ratio, 0.01f, 1000.0f);
+            locationBuffer.Remove(rotationLocRange);
         }
 
         private void HandleDrag(ImGuiMouseButton button, Vector2 delta)
@@ -63,7 +45,7 @@ namespace zzre.imgui
             if (button != ImGuiMouseButton.Right)
                 return;
 
-            cameraAngle += delta * 0.01f;
+            cameraAngle -= delta * 0.01f;
             while (cameraAngle.X > MathF.PI) cameraAngle.X -= 2 * MathF.PI;
             while (cameraAngle.X < -MathF.PI) cameraAngle.X += 2 * MathF.PI;
             cameraAngle.Y = Math.Clamp(cameraAngle.Y, -MathF.PI / 2.0f, MathF.PI / 2.0f);
@@ -85,7 +67,8 @@ namespace zzre.imgui
 
         private void UpdateCamera()
         {
-            View.Ref = Matrix4x4.CreateRotationY(cameraAngle.X) * Matrix4x4.CreateRotationX(cameraAngle.Y) * Matrix4x4.CreateTranslation(0.0f, 0.0f, -distance);
+            rotationLoc.LocalRotation = Quaternion.CreateFromYawPitchRoll(cameraAngle.X, cameraAngle.Y, 0.0f);
+            target.LocalPosition = Vector3.UnitZ * distance;
             fbArea.IsDirty = true;
         }
     }

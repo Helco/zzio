@@ -20,6 +20,7 @@ namespace zzre.tools
         private readonly ITagContainer diContainer;
         private readonly ITagContainer localDiContainer;
         private readonly TwoColumnEditorTag editor;
+        private readonly Camera camera;
         private readonly OrbitControlsTag controls;
         private readonly GraphicsDevice device;
         private readonly FramebufferArea fbArea;
@@ -45,7 +46,6 @@ namespace zzre.tools
             Window.InitialBounds = new Rect(float.NaN, float.NaN, 1100.0f, 600.0f);
             Window.AddTag(this);
             editor = new TwoColumnEditorTag(Window, diContainer);
-            controls = new OrbitControlsTag(Window, diContainer);
             var onceAction = new OnceAction();
             Window.AddTag(onceAction);
             Window.OnContent += onceAction.Invoke;
@@ -63,9 +63,15 @@ namespace zzre.tools
             locationBuffer = new LocationBuffer(device);
             AddDisposable(locationBuffer);
             localDiContainer = diContainer.ExtendedWith(locationBuffer);
+            camera = new Camera(localDiContainer);
+            AddDisposable(camera);
+            controls = new OrbitControlsTag(Window, camera.Location, localDiContainer);
+            AddDisposable(controls);
+            localDiContainer.AddTag(camera);
 
             gridRenderer = new DebugGridRenderer(diContainer);
-            gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
+            gridRenderer.Material.LinkTransformsTo(camera);
+            gridRenderer.Material.World.Ref = Matrix4x4.Identity;
             AddDisposable(gridRenderer);
             localDiContainer.AddTag<IStandardTransformMaterial>(gridRenderer.Material);
 
@@ -115,6 +121,7 @@ namespace zzre.tools
 
         private void HandleRender(CommandList cl)
         {
+            camera.Update(cl);
             locationBuffer.Update(cl);
             gridRenderer.Render(cl);
             body?.Render(cl);
