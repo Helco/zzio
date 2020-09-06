@@ -73,7 +73,7 @@ namespace zzre.tools
 
             private Trigger[] triggers = new Trigger[0];
             private bool isVisible = true;
-            private float iconSize = 196f;
+            private float iconSize = 128f;
 
             public TriggerComponent(ITagContainer diContainer)
             {
@@ -137,7 +137,7 @@ namespace zzre.tools
 
             private DebugIcon GetDebugIconFor(Trigger trigger)
             {
-                var glyph = iconFont.Glyphs[ForkAwesome.Bell];
+                var glyph = iconFont.Glyphs[Icons.GetValueOrDefault(trigger.SceneTrigger.type, ForkAwesome.Bell)!];
                 return new DebugIcon
                 {
                     pos = trigger.Location.GlobalPosition,
@@ -168,6 +168,63 @@ namespace zzre.tools
                     TreePop();
                 }
             }
+
+            private static readonly IReadOnlyDictionary<TriggerType, string> Icons = new Dictionary<TriggerType, string>()
+            {
+                { TriggerType.Doorway, ForkAwesome.SignIn },
+                { TriggerType.SingleplayerStartpoint, ForkAwesome.User },
+                { TriggerType.MultiplayerStartpoint, ForkAwesome.Users },
+                { TriggerType.NpcStartpoint, ForkAwesome.UserSecret },
+                { TriggerType.CameraPosition, ForkAwesome.VideoCamera },
+                { TriggerType.Waypoint, ForkAwesome.MapMarker },
+                { TriggerType.StartDuel, ForkAwesome.ExclamationTriangle },
+                { TriggerType.LeaveDuel, ForkAwesome.ExclamationTriangle },
+                { TriggerType.NpcAttackPosition, ForkAwesome.ExclamationTriangle },
+                { TriggerType.FlyArea, ForkAwesome.Plane },
+                { TriggerType.KillPlayer, ForkAwesome.Hackaday },
+                { TriggerType.SetCameraView, ForkAwesome.VideoCamera },
+                { TriggerType.SavePoint, ForkAwesome.FloppyO },
+                { TriggerType.SwampMarker, ForkAwesome.Tint },
+                { TriggerType.RiverMarker, ForkAwesome.Tint },
+                { TriggerType.PlayVideo, ForkAwesome.Film },
+                { TriggerType.Elevator, ForkAwesome.CaretSquareOUp },
+                { TriggerType.GettingACard, ForkAwesome.IdCardO },
+                { TriggerType.Sign, ForkAwesome.MapSigns },
+                { TriggerType.GettingPixie, ForkAwesome.Paw },
+                { TriggerType.UsingPipe, ForkAwesome.Magnet },
+                { TriggerType.LeaveDancePlatform, ForkAwesome.Music },
+                { TriggerType.RemoveStoneBlocker, ForkAwesome.HandPaperO },
+                { TriggerType.RemovePlantBlocker, ForkAwesome.HandPaperO },
+                { TriggerType.EventCamera, ForkAwesome.VideoCamera },
+                { TriggerType.Platform, ForkAwesome.StreetView },
+                { TriggerType.CreatePlatforms, ForkAwesome.Magic },
+                { TriggerType.ShadowLight, ForkAwesome.LightbulbO },
+                { TriggerType.CreateItems, ForkAwesome.Magic },
+                { TriggerType.Item, ForkAwesome.IdCardO },
+                { TriggerType.Shrink, ForkAwesome.Compress },
+                { TriggerType.WizformMarker, ForkAwesome.ExclamationTriangle },
+                { TriggerType.IndoorCamera, ForkAwesome.VideoCamera },
+                { TriggerType.LensFlare, ForkAwesome.SunO },
+                { TriggerType.FogModifier, ForkAwesome.Cloud },
+                { TriggerType.OpenMagicWaypoints, ForkAwesome.Magic },
+                { TriggerType.RuneTarget, ForkAwesome.CaretSquareODown },
+                { TriggerType.Animal, ForkAwesome.Paw },
+                { TriggerType.AnimalWaypoint, ForkAwesome.MapMarker },
+                { TriggerType.SceneOpening, ForkAwesome.SignOut },
+                { TriggerType.CollectionWizform, ForkAwesome.Paw },
+                { TriggerType.ElementalLock, ForkAwesome.Lock },
+                { TriggerType.ItemGenerator, ForkAwesome.Magic },
+                { TriggerType.Escape, ForkAwesome.SignOut },
+                { TriggerType.Jumper, ForkAwesome.Plane },
+                { TriggerType.RefreshMana, ForkAwesome.Heartbeat },
+                { TriggerType.TemporaryNpc, ForkAwesome.UserSecret },
+                { TriggerType.EffectBeam, ForkAwesome.Bolt },
+                { TriggerType.MultiplayerObserverPosition, ForkAwesome.VideoCamera },
+                { TriggerType.MultiplayerHealingPool, ForkAwesome.Heart },
+                { TriggerType.MultiplayerManaPool, ForkAwesome.Heartbeat },
+                { TriggerType.Ceiling, ForkAwesome.ArrowDown },
+                { TriggerType.HealAllWizforms, ForkAwesome.Heart }
+            };
         }
     }
 }
