@@ -18,6 +18,7 @@ namespace zzre.rendering
         IPipelineBuilder WithDepthTarget(PixelFormat format);
         IPipelineBuilder WithColorTarget(PixelFormat format);
         IPipelineBuilder With(TextureSampleCount sampleCount);
+        IPipelineBuilder WithInstanceStepRate(uint instanceStepRate);
         IPipelineBuilder With(VertexElementDescription vertexElementDescr);
         IPipelineBuilder With(ResourceLayoutElementDescription resourceLayoutDescr);
         IPipelineBuilder With(RasterizerStateDescription rasterizerStateDescr);

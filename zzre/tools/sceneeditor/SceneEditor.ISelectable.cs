@@ -42,6 +42,8 @@ namespace zzre.tools
 
         private class SelectionComponent : BaseDisposable
         {
+            private const float MinViewDistance = 0.5f;
+
             private readonly SceneEditor editor;
             private readonly ITagContainer diContainer;
             private readonly LocationBuffer locationBuffer;
@@ -61,6 +63,7 @@ namespace zzre.tools
                 boundsRenderer = new DebugBoundsLineRenderer(diContainer);
                 boundsRenderer.Material.LinkTransformsTo(camera);
                 boundsRenderer.Color = IColor.Red;
+                editor.OnLoadScene += () => editor.Selected = null;
                 editor.OnNewSelection += HandleNewSelection;
                 fbArea.OnRender += HandleRender;
             }
@@ -100,7 +103,7 @@ namespace zzre.tools
                 var camera = editor.camera;
                 var size = selected.Bounds.Size;
                 var maxSize = Math.Max(Math.Max(size.X, size.Y), size.Z);
-                var distance = Math.Abs(maxSize / MathF.Sin(camera.VFoV / 2f));
+                var distance = Math.Max(MinViewDistance, Math.Abs(maxSize / MathF.Sin(camera.VFoV / 2f)));
                 camera.Location.LocalPosition =
                     Vector3.Transform(selected.Bounds.Center, selected.Location.LocalToWorld) -
                     camera.Location.GlobalForward * distance;

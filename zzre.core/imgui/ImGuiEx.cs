@@ -159,5 +159,17 @@ namespace zzre.imgui
             return IsItemHovered() && IsMouseClicked(ImGuiMouseButton.Left);
         }
         public static bool Hyperlink(string text, bool addIcon = true) => Hyperlink("", text, addIcon);
+
+        public static unsafe bool InputInt(string label, ref uint value)
+        {
+            var valueBytes = BitConverter.GetBytes(value);
+            bool hasChanged;
+            fixed (void* valuePtr = valueBytes)
+            {
+                hasChanged = InputScalar(label, ImGuiDataType.U32, new IntPtr(valuePtr));
+            }
+            value = BitConverter.ToUInt32(valueBytes);
+            return hasChanged;
+        }
     }
 }

@@ -19,6 +19,10 @@ namespace zzre.rendering
             {
                 new List<VertexElementDescription>()
             };
+            private List<uint> vertexLayoutInstanceStepRates = new List<uint>()
+            {
+                0
+            };
             private List<List<ResourceLayoutElementDescription>> resLayoutElements = new List<List<ResourceLayoutElementDescription>>()
             {
                 new List<ResourceLayoutElementDescription>()
@@ -67,10 +71,16 @@ namespace zzre.rendering
                 return this;
             }
 
+            public IPipelineBuilder WithInstanceStepRate(uint instanceStepRate)
+            {
+                vertexLayoutInstanceStepRates[vertexLayoutInstanceStepRates.Count - 1] = instanceStepRate;
+                return this;
+            }
+
             public IPipelineBuilder With(VertexElementDescription vertexElementDescr)
             {
                 if (Collection.Factory.BackendType == GraphicsBackend.Direct3D11)
-                    vertexElementDescr.Semantic = VertexElementSemantic.TextureCoordinate; // TODO: Maybe watch the Veldrid bug for that? 
+                    vertexElementDescr.Semantic = VertexElementSemantic.TextureCoordinate; // TODO: Maybe watch the Veldrid bug for that?
 
                 vertexElements.Last().Add(vertexElementDescr);
                 return this;
@@ -187,6 +197,7 @@ namespace zzre.rendering
 
                 var vertexLayouts = vertexElements
                     .Select(set => new VertexLayoutDescription(set.ToArray()))
+                    .Select((set, i) => { set.InstanceStepRate = vertexLayoutInstanceStepRates[i]; return set; })
                     .ToArray();
                 var resLayoutDescrs = resLayoutElements
                     .Select(set => new ResourceLayoutDescription(set.ToArray()))

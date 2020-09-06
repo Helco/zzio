@@ -76,6 +76,12 @@ namespace zzre.imgui
             EndMenu();
         });
 
+        public void AddSlider(string path, float minVal, float maxVal, GetRefValueFunc<float> getValue, Action? onChanged = null) => AddItem(path, name =>
+        {
+            if (SliderFloat(name, ref getValue(), minVal, maxVal))
+                onChanged?.Invoke();
+        });
+
         public void Update()
         {
             if (!BeginMenuBar())

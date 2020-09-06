@@ -76,6 +76,7 @@ namespace zzre.tools
             new WorldComponent(localDiContainer);
             new ModelComponent(localDiContainer);
             new FOModelComponent(localDiContainer);
+            new TriggerComponent(localDiContainer);
             new SelectionComponent(localDiContainer);
         }
 

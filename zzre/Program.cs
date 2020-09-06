@@ -52,7 +52,8 @@ namespace zzre
                 .AddTag<IResourcePool>(resourcePool)
                 .AddTag(pipelineCollection)
                 .AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(diContainer))
-                .AddTag(new OpenDocumentSet(diContainer));
+                .AddTag(new OpenDocumentSet(diContainer))
+                .AddTag(IconFont.CreateForkAwesome(graphicsDevice));
 
             windowContainer.MenuBar.AddButton("Tools/Model Viewer", () => new ModelViewer(diContainer));
             windowContainer.MenuBar.AddButton("Tools/Actor Viewer", () => new ActorEditor(diContainer));

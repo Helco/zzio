@@ -19,7 +19,6 @@ namespace zzre.imgui
         private List<Fence> onceFences = new List<Fence>();
         private CommandList commandList;
         private Fence fence;
-        private IntPtr glyphRangePtr = IntPtr.Zero;
 
         public BaseWindow? FocusedWindow { get; private set; } = null;
         public int Count => windows.Count;
@@ -56,16 +55,6 @@ namespace zzre.imgui
             ImGuiRenderer.Dispose();
             commandList.Dispose();
             fence.Dispose();
-        }
-
-        protected override void DisposeNative()
-        {
-            base.DisposeNative();
-            if (glyphRangePtr != IntPtr.Zero)
-            {
-                Marshal.FreeHGlobal(glyphRangePtr);
-                glyphRangePtr = IntPtr.Zero;
-            }
         }
 
         private void AddSafelyToWindows(BaseWindow window)
@@ -169,29 +158,8 @@ namespace zzre.imgui
 
         private unsafe void LoadForkAwesomeFont()
         {
-            var assembly = typeof(WindowContainer).Assembly;
-            using var stream = assembly.GetManifestResourceStream("zzre.core.assets.forkawesome-webfont.ttf");
-            if (stream == null)
-                throw new FileNotFoundException("Could not find embedded ForkAwesome font");
-            var data = new byte[stream.Length];
-            stream.Read(data, 0, data.Length);
-            stream.Close();
-
-            glyphRangePtr = Marshal.AllocHGlobal(sizeof(ushort) * 3);
-            var fontConfig = ImGuiNative.ImFontConfig_ImFontConfig();
-            fontConfig->MergeMode = 1;
-            fontConfig->GlyphMinAdvanceX = 13.0f;
-            fontConfig->FontDataOwnedByAtlas = 0;
-            fixed (byte* fontPtr = data)
-            {
-                ushort* glyphRanges = (ushort*)glyphRangePtr.ToPointer();
-                glyphRanges[0] = IconFonts.ForkAwesome.IconMin;
-                glyphRanges[1] = IconFonts.ForkAwesome.IconMax;
-                glyphRanges[2] = 0;
-                GetIO().Fonts.AddFontFromMemoryTTF(new IntPtr(fontPtr), data.Length, 15.0f, fontConfig, glyphRangePtr);
-            }
+            zzre.core.assets.ForkAwesomeIconFont.AddToFontAtlas(GetIO().Fonts, 1, 15.0f, 13.0f);
             ImGuiRenderer.RecreateFontDeviceTexture();
-            ImGuiNative.ImFontConfig_destroy(fontConfig);
         }
 
         public void SetNextFocusedWindow(BaseWindow window) => nextFocusedWindow = window;
