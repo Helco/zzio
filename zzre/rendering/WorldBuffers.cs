@@ -21,9 +21,9 @@ namespace zzre.rendering
             public PlaneSection? Parent { get; set; }
             public abstract bool IsMesh { get; }
             public bool IsPlane => !IsMesh;
-            public Bounds Bounds { get; }
+            public Box Bounds { get; }
 
-            protected BaseSection(Bounds b) => Bounds = b;
+            protected BaseSection(Box b) => Bounds = b;
         }
 
         public class MeshSection : BaseSection
@@ -32,7 +32,7 @@ namespace zzre.rendering
             public readonly int SubMeshStart, SubMeshCount;
             public readonly int VertexCount, TriangleCount;
 
-            public MeshSection(Bounds b, int sms, int smc, int vc, int tc) : base(b) =>
+            public MeshSection(Box b, int sms, int smc, int vc, int tc) : base(b) =>
                 (SubMeshStart, SubMeshCount, VertexCount, TriangleCount) = (sms, smc, vc, tc);
         }
         
@@ -43,7 +43,7 @@ namespace zzre.rendering
             public readonly float CenterValue, LeftValue, RightValue;
             public readonly RWPlaneSectionType PlaneType;
 
-            public PlaneSection(Bounds b, BaseSection lc, BaseSection rc, float cv, float lv, float rv, RWPlaneSectionType t) : base(b)
+            public PlaneSection(Box b, BaseSection lc, BaseSection rc, float cv, float lv, float rv, RWPlaneSectionType t) : base(b)
             {
                 (LeftChild, RightChild) = (lc, rc);
                 (CenterValue, LeftValue, RightValue) = (cv, lv, rv);
@@ -123,7 +123,7 @@ namespace zzre.rendering
 
                 var leftChild = LoadChild(0);
                 var rightChild = LoadChild(1);
-                var bounds = Bounds.Union(leftChild.Bounds, rightChild.Bounds);
+                var bounds = Box.Union(leftChild.Bounds, rightChild.Bounds);
                 var result = new PlaneSection(
                     bounds,
                     leftChild, rightChild,
@@ -171,7 +171,7 @@ namespace zzre.rendering
                 int triangleCount = trianglesByMaterial.Sum(group => group.Count());
                 indexCount += triangleCount * 3;
 
-                var bounds = Bounds.FromMinMax(atomic.bbox1.ToNumerics(), atomic.bbox2.ToNumerics());
+                var bounds = Box.FromMinMax(atomic.bbox1.ToNumerics(), atomic.bbox2.ToNumerics());
                 var result = new MeshSection(bounds, subMeshStart, subMeshCount, atomic.vertices.Count(), triangleCount);
                 sectionList.Add(result);
                 return result;

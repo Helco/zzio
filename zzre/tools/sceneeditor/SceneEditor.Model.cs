@@ -29,7 +29,7 @@ namespace zzre.tools
             public zzio.scn.Behavior? SceneBehaviour { get; }
 
             public string Title => $"#{SceneModel.idx} - {SceneModel.filename}";
-            public Bounds Bounds => clumpBuffers.Bounds;
+            public Box Bounds => clumpBuffers.Bounds;
 
             public Model(ITagContainer diContainer, zzio.scn.Model sceneModel, Behavior? sceneBehavior)
             {

@@ -68,7 +68,7 @@ namespace zzre.rendering
             return firstSide > 0 ? ViewFrustumIntersection.Inside : ViewFrustumIntersection.Outside;
         }
 
-        public ViewFrustumIntersection Test(Bounds bounds)
+        public ViewFrustumIntersection Test(Box bounds)
         {
             // TODO: Implement AABB ViewFrustumCulling
             return ViewFrustumIntersection.Inside;

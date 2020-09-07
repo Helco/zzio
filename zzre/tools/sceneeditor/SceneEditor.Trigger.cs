@@ -30,7 +30,7 @@ namespace zzre.tools
             public int Index { get; }
 
             public string Title => $"#{SceneTrigger.idx} - {SceneTrigger.type}";
-            public Bounds Bounds { get; }
+            public Box Bounds { get; }
 
             public Trigger(ITagContainer diContainer, zzio.scn.Trigger sceneTrigger, int index)
             {
@@ -41,7 +41,7 @@ namespace zzre.tools
                 Location.LocalPosition = sceneTrigger.pos.ToNumerics();
                 Location.LocalRotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateLookAt(Vector3.Zero, sceneTrigger.dir.ToNumerics(), Vector3.UnitY));
 
-                Bounds = new Bounds(Vector3.Zero, SceneTrigger.colliderType switch
+                Bounds = new Box(Vector3.Zero, SceneTrigger.colliderType switch
                 {
                     TriggerColliderType.Box => SceneTrigger.size.ToNumerics(),
                     TriggerColliderType.Sphere => Vector3.One * SceneTrigger.radius,

@@ -27,7 +27,7 @@ namespace zzre.tools
             public zzio.scn.FOModel SceneFOModel { get; }
 
             public string Title => $"#{SceneFOModel.idx} - {SceneFOModel.filename}";
-            public Bounds Bounds => clumpBuffers.Bounds;
+            public Box Bounds => clumpBuffers.Bounds;
 
             public FOModel(ITagContainer diContainer, zzio.scn.FOModel sceneModel)
             {

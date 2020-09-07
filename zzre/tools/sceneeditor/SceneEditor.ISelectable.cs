@@ -16,7 +16,7 @@ namespace zzre.tools
         public interface ISelectable
         {
             string Title { get; }
-            Bounds Bounds { get; } // In object space
+            Box Bounds { get; } // In object space
             Location Location { get; }
         }
 

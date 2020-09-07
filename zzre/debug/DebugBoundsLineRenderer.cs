@@ -11,11 +11,11 @@ namespace zzre
 {
     public class DebugBoundsLineRenderer : DebugHexahedronLineRenderer
     {
-        private Bounds bounds;
+        private Box bounds;
 
         public DebugBoundsLineRenderer(ITagContainer diContainer) : base(diContainer) { }
 
-        public Bounds Bounds
+        public Box Bounds
         {
             get => bounds;
             set
