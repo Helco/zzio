@@ -1,4 +1,6 @@
-﻿using System;
+﻿using SharpDX.Diagnostics;
+using System;
+using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
@@ -69,9 +71,47 @@ namespace zzre
         public Box Union(Box other) => FromMinMax(Vector3.Min(Min, other.Min), Vector3.Max(Max, other.Max));
         public Box Union(Vector3 v) => Union(new Box(v, Vector3.Zero));
 
-        public bool IsInside(Vector3 pos) =>
+        public (Box, Quaternion) TransformToWorld(Location location)
+        {
+            var newCenter = Vector3.Transform(Center, location.LocalToWorld);
+            var newSize = Size * location.GlobalScale;
+            return (new Box(newCenter, newSize), location.GlobalRotation);
+        }
+
+        public Vector3 ClosestPoint(Vector3 to)
+        {
+            var min = Min;
+            var max = Max;
+            return new Vector3(
+                Math.Clamp(to.X, min.X, max.X),
+                Math.Clamp(to.Y, min.Y, max.Y),
+                Math.Clamp(to.Z, min.Z, max.Z));
+        }
+
+        public Vector3 ClosestPoint(Location location, Vector3 to)
+        {
+            var (transformed, orientation) = TransformToWorld(location);
+            return transformed.ClosestPoint(orientation, to);
+        }
+
+        public Vector3 ClosestPoint(Quaternion orientation, Vector3 to)
+        {
+            var dir = to - Center;
+            var (right, up, forward) = orientation.UnitVectors();
+            var distanceX = Vector3.Dot(right, dir);
+            var distanceY = Vector3.Dot(up, dir);
+            var distanceZ = Vector3.Dot(forward, dir);
+            return Center +
+                right * Math.Clamp(distanceX, -HalfSize.X, +HalfSize.X) +
+                up * Math.Clamp(distanceY, -HalfSize.Y, +HalfSize.Y) +
+                forward * Math.Clamp(distanceZ, -HalfSize.Z, +HalfSize.Z);
+        }
+
+        public bool Intersects(Vector3 pos) =>
             pos.X >= Min.X && pos.X < Max.X &&
             pos.Y >= Min.Y && pos.Y < Max.Y &&
-            pos.Z >= Min.Y && pos.Z < Max.Z;
+            pos.Z >= Min.Z && pos.Z < Max.Z;
+
+        public bool Intersects(Location location, Vector3 point) => Intersects(Vector3.Transform(point, location.WorldToLocal));
     }
 }

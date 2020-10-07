@@ -62,8 +62,8 @@ namespace zzre
         // TODO: We might want setters for these three as well 
 
         public Vector3 GlobalPosition => LocalToWorld.Translation;
-        public Quaternion GlobalRotation => Quaternion.CreateFromRotationMatrix(LocalToWorld);
-        public Vector3 GlobalScale => (Parent?.LocalScale ?? Vector3.One) * LocalScale;
+        public Quaternion GlobalRotation => (Parent?.GlobalRotation ?? Quaternion.Identity) * LocalRotation;
+        public Vector3 GlobalScale => (Parent?.GlobalScale ?? Vector3.One) * LocalScale;
 
         public Vector3 GlobalForward => Vector3.Transform(-Vector3.UnitZ, GlobalRotation);
         public Vector3 GlobalUp => Vector3.Transform(Vector3.UnitY, GlobalRotation);

@@ -37,7 +37,7 @@ namespace zzre.tools
         private readonly Camera camera;
         private readonly LocationBuffer locationBuffer;
 
-        private ViewFrustumCulling viewFrustumCulling => worldRenderer.ViewFrustumCulling;
+        private Frustum viewFrustum => worldRenderer.ViewFrustum;
         private IReadOnlyList<ModelStandardMaterial> materials => worldRenderer.Materials;
 
         private UniformBuffer<Matrix4x4> worldTransform;
@@ -341,7 +341,7 @@ namespace zzre.tools
 
             if (didChange)
             {
-                viewFrustumCulling.FrustumCorners.ToArray().CopyTo(frustumRenderer.Corners, 0);
+                viewFrustum.Corners.ToArray().CopyTo(frustumRenderer.Corners, 0);
                 fbArea.IsDirty = true;
             }
         }

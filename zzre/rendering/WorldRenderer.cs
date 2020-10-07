@@ -26,6 +26,8 @@ namespace zzre.rendering
         }
 
         private readonly DeviceBufferRange locationRange;
+        private readonly Camera camera;
+        private Frustum viewFrustum;
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
         public IReadOnlyList<ModelStandardMaterial> Materials => materials;
 
@@ -33,14 +35,14 @@ namespace zzre.rendering
         public IReadOnlyList<WorldBuffers.MeshSection> VisibleMeshSections => visibleMeshSections;
 
         public Location Location { get; } = new Location();
-        public ViewFrustumCulling ViewFrustumCulling { get; }
+        public Frustum ViewFrustum => viewFrustum;
 
         public WorldRenderer(ITagContainer diContainer)
         {
             this.diContainer = diContainer;
+            camera = diContainer.GetTag<Camera>();
             var locationBuffer = diContainer.GetTag<LocationBuffer>();
             locationRange = locationBuffer.Add(Location);
-            ViewFrustumCulling = new ViewFrustumCulling(diContainer.GetTag<Camera>());
         }
 
         protected override void DisposeManaged()
@@ -78,7 +80,7 @@ namespace zzre.rendering
             if (worldBuffers == null)
                 return;
 
-            ViewFrustumCulling.UpateFrustum();
+            viewFrustum.Projection = camera.View * camera.Projection;
             visibleMeshSections.Clear();
             var sectionQueue = new Queue<WorldBuffers.BaseSection>();
             sectionQueue.Enqueue(worldBuffers.Sections.First());
@@ -92,10 +94,10 @@ namespace zzre.rendering
                 }
 
                 var plane = (WorldBuffers.PlaneSection)section;
-                var intersection = ViewFrustumCulling.Test(plane.PlaneType.AsNormal().ToNumerics(), plane.CenterValue);
-                if (intersection.HasFlag(ViewFrustumIntersection.Inside))
+                var intersection = viewFrustum.Intersects(new Plane(plane.PlaneType.AsNormal().ToNumerics(), plane.CenterValue));
+                if (intersection.HasFlag(FrustumIntersection.Inside))
                     sectionQueue.Enqueue(plane.RightChild);
-                if (intersection.HasFlag(ViewFrustumIntersection.Outside))
+                if (intersection.HasFlag(FrustumIntersection.Outside))
                     sectionQueue.Enqueue(plane.LeftChild);
             }
         }

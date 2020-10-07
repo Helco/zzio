@@ -30,5 +30,10 @@ namespace zzre
 
             return euler;
         }
+
+        public static (Vector3 right, Vector3 up, Vector3 forward) UnitVectors(this Quaternion q) => (
+            Vector3.Transform(Vector3.UnitX, q),
+            Vector3.Transform(Vector3.UnitY, q),
+            Vector3.Transform(Vector3.UnitZ, q));
     }
 }
