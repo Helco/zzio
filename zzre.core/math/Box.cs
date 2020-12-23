@@ -74,8 +74,7 @@ namespace zzre
         public (Box, Quaternion) TransformToWorld(Location location)
         {
             var newCenter = Vector3.Transform(Center, location.LocalToWorld);
-            var newSize = Size * location.GlobalScale;
-            return (new Box(newCenter, newSize), location.GlobalRotation);
+            return (new Box(newCenter, Size), location.GlobalRotation);
         }
 
         public Vector3 ClosestPoint(Vector3 to)

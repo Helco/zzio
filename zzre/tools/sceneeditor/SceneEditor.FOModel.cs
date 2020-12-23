@@ -98,10 +98,8 @@ namespace zzre.tools
                 
                 var pos = Location.LocalPosition;
                 var rotEuler = Location.LocalRotation.ToEuler() * 180.0f / MathF.PI;
-                var scale = Location.LocalScale;
                 hasChanged |= DragFloat3("Position", ref pos);
                 hasChanged |= DragFloat3("Rotation", ref rotEuler);
-                hasChanged |= DragFloat3("Scale", ref scale);
                 NewLine();
 
                 var f1 = SceneFOModel.f1;
@@ -130,7 +128,6 @@ namespace zzre.tools
                     rotEuler = (rotEuler * MathF.PI / 180.0f) - Location.LocalRotation.ToEuler();
                     Location.LocalPosition = pos;
                     Location.LocalRotation *= Quaternion.CreateFromYawPitchRoll(rotEuler.Y, rotEuler.X, rotEuler.Z);
-                    Location.LocalScale = scale;
                     diContainer.GetTag<FramebufferArea>().IsDirty = true;
                 }
             }

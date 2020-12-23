@@ -8,7 +8,6 @@ namespace zzre
         public Location? Parent { get; set; } = null;
 
         public Vector3 LocalPosition { get; set; } = Vector3.Zero;
-        public Vector3 LocalScale { get; set; } = Vector3.One;
 
         private Quaternion _localRotation = Quaternion.Identity;
         public Quaternion LocalRotation
@@ -20,19 +19,17 @@ namespace zzre
         public Matrix4x4 ParentToLocal
         {
             get =>
-                Matrix4x4.CreateScale(LocalScale) *
                 Matrix4x4.CreateFromQuaternion(LocalRotation) *
                 Matrix4x4.CreateTranslation(LocalPosition);
             set
             {
-                if (!Matrix4x4.Decompose(value, out var newScale, out var newRotation, out var newTranslation))
+                if (!Matrix4x4.Decompose(value, out _, out var newRotation, out var newTranslation))
                 {
                     newRotation = Quaternion.Normalize(
                         Quaternion.CreateFromRotationMatrix(value));
                 }
                 LocalPosition = newTranslation;
                 LocalRotation = newRotation;
-                LocalScale = newScale;
             }
         }
 
@@ -63,7 +60,6 @@ namespace zzre
 
         public Vector3 GlobalPosition => LocalToWorld.Translation;
         public Quaternion GlobalRotation => (Parent?.GlobalRotation ?? Quaternion.Identity) * LocalRotation;
-        public Vector3 GlobalScale => (Parent?.GlobalScale ?? Vector3.One) * LocalScale;
 
         public Vector3 GlobalForward => Vector3.Transform(-Vector3.UnitZ, GlobalRotation);
         public Vector3 GlobalUp => Vector3.Transform(Vector3.UnitY, GlobalRotation);

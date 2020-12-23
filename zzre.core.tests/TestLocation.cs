@@ -14,7 +14,6 @@ namespace zzre.core.tests
         {
             var location = new Location();
             location.LocalPosition = new Vector3(1.0f, 2.0f, 3.0f);
-            location.LocalScale = new Vector3(4.0f, 5.0f, 6.0f);
             location.LocalRotation = Quaternion.CreateFromYawPitchRoll(30.0f, 90.0f, 170.0f);
             return location;
         }
@@ -22,7 +21,6 @@ namespace zzre.core.tests
         {
             var location = new Location();
             location.LocalPosition = new Vector3(-234.0f, 0.0123f, 453.09f);
-            location.LocalScale = new Vector3(1.1145f, 0.898f, 2.341f);
             location.LocalRotation = Quaternion.CreateFromYawPitchRoll(-56.0f, 24.0f, 35.0f);
             return location;
         }
@@ -30,7 +28,6 @@ namespace zzre.core.tests
         {
             var location = new Location();
             location.LocalPosition = new Vector3(-0.01f, 23.0f, 5.0f);
-            location.LocalScale = new Vector3(-0.4f, 1.0f, 1.0f);
             location.LocalRotation = Quaternion.CreateFromYawPitchRoll(12.0f, 270.0f, -500.0f);
             return location;
         }
