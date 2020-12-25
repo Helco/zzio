@@ -1,5 +1,6 @@
 ﻿using SharpDX.Diagnostics;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.Linq;
@@ -71,6 +72,33 @@ namespace zzre
         public Box Union(Box other) => FromMinMax(Vector3.Min(Min, other.Min), Vector3.Max(Max, other.Max));
         public Box Union(Vector3 v) => Union(new Box(v, Vector3.Zero));
 
+        public IEnumerable<Vector3> Corners() => new[]
+        {
+            new Vector3(Min.X, Min.Y, Min.Z),
+            new Vector3(Max.X, Min.Y, Min.Z),
+            new Vector3(Min.X, Max.Y, Min.Z),
+            new Vector3(Max.X, Max.Y, Min.Z),
+            new Vector3(Min.X, Min.Y, Max.Z),
+            new Vector3(Max.X, Min.Y, Max.Z),
+            new Vector3(Min.X, Max.Y, Max.Z),
+            new Vector3(Max.X, Max.Y, Max.Z)
+        };
+
+        public IEnumerable<Vector3> Corners(Quaternion q)
+        {
+            var (right, up, forward) = q.UnitVectors();
+            return Corners().Select(c =>
+                right * c.X +
+                up * c.Y +
+                forward * c.Z);
+        }
+
+        public IEnumerable<Vector3> Corners(Location loc)
+        {
+            var (box, q) = TransformToWorld(loc);
+            return box.Corners(q);
+        }
+
         public (Box, Quaternion) TransformToWorld(Location location)
         {
             var newCenter = Vector3.Transform(Center, location.LocalToWorld);
@@ -112,5 +140,40 @@ namespace zzre
             pos.Z >= Min.Z && pos.Z < Max.Z;
 
         public bool Intersects(Location location, Vector3 point) => Intersects(Vector3.Transform(point, location.WorldToLocal));
+
+        public bool Intersects(Box other) =>
+            Min.X <= other.Max.X && Max.X >= other.Min.X &&
+            Min.Y <= other.Max.Y && Max.Y >= other.Min.Y &&
+            Min.Z <= other.Max.Z && Max.Z >= other.Min.Z;
+
+        public bool Intersects(Box other, Location location)
+        {
+            var (otherTransformed, otherRotation) = other.TransformToWorld(location);
+            var (otherR, otherU, otherF) = otherRotation.UnitVectors();
+            return MathEx.SATIntersects(Corners(), otherTransformed.Corners(otherRotation),
+                new[] { Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ },
+                new[] { otherR, otherU, otherF });
+        }
+
+        public bool Intersects(Location myLocation, Box other, Location otherLocation)
+        {
+            var (meTransformed, meRot) = TransformToWorld(myLocation);
+            var (meR, meU, meF) = meRot.UnitVectors();
+            var (otherTransformed, otherRot) = TransformToWorld(otherLocation);
+            var (otherR, otherU, otherF) = otherRot.UnitVectors();
+            return MathEx.SATIntersects(meTransformed.Corners(meRot), otherTransformed.Corners(otherRot),
+                new[] { meR, meU, meF }, new[] { otherR, otherU, otherF });
+        }
+
+        internal Interval IntervalOn(Vector3 axis) => new Interval(Corners().Select(c => Vector3.Dot(c, axis)));
+        public bool Intersects(Plane plane) => IntervalOn(plane.Normal).Intersects(plane.Distance);
+
+        internal Interval IntervalOn(Location myLocation, Vector3 axis) => new Interval(Corners(myLocation).Select(c => Vector3.Dot(c, axis)));
+        public bool Intersects(Location myLocation, Plane plane) => IntervalOn(myLocation, plane.Normal).Intersects(plane.Distance);
+
+        public bool Intersects(Sphere sphere) => sphere.Intersects(this);
+        public bool Intersects(Location myLoc, Sphere sphere) => sphere.Intersects(this, myLoc);
+
+
     }
 }
