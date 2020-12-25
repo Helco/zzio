@@ -26,6 +26,12 @@ namespace zzre
             Normal = normal;
         }
 
-        public int SideOf(Vector3 point) => Math.Sign(Vector3.Dot(point, normal) - Distance);
+        public float SignedDistanceTo(Vector3 point) => Vector3.Dot(point, normal) - Distance;
+        public float DistanceTo(Vector3 point) => Math.Abs(SignedDistanceTo(point));
+        public bool Intersects(Vector3 point) => MathEx.CmpZero(DistanceTo(point));
+        public int SideOf(Vector3 point) => Math.Sign(SignedDistanceTo(point));
+        public Vector3 ClosestPoint(Vector3 point) => point - normal * SignedDistanceTo(point);
+
+        public bool Intersects(Plane other) => !MathEx.CmpZero(Vector3.Cross(Normal, other.Normal).LengthSquared());
     }
 }
