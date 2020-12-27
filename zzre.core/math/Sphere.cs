@@ -9,6 +9,7 @@ namespace zzre
     {
         public readonly Vector3 Center;
         public readonly float Radius;
+        public float RadiusSq => Radius * Radius;
 
         public static Sphere Zero = new Sphere();
 
@@ -29,7 +30,7 @@ namespace zzre
             Radius);
 
         public bool IsInside(Vector3 point) =>
-            Vector3.DistanceSquared(point, Center) <= Radius * Radius;
+            Vector3.DistanceSquared(point, Center) <= RadiusSq;
 
         public bool Intersects(Vector3 point) => IsInside(point);
         public bool Intersects(Sphere other) =>
