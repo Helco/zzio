@@ -104,5 +104,18 @@ namespace zzre
             var p = Start + Direction * t.t;
             return new Raycast(t.t, p, t.n);
         }
+
+        public Raycast? Raycast(Plane plane)
+        {
+            float angle = Vector3.Dot(Direction, plane.Normal);
+            float rayPos = Vector3.Dot(Start, plane.Normal);
+            float t = (plane.Distance - rayPos) / angle;
+            if (angle >= 0.0f || float.IsNaN(t) || t < 0)
+                return null;
+
+            return new Raycast(t, Start + Direction * t, plane.Normal);
+        }
+
+
     }
 }
