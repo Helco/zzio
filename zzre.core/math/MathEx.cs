@@ -16,9 +16,24 @@ namespace zzre
             SATIntersects(pointsA, pointsB,
                 axesA.Concat(axesB).Concat(axesA.SelectMany(a => axesB.Select(b => Vector3.Cross(a, b)))));
 
-        public static bool SATIntersects(IEnumerable<Vector3> pointsA, IEnumerable<Vector3> pointsB, IEnumerable<Vector3> axes) =>
-            axes.All(axis => !
-                new Interval(pointsA.Select(p => Vector3.Dot(p, axis))).Intersects(
-                new Interval(pointsB.Select(p => Vector3.Dot(p, axis)))));
+        public static bool SATIntersects(IEnumerable<Vector3> pointsA, IEnumerable<Vector3> pointsB, IEnumerable<Vector3> axes)
+        {
+            foreach (var axis in axes)
+            {
+                var i1 = new Interval(pointsA.Select(p => Vector3.Dot(p, axis)));
+                var i2 = new Interval(pointsB.Select(p => Vector3.Dot(p, axis)));
+                if (!CmpZero(axis.LengthSquared()) && !i1.Intersects(i2))
+                    return false;
+            }
+            return true;
+        }
+
+        public static Vector3 SATCrossEdge(Line e1, Line e2)
+        {
+            var cross = Vector3.Cross(e1.Vector, e2.Vector);
+            return CmpZero(cross.LengthSquared())
+                ? Vector3.Cross(e1.Vector, Vector3.Cross(e1.Vector, e2.Start - e1.Start))
+                : cross;
+        }
     }
 }

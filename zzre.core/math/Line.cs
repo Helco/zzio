@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 
-namespace zzre.core.math
+namespace zzre
 {
     public readonly struct Line
     {
