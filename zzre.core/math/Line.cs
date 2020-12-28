@@ -26,5 +26,6 @@ namespace zzre
         public Raycast? Cast(Box box) => CheckRaycast(new Ray(Start, Direction).Raycast(box));
         public Raycast? Cast(Box box, Location boxLoc) => CheckRaycast(new Ray(Start, Direction).Raycast(box, boxLoc));
         public Raycast? Cast(Plane plane) => CheckRaycast(new Ray(Start, Direction).Raycast(plane));
+        public Raycast? Cast(Triangle triangle) => CheckRaycast(new Ray(Start, Direction).Raycast(triangle));
     }
 }

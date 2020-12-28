@@ -116,6 +116,16 @@ namespace zzre
             return new Raycast(t, Start + Direction * t, plane.Normal);
         }
 
-
+        public Raycast? Raycast(Triangle triangle)
+        {
+            var cast = Raycast(triangle);
+            if (cast == null)
+                return null;
+            var bary = triangle.Barycentric(cast.Value.Point);
+            return bary.X >= 0.0f && bary.X <= 1.0f &&
+                bary.Y >= 0.0f && bary.Y <= 1.0f &&
+                bary.Z >= 0.0f && bary.Z <= 1.0f
+                ? cast : null;
+        }
     }
 }

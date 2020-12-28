@@ -10,9 +10,11 @@ namespace zzre
     {
         public readonly Vector3 A, B, C;
         public Line AB => new Line(A, B);
+        public Line AC => new Line(A, C);
+        public Line BA => new Line(B, A);
         public Line BC => new Line(B, C);
         public Line CA => new Line(C, A);
-        public Line AC => new Line(A, C);
+        public Line CB => new Line(C, B);
         public Vector3 NormalUn => Vector3.Cross(AB.Vector, AC.Vector);
         public Vector3 Normal => Vector3.Normalize(NormalUn);
         public Plane Plane => new Plane(Normal, Vector3.Dot(A, Normal));
@@ -94,6 +96,20 @@ namespace zzre
                 (CmpZero(da) && CmpZero(db) && CmpZero(dc)) ||
                 !(da < 0 && db < 0 && dc < 0) ||
                 !(da > 0 && db > 0 && dc > 0);
+        }
+
+        public Vector3 Barycentric(Vector3 point)
+        {
+            float PerAxis(Line side, Line opposite)
+            {
+                var v = Perpendicular(side.Vector, opposite.Vector);
+                return 1f - (Vector3.Dot(v, side.Start - point) / Vector3.Dot(v, side.Vector));
+            }
+
+            return new Vector3(
+                PerAxis(AB, BC),
+                PerAxis(BC, AC),
+                PerAxis(CA, AB));
         }
     }
 }

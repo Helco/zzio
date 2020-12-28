@@ -12,6 +12,15 @@ namespace zzre
 
         public static bool CmpZero(float a) => Cmp(a, 0.0f);
 
+        public static Vector3 Project(Vector3 length, Vector3 dir)
+        {
+            var dot = Vector3.Dot(length, dir);
+            return dir * (dot / dir.LengthSquared());
+        }
+
+        public static Vector3 Perpendicular(Vector3 length, Vector3 dir) =>
+            length - Project(length, dir);
+
         public static bool SATIntersects(IEnumerable<Vector3> pointsA, IEnumerable<Vector3> pointsB, IEnumerable<Vector3> axesA, IEnumerable<Vector3> axesB) =>
             SATIntersects(pointsA, pointsB,
                 axesA.Concat(axesB).Concat(axesA.SelectMany(a => axesB.Select(b => Vector3.Cross(a, b)))));
