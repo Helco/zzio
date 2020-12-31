@@ -10,7 +10,7 @@ namespace zzre
 {
     // unfortunately very much copy-paste from Rect, CSharp has no better generics support
 
-    public struct Box
+    public struct Box : IRaycastable
     {
         public Vector3 Center;
         public Vector3 Size;
@@ -174,6 +174,7 @@ namespace zzre
         public bool Intersects(Sphere sphere) => sphere.Intersects(this);
         public bool Intersects(Location myLoc, Sphere sphere) => sphere.Intersects(this, myLoc);
 
-
+        public Raycast? Cast(Ray ray) => ray.Cast(this);
+        public Raycast? Cast(Line line) => line.Cast(this);
     }
 }

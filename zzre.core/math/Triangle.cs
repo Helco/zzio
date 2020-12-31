@@ -6,7 +6,7 @@ using static zzre.MathEx;
 
 namespace zzre
 {
-    public readonly struct Triangle
+    public readonly struct Triangle : IRaycastable
     {
         public readonly Vector3 A, B, C;
         public Line AB => new Line(A, B);
@@ -100,16 +100,24 @@ namespace zzre
 
         public Vector3 Barycentric(Vector3 point)
         {
-            float PerAxis(Line side, Line opposite)
-            {
-                var v = Perpendicular(side.Vector, opposite.Vector);
-                return 1f - (Vector3.Dot(v, side.Start - point) / Vector3.Dot(v, side.Vector));
-            }
+            var AP_Vector = point - A;
+            float d00 = Vector3.Dot(AB.Vector, AB.Vector);
+            float d01 = Vector3.Dot(AB.Vector, AC.Vector);
+            float d11 = Vector3.Dot(AC.Vector, AC.Vector);
+            float d20 = Vector3.Dot(AP_Vector, AB.Vector);
+            float d21 = Vector3.Dot(AP_Vector, AC.Vector);
+            float denom = d00 * d11 - d01 * d01;
+            if (CmpZero(denom))
+                return Vector3.Zero;
 
-            return new Vector3(
-                PerAxis(AB, BC),
-                PerAxis(BC, AC),
-                PerAxis(CA, AB));
+            Vector3 result;
+            result.Y = (d11 * d20 - d01 * d21) / denom;
+            result.Z = (d00 * d21 - d01 * d20) / denom;
+            result.X = 1f - result.Y - result.Z;
+            return result;
         }
+
+        public Raycast? Cast(Ray ray) => ray.Cast(this);
+        public Raycast? Cast(Line line) => line.Cast(this);
     }
 }

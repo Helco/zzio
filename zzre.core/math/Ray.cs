@@ -16,7 +16,7 @@ namespace zzre
         public float PhaseOf(Vector3 point) => Vector3.Dot(point - Start, Direction);
         public Vector3 ClosestPoint(Vector3 point) => Start + Direction * Math.Max(0f, PhaseOf(point));
 
-        public Raycast? Raycast(Sphere sphere)
+        public Raycast? Cast(Sphere sphere)
         {
             var e = sphere.Center - Start;
             var eSq = e.LengthSquared();
@@ -26,14 +26,16 @@ namespace zzre
                 return null;
 
             var d = eSq < sphere.RadiusSq ? a + f : a - f;
+            if (d < 0.0f)
+                return null;
             var p = Start + Direction * d;
-            var n = (p - sphere.Center) / sphere.RadiusSq;
+            var n = Vector3.Normalize(p - sphere.Center);
             return new Raycast(d, p, n);
         }
 
-        public Raycast? Raycast(Box box)
+        public Raycast? Cast(Box box)
         {
-            return Raycast(AABBSlabPoints(box, this));
+            return Cast(AABBSlabPoints(box, this));
 
             static IEnumerable<((float t, Vector3 n), (float t, Vector3 n))> AABBSlabPoints(Box box, Ray me)
             {
@@ -52,7 +54,7 @@ namespace zzre
             }
         }
 
-        public Raycast? Raycast(Box box, Location boxLoc)
+        public Raycast? Cast(Box box, Location boxLoc)
         {
             static ((float t, Vector3 n), (float t, Vector3 n))? OBBSlabPoint(Box box, Ray me, Vector3 axis, float halfSize)
             {
@@ -74,7 +76,7 @@ namespace zzre
             var invalid = ((-1f, Vector3.Zero), (-1f, Vector3.Zero));
             var (newBox, boxRot) = box.TransformToWorld(boxLoc);
             var (boxRight, boxUp, boxForward) = boxRot.UnitVectors();
-            return Raycast(new[]
+            return Cast(new[]
             {
                 OBBSlabPoint(newBox, this, boxRight, box.HalfSize.X) ?? invalid,
                 OBBSlabPoint(newBox, this, boxUp, box.HalfSize.X) ?? invalid,
@@ -82,15 +84,15 @@ namespace zzre
             });
         }
 
-        private Raycast? Raycast(IEnumerable<((float t, Vector3 n), (float t, Vector3 n))> slabPoints)
+        private Raycast? Cast(IEnumerable<((float t, Vector3 n), (float t, Vector3 n))> slabPoints)
         {
-            var tmin = (t: float.MaxValue, n: Vector3.Zero);
-            var tmax = (t: float.MinValue, n: Vector3.Zero);
+            var tmin = (t: float.MinValue, n: Vector3.Zero);
+            var tmax = (t: float.MaxValue, n: Vector3.Zero);
 
             foreach (var cur in slabPoints)
             {
                 var (curMin, curMax) = (cur.Item1, cur.Item2);
-                if (curMin.t < curMax.t)
+                if (curMax.t < curMin.t)
                     (curMin, curMax) = (curMax, curMin);
                 if (curMin.t > tmin.t)
                     tmin = curMin;
@@ -105,7 +107,7 @@ namespace zzre
             return new Raycast(t.t, p, t.n);
         }
 
-        public Raycast? Raycast(Plane plane)
+        public Raycast? Cast(Plane plane)
         {
             float angle = Vector3.Dot(Direction, plane.Normal);
             float rayPos = Vector3.Dot(Start, plane.Normal);
@@ -116,9 +118,9 @@ namespace zzre
             return new Raycast(t, Start + Direction * t, plane.Normal);
         }
 
-        public Raycast? Raycast(Triangle triangle)
+        public Raycast? Cast(Triangle triangle)
         {
-            var cast = Raycast(triangle);
+            var cast = Cast(triangle.Plane);
             if (cast == null)
                 return null;
             var bary = triangle.Barycentric(cast.Value.Point);
