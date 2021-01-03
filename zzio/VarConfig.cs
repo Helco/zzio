@@ -101,7 +101,7 @@ namespace zzio
 
             hashStream.FlushFinalBlock();
             stream.Seek(startPosition, SeekOrigin.Begin);
-            stream.Write(md5.Hash, 0, 16);
+            stream.Write(md5.Hash!, 0, 16);
         }
 
         public static string ReadEncryptedString(BinaryReader reader)

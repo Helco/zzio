@@ -52,7 +52,7 @@ namespace zzio.cli
                 }
                 catch (Exception)
                 {
-                    Console.Error.WriteLine("Could not redirect stdout to \"" + args["stdout"] as string + "\"");
+                    Console.Error.WriteLine("Could not redirect stdout to \"" + (args["stdout"] as string) + "\"");
                 }
             }
             else if (args["stderr"] != null)
@@ -71,7 +71,7 @@ namespace zzio.cli
                 }
                 catch (Exception)
                 {
-                    Console.Error.WriteLine("Could not redirect stderr to \"" + args["stderr"] as string + "\"");
+                    Console.Error.WriteLine("Could not redirect stderr to \"" + (args["stderr"] as string) + "\"");
                 }
             }
         }

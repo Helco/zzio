@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace zzre.core
 {
-    public class RelativeOrderSolver<T> : IReadOnlyList<T>
+    public class RelativeOrderSolver<T> : IReadOnlyList<T> where T : notnull
     {
         private Func<T, RelativeOrderItem> orderOf;
         private List<T> ordering = new List<T>();

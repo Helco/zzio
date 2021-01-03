@@ -95,7 +95,7 @@ namespace zzio.cli
                 {
                     FileType targetType = FileType.Unknown;
                     if (!Enum.TryParse<FileType>(target as string, true, out targetType))
-                        throw new ParameterException("Unknown target format: \"" + target as string + "\"");
+                        throw new ParameterException("Unknown target format: \"" + (target as string) + "\"");
                     foreach (FileType type in formats)
                     {
                         IConverter conv = findConverter(type, targetType);
@@ -113,9 +113,9 @@ namespace zzio.cli
                     object[] ss = s as object[];
                     FileType fromType = FileType.Unknown, toType = FileType.Unknown;
                     if (!Enum.TryParse<FileType>(ss[0] as string, true, out fromType))
-                        throw new Exception("Unknown source format: \"" + ss[0] as string + "\"");
+                        throw new Exception("Unknown source format: \"" + (ss[0] as string) + "\"");
                     if (!Enum.TryParse<FileType>(ss[1] as string, true, out toType))
-                        throw new Exception("Unknown target format: \"" + ss[1] as string + "\"");
+                        throw new Exception("Unknown target format: \"" + (ss[1] as string) + "\"");
                     IConverter conv = findConverter(fromType, toType);
                     if (conv == null)
                         throw new Exception("Conversions from " + fromType + " to " + toType + " are not supported.");
