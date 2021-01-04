@@ -9,6 +9,7 @@ using zzre.core;
 using zzre.imgui;
 using zzre.rendering;
 using System.Linq;
+using Quaternion = System.Numerics.Quaternion;
 
 namespace zzre.tools
 {
@@ -16,7 +17,7 @@ namespace zzre.tools
     {
         private class RaycastObject
         {
-            public IRaycastable Geometry { get; init; } = null!;
+            public IRaycastable Geometry { get; set; } = null!;
             public IColor Color { get; init; } = IColor.White;
             public Func<RaycastObject, Vector3, Raycast, IColor> Shader { get; init; } = (_1, _2, _3) => IColor.Black;
         }
@@ -28,9 +29,11 @@ namespace zzre.tools
         private readonly FlyControlsTag controls;
         private readonly GraphicsDevice device;
         private readonly IReadOnlyList<RaycastObject> objects;
+        private readonly RaycastObject rotatingBox;
 
         private IColor[]? pixels;
         private int PixelCount => (int)(fbArea.Framebuffer.Width * fbArea.Framebuffer.Height);
+        private float rotation = 0.0f;
 
         public Window Window { get; }
 
@@ -54,6 +57,11 @@ namespace zzre.tools
             Window.OnRender += OnRender; // on window to not update framebuffer texture during rendering
             Window.OnContent += OnContent;
 
+            rotatingBox = new RaycastObject()
+            {
+                Geometry = new OrientedBox(new Box(Vector3.UnitX * 3f, Vector3.One), Quaternion.Identity),
+                Shader = ShaderNormal
+            };
             objects = new[]
             {
                 new RaycastObject()
@@ -78,7 +86,8 @@ namespace zzre.tools
                 {
                     Geometry = new Box(Vector3.UnitZ * 3f, Vector3.One),
                     Shader = ShaderNormal
-                }
+                },
+                rotatingBox
             };
         }
 
@@ -86,6 +95,15 @@ namespace zzre.tools
         {
             mouseEventArea.Content();
             fbArea.Content();
+
+            rotation += 3.0f / 180f * MathF.PI;
+            var loc = new Location();
+            loc.LocalPosition =
+                Vector3.UnitX * (3f + MathF.Sin(rotation)) +
+                Vector3.UnitY * MathF.Cos(rotation) * 0.5f +
+                Vector3.UnitZ * MathF.Cos(rotation);
+            loc.LocalRotation = Quaternion.CreateFromYawPitchRoll(rotation, rotation, 0f);
+            rotatingBox.Geometry = new Box(Vector3.Zero, new Vector3(0.4f, 0.8f, 1.2f)).TransformToWorld(loc);
         }
 
         private void OnResize()
@@ -113,11 +131,7 @@ namespace zzre.tools
                     pixelX / (float)fbArea.Framebuffer.Width,
                     pixelY / (float)fbArea.Framebuffer.Height,
                     1.0f) * 2f - Vector3.One;
-                var _projected = Vector3.Transform(pixelPos, invProj);
-                var projected = Vector3.Transform(_projected, camera.Location.LocalToWorld);
-                var ray = new Ray(
-                    camera.Location.GlobalPosition,
-                    Vector3.Normalize(projected - camera.Location.GlobalPosition));
+                var ray = camera.RayAt(new Vector2(pixelPos.X, pixelPos.Y));
 
                 var (cast, obj) = objects
                     .Select(obj => (cast: obj.Geometry.Cast(ray), obj))

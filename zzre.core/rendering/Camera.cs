@@ -11,6 +11,7 @@ namespace zzre.rendering
         private readonly LocationBuffer locationBuffer;
 
         private UniformBuffer<Matrix4x4> projection;
+        private ResettableLazyValue<Matrix4x4> invProjection;
         private float aspect = 1.0f;
         private float vfov = 60.0f * 3.141592653f / 180.0f;
         private float nearPlane = 0.1f;
@@ -21,6 +22,7 @@ namespace zzre.rendering
         public DeviceBufferRange ProjectionRange => new DeviceBufferRange(projection.Buffer, 0, projection.Buffer.SizeInBytes);
         public Matrix4x4 View => Location.WorldToLocal;
         public Matrix4x4 Projection => projection.Value;
+        public Matrix4x4 InvProjection => invProjection.Value;
 
         public float Aspect
         {
@@ -77,6 +79,7 @@ namespace zzre.rendering
             locationBuffer = diContainer.GetTag<LocationBuffer>();
             ViewRange = locationBuffer.Add(Location, inverted: true);
             projection = new UniformBuffer<Matrix4x4>(diContainer.GetTag<GraphicsDevice>().ResourceFactory);
+            invProjection = new ResettableLazyValue<Matrix4x4>(CreateInvProjection);
             UpdateProjection();
         }
 
@@ -92,6 +95,22 @@ namespace zzre.rendering
         private void UpdateProjection()
         {
             projection.Ref = Matrix4x4.CreatePerspectiveFieldOfView(vfov, aspect, nearPlane, farPlane);
+        }
+
+        private Matrix4x4 CreateInvProjection()
+        {
+            if (!Matrix4x4.Invert(Projection, out var invProjection))
+                return default;
+            return invProjection;
+        }
+
+        public Ray RayAt(Vector2 screenPos)
+        {
+            var projected = Vector3.Transform(new Vector3(screenPos, 1f), InvProjection);
+            var transformed = Vector3.Transform(projected, Location.LocalToWorld);
+            return new Ray(
+                Location.GlobalPosition,
+                Vector3.Normalize(transformed - Location.GlobalPosition));
         }
     }
 }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace zzre
 {
-    public readonly struct Sphere : IRaycastable
+    public readonly struct Sphere : IRaycastable, IIntersectable
     {
         public readonly Vector3 Center;
         public readonly float Radius;
@@ -37,6 +37,7 @@ namespace zzre
             (Center - other.Center).LengthSquared() <= MathF.Pow(Radius + other.Radius, 2f);
         public bool Intersects(Box box) => Intersects(box.ClosestPoint(Center));
         public bool Intersects(Box box, Location location) => Intersects(box.ClosestPoint(location, Center));
+        public bool Intersects(OrientedBox box) => Intersects(box.Box.ClosestPoint(box.Orientation, Center));
         public bool Intersects(Plane plane) => Intersects(plane.ClosestPoint(Center));
         public bool Intersects(Triangle triangle) => Intersects(triangle.ClosestPoint(Center));
 

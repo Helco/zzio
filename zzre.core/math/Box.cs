@@ -1,8 +1,5 @@
-﻿using SharpDX.Diagnostics;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Drawing;
 using System.Linq;
 using System.Numerics;
 
@@ -10,7 +7,7 @@ namespace zzre
 {
     // unfortunately very much copy-paste from Rect, CSharp has no better generics support
 
-    public struct Box : IRaycastable
+    public struct Box : IRaycastable, IIntersectable
     {
         public Vector3 Center;
         public Vector3 Size;
@@ -99,10 +96,10 @@ namespace zzre
             return box.Corners(q);
         }
 
-        public (Box, Quaternion) TransformToWorld(Location location)
+        public OrientedBox TransformToWorld(Location location)
         {
             var newCenter = Vector3.Transform(Center, location.LocalToWorld);
-            return (new Box(newCenter, Size), location.GlobalRotation);
+            return new OrientedBox(new Box(newCenter, Size), location.GlobalRotation);
         }
 
         public Vector3 ClosestPoint(Vector3 to)
@@ -146,11 +143,12 @@ namespace zzre
             Min.Y <= other.Max.Y && Max.Y >= other.Min.Y &&
             Min.Z <= other.Max.Z && Max.Z >= other.Min.Z;
 
-        public bool Intersects(Box other, Location location)
+        public bool Intersects(Box other, Location location) => Intersects(other.TransformToWorld(location));
+
+        public bool Intersects(Box other, Quaternion otherOrientation)
         {
-            var (otherTransformed, otherRotation) = other.TransformToWorld(location);
-            var (otherR, otherU, otherF) = otherRotation.UnitVectors();
-            return MathEx.SATIntersects(Corners(), otherTransformed.Corners(otherRotation),
+            var (otherR, otherU, otherF) = otherOrientation.UnitVectors();
+            return MathEx.SATIntersects(Corners(), other.Corners(otherOrientation),
                 new[] { Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ },
                 new[] { otherR, otherU, otherF });
         }
@@ -165,11 +163,13 @@ namespace zzre
                 new[] { meR, meU, meF }, new[] { otherR, otherU, otherF });
         }
 
+        public bool Intersects(OrientedBox o) => Intersects(o.Box, o.Orientation);
+
         internal Interval IntervalOn(Vector3 axis) => new Interval(Corners().Select(c => Vector3.Dot(c, axis)));
         public bool Intersects(Plane plane) => IntervalOn(plane.Normal).Intersects(plane.Distance);
 
-        internal Interval IntervalOn(Location myLocation, Vector3 axis) => new Interval(Corners(myLocation).Select(c => Vector3.Dot(c, axis)));
-        public bool Intersects(Location myLocation, Plane plane) => IntervalOn(myLocation, plane.Normal).Intersects(plane.Distance);
+        internal Interval IntervalOn(Quaternion orientation, Vector3 axis) => new Interval(Corners(orientation).Select(c => Vector3.Dot(c, axis)));
+        public bool Intersects(Quaternion orientation, Plane plane) => IntervalOn(orientation, plane.Normal).Intersects(plane.Distance);
 
         public bool Intersects(Sphere sphere) => sphere.Intersects(this);
         public bool Intersects(Location myLoc, Sphere sphere) => sphere.Intersects(this, myLoc);

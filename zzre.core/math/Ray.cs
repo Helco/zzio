@@ -54,7 +54,7 @@ namespace zzre
             }
         }
 
-        public Raycast? Cast(Box box, Location boxLoc)
+        public Raycast? Cast(OrientedBox obb)
         {
             static ((float t, Vector3 n), (float t, Vector3 n))? OBBSlabPoint(Box box, Ray me, Vector3 axis, float halfSize)
             {
@@ -74,13 +74,13 @@ namespace zzre
             }
 
             var invalid = ((-1f, Vector3.Zero), (-1f, Vector3.Zero));
-            var (newBox, boxRot) = box.TransformToWorld(boxLoc);
+            var (box, boxRot) = obb;
             var (boxRight, boxUp, boxForward) = boxRot.UnitVectors();
             return Cast(new[]
             {
-                OBBSlabPoint(newBox, this, boxRight, box.HalfSize.X) ?? invalid,
-                OBBSlabPoint(newBox, this, boxUp, box.HalfSize.X) ?? invalid,
-                OBBSlabPoint(newBox, this, boxForward, box.HalfSize.X) ?? invalid,
+                OBBSlabPoint(box, this, boxRight, box.HalfSize.X) ?? invalid,
+                OBBSlabPoint(box, this, boxUp, box.HalfSize.Y) ?? invalid,
+                OBBSlabPoint(box, this, boxForward, box.HalfSize.Z) ?? invalid,
             });
         }
 
@@ -129,5 +129,10 @@ namespace zzre
                 bary.Z >= 0.0f && bary.Z <= 1.0f
                 ? cast : null;
         }
+
+        public bool Intersects(Box box) => Cast(box) != null;
+        public bool Intersects(OrientedBox box) => Cast(box) != null;
+        public bool Intersects(Sphere sphere) => Cast(sphere) != null;
+        public bool Intersects(Plane plane) => Cast(plane) != null;
     }
 }

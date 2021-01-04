@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace zzre
 {
-    public struct Plane : IRaycastable
+    public struct Plane : IRaycastable, IIntersectable
     {
         private Vector3 normal;
         public Vector3 Normal
@@ -33,6 +33,9 @@ namespace zzre
         public Vector3 ClosestPoint(Vector3 point) => point - normal * SignedDistanceTo(point);
 
         public bool Intersects(Plane other) => !MathEx.CmpZero(Vector3.Cross(Normal, other.Normal).LengthSquared());
+        public bool Intersects(Box box) => box.Intersects(this);
+        public bool Intersects(OrientedBox box) => box.Box.Intersects(box.Orientation, this);
+        public bool Intersects(Sphere sphere) => sphere.Intersects(this);
 
         public Raycast? Cast(Ray ray) => ray.Cast(this);
         public Raycast? Cast(Line line) => line.Cast(this);

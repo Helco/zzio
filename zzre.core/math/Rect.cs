@@ -62,5 +62,11 @@ namespace zzre
         public Rect WithSizeOf(Vector2 newSize) => new Rect(Center, newSize);
 
         public bool IsInside(Vector2 pos) => pos.X >= Min.X && pos.X < Max.X && pos.Y >= Min.Y && pos.Y < Max.Y;
+
+        /// <summary>
+        /// Calculates the relative position of a point to the rectangle
+        /// </summary>
+        /// <returns>A vector whose components are clamped to 0..1 when inside of the rectangle</returns>
+        public Vector2 RelativePos(Vector2 pos) => (pos - Min) / Size;
     }
 }

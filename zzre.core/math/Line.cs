@@ -5,7 +5,7 @@ using System.Text;
 
 namespace zzre
 {
-    public readonly struct Line
+    public readonly struct Line : IIntersectable
     {
         public readonly Vector3 Start;
         public readonly Vector3 End;
@@ -24,8 +24,14 @@ namespace zzre
             cast == null || cast.Value.Distance * cast.Value.Distance <= LengthSq ? cast : null;
         public Raycast? Cast(Sphere sphere) => CheckRaycast(new Ray(Start, Direction).Cast(sphere));
         public Raycast? Cast(Box box) => CheckRaycast(new Ray(Start, Direction).Cast(box));
-        public Raycast? Cast(Box box, Location boxLoc) => CheckRaycast(new Ray(Start, Direction).Cast(box, boxLoc));
+        public Raycast? Cast(Box box, Location boxLoc) => CheckRaycast(new Ray(Start, Direction).Cast(box.TransformToWorld(boxLoc)));
+        public Raycast? Cast(OrientedBox box) => CheckRaycast(new Ray(Start, Direction).Cast(box));
         public Raycast? Cast(Plane plane) => CheckRaycast(new Ray(Start, Direction).Cast(plane));
         public Raycast? Cast(Triangle triangle) => CheckRaycast(new Ray(Start, Direction).Cast(triangle));
+
+        public bool Intersects(Box box) => Cast(box) != null;
+        public bool Intersects(OrientedBox box) => Cast(box) != null;
+        public bool Intersects(Sphere sphere) => Cast(sphere) != null;
+        public bool Intersects(Plane plane) => Cast(plane) != null;
     }
 }
