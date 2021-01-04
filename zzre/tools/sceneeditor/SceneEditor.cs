@@ -61,6 +61,7 @@ namespace zzre.tools
             gridRenderer.Material.World.Ref = Matrix4x4.Identity;
             AddDisposable(gridRenderer);
             fbArea = Window.GetTag<FramebufferArea>();
+            fbArea.OnResize += HandleResize;
             fbArea.OnRender += camera.Update;
             fbArea.OnRender += locationBuffer.Update;
             fbArea.OnRender += gridRenderer.Render;
@@ -110,6 +111,8 @@ namespace zzre.tools
             Window.Title = $"Scene Editor - {resource.Path.ToPOSIXString()}";
             OnLoadScene();
         }
+
+        private void HandleResize() => camera.Aspect = fbArea.Ratio;
 
         private void HandleMenuOpen()
         {

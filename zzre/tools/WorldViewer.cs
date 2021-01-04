@@ -83,6 +83,7 @@ namespace zzre.tools
             worldTransform.Ref = Matrix4x4.Identity;
             AddDisposable(worldTransform);
             fbArea = Window.GetTag<FramebufferArea>();
+            fbArea.OnResize += HandleResize;
             fbArea.OnRender += locationBuffer.Update;
             fbArea.OnRender += worldTransform.Update;
             fbArea.OnRender += camera.Update;
@@ -188,6 +189,8 @@ namespace zzre.tools
             if (!updateViewFrustumCulling)
                 frustumRenderer.Render(cl);
         }
+
+        private void HandleResize() => camera.Aspect = fbArea.Ratio;
 
         private void HandleMenuOpen()
         {
