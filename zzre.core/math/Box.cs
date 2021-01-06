@@ -40,6 +40,8 @@ namespace zzre
             }
         }
 
+        public float MaxSizeComponent => Math.Max(Math.Max(Size.X, Size.Y), Size.Z);
+
         public static Box Zero => new Box();
 
         public Box(float x, float y, float z, float w, float h, float d)
@@ -84,10 +86,20 @@ namespace zzre
         public IEnumerable<Vector3> Corners(Quaternion q)
         {
             var (right, up, forward) = q.UnitVectors();
-            return Corners().Select(c =>
-                right * c.X +
-                up * c.Y +
-                forward * c.Z);
+            right *= HalfSize.X;
+            up *= HalfSize.Y;
+            forward *= HalfSize.Z;
+            return new[]
+            {
+                Center - right - up - forward,
+                Center + right - up - forward,
+                Center - right + up - forward,
+                Center + right + up - forward,
+                Center - right - up + forward,
+                Center + right - up + forward,
+                Center - right + up + forward,
+                Center + right + up + forward,
+            };
         }
 
         public IEnumerable<Vector3> Corners(Location loc)

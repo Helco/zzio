@@ -12,6 +12,7 @@ using zzre.rendering;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
 using System.Security.Cryptography.X509Certificates;
+using System.Collections;
 
 namespace zzre.tools
 {
@@ -29,7 +30,9 @@ namespace zzre.tools
             public zzio.scn.Behavior? SceneBehaviour { get; }
 
             public string Title => $"#{SceneModel.idx} - {SceneModel.filename}";
-            public Box Bounds => clumpBuffers.Bounds;
+            public IRaycastable SelectableBounds => clumpBuffers.Bounds.TransformToWorld(Location);
+            public IRaycastable RenderedBounds => SelectableBounds;
+            public float ViewSize => clumpBuffers.Bounds.MaxSizeComponent;
 
             public Model(ITagContainer diContainer, zzio.scn.Model sceneModel, Behavior? sceneBehavior)
             {
@@ -127,7 +130,7 @@ namespace zzre.tools
             }
         }
         
-        private class ModelComponent : BaseDisposable
+        private class ModelComponent : BaseDisposable, IEnumerable<ISelectable>
         {
             private readonly ITagContainer diContainer;
             private readonly SceneEditor editor;
@@ -140,6 +143,7 @@ namespace zzre.tools
                 diContainer.AddTag(this);
                 this.diContainer = diContainer;
                 editor = diContainer.GetTag<SceneEditor>();
+                editor.selectableContainers.Add(this);
                 editor.fbArea.OnRender += HandleRender;
                 editor.OnLoadScene += HandleLoadScene;
                 diContainer.GetTag<MenuBarWindowTag>().AddCheckbox("View/Models", () => ref isVisible, () => editor.fbArea.IsDirty = true);
@@ -192,6 +196,9 @@ namespace zzre.tools
                     TreePop();
                 }
             }
+
+            IEnumerator<ISelectable> IEnumerable<ISelectable>.GetEnumerator() => ((IEnumerable<ISelectable>)models).GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => models.Cast<ISelectable>().GetEnumerator();
         }
     }
 }

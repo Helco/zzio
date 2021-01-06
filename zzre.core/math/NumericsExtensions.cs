@@ -35,5 +35,7 @@ namespace zzre
             Vector3.Transform(Vector3.UnitX, q),
             Vector3.Transform(Vector3.UnitY, q),
             Vector3.Transform(Vector3.UnitZ, q));
+
+        public static float MaxComponent(this Vector3 v) => Math.Max(Math.Max(v.X, v.Y), v.Z);
     }
 }

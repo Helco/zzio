@@ -30,7 +30,7 @@ namespace zzre.tools
         private readonly IResourcePool resourcePool;
         private readonly OpenFileModal openFileModal;
         private readonly ModelMaterialEdit modelMaterialEdit;
-        private readonly DebugBoundsLineRenderer boundsRenderer;
+        private readonly DebugBoxLineRenderer boundsRenderer;
         private readonly DebugPlaneRenderer planeRenderer;
         private readonly DebugHexahedronLineRenderer frustumRenderer;
         private readonly WorldRenderer worldRenderer;
@@ -95,7 +95,7 @@ namespace zzre.tools
             editor.AddInfoSection("Sections", HandleSectionsContent, false);
             editor.AddInfoSection("ViewFrustum Culling", HandleViewFrustumCulling, false);
 
-            boundsRenderer = new DebugBoundsLineRenderer(diContainer);
+            boundsRenderer = new DebugBoxLineRenderer(diContainer);
             boundsRenderer.Color = IColor.Red;
             boundsRenderer.Material.LinkTransformsTo(camera);
             boundsRenderer.Material.LinkTransformsTo(world: worldTransform);

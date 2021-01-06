@@ -13,6 +13,7 @@ namespace zzre.imgui
 
         public event Action<ImGuiMouseButton, Vector2> OnDrag = (_, __) => { };
         public event Action<float> OnScroll = _ => { };
+        public event Action<ImGuiMouseButton, Vector2> OnClick = (_, __) => { };
 
         public MouseEventArea(Window parent)
         {
@@ -37,7 +38,16 @@ namespace zzre.imgui
             for (int i = 0; i < (int)ImGuiMouseButton.COUNT; i++)
             {
                 var button = (ImGuiMouseButton)i;
-                if (!IsMouseDragging(button) || !validBounds.IsInside(GetIO().MouseClickedPos[i]))
+                if (!validBounds.IsInside(GetIO().MouseClickedPos[i]))
+                    continue;
+
+                if (IsMouseClicked(button))
+                {
+                    OnClick(button, validBounds.RelativePos(GetIO().MouseClickedPos[i]));
+                    continue;
+                }    
+
+                if (!IsMouseDragging(button))
                 {
                     lastDragDelta[i] = Vector2.Zero;
                     continue;

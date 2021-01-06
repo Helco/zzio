@@ -1,6 +1,7 @@
 ﻿using IconFonts;
 using ImGuiNET;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -22,6 +23,7 @@ namespace zzre.tools
         private class Trigger : BaseDisposable, ISelectable
         {
             private const float PointTriggerSize = 0.1f;
+            private const float SelectableSize = 0.2f;
 
             private readonly ITagContainer diContainer;
 
@@ -30,7 +32,22 @@ namespace zzre.tools
             public int Index { get; }
 
             public string Title => $"#{SceneTrigger.idx} - {SceneTrigger.type}";
-            public Box Bounds { get; }
+            public IRaycastable SelectableBounds => new Sphere(Location.GlobalPosition, SelectableSize);
+
+            public IRaycastable? RenderedBounds => SceneTrigger.colliderType switch
+            {
+                TriggerColliderType.Box => new Box(Vector3.Zero, SceneTrigger.size.ToNumerics()).TransformToWorld(Location),
+                TriggerColliderType.Sphere => new Sphere(Location.GlobalPosition, SceneTrigger.radius),
+                TriggerColliderType.Point => null,
+                _ => throw new NotImplementedException("Unknown TriggerColliderType")
+            };
+            public float ViewSize => SceneTrigger.colliderType switch
+            {
+                TriggerColliderType.Box => SceneTrigger.size.ToNumerics().MaxComponent(),
+                TriggerColliderType.Sphere => SceneTrigger.radius * 2f,
+                TriggerColliderType.Point => PointTriggerSize * 2f,
+                _ => throw new NotImplementedException("Unknown TriggerColliderType")
+            };
 
             public Trigger(ITagContainer diContainer, zzio.scn.Trigger sceneTrigger, int index)
             {
@@ -40,14 +57,6 @@ namespace zzre.tools
 
                 Location.LocalPosition = sceneTrigger.pos.ToNumerics();
                 Location.LocalRotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateLookAt(Vector3.Zero, sceneTrigger.dir.ToNumerics(), Vector3.UnitY));
-
-                Bounds = new Box(Vector3.Zero, SceneTrigger.colliderType switch
-                {
-                    TriggerColliderType.Box => SceneTrigger.size.ToNumerics(),
-                    TriggerColliderType.Sphere => Vector3.One * SceneTrigger.radius,
-                    TriggerColliderType.Point => Vector3.One * PointTriggerSize,
-                    _ => throw new NotImplementedException("Unknown TriggerColliderType")
-                });
             }
 
             public void Content()
@@ -61,7 +70,7 @@ namespace zzre.tools
             }
         }
 
-        private class TriggerComponent : BaseDisposable
+        private class TriggerComponent : BaseDisposable, IEnumerable<ISelectable>
         {
             private static readonly IColor NormalColor = IColor.White;
             private static readonly IColor SelectedColor = IColor.Red;
@@ -85,6 +94,7 @@ namespace zzre.tools
                 editor.OnLoadScene += HandleLoadScene;
                 editor.OnNewSelection += _ => UpdateIcons();
                 editor.editor.AddInfoSection("Triggers", HandleInfoSection, false);
+                editor.selectableContainers.Add(this);
                 diContainer.GetTag<MenuBarWindowTag>().AddSlider("View/Triggers/Size", 0.0f, 512f, () => ref iconSize, UpdateIcons);
                 iconFont = diContainer.GetTag<IconFont>();
                 iconRenderer = new DebugIconRenderer(diContainer);
@@ -168,6 +178,9 @@ namespace zzre.tools
                     TreePop();
                 }
             }
+
+            public IEnumerator<ISelectable> GetEnumerator() => ((IEnumerable<ISelectable>)triggers).GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
             private static readonly IReadOnlyDictionary<TriggerType, string> Icons = new Dictionary<TriggerType, string>()
             {

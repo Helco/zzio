@@ -11,6 +11,7 @@ using zzre.materials;
 using zzre.rendering;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
+using System.Collections;
 
 namespace zzre.tools
 {
@@ -27,7 +28,9 @@ namespace zzre.tools
             public zzio.scn.FOModel SceneFOModel { get; }
 
             public string Title => $"#{SceneFOModel.idx} - {SceneFOModel.filename}";
-            public Box Bounds => clumpBuffers.Bounds;
+            public IRaycastable SelectableBounds => clumpBuffers.Bounds.TransformToWorld(Location);
+            public IRaycastable RenderedBounds => SelectableBounds;
+            public float ViewSize => clumpBuffers.Bounds.MaxSizeComponent;
 
             public FOModel(ITagContainer diContainer, zzio.scn.FOModel sceneModel)
             {
@@ -133,7 +136,7 @@ namespace zzre.tools
             }
         }
         
-        private class FOModelComponent : BaseDisposable
+        private class FOModelComponent : BaseDisposable, IEnumerable<ISelectable>
         {
             private readonly ITagContainer diContainer;
             private readonly SceneEditor editor;
@@ -146,6 +149,7 @@ namespace zzre.tools
                 diContainer.AddTag(this);
                 this.diContainer = diContainer;
                 editor = diContainer.GetTag<SceneEditor>();
+                editor.selectableContainers.Add(this);
                 editor.fbArea.OnRender += HandleRender;
                 editor.OnLoadScene += HandleLoadScene;
                 diContainer.GetTag<MenuBarWindowTag>().AddRadio("View/FOModels", new[]
@@ -208,6 +212,9 @@ namespace zzre.tools
                     TreePop();
                 }
             }
+
+            IEnumerator<ISelectable> IEnumerable<ISelectable>.GetEnumerator() => ((IEnumerable<ISelectable>)models).GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => models.Cast<ISelectable>().GetEnumerator();
         }
     }
 }
