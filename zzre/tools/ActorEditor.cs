@@ -17,6 +17,13 @@ namespace zzre.tools
 {
     public partial class ActorEditor : ListDisposable, IDocumentEditor
     {
+        private enum HeadIKMode
+        {
+            Disabled = 0,
+            Enabled,
+            Frozen
+        }
+
         private readonly ITagContainer diContainer;
         private readonly ITagContainer localDiContainer;
         private readonly TwoColumnEditorTag editor;
@@ -33,6 +40,7 @@ namespace zzre.tools
         private Part? wings;
         private Location actorLocation = new Location();
         private LocationBuffer locationBuffer;
+        private HeadIKMode headIKMode = HeadIKMode.Disabled;
 
         public Window Window { get; }
         public IResource? CurrentResource { get; private set; }
@@ -81,6 +89,7 @@ namespace zzre.tools
             editor.AddInfoSection("Wings animations", () => HandlePartContent(true, () => wings?.AnimationsContent() ?? false), false);
             editor.AddInfoSection("Body skeleton", () => HandlePartContent(false, () => body?.skeletonRenderer.Content() ?? false), false);
             editor.AddInfoSection("Wings skeleton", () => HandlePartContent(true, () => wings?.skeletonRenderer.Content() ?? false), false);
+            editor.AddInfoSection("Head IK", HandleHeadIKContent, false);
         }
 
         public void Load(string pathText)
@@ -194,6 +203,24 @@ namespace zzre.tools
                 Text("This actor has no wings.");
             else if (action())
                 fbArea.IsDirty = true;
+        }
+
+        private void HandleHeadIKContent()
+        {
+            if (description == null || body == null)
+                return;
+            if (description.headBoneID < 0)
+                Text("This actor has no head.");
+
+            ImGuiEx.EnumRadioButtonGroup(ref headIKMode);
+            var newValue = (description.headBoneID, camera.Location.GlobalPosition);
+            body.singleIK = headIKMode switch
+            {
+                HeadIKMode.Disabled => null,
+                HeadIKMode.Enabled => newValue,
+                HeadIKMode.Frozen => body.singleIK ?? newValue,
+                _ => throw new NotImplementedException("Unimplemented head IK mode")
+            };
         }
     }
 }

@@ -99,7 +99,11 @@ namespace zzre
         public void AddTime(float delta)
         {
             if (currentAnimators == null)
+            {
+                ResetToBinding();
                 return;
+            }
+
             foreach (var (bone, boneI) in Bones.Indexed())
             {
                 currentAnimators[boneI].AddTime(delta);
@@ -109,6 +113,18 @@ namespace zzre
                 bone.LocalRotation = Quaternion.Conjugate(currentAnimators[boneI].CurRotation); // unfortunately no idea why the conjugate has to be used
                 bone.LocalPosition = currentAnimators[boneI].CurTranslation;
             }
+        }
+
+        public void ApplySingleIK(int boneIdx, Vector3 worldTargetPos)
+        {
+            var objTargetPos = Vector3.Transform(worldTargetPos, Bones[boneIdx].WorldToLocal);
+            var objTargetDir = Vector3.Normalize(objTargetPos);
+            var boneForward = Vector3.UnitY;
+            var rotationAxis = Vector3.Normalize(Vector3.Cross(objTargetDir, boneForward));
+
+            var dot = Math.Clamp(Vector3.Dot(objTargetDir, boneForward), 0.0f, 1.0f);
+            var newRotation = Quaternion.CreateFromAxisAngle(rotationAxis, MathF.Acos(dot));
+            Bones[boneIdx].LocalRotation = Quaternion.Conjugate(newRotation);
         }
     }
 }

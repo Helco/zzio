@@ -35,6 +35,7 @@ namespace zzre.tools
             public Skeleton skeleton;
             public DebugSkeletonRenderer skeletonRenderer;
             public (AnimationType type, string fileName, SkeletalAnimation ani)[] animations;
+            public (int BoneIdx, Vector3 TargetPos)? singleIK = null;
             
             public Part(ITagContainer diContainer, string modelName, (AnimationType type, string filename)[] animationNames)
             {
@@ -126,10 +127,12 @@ namespace zzre.tools
 
             public bool PlaybackContent()
             {
-                bool hasChanged = isPlaying;
-                if (isPlaying)
+                bool hasChanged = isPlaying || singleIK.HasValue;
+                if (hasChanged)
                 {
-                    skeleton.AddTime(gameTime.Delta);
+                    skeleton.AddTime(isPlaying ? gameTime.Delta : 0.0f);
+                    if (singleIK.HasValue)
+                        skeleton.ApplySingleIK(singleIK.Value.BoneIdx, singleIK.Value.TargetPos);
                     foreach (var mat in materials)
                         mat.Pose.MarkPoseDirty();
                     skeletonRenderer.BoneMaterial.Pose.MarkPoseDirty();
