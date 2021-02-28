@@ -192,34 +192,37 @@ namespace zzre.rendering
                 if (resLayoutElements.Last().Count() == 0)
                     throw new InvalidOperationException("Last resource layout has no elements");
 
-                var builtPipeline = Collection.pipelines.FirstOrDefault(Equals);
-                if (builtPipeline != null)
+                lock (Collection)
+                {
+                    var builtPipeline = Collection.pipelines.FirstOrDefault(Equals);
+                    if (builtPipeline != null)
+                        return builtPipeline;
+
+                    var vertexLayouts = vertexElements
+                        .Select(set => new VertexLayoutDescription(set.ToArray()))
+                        .Select((set, i) => { set.InstanceStepRate = vertexLayoutInstanceStepRates[i]; return set; })
+                        .ToArray();
+                    var resLayoutDescrs = resLayoutElements
+                        .Select(set => new ResourceLayoutDescription(set.ToArray()))
+                        .ToArray();
+                    var resourceLayouts = resLayoutDescrs
+                        .Select(layoutDescr => Collection.Factory.CreateResourceLayout(layoutDescr))
+                        .ToArray();
+                    var shaders = Collection.LoadShaderSet(shaderSetName);
+                    var pipelineDescr = new GraphicsPipelineDescription(
+                        blendState,
+                        depthStencil,
+                        rasterizer,
+                        primitiveTopology,
+                        new ShaderSetDescription(vertexLayouts, shaders),
+                        resourceLayouts,
+                        OutputDescription);
+                    var pipeline = Collection.Factory.CreateGraphicsPipeline(pipelineDescr);
+                    builtPipeline = new BuiltPipeline(pipeline, pipelineDescr, resLayoutDescrs, shaderSetName);
+
+                    Collection.pipelines.Add(builtPipeline);
                     return builtPipeline;
-
-                var vertexLayouts = vertexElements
-                    .Select(set => new VertexLayoutDescription(set.ToArray()))
-                    .Select((set, i) => { set.InstanceStepRate = vertexLayoutInstanceStepRates[i]; return set; })
-                    .ToArray();
-                var resLayoutDescrs = resLayoutElements
-                    .Select(set => new ResourceLayoutDescription(set.ToArray()))
-                    .ToArray();
-                var resourceLayouts = resLayoutDescrs
-                    .Select(layoutDescr => Collection.Factory.CreateResourceLayout(layoutDescr))
-                    .ToArray();
-                var shaders = Collection.LoadShaderSet(shaderSetName);
-                var pipelineDescr = new GraphicsPipelineDescription(
-                    blendState,
-                    depthStencil,
-                    rasterizer,
-                    primitiveTopology,
-                    new ShaderSetDescription(vertexLayouts, shaders),
-                    resourceLayouts,
-                    OutputDescription);
-                var pipeline = Collection.Factory.CreateGraphicsPipeline(pipelineDescr);
-                builtPipeline = new BuiltPipeline(pipeline, pipelineDescr, resLayoutDescrs, shaderSetName);
-
-                Collection.pipelines.Add(builtPipeline);
-                return builtPipeline;
+                }
             }
 
             private OutputDescription OutputDescription => new OutputDescription(
