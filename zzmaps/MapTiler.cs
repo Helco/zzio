@@ -16,7 +16,7 @@ namespace zzmaps
         public float BasePixelsPerUnit { get; set; } = 1f;
         public float MinPixelsPerUnit { get; set; } = 32f;
 
-        public int TilePixelSize { get; set; } = 1024;
+        public uint TilePixelSize { get; set; } = 1024;
         public Box WorldUnitBounds { get; set; }
 
         public float ZoomFactorAt(int zoomLevel) => MathF.Pow(2f, zoomLevel);

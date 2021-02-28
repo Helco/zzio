@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using Veldrid;
 
 namespace zzre
 {
@@ -32,5 +33,8 @@ namespace zzre
             m.right.y, m.up.y, m.forward.y, m.pos.y,
             m.right.z, m.up.z, m.forward.z, m.pos.z,
             m.right.w, m.up.w, m.forward.w, m.pos.w);
+
+        public static RgbaByte ToVeldrid(this zzio.primitives.IColor c) => new RgbaByte(c.r, c.g, c.b, c.a);
+        public static RgbaFloat ToVeldrid(this zzio.primitives.FColor c) => new RgbaFloat(c.r, c.g, c.b, c.a);
     }
 }
