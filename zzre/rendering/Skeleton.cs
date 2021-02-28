@@ -107,8 +107,7 @@ namespace zzre
             foreach (var (bone, boneI) in Bones.Indexed())
             {
                 currentAnimators[boneI].AddTime(delta);
-                if (nextAnimators != null)
-                    nextAnimators[boneI].AddTime(delta);
+                nextAnimators?[boneI].AddTime(delta);
 
                 bone.LocalRotation = Quaternion.Conjugate(currentAnimators[boneI].CurRotation); // unfortunately no idea why the conjugate has to be used
                 bone.LocalPosition = currentAnimators[boneI].CurTranslation;

@@ -53,6 +53,7 @@ namespace zzre.tools
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddButton("Open", HandleMenuOpen);
             fbArea = Window.GetTag<FramebufferArea>();
+            fbArea.OnResize += HandleResize;
             fbArea.OnRender += HandleRender;
             modelMaterialEdit = new ModelMaterialEdit(Window, diContainer);
             diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
@@ -136,6 +137,8 @@ namespace zzre.tools
             CurrentResource = resource;
             Window.Title = $"Model Viewer - {resource.Path.ToPOSIXString()}";
         }
+
+        private void HandleResize() => camera.Aspect = fbArea.Ratio;
 
         private void HandleRender(CommandList cl)
         {
