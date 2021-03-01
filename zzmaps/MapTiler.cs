@@ -6,6 +6,16 @@ using zzre;
 
 namespace zzmaps
 {
+    readonly struct TileID
+    {
+        public TileID(int tileX, int tileZ, int zoomLevel) =>
+            (TileX, TileZ, ZoomLevel) = (tileX, tileZ, zoomLevel);
+
+        public int TileX { get; }
+        public int TileZ { get; }
+        public int ZoomLevel { get; }
+    }
+
     class MapTiler
     {
         private readonly int globalMinZoomLevel = int.MinValue;
@@ -41,20 +51,20 @@ namespace zzmaps
             TilePixelSize = options.TileSize;
         }
 
-        public Box TileUnitBoundsFor(int tileX, int tileZ, int zoomLevel)
+        public Box TileUnitBoundsFor(TileID id)
         {
-            float tileUnitSize = TileUnitSizeAt(zoomLevel);
+            float tileUnitSize = TileUnitSizeAt(id.ZoomLevel);
             return new Box(
                 center: new Vector3(
-                    WorldUnitBounds.Min.X + (tileX + 0.5f) * tileUnitSize,
+                    WorldUnitBounds.Min.X + (id.TileX + 0.5f) * tileUnitSize,
                     WorldUnitBounds.Center.Y,
-                    WorldUnitBounds.Min.Z + (tileZ + 0.5f) * tileUnitSize),
+                    WorldUnitBounds.Min.Z + (id.TileZ + 0.5f) * tileUnitSize),
                 size: new Vector3(tileUnitSize, WorldUnitBounds.Size.Y, tileUnitSize));
         }
 
         private (int minTile, int maxTile) TileRangeForAndAt(float min, float max, int zoomLevel) => (
             (int)Math.Floor((min - ExtraBorder) / TileUnitSizeAt(zoomLevel)),
-            (int)Math.Ceiling((max + ExtraBorder) / TileUnitSizeAt(zoomLevel)));
+            (int)Math.Floor((max + ExtraBorder) / TileUnitSizeAt(zoomLevel)));
 
         private int TileCountForAndAt(float min, float max, int zoomLevel) =>
             TileRangeForAndAt(min, max, zoomLevel).maxTile - TileRangeForAndAt(min, max, zoomLevel).minTile + 1;
@@ -75,7 +85,7 @@ namespace zzmaps
             for (int i = 1; ;i++)
             {
                 if (TileCountForAndAt(min, max, i) > 1)
-                    return i - 1;
+                    return i;
             }
         }
 
@@ -93,17 +103,15 @@ namespace zzmaps
         public int ZoomLevelCount => MaxZoomLevel - MinZoomLevel + 1;
 
         public IEnumerable<(int tileX, int tileZ)> TilesAt(int zoomLevel) => Enumerable
-            .Range(TileRangeForXAt(zoomLevel).minTile, TileCountForXAt(zoomLevel))
+            .Range(0, TileCountForXAt(zoomLevel))
             .SelectMany(x => Enumerable
-                .Range(TileRangeForZAt(zoomLevel).minTile, TileCountForZAt(zoomLevel))
+                .Range(0, TileCountForZAt(zoomLevel))
                 .Select(z => (x, z)));
 
-        public IEnumerable<(int zoomLevel, int tileX, int tileZ)> Tiles => Enumerable
+        public IEnumerable<TileID> Tiles => Enumerable
             .Range(MinZoomLevel, ZoomLevelCount)
             .SelectMany(zoomLevel => TilesAt(zoomLevel)
-                .Select(t => (zoomLevel, t.tileX, t.tileZ)));
-
-        public IEnumerable<Box> TileUnitBounds => Tiles.Select(t => TileUnitBoundsFor(t.tileX, t.tileZ, t.zoomLevel));
+                .Select(t => new TileID(t.tileX, t.tileZ, zoomLevel)));
 
         public int TileCountAt(int zoomLevel) =>
             TileCountForXAt(zoomLevel) * TileCountForZAt(zoomLevel);

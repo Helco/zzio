@@ -20,6 +20,7 @@ namespace zzmaps
         private readonly CommandList commandList;
         private readonly Framebuffer framebuffer;
         private readonly Texture depthTexture, colorTexture, stagingTexture;
+        private readonly DeviceBuffer counterBuffer, counterStagingBuffer;
         private RgbaFloat backgroundColor;
         private MapTiler mapTiler = new MapTiler();
         private TileScene? scene = null;
@@ -36,7 +37,7 @@ namespace zzmaps
                 scene = value;
                 if (scene != null)
                 {
-                    sceneRenderData = new TileSceneRenderData(localDiContainer, scene);
+                    sceneRenderData = new TileSceneRenderData(localDiContainer, scene, counterBuffer);
                     mapTiler.WorldUnitBounds = scene.WorldBuffers.Sections.First().Bounds;
                     backgroundColor = options.Background switch
                     {
@@ -71,6 +72,14 @@ namespace zzmaps
                 DepthTarget = new FramebufferAttachmentDescription(depthTexture, 0),
                 ColorTargets = new[] { new FramebufferAttachmentDescription(colorTexture, 0) }
             });
+            counterBuffer = resourceFactory.CreateBuffer(new BufferDescription()
+            {
+                SizeInBytes = sizeof(uint),
+                StructureByteStride = sizeof(uint),
+                Usage = BufferUsage.StructuredBufferReadWrite,
+                RawBuffer = false
+            });
+            counterStagingBuffer = resourceFactory.CreateBuffer(new BufferDescription(sizeof(uint), BufferUsage.Staging));
 
             AddDisposable(commandList);
             AddDisposable(Fence);
@@ -80,6 +89,8 @@ namespace zzmaps
             AddDisposable(depthTexture);
             AddDisposable(stagingTexture);
             AddDisposable(framebuffer);
+            AddDisposable(counterBuffer);
+            AddDisposable(counterStagingBuffer);
         }
 
         private TextureDescription GetTextureDescription(TextureUsage usage, PixelFormat format)
@@ -105,32 +116,35 @@ namespace zzmaps
             scene?.Dispose();
         }
         
-        public IEnumerable<MappedResource> RenderTiles()
+        public IEnumerable<(Texture, TileID, uint)> RenderTiles()
         {
             if (sceneRenderData == null)
                 yield break;
 
-            foreach (var tileUnitBounds in mapTiler.TileUnitBounds)
+            uint pixelCounter = 0;
+            foreach (var tile in mapTiler.Tiles)
             {
+                pixelCounter = 0;
                 Fence.Reset();
                 commandList.Begin();
+                commandList.UpdateBuffer(counterBuffer, 0, pixelCounter);
                 commandList.SetFramebuffer(framebuffer);
                 commandList.ClearColorTarget(0, backgroundColor);
                 commandList.ClearDepthStencil(1f);
-                camera.Bounds = tileUnitBounds;
+                camera.Bounds = mapTiler.TileUnitBoundsFor(tile);
                 camera.Update(commandList);
                 locationBuffer.Update(commandList);
                 sceneRenderData.Render(commandList);
-                commandList.End();
-                graphicsDevice.SubmitCommands(commandList, Fence);
-                graphicsDevice.WaitForFence(Fence);
-                Fence.Reset();
-                commandList.Begin();
+                commandList.CopyBuffer(counterBuffer, 0, counterStagingBuffer, 0, sizeof(uint));
                 commandList.CopyTexture(colorTexture, stagingTexture);
                 commandList.End();
                 graphicsDevice.SubmitCommands(commandList, Fence);
                 graphicsDevice.WaitForFence(Fence);
-                yield return graphicsDevice.Map(stagingTexture, MapMode.Read);
+
+                var counterMap = graphicsDevice.Map<uint>(counterStagingBuffer, MapMode.Read);
+                pixelCounter = counterMap[0];
+                graphicsDevice.Unmap(counterStagingBuffer);
+                yield return (stagingTexture, tile, pixelCounter);
             }
         }
     }

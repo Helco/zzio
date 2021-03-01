@@ -87,22 +87,27 @@ namespace zzmaps
         {
             var diContainer = SetupDIContainer(options, out var graphicsDevice);
 
-            options.MaxZoom = options.MinZoom = 0;
-            options.IgnorePPU = true;
-
             var renderer = new MapTileRenderer(diContainer);
             renderer.Scene = new TileScene(diContainer, diContainer.GetTag<IResourcePool>().FindFile("resources/worlds/sc_2400.scn")
                 ?? throw new FileNotFoundException("Could not find world sc_2400"));
             var jpgEncoder = new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder();
 
-            foreach (var tile in renderer.RenderTiles())
+            bool didRenderBackground = false;
+            foreach (var (texture, tile, pixelCounter) in renderer.RenderTiles())
             {
+                if (pixelCounter == 0)
+                {
+                    if (didRenderBackground)
+                        continue;
+                    didRenderBackground = true;
+                }
                 ReadOnlySpan<byte> tileSpan;
-                unsafe { tileSpan = new ReadOnlySpan<byte>(tile.Data.ToPointer(), (int)(options.TileSize * options.TileSize * 4)); }
+                var map = graphicsDevice.Map(texture, MapMode.Read);
+                unsafe { tileSpan = new ReadOnlySpan<byte>(map.Data.ToPointer(), (int)(options.TileSize * options.TileSize * 4)); }
                 using var image = SixLabors.ImageSharp.Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgba32>(tileSpan, (int)options.TileSize, (int)options.TileSize);
-                using var fs = new FileStream("test.jpg", FileMode.Create, FileAccess.Write);
+                using var fs = new FileStream(pixelCounter == 0 ? "background.jpg" : $"out/test-{tile.ZoomLevel}-{tile.TileX}.{tile.TileZ}.jpg", FileMode.Create, FileAccess.Write);
                 image.Save(fs, jpgEncoder);
-                graphicsDevice.Unmap(tile.Resource);
+                graphicsDevice.Unmap(texture);
             }
 
             renderer.Dispose();
@@ -136,6 +141,7 @@ namespace zzmaps
 
             var pipelineCollection = new PipelineCollection(graphicsDevice);
             pipelineCollection.AddShaderResourceAssemblyOf<zzre.materials.ModelStandardMaterial>();
+            pipelineCollection.AddShaderResourceAssemblyOf<MapStandardMaterial>();
             diContainer.AddTag(pipelineCollection);
 
             var resourcePools = options.ResourcePath

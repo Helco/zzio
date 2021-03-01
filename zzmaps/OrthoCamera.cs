@@ -79,7 +79,7 @@ namespace zzmaps
                 Bounds.Center.X,
                 Bounds.Max.Y - nearPlane,
                 Bounds.Center.Z);
-            Location.LocalRotation = Quaternion.CreateFromYawPitchRoll(0.0f, 90f * MathF.PI / 180f, 0.0f);
+            Location.LocalRotation = Quaternion.CreateFromYawPitchRoll(0.0f, -90f * MathF.PI / 180f, 0.0f);
         }
 
         private Matrix4x4 CreateInvProjection()
