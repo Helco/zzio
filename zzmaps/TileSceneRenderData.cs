@@ -79,10 +79,15 @@ namespace zzmaps
                 locationBuffer.Remove(range);
         }
 
-        public void Render(CommandList cl)
+        public void Render(CommandList cl, Box visibleBox)
         {
+            var visibleWorldMeshes = scene.WorldBuffers.Sections
+                .OfType<WorldBuffers.MeshSection>()
+                .Where(meshSection => meshSection.Bounds.Intersects(visibleBox))
+                .SelectMany(meshSection => scene.WorldBuffers.SubMeshes.Skip(meshSection.SubMeshStart).Take(meshSection.SubMeshCount))
+                .GroupBy(subMesh => subMesh.MaterialIndex);
             scene.WorldBuffers.SetBuffers(cl);
-            foreach (var group in scene.WorldBuffers.SubMeshes.GroupBy(subMesh => subMesh.MaterialIndex))
+            foreach (var group in visibleWorldMeshes)
             {
                 worldMaterials[group.Key].Apply(cl);
                 foreach (var subMesh in group)

@@ -134,7 +134,7 @@ namespace zzmaps
                 camera.Bounds = mapTiler.TileUnitBoundsFor(tile);
                 camera.Update(commandList);
                 locationBuffer.Update(commandList);
-                sceneRenderData.Render(commandList);
+                sceneRenderData.Render(commandList, camera.Bounds);
                 commandList.CopyBuffer(counterBuffer, 0, counterStagingBuffer, 0, sizeof(uint));
                 commandList.CopyTexture(colorTexture, stagingTexture);
                 commandList.End();
