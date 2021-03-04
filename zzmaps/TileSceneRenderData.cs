@@ -37,16 +37,23 @@ namespace zzmaps
             this.locationRanges = locationRanges;
             worldMaterials = scene.WorldBuffers.Materials.Select(rwMaterial =>
             {
-                var material = new MapStandardMaterial(diContainer);
-                (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(TextureBasePaths, rwMaterial);
+                IMapMaterial material;
+                if (rwMaterial.isTextured)
+                {
+                    var texMaterial = new MapStandardMaterial(diContainer);
+                    (texMaterial.MainTexture.Texture, texMaterial.Sampler.Sampler) = textureLoader.LoadTexture(TextureBasePaths, rwMaterial);
+                    material = texMaterial;
+                }
+                else
+                    material = new MapUntexturedMaterial(diContainer);
                 material.Projection.BufferRange = camera.ProjectionRange;
                 material.View.BufferRange = camera.ViewRange;
                 material.World.Value = Matrix4x4.Identity;
                 material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
                 material.PixelCounter.Buffer = counterBuffer;
                 AddDisposable(material);
-                return material;
-            }).ToList();
+                return material as IMaterial;
+            }).ToList() as IReadOnlyList<IMaterial>;
 
             objectMaterials = scene.Objects.Select(obj => obj.ClumpBuffers.SubMeshes.Select(subMesh =>
             {
@@ -57,8 +64,15 @@ namespace zzmaps
                 locationRanges.Add(objectLocationRange);
 
                 var rwMaterial = subMesh.Material;
-                var material = new MapStandardMaterial(diContainer);
-                (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(TextureBasePaths, rwMaterial);
+                IMapMaterial material;
+                if (rwMaterial.isTextured)
+                {
+                    var texMaterial = new MapStandardMaterial(diContainer);
+                    (texMaterial.MainTexture.Texture, texMaterial.Sampler.Sampler) = textureLoader.LoadTexture(TextureBasePaths, rwMaterial);
+                    material = texMaterial;
+                }
+                else
+                    material = new MapUntexturedMaterial(diContainer);
                 material.Projection.BufferRange = camera.ProjectionRange;
                 material.View.BufferRange = camera.ViewRange;
                 material.World.BufferRange = objectLocationRange;
@@ -67,8 +81,8 @@ namespace zzmaps
                 material.Uniforms.Ref.tint = rwMaterial.color.ToFColor() * obj.Tint;
                 material.PixelCounter.Buffer = counterBuffer;
                 AddDisposable(material);
-                return material;
-            }).ToList()).ToList();
+                return material as IMaterial;
+            }).ToList() as IReadOnlyList<IMaterial>).ToList();
 
         }
 

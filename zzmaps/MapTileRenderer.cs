@@ -120,6 +120,9 @@ namespace zzmaps
         {
             if (sceneRenderData == null)
                 throw new InvalidOperationException("No scene was set");
+            var tileUnitBounds = mapTiler.TileUnitBoundsFor(tile);
+            if (!tileUnitBounds.Intersects(mapTiler.WorldUnitBounds))
+                return (null!, 0);
 
             uint pixelCounter = 0;
             Fence.Reset();
@@ -128,7 +131,7 @@ namespace zzmaps
             commandList.SetFramebuffer(framebuffer);
             commandList.ClearColorTarget(0, backgroundColor);
             commandList.ClearDepthStencil(1f);
-            camera.Bounds = mapTiler.TileUnitBoundsFor(tile);
+            camera.Bounds = tileUnitBounds;
             camera.Update(commandList);
             locationBuffer.Update(commandList);
             sceneRenderData.Render(commandList, camera.Bounds);
