@@ -4,22 +4,18 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using System.Threading;
+using System.Runtime;
 using zzre;
 using zzio.vfs;
 using SixLabors.ImageSharp.PixelFormats;
-using System.IO;
 using SixLabors.ImageSharp;
 using Veldrid;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using System.Diagnostics;
-using System.Threading;
-using System.Runtime;
+using SQLitePCL.pretty;
 
 namespace zzmaps
 {
-    partial class Scheduler : BaseDisposable
+    partial class Scheduler : ListDisposable
     {
         public long ScenesFound => scenesFound;
         public long ScenesLoaded => scenesLoaded;
@@ -34,6 +30,10 @@ namespace zzmaps
         private readonly GraphicsDevice graphicsDevice;
         private readonly ConcurrentQueue<MapTileRenderer> rendererQueue = new ConcurrentQueue<MapTileRenderer>();
         private long scenesFound = 0, scenesLoaded = 0, tilesRendered = 0, emptyTiles = 0, tilesEncoded = 0, tilesOutput = 0;
+
+        private SQLiteDatabaseConnection? dbConnection;
+        private IStatement? insertStmt;
+        private bool hasTransactionOpen;
 
         public Scheduler(ITagContainer diContainer)
         {
@@ -53,6 +53,14 @@ namespace zzmaps
             {
                 if (rendererQueue.TryDequeue(out var renderer))
                     renderer.Dispose();
+            }
+
+            insertStmt?.Dispose();
+            if (dbConnection != null)
+            {
+                if (hasTransactionOpen)
+                    dbConnection.Execute("COMMIT");
+                dbConnection.Dispose();
             }
         }
 

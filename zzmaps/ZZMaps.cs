@@ -56,6 +56,7 @@ namespace zzmaps
                 .LegalFilePathsOnly(),
                 new Option<bool>(new[] { "--replace-existing" }, () => false, "Replace existing rendered files/blobs"),
                 new Option<Regex>(new[] { "--scene-pattern" }, () => defaultOptions.ScenePattern, "RegEx pattern selecting scenes to render"),
+                new Option<uint>("--commit-every", () => defaultOptions.CommitEvery, "Commit the SQLite transaction every n tiles"),
 
                 // Tiler
                 new Option<float>(new[] { "--extra-border" }, () => defaultTiler.ExtraBorder, "Extra border around rendered maps"),
@@ -80,10 +81,7 @@ namespace zzmaps
                 // Scheduler
                 new Option<ZZMapsGraphicsBackend>("--backend", () => ZZMapsGraphicsBackend.Vulkan, "The graphics backend to use"),
                 new Option<uint>("--renderers", () => (uint)Environment.ProcessorCount, "The maximum number of parallel render jobs"),
-                new Option<uint>("--cache-clean", () => (uint)(Environment.ProcessorCount * 2), "The number of scenes rendered before cleaning the asset caches"),
-                new Option<uint>("--queue-load", () => 1, "The number of scenes to preload for rendering per job"),
-                new Option<uint>("--queue-render", () => 0, "The number of tiles to prerender for encoding per job"),
-                new Option<uint>("--queue-output", () => 0, "The number of tiles to preencode for outputting per job")
+                new Option<uint>("--cache-clean", () => (uint)(Environment.ProcessorCount * 2), "The number of scenes rendered before cleaning the asset caches")
             };
 
             rootCommand.TreatUnmatchedTokensAsErrors = true;
@@ -184,6 +182,7 @@ namespace zzmaps
         public FileInfo? OutputDb { get; set; }
         public bool ReplaceExisting { get; set; }
         public Regex ScenePattern { get; set; } = new Regex("^sc_");
+        public uint CommitEvery { get; set; } = 100;
         
         public float ExtraBorder { get; set; }
         public float BasePPU { get; set; }
@@ -204,8 +203,5 @@ namespace zzmaps
         public ZZMapsGraphicsBackend Backend { get; set; }
         public uint Renderers { get; set; }
         public uint CacheClean { get; set; }
-        public uint QueueLoad { get; set; }
-        public uint QueueRender { get; set; }
-        public uint QueueOutput { get; set; }
     }
 }
