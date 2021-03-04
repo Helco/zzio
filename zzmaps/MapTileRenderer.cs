@@ -116,35 +116,42 @@ namespace zzmaps
             scene?.Dispose();
         }
         
+        public (Texture texture, uint pixelCounter) RenderTile(TileID tile)
+        {
+            if (sceneRenderData == null)
+                throw new InvalidOperationException("No scene was set");
+
+            uint pixelCounter = 0;
+            Fence.Reset();
+            commandList.Begin();
+            commandList.UpdateBuffer(counterBuffer, 0, pixelCounter);
+            commandList.SetFramebuffer(framebuffer);
+            commandList.ClearColorTarget(0, backgroundColor);
+            commandList.ClearDepthStencil(1f);
+            camera.Bounds = mapTiler.TileUnitBoundsFor(tile);
+            camera.Update(commandList);
+            locationBuffer.Update(commandList);
+            sceneRenderData.Render(commandList, camera.Bounds);
+            commandList.CopyBuffer(counterBuffer, 0, counterStagingBuffer, 0, sizeof(uint));
+            commandList.CopyTexture(colorTexture, stagingTexture);
+            commandList.End();
+            graphicsDevice.SubmitCommands(commandList, Fence);
+            graphicsDevice.WaitForFence(Fence);
+
+            var counterMap = graphicsDevice.Map<uint>(counterStagingBuffer, MapMode.Read);
+            pixelCounter = counterMap[0];
+            graphicsDevice.Unmap(counterStagingBuffer);
+            return (stagingTexture, pixelCounter);
+        }
+
         public IEnumerable<(Texture, TileID, uint)> RenderTiles()
         {
             if (sceneRenderData == null)
-                yield break;
-
-            uint pixelCounter = 0;
+                throw new InvalidOperationException("No scene was set");
             foreach (var tile in mapTiler.Tiles)
             {
-                pixelCounter = 0;
-                Fence.Reset();
-                commandList.Begin();
-                commandList.UpdateBuffer(counterBuffer, 0, pixelCounter);
-                commandList.SetFramebuffer(framebuffer);
-                commandList.ClearColorTarget(0, backgroundColor);
-                commandList.ClearDepthStencil(1f);
-                camera.Bounds = mapTiler.TileUnitBoundsFor(tile);
-                camera.Update(commandList);
-                locationBuffer.Update(commandList);
-                sceneRenderData.Render(commandList, camera.Bounds);
-                commandList.CopyBuffer(counterBuffer, 0, counterStagingBuffer, 0, sizeof(uint));
-                commandList.CopyTexture(colorTexture, stagingTexture);
-                commandList.End();
-                graphicsDevice.SubmitCommands(commandList, Fence);
-                graphicsDevice.WaitForFence(Fence);
-
-                var counterMap = graphicsDevice.Map<uint>(counterStagingBuffer, MapMode.Read);
-                pixelCounter = counterMap[0];
-                graphicsDevice.Unmap(counterStagingBuffer);
-                yield return (stagingTexture, tile, pixelCounter);
+                var (texture, pixelCounter) = RenderTile(tile);
+                yield return (texture, tile, pixelCounter);
             }
         }
     }

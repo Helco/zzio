@@ -10,13 +10,14 @@ using zzre;
 using zzre.rendering;
 using Veldrid;
 using zzio.vfs;
+using System.Threading;
 
 namespace zzmaps
 {
     internal enum ZZMapsImageFormat
     {
         Png,
-        Jpg
+        Jpeg
     }
 
     internal enum ZZMapsGraphicsBackend
@@ -38,7 +39,10 @@ namespace zzmaps
     {
         static Task Main(string[] args)
         {
+            var defaultOptions = new Options();
             var defaultTiler = new MapTiler();
+            var pngDefaultCompression = (int)SixLabors.ImageSharp.Formats.Png.PngCompressionLevel.DefaultCompression;
+
             var rootCommand = new RootCommand()
             {
                 // Input and output
@@ -51,7 +55,7 @@ namespace zzmaps
                 new Option<FileInfo>(new[] { "--output-db" }, "Output to a SQLite database at that directory")
                 .LegalFilePathsOnly(),
                 new Option<bool>(new[] { "--replace-existing" }, () => false, "Replace existing rendered files/blobs"),
-                new Option<Regex>(new[] { "--scene-pattern" }, () => new Regex("^sc_"), "RegEx pattern selecting scenes to render"),
+                new Option<Regex>(new[] { "--scene-pattern" }, () => defaultOptions.ScenePattern, "RegEx pattern selecting scenes to render"),
 
                 // Tiler
                 new Option<float>(new[] { "--extra-border" }, () => defaultTiler.ExtraBorder, "Extra border around rendered maps"),
@@ -64,10 +68,14 @@ namespace zzmaps
 
                 // Encoder
                 new Option<ZZMapsBackground>( "--background", () => ZZMapsBackground.Scene, "The background color of the output images"),
-                new Option<ZZMapsImageFormat>(new[] { "--output-format" }, () => ZZMapsImageFormat.Jpg, "Output image format"),
+                new Option<ZZMapsImageFormat>(new[] { "--output-format" }, () => ZZMapsImageFormat.Jpeg, "Output image format"),
                 new Option<ZZMapsImageFormat>(new[] { "--temp-format" }, () => ZZMapsImageFormat.Png, "Format given to optimizer"),
+                new Option<int>(new[] { "--jpeg-quality" }, () => 75, "JPEG quality level"),
+                new Option<int>(new[] { "--png-compression" }, () => pngDefaultCompression, "PNG compression level"),
                 new Option<string?>(new[] { "--optimizer" }, "Optimizer to process images")
                 .AddSuggestions("brotli.exe --quality 80 $input $output"),
+                new Option<DirectoryInfo>("--temp-folder", () => defaultOptions.TempFolder, "Temporary folder for optimization")
+                .LegalFilePathsOnly(),
 
                 // Scheduler
                 new Option<ZZMapsGraphicsBackend>("--backend", () => ZZMapsGraphicsBackend.Vulkan, "The graphics backend to use"),
@@ -86,33 +94,41 @@ namespace zzmaps
         private static void HandleCommand(Options options)
         {
             var diContainer = SetupDIContainer(options, out var graphicsDevice);
+            var scheduler = new Scheduler(diContainer);
 
-            var renderer = new MapTileRenderer(diContainer);
-            renderer.Scene = new TileScene(diContainer, diContainer.GetTag<IResourcePool>().FindFile("resources/worlds/sc_2400.scn")
-                ?? throw new FileNotFoundException("Could not find world sc_2400"));
-            var jpgEncoder = new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder();
-
-            bool didRenderBackground = false;
-            foreach (var (texture, tile, pixelCounter) in renderer.RenderTiles())
+            var runTask = scheduler.Run();
+            int printedLines = 0;
+            while(!runTask.IsCompleted)
             {
-                if (pixelCounter == 0)
-                {
-                    if (didRenderBackground)
-                        continue;
-                    didRenderBackground = true;
-                }
-                ReadOnlySpan<byte> tileSpan;
-                var map = graphicsDevice.Map(texture, MapMode.Read);
-                unsafe { tileSpan = new ReadOnlySpan<byte>(map.Data.ToPointer(), (int)(options.TileSize * options.TileSize * 4)); }
-                using var image = SixLabors.ImageSharp.Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgba32>(tileSpan, (int)options.TileSize, (int)options.TileSize);
-                using var fs = new FileStream(pixelCounter == 0 ? "background.jpg" : $"out/test-{tile.ZoomLevel}-{tile.TileX}.{tile.TileZ}.jpg", FileMode.Create, FileAccess.Write);
-                image.Save(fs, jpgEncoder);
-                graphicsDevice.Unmap(texture);
+                PrintProgress();
+                Thread.Sleep(500);
+            }
+            PrintProgress();
+            Console.WriteLine($"Rendering {runTask.Status}");
+            if (runTask.Exception != null)
+                throw runTask.Exception;
+
+            void PrintProgress()
+            {
+                Console.CursorTop -= printedLines;
+                printedLines = 0;
+                PrintLine("Scenes found", scheduler.ScenesFound);
+                PrintLine("Scenes loaded", scheduler.ScenesLoaded);
+                PrintLine("Tiles rendered", scheduler.TilesRendered);
+                PrintLine("Tiles empty", scheduler.EmptyTiles);
+                PrintLine("Tiles encoded", scheduler.TilesEncoded);
+                PrintLine("Tiles output", scheduler.TilesOutput);
+            }
+            void PrintLine(string title, long value)
+            {
+                if (value <= 0)
+                    return;
+                Console.WriteLine($"{title}:\t{value}");
+                printedLines++;
             }
 
-            renderer.Dispose();
-
             // dispose graphics device last, otherwise Vulkan will crash
+            scheduler.Dispose();
             diContainer.RemoveTag<GraphicsDevice>();
             diContainer.Dispose();
             graphicsDevice.Dispose();
@@ -147,7 +163,7 @@ namespace zzmaps
             var resourcePools = options.ResourcePath
                 .Select(dirInfo => new FileResourcePool(dirInfo.FullName) as IResourcePool);
             resourcePools = resourcePools.Concat(options.PAK
-                .Select(fileInfo => new PAKResourcePool(new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read))));
+                .Select(fileInfo => new PAKParallelResourcePool(fileInfo.FullName)));
             var combinedResourcePool = new CombinedResourcePool(resourcePools.Reverse().ToArray());
             diContainer.AddTag<IResourcePool>(combinedResourcePool);
 
@@ -167,7 +183,7 @@ namespace zzmaps
         public DirectoryInfo? OutputDir { get; set; }
         public FileInfo? OutputDb { get; set; }
         public bool ReplaceExisting { get; set; }
-        public Regex? ScenePatter { get; set; }
+        public Regex ScenePattern { get; set; } = new Regex("^sc_");
         
         public float ExtraBorder { get; set; }
         public float BasePPU { get; set; }
@@ -180,7 +196,10 @@ namespace zzmaps
         public ZZMapsBackground Background { get; set; }
         public ZZMapsImageFormat OutputFormat { get; set; }
         public ZZMapsImageFormat TempFormat { get; set; }
+        public int JPEGQuality { get; set; }
+        public int PNGCompression { get; set; }
         public string? Optimizer { get; set; }
+        public DirectoryInfo TempFolder { get; set; } = new DirectoryInfo("./temp");
 
         public ZZMapsGraphicsBackend Backend { get; set; }
         public uint Renderers { get; set; }
