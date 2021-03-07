@@ -32,9 +32,9 @@ namespace zzmaps
         public float ZoomFactorAt(int zoomLevel) => MathF.Pow(2f, zoomLevel);
         public float TileUnitSizeAt(int zoomLevel) => TilePixelSize / BasePixelsPerUnit / ZoomFactorAt(zoomLevel);
 
-        public MapTiler(ITagContainer? diContainer = null)
+        public MapTiler(Options? options = null)
         {
-            if (diContainer == null || !diContainer.TryGetTag<Options>(out var options))
+            if (options == null)
                 return;
 
             if (options.MinZoom.HasValue)

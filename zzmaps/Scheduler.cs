@@ -17,19 +17,22 @@ namespace zzmaps
 {
     partial class Scheduler : ListDisposable
     {
-        public long ScenesFound => scenesFound;
-        public long ScenesLoaded => scenesLoaded;
-        public long TilesRendered => tilesRendered;
-        public long EmptyTiles => emptyTiles;
-        public long TilesEncoded => tilesEncoded;
-        public long TilesOutput => tilesOutput;
+        public IEnumerable<ProgressStep> ProgressSteps { get; }
 
         private readonly ITagContainer diContainer;
         private readonly Options options;
         private readonly IResourcePool resourcePool;
         private readonly GraphicsDevice graphicsDevice;
         private readonly ConcurrentQueue<MapTileRenderer> rendererQueue = new ConcurrentQueue<MapTileRenderer>();
-        private long scenesFound = 0, scenesLoaded = 0, tilesRendered = 0, emptyTiles = 0, tilesEncoded = 0, tilesOutput = 0;
+
+        private ProgressStep stepScenesFound = new ProgressStep("Scenes found");
+        private ProgressStep stepScenesLoaded = new ProgressStep("Scenes loaded");
+        private ProgressStep stepTilesEmpty = new ProgressStep("Empty tiles");
+        private ProgressStep stepTilesRendered = new ProgressStep("Tiles rendered");
+        private ProgressStep stepTilesEncoded = new ProgressStep("Tiles encoded");
+        private ProgressStep stepTilesOptimized = new ProgressStep("Tiles optimized");
+        private ProgressStep stepTilesOutput = new ProgressStep("Tiles output");
+        private ProgressStep stepTilesCount = new ProgressStep("Tiles counted");
 
         private SQLiteDatabaseConnection? dbConnection;
         private IStatement? insertStmt;
@@ -44,6 +47,12 @@ namespace zzmaps
 
             for (int i = 0; i < options.Renderers; i++)
                 rendererQueue.Enqueue(new MapTileRenderer(diContainer));
+
+            ProgressSteps = new[]
+            {
+                stepScenesFound, stepScenesLoaded,
+                stepTilesEmpty, stepTilesRendered, stepTilesEncoded, stepTilesOptimized, stepTilesOutput, stepTilesCount
+            };
         }
 
         protected override void DisposeManaged()
@@ -78,13 +87,18 @@ namespace zzmaps
             var encoder = CreateEncoder<Rgba32>(dataflowOptions);
             var output = CreateOutput();
 
+            var tileBranch = new BranchBlock<RenderedSceneTile<Rgba32>>(dataflowOptions);
+            var tileCounter = new ActionBlock<RenderedSceneTile<Rgba32>>(_ => stepTilesCount.Increment(), dataflowOptions);
+
             var linkOptions = new DataflowLinkOptions()
             {
                 PropagateCompletion = true
             };
             sceneSelector.LinkTo(sceneLoader, linkOptions);
             sceneLoader.LinkTo(tileRenderer, linkOptions);
-            tileRenderer.LinkTo(encoder, linkOptions);
+            tileRenderer.LinkTo(tileBranch, linkOptions);
+            tileBranch.LinkTo(encoder, linkOptions);
+            tileBranch.LinkTo(tileCounter, linkOptions);
             encoder.LinkTo(output, linkOptions);
 
             ThreadPool.GetMinThreads(out var prevWorkerThreads, out var prevCompletionThreads);
@@ -96,7 +110,7 @@ namespace zzmaps
             {
                 sceneSelector.Post(new ScenePattern(options.ScenePattern));
                 sceneSelector.Complete();
-                await output.Completion;
+                await Task.WhenAll(output.Completion, tileCounter.Completion);
             }
             finally
             {
@@ -120,7 +134,7 @@ namespace zzmaps
                         folderQueue.Enqueue(child);
                     else if (child.Name.EndsWith(".scn") && pattern.Pattern.IsMatch(child.Name))
                     {
-                        Interlocked.Increment(ref scenesFound);
+                        stepScenesFound.Increment();
                         yield return new SceneResource(child);
                     }
                 }
@@ -131,7 +145,7 @@ namespace zzmaps
             new TransformBlock<SceneResource, LoadedScene>(r =>
             {
                 var scene = new LoadedScene(r.Resource.Name.Replace(".scn", ""), new TileScene(diContainer, r.Resource));
-                Interlocked.Increment(ref scenesLoaded);
+                stepScenesLoaded.Increment();
                 return scene;
             }, dataflowOptions);
 
@@ -148,7 +162,7 @@ namespace zzmaps
                     {
                         if (t.Item3 == 0)
                         {
-                            Interlocked.Increment(ref emptyTiles);
+                            stepTilesEmpty.Increment();
                             return new RenderedSceneTile<Rgba32>(null!, 0, default, null!);
                         }
                         ReadOnlySpan<byte> tileSpan;
@@ -156,7 +170,7 @@ namespace zzmaps
                         unsafe { tileSpan = new ReadOnlySpan<byte>(map.Data.ToPointer(), (int)(options.TileSize * options.TileSize * 4)); }
                         var image = Image.LoadPixelData<Rgba32>(tileSpan, (int)options.TileSize, (int)options.TileSize);
                         graphicsDevice.Unmap(map.Resource);
-                        Interlocked.Increment(ref tilesRendered);
+                        stepTilesRendered.Increment();
                         return new RenderedSceneTile<Rgba32>(scene.SceneName, 0, t.Item2, image);
                     }).Where(tile => tile.Image != null).ToArray();
 

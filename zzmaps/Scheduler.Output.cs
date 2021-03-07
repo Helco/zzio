@@ -18,30 +18,30 @@ namespace zzmaps
             if ((options.OutputDb == null) == (options.OutputDir == null))
                 throw new InvalidOperationException("Exactly one output has to be set");
             else if (options.OutputDb != null)
-                return CreateSQLiteOutput(options.OutputDb);
+                return CreateSQLiteOutput(options.OutputDb, options.OutputFormat, stepTilesOutput);
             else if (options.OutputDir != null)
-                return CreateDirectoryOutput(options.OutputDir);
+                return CreateDirectoryOutput(options.OutputDir, options.OutputFormat, stepTilesOutput);
 
             throw new InvalidProgramException("Unexpected fall-through");
         }
 
-        private ITargetBlock<EncodedSceneTile> CreateDirectoryOutput(DirectoryInfo outputDir)
+        private static ITargetBlock<EncodedSceneTile> CreateDirectoryOutput(DirectoryInfo outputDir, ZZMapsImageFormat outputFormat, ProgressStep progressStep)
         {
             outputDir.Create();
             return new ActionBlock<EncodedSceneTile>(async tile =>
             {
-                var extension = ExtensionFor(options.OutputFormat);
+                var extension = ExtensionFor(outputFormat);
                 var tileName = $"{tile.Layer}-{tile.TileID.ZoomLevel}-{tile.TileID.TileX}.{tile.TileID.TileZ}{extension}";
                 var tilePath = Path.Combine(outputDir.FullName, tile.SceneName);
                 Directory.CreateDirectory(tilePath);
 
                 using var targetStream = new FileStream(Path.Combine(tilePath, tileName), FileMode.Create, FileAccess.Write);
                 await tile.Stream.CopyToAsync(targetStream);
-                Interlocked.Increment(ref tilesOutput);
+                progressStep.Increment();
             });
         }
 
-        private ITargetBlock<EncodedSceneTile> CreateSQLiteOutput(FileInfo info)
+        private ITargetBlock<EncodedSceneTile> CreateSQLiteOutput(FileInfo info, ZZMapsImageFormat outputFormat, ProgressStep progressStep)
         {
             var dbConnection = this.dbConnection = SQLiteDatabaseConnectionBuilder
                 .Create(info.FullName)
@@ -81,7 +81,7 @@ INSERT OR REPLACE INTO Tiles VALUES (?, ?, ?, ?, ?, ?, ?)");
                                 tile.TileID.ZoomLevel,
                                 tile.TileID.TileX,
                                 tile.TileID.TileZ,
-                                ExtensionFor(options.OutputFormat),
+                                ExtensionFor(outputFormat),
                                 block);
                 insertStmt.MoveNext();
                 if (++tilesWritten >= options.CommitEvery && options.CommitEvery > 0)
@@ -90,7 +90,7 @@ INSERT OR REPLACE INTO Tiles VALUES (?, ?, ?, ?, ?, ?, ?)");
                     dbConnection.Execute("BEGIN");
                     tilesWritten = 0;
                 }
-                Interlocked.Increment(ref tilesOutput);
+                progressStep.Increment();
             });
         }
     }

@@ -17,15 +17,15 @@ namespace zzmaps
         {
             dataflowOptions ??= new ExecutionDataflowBlockOptions();
             if (options.Optimizer == null)
-                return CreateImageEncoding<TPixel>(options.OutputFormat, dataflowOptions, true);
+                return CreateImageEncoding<TPixel>(options.OutputFormat, dataflowOptions, stepTilesEncoded);
 
-            var intermediate = CreateImageEncoding<TPixel>(options.TempFormat, dataflowOptions, false);
-            var optimizer = CreateOptimizer(dataflowOptions);
+            var intermediate = CreateImageEncoding<TPixel>(options.TempFormat, dataflowOptions, stepTilesEncoded);
+            var optimizer = CreateOptimizer(dataflowOptions, stepTilesOptimized);
             intermediate.LinkTo(optimizer);
             return intermediate;
         }
 
-        private IPropagatorBlock<RenderedSceneTile<TPixel>, EncodedSceneTile> CreateImageEncoding<TPixel>(ZZMapsImageFormat format, ExecutionDataflowBlockOptions dataflowOptions, bool finalEncoding)
+        private IPropagatorBlock<RenderedSceneTile<TPixel>, EncodedSceneTile> CreateImageEncoding<TPixel>(ZZMapsImageFormat format, ExecutionDataflowBlockOptions dataflowOptions, ProgressStep? progressStep)
             where TPixel : unmanaged, IPixel<TPixel>
         {
             IImageEncoder encoder = format switch
@@ -47,8 +47,7 @@ namespace zzmaps
                 var stream = new MemoryStream();
                 encoder.Encode(renderedTile.Image, stream);
                 stream.Position = 0;
-                if (finalEncoding)
-                    Interlocked.Increment(ref tilesEncoded);
+                progressStep?.Increment();
                 return new EncodedSceneTile(renderedTile.SceneName, renderedTile.Layer, renderedTile.TileID, stream);
             }, dataflowOptions);
         }
@@ -60,7 +59,7 @@ namespace zzmaps
             _ => throw new NotSupportedException($"Unsupported image formt {format}")
         };
 
-        private IPropagatorBlock<EncodedSceneTile, EncodedSceneTile> CreateOptimizer(ExecutionDataflowBlockOptions dataflowOptions)
+        private IPropagatorBlock<EncodedSceneTile, EncodedSceneTile> CreateOptimizer(ExecutionDataflowBlockOptions dataflowOptions, ProgressStep progressStep)
         {
             if (options.Optimizer == null)
                 throw new InvalidOperationException("No optimizer was given");
@@ -96,7 +95,7 @@ namespace zzmaps
                 if (process.ExitCode != 0)
                     throw new Exception($"Image optimizer failed with {process.ExitCode}");
 
-                Interlocked.Increment(ref tilesEncoded);
+                progressStep.Increment();
                 return new EncodedSceneTile(
                     tile.SceneName, tile.Layer, tile.TileID,
                     new FileStream(outputPath, FileMode.Open, FileAccess.Read));

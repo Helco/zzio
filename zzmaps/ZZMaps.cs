@@ -110,19 +110,16 @@ namespace zzmaps
             {
                 Console.CursorTop -= printedLines;
                 printedLines = 0;
-                PrintLine("Scenes found", scheduler.ScenesFound);
-                PrintLine("Scenes loaded", scheduler.ScenesLoaded);
-                PrintLine("Empty tiles", scheduler.EmptyTiles);
-                PrintLine("Tiles rendered", scheduler.TilesRendered);
-                PrintLine("Tiles encoded", scheduler.TilesEncoded);
-                PrintLine("Tiles output", scheduler.TilesOutput);
-            }
-            void PrintLine(string title, long value)
-            {
-                if (value <= 0)
-                    return;
-                Console.WriteLine($"{title}:\t{value}");
-                printedLines++;
+                foreach (var step in scheduler.ProgressSteps)
+                {
+                    if (step.Current <= 0)
+                        continue;
+                    if (step.Total == null)
+                        Console.WriteLine($"{step.Name}:\t{step.Current}");
+                    else
+                        Console.WriteLine($"{step.Name}:\t{step.Current} / {step.Total}");
+                    printedLines++;
+                }
             }
 
             // dispose graphics device last, otherwise Vulkan will crash

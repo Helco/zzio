@@ -22,7 +22,7 @@ namespace zzmaps
         private readonly Texture depthTexture, colorTexture, stagingTexture;
         private readonly DeviceBuffer counterBuffer, counterStagingBuffer;
         private RgbaFloat backgroundColor;
-        private MapTiler mapTiler = new MapTiler();
+        private MapTiler mapTiler;
         private TileScene? scene = null;
         private TileSceneRenderData? sceneRenderData = null;
 
@@ -58,6 +58,7 @@ namespace zzmaps
             graphicsDevice = diContainer.GetTag<GraphicsDevice>();
             var resourceFactory = diContainer.GetTag<ResourceFactory>();
             options = diContainer.GetTag<Options>();
+            mapTiler = new MapTiler(options);
             locationBuffer = new LocationBuffer(graphicsDevice, 512);
             camera = new OrthoCamera(diContainer.ExtendedWith(locationBuffer));
             commandList = resourceFactory.CreateCommandList();

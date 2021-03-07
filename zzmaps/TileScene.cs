@@ -75,7 +75,8 @@ namespace zzmaps
                 var clumpResource = resourcePool.FindFile(filePath);
                 if (clumpResource == null)
                     throw new FileNotFoundException($"Could not find clump file {filePath}");
-                var clumpBuffers = clumpBufferLoader.Load(clumpResource);
+                if (!clumpBufferLoader.TryLoad(clumpResource, out var clumpBuffers))
+                    continue;
                 objects.Add(new TileSceneObject(clumpResource, clumpBuffers)
                 {
                     Position = pos.ToNumerics(),
