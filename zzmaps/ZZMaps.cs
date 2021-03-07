@@ -11,6 +11,7 @@ using zzre.rendering;
 using Veldrid;
 using zzio.vfs;
 using System.Threading;
+using zzio.db;
 
 namespace zzmaps
 {
@@ -40,7 +41,7 @@ namespace zzmaps
         static Task Main(string[] args)
         {
             var defaultOptions = new Options();
-            var defaultTiler = new MapTiler();
+            var defaultTiler = new MapTiler(Box.Zero);
             var pngDefaultCompression = (int)SixLabors.ImageSharp.Formats.Png.PngCompressionLevel.DefaultCompression;
 
             var rootCommand = new RootCommand()
@@ -109,15 +110,19 @@ namespace zzmaps
             void PrintProgress()
             {
                 Console.CursorTop -= printedLines;
+                string emptyLine = new string(' ', Console.BufferWidth - 1);
                 printedLines = 0;
+                int maxNameLen = scheduler.ProgressSteps.Max(s => s.Name.Length);
                 foreach (var step in scheduler.ProgressSteps)
                 {
                     if (step.Current <= 0)
                         continue;
+                    Console.Write(emptyLine);
+                    Console.CursorLeft = 0;
                     if (step.Total == null)
-                        Console.WriteLine($"{step.Name}:\t{step.Current}");
+                        Console.WriteLine($"{step.Name.PadLeft(maxNameLen, ' ')}:\t{step.Current}");
                     else
-                        Console.WriteLine($"{step.Name}:\t{step.Current} / {step.Total}");
+                        Console.WriteLine($"{step.Name.PadLeft(maxNameLen, ' ')}:\t{step.Current} / {step.Total}");
                     printedLines++;
                 }
             }
@@ -166,6 +171,18 @@ namespace zzmaps
                 new TextureAssetLoader(diContainer)));
             diContainer.AddTag<IAssetLoader<ClumpBuffers>>(new RefCachedAssetLoader<ClumpBuffers>(
                 new ClumpAssetLoader(diContainer)));
+
+            var mappedDb = new MappedDB();
+            for (int i = 1; i <= 6; i++)
+            {
+                using var tableStream = combinedResourcePool.FindAndOpen($"Data/_fb0x0{i}.fbs");
+                if (tableStream == null)
+                    continue;
+                var table = new Table();
+                table.Read(tableStream);
+                mappedDb.AddTable(table);
+            }
+            diContainer.AddTag(mappedDb);
 
             return diContainer;
         }

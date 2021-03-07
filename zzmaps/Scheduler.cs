@@ -25,6 +25,7 @@ namespace zzmaps
         private readonly GraphicsDevice graphicsDevice;
         private readonly ConcurrentQueue<MapTileRenderer> rendererQueue = new ConcurrentQueue<MapTileRenderer>();
         private readonly IOutput output;
+        private readonly SceneMetadataBuilder sceneMetadataBuilder;
 
         private ProgressStep stepScenesFound = new ProgressStep("Scenes found");
         private ProgressStep stepScenesLoaded = new ProgressStep("Scenes loaded");
@@ -33,6 +34,8 @@ namespace zzmaps
         private ProgressStep stepTilesEncoded = new ProgressStep("Tiles encoded");
         private ProgressStep stepTilesOptimized = new ProgressStep("Tiles optimized");
         private ProgressStep stepTilesOutput = new ProgressStep("Tiles output");
+        private ProgressStep stepScenesMeta = new ProgressStep("Scene Metadata built");
+        private ProgressStep stepMetaOutput = new ProgressStep("Scene Metadata output");
 
         public Scheduler(ITagContainer diContainer)
         {
@@ -40,6 +43,7 @@ namespace zzmaps
             options = diContainer.GetTag<Options>();
             resourcePool = diContainer.GetTag<IResourcePool>();
             graphicsDevice = diContainer.GetTag<GraphicsDevice>();
+            sceneMetadataBuilder = new SceneMetadataBuilder(diContainer);
 
             for (int i = 0; i < options.Renderers; i++)
                 rendererQueue.Enqueue(new MapTileRenderer(diContainer));
@@ -47,7 +51,8 @@ namespace zzmaps
             ProgressSteps = new[]
             {
                 stepScenesFound, stepScenesLoaded,
-                stepTilesEmpty, stepTilesRendered, stepTilesEncoded, stepTilesOptimized, stepTilesOutput
+                stepTilesEmpty, stepTilesRendered, stepTilesEncoded, stepTilesOptimized, stepTilesOutput,
+                stepScenesMeta, stepMetaOutput
             };
 
             output = CreateOutput(options);
@@ -74,23 +79,33 @@ namespace zzmaps
                 SingleProducerConstrained = false,
                 BoundedCapacity = (int)options.Renderers
             };
+            var outputDataflowOptions = new ExecutionDataflowBlockOptions()
+            {
+                MaxDegreeOfParallelism = 1
+            };
+
             var sceneSelector = CreateSceneSelector();
             var sceneLoader = CreateSceneLoader(dataflowOptions);
             var tileRenderer = CreateTileRenderer(dataflowOptions);
             var encoder = CreateEncoder<Rgba32>(dataflowOptions);
-            var tileOutput = output.CreateTileTarget(new ExecutionDataflowBlockOptions()
-            {
-                MaxDegreeOfParallelism = 1
-            }, stepTilesOutput);
+            var metadataBuilder = sceneMetadataBuilder.CreateTransform(dataflowOptions, stepScenesMeta);
+            var tileOutput = output.CreateTileTarget(outputDataflowOptions, stepTilesOutput);
+            var metaOutput = output.CreateMetaTarget(outputDataflowOptions, stepMetaOutput);
+
+            var loadedSceneBranch = new BranchBlock<LoadedScene>(dataflowOptions);
 
             var linkOptions = new DataflowLinkOptions()
             {
                 PropagateCompletion = true
             };
             sceneSelector.LinkTo(sceneLoader, linkOptions);
-            sceneLoader.LinkTo(tileRenderer, linkOptions);
+            sceneLoader.LinkTo(loadedSceneBranch, linkOptions);
+            loadedSceneBranch.LinkTo(tileRenderer, linkOptions);
             tileRenderer.LinkTo(encoder, linkOptions);
             encoder.LinkTo(tileOutput, linkOptions);
+
+            loadedSceneBranch.LinkTo(metadataBuilder, linkOptions);
+            metadataBuilder.LinkTo(metaOutput, linkOptions);
 
             ThreadPool.GetMinThreads(out var prevWorkerThreads, out var prevCompletionThreads);
             ThreadPool.SetMinThreads((int)options.Renderers, prevCompletionThreads);
@@ -101,7 +116,7 @@ namespace zzmaps
             {
                 sceneSelector.Post(new ScenePattern(options.ScenePattern));
                 sceneSelector.Complete();
-                await Task.WhenAll(tileOutput.Completion);
+                await Task.WhenAll(tileOutput.Completion, metaOutput.Completion);
             }
             finally
             {

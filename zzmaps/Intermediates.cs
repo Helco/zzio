@@ -82,4 +82,16 @@ namespace zzmaps
         public TileID TileID { get; }
         public Stream Stream { get; }
     }
+
+    readonly struct BuiltSceneMetadata
+    {
+        public BuiltSceneMetadata(string sceneName, string data)
+        {
+            SceneName = sceneName;
+            Data = data;
+        }
+
+        public string SceneName { get; }
+        public string Data { get; }
+    }
 }

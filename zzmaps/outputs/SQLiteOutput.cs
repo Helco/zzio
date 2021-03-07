@@ -13,7 +13,7 @@ namespace zzmaps
     class SQLiteOutput : ListDisposable, IOutput
     {
         private readonly SQLiteDatabaseConnection dbConnection;
-        private readonly IStatement insertTileStmt;
+        private readonly IStatement insertTileStmt, insertMetaStmt;
         private readonly string extension;
         private uint tilesWritten, commitEvery;
 
@@ -38,15 +38,23 @@ CREATE TABLE IF NOT EXISTS Tiles(
   z INTEGER,
   encoding TEXT,
   tile BLOB,
-  PRIMARY KEY(scene, layer, zoom, x, z))
+  PRIMARY KEY(scene, layer, zoom, x, z));
+
+CREATE TABLE IF NOT EXISTS SceneMeta(
+  scene TEXT,
+  meta TEXT,
+  PRIMARY KEY(scene))
 ");
 
             insertTileStmt = dbConnection.PrepareStatement(@"
 INSERT OR REPLACE INTO Tiles VALUES (?, ?, ?, ?, ?, ?, ?)");
+            insertMetaStmt = dbConnection.PrepareStatement(@"
+INSERT OR REPLACE INTO SceneMeta VALUES (?, ?)");
 
             dbConnection.Execute("BEGIN");
 
             AddDisposable(insertTileStmt);
+            AddDisposable(insertMetaStmt);
             AddDisposable(dbConnection);
         }
 
@@ -87,6 +95,15 @@ INSERT OR REPLACE INTO Tiles VALUES (?, ?, ?, ?, ?, ?, ?)");
                     }
                     tilesWritten = 0;
                 }
+                progressStep.Increment();
+            });
+
+        public ITargetBlock<BuiltSceneMetadata> CreateMetaTarget(ExecutionDataflowBlockOptions options, ProgressStep progressStep) =>
+            new ActionBlock<BuiltSceneMetadata>(meta =>
+            {
+                insertMetaStmt.Reset();
+                insertMetaStmt.Bind(meta.SceneName, meta.Data);
+                insertMetaStmt.MoveNext();
                 progressStep.Increment();
             });
     }

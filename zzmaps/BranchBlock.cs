@@ -25,7 +25,12 @@ namespace zzmaps
         }
 
         public Task Completion => multiplyBlock.Completion;
-        public void Complete() => multiplyBlock.Complete();
+        public void Complete()
+        {
+            multiplyBlock.Complete();
+            foreach (var target in targets.Values)
+                target.Complete();
+        }
 
         public T? ConsumeMessage(DataflowMessageHeader messageHeader, ITargetBlock<T> target, out bool messageConsumed) =>
             multiplyBlockInternal.ConsumeMessage(messageHeader, targets[target], out messageConsumed).Item2;

@@ -22,7 +22,6 @@ namespace zzmaps
         private readonly Texture depthTexture, colorTexture, stagingTexture;
         private readonly DeviceBuffer counterBuffer, counterStagingBuffer;
         private RgbaFloat backgroundColor;
-        private MapTiler mapTiler;
         private TileScene? scene = null;
         private TileSceneRenderData? sceneRenderData = null;
 
@@ -38,7 +37,6 @@ namespace zzmaps
                 if (scene != null)
                 {
                     sceneRenderData = new TileSceneRenderData(localDiContainer, scene, counterBuffer);
-                    mapTiler.WorldUnitBounds = scene.WorldBuffers.Sections.First().Bounds;
                     backgroundColor = options.Background switch
                     {
                         ZZMapsBackground.Clear => RgbaFloat.Clear,
@@ -58,7 +56,6 @@ namespace zzmaps
             graphicsDevice = diContainer.GetTag<GraphicsDevice>();
             var resourceFactory = diContainer.GetTag<ResourceFactory>();
             options = diContainer.GetTag<Options>();
-            mapTiler = new MapTiler(options);
             locationBuffer = new LocationBuffer(graphicsDevice, 512);
             camera = new OrthoCamera(diContainer.ExtendedWith(locationBuffer));
             commandList = resourceFactory.CreateCommandList();
@@ -119,10 +116,10 @@ namespace zzmaps
         
         public (Texture texture, uint pixelCounter) RenderTile(TileID tile)
         {
-            if (sceneRenderData == null)
+            if (sceneRenderData == null || scene == null)
                 throw new InvalidOperationException("No scene was set");
-            var tileUnitBounds = mapTiler.TileUnitBoundsFor(tile);
-            if (!tileUnitBounds.Intersects(mapTiler.WorldUnitBounds))
+            var tileUnitBounds = scene.MapTiler.TileUnitBoundsFor(tile);
+            if (!tileUnitBounds.Intersects(scene.MapTiler.WorldUnitBounds))
                 return (null!, 0);
 
             uint pixelCounter = 0;
@@ -150,9 +147,9 @@ namespace zzmaps
 
         public IEnumerable<(Texture, TileID, uint)> RenderTiles()
         {
-            if (sceneRenderData == null)
+            if (sceneRenderData == null || scene == null)
                 throw new InvalidOperationException("No scene was set");
-            foreach (var tile in mapTiler.Tiles)
+            foreach (var tile in scene.MapTiler.Tiles)
             {
                 var (texture, pixelCounter) = RenderTile(tile);
                 yield return (texture, tile, pixelCounter);

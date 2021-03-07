@@ -35,5 +35,13 @@ namespace zzmaps
                 await tile.Stream.CopyToAsync(targetStream);
                 progressStep.Increment();
             });
+
+        public ITargetBlock<BuiltSceneMetadata> CreateMetaTarget(ExecutionDataflowBlockOptions options, ProgressStep progressStep) =>
+            new ActionBlock<BuiltSceneMetadata>(async meta =>
+            {
+                var metaPath = Path.Combine(outputPath, $"{meta.SceneName}.json");
+                await File.WriteAllTextAsync(metaPath, meta.Data);
+                progressStep.Increment();
+            });
     }
 }

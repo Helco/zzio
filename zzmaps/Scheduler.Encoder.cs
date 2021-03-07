@@ -52,13 +52,6 @@ namespace zzmaps
             }, dataflowOptions);
         }
 
-        private static string ExtensionFor(ZZMapsImageFormat format) => format switch
-        {
-            ZZMapsImageFormat.Jpeg => ".jpeg",
-            ZZMapsImageFormat.Png => ".png",
-            _ => throw new NotSupportedException($"Unsupported image formt {format}")
-        };
-
         private IPropagatorBlock<EncodedSceneTile, EncodedSceneTile> CreateOptimizer(ExecutionDataflowBlockOptions dataflowOptions, ProgressStep progressStep)
         {
             if (options.Optimizer == null)
@@ -75,8 +68,8 @@ namespace zzmaps
             return new TransformBlock<EncodedSceneTile, EncodedSceneTile>(async tile =>
             {
                 var tempName = $"{tile.SceneName}-{tile.Layer}-{tile.TileID.ZoomLevel}-{tile.TileID.TileX}.{tile.TileID.TileZ}";
-                var inputPath = Path.Combine(options.TempFolder.FullName, $"{tempName}-in{ExtensionFor(options.TempFormat)}");
-                var outputPath = Path.Combine(options.TempFolder.FullName, $"{tempName}-out{ExtensionFor(options.OutputFormat)}");
+                var inputPath = Path.Combine(options.TempFolder.FullName, $"{tempName}-in{options.TempFormat.AsExtension()}");
+                var outputPath = Path.Combine(options.TempFolder.FullName, $"{tempName}-out{options.OutputFormat.AsExtension()}");
 
                 using (var inputStream = new FileStream(inputPath, FileMode.Create, FileAccess.Write))
                     await tile.Stream.CopyToAsync(inputStream);

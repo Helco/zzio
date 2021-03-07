@@ -47,6 +47,7 @@ namespace zzmaps
         public Scene Scene { get; }
         public WorldBuffers WorldBuffers { get; }
         public IReadOnlyList<TileSceneObject> Objects { get; }
+        public MapTiler MapTiler { get; }
 
         public TileScene(ITagContainer diContainer, IResource resource)
         {
@@ -103,6 +104,8 @@ namespace zzmaps
                         textures.Add(textureRes);
                 }
             }
+
+            MapTiler = new MapTiler(WorldBuffers.Sections.First().Bounds, diContainer.GetTag<Options>());
         }
 
         protected override void DisposeManaged()

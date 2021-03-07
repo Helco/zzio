@@ -22,21 +22,22 @@ namespace zzmaps
         private readonly int globalMaxZoomLevel = int.MaxValue;
         private readonly bool ignorePPU = false;
 
-        public float ExtraBorder { get; set; } = 0f;
-        public float BasePixelsPerUnit { get; set; } = 1f;
-        public float MinPixelsPerUnit { get; set; } = 32f;
+        public float ExtraBorder { get; } = 0f;
+        public float BasePixelsPerUnit { get; } = 1f;
+        public float MinPixelsPerUnit { get; } = 32f;
 
-        public uint TilePixelSize { get; set; } = 1024;
-        public Box WorldUnitBounds { get; set; }
+        public uint TilePixelSize { get; } = 1024;
+        public Box WorldUnitBounds { get; }
 
         public float ZoomFactorAt(int zoomLevel) => MathF.Pow(2f, zoomLevel);
         public float TileUnitSizeAt(int zoomLevel) => TilePixelSize / BasePixelsPerUnit / ZoomFactorAt(zoomLevel);
 
-        public MapTiler(Options? options = null)
+        public MapTiler(Box worldUnitBounds, Options? options = null)
         {
+            WorldUnitBounds = worldUnitBounds;
+
             if (options == null)
                 return;
-
             if (options.MinZoom.HasValue)
                 globalMinZoomLevel = options.MinZoom.Value;
             if (options.MaxZoom.HasValue)
