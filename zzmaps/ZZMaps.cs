@@ -169,6 +169,13 @@ namespace zzmaps
 
             return diContainer;
         }
+
+        internal static string AsExtension(this ZZMapsImageFormat format) => format switch
+        {
+            ZZMapsImageFormat.Jpeg => ".jpeg",
+            ZZMapsImageFormat.Png => ".png",
+            _ => throw new NotSupportedException($"Unsupported image formt {format}")
+        };
     }
 
     internal class Options

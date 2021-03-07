@@ -24,6 +24,7 @@ namespace zzmaps
         private readonly IResourcePool resourcePool;
         private readonly GraphicsDevice graphicsDevice;
         private readonly ConcurrentQueue<MapTileRenderer> rendererQueue = new ConcurrentQueue<MapTileRenderer>();
+        private readonly IOutput output;
 
         private ProgressStep stepScenesFound = new ProgressStep("Scenes found");
         private ProgressStep stepScenesLoaded = new ProgressStep("Scenes loaded");
@@ -32,11 +33,6 @@ namespace zzmaps
         private ProgressStep stepTilesEncoded = new ProgressStep("Tiles encoded");
         private ProgressStep stepTilesOptimized = new ProgressStep("Tiles optimized");
         private ProgressStep stepTilesOutput = new ProgressStep("Tiles output");
-        private ProgressStep stepTilesCount = new ProgressStep("Tiles counted");
-
-        private SQLiteDatabaseConnection? dbConnection;
-        private IStatement? insertStmt;
-        private bool hasTransactionOpen;
 
         public Scheduler(ITagContainer diContainer)
         {
@@ -51,8 +47,13 @@ namespace zzmaps
             ProgressSteps = new[]
             {
                 stepScenesFound, stepScenesLoaded,
-                stepTilesEmpty, stepTilesRendered, stepTilesEncoded, stepTilesOptimized, stepTilesOutput, stepTilesCount
+                stepTilesEmpty, stepTilesRendered, stepTilesEncoded, stepTilesOptimized, stepTilesOutput
             };
+
+            output = CreateOutput(options);
+            var outputDisposable = output as IDisposable;
+            if (outputDisposable != null)
+                AddDisposable(outputDisposable);
         }
 
         protected override void DisposeManaged()
@@ -62,14 +63,6 @@ namespace zzmaps
             {
                 if (rendererQueue.TryDequeue(out var renderer))
                     renderer.Dispose();
-            }
-
-            insertStmt?.Dispose();
-            if (dbConnection != null)
-            {
-                if (hasTransactionOpen)
-                    dbConnection.Execute("COMMIT");
-                dbConnection.Dispose();
             }
         }
 
@@ -85,10 +78,10 @@ namespace zzmaps
             var sceneLoader = CreateSceneLoader(dataflowOptions);
             var tileRenderer = CreateTileRenderer(dataflowOptions);
             var encoder = CreateEncoder<Rgba32>(dataflowOptions);
-            var output = CreateOutput();
-
-            var tileBranch = new BranchBlock<RenderedSceneTile<Rgba32>>(dataflowOptions);
-            var tileCounter = new ActionBlock<RenderedSceneTile<Rgba32>>(_ => stepTilesCount.Increment(), dataflowOptions);
+            var tileOutput = output.CreateTileTarget(new ExecutionDataflowBlockOptions()
+            {
+                MaxDegreeOfParallelism = 1
+            }, stepTilesOutput);
 
             var linkOptions = new DataflowLinkOptions()
             {
@@ -96,10 +89,8 @@ namespace zzmaps
             };
             sceneSelector.LinkTo(sceneLoader, linkOptions);
             sceneLoader.LinkTo(tileRenderer, linkOptions);
-            tileRenderer.LinkTo(tileBranch, linkOptions);
-            tileBranch.LinkTo(encoder, linkOptions);
-            tileBranch.LinkTo(tileCounter, linkOptions);
-            encoder.LinkTo(output, linkOptions);
+            tileRenderer.LinkTo(encoder, linkOptions);
+            encoder.LinkTo(tileOutput, linkOptions);
 
             ThreadPool.GetMinThreads(out var prevWorkerThreads, out var prevCompletionThreads);
             ThreadPool.SetMinThreads((int)options.Renderers, prevCompletionThreads);
@@ -110,7 +101,7 @@ namespace zzmaps
             {
                 sceneSelector.Post(new ScenePattern(options.ScenePattern));
                 sceneSelector.Complete();
-                await Task.WhenAll(output.Completion, tileCounter.Completion);
+                await Task.WhenAll(tileOutput.Completion);
             }
             finally
             {
@@ -177,5 +168,17 @@ namespace zzmaps
                 rendererQueue.Enqueue(renderer);
                 return tiles;
             }, dataflowOptions);
+
+        private static IOutput CreateOutput(Options options)
+        {
+            if ((options.OutputDb == null) == (options.OutputDir == null))
+                throw new InvalidOperationException("Either file output or database (but not both) have to specified");
+            else if (options.OutputDb != null)
+                return new SQLiteOutput(options);
+            else if (options.OutputDir != null)
+                return new FileOutput(options);
+            else
+                throw new InvalidProgramException("Weird fall-through that should never happen");
+        }
     }
 }
