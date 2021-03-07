@@ -37,15 +37,7 @@ namespace zzmaps
                 if (scene != null)
                 {
                     sceneRenderData = new TileSceneRenderData(localDiContainer, scene, counterBuffer);
-                    backgroundColor = options.Background switch
-                    {
-                        ZZMapsBackground.Clear => RgbaFloat.Clear,
-                        ZZMapsBackground.Black => RgbaFloat.Black,
-                        ZZMapsBackground.White => RgbaFloat.White,
-                        ZZMapsBackground.Scene => scene.Scene.misc.clearColor.ToFColor().ToVeldrid(),
-                        ZZMapsBackground.Fog => scene.Scene.misc.fogColor.ToFColor().ToVeldrid(),
-                        _ => RgbaFloat.Clear
-                    };
+                    backgroundColor = options.Background.AsColor(scene.Scene).ToVeldrid();
                 }
             }
         }

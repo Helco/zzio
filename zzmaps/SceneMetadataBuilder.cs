@@ -21,16 +21,20 @@ namespace zzmaps
         public float BasePixelsPerUnit;
         public uint TilePixelSize;
         public Vector2 MinBounds, MaxBounds;
+        public FColor BackgroundColor;
         public zzio.scn.Trigger[] Triggers;
     }
 
     class SceneMetadataBuilder
     {
         private readonly MappedDB mappedDb;
+        private readonly ZZMapsBackground background;
 
         public SceneMetadataBuilder(ITagContainer diContainer)
         {
+            var options = diContainer.GetTag<Options>();
             mappedDb = diContainer.GetTag<MappedDB>();
+            background = options.Background;
         }
 
         public TransformBlock<LoadedScene, BuiltSceneMetadata> CreateTransform(ExecutionDataflowBlockOptions options, ProgressStep progressStep) =>
@@ -52,6 +56,7 @@ namespace zzmaps
                     TilePixelSize = mapTiler.TilePixelSize,
                     MinBounds = new Vector2(mapBounds.Min.X, mapBounds.Min.Z),
                     MaxBounds = new Vector2(mapBounds.Max.X, mapBounds.Max.Z),
+                    BackgroundColor = background.AsColor(scene),
                     Triggers = scene.triggers
                 };
 

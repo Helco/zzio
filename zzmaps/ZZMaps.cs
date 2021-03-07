@@ -12,6 +12,7 @@ using Veldrid;
 using zzio.vfs;
 using System.Threading;
 using zzio.db;
+using zzio.primitives;
 
 namespace zzmaps
 {
@@ -192,6 +193,16 @@ namespace zzmaps
             ZZMapsImageFormat.Jpeg => ".jpeg",
             ZZMapsImageFormat.Png => ".png",
             _ => throw new NotSupportedException($"Unsupported image formt {format}")
+        };
+
+        internal static FColor AsColor(this ZZMapsBackground background, zzio.scn.Scene scene) => background switch
+        {
+            ZZMapsBackground.Clear => FColor.Clear,
+            ZZMapsBackground.Black => FColor.Black,
+            ZZMapsBackground.White => FColor.White,
+            ZZMapsBackground.Scene => scene.misc.clearColor.ToFColor(),
+            ZZMapsBackground.Fog => scene.misc.fogColor.ToFColor(),
+            _ => FColor.Clear
         };
     }
 

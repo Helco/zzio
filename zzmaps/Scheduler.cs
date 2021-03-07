@@ -26,6 +26,7 @@ namespace zzmaps
         private readonly ConcurrentQueue<MapTileRenderer> rendererQueue = new ConcurrentQueue<MapTileRenderer>();
         private readonly IOutput output;
         private readonly SceneMetadataBuilder sceneMetadataBuilder;
+        private readonly BackgroundTileRenderer bgTileRenderer;
 
         private ProgressStep stepScenesFound = new ProgressStep("Scenes found");
         private ProgressStep stepScenesLoaded = new ProgressStep("Scenes loaded");
@@ -36,6 +37,7 @@ namespace zzmaps
         private ProgressStep stepTilesOutput = new ProgressStep("Tiles output");
         private ProgressStep stepScenesMeta = new ProgressStep("Scene Metadata built");
         private ProgressStep stepMetaOutput = new ProgressStep("Scene Metadata output");
+        private ProgressStep stepBgTilesRendered = new ProgressStep("BG Tiles rendered");
 
         public Scheduler(ITagContainer diContainer)
         {
@@ -44,6 +46,7 @@ namespace zzmaps
             resourcePool = diContainer.GetTag<IResourcePool>();
             graphicsDevice = diContainer.GetTag<GraphicsDevice>();
             sceneMetadataBuilder = new SceneMetadataBuilder(diContainer);
+            bgTileRenderer = new BackgroundTileRenderer(options);
 
             for (int i = 0; i < options.Renderers; i++)
                 rendererQueue.Enqueue(new MapTileRenderer(diContainer));
@@ -52,7 +55,8 @@ namespace zzmaps
             {
                 stepScenesFound, stepScenesLoaded,
                 stepTilesEmpty, stepTilesRendered, stepTilesEncoded, stepTilesOptimized, stepTilesOutput,
-                stepScenesMeta, stepMetaOutput
+                stepScenesMeta, stepMetaOutput,
+                stepBgTilesRendered
             };
 
             output = CreateOutput(options);
@@ -89,6 +93,7 @@ namespace zzmaps
             var tileRenderer = CreateTileRenderer(dataflowOptions);
             var encoder = CreateEncoder<Rgba32>(dataflowOptions);
             var metadataBuilder = sceneMetadataBuilder.CreateTransform(dataflowOptions, stepScenesMeta);
+            var bgTileRenderer = this.bgTileRenderer.CreateTransform(dataflowOptions, stepBgTilesRendered);
             var tileOutput = output.CreateTileTarget(outputDataflowOptions, stepTilesOutput);
             var metaOutput = output.CreateMetaTarget(outputDataflowOptions, stepMetaOutput);
 
@@ -106,6 +111,9 @@ namespace zzmaps
 
             loadedSceneBranch.LinkTo(metadataBuilder, linkOptions);
             metadataBuilder.LinkTo(metaOutput, linkOptions);
+
+            loadedSceneBranch.LinkTo(bgTileRenderer, linkOptions);
+            bgTileRenderer.LinkTo(encoder, linkOptions);
 
             ThreadPool.GetMinThreads(out var prevWorkerThreads, out var prevCompletionThreads);
             ThreadPool.SetMinThreads((int)options.Renderers, prevCompletionThreads);
