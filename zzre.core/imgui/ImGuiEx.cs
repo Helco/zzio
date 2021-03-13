@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using ImGuiNET;
+using zzio.primitives;
 using static ImGuiNET.ImGui;
 
 namespace zzre.imgui
@@ -170,6 +171,15 @@ namespace zzre.imgui
             }
             value = BitConverter.ToUInt32(valueBytes);
             return hasChanged;
+        }
+
+        public static bool ColorEdit4(string label, ref IColor color, ImGuiColorEditFlags flags = ImGuiColorEditFlags.None)
+        {
+            var numColor = color.ToFColor().ToNumerics();
+            var result = ImGui.ColorEdit4(label, ref numColor, (flags & ~ImGuiColorEditFlags._DataTypeMask) | ImGuiColorEditFlags.Uint8);
+            if (result)
+                color = new IColor((byte)(numColor.X / 255f), (byte)(numColor.Y / 255f), (byte)(numColor.Z / 255f), (byte)(numColor.W / 255f));
+            return result;
         }
     }
 }

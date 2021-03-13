@@ -106,8 +106,7 @@ namespace zzre.rendering
         {
             if (worldBuffers == null)
                 return;
-            if (sections == null)
-                sections = visibleMeshSections;
+            sections ??= visibleMeshSections;
 
             var visibleSubMeshes = sections
                 .SelectMany(m => worldBuffers.SubMeshes.Skip(m.SubMeshStart).Take(m.SubMeshCount))

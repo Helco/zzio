@@ -57,11 +57,12 @@ namespace zzre
 
             windowContainer.MenuBar.AddButton("Tools/Model Viewer", () => new ModelViewer(diContainer));
             windowContainer.MenuBar.AddButton("Tools/Actor Viewer", () => new ActorEditor(diContainer));
+            windowContainer.MenuBar.AddButton("Tools/Effect Viewer", () => new EffectEditor(diContainer));
             windowContainer.MenuBar.AddButton("Tools/World Viewer", () => new WorldViewer(diContainer));
             windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
             diContainer.GetTag<OpenDocumentSet>()
-                .OpenWith<ActorEditor>("resources/models/actorsex/chr01.aed");
+                .OpenWith<EffectEditor>("resources/effects/e0006.ed");
 
             window.Resized += () =>
             {

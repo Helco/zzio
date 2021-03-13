@@ -46,6 +46,8 @@ namespace zzre.imgui
         public void AddInfoSection(string name, Action content, bool defaultOpen = true) =>
             infoSections.Add((name, content, defaultOpen));
 
+        public void ClearInfoSections() => infoSections.Clear();
+
         private void HandleContent()
         {
             ImGui.Columns(2, null, true);
