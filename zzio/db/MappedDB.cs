@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using zzio.utils;
 using zzio.primitives;
+using System.Diagnostics.CodeAnalysis;
 
 namespace zzio.db
 {
@@ -112,6 +113,14 @@ namespace zzio.db
         public NpcRow GetNpc(UID uid)
         {
             return new NpcRow(this, modules[ModuleType.Npc][uid]);
+        }
+
+        public bool TryGetNpc(UID uid, [NotNullWhen(true)] out NpcRow? npc)
+        {
+            npc = modules[ModuleType.Npc].TryGetValue(uid, out var row)
+                ? new NpcRow(this, row)
+                : null;
+            return npc != null;
         }
 
         public IEnumerable<DialogRow> Dialogs
