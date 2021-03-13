@@ -32,7 +32,7 @@ namespace zzre.rendering
 
             locations = new WeakReference<Location>?[capacity];
             isInverted = new bool[capacity];
-            matrices = new Matrix4x4[capacity];
+            matrices = new Matrix4x4[capacity * matrixStrideAsMultiple];
             buffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)capacity * matrixStride, BufferUsage.UniformBuffer));
         }

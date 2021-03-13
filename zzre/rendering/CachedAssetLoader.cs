@@ -10,7 +10,7 @@ namespace zzre.rendering
     public class CachedAssetLoader<TAsset> : BaseDisposable, IAssetLoader<TAsset> where TAsset : class, IDisposable
     {
         private readonly IAssetLoader<TAsset> parent;
-        private readonly Dictionary<FilePath, TAsset> cache = new Dictionary<FilePath, TAsset>();
+        protected readonly Dictionary<FilePath, TAsset> cache = new Dictionary<FilePath, TAsset>();
         public ITagContainer DIContainer => parent.DIContainer;
 
         public CachedAssetLoader(IAssetLoader<TAsset> parent)
@@ -24,14 +24,14 @@ namespace zzre.rendering
             Clear();
         }
 
-        public void Clear()
+        public virtual void Clear()
         {
             foreach (var asset in cache.Values)
                 asset.Dispose();
             cache.Clear();
         }
 
-        public bool TryLoad(IResource resource, [NotNullWhen(true)] out TAsset? asset)
+        public virtual bool TryLoad(IResource resource, [NotNullWhen(true)] out TAsset? asset)
         {
             if (cache.TryGetValue(resource.Path, out asset))
                 return true;

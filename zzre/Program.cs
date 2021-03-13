@@ -61,7 +61,7 @@ namespace zzre
             windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
             diContainer.GetTag<OpenDocumentSet>()
-                .OpenWith<SceneEditor>("resources/worlds/sc_2411.scn");
+                .OpenWith<ActorEditor>("resources/models/actorsex/chr01.aed");
 
             window.Resized += () =>
             {

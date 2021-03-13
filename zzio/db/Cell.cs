@@ -28,11 +28,11 @@ namespace zzio.db
         // a struct value type and it is not supposed to be extendable
         // make a better database file instead...
 
-        private readonly string stringValue;
+        private readonly string? stringValue;
         private readonly int integerValue;
         private readonly byte byteValue;
         private readonly ForeignKey foreignKeyValue;
-        private readonly byte[] bufferValue;
+        private readonly byte[]? bufferValue;
 
         private void checkType(CellDataType expected)
         {
@@ -43,11 +43,11 @@ namespace zzio.db
         public CellDataType Type { get; }
         public int ColumnIndex { get; }
 
-        public string String         { get { checkType(CellDataType.String); return stringValue; } }
+        public string String         { get { checkType(CellDataType.String); return stringValue!; } }
         public int Integer           { get { checkType(CellDataType.Integer); return integerValue; } }
         public byte Byte             { get { checkType(CellDataType.Byte); return byteValue; } }
         public ForeignKey ForeignKey { get { checkType(CellDataType.ForeignKey); return foreignKeyValue; } }
-        public byte[] Buffer         { get { checkType(CellDataType.Buffer); return bufferValue.ToArray(); } }
+        public byte[] Buffer         { get { checkType(CellDataType.Buffer); return bufferValue!.ToArray(); } }
 
         public Cell(string value, int columnIndex = -1) : this()
         {
@@ -101,7 +101,7 @@ namespace zzio.db
                 case CellDataType.Integer:    return integerValue == cell.integerValue;
                 case CellDataType.Byte:       return byteValue == cell.byteValue;
                 case CellDataType.ForeignKey: return foreignKeyValue.Equals(cell.foreignKeyValue);
-                case CellDataType.Buffer:     return bufferValue.SequenceEqual(cell.bufferValue);
+                case CellDataType.Buffer:     return bufferValue!.SequenceEqual(cell.bufferValue!);
                 default: return false;
             }
         }
@@ -111,11 +111,11 @@ namespace zzio.db
             int hashCode = (((int)Type * 0x81f5cab) << 8) ^ ((ColumnIndex * 0xabc3dfe) << 4);
             switch(Type)
             {
-                case CellDataType.String:     hashCode ^= stringValue.GetHashCode(); break;
+                case CellDataType.String:     hashCode ^= stringValue!.GetHashCode(); break;
                 case CellDataType.Integer:    hashCode ^= integerValue.GetHashCode(); break;
                 case CellDataType.Byte:       hashCode ^= byteValue.GetHashCode(); break;
                 case CellDataType.ForeignKey: hashCode ^= foreignKeyValue.GetHashCode(); break;
-                case CellDataType.Buffer:     hashCode ^= bufferValue.GetHashCode(); break;
+                case CellDataType.Buffer:     hashCode ^= bufferValue!.GetHashCode(); break;
                 default: break;
             }
             return hashCode;
@@ -173,11 +173,11 @@ namespace zzio.db
         private static readonly Dictionary<CellDataType, Action<BinaryWriter, Cell>> dataWriters =
             new Dictionary<CellDataType, Action<BinaryWriter, Cell>>()
             {
-                { CellDataType.String,     (w, c) => { w.WriteTZString(c.stringValue); } },
+                { CellDataType.String,     (w, c) => { w.WriteTZString(c.stringValue!); } },
                 { CellDataType.Integer,    (w, c) => { w.Write(4); w.Write(c.integerValue); } },
                 { CellDataType.Byte,       (w, c) => { w.Write(1); w.Write(c.byteValue); } },
                 { CellDataType.ForeignKey, (w, c) => { w.Write(8); c.foreignKeyValue.Write(w); } },
-                { CellDataType.Buffer,     (w, c) => { w.Write(c.bufferValue.Length); w.Write(c.bufferValue); } }
+                { CellDataType.Buffer,     (w, c) => { w.Write(c.bufferValue!.Length); w.Write(c.bufferValue!); } }
             };
 
         public void Write(BinaryWriter writer)
