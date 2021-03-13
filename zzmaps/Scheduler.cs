@@ -106,14 +106,15 @@ namespace zzmaps
             sceneSelector.LinkTo(sceneLoader, linkOptions);
             sceneLoader.LinkTo(loadedSceneBranch, linkOptions);
             loadedSceneBranch.LinkTo(tileRenderer, linkOptions);
-            tileRenderer.LinkTo(encoder, linkOptions);
+            tileRenderer.LinkTo(encoder);
             encoder.LinkTo(tileOutput, linkOptions);
+            CompleteWhenAll(encoder, tileRenderer, bgTileRenderer);
 
             loadedSceneBranch.LinkTo(metadataBuilder, linkOptions);
             metadataBuilder.LinkTo(metaOutput, linkOptions);
 
             loadedSceneBranch.LinkTo(bgTileRenderer, linkOptions);
-            bgTileRenderer.LinkTo(encoder, linkOptions);
+            bgTileRenderer.LinkTo(encoder);
 
             ThreadPool.GetMinThreads(out var prevWorkerThreads, out var prevCompletionThreads);
             ThreadPool.SetMinThreads((int)options.Renderers, prevCompletionThreads);
@@ -153,6 +154,26 @@ namespace zzmaps
                     }
                 }
             }
+        }
+
+        private static void CompleteWhenAll(IDataflowBlock target, params IDataflowBlock[] sources)
+        {
+            if (target == null) return;
+            if (sources.Length == 0) { target.Complete(); return; }
+            Task.Factory.ContinueWhenAll(
+                sources.Select(b => b.Completion).ToArray(),
+                tasks => {
+                    var exceptions = (from t in tasks where t.IsFaulted select t.Exception).ToList();
+                    if (exceptions.Count != 0)
+                    {
+                        target.Fault(new AggregateException(exceptions));
+                    }
+                    else
+                    {
+                        target.Complete();
+                    }
+                }
+            );
         }
 
         private IPropagatorBlock<SceneResource, LoadedScene> CreateSceneLoader(ExecutionDataflowBlockOptions dataflowOptions) =>

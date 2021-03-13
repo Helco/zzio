@@ -28,8 +28,6 @@ namespace zzmaps
         public void Complete()
         {
             multiplyBlock.Complete();
-            foreach (var target in targets.Values)
-                target.Complete();
         }
 
         public T? ConsumeMessage(DataflowMessageHeader messageHeader, ITargetBlock<T> target, out bool messageConsumed) =>
