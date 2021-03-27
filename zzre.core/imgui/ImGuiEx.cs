@@ -178,7 +178,7 @@ namespace zzre.imgui
             var numColor = color.ToFColor().ToNumerics();
             var result = ImGui.ColorEdit4(label, ref numColor, (flags & ~ImGuiColorEditFlags._DataTypeMask) | ImGuiColorEditFlags.Uint8);
             if (result)
-                color = new IColor((byte)(numColor.X / 255f), (byte)(numColor.Y / 255f), (byte)(numColor.Z / 255f), (byte)(numColor.W / 255f));
+                color = new IColor((byte)(numColor.X * 255f), (byte)(numColor.Y * 255f), (byte)(numColor.Z * 255f), (byte)(numColor.W * 255f));
             return result;
         }
     }

@@ -36,7 +36,6 @@ namespace zzre.rendering
         public static (Texture, Sampler) LoadTexture(this IAssetLoader<Texture> loader, IEnumerable<FilePath> basePaths, RWTexture texSection)
         {
             var device = loader.DIContainer.GetTag<GraphicsDevice>();
-            var resourcePool = loader.DIContainer.GetTag<IResourcePool>();
 
             var addressModeU = ConvertAddressMode(texSection.uAddressingMode);
             var samplerDescription = new SamplerDescription()
@@ -51,18 +50,28 @@ namespace zzre.rendering
             if (nameSection == null)
                 throw new InvalidDataException("Could not find filename section in RWTexture");
 
+            var texture = loader.LoadTexture(basePaths, nameSection.value);
+            return (texture, sampler);
+        }
+
+        public static Texture LoadTexture(this IAssetLoader<Texture> loader, FilePath basePath, string texName) =>
+            LoadTexture(loader, new[] { basePath }, texName);
+
+        public static Texture LoadTexture(this IAssetLoader<Texture> loader, IEnumerable<FilePath> basePaths, string texName)
+        {
+            var resourcePool = loader.DIContainer.GetTag<IResourcePool>();
             var texture = basePaths
-                .Select(basePath => basePath.Combine(nameSection.value))
+                .Select(basePath => basePath.Combine(texName))
                 .SelectMany(fullPath => new[] { ".dds", ".bmp" }.Select(ext => fullPath.ToPOSIXString() + ext))
                 .Select(fullPath => resourcePool.FindFile(fullPath))
                 .Where(res => res != null)
                 .Select(res => loader.TryLoad(res!, out var texture) ? texture : null)
                 .FirstOrDefault(tex => tex != null);
-            if (texture == null)
-                throw new InvalidDataException($"Could not load texture {nameSection.value}");
 
-            texture.Name = nameSection.value;
-            return (texture, sampler);
+            if (texture == null)
+                throw new InvalidDataException($"Could not load texture {texName}");
+            texture.Name = texName;
+            return texture;
         }
 
         private static SamplerAddressMode ConvertAddressMode(TextureAddressingMode mode, SamplerAddressMode? altMode = null) => mode switch

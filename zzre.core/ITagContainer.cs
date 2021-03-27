@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace zzre
 {
-    public interface ITagContainer
+    public interface ITagContainer : IDisposable
     {
         bool HasTag<TTag>() where TTag : class;
         TTag GetTag<TTag>() where TTag : class;

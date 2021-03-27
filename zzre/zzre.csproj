@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <WarningsAsErrors>NU1605;nullable</WarningsAsErrors>
+    <WarningsAsErrors>NU1605;nullable;CS8618</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 

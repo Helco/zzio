@@ -36,6 +36,11 @@ namespace zzre
             Vector3.Transform(Vector3.UnitY, q),
             Vector3.Transform(Vector3.UnitZ, q));
 
+        public static float MaxComponent(this Vector2 v) => Math.Max(v.X, v.Y);
+        public static float MinComponent(this Vector2 v) => Math.Min(v.X, v.Y);
         public static float MaxComponent(this Vector3 v) => Math.Max(Math.Max(v.X, v.Y), v.Z);
+        public static float MinComponent(this Vector3 v) => Math.Min(Math.Min(v.X, v.Y), v.Z);
+        public static float MaxComponent(this Vector4 v) => Math.Max(Math.Max(Math.Max(v.X, v.Y), v.Z), v.W);
+        public static float MinComponent(this Vector4 v) => Math.Min(Math.Min(Math.Min(v.X, v.Y), v.Z), v.W);
     }
 }

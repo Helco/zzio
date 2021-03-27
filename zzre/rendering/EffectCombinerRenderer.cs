@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Veldrid;
 using zzio.effect;
 using zzio.effect.parts;
+using zzio.utils;
 using zzio.vfs;
 using zzre.rendering.effectparts;
 
@@ -14,13 +15,16 @@ namespace zzre.rendering
 {
     public interface IEffectCombinerPartRenderer : IDisposable
     {
+        static readonly FilePath TexturePath = new FilePath("Resources/Textures/Effects");
+
         void Render(CommandList cl);
+        void Update();
+        void AddTime(float deltaTime, float newProgress);
     }
 
     public class EffectCombinerRenderer : ListDisposable
     {
         private readonly ITagContainer diContainer;
-        
 
         public Location Location { get; } = new Location();
         public EffectCombiner Effect { get; }
@@ -49,7 +53,7 @@ namespace zzre.rendering
                 {
                     MovingPlanes mp => new MovingPlanesRenderer(diContainer, mp) as IEffectCombinerPartRenderer,
 
-                    _ => null // ignore it until we have an implementation for all supported in zzio
+                    _ => new DummyRenderer() as IEffectCombinerPartRenderer // ignore it until we have an implementation for all supported in zzio
                     // _ => throw new NotSupportedException($"Unsupported effect combine part {part.GetType().Name}")
                 }).Where(renderer => renderer != null).ToArray()!;
             foreach (var part in Parts)
@@ -60,6 +64,14 @@ namespace zzre.rendering
         {
             foreach (var part in Parts)
                 part.Render(cl);
+        }
+
+        private class DummyRenderer : IEffectCombinerPartRenderer
+        {
+            public void AddTime(float deltaTime, float newProgress) { }
+            public void Dispose() { }
+            public void Render(CommandList cl) { }
+            public void Update() { }
         }
     }
 }

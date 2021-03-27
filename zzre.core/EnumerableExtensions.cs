@@ -30,5 +30,9 @@ namespace zzre
             .Select(prop => prop.Index)
             .Append(-1)
             .First();
+
+        public static Index Offset(this Index index, int offset) => index.IsFromEnd
+            ? new Index(index.Value - offset, true)
+            : new Index(index.Value + offset, false);
     }
 }

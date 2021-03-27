@@ -32,13 +32,13 @@ namespace zzre.tools
 
         private EffectCombinerRenderer? effectRenderer;
         private EffectCombiner? Effect => effectRenderer?.Effect;
+        private bool[] isVisible = Array.Empty<bool>();
 
         public Window Window { get; }
         public IResource? CurrentResource { get; private set; }
 
         public EffectEditor(ITagContainer diContainer)
         {
-            this.diContainer = diContainer;
             device = diContainer.GetTag<GraphicsDevice>();
             resourcePool = diContainer.GetTag<IResourcePool>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Effect Editor");
@@ -63,13 +63,13 @@ namespace zzre.tools
             openFileModal.OnOpenedResource += Load;
 
             locationBuffer = new LocationBuffer(device);
-            AddDisposable(locationBuffer);
-            var localDiContainer = diContainer.ExtendedWith(locationBuffer);
-            camera = new Camera(localDiContainer);
-            AddDisposable(camera);
-            controls = new OrbitControlsTag(Window, camera.Location, localDiContainer);
+            this.diContainer = diContainer.ExtendedWith(locationBuffer);
+            AddDisposable(this.diContainer);
+            this.diContainer.AddTag(camera = new Camera(this.diContainer));
+            this.diContainer.AddTag<IQuadMeshBuffer<EffectVertex>>(new DynamicQuadMeshBuffer<EffectVertex>(device.ResourceFactory));
+            controls = new OrbitControlsTag(Window, camera.Location, this.diContainer);
             AddDisposable(controls);
-            gridRenderer = new DebugGridRenderer(diContainer);
+            gridRenderer = new DebugGridRenderer(this.diContainer);
             gridRenderer.Material.LinkTransformsTo(camera);
             gridRenderer.Material.World.Ref = Matrix4x4.Identity;
             AddDisposable(gridRenderer);
@@ -112,8 +112,9 @@ namespace zzre.tools
                 {
                     MovingPlanes mp => () => HandlePartMovingPlanes(mp, (MovingPlanesRenderer)partRenderer),
                     _ => () => { } // ignore for now
-                }, false);
+                }, defaultOpen: false, () => HandlePartPreContent(i));
             }
+            isVisible = Enumerable.Repeat(true, effectRenderer.Parts.Count).ToArray();
 
             controls.ResetView();
             fbArea.IsDirty = true;
@@ -128,7 +129,11 @@ namespace zzre.tools
             locationBuffer.Update(cl);
             camera.Update(cl);
             gridRenderer.Render(cl);
-            effectRenderer?.Render(cl);
+
+            if (effectRenderer == null)
+                return;
+            foreach (var part in effectRenderer.Parts.Where((p, i) => isVisible[i]))
+                part.Render(cl);
         }
 
         private void HandleInfoContent()
@@ -150,6 +155,15 @@ namespace zzre.tools
         {
             openFileModal.InitialSelectedResource = CurrentResource;
             openFileModal.Modal.Open();
+        }
+
+        private void HandlePartPreContent(int i)
+        {
+            if (ImGui.Button(isVisible[i] ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash))
+            {
+                isVisible[i] = !isVisible[i];
+                fbArea.IsDirty = true;
+            }
         }
     }
 }
