@@ -59,7 +59,7 @@ namespace zzre.imgui
             var mat = materials.First().Uniforms.Value;
             didChange |= SliderFloat("Vertex Color Factor", ref mat.vertexColorFactor, 0.0f, 1.0f);
             didChange |= SliderFloat("Global Tint Factor", ref mat.tintFactor, 0.0f, 1.0f);
-            didChange |= SliderFloat("Alpha Reference", ref mat.alphaReference, 0.0f, 1.0f, "%.3f", 2.0f);
+            didChange |= SliderFloat("Alpha Reference", ref mat.alphaReference, 0.0f, 1.0f, "%.3f");
             if (didChange)
             {
                 foreach (var material in materials)

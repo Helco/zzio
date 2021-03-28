@@ -42,13 +42,14 @@ namespace zzre.rendering
             Texture.Name = "IconFontTexture";
             device.UpdateTexture(Texture, texPixels, (uint)(texWidth * texHeight * 1), 0, 0, 0, (uint)texWidth, (uint)texHeight, 1, 0, 0);
 
-            var glyphPtr = (ImFontGlyph*)font->Glyphs.Data.ToPointer();
+            var glyphsPtr = (ImFontGlyph*)font->Glyphs.Data.ToPointer();
             var glyphs = new Dictionary<string, Rect>();
             for (int i = 0; i < font->Glyphs.Size; i++)
             {
-                var uvMin = new Vector2(glyphPtr[i].U0, glyphPtr[i].V1); // switch v to prevent vflip
-                var uvMax = new Vector2(glyphPtr[i].U1, glyphPtr[i].V0);
-                var codepoint = (int)(glyphPtr[i].Codepoint & ~0x80000000); // not sure why ImGui adds this bit?
+                var glyph = new ImFontGlyphPtr(glyphsPtr + i);
+                var uvMin = new Vector2(glyph.U0, glyph.V1); // switch v to prevent vflip
+                var uvMax = new Vector2(glyph.U1, glyph.V0);
+                var codepoint = (int)(glyph.Codepoint);
                 glyphs[char.ConvertFromUtf32(codepoint)] = new Rect((uvMin + uvMax) / 2, uvMax - uvMin);
             }
             Glyphs = glyphs;
