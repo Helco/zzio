@@ -40,14 +40,14 @@ namespace zzio.effect.parts
             yOffset = 0.0f,
             minPosX = 0.0f;
         public bool
-            ignoreHead = false,
+            ignorePhases = false,
             circlesAround = false;
         public string
             texName = "standard",
             name = "Random Planes";
         public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
-        public float Duration => (phase1 + phase2) / 1000f;
+        public float Duration => (phase1 + phase2 + planeLife + extraPhase) / 1000f;
 
         public RandomPlanes() { }
 
@@ -59,7 +59,7 @@ namespace zzio.effect.parts
 
             phase1 = r.ReadUInt32();
             phase2 = r.ReadUInt32();
-            ignoreHead = r.ReadBoolean();
+            ignorePhases = r.ReadBoolean();
             r.BaseStream.Seek(3, SeekOrigin.Current);
             spawnRate = r.ReadUInt32();
             minProgress = r.ReadSingle();

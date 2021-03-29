@@ -72,6 +72,7 @@ namespace zzre.rendering.effectparts
             ResetTiming();
             foreach (ref var plane in planes.AsSpan())
                 plane.life = 0f;
+            areQuadsDirty = true;
         }
         private void ResetTiming()
         {
@@ -87,7 +88,7 @@ namespace zzre.rendering.effectparts
             foreach (ref var plane in planes.AsSpan())
                 UpdatePlane(ref plane, deltaTime);
 
-            if (!data.ignoreHead && newProgress > data.minProgress)
+            if (!data.ignorePhases && newProgress > data.minProgress)
             {
                 if (curPhase1 > 0f)
                     curPhase1 -= deltaTime;
@@ -99,8 +100,9 @@ namespace zzre.rendering.effectparts
                     AddTime(0f, newProgress);
                 }
             }
-
-            SpawnPlanes(deltaTime);
+            
+            if (data.ignorePhases || curPhase1 > 0f || curPhase2 > 0f)
+                SpawnPlanes(deltaTime);
             areQuadsDirty = true;
         }
 

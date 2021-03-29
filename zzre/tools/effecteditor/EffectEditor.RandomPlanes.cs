@@ -13,7 +13,7 @@ namespace zzre.tools
 {
     partial class EffectEditor
     {
-        private void HandlePart(MovingPlanes data, MovingPlanesRenderer ren)
+        private void HandlePart(RandomPlanes data, RandomPlanesRenderer ren)
         {
             InputText("Name", ref data.name, 128);
             NewLine();
@@ -21,28 +21,31 @@ namespace zzre.tools
             Text("Timing:");
             InputInt("Phase1", ref data.phase1);
             InputInt("Phase2", ref data.phase2);
+            InputInt("Extra phase", ref data.extraPhase);
             InputFloat("MinProgress", ref data.minProgress);
-            Checkbox("ManualProgress", ref data.manualProgress);
+            Checkbox("Ignore Phases", ref data.ignorePhases);
             NewLine();
 
             Text("Shape/Movement:");
             InputFloat("Width", ref data.width);
             InputFloat("Height", ref data.height);
-            InputFloat("SizeModSpeed", ref data.sizeModSpeed);
+            DragFloatRange2("Scale Speed Range", ref data.minScaleSpeed, ref data.maxScaleSpeed, 1f, 0f);
+            InputFloat("Scale Speed Mult.", ref data.scaleSpeedMult);
             InputFloat("Target Size", ref data.targetSize);
-            InputFloat("Rotation", ref data.rotation);
-            InputFloat("Y Offset", ref data.yOffset);
+            InputFloat2("Offset", ref data.minPosX, ref data.yOffset);
+            InputFloat2("Pos Range", ref data.amplPosX, ref data.amplPosY);
+            InputFloat("Rotation Speed Mult.", ref data.rotationSpeedMult);
             InputFloat("Tex Shift", ref data.texShift);
-            Checkbox("CirclesAround", ref data.circlesAround);
-            Checkbox("Use Direction", ref data.useDirection);
-            Checkbox("Single Plane", ref data.disableSecondPlane);
+            Checkbox("Circles Around", ref data.circlesAround);
             NewLine();
 
             Text("Material:");
             LabelText("Texture", data.texName);
-            InputInt("TileId", ref data.tileId);
-            InputInt("TileW", ref data.tileW);
-            InputInt("TileH", ref data.tileH);
+            InputInt("Tile Id", ref data.tileId);
+            InputInt("Tile Count", ref data.tileCount);
+            InputInt("Tile Duration", ref data.tileDuration);
+            InputInt("Tile W", ref data.tileW);
+            InputInt("Tile H", ref data.tileH);
             ColorEdit4("Color", ref data.color);
             EnumCombo("RenderMode", ref data.renderMode);
         }

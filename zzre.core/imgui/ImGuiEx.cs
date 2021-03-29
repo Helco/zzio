@@ -173,6 +173,15 @@ namespace zzre.imgui
             return hasChanged;
         }
 
+        public static bool InputFloat2(string label, ref float x, ref float y)
+        {
+            var v = new Vector2(x, y);
+            var result = ImGui.InputFloat2(label, ref v);
+            if (result)
+                (x, y) = (v.X, v.Y);
+            return result;
+        }
+
         public static bool ColorEdit4(string label, ref IColor color, ImGuiColorEditFlags flags = ImGuiColorEditFlags.None)
         {
             var numColor = color.ToFColor().ToNumerics();

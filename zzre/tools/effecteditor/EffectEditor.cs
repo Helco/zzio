@@ -118,7 +118,8 @@ namespace zzre.tools
                 var part = Effect.parts[i];
                 editor.AddInfoSection($"{part.Type} \"{part.Name}\"", part switch
                 {
-                    MovingPlanes mp => () => HandlePartMovingPlanes(mp, (MovingPlanesRenderer)partRenderer),
+                    MovingPlanes mp => () => HandlePart(mp, (MovingPlanesRenderer)partRenderer),
+                    RandomPlanes rp => () => HandlePart(rp, (RandomPlanesRenderer)partRenderer),
                     _ => () => { } // ignore for now
                 }, defaultOpen: false, () => HandlePartPreContent(i));
             }
@@ -179,7 +180,10 @@ namespace zzre.tools
             UndoSlider("Progress Speed", ref progressSpeed, -2f, 2f, 0f);
 
             if (ImGui.Button(IconFonts.ForkAwesome.FastBackward))
+            {
                 effectRenderer?.Reset();
+                fbArea.IsDirty = true;
+            }
             ImGui.SameLine();
             if (isPlaying && ImGui.Button(IconFonts.ForkAwesome.Pause))
                 isPlaying = false;
