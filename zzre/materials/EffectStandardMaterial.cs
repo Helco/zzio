@@ -67,6 +67,7 @@ namespace zzre.materials
         }
 
         protected static IPipelineBuilder BuildBasePipeline(IPipelineBuilder builder) => builder
+            .WithDepthWrite(false)
             .WithDepthTarget(PixelFormat.D24_UNorm_S8_UInt)
             .WithColorTarget(PixelFormat.R8_G8_B8_A8_UNorm)
             .WithShaderSet("ModelStandard")
