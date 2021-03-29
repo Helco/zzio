@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using zzio.effect.parts;
 using zzio.primitives;
 using zzio.utils;
+using System.Linq;
 
 namespace zzio.effect
 {
@@ -55,6 +56,8 @@ namespace zzio.effect
             forwards = new Vector(),
             position = new Vector();
         public IEffectPart[] parts = new IEffectPart[0];
+
+        public float Duration => parts.Any() ? parts.Max(p => p.Duration) : 0f;
 
         public EffectCombiner() { }
 

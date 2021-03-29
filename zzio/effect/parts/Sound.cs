@@ -22,6 +22,8 @@ namespace zzio.effect.parts
             fileName = "standard",
             name = "Sound Effect";
 
+        public float Duration => 0f;
+
         public Sound() { }
 
         public void Read(BinaryReader r)

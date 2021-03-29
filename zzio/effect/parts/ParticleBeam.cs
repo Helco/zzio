@@ -48,6 +48,8 @@ namespace zzio.effect.parts
         public ParticleBeamMode mode = ParticleBeamMode.Tornado;
         public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
+        public float Duration => (phase1 + phase2) / 1000f;
+
         public ParticleBeam() { }
 
         public void Read(BinaryReader r)

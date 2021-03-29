@@ -23,8 +23,8 @@ namespace zzio.effect.parts
         public string Name => name;
 
         public uint
-            head1 = 1000,
-            head2 = 1000,
+            phase1 = 1000,
+            phase2 = 1000,
             minSpawnRateModProgress = 1,
             spawnRate = 1000,
             tileW = 256,
@@ -57,6 +57,8 @@ namespace zzio.effect.parts
         public ParticleType type = ParticleType.Particle;
         public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
+        public float Duration => (phase1 + phase2) / 1000f;
+
         public ParticleEmitter() { }
 
         public void Read(BinaryReader r)
@@ -65,8 +67,8 @@ namespace zzio.effect.parts
             if (size != 288 && size != 292)
                 throw new InvalidDataException("Invalid size of EffectPart ParticleEmitter");
 
-            head1 = r.ReadUInt32();
-            head2 = r.ReadUInt32();
+            phase1 = r.ReadUInt32();
+            phase2 = r.ReadUInt32();
             r.BaseStream.Seek(4 * 4 + 32 + 1, SeekOrigin.Current); // many unused variables
             name = r.ReadSizedCString(32);
             r.BaseStream.Seek(3, SeekOrigin.Current);

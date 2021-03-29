@@ -46,6 +46,8 @@ namespace zzio.effect.parts
         public BeamStarMode mode = BeamStarMode.Constant;
         public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
+        public float Duration => (phase1 + phase2) / 1000f;
+
         public BeamStar() { }
 
         public void Read(BinaryReader r)

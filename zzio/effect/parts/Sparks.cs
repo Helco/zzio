@@ -34,6 +34,8 @@ namespace zzio.effect.parts
             texName = "standard",
             name = "Sparks";
 
+        public float Duration => (phase1 + phase2) / 1000f;
+
         public void Read(BinaryReader r)
         {
             uint size = r.ReadUInt32();

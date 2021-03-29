@@ -40,6 +40,8 @@ namespace zzio.effect.parts
             texName = "standard",
             name = "Particle Collector";
 
+        public float Duration => 1f;
+
         public ParticleCollector() { }
 
         public void Read(BinaryReader r)

@@ -34,6 +34,8 @@ namespace zzio.effect.parts
             name = "PlaneBeam";
         public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
+        public float Duration => (phase1 + phase2) / 1000f;
+
         public PlaneBeam() { }
 
         public void Read(BinaryReader r)

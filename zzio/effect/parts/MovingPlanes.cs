@@ -38,6 +38,8 @@ namespace zzio.effect.parts
             useDirection = false;
         public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
+        public float Duration => (phase1 + phase2) / 1000f;
+
         public MovingPlanes() { }
 
         public void Read(BinaryReader r)

@@ -34,6 +34,7 @@ namespace zzio.effect
     {
         EffectPartType Type { get; }
         string Name { get; }
+        float Duration { get; }
 
         void Read(System.IO.BinaryReader reader);
     }

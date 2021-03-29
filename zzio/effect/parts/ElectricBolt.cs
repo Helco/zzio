@@ -27,6 +27,8 @@ namespace zzio.effect.parts
             texName = "standard",
             name = "Eletric Bolt";
 
+        public float Duration => (phase1 + phase2) / 1000f;
+
         public ElectricBolt() { }
 
         public void Read(BinaryReader r)
