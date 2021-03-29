@@ -59,13 +59,14 @@ namespace zzre.rendering
             locationBuffer = diContainer.GetTag<LocationBuffer>();
             locationRange = locationBuffer.Add(Location);
             Effect = effect;
-            Location.LocalPosition = effect.position.ToNumerics();
+            /*Location.LocalPosition = effect.position.ToNumerics();
             Location.LocalRotation = Quaternion.CreateFromRotationMatrix(
-                Matrix4x4.CreateLookAt(Vector3.Zero, effect.forwards.ToNumerics(), effect.upwards.ToNumerics()));
+                Matrix4x4.CreateLookAt(Vector3.Zero, effect.forwards.ToNumerics(), effect.upwards.ToNumerics()));*/
 
             Parts = effect.parts.Select(part => part switch
                 {
                     MovingPlanes mp => new MovingPlanesRenderer(diContainer, locationRange, mp),
+                    RandomPlanes rp => new RandomPlanesRenderer(diContainer, locationRange, rp),
 
                     _ => new DummyRenderer(part) as IEffectCombinerPartRenderer // ignore it until we have an implementation for all supported in zzio
                     // _ => throw new NotSupportedException($"Unsupported effect combine part {part.GetType().Name}")

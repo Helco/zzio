@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Threading.Tasks;
 using Veldrid;
 using zzio.effect;
 using zzio.effect.parts;
-using zzio.utils;
-using zzio.vfs;
 using zzre.materials;
 
 namespace zzre.rendering.effectparts
@@ -32,7 +27,6 @@ namespace zzre.rendering.effectparts
         public MovingPlanesRenderer(ITagContainer diContainer, DeviceBufferRange locationRange, MovingPlanes data)
         {
             this.data = data;
-            var resourcePool = diContainer.GetTag<IResourcePool>();
             var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
             var camera = diContainer.GetTag<Camera>();
             quadMeshBuffer = diContainer.GetTag<IQuadMeshBuffer<EffectVertex>>();
@@ -41,7 +35,8 @@ namespace zzre.rendering.effectparts
             material.World.BufferRange = locationRange;
             material.Uniforms.Value = EffectMaterialUniforms.Default;
             material.Uniforms.Ref.isBillboard = !data.circlesAround && !data.useDirection;
-            AddDisposable(material.MainTexture.Texture = textureLoader.LoadTexture(IEffectCombinerPartRenderer.TexturePath, data.texName));
+            AddDisposable(material.MainTexture.Texture = textureLoader.LoadTexture(
+                IEffectCombinerPartRenderer.TexturePath, data.texName));
             material.Sampler.Value = SamplerAddressMode.Clamp.AsDescription(SamplerFilter.MinLinear_MagLinear_MipLinear);
             AddDisposable(material);
 
@@ -130,9 +125,9 @@ namespace zzre.rendering.effectparts
             var rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, CurRotationAngle);
             var right = Vector3.Transform(Vector3.UnitX * data.width, rotation);
             var up = Vector3.Transform(Vector3.UnitY * data.width, rotation);
-            var center = Vector3.Transform(
-                data.circlesAround ? Vector3.UnitY * data.yOffset : Vector3.Zero,
-                rotation);
+            var center = data.circlesAround
+                ? Vector3.Transform(Vector3.UnitY * data.yOffset, rotation)
+                : Vector3.Zero;
 
             var vertices = quadMeshBuffer[quadRange];
             vertices.UpdateQuad(center, right, up, curColor, texCoords);

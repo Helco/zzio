@@ -21,6 +21,11 @@ namespace zzre.rendering.effectparts
                 new Vector2(texTileW, texTileH));
         }
 
+        public static Rect[] GetTileUV(uint tileW, uint tileH, uint tileId, uint tileCount) => Enumerable
+            .Range(0, (int)tileCount)
+            .Select(i => GetTileUV(tileW, tileH, tileId + (uint)i))
+            .ToArray();
+
         public static void UpdateQuad(this Span<EffectVertex> vertices, Vector3 center, Vector3 right, Vector3 up, Vector4 color, Rect texCoords)
         {
             vertices[0].pos = -right + -up;

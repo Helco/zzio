@@ -34,7 +34,7 @@ namespace zzre
                 PreferStandardClipSpaceYDirection = true,
                 SyncToVerticalBlank = true,
                 Debug = true
-            }, GraphicsBackend.Vulkan);
+            }, GraphicsBackend.Direct3D11);
 
             var pipelineCollection = new PipelineCollection(graphicsDevice);
             pipelineCollection.AddShaderResourceAssemblyOf<Program>();
@@ -63,7 +63,7 @@ namespace zzre
             windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
             diContainer.GetTag<OpenDocumentSet>()
-                .OpenWith<EffectEditor>("resources/effects/e0006.ed");
+                .OpenWith<EffectEditor>("resources/effects/e4002.ed");
 
             window.Resized += () =>
             {

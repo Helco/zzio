@@ -42,5 +42,19 @@ namespace zzre
         public static float MinComponent(this Vector3 v) => Math.Min(Math.Min(v.X, v.Y), v.Z);
         public static float MaxComponent(this Vector4 v) => Math.Max(Math.Max(Math.Max(v.X, v.Y), v.Z), v.W);
         public static float MinComponent(this Vector4 v) => Math.Min(Math.Min(Math.Min(v.X, v.Y), v.Z), v.W);
+
+        public static float NextFloat(this Random random) => (float)random.NextDouble();
+
+        public static Vector2 InPositiveSquare(this Random random) => new Vector2(random.NextFloat(), random.NextFloat());
+        public static Vector3 InPositiveCube(this Random random) => new Vector3(random.NextFloat(), random.NextFloat(), random.NextFloat());
+
+        public static float InLine(this Random random) => random.NextSign() * (float)random.NextDouble();
+        public static Vector2 InSquare(this Random random) => new Vector2(random.InLine(), random.InLine());
+        public static Vector3 InCube(this Random random) => new Vector3(random.InLine(), random.InLine(), random.InLine());
+
+        public static int NextSign(this Random random) => random.Next(2) * 2 - 1;
+
+        public static float Next(this Random random, float min, float max) =>
+            min + random.NextFloat() * (max - min);
     }
 }
