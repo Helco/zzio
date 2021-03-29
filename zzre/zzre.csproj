@@ -15,41 +15,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="shaders\color.frag" />
-    <None Remove="shaders\color.vert" />
-    <None Remove="shaders\DebugIcon.frag" />
-    <None Remove="shaders\DebugIcon.vert" />
-    <None Remove="shaders\DebugSkinAll.frag" />
-    <None Remove="shaders\DebugSkinAll.vert" />
-    <None Remove="shaders\DebugSkinSingle.frag" />
-    <None Remove="shaders\DebugSkinSingle.vert" />
-    <None Remove="shaders\ModelSkinned.frag" />
-    <None Remove="shaders\ModelSkinned.vert" />
-    <None Remove="shaders\ModelStandard.frag" />
-    <None Remove="shaders\ModelStandard.vert" />
-    <None Remove="shaders\VertexColor.frag" />
-    <None Remove="shaders\VertexColor.vert" />
-    <None Remove="shaders\VertexColorSkinned.frag" />
-    <None Remove="shaders\VertexColorSkinned.vert" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="shaders\DebugSkinSingle.frag" />
-    <EmbeddedResource Include="shaders\DebugSkinSingle.vert" />
-    <EmbeddedResource Include="shaders\DebugSkinAll.frag" />
-    <EmbeddedResource Include="shaders\DebugSkinAll.vert" />
-    <EmbeddedResource Include="shaders\ModelSkinned.frag" />
-    <EmbeddedResource Include="shaders\ModelSkinned.vert" />
-    <EmbeddedResource Include="shaders\DebugIcon.frag" />
-    <EmbeddedResource Include="shaders\DebugIcon.vert" />
-    <EmbeddedResource Include="shaders\VertexColorSkinned.frag" />
-    <EmbeddedResource Include="shaders\VertexColorSkinned.vert" />
-    <EmbeddedResource Include="shaders\VertexColor.vert" />
-    <EmbeddedResource Include="shaders\VertexColor.frag" />
-    <EmbeddedResource Include="shaders\ModelStandard.frag" />
-    <EmbeddedResource Include="shaders\ModelStandard.vert" />
-    <EmbeddedResource Include="shaders\color.frag" />
-    <EmbeddedResource Include="shaders\color.vert" />
+    <EmbeddedResource Include="shaders\*.frag" />
+    <EmbeddedResource Include="shaders\*.vert" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Pfim" Version="0.10.0" />

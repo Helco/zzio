@@ -13,10 +13,11 @@ namespace zzre.materials
     public struct EffectVertex
     {
         public Vector3 pos;
+        public Vector3 center;
         public Vector2 tex;
         public Vector4 color;
         public const uint Stride =
-            (3 + 2 + 4) * sizeof(float);
+            (3 + 3 + 2 + 4) * sizeof(float);
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -26,14 +27,16 @@ namespace zzre.materials
         public float vertexColorFactor;
         public float tintFactor;
         public float alphaReference;
-        public const uint Stride = (4 + 3) * sizeof(float);
+        public bool isBillboard;
+        public const uint Stride = (4 + 3) * sizeof(float) + sizeof(bool);
 
         public static readonly EffectMaterialUniforms Default = new EffectMaterialUniforms
         {
             tint = FColor.White,
             vertexColorFactor = 1f,
             tintFactor = 1f,
-            alphaReference = 0.03f
+            alphaReference = 0.03f,
+            isBillboard = true
         };
     }
 
@@ -70,8 +73,9 @@ namespace zzre.materials
             .WithDepthWrite(false)
             .WithDepthTarget(PixelFormat.D24_UNorm_S8_UInt)
             .WithColorTarget(PixelFormat.R8_G8_B8_A8_UNorm)
-            .WithShaderSet("ModelStandard")
+            .WithShaderSet("Effect")
             .With("Position", VertexElementFormat.Float3, VertexElementSemantic.Position)
+            .With("Center", VertexElementFormat.Float3, VertexElementSemantic.Position)
             .With("TexCoords", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate)
             .With("Color", VertexElementFormat.Float4, VertexElementSemantic.Color)
             .With("Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)
@@ -79,7 +83,7 @@ namespace zzre.materials
             .With("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With("View", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With("World", ResourceKind.UniformBuffer, ShaderStages.Vertex)
-            .With("MaterialBuffer", ResourceKind.UniformBuffer, ShaderStages.Fragment)
+            .With("MaterialBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment)
             .With(FrontFace.CounterClockwise);
     }
 

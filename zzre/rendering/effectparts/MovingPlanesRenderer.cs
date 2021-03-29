@@ -14,7 +14,6 @@ namespace zzre.rendering.effectparts
 {
     public class MovingPlanesRenderer : ListDisposable, IEffectCombinerPartRenderer
     {
-        private readonly Camera camera;
         private readonly LocationBuffer locationBuffer;
         private readonly IQuadMeshBuffer<EffectVertex> quadMeshBuffer;
         private readonly DeviceBufferRange locationRange;
@@ -39,7 +38,7 @@ namespace zzre.rendering.effectparts
             this.data = data;
             var resourcePool = diContainer.GetTag<IResourcePool>();
             var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
-            camera = diContainer.GetTag<Camera>();
+            var camera = diContainer.GetTag<Camera>();
             quadMeshBuffer = diContainer.GetTag<IQuadMeshBuffer<EffectVertex>>();
             locationBuffer = diContainer.GetTag<LocationBuffer>();
             locationRange = locationBuffer.Add(Location);
@@ -68,13 +67,6 @@ namespace zzre.rendering.effectparts
         {
             (material as IMaterial).Apply(cl);
             quadMeshBuffer.Render(cl, quadRange);
-        }
-
-        public void Update()
-        {
-            if (!data.circlesAround && !data.useDirection)
-                Location.LocalRotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateLookAt(
-                    Location.GlobalPosition, camera.Location.GlobalPosition, Vector3.UnitY));
         }
 
         public void AddTime(float timeDelta, float newProgress)
@@ -139,29 +131,35 @@ namespace zzre.rendering.effectparts
             float
                 sinTexShift = MathF.Sin(2 * curTexShift) * data.texShift,
                 cosTexShift = MathF.Cos(2 * curTexShift) * data.texShift;
+            // TODO: Apply texture shift
+
             var rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, CurRotationAngle);
+            var right = Vector3.Transform(Vector3.UnitX * data.width, rotation);
+            var up = Vector3.Transform(Vector3.UnitY * data.width, rotation);
+            var center = Vector3.Transform(
+                data.circlesAround ? Vector3.UnitY * data.yOffset : Vector3.Zero,
+                rotation);
 
             var vertices = quadMeshBuffer[quadRange];
-            UpdateQuad(vertices, Vector3.UnitX);
+            UpdateQuad(vertices, center, right, up, curColor, texCoords);
             if (!data.disableSecondPlane)
-                UpdateQuad(vertices.Slice(4), -Vector3.UnitX);
+                UpdateQuad(vertices.Slice(4), center, -right, up, curColor, texCoords);
             
-            void UpdateQuad(Span<EffectVertex> vertices, Vector3 right)
+            static void UpdateQuad(Span<EffectVertex> vertices, Vector3 center, Vector3 right, Vector3 up, Vector4 color, Rect texCoords)
             {
-                var preYOffset = data.circlesAround ? data.yOffset : 0f;
-                var postYOffset = data.circlesAround ? 0f : data.yOffset;
-                vertices[0].pos = right * -data.width + Vector3.UnitY * (preYOffset - data.height);
-                vertices[1].pos = right * -data.width + Vector3.UnitY * (preYOffset + data.height);
-                vertices[2].pos = right * +data.width + Vector3.UnitY * (preYOffset + data.height);
-                vertices[3].pos = right * +data.width + Vector3.UnitY * (preYOffset - data.height);
+                vertices[0].pos = -right + -up;
+                vertices[1].pos = -right + up;
+                vertices[2].pos = right + up;
+                vertices[3].pos = right + -up;
                 vertices[0].tex = new Vector2(texCoords.Min.X, texCoords.Min.Y);
                 vertices[1].tex = new Vector2(texCoords.Min.X, texCoords.Max.Y);
                 vertices[2].tex = new Vector2(texCoords.Max.X, texCoords.Max.Y);
-                vertices[3].tex = new Vector2(texCoords.Max.X, texCoords.Min.Y);
+                vertices[3].tex = new Vector2(texCoords.Max.X, texCoords.Min.Y);;
+                
                 for (int i = 0; i < 4; i++)
                 {
-                    vertices[i].pos = Vector3.Transform(vertices[i].pos, rotation) + Vector3.UnitY * postYOffset;
-                    vertices[i].color = curColor;
+                    vertices[i].center = center;
+                    vertices[i].color = color;
                 }
             }
         }

@@ -21,7 +21,6 @@ namespace zzre.rendering
 
         void Render(CommandList cl);
         void Reset();
-        void Update();
         void AddTime(float deltaTime, float newProgress);
     }
 
@@ -83,12 +82,6 @@ namespace zzre.rendering
             CurProgress = 100f;
             foreach (var part in Parts)
                 part.Reset();
-        }
-
-        public void Update()
-        {
-            foreach (var part in Parts)
-                part.Update();
         }
 
         public void AddTime(float timeDelta, float newProgress)
