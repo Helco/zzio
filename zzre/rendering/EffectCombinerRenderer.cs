@@ -17,7 +17,10 @@ namespace zzre.rendering
     {
         static readonly FilePath TexturePath = new FilePath("Resources/Textures/Effects");
 
+        IEffectPart Part { get; }
+
         void Render(CommandList cl);
+        void Reset();
         void Update();
         void AddTime(float deltaTime, float newProgress);
     }
@@ -29,6 +32,14 @@ namespace zzre.rendering
         public Location Location { get; } = new Location();
         public EffectCombiner Effect { get; }
         public IReadOnlyCollection<IEffectCombinerPartRenderer> Parts { get; }
+        public float CurTime { get; private set; } = 0f;
+        public float CurProgress { get; private set; } = 100f;
+
+        public float Duration => Effect.Duration;
+        public float SafeDuration => (Duration < float.Epsilon ? 1f : Duration);
+        public float CurTimeNormalized => CurTime / SafeDuration;
+        public bool IsLooping => Effect.isLooping;
+        public bool IsDone => !IsLooping && CurTime >= Duration;
 
         public EffectCombinerRenderer(ITagContainer diContainer, IResource resource)
             : this(diContainer, Load(resource)) { }
@@ -44,16 +55,16 @@ namespace zzre.rendering
         public EffectCombinerRenderer(ITagContainer diContainer, EffectCombiner effect)
         {
             this.diContainer = diContainer.ExtendedWith(this);
-            this.Effect = effect;
+            Effect = effect;
             Location.LocalPosition = effect.position.ToNumerics();
             Location.LocalRotation = Quaternion.CreateFromRotationMatrix(
                 Matrix4x4.CreateLookAt(Vector3.Zero, effect.forwards.ToNumerics(), effect.upwards.ToNumerics()));
 
             Parts = effect.parts.Select(part => part switch
                 {
-                    MovingPlanes mp => new MovingPlanesRenderer(diContainer, mp) as IEffectCombinerPartRenderer,
+                    MovingPlanes mp => new MovingPlanesRenderer(diContainer, mp),
 
-                    _ => new DummyRenderer() as IEffectCombinerPartRenderer // ignore it until we have an implementation for all supported in zzio
+                    _ => new DummyRenderer(part) as IEffectCombinerPartRenderer // ignore it until we have an implementation for all supported in zzio
                     // _ => throw new NotSupportedException($"Unsupported effect combine part {part.GetType().Name}")
                 }).Where(renderer => renderer != null).ToArray()!;
             foreach (var part in Parts)
@@ -66,12 +77,45 @@ namespace zzre.rendering
                 part.Render(cl);
         }
 
+        public void Reset()
+        {
+            CurTime = 0f;
+            CurProgress = 100f;
+            foreach (var part in Parts)
+                part.Reset();
+        }
+
+        public void Update()
+        {
+            foreach (var part in Parts)
+                part.Update();
+        }
+
+        public void AddTime(float timeDelta, float newProgress)
+        {
+            CurTime += timeDelta;
+            if (IsLooping && CurTime > Duration)
+                CurTime %= SafeDuration;
+            if (!IsLooping && CurTime > Duration)
+            {
+                timeDelta -= CurTime - Duration;
+                CurTime = Duration;
+            }
+            CurProgress = newProgress;
+            foreach (var part in Parts)
+                part.AddTime(timeDelta, newProgress);
+        }
+
         private class DummyRenderer : IEffectCombinerPartRenderer
         {
+            public IEffectPart Part { get; }
+            public DummyRenderer(IEffectPart part) => Part = part;
+            public float Duration => 0f;
             public void AddTime(float deltaTime, float newProgress) { }
             public void Dispose() { }
             public void Render(CommandList cl) { }
             public void Update() { }
+            public void Reset() { }
         }
     }
 }

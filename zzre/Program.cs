@@ -19,6 +19,7 @@ namespace zzre
     {
         static void Main(string[] args)
         {
+            System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
             var window = VeldridStartup.CreateWindow(new WindowCreateInfo
             {
                 X = 100,

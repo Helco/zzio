@@ -29,10 +29,14 @@ namespace zzre.tools
         private readonly DebugGridRenderer gridRenderer;
         private readonly OpenFileModal openFileModal;
         private readonly LocationBuffer locationBuffer;
+        private readonly GameTime gameTime;
 
         private EffectCombinerRenderer? effectRenderer;
-        private EffectCombiner? Effect => effectRenderer?.Effect;
+        private EffectCombiner Effect => effectRenderer?.Effect ?? emptyEffect;
+        private EffectCombiner emptyEffect = new EffectCombiner();
         private bool[] isVisible = Array.Empty<bool>();
+        private bool isPlaying = false;
+        private float timeScale = 1f, progressSpeed = 0f;
 
         public Window Window { get; }
         public IResource? CurrentResource { get; private set; }
@@ -41,6 +45,7 @@ namespace zzre.tools
         {
             device = diContainer.GetTag<GraphicsDevice>();
             resourcePool = diContainer.GetTag<IResourcePool>();
+            gameTime = diContainer.GetTag<GameTime>();
             Window = diContainer.GetTag<WindowContainer>().NewWindow("Effect Editor");
             Window.InitialBounds = new Rect(float.NaN, float.NaN, 1100f, 600f);
             Window.AddTag(this);
@@ -75,6 +80,7 @@ namespace zzre.tools
             AddDisposable(gridRenderer);
 
             editor.AddInfoSection("Info", HandleInfoContent);
+            editor.AddInfoSection("Playback", HandlePlaybackContent);
         }
 
         protected override void DisposeManaged()
@@ -99,15 +105,17 @@ namespace zzre.tools
             if (resource.Equals(CurrentResource))
                 return;
             CurrentResource = null;
+            emptyEffect = new EffectCombiner();
 
             effectRenderer?.Dispose();
             effectRenderer = new EffectCombinerRenderer(diContainer, resource);
 
             editor.ClearInfoSections();
             editor.AddInfoSection("Info", HandleInfoContent);
+            editor.AddInfoSection("Playback", HandlePlaybackContent);
             foreach (var (partRenderer, i) in effectRenderer.Parts.Indexed())
             {
-                var part = Effect!.parts[i];
+                var part = Effect.parts[i];
                 editor.AddInfoSection($"{part.Type} \"{part.Name}\"", part switch
                 {
                     MovingPlanes mp => () => HandlePartMovingPlanes(mp, (MovingPlanesRenderer)partRenderer),
@@ -138,17 +146,59 @@ namespace zzre.tools
 
         private void HandleInfoContent()
         {
-            var descr = Effect?.description ?? "";
-            ImGui.InputText("Description", ref descr, 512);
+            ImGui.InputText("Description", ref Effect.description, 512);
 
-            var pos = Effect?.position.ToNumerics() ?? Vector3.Zero;
-            var forwards = Effect?.forwards.ToNumerics() ?? Vector3.Zero;
-            var upwards = Effect?.upwards.ToNumerics() ?? Vector3.Zero;
+            var pos = Effect.position.ToNumerics();
+            var forwards = Effect.forwards.ToNumerics();
+            var upwards = Effect.upwards.ToNumerics();
             ImGui.DragFloat3("Position", ref pos);
             ImGui.DragFloat3("Forwards", ref forwards);
             ImGui.DragFloat3("Upwards", ref upwards);
-            var isLooping = Effect?.isLooping ?? false;
-            ImGui.Checkbox("Looping", ref isLooping);
+        }
+
+        private void HandlePlaybackContent()
+        {
+            static void UndoSlider(string label, ref float value, float min, float max, float defaultValue)
+            {
+                ImGui.SliderFloat(label, ref value, min, max);
+                if (ImGui.IsItemClicked(ImGuiMouseButton.Right) || ImGui.IsItemClicked(ImGuiMouseButton.Middle))
+                    value = defaultValue;
+            }
+
+            ImGui.Checkbox("Looping", ref Effect.isLooping);
+
+            float curTime = effectRenderer?.CurTime ?? 0f;
+            ImGui.SliderFloat("Time", ref curTime, 0f, Effect.Duration, $"%.3f / {Effect.Duration}", ImGuiSliderFlags.NoInput);
+            UndoSlider("Time Scale", ref timeScale, 0f, 5f, 1f);
+            float progress = effectRenderer?.CurProgress ?? 0f;
+            if (ImGui.SliderFloat("Progress", ref progress, 0f, 100f))
+            {
+                effectRenderer?.AddTime(0f, progress);
+                fbArea.IsDirty = true;
+            }
+            UndoSlider("Progress Speed", ref progressSpeed, -2f, 2f, 0f);
+
+            if (ImGui.Button(IconFonts.ForkAwesome.FastBackward))
+                effectRenderer?.Reset();
+            ImGui.SameLine();
+            if (isPlaying && ImGui.Button(IconFonts.ForkAwesome.Pause))
+                isPlaying = false;
+            else if (!isPlaying && ImGui.Button(IconFonts.ForkAwesome.Play) && effectRenderer != null)
+                isPlaying = true;
+
+            if (isPlaying && effectRenderer != null)
+            {
+                var newProgress = effectRenderer.CurProgress + progressSpeed * 100f * gameTime.Delta;
+                newProgress = Effect.isLooping
+                    ? newProgress < 0f ? 100f - newProgress
+                    : newProgress > 100f ? newProgress - 100f
+                    : newProgress
+                    : Math.Clamp(newProgress, 0f, 100f);
+                effectRenderer.AddTime(gameTime.Delta * timeScale, newProgress);
+                if (effectRenderer.IsDone)
+                    isPlaying = false;
+                fbArea.IsDirty = true;
+            }
         }
 
         private void HandleMenuOpen()

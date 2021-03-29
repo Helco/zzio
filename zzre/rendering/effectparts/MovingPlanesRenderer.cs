@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Veldrid;
+using zzio.effect;
 using zzio.effect.parts;
 using zzio.utils;
 using zzio.vfs;
@@ -22,6 +23,7 @@ namespace zzre.rendering.effectparts
         private readonly Range quadRange;
         private readonly Rect texCoords;
 
+        public IEffectPart Part => data;
         private Vector2 CurSize => new Vector2(data.width, data.height) * curScale;
         private float CurRotationAngle => curRotation * data.rotation * MathF.PI / 180f;
 
@@ -53,7 +55,6 @@ namespace zzre.rendering.effectparts
             texCoords = EffectPartUtility.GetTileUV(data.tileW, data.tileH, data.tileId);
 
             Reset();
-            UpdateQuads();
         }
 
         protected override void DisposeManaged()
@@ -124,12 +125,13 @@ namespace zzre.rendering.effectparts
             curScale += amount;
         }
 
-        private void Reset()
+        public void Reset()
         {
             curPhase1 = Math.Max(0.001f, data.phase1 / 1000f);
             curPhase2 = data.phase2 / 1000f;
             curScale = 1f;
             curColor = data.color.ToFColor().ToNumerics();
+            UpdateQuads();
         }
 
         private void UpdateQuads()
