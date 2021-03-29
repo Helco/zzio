@@ -24,9 +24,9 @@ void main()
 {
 	vec4 pos;
 	if (isBillboard)
-		pos = world * view * vec4(vsin_center, 1) + vec4(vsin_pos, 1);
+		pos = view * world * vec4(vsin_center, 1) + vec4(vsin_pos, 1);
 	else
-		pos = world * view * vec4(vsin_center + vsin_pos, 1);
+		pos = view * world * vec4(vsin_center + vsin_pos, 1);
 	pos = projection * pos;
 	gl_Position = pos;
 	fsin_uv = vsin_uv;

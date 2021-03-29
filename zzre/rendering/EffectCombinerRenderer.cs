@@ -27,6 +27,8 @@ namespace zzre.rendering
     public class EffectCombinerRenderer : ListDisposable
     {
         private readonly ITagContainer diContainer;
+        private readonly LocationBuffer locationBuffer;
+        private readonly DeviceBufferRange locationRange;
 
         public Location Location { get; } = new Location();
         public EffectCombiner Effect { get; }
@@ -54,6 +56,8 @@ namespace zzre.rendering
         public EffectCombinerRenderer(ITagContainer diContainer, EffectCombiner effect)
         {
             this.diContainer = diContainer.ExtendedWith(this);
+            locationBuffer = diContainer.GetTag<LocationBuffer>();
+            locationRange = locationBuffer.Add(Location);
             Effect = effect;
             Location.LocalPosition = effect.position.ToNumerics();
             Location.LocalRotation = Quaternion.CreateFromRotationMatrix(
@@ -61,13 +65,19 @@ namespace zzre.rendering
 
             Parts = effect.parts.Select(part => part switch
                 {
-                    MovingPlanes mp => new MovingPlanesRenderer(diContainer, mp),
+                    MovingPlanes mp => new MovingPlanesRenderer(diContainer, locationRange, mp),
 
                     _ => new DummyRenderer(part) as IEffectCombinerPartRenderer // ignore it until we have an implementation for all supported in zzio
                     // _ => throw new NotSupportedException($"Unsupported effect combine part {part.GetType().Name}")
                 }).Where(renderer => renderer != null).ToArray()!;
             foreach (var part in Parts)
                 AddDisposable(part);
+        }
+
+        protected override void DisposeManaged()
+        {
+            base.DisposeManaged();
+            locationBuffer.Remove(locationRange);
         }
 
         public void Render(CommandList cl)

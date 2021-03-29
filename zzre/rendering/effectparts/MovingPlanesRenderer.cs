@@ -14,9 +14,7 @@ namespace zzre.rendering.effectparts
 {
     public class MovingPlanesRenderer : ListDisposable, IEffectCombinerPartRenderer
     {
-        private readonly LocationBuffer locationBuffer;
         private readonly IQuadMeshBuffer<EffectVertex> quadMeshBuffer;
-        private readonly DeviceBufferRange locationRange;
         private readonly EffectMaterial material;
         private readonly MovingPlanes data;
         private readonly Range quadRange;
@@ -31,21 +29,18 @@ namespace zzre.rendering.effectparts
         private float curScale = 1f;
         private Vector4 curColor;
 
-        public Location Location { get; } = new Location();
-
-        public MovingPlanesRenderer(ITagContainer diContainer, MovingPlanes data)
+        public MovingPlanesRenderer(ITagContainer diContainer, DeviceBufferRange locationRange, MovingPlanes data)
         {
             this.data = data;
             var resourcePool = diContainer.GetTag<IResourcePool>();
             var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
             var camera = diContainer.GetTag<Camera>();
             quadMeshBuffer = diContainer.GetTag<IQuadMeshBuffer<EffectVertex>>();
-            locationBuffer = diContainer.GetTag<LocationBuffer>();
-            locationRange = locationBuffer.Add(Location);
             material = EffectMaterial.CreateFor(data.renderMode, diContainer);
             material.LinkTransformsTo(camera);
             material.World.BufferRange = locationRange;
             material.Uniforms.Value = EffectMaterialUniforms.Default;
+            material.Uniforms.Ref.isBillboard = !data.circlesAround && !data.useDirection;
             AddDisposable(material.MainTexture.Texture = textureLoader.LoadTexture(IEffectCombinerPartRenderer.TexturePath, data.texName));
             material.Sampler.Value = SamplerAddressMode.Clamp.AsDescription(SamplerFilter.MinLinear_MagLinear_MipLinear);
             AddDisposable(material);
@@ -60,7 +55,6 @@ namespace zzre.rendering.effectparts
         {
             base.DisposeManaged();
             quadMeshBuffer.Release(quadRange);
-            locationBuffer.Remove(locationRange);
         }
 
         public void Render(CommandList cl)
@@ -141,27 +135,9 @@ namespace zzre.rendering.effectparts
                 rotation);
 
             var vertices = quadMeshBuffer[quadRange];
-            UpdateQuad(vertices, center, right, up, curColor, texCoords);
+            vertices.UpdateQuad(center, right, up, curColor, texCoords);
             if (!data.disableSecondPlane)
-                UpdateQuad(vertices.Slice(4), center, -right, up, curColor, texCoords);
-            
-            static void UpdateQuad(Span<EffectVertex> vertices, Vector3 center, Vector3 right, Vector3 up, Vector4 color, Rect texCoords)
-            {
-                vertices[0].pos = -right + -up;
-                vertices[1].pos = -right + up;
-                vertices[2].pos = right + up;
-                vertices[3].pos = right + -up;
-                vertices[0].tex = new Vector2(texCoords.Min.X, texCoords.Min.Y);
-                vertices[1].tex = new Vector2(texCoords.Min.X, texCoords.Max.Y);
-                vertices[2].tex = new Vector2(texCoords.Max.X, texCoords.Max.Y);
-                vertices[3].tex = new Vector2(texCoords.Max.X, texCoords.Min.Y);;
-                
-                for (int i = 0; i < 4; i++)
-                {
-                    vertices[i].center = center;
-                    vertices[i].color = color;
-                }
-            }
+                vertices[4..].UpdateQuad(center, -right, up, curColor, texCoords);
         }
     }
 }
