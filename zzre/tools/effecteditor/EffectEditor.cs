@@ -71,7 +71,7 @@ namespace zzre.tools
             this.diContainer = diContainer.ExtendedWith(locationBuffer);
             AddDisposable(this.diContainer);
             this.diContainer.AddTag(camera = new Camera(this.diContainer));
-            this.diContainer.AddTag<IQuadMeshBuffer<EffectVertex>>(new DynamicQuadMeshBuffer<EffectVertex>(device.ResourceFactory));
+            this.diContainer.AddTag<IQuadMeshBuffer<EffectVertex>>(new DynamicQuadMeshBuffer<EffectVertex>(device.ResourceFactory, 1024));
             controls = new OrbitControlsTag(Window, camera.Location, this.diContainer);
             AddDisposable(controls);
             gridRenderer = new DebugGridRenderer(this.diContainer);
@@ -109,6 +109,8 @@ namespace zzre.tools
 
             effectRenderer?.Dispose();
             effectRenderer = new EffectCombinerRenderer(diContainer, resource);
+            effectRenderer.Location.LocalPosition = Vector3.Zero;
+            effectRenderer.Location.LocalRotation = Quaternion.Identity;
 
             editor.ClearInfoSections();
             editor.AddInfoSection("Info", HandleInfoContent);
@@ -120,10 +122,14 @@ namespace zzre.tools
                 {
                     MovingPlanes mp => () => HandlePart(mp, (MovingPlanesRenderer)partRenderer),
                     RandomPlanes rp => () => HandlePart(rp, (RandomPlanesRenderer)partRenderer),
+                    ParticleEmitter pe => () => HandlePart(pe, (ParticleEmitterRenderer)partRenderer),
                     _ => () => { } // ignore for now
                 }, defaultOpen: false, () => HandlePartPreContent(i));
             }
             isVisible = Enumerable.Repeat(true, effectRenderer.Parts.Count).ToArray();
+            isPlaying = true;
+            timeScale = 1f;
+            progressSpeed = 0f;
 
             controls.ResetView();
             fbArea.IsDirty = true;
@@ -149,10 +155,11 @@ namespace zzre.tools
         {
             ImGui.InputText("Description", ref Effect.description, 512);
 
-            var pos = Effect.position.ToNumerics();
+            var pos = effectRenderer?.Location.LocalPosition ?? Vector3.Zero;
             var forwards = Effect.forwards.ToNumerics();
             var upwards = Effect.upwards.ToNumerics();
-            ImGui.DragFloat3("Position", ref pos);
+            if (ImGui.DragFloat3("Position", ref pos) && effectRenderer != null)
+                effectRenderer.Location.LocalPosition = pos;
             ImGui.DragFloat3("Forwards", ref forwards);
             ImGui.DragFloat3("Upwards", ref upwards);
         }

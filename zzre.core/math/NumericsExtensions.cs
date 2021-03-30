@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Numerics;
+using zzio.primitives;
+using Quaternion = System.Numerics.Quaternion;
 
 namespace zzre
 {
@@ -56,5 +58,8 @@ namespace zzre
 
         public static float Next(this Random random, float min, float max) =>
             min + random.NextFloat() * (max - min);
+
+        public static float In(this Random random, ValueRangeAnimation range) =>
+            range.value + random.InLine() * range.width;
     }
 }

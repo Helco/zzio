@@ -8,7 +8,7 @@ using zzre.materials;
 
 namespace zzre.rendering.effectparts
 {
-    public class RandomPlanesRenderer : ListDisposable, IEffectCombinerPartRenderer
+    public class RandomPlanesRenderer : ListDisposable, IEffectPartRenderer
     {
         private struct RandomPlane
         {
@@ -50,7 +50,7 @@ namespace zzre.rendering.effectparts
             material.Uniforms.Value = EffectMaterialUniforms.Default;
             material.Uniforms.Ref.isBillboard = !data.circlesAround;
             AddDisposable(material.MainTexture.Texture = textureLoader.LoadTexture(
-                IEffectCombinerPartRenderer.TexturePath, data.texName));
+                IEffectPartRenderer.TexturePath, data.texName));
             material.Sampler.Value = SamplerAddressMode.Clamp.AsDescription(SamplerFilter.MinLinear_MagLinear_MipLinear);
             AddDisposable(material);
 

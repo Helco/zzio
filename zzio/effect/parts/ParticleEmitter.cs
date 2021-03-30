@@ -17,6 +17,17 @@ namespace zzio.effect.parts
     }
 
     [System.Serializable]
+    public enum ParticleSpawnMode
+    {
+        Constant = 0,
+        Loadup,
+        Normal,
+        Explosion,
+
+        Unknown = -1
+    }
+
+    [System.Serializable]
     public class ParticleEmitter : IEffectPart
     {
         public EffectPartType Type => EffectPartType.ParticleEmitter;
@@ -25,14 +36,14 @@ namespace zzio.effect.parts
         public uint
             phase1 = 1000,
             phase2 = 1000,
-            minSpawnRateModProgress = 1,
+            minProgress = 1,
             spawnRate = 1000,
             tileW = 256,
             tileH = 256,
             tileId = 0,
             tileCount = 1,
-            tileDuration = 1,
-            mode = 2; // TODO: Put this into an enum 
+            tileDuration = 1;
+        public ParticleSpawnMode spawnMode = ParticleSpawnMode.Normal;
         public float
             minVel = 1.0f,
             verticalDir = 90.0f,
@@ -72,7 +83,7 @@ namespace zzio.effect.parts
             r.BaseStream.Seek(4 * 4 + 32 + 1, SeekOrigin.Current); // many unused variables
             name = r.ReadSizedCString(32);
             r.BaseStream.Seek(3, SeekOrigin.Current);
-            minSpawnRateModProgress = r.ReadUInt32();
+            minProgress = r.ReadUInt32();
             life.value = r.ReadSingle();
             spawnRate = r.ReadUInt32();
             minVel = r.ReadSingle();
@@ -107,7 +118,7 @@ namespace zzio.effect.parts
             r.BaseStream.Seek(4, SeekOrigin.Current);
             horRadius = r.ReadSingle();
             verRadius = r.ReadSingle();
-            mode = r.ReadUInt32();
+            spawnMode = EnumUtils.intToEnum<ParticleSpawnMode>(r.ReadInt32());
             r.BaseStream.Seek(4, SeekOrigin.Current);
             hasDirection = r.ReadBoolean();
             r.BaseStream.Seek(3, SeekOrigin.Current);

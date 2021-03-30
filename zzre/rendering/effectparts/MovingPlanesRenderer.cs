@@ -7,7 +7,7 @@ using zzre.materials;
 
 namespace zzre.rendering.effectparts
 {
-    public class MovingPlanesRenderer : ListDisposable, IEffectCombinerPartRenderer
+    public class MovingPlanesRenderer : ListDisposable, IEffectPartRenderer
     {
         private readonly IQuadMeshBuffer<EffectVertex> quadMeshBuffer;
         private readonly EffectMaterial material;
@@ -36,7 +36,7 @@ namespace zzre.rendering.effectparts
             material.Uniforms.Value = EffectMaterialUniforms.Default;
             material.Uniforms.Ref.isBillboard = !data.circlesAround && !data.useDirection;
             AddDisposable(material.MainTexture.Texture = textureLoader.LoadTexture(
-                IEffectCombinerPartRenderer.TexturePath, data.texName));
+                IEffectPartRenderer.TexturePath, data.texName));
             material.Sampler.Value = SamplerAddressMode.Clamp.AsDescription(SamplerFilter.MinLinear_MagLinear_MipLinear);
             AddDisposable(material);
 

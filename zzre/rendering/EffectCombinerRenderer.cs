@@ -13,7 +13,7 @@ using zzre.rendering.effectparts;
 
 namespace zzre.rendering
 {
-    public interface IEffectCombinerPartRenderer : IDisposable
+    public interface IEffectPartRenderer : IDisposable
     {
         static readonly FilePath TexturePath = new FilePath("Resources/Textures/Effects");
 
@@ -32,7 +32,7 @@ namespace zzre.rendering
 
         public Location Location { get; } = new Location();
         public EffectCombiner Effect { get; }
-        public IReadOnlyCollection<IEffectCombinerPartRenderer> Parts { get; }
+        public IReadOnlyCollection<IEffectPartRenderer> Parts { get; }
         public float CurTime { get; private set; } = 0f;
         public float CurProgress { get; private set; } = 100f;
 
@@ -59,16 +59,17 @@ namespace zzre.rendering
             locationBuffer = diContainer.GetTag<LocationBuffer>();
             locationRange = locationBuffer.Add(Location);
             Effect = effect;
-            /*Location.LocalPosition = effect.position.ToNumerics();
+            Location.LocalPosition = effect.position.ToNumerics();
             Location.LocalRotation = Quaternion.CreateFromRotationMatrix(
-                Matrix4x4.CreateLookAt(Vector3.Zero, effect.forwards.ToNumerics(), effect.upwards.ToNumerics()));*/
+                Matrix4x4.CreateLookAt(Vector3.Zero, effect.forwards.ToNumerics(), effect.upwards.ToNumerics()));
 
             Parts = effect.parts.Select(part => part switch
                 {
                     MovingPlanes mp => new MovingPlanesRenderer(diContainer, locationRange, mp),
                     RandomPlanes rp => new RandomPlanesRenderer(diContainer, locationRange, rp),
+                    ParticleEmitter pe => new ParticleEmitterRenderer(diContainer, Location, pe),
 
-                    _ => new DummyRenderer(part) as IEffectCombinerPartRenderer // ignore it until we have an implementation for all supported in zzio
+                    _ => new DummyRenderer(part) as IEffectPartRenderer // ignore it until we have an implementation for all supported in zzio
                     // _ => throw new NotSupportedException($"Unsupported effect combine part {part.GetType().Name}")
                 }).Where(renderer => renderer != null).ToArray()!;
             foreach (var part in Parts)
@@ -110,7 +111,7 @@ namespace zzre.rendering
                 part.AddTime(timeDelta, newProgress);
         }
 
-        private class DummyRenderer : IEffectCombinerPartRenderer
+        private class DummyRenderer : IEffectPartRenderer
         {
             public IEffectPart Part { get; }
             public DummyRenderer(IEffectPart part) => Part = part;
