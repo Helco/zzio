@@ -31,6 +31,7 @@ namespace zzre.rendering.effectparts
             behaviour = data.type switch
             {
                 ParticleType.Particle => new ParticleBehaviourParticle(diContainer, location, data),
+                ParticleType.Model => new ParticleBehaviourModel(diContainer, location, data),
 
                 _ => new DummyBehaviour()
                 //_ => throw new NotSupportedException($"Unsupported particle emitter type {data.type}")

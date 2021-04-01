@@ -69,7 +69,7 @@ namespace zzre.rendering
         }
     }
 
-    public class UniformBinding<T> : UniformBinding where T : struct
+    public class UniformBinding<T> : UniformBinding where T : unmanaged
     {
         protected override uint SizeInBytes => (uint)((Marshal.SizeOf<T>() + 15) / 16 * 16); // has to be aligned
 

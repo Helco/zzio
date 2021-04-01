@@ -53,6 +53,21 @@ namespace zzre
         public static float InLine(this Random random) => random.NextSign() * (float)random.NextDouble();
         public static Vector2 InSquare(this Random random) => new Vector2(random.InLine(), random.InLine());
         public static Vector3 InCube(this Random random) => new Vector3(random.InLine(), random.InLine(), random.InLine());
+        public static Vector3 InSphere(this Random random) => random.OnSphere() * random.NextFloat();
+
+        public static Vector3 OnSphere(this Random random)
+        {
+            // polar coordinates
+            float
+                hor = random.NextFloat() * 2 * MathF.PI,
+                ver = random.NextFloat() * 2 * MathF.PI,
+                horSin = MathF.Sin(hor), horCos = MathF.Cos(hor),
+                verSin = MathF.Sin(ver), verCos = MathF.Cos(ver);
+            return new Vector3(
+                horCos * verSin,
+                verCos,
+                horSin * verSin);
+        }
 
         public static int NextSign(this Random random) => random.Next(2) * 2 - 1;
 

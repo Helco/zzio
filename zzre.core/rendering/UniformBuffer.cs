@@ -4,7 +4,7 @@ using Veldrid;
 
 namespace zzre.rendering
 {
-    public class UniformBuffer<T> : BaseDisposable where T : struct
+    public class UniformBuffer<T> : BaseDisposable where T : unmanaged
     {
         private T value = default;
         private bool isDirty = true;

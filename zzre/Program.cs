@@ -50,6 +50,7 @@ namespace zzre
                 .AddTag(time)
                 .AddTag(windowContainer)
                 .AddTag(graphicsDevice)
+                .AddTag(graphicsDevice.ResourceFactory)
                 .AddTag<IResourcePool>(resourcePool)
                 .AddTag(pipelineCollection)
                 .AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(diContainer))

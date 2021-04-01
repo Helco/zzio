@@ -34,40 +34,14 @@ namespace zzre.rendering.effectparts
             {
                 tileI = 0;
                 tileLife = 0f;
-                basic.life = 0f;
-                basic.maxLife = Math.Clamp(random.In(data.life), 0.1f, 15f);
 
-                basic.color = Vector4.Clamp(new Vector4(
-                    random.In(data.colorR),
-                    random.In(data.colorG),
-                    random.In(data.colorB),
-                    random.In(data.colorA)),
-                    Vector4.Zero, Vector4.One);
-                basic.colorMod = new Vector4(
-                    data.colorR.mod + random.InLine() * data.colorR.width,
-                    data.colorG.mod + random.InLine() * data.colorG.width,
-                    data.colorB.mod + random.InLine() * data.colorB.width,
-                    data.colorA.mod + random.InLine() * data.colorA.width)
-                    - basic.color / basic.maxLife;
-
-                basic.scale = random.In(data.scale);
-                basic.scaleMod = (data.scale.mod - basic.scale) / basic.maxLife;
-
-                basic.gravity = Vector3.Clamp(data.gravity.ToNumerics(), Vector3.One * -0.5f, Vector3.One * +0.5f) * 9.8f;
-                basic.gravityMod = 9.8f * data.gravityMod.ToNumerics() - basic.gravity / basic.maxLife;
+                basic.SpawnLifeGravityColorDirVel(random, in data, out var dir);
+                basic.SpawnScale(random, in data);
 
                 basic.pos = pos + 
                     Vector3.Multiply(random.InCube(), new Vector3(data.horRadius, data.verRadius, data.horRadius));
                 basic.prevPos = basic.pos;
 
-                float horRot = random.InLine() * MathF.PI * 2f;
-                float verRot = random.InLine() * MathF.PI * data.verticalDir;
-                var dir = (data.hasDirection ? Vector3.UnitZ : Vector3.Zero) + new Vector3(
-                    MathF.Cos(horRot) * MathF.Sin(verRot),
-                    MathF.Cos(verRot),
-                    MathF.Sin(horRot) * MathF.Sin(verRot));
-
-                basic.vel = dir * (data.minVel + random.InLine() * data.acc.width);
                 basic.acc = (dir * random.In(data.acc) - basic.vel) / basic.maxLife;
             }
         }
@@ -100,8 +74,7 @@ namespace zzre.rendering.effectparts
             material.LinkTransformsTo(camera);
             material.World.Value = Matrix4x4.Identity; // particles are spawned in world-space
             material.Uniforms.Value = EffectMaterialUniforms.Default;
-            AddDisposable(material.MainTexture.Texture = textureLoader.LoadTexture(
-                IEffectPartRenderer.TexturePath, data.texName));
+            material.MainTexture.Texture = textureLoader.LoadTexture(IEffectPartRenderer.TexturePath, data.texName);
             material.Sampler.Value = SamplerAddressMode.Clamp.AsDescription(SamplerFilter.MinLinear_MagLinear_MipLinear);
             AddDisposable(material);
 

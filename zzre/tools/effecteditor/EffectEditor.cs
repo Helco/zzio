@@ -30,6 +30,8 @@ namespace zzre.tools
         private readonly OpenFileModal openFileModal;
         private readonly LocationBuffer locationBuffer;
         private readonly GameTime gameTime;
+        private readonly CachedAssetLoader<Texture> textureLoader;
+        private readonly CachedAssetLoader<ClumpBuffers> clumpLoader;
 
         private EffectCombinerRenderer? effectRenderer;
         private EffectCombiner Effect => effectRenderer?.Effect ?? emptyEffect;
@@ -78,6 +80,11 @@ namespace zzre.tools
             gridRenderer.Material.LinkTransformsTo(camera);
             gridRenderer.Material.World.Ref = Matrix4x4.Identity;
             AddDisposable(gridRenderer);
+
+            AddDisposable(textureLoader = new CachedAssetLoader<Texture>(new TextureAssetLoader(diContainer)));
+            AddDisposable(clumpLoader = new CachedClumpAssetLoader(diContainer));
+            this.diContainer.AddTag<IAssetLoader<Texture>>(textureLoader);
+            this.diContainer.AddTag<IAssetLoader<ClumpBuffers>>(clumpLoader);
 
             editor.AddInfoSection("Info", HandleInfoContent);
             editor.AddInfoSection("Playback", HandlePlaybackContent);
