@@ -32,9 +32,8 @@ namespace zzre.rendering.effectparts
             {
                 ParticleType.Particle => new ParticleBehaviourParticle(diContainer, location, data),
                 ParticleType.Model => new ParticleBehaviourModel(diContainer, location, data),
-
-                _ => new DummyBehaviour()
-                //_ => throw new NotSupportedException($"Unsupported particle emitter type {data.type}")
+                ParticleType.Spark => new ParticleBehaviourSpark(diContainer, location, data),
+                _ => throw new NotSupportedException($"Unsupported particle emitter type {data.type}")
             };
 
             Reset();
@@ -94,16 +93,5 @@ namespace zzre.rendering.effectparts
         }
 
         public void Render(CommandList cl) => behaviour.Render(cl);
-
-        private class DummyBehaviour : IParticleBehaviour
-        {
-            public IEffectPart Part => null!;
-            public float SpawnRate { get; set; }
-            public int CurrentParticles => 0;
-            public void AddTime(float deltaTime, float newProgress) { }
-            public void Dispose() { }
-            public void Render(CommandList cl) { }
-            public void Reset() { }
-        }
     }
 }

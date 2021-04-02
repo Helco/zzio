@@ -74,6 +74,7 @@ namespace zzre.tools
             AddDisposable(this.diContainer);
             this.diContainer.AddTag(camera = new Camera(this.diContainer));
             this.diContainer.AddTag<IQuadMeshBuffer<EffectVertex>>(new DynamicQuadMeshBuffer<EffectVertex>(device.ResourceFactory, 1024));
+            this.diContainer.AddTag<IQuadMeshBuffer<SparkVertex>>(new DynamicQuadMeshBuffer<SparkVertex>(device.ResourceFactory, 256));
             controls = new OrbitControlsTag(Window, camera.Location, this.diContainer);
             AddDisposable(controls);
             gridRenderer = new DebugGridRenderer(this.diContainer);
