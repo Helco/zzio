@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>Veldrid</RootNamespace>
-    <RestoreSources>$(RestoreSources);../../zzio-feed</RestoreSources>
+    <RestoreSources>$(RestoreSources);../../zzio-feed;https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
 
   <ItemGroup>
