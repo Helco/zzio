@@ -5,6 +5,10 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+    
+defaults:
+  run:
+    working-directory: ./zzio
 
 jobs:
   build:
@@ -13,6 +17,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        path: zzio
+    - uses: actions/checkout@v2
+      with:
+        repository: Helco/zzio-feed
+        path: zzio-feed
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
