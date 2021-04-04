@@ -1,4 +1,5 @@
 ﻿using ImGuiNET;
+using ImGuizmoNET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,6 +75,7 @@ namespace zzre.tools
                 sphereBoundsRenderer.Material.World.Value = Matrix4x4.Identity;
                 sphereBoundsRenderer.Color = IColor.Red;
 
+                editor.Window.OnContent += HandleGizmos;
                 editor.OnLoadScene += () => editor.Selected = null;
                 editor.OnNewSelection += HandleNewSelection;
                 fbArea.OnRender += HandleRender;
@@ -85,6 +87,24 @@ namespace zzre.tools
                 base.DisposeManaged();
                 boxBoundsRenderer.Dispose();
                 sphereBoundsRenderer.Dispose();
+            }
+
+            private void HandleGizmos()
+            {
+                var selected = editor.Selected;
+                if (selected == null)
+                    return;
+
+                var view = camera.Location.WorldToLocal;
+                var projection = camera.Projection;
+                var matrix = selected.Location.LocalToWorld;
+                ImGuizmo.SetDrawlist();
+                if (ImGuizmo.Manipulate(ref view.M11, ref projection.M11, OPERATION.TRANSLATE, MODE.LOCAL, ref matrix.M11))
+                {
+                    selected.Location.LocalToWorld = matrix;
+                    editor.fbArea.IsDirty = true;
+                }
+
             }
 
             private void HandleNewSelection(ISelectable? newSelected)
@@ -112,7 +132,7 @@ namespace zzre.tools
 
             private void HandleClick(ImGuiMouseButton button, Vector2 pos)
             {
-                if (button != ImGuiMouseButton.Left)
+                if (button != ImGuiMouseButton.Left || ImGuizmo.IsOver() || ImGuizmo.IsUsing())
                     return;
 
                 var ray = camera.RayAt((pos * 2f - Vector2.One) * new Vector2(1f, -1f));

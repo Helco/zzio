@@ -23,6 +23,7 @@ namespace zzre.imgui
         private OnceAction onceBeforeContent = new OnceAction();
 
         public Framebuffer Framebuffer { get; private set; }
+        public RgbaFloat ClearColor { get; set; }
         public float Ratio => Framebuffer.Width / (float)Framebuffer.Height;
         public bool IsDirty { get; set; } = true;
         public event Action<CommandList> OnRender = _ => { };
@@ -41,6 +42,8 @@ namespace zzre.imgui
             Resize(parent.InitialBounds.Size);
             commandList = Factory.CreateCommandList();
             fence = Factory.CreateFence(true);
+
+            ClearColor = new RgbaFloat(GetStyle().Colors[(int)ImGuiCol.FrameBg]);
         }
 
         protected override void DisposeManaged()
@@ -105,9 +108,11 @@ namespace zzre.imgui
             PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.Zero);
             PushStyleColor(ImGuiCol.ButtonActive, normalColor);
             PushStyleColor(ImGuiCol.ButtonHovered, normalColor);
-            ImageButton(bindingHandle, size);
+            Image(bindingHandle, size);
             PopStyleColor(2);
             PopStyleVar(2);
+
+            ImGuizmoNET.ImGuizmo.SetRect(offset.X, offset.Y, size.X, size.Y);
         }
 
         private void HandleRender()
@@ -119,7 +124,7 @@ namespace zzre.imgui
             fence.Reset();
             commandList.Begin();
             commandList.SetFramebuffer(Framebuffer);
-            commandList.ClearColorTarget(0, RgbaFloat.Clear);
+            commandList.ClearColorTarget(0, ClearColor);
             commandList.ClearDepthStencil(1f);
             OnRender(commandList);
             commandList.End();

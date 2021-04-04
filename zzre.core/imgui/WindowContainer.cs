@@ -40,6 +40,8 @@ namespace zzre.imgui
 
             var fb = device.MainSwapchain.Framebuffer;
             ImGuiRenderer = new ImGuiRenderer(device, fb.OutputDescription, (int)fb.Width, (int)fb.Height);
+            ImGuizmoNET.ImGuizmo.SetImGuiContext(ImGui.GetCurrentContext());
+            ImGuizmoNET.ImGuizmo.AllowAxisFlip(false);
             commandList = Factory.CreateCommandList();
             fence = Factory.CreateFence(true);
 
@@ -82,6 +84,7 @@ namespace zzre.imgui
         public void Update(GameTime time, InputSnapshot input)
         {
             ImGuiRenderer.Update(time.Delta, input);
+            ImGuizmoNET.ImGuizmo.BeginFrame();
 
             var viewport = GetMainViewport();
             SetNextWindowPos(viewport.Pos);

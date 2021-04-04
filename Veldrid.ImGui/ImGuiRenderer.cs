@@ -96,6 +96,7 @@ namespace Veldrid
 
             ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
             ImGui.GetIO().ConfigWindowsResizeFromEdges = true;
+            ImGui.GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
         }
 
         public void Start()
