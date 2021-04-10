@@ -35,9 +35,9 @@ namespace zzre.rendering.effectparts
             material.World.BufferRange = locationRange;
             material.Uniforms.Value = EffectMaterialUniforms.Default;
             material.Uniforms.Ref.isBillboard = !data.circlesAround && !data.useDirection;
-            AddDisposable(material.MainTexture.Texture = textureLoader.LoadTexture(
-                IEffectPartRenderer.TexturePath, data.texName));
-            material.Sampler.Value = SamplerAddressMode.Clamp.AsDescription(SamplerFilter.MinLinear_MagLinear_MipLinear);
+            material.MainTexture.Texture = textureLoader.LoadTexture(
+                IEffectPartRenderer.TexturePath, data.texName);
+            material.Sampler.Value = IEffectPartRenderer.SamplerDescription;
             AddDisposable(material);
 
             quadRange = quadMeshBuffer.Reserve(data.disableSecondPlane ? 1 : 2);
@@ -117,11 +117,6 @@ namespace zzre.rendering.effectparts
 
         private void UpdateQuads()
         {
-            float
-                sinTexShift = MathF.Sin(2 * curTexShift) * data.texShift,
-                cosTexShift = MathF.Cos(2 * curTexShift) * data.texShift;
-            // TODO: Apply texture shift
-
             var rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, CurRotationAngle);
             var right = Vector3.Transform(Vector3.UnitX * data.width, rotation);
             var up = Vector3.Transform(Vector3.UnitY * data.width, rotation);
@@ -129,10 +124,13 @@ namespace zzre.rendering.effectparts
                 ? Vector3.Transform(Vector3.UnitY * data.yOffset, rotation)
                 : Vector3.Zero;
 
+            var newTexCoords1 = EffectPartUtility.TexShift(texCoords, 2 * curTexShift, data.texShift);
+            var newTexCoords2 = EffectPartUtility.TexShift(texCoords, 2 * curTexShift, -data.texShift);
+
             var vertices = quadMeshBuffer[quadRange];
-            vertices.UpdateQuad(center, right, up, curColor, texCoords);
+            vertices.UpdateQuad(center, right, up, curColor, newTexCoords1);
             if (!data.disableSecondPlane)
-                vertices[4..].UpdateQuad(center, -right, up, curColor, texCoords);
+                vertices[4..].UpdateQuad(center, -right, up, curColor, newTexCoords2);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,6 +16,8 @@ namespace zzre.rendering
     public interface IEffectPartRenderer : IDisposable
     {
         static readonly FilePath TexturePath = new FilePath("Resources/Textures/Effects");
+        static readonly SamplerDescription SamplerDescription =
+            SamplerAddressMode.Clamp.AsDescription(SamplerFilter.MinLinear_MagLinear_MipLinear);
 
         IEffectPart Part { get; }
 

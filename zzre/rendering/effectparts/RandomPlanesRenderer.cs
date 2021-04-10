@@ -182,7 +182,7 @@ namespace zzre.rendering.effectparts
             var center = data.circlesAround ? Vector3.Transform(plane.pos, rotation) : plane.pos;
             var right = Vector3.Transform(Vector3.UnitX * plane.Size.X, rotation);
             var up = Vector3.Transform(Vector3.UnitY * plane.Size.Y, rotation);
-            var texCoords = tileTexCoords[plane.tileI]; // TODO: Apply texture shifting
+            var texCoords = EffectPartUtility.TexShift(tileTexCoords[plane.tileI], curTexShift, data.texShift);
 
             quadMeshBuffer[index].UpdateQuad(center, right, up, plane.color, texCoords);
         }

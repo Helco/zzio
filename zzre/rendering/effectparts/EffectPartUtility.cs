@@ -43,5 +43,12 @@ namespace zzre.rendering.effectparts
                 vertices[i].color = color;
             }
         }
+
+        public static Rect TexShift(Rect input, float angle, float amplitude)
+        {
+            var newMin = input.Min + Vector2.One * MathF.Sin(angle) * amplitude;
+            var newMax = input.Max + Vector2.One * MathF.Cos(angle) * amplitude;
+            return new Rect((newMin + newMax) / 2f, (newMax - newMin));
+        }
     }
 }
