@@ -57,21 +57,23 @@ namespace zzre.imgui
                 didSetColumnWidth++;
             }
             ImGui.BeginChild("LeftColumn", ImGui.GetContentRegionAvail(), false, ImGuiWindowFlags.HorizontalScrollbar);
+            var i = 0;
             foreach (var (name, content, isDefaultOpen, preContent) in infoSections)
             {
-                ImGui.PushID(name);
+                ImGui.PushID($"{name}_{i++}");
                 if (preContent != null)
                 {
                     preContent.Invoke();
                     ImGui.SameLine();
                 }
-                ImGui.PopID();
 
                 var flags = isDefaultOpen ? ImGuiTreeNodeFlags.DefaultOpen : 0;
                 if (!ImGui.CollapsingHeader(name, flags))
+                {
+                    ImGui.PopID();
                     continue;
+                }
 
-                ImGui.PushID(name);
                 ImGui.BeginGroup();
                 ImGui.Indent();
                 content();
