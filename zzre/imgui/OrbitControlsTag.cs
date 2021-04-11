@@ -18,6 +18,26 @@ namespace zzre.imgui
         private float distance = 2.0f;
         private Vector2 cameraAngle = Vector2.Zero;
 
+        public float Distance
+        {
+            get => distance;
+            set
+            {
+                distance = value;
+                UpdateCamera();
+            }
+        }
+
+        public Vector2 CameraAngle
+        {
+            get => cameraAngle;
+            set
+            {
+                cameraAngle = value;
+                UpdateCamera();
+            }
+        }
+
         public OrbitControlsTag(Window window, Location target, ITagContainer diContainer)
         {
             window.AddTag(this);

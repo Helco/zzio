@@ -131,6 +131,7 @@ namespace zzre.tools
                     MovingPlanes mp => () => HandlePart(mp, (MovingPlanesRenderer)partRenderer),
                     RandomPlanes rp => () => HandlePart(rp, (RandomPlanesRenderer)partRenderer),
                     ParticleEmitter pe => () => HandlePart(pe, (ParticleEmitterRenderer)partRenderer),
+                    BeamStar bs => () => HandlePart(bs, (BeamStarRenderer)partRenderer),
                     _ => () => { } // ignore for now
                 }, defaultOpen: false, () => HandlePartPreContent(i));
             }
@@ -140,6 +141,7 @@ namespace zzre.tools
             progressSpeed = 0f;
 
             controls.ResetView();
+            controls.CameraAngle = new Vector2(45f, -45f) * MathF.PI / 180f;
             fbArea.IsDirty = true;
             CurrentResource = resource;
             Window.Title = $"Effect Editor - {resource.Path.ToPOSIXString()}";
@@ -193,6 +195,11 @@ namespace zzre.tools
                 fbArea.IsDirty = true;
             }
             UndoSlider("Progress Speed", ref progressSpeed, -2f, 2f, 0f);
+
+            float length = effectRenderer?.Length ?? 0f;
+            UndoSlider("Length", ref length, 0f, 5f, 1f);
+            if (effectRenderer != null)
+                effectRenderer.Length = length;
 
             if (ImGui.Button(IconFonts.ForkAwesome.FastBackward))
             {

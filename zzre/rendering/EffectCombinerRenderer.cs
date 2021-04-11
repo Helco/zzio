@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,11 +26,17 @@ namespace zzre.rendering
         void AddTime(float deltaTime, float newProgress);
     }
 
+    public interface IEffectPartBeamRenderer : IEffectPartRenderer
+    {
+        float Length { get; set; }
+    }
+
     public class EffectCombinerRenderer : ListDisposable
     {
         private readonly ITagContainer diContainer;
         private readonly LocationBuffer locationBuffer;
         private readonly DeviceBufferRange locationRange;
+        private float length = 1f;
 
         public Location Location { get; } = new Location();
         public EffectCombiner Effect { get; }
@@ -43,6 +49,17 @@ namespace zzre.rendering
         public float CurTimeNormalized => CurTime / SafeDuration;
         public bool IsLooping => Effect.isLooping;
         public bool IsDone => !IsLooping && CurTime >= Duration;
+
+        public float Length
+        {
+            get => length;
+            set
+            {
+                length = value;
+                foreach (var beamPart in Parts.OfType<IEffectPartBeamRenderer>())
+                    beamPart.Length = value;
+            }
+        }
 
         public EffectCombinerRenderer(ITagContainer diContainer, IResource resource)
             : this(diContainer, Load(resource)) { }
@@ -70,12 +87,14 @@ namespace zzre.rendering
                     MovingPlanes mp => new MovingPlanesRenderer(diContainer, locationRange, mp),
                     RandomPlanes rp => new RandomPlanesRenderer(diContainer, locationRange, rp),
                     ParticleEmitter pe => new ParticleEmitterRenderer(diContainer, Location, pe),
+                    BeamStar bs => new BeamStarRenderer(diContainer, locationRange, bs),
 
                     _ => new DummyRenderer(part) as IEffectPartRenderer // ignore it until we have an implementation for all supported in zzio
                     // _ => throw new NotSupportedException($"Unsupported effect combine part {part.GetType().Name}")
                 }).Where(renderer => renderer != null).ToArray()!;
             foreach (var part in Parts)
                 AddDisposable(part);
+            Length = length;
         }
 
         protected override void DisposeManaged()

@@ -63,10 +63,8 @@ namespace zzre
             windowContainer.MenuBar.AddButton("Tools/World Viewer", () => new WorldViewer(diContainer));
             windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
-            //diContainer.GetTag<OpenDocumentSet>()
-                //.OpenWith<EffectEditor>("resources/effects/e4037.ed");
             diContainer.GetTag<OpenDocumentSet>()
-                .OpenWith<SceneEditor>("resources/worlds/sc_2400.scn");
+                .OpenWith<EffectEditor>("resources/effects/e1050.ed");
 
             window.Resized += () =>
             {

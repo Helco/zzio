@@ -76,4 +76,9 @@ namespace zzio.effect.parts
             renderMode = EnumUtils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
         }
     }
+
+    public static partial class EffectPartExtensions
+    {
+        public static int GetPlaneCount(this BeamStarComplexity c) => 1 << (int)c;
+    }
 }
