@@ -82,6 +82,7 @@ namespace zzre.tools
 
             private Trigger[] triggers = new Trigger[0];
             private bool isVisible = true;
+            private bool wasSelected = false;
             private float iconSize = 128f;
 
             public TriggerComponent(ITagContainer diContainer)
@@ -92,7 +93,8 @@ namespace zzre.tools
                 editor.fbArea.OnRender += HandleRender;
                 editor.fbArea.OnResize += HandleResize;
                 editor.OnLoadScene += HandleLoadScene;
-                editor.OnNewSelection += _ => UpdateIcons();
+                editor.OnNewSelection += HandleSelectionEvent;
+                editor.OnSelectionManipulate += HandleSelectionEvent;
                 editor.editor.AddInfoSection("Triggers", HandleInfoSection, false);
                 editor.selectableContainers.Add(this);
                 diContainer.GetTag<MenuBarWindowTag>().AddSlider("View/Triggers/Size", 0.0f, 512f, () => ref iconSize, UpdateIcons);
@@ -137,6 +139,14 @@ namespace zzre.tools
                 if (!isVisible)
                     return;
                 iconRenderer.Render(cl);
+            }
+
+            private void HandleSelectionEvent(ISelectable? selectable)
+            {
+                var prevWasSelected = wasSelected;
+                wasSelected = selectable is Trigger;
+                if (prevWasSelected)
+                    UpdateIcons();
             }
 
             private void UpdateIcons()

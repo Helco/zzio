@@ -39,9 +39,17 @@ namespace zzre.tools
         }
 
         private event Action<ISelectable?> OnNewSelection = _ => { };
+        private event Action<ISelectable> OnSelectionManipulate = _ => { };
 
         private void MoveCameraToSelected() =>
             localDiContainer.GetTag<SelectionComponent>().MoveCameraToSelected();
+
+        private void TriggerSelectionManipulate()
+        {
+            if (Selected == null)
+                throw new InvalidOperationException("Cannot trigger selection manipulate without a selection");
+            OnSelectionManipulate(Selected);
+        }
 
         private class SelectionComponent : BaseDisposable
         {
@@ -102,17 +110,14 @@ namespace zzre.tools
                 if (ImGuizmo.Manipulate(ref view.M11, ref projection.M11, OPERATION.TRANSLATE, MODE.LOCAL, ref matrix.M11))
                 {
                     selected.Location.LocalToWorld = matrix;
-                    editor.fbArea.IsDirty = true;
+                    editor.TriggerSelectionManipulate();
+                    HandleNewSelection(selected); // to update the bounds
                 }
-
             }
 
             private void HandleNewSelection(ISelectable? newSelected)
             {
-                if (newSelected == null)
-                    return;
-
-                var bounds = newSelected.RenderedBounds;
+                var bounds = newSelected?.RenderedBounds;
                 if (bounds is OrientedBox)
                 {
                     boxBoundsRenderer.Bounds = (OrientedBox)bounds;
