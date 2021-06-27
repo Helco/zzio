@@ -33,5 +33,6 @@ namespace zzre
         public bool Intersects(OrientedBox box) => Cast(box) != null;
         public bool Intersects(Sphere sphere) => Cast(sphere) != null;
         public bool Intersects(Plane plane) => Cast(plane) != null;
+        public bool Intersects(Triangle triangle) => Cast(triangle) != null;
     }
 }

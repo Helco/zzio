@@ -6,7 +6,7 @@ using static zzre.MathEx;
 
 namespace zzre
 {
-    public readonly struct Triangle : IRaycastable
+    public readonly struct Triangle : IRaycastable, IIntersectable
     {
         public readonly Vector3 A, B, C;
         public Line AB => new Line(A, B);
@@ -51,15 +51,20 @@ namespace zzre
                 Vector3.Dot(normalPBC, normalPCA) < 0;
         }
 
-        public bool Intersects(Box box) => Intersects(box, Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ);
+        public bool Intersects(Box box) => Intersects(box.Corners(), Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ);
         public bool Intersects(Box box, Location boxLoc)
         {
-            var (newBox, boxRot) = box.TransformToWorld(boxLoc);
-            var (boxRight, boxUp, boxForward) = boxRot.UnitVectors();
-            return Intersects(newBox, boxRight, boxUp, boxForward);
+            var (boxRight, boxUp, boxForward) = boxLoc.GlobalRotation.UnitVectors();
+            return Intersects(box.Corners(boxLoc), boxRight, boxUp, boxForward);
         }
-        private bool Intersects(Box box, Vector3 boxRight, Vector3 boxUp, Vector3 boxForward) =>
-            SATIntersects(box.Corners(), Corners(), new[]
+        public bool Intersects(OrientedBox box)
+        {
+            var (boxRight, boxUp, boxForward) = box.Orientation.UnitVectors();
+            return Intersects(box.Box.Corners(box.Orientation), boxRight, boxUp, boxForward);
+        }
+
+        private bool Intersects(IEnumerable<Vector3> boxCorners, Vector3 boxRight, Vector3 boxUp, Vector3 boxForward) =>
+            SATIntersects(boxCorners, Corners(), new[]
             {
                 boxRight, boxUp, boxForward, Normal,
                 Vector3.Cross(boxRight, AB.Vector),
@@ -97,6 +102,8 @@ namespace zzre
                 !(da < 0 && db < 0 && dc < 0) ||
                 !(da > 0 && db > 0 && dc > 0);
         }
+
+        public bool Intersects(Sphere sphere) => sphere.Intersects(this);
 
         public Vector3 Barycentric(Vector3 point)
         {

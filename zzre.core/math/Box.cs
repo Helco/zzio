@@ -184,6 +184,7 @@ namespace zzre
         public bool Intersects(Quaternion orientation, Plane plane) => IntervalOn(orientation, plane.Normal).Intersects(plane.Distance);
 
         public bool Intersects(Sphere sphere) => sphere.Intersects(this);
+        public bool Intersects(Triangle triangle) => triangle.Intersects(this);
         public bool Intersects(Location myLoc, Sphere sphere) => sphere.Intersects(this, myLoc);
 
         public Raycast? Cast(Ray ray) => ray.Cast(this);

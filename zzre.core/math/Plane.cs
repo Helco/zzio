@@ -36,6 +36,7 @@ namespace zzre
         public bool Intersects(Box box) => box.Intersects(this);
         public bool Intersects(OrientedBox box) => box.Box.Intersects(box.Orientation, this);
         public bool Intersects(Sphere sphere) => sphere.Intersects(this);
+        public bool Intersects(Triangle triangle) => triangle.Intersects(this);
 
         public Raycast? Cast(Ray ray) => ray.Cast(this);
         public Raycast? Cast(Line line) => line.Cast(this);

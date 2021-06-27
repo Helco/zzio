@@ -23,5 +23,6 @@ namespace zzre
         public bool Intersects(OrientedBox box) => box.Intersects(this);
         public bool Intersects(Sphere sphere) => sphere.Intersects(this);
         public bool Intersects(Plane plane) => plane.Intersects(this);
+        public bool Intersects(Triangle triangle) => triangle.Intersects(this);
     }
 }
