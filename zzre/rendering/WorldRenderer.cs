@@ -95,9 +95,9 @@ namespace zzre.rendering
 
                 var plane = (WorldBuffers.PlaneSection)section;
                 var intersection = viewFrustum.Intersects(new Plane(plane.PlaneType.AsNormal().ToNumerics(), plane.CenterValue));
-                if (intersection.HasFlag(FrustumIntersection.Inside))
+                if (intersection.HasFlag(PlaneIntersections.Inside))
                     sectionQueue.Enqueue(plane.RightChild);
-                if (intersection.HasFlag(FrustumIntersection.Outside))
+                if (intersection.HasFlag(PlaneIntersections.Outside))
                     sectionQueue.Enqueue(plane.LeftChild);
             }
         }
