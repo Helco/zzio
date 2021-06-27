@@ -38,6 +38,24 @@ namespace zzio.utils
             return len == 0 ? "" : Encoding.GetString(buf, 0, len);
         }
 
+        public static unsafe void ReadStructureArray<T>(this BinaryReader reader, T[] array) where T : unmanaged
+        {
+            fixed(T* arrayPtr = array)
+            {
+                var span = new Span<byte>(arrayPtr, sizeof(T) * array.Length);
+                var bytesRead = reader.Read(span);
+                if (span.Length != bytesRead)
+                    throw new EndOfStreamException($"Array {typeof(T)}[{array.Length}] could not be read completly");
+            }
+        }
+
+        public static T[] ReadStructureArray<T>(this BinaryReader reader, int count) where T : unmanaged
+        {
+            var array = new T[count];
+            ReadStructureArray(reader, array);
+            return array;
+        }
+
         /// <summary>Writes a 32-bit prefixed, not-0-terminated string</summary>
         public static void WriteZString(this BinaryWriter writer, string text)
         {
@@ -71,6 +89,14 @@ namespace zzio.utils
 
             for (; written < maxLen; written++)
                 writer.Write((byte)0);
+        }
+
+        public static unsafe void WriteStructureArray<T>(this BinaryWriter writer, T[] array) where T : unmanaged
+        {
+            fixed(T* arrayPtr = array)
+            {
+                writer.Write(new ReadOnlySpan<byte>(arrayPtr, sizeof(T) * array.Length));
+            }
         }
     }
 }
