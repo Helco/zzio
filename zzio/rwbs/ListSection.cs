@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using zzio.utils;
 
 namespace zzio.rwbs
@@ -44,6 +44,14 @@ namespace zzio.rwbs
                 }
             }
             return null;
+        }
+
+        public override IEnumerable<Section> FindAllChildrenById(SectionId sectionId, bool recursive = true)
+        {
+            var result = children.Where(s => s.sectionId == sectionId);
+            if (recursive)
+                result = result.Concat(children.SelectMany(s => s.FindAllChildrenById(sectionId, recursive)));
+            return result;
         }
     }
 }

@@ -33,9 +33,11 @@ namespace zzre
             return new Raycast(d, p, n);
         }
 
-        public Raycast? Cast(Box box)
+        public Raycast? Cast(Box box) => DoubleCast(box).first;
+
+        public (Raycast? first, Raycast? second) DoubleCast(Box box)
         {
-            return Cast(AABBSlabPoints(box, this));
+            return DoubleCast(AABBSlabPoints(box, this));
 
             static IEnumerable<((float t, Vector3 n), (float t, Vector3 n))> AABBSlabPoints(Box box, Ray me)
             {
@@ -54,7 +56,9 @@ namespace zzre
             }
         }
 
-        public Raycast? Cast(OrientedBox obb)
+        public Raycast? Cast(OrientedBox obb) => DoubleCast(obb).first;
+
+        public (Raycast? first, Raycast? second) DoubleCast(OrientedBox obb)
         {
             static ((float t, Vector3 n), (float t, Vector3 n))? OBBSlabPoint(Box box, Ray me, Vector3 axis, float halfSize)
             {
@@ -76,7 +80,7 @@ namespace zzre
             var invalid = ((-1f, Vector3.Zero), (-1f, Vector3.Zero));
             var (box, boxRot) = obb;
             var (boxRight, boxUp, boxForward) = boxRot.UnitVectors();
-            return Cast(new[]
+            return DoubleCast(new[]
             {
                 OBBSlabPoint(box, this, boxRight, box.HalfSize.X) ?? invalid,
                 OBBSlabPoint(box, this, boxUp, box.HalfSize.Y) ?? invalid,
@@ -84,7 +88,7 @@ namespace zzre
             });
         }
 
-        private Raycast? Cast(IEnumerable<((float t, Vector3 n), (float t, Vector3 n))> slabPoints)
+        private (Raycast? first, Raycast? second) DoubleCast(IEnumerable<((float t, Vector3 n), (float t, Vector3 n))> slabPoints)
         {
             var tmin = (t: float.MinValue, n: Vector3.Zero);
             var tmax = (t: float.MaxValue, n: Vector3.Zero);
@@ -101,10 +105,12 @@ namespace zzre
             }
 
             if (tmax.t < 0 || tmin.t > tmax.t)
-                return null;
-            var t = tmin.t < 0 ? tmax : tmin;
-            var p = Start + Direction * t.t;
-            return new Raycast(t.t, p, t.n);
+                return (null, null);
+            var hitMin = new Raycast(tmin.t, Start + Direction * tmin.t, tmin.n);
+            var hitMax = new Raycast(tmax.t, Start + Direction * tmax.t, tmax.n);
+            return tmin.t < 0
+                ? (hitMax, null)
+                : (hitMin, hitMax);
         }
 
         public Raycast? Cast(Plane plane)

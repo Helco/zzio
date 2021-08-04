@@ -7,14 +7,11 @@ using System.IO;
 
 namespace zzio.rwbs
 {
-    [Flags]
     public enum CollisionSectorType
     {
         X = 0,
         Y = 4,
-        Z = 8,
-
-        Negative = 1
+        Z = 8
     }
 
     [Serializable]
@@ -56,7 +53,7 @@ namespace zzio.rwbs
                 split.left.value = reader.ReadSingle();
 
                 split.right.type = (CollisionSectorType)(types >> 16);
-                split.left.type = split.right.type | CollisionSectorType.Negative;
+                split.left.type = split.right.type;
                 split.right.count = ((types >> 0) & 0xff) == 2 ? SplitCount : 0;
                 split.left.count = ((types >> 8) & 0xff) == 2 ? SplitCount : 0;
             }
