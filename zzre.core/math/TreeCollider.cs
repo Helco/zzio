@@ -11,7 +11,7 @@ namespace zzre
         public RWCollision Collision { get; }
         public Box Box { get; }
 
-        protected TreeCollider(Box box, RWCollision collision) => Collision = collision;
+        protected TreeCollider(Box box, RWCollision collision) => (Box, Collision) = (box, collision);
 
         protected abstract Triangle GetTriangle(int i);
 
@@ -28,47 +28,71 @@ namespace zzre
 
         public Raycast? Cast(Ray ray, float maxLength)
         {
-            if (!ray.Intersects(Box))
+            var  first = ray.Cast(Box);
+            if (!first.HasValue)
                 return null;
+            var second = ray.PointOfExit(Box, first.Value);
 
-            Raycast? bestRaycast = null;
-            var splitStack = new Stack<CollisionSplit>();
-            splitStack.Push(Collision.splits[0]);
-            while (splitStack.Any())
-            {
-                var curSplit = splitStack.Pop();
-
-                if (ray.Cast(GetPlane(curSplit.right))?.Distance < maxLength)
-                {
-                    if (curSplit.right.count == RWCollision.SplitCount)
-                        splitStack.Push(Collision.splits[curSplit.right.index]);
-                    else
-                        bestRaycast = RaycastLeaf(curSplit.right, ray, maxLength, bestRaycast);
-                }
-
-                if (ray.Cast(GetPlane(curSplit.left))?.Distance < maxLength)
-                {
-                    if (curSplit.left.count == RWCollision.SplitCount)
-                        splitStack.Push(Collision.splits[curSplit.left.index]);
-                    else
-                        bestRaycast = RaycastLeaf(curSplit.left, ray, maxLength, bestRaycast);
-                }
-            }
-            return bestRaycast;
+            var firstDist = first.Value.Distance;
+            var minDist = second.HasValue ? firstDist : 0f;
+            var maxDist = Math.Min(maxLength, second.HasValue ? second.Value.Distance : firstDist);
+            return RaycastNode(Collision.splits.First(), ray, minDist, maxDist);
         }
 
-        private Raycast? RaycastLeaf(CollisionSector sector, Ray ray, float maxLength, Raycast? prevRaycast)
+        private Raycast? RaycastNode(CollisionSplit split, Ray ray, float minDist, float maxDist)
         {
-            var myRaycast = Collision.map
-                .Skip(sector.index)
-                .Take(sector.count)
-                .Select(i => ray.Cast(GetTriangle(i)))
-                .OrderBy(c => c?.Distance ?? float.MaxValue)
-                .FirstOrDefault();
+            var planeNormal = GetPlane(split.right).Normal;
+            var rightDist = ray.Cast(GetPlane(split.right))?.Distance;
+            var leftDist = ray.Cast(GetPlane(split.left))?.Distance;
 
-            return myRaycast.HasValue && myRaycast.Value.Distance < Math.Min(maxLength, prevRaycast?.Distance ?? maxLength)
-                ? myRaycast
-                : prevRaycast;
+            Raycast? hit = null;
+            if (Vector3.Dot(ray.Direction, planeNormal) > 0f)
+            {
+                leftDist ??= minDist;
+                rightDist ??= maxDist;
+                hit = RaycastSector(split.right, ray, minDist, rightDist.Value, hit);
+                if ((hit?.Distance ?? float.MaxValue) >= leftDist)
+                    hit = RaycastSector(split.left, ray, leftDist.Value, maxDist, hit);
+            }
+            else
+            {
+                leftDist ??= maxDist;
+                rightDist ??= minDist;
+                hit = RaycastSector(split.left, ray, minDist, leftDist.Value, hit);
+                if ((hit?.Distance ?? float.MaxValue) >= rightDist)
+                    hit = RaycastSector(split.right, ray, rightDist.Value, maxDist, hit);
+            }
+
+            return hit;
+        }
+
+        private Raycast? RaycastSector(CollisionSector sector, Ray ray, float minDist, float maxDist, Raycast? prevHit)
+        {
+            Raycast? myHit;
+            if (sector.count == RWCollision.SplitCount)
+                myHit = RaycastNode(Collision.splits[sector.index], ray, minDist, maxDist);
+            else
+            {
+                /*myHit = Collision.map
+                    .Skip(sector.index)
+                    .Take(sector.count)
+                    .Select(i => ray.Cast(GetTriangle(i)))
+                    .OrderBy(c => c?.Distance ?? float.MaxValue)
+                    .FirstOrDefault();*/
+                myHit = null;
+                for (int i = 0; i < sector.count; i++)
+                {
+                    var newHit = ray.Cast(GetTriangle(Collision.map[sector.index + i]));
+                    if (newHit == null)
+                        continue;
+                    if (newHit.Value.Distance < (myHit?.Distance ?? float.MaxValue))
+                        myHit = newHit;
+                }
+            }
+
+            return myHit.HasValue && myHit.Value.Distance < Math.Min(maxDist, prevHit?.Distance ?? maxDist)
+                ? myHit
+                : prevHit;
         }
 
         private bool Intersects<T>(T query, Func<Plane, T, PlaneIntersections> sideOf, Func<Triangle, T, bool> intersects) where T : IIntersectable

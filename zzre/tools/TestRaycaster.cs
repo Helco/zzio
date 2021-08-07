@@ -10,6 +10,8 @@ using zzre.imgui;
 using zzre.rendering;
 using System.Linq;
 using Quaternion = System.Numerics.Quaternion;
+using zzio.vfs;
+using zzio.rwbs;
 
 namespace zzre.tools
 {
@@ -57,6 +59,10 @@ namespace zzre.tools
             Window.OnRender += OnRender; // on window to not update framebuffer texture during rendering
             Window.OnContent += OnContent;
 
+            var rwWorld = diContainer.GetTag<IResourcePool>().FindFile("resources/worlds/sc_3302.bsp")!.OpenAsRWBS<RWWorld>();
+            var worldCollider = new WorldCollider(rwWorld);
+            camera.Location.LocalPosition = -rwWorld.origin.ToNumerics();
+
             rotatingBox = new RaycastObject()
             {
                 Geometry = new OrientedBox(new Box(Vector3.UnitX * 3f, Vector3.One), Quaternion.Identity),
@@ -64,7 +70,7 @@ namespace zzre.tools
             };
             objects = new[]
             {
-                new RaycastObject()
+                /*new RaycastObject()
                 {
                     Geometry = new Sphere(Vector3.UnitZ * -3f, 1f),
                     Shader = ShaderNormal
@@ -87,7 +93,12 @@ namespace zzre.tools
                     Geometry = new Box(Vector3.UnitZ * 3f, Vector3.One),
                     Shader = ShaderNormal
                 },
-                rotatingBox
+                rotatingBox,*/
+                new RaycastObject()
+                {
+                    Geometry = worldCollider,
+                    Shader = ShaderNormal
+                }
             };
         }
 
@@ -120,13 +131,10 @@ namespace zzre.tools
             if (pixels == null)
                 OnResize();
 
-            if (!Matrix4x4.Invert(camera.Projection, out var invProj))
-                throw new InvalidProgramException("Could not invert camera projection");
-
             Parallel.For(0, PixelCount, i =>
             {
                 int pixelX = i % (int)fbArea.Framebuffer.Width;
-                int pixelY = i / (int)fbArea.Framebuffer.Width;
+                int pixelY = (int)fbArea.Framebuffer.Height - 1 - i / (int)fbArea.Framebuffer.Width;
                 var pixelPos = new Vector3(
                     pixelX / (float)fbArea.Framebuffer.Width,
                     pixelY / (float)fbArea.Framebuffer.Height,

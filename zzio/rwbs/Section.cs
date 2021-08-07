@@ -30,6 +30,7 @@ namespace zzio.rwbs
                 { SectionId.Struct,        () => new RWStruct() },
                 { SectionId.Texture,       () => new RWTexture() },
                 { SectionId.World,         () => new RWWorld() },
+                { SectionId.CollisionPLG,  () => new RWCollision() },
                 { SectionId.Unknown,       () => new UnknownSection() }
             };
 

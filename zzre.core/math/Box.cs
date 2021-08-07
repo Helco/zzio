@@ -71,7 +71,7 @@ namespace zzre
         public Box Union(Box other) => FromMinMax(Vector3.Min(Min, other.Min), Vector3.Max(Max, other.Max));
         public Box Union(Vector3 v) => Union(new Box(v, Vector3.Zero));
 
-        public IEnumerable<Vector3> Corners() => new[]
+        public IReadOnlyList<Vector3> Corners() => new[]
         {
             new Vector3(Min.X, Min.Y, Min.Z),
             new Vector3(Max.X, Min.Y, Min.Z),
@@ -83,7 +83,7 @@ namespace zzre
             new Vector3(Max.X, Max.Y, Max.Z)
         };
 
-        public IEnumerable<Vector3> Corners(Quaternion q)
+        public IReadOnlyList<Vector3> Corners(Quaternion q)
         {
             var (right, up, forward) = q.UnitVectors();
             right *= HalfSize.X;
@@ -102,11 +102,21 @@ namespace zzre
             };
         }
 
-        public IEnumerable<Vector3> Corners(Location loc)
+        public IReadOnlyList<Vector3> Corners(Location loc)
         {
             var (box, q) = TransformToWorld(loc);
             return box.Corners(q);
         }
+
+        public IReadOnlyList<Plane> Planes() => new[]
+        {
+            new Plane(-Vector3.UnitX, Min.X),
+            new Plane(Vector3.UnitX, Max.X),
+            new Plane(-Vector3.UnitY, Min.Z),
+            new Plane(Vector3.UnitY, Max.Z),
+            new Plane(-Vector3.UnitZ, Min.Z),
+            new Plane(Vector3.UnitZ, Max.Z),
+        };
 
         public OrientedBox TransformToWorld(Location location)
         {

@@ -30,7 +30,7 @@ namespace zzio.rwbs
     }
 
     [Serializable]
-    public class RWCollision : StructSection
+    public class RWCollision : Section
     {
         public const int SplitCount = -1;
         public override SectionId sectionId => SectionId.CollisionPLG;
@@ -38,7 +38,7 @@ namespace zzio.rwbs
         public CollisionSplit[] splits = Array.Empty<CollisionSplit>();
         public int[] map = Array.Empty<int>();
 
-        protected override void readStruct(Stream stream)
+        protected override void readBody(Stream stream)
         {
             using var reader = new BinaryReader(stream);
             splits = new CollisionSplit[reader.ReadInt32() - 1];
@@ -81,7 +81,7 @@ namespace zzio.rwbs
             reader.ReadStructureArray(map);
         }
 
-        protected override void writeStruct(Stream stream)
+        protected override void writeBody(Stream stream)
         {
             using var writer = new BinaryWriter(stream);
             writer.Write(splits.Length + 1);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 
@@ -33,11 +34,9 @@ namespace zzre
             return new Raycast(d, p, n);
         }
 
-        public Raycast? Cast(Box box) => DoubleCast(box).first;
-
-        public (Raycast? first, Raycast? second) DoubleCast(Box box)
+        public Raycast? Cast(Box box)
         {
-            return DoubleCast(AABBSlabPoints(box, this));
+            return Cast(AABBSlabPoints(box, this));
 
             static IEnumerable<((float t, Vector3 n), (float t, Vector3 n))> AABBSlabPoints(Box box, Ray me)
             {
@@ -56,9 +55,7 @@ namespace zzre
             }
         }
 
-        public Raycast? Cast(OrientedBox obb) => DoubleCast(obb).first;
-
-        public (Raycast? first, Raycast? second) DoubleCast(OrientedBox obb)
+        public Raycast? Cast(OrientedBox obb)
         {
             static ((float t, Vector3 n), (float t, Vector3 n))? OBBSlabPoint(Box box, Ray me, Vector3 axis, float halfSize)
             {
@@ -80,7 +77,7 @@ namespace zzre
             var invalid = ((-1f, Vector3.Zero), (-1f, Vector3.Zero));
             var (box, boxRot) = obb;
             var (boxRight, boxUp, boxForward) = boxRot.UnitVectors();
-            return DoubleCast(new[]
+            return Cast(new[]
             {
                 OBBSlabPoint(box, this, boxRight, box.HalfSize.X) ?? invalid,
                 OBBSlabPoint(box, this, boxUp, box.HalfSize.Y) ?? invalid,
@@ -88,7 +85,7 @@ namespace zzre
             });
         }
 
-        private (Raycast? first, Raycast? second) DoubleCast(IEnumerable<((float t, Vector3 n), (float t, Vector3 n))> slabPoints)
+        private Raycast? Cast(IEnumerable<((float t, Vector3 n), (float t, Vector3 n))> slabPoints)
         {
             var tmin = (t: float.MinValue, n: Vector3.Zero);
             var tmax = (t: float.MaxValue, n: Vector3.Zero);
@@ -105,12 +102,10 @@ namespace zzre
             }
 
             if (tmax.t < 0 || tmin.t > tmax.t)
-                return (null, null);
-            var hitMin = new Raycast(tmin.t, Start + Direction * tmin.t, tmin.n);
-            var hitMax = new Raycast(tmax.t, Start + Direction * tmax.t, tmax.n);
-            return tmin.t < 0
-                ? (hitMax, null)
-                : (hitMin, hitMax);
+                return null;
+            var t = tmin.t < 0 ? tmax : tmin;
+            var p = Start + Direction * t.t;
+            return new Raycast(t.t, p, t.n);
         }
 
         public Raycast? Cast(Plane plane)
@@ -134,6 +129,21 @@ namespace zzre
                 bary.Y >= 0.0f && bary.Y <= 1.0f &&
                 bary.Z >= 0.0f && bary.Z <= 1.0f
                 ? cast : null;
+        }
+
+        public Raycast? PointOfExit(Box box, Raycast hit)
+        {
+            if (box.Intersects(Start))
+                return null;
+
+            var inner = new Ray(hit.Point + Direction * box.HalfSize.MinComponent(), Direction);
+            var exit = box.Planes()
+                .Select(Cast)
+                .OrderBy(h => h?.Distance ?? float.MaxValue)
+                .First();
+            if (exit.HasValue)
+                exit = new Raycast(exit.Value.Distance + hit.Distance + box.HalfSize.MinComponent(), exit.Value.Point, exit.Value.Normal);
+            return exit;
         }
 
         public bool Intersects(Box box) => Cast(box) != null;
