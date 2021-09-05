@@ -98,7 +98,7 @@ namespace zzmaps
             var visibleWorldMeshes = scene.WorldBuffers.Sections
                 .OfType<WorldBuffers.MeshSection>()
                 .Where(meshSection => meshSection.Bounds.Intersects(visibleBox))
-                .SelectMany(meshSection => scene.WorldBuffers.SubMeshes.Skip(meshSection.SubMeshStart).Take(meshSection.SubMeshCount))
+                .SelectMany(meshSection => scene.WorldBuffers.SubMeshes.Range(meshSection.SubMeshes))
                 .GroupBy(subMesh => subMesh.MaterialIndex);
             scene.WorldBuffers.SetBuffers(cl);
             foreach (var group in visibleWorldMeshes)

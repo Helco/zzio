@@ -19,6 +19,11 @@
     <EmbeddedResource Include="shaders\*.frag" />
     <EmbeddedResource Include="shaders\*.vert" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="shaders\Wireframe.frag" />
+    <None Remove="shaders\Wireframe.vert" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Pfim" Version="0.10.0" />
     <PackageReference Include="Veldrid" Version="4.8.0" />

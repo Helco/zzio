@@ -109,7 +109,7 @@ namespace zzre.rendering
             sections ??= visibleMeshSections;
 
             var visibleSubMeshes = sections
-                .SelectMany(m => worldBuffers.SubMeshes.Skip(m.SubMeshStart).Take(m.SubMeshCount))
+                .SelectMany(m => worldBuffers.SubMeshes.Range(m.SubMeshes))
                 .GroupBy(s => s.MaterialIndex);
             foreach (var group in visibleSubMeshes)
             {

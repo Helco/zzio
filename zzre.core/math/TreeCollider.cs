@@ -13,7 +13,7 @@ namespace zzre
 
         protected TreeCollider(Box box, RWCollision collision) => (Box, Collision) = (box, collision);
 
-        protected abstract Triangle GetTriangle(int i);
+        public abstract Triangle GetTriangle(int i);
 
         public Raycast? Cast(Ray ray) => Cast(ray, float.PositiveInfinity);
         public Raycast? Cast(Line line) => Cast(new Ray(line.Start, line.Direction), line.Length);

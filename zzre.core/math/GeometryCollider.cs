@@ -18,7 +18,7 @@ namespace zzre
             Location = location ?? new Location();
         }
 
-        protected override Triangle GetTriangle(int i)
+        public override Triangle GetTriangle(int i)
         {
             // TODO: Benchmark whether to transform all vertices first
 

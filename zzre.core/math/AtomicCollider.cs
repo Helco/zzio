@@ -16,7 +16,7 @@ namespace zzre
             Atomic = atomic;
         }
 
-        protected override Triangle GetTriangle(int i)
+        public override Triangle GetTriangle(int i)
         {
             var t = Atomic.triangles[i];
             return new Triangle(

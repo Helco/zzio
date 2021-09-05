@@ -33,6 +33,7 @@ namespace zzre.tools
         private readonly DebugBoxLineRenderer boundsRenderer;
         private readonly DebugPlaneRenderer planeRenderer;
         private readonly DebugHexahedronLineRenderer frustumRenderer;
+        private readonly DebugTriangleLineRenderer triangleRenderer;
         private readonly WorldRenderer worldRenderer;
         private readonly Camera camera;
         private readonly LocationBuffer locationBuffer;
@@ -42,10 +43,13 @@ namespace zzre.tools
 
         private UniformBuffer<Matrix4x4> worldTransform;
         private WorldBuffers? worldBuffers;
+        private AtomicCollider? atomicCollider;
         private int[] sectionDepths = new int[0];
         private int highlightedSectionI = -1;
+        private int highlightedSplitI = -1;
         private bool updateViewFrustumCulling = true;
         private bool renderCulledSections = false;
+        private bool renderOnlyCollision = false;
 
         public IResource? CurrentResource { get; private set; }
         public Window Window { get; }
@@ -94,6 +98,7 @@ namespace zzre.tools
             editor.AddInfoSection("Materials", HandleMaterialsContent, false);
             editor.AddInfoSection("Sections", HandleSectionsContent, false);
             editor.AddInfoSection("ViewFrustum Culling", HandleViewFrustumCulling, false);
+            editor.AddInfoSection("Collision", HandleCollision, false);
 
             boundsRenderer = new DebugBoxLineRenderer(diContainer);
             boundsRenderer.Color = IColor.Red;
@@ -110,6 +115,11 @@ namespace zzre.tools
             frustumRenderer.Material.LinkTransformsTo(camera);
             frustumRenderer.Material.LinkTransformsTo(world: worldTransform);
             AddDisposable(frustumRenderer);
+
+            triangleRenderer = new DebugTriangleLineRenderer(diContainer);
+            triangleRenderer.Material.LinkTransformsTo(camera);
+            triangleRenderer.Material.LinkTransformsTo(world: worldTransform);
+            AddDisposable(triangleRenderer);
 
             worldRenderer = new WorldRenderer(diContainer.ExtendedWith(camera, locationBuffer));
             AddDisposable(worldRenderer);
@@ -139,7 +149,7 @@ namespace zzre.tools
 
             CurrentResource = resource;
             UpdateSectionDepths();
-            highlightedSectionI = -1;
+            HighlightSection(-1);
             controls.ResetView();
             camera.Location.LocalPosition = -worldBuffers.Origin;
             fbArea.IsDirty = true;
@@ -175,7 +185,12 @@ namespace zzre.tools
                 worldRenderer.UpdateVisibility();
             }
 
-            if (renderCulledSections)
+            if (renderOnlyCollision)
+            {
+                if (highlightedSectionI >= 0 && worldBuffers.Sections[highlightedSectionI] is WorldBuffers.MeshSection meshSection)
+                    worldRenderer.Render(cl, new[] { meshSection });
+            }
+            else if (renderCulledSections)
                 worldRenderer.RenderForceAll(cl);
             else
                 worldRenderer.Render(cl);
@@ -188,6 +203,8 @@ namespace zzre.tools
 
             if (!updateViewFrustumCulling)
                 frustumRenderer.Render(cl);
+
+            triangleRenderer.Render(cl);
         }
 
         private void HandleResize() => camera.Aspect = fbArea.Ratio;
@@ -272,7 +289,7 @@ namespace zzre.tools
                     return;
                 Text($"Vertices: {section.VertexCount}");
                 Text($"Triangles: {section.TriangleCount}");
-                Text($"SubMeshes: {section.SubMeshCount}");
+                Text($"SubMeshes: {section.SubMeshes.GetLength(worldBuffers.SubMeshes.Count)}");
             }
 
             void PlaneSectionContent(WorldBuffers.PlaneSection section, int index)
@@ -290,6 +307,9 @@ namespace zzre.tools
         private void HighlightSection(int index)
         {
             highlightedSectionI = index;
+            HighlightSplit(-1);
+            renderOnlyCollision = false;
+            atomicCollider = null;
             if (worldBuffers == null || highlightedSectionI < 0)
                 return;
             boundsRenderer.Bounds = worldBuffers.Sections[index].Bounds;
@@ -298,37 +318,85 @@ namespace zzre.tools
             if (worldBuffers.Sections[index].IsPlane)
             {
                 var section = (WorldBuffers.PlaneSection)worldBuffers.Sections[index];
-                var normal = section.PlaneType.AsNormal().ToNumerics();
-                var planarCenter = section.Bounds.Center * (Vector3.One - normal);
-                var otherSizes = section.Bounds.Size * (Vector3.One - normal);
-                var size = Math.Max(Math.Max(otherSizes.X, otherSizes.Y), otherSizes.Z) * 0.5f;
-                planeRenderer.Planes = new[]
-                {
+                SetPlanes(section.Bounds, section.PlaneType.AsNormal().ToNumerics(), section.LeftValue, section.RightValue, section.CenterValue);
+            }
+            else
+            {
+                var worldSection = (WorldBuffers.MeshSection)worldBuffers.Sections[index];
+                var atomicSection = worldSection.RWAtomicSection;
+                if (atomicSection.FindChildById(SectionId.CollisionPLG, recursive: true) != null)
+                    atomicCollider = new AtomicCollider(atomicSection);
+            }
+
+            fbArea.IsDirty = true;
+        }
+
+        private void HighlightSplit(int splitI)
+        {
+            highlightedSplitI = splitI;
+            triangleRenderer.Triangles = Array.Empty<Triangle>();
+            if (atomicCollider == null || splitI < 0)
+                return;
+
+            var split = atomicCollider.Collision.splits[splitI];
+            var normal = split.left.type switch
+            {
+                CollisionSectorType.X => Vector3.UnitX,
+                CollisionSectorType.Y => Vector3.UnitY,
+                CollisionSectorType.Z => Vector3.UnitZ,
+                _ => throw new NotSupportedException($"Unsupported collision sector type: " + split.left.type)
+            };
+            SetPlanes(atomicCollider.Box, normal, split.left.value, split.right.value, centerValue: null);
+
+            triangleRenderer.Triangles = SplitTriangles(split).ToArray();
+
+            fbArea.IsDirty = true;
+
+            IEnumerable<Triangle> SplitTriangles(CollisionSplit split) =>
+                SectorTriangles(split.left).Concat(SectorTriangles(split.right));
+
+            IEnumerable<Triangle> SectorTriangles(CollisionSector sector) => sector.count == RWCollision.SplitCount
+                ? SplitTriangles(atomicCollider.Collision.splits[sector.index])
+                : atomicCollider.Collision.map
+                    .Skip(sector.index)
+                    .Take(sector.count)
+                    .Select(atomicCollider.GetTriangle)
+                    .ToArray();
+        }
+
+        private void SetPlanes(Box bounds, Vector3 normal, float leftValue, float rightValue, float? centerValue)
+        {
+            var planarCenter = bounds.Center * (Vector3.One - normal);
+            var otherSizes = bounds.Size * (Vector3.One - normal);
+            var size = Math.Max(Math.Max(otherSizes.X, otherSizes.Y), otherSizes.Z) * 0.5f;
+            planeRenderer.Planes = new[]
+            {
                     new DebugPlane()
                     {
-                        center = planarCenter + normal * section.CenterValue,
-                        normal = normal,
-                        size = size,
-                        color = IColor.Green.WithA(DebugPlaneAlpha)
-                    },
-                    new DebugPlane()
-                    {
-                        center = planarCenter + normal * section.LeftValue,
+                        center = planarCenter + normal * leftValue,
                         normal = normal,
                         size = size * 0.7f,
                         color = IColor.Red.WithA(DebugPlaneAlpha)
                     },
                     new DebugPlane()
                     {
-                        center = planarCenter + normal * section.RightValue,
+                        center = planarCenter + normal * rightValue,
                         normal = normal,
                         size = size * 0.7f,
                         color = IColor.Blue.WithA(DebugPlaneAlpha)
                     }
-                };
+            };
+            if (centerValue.HasValue)
+            {
+                planeRenderer.Planes = planeRenderer.Planes.Append(
+                    new DebugPlane()
+                    {
+                        center = planarCenter + normal * centerValue.Value,
+                        normal = normal,
+                        size = size,
+                        color = IColor.Green.WithA(DebugPlaneAlpha)
+                    }).ToArray();
             }
-
-            fbArea.IsDirty = true;
         }
 
         private void HandleViewFrustumCulling()
@@ -346,6 +414,55 @@ namespace zzre.tools
             {
                 viewFrustum.Corners.ToArray().CopyTo(frustumRenderer.Corners, 0);
                 fbArea.IsDirty = true;
+            }
+        }
+
+        private void HandleCollision()
+        {
+            if (worldBuffers == null)
+            {
+                Text("No world loaded");
+                return;
+            }
+            else if (highlightedSectionI < 0)
+            {
+                Text("No section selected");
+                return;
+            }
+            else if (atomicCollider == null)
+            {
+                Text("No collision in selected section");
+                return;
+            }
+
+            var coll = atomicCollider.Collision;
+            fbArea.IsDirty |= Checkbox("Only render collision", ref renderOnlyCollision);
+            Split(0);
+
+            void Split(int splitI)
+            {
+                var split = coll.splits[splitI];
+                var flags = (splitI == highlightedSplitI ? ImGuiTreeNodeFlags.Selected : 0) |
+                    ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow |
+                    ImGuiTreeNodeFlags.DefaultOpen;
+                var isOpen = TreeNodeEx($"{split.left.type} {split.left.value}-{split.right.value}", flags);
+                if (IsItemClicked() && splitI != highlightedSplitI)
+                    HighlightSplit(splitI);
+
+                if (isOpen)
+                {
+                    Sector(split.left, false);
+                    Sector(split.right, true);
+                    TreePop();
+                }
+            }
+
+            void Sector(CollisionSector sector, bool isRight)
+            {
+                if (sector.count == RWCollision.SplitCount)
+                    Split(sector.index);
+                else
+                    Text($"{(isRight ? "Right" : "Left")}: {sector.count} Triangles");
             }
         }
     }

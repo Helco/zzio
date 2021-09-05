@@ -34,5 +34,14 @@ namespace zzre
         public static Index Offset(this Index index, int offset) => index.IsFromEnd
             ? new Index(index.Value - offset, true)
             : new Index(index.Value + offset, false);
+
+        public static int GetOffset(this Range range, int length) => range.GetOffsetAndLength(length).Offset;
+        public static int GetLength(this Range range, int length) => range.GetOffsetAndLength(length).Length;
+
+        public static IEnumerable<T> Range<T>(this IReadOnlyList<T> roList, Range range)
+        {
+            var (offset, length) = range.GetOffsetAndLength(roList.Count);
+            return roList.Skip(offset).Take(length);
+        }
     }
 }

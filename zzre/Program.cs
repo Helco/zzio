@@ -34,7 +34,7 @@ namespace zzre
                 PreferStandardClipSpaceYDirection = true,
                 SyncToVerticalBlank = true,
                 Debug = true
-            }, GraphicsBackend.Direct3D11);
+            }, GraphicsBackend.Vulkan);
 
             var pipelineCollection = new PipelineCollection(graphicsDevice);
             pipelineCollection.AddShaderResourceAssemblyOf<Program>();
@@ -66,7 +66,7 @@ namespace zzre
             diContainer.GetTag<OpenDocumentSet>()
                 .OpenWith<WorldViewer>("resources/worlds/sc_3302.bsp");
 
-            new TestRaycaster(diContainer);
+            //new TestRaycaster(diContainer);
 
             window.Resized += () =>
             {
