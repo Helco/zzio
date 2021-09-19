@@ -41,8 +41,8 @@ namespace zzre
             var windowContainer = new WindowContainer(graphicsDevice);
             var resourcePool = new CombinedResourcePool(new IResourcePool[]
             {
-                new PAKResourcePool(new FileStream(@"C:\dev\zanzarah\Resources\DATA_0.PAK", FileMode.Open, FileAccess.Read)),
-                new FileResourcePool(@"C:\dev\zanzarah")
+                new PAKResourcePool(new FileStream(@"C:\SAPDevelop\zanzarah\game\Resources\DATA_0.PAK", FileMode.Open, FileAccess.Read)),
+                new FileResourcePool(@"C:\SAPDevelop\zanzarah\game")
             });
             var time = new GameTime();
             var diContainer = new TagContainer();

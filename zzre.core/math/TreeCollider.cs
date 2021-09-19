@@ -6,8 +6,22 @@ using zzio.rwbs;
 
 namespace zzre
 {
+#if DEBUG_TREE_COLLIDER
+    public enum TreeTraceFlags : byte
+    {
+        Hit = (1 << 0), // so default is invalid
+        TookBothBranches = (1 << 1),
+        TookLeftFirst = (1 << 2),
+    }
+#endif
+
     public abstract class TreeCollider : IRaycastable, IIntersectable
     {
+#if DEBUG_TREE_COLLIDER
+        private readonly List<(int split, TreeTraceFlags flags)> trace = new List<(int, TreeTraceFlags)>();
+        public IReadOnlyList<(int split, TreeTraceFlags flags)> Trace => trace;
+#endif
+
         public RWCollision Collision { get; }
         public Box Box { get; }
 
@@ -28,6 +42,10 @@ namespace zzre
 
         public Raycast? Cast(Ray ray, float maxLength)
         {
+#if DEBUG_TREE_COLLIDER
+            trace.Clear();
+#endif
+
             var  first = ray.Cast(Box);
             if (!first.HasValue)
                 return null;
@@ -36,32 +54,53 @@ namespace zzre
             var firstDist = first.Value.Distance;
             var minDist = second.HasValue ? firstDist : 0f;
             var maxDist = Math.Min(maxLength, second.HasValue ? second.Value.Distance : firstDist);
-            return RaycastNode(Collision.splits.First(), ray, minDist, maxDist);
+            return RaycastNode(splitI: 0, ray, minDist, maxDist);
         }
 
-        private Raycast? RaycastNode(CollisionSplit split, Ray ray, float minDist, float maxDist)
+        private Raycast? RaycastNode(int splitI, Ray ray, float minDist, float maxDist)
         {
+            var split = Collision.splits[splitI];
             var planeNormal = GetPlane(split.right).Normal;
             var rightDist = ray.Cast(GetPlane(split.right))?.Distance;
             var leftDist = ray.Cast(GetPlane(split.left))?.Distance;
 
             Raycast? hit = null;
+#if DEBUG_TREE_COLLIDER
+            TreeTraceFlags flags = TreeTraceFlags.Hit;
+#endif
             if (Vector3.Dot(ray.Direction, planeNormal) > 0f)
             {
                 leftDist ??= minDist;
                 rightDist ??= maxDist;
                 hit = RaycastSector(split.right, ray, minDist, rightDist.Value, hit);
                 if ((hit?.Distance ?? float.MaxValue) >= leftDist)
+                {
+#if DEBUG_TREE_COLLIDER
+                    flags |= TreeTraceFlags.TookBothBranches;
+#endif
                     hit = RaycastSector(split.left, ray, leftDist.Value, maxDist, hit);
+                }
             }
             else
             {
+#if DEBUG_TREE_COLLIDER
+                flags |= TreeTraceFlags.TookLeftFirst;
+#endif
                 leftDist ??= maxDist;
                 rightDist ??= minDist;
                 hit = RaycastSector(split.left, ray, minDist, leftDist.Value, hit);
                 if ((hit?.Distance ?? float.MaxValue) >= rightDist)
+                {
+#if DEBUG_TREE_COLLIDER
+                    flags |= TreeTraceFlags.TookBothBranches;
+#endif
                     hit = RaycastSector(split.right, ray, rightDist.Value, maxDist, hit);
+                }
             }
+
+#if DEBUG_TREE_COLLIDER
+            trace.Add((splitI, flags));
+#endif
 
             return hit;
         }
@@ -70,7 +109,7 @@ namespace zzre
         {
             Raycast? myHit;
             if (sector.count == RWCollision.SplitCount)
-                myHit = RaycastNode(Collision.splits[sector.index], ray, minDist, maxDist);
+                myHit = RaycastNode(sector.index, ray, minDist, maxDist);
             else
             {
                 /*myHit = Collision.map

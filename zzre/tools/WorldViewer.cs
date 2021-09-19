@@ -31,6 +31,7 @@ namespace zzre.tools
         private readonly OpenFileModal openFileModal;
         private readonly ModelMaterialEdit modelMaterialEdit;
         private readonly DebugBoxLineRenderer boundsRenderer;
+        private readonly DebugBoxLineRenderer rayRenderer;
         private readonly DebugPlaneRenderer planeRenderer;
         private readonly DebugHexahedronLineRenderer frustumRenderer;
         private readonly DebugTriangleLineRenderer triangleRenderer;
@@ -41,7 +42,7 @@ namespace zzre.tools
         private Frustum viewFrustum => worldRenderer.ViewFrustum;
         private IReadOnlyList<ModelStandardMaterial> materials => worldRenderer.Materials;
 
-        private UniformBuffer<Matrix4x4> worldTransform;
+        private readonly UniformBuffer<Matrix4x4> worldTransform;
         private WorldBuffers? worldBuffers;
         private AtomicCollider? atomicCollider;
         private int[] sectionDepths = new int[0];
@@ -98,7 +99,7 @@ namespace zzre.tools
             editor.AddInfoSection("Materials", HandleMaterialsContent, false);
             editor.AddInfoSection("Sections", HandleSectionsContent, false);
             editor.AddInfoSection("ViewFrustum Culling", HandleViewFrustumCulling, false);
-            editor.AddInfoSection("Collision", HandleCollision, false);
+            editor.AddInfoSection("Collision", HandleCollision, true);
 
             boundsRenderer = new DebugBoxLineRenderer(diContainer);
             boundsRenderer.Color = IColor.Red;
@@ -120,6 +121,12 @@ namespace zzre.tools
             triangleRenderer.Material.LinkTransformsTo(camera);
             triangleRenderer.Material.LinkTransformsTo(world: worldTransform);
             AddDisposable(triangleRenderer);
+
+            rayRenderer = new DebugBoxLineRenderer(diContainer);
+            rayRenderer.Color = IColor.Green;
+            rayRenderer.Material.LinkTransformsTo(camera);
+            rayRenderer.Material.LinkTransformsTo(world: worldTransform);
+            AddDisposable(rayRenderer);
 
             worldRenderer = new WorldRenderer(diContainer.ExtendedWith(camera, locationBuffer));
             AddDisposable(worldRenderer);
@@ -154,6 +161,9 @@ namespace zzre.tools
             camera.Location.LocalPosition = -worldBuffers.Origin;
             fbArea.IsDirty = true;
             Window.Title = $"World Viewer - {resource.Path.ToPOSIXString()}";
+
+            HighlightSection(worldBuffers.Sections.Indexed().First(s => s.Value.IsMesh).Index);
+            renderOnlyCollision = true;
         }
 
         private void UpdateSectionDepths()
@@ -203,6 +213,9 @@ namespace zzre.tools
 
             if (!updateViewFrustumCulling)
                 frustumRenderer.Render(cl);
+
+            if (atomicCollider != null && atomicCollider.Trace.Any())
+                rayRenderer.Render(cl);
 
             triangleRenderer.Render(cl);
         }
@@ -435,6 +448,11 @@ namespace zzre.tools
                 return;
             }
 
+#if DEBUG_TREE_COLLIDER
+            if (Button("Shoot ray"))
+                ShootRay();
+#endif
+
             var coll = atomicCollider.Collision;
             fbArea.IsDirty |= Checkbox("Only render collision", ref renderOnlyCollision);
             Split(0);
@@ -442,10 +460,21 @@ namespace zzre.tools
             void Split(int splitI)
             {
                 var split = coll.splits[splitI];
+                var traceIcons = "";
+#if DEBUG_TREE_COLLIDER
+                var traceFlags = atomicCollider.Trace.FirstOrDefault(t => t.split == splitI).flags;
+                if (traceFlags.HasFlag(TreeTraceFlags.Hit))
+                    traceIcons += " H";
+                if (traceFlags.HasFlag(TreeTraceFlags.TookBothBranches))
+                    traceIcons += "B";
+                if (traceFlags.HasFlag(TreeTraceFlags.TookLeftFirst))
+                    traceIcons += "L";
+#endif
+
                 var flags = (splitI == highlightedSplitI ? ImGuiTreeNodeFlags.Selected : 0) |
                     ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow |
                     ImGuiTreeNodeFlags.DefaultOpen;
-                var isOpen = TreeNodeEx($"{split.left.type} {split.left.value}-{split.right.value}", flags);
+                var isOpen = TreeNodeEx($"{split.left.type} {split.left.value}-{split.right.value}{traceIcons}", flags);
                 if (IsItemClicked() && splitI != highlightedSplitI)
                     HighlightSplit(splitI);
 
@@ -465,5 +494,24 @@ namespace zzre.tools
                     Text($"{(isRight ? "Right" : "Left")}: {sector.count} Triangles");
             }
         }
+
+#if DEBUG_TREE_COLLIDER
+        private void ShootRay()
+        {
+            if (atomicCollider == null)
+                return;
+
+            var ray = new Ray(camera.Location.GlobalPosition, camera.Location.GlobalForward);
+            _ = atomicCollider.Cast(ray);
+            rayRenderer.Bounds = new OrientedBox(
+                Box.FromMinMax(ray.Start, ray.Start + Vector3.UnitZ * 100f),
+                System.Numerics.Quaternion.CreateFromRotationMatrix(
+                    Matrix4x4.CreateLookAt(Vector3.Zero, ray.Direction, Vector3.UnitY)));
+            rayRenderer.Bounds = new OrientedBox(
+                new Box(ray.Start, Vector3.One),
+                System.Numerics.Quaternion.Identity);
+            fbArea.IsDirty = true;
+        }
+#endif
     }
 }
