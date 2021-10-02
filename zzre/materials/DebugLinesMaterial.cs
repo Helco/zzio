@@ -33,6 +33,7 @@ namespace zzre.materials
             .With("View", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With("World", ResourceKind.UniformBuffer, ShaderStages.Vertex)
             .With(PrimitiveTopology.LineList)
+            .With(FaceCullMode.None)
             .WithDepthWrite(false)
             .WithDepthTest(false)
             .Build());

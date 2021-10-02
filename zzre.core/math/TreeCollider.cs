@@ -20,6 +20,7 @@ namespace zzre
 #if DEBUG_TREE_COLLIDER
         private readonly List<(int split, TreeTraceFlags flags)> trace = new List<(int, TreeTraceFlags)>();
         public IReadOnlyList<(int split, TreeTraceFlags flags)> Trace => trace;
+        public Triangle HitTriangle { get; private set; }
 #endif
 
         public RWCollision Collision { get; }
@@ -68,7 +69,7 @@ namespace zzre
 #if DEBUG_TREE_COLLIDER
             TreeTraceFlags flags = TreeTraceFlags.Hit;
 #endif
-            if (Vector3.Dot(ray.Direction, planeNormal) > 0f)
+            if (Vector3.Dot(ray.Direction, planeNormal) < 0f)
             {
                 leftDist ??= minDist;
                 rightDist ??= maxDist;
@@ -99,7 +100,7 @@ namespace zzre
             }
 
 #if DEBUG_TREE_COLLIDER
-            trace.Add((splitI, flags));
+            //trace.Add((splitI, flags));
 #endif
 
             return hit;
@@ -121,11 +122,17 @@ namespace zzre
                 myHit = null;
                 for (int i = 0; i < sector.count; i++)
                 {
-                    var newHit = ray.Cast(GetTriangle(Collision.map[sector.index + i]));
+                    var triangle = GetTriangle(Collision.map[sector.index + i]);
+                    var newHit = ray.Cast(triangle);
                     if (newHit == null)
                         continue;
                     if (newHit.Value.Distance < (myHit?.Distance ?? float.MaxValue))
+                    {
                         myHit = newHit;
+#if DEBUG_TREE_COLLIDER
+                        HitTriangle = triangle;
+#endif
+                    }
                 }
             }
 

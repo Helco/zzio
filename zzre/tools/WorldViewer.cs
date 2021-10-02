@@ -31,7 +31,7 @@ namespace zzre.tools
         private readonly OpenFileModal openFileModal;
         private readonly ModelMaterialEdit modelMaterialEdit;
         private readonly DebugBoxLineRenderer boundsRenderer;
-        private readonly DebugBoxLineRenderer rayRenderer;
+        private readonly DebugTriangleLineRenderer rayRenderer;
         private readonly DebugPlaneRenderer planeRenderer;
         private readonly DebugHexahedronLineRenderer frustumRenderer;
         private readonly DebugTriangleLineRenderer triangleRenderer;
@@ -122,7 +122,7 @@ namespace zzre.tools
             triangleRenderer.Material.LinkTransformsTo(world: worldTransform);
             AddDisposable(triangleRenderer);
 
-            rayRenderer = new DebugBoxLineRenderer(diContainer);
+            rayRenderer = new DebugTriangleLineRenderer(diContainer);
             rayRenderer.Color = IColor.Green;
             rayRenderer.Material.LinkTransformsTo(camera);
             rayRenderer.Material.LinkTransformsTo(world: worldTransform);
@@ -502,14 +502,30 @@ namespace zzre.tools
                 return;
 
             var ray = new Ray(camera.Location.GlobalPosition, camera.Location.GlobalForward);
-            _ = atomicCollider.Cast(ray);
-            rayRenderer.Bounds = new OrientedBox(
+            var cast = atomicCollider.Cast(ray);
+            /*rayRenderer.Bounds = new OrientedBox(
                 Box.FromMinMax(ray.Start, ray.Start + Vector3.UnitZ * 100f),
                 System.Numerics.Quaternion.CreateFromRotationMatrix(
-                    Matrix4x4.CreateLookAt(Vector3.Zero, ray.Direction, Vector3.UnitY)));
-            rayRenderer.Bounds = new OrientedBox(
-                new Box(ray.Start, Vector3.One),
-                System.Numerics.Quaternion.Identity);
+                    Matrix4x4.CreateLookAt(Vector3.Zero, ray.Direction, Vector3.UnitY)));*/
+            /*rayRenderer.Bounds = new OrientedBox(
+                new Box(ray.Start, Vector3.One * 0.3f),
+                System.Numerics.Quaternion.Identity);*/
+            var triangles = new List<Triangle>()
+            { new Triangle(
+                    ray.Start,
+                    ray.Start,
+                    ray.Start + ray.Direction * 100f)
+            };
+            if (cast.HasValue)
+            {
+                triangles.Add(atomicCollider.HitTriangle);
+                triangles.Add(new Triangle(
+                    cast.Value.Point,
+                    cast.Value.Point,
+                    cast.Value.Point + cast.Value.Normal * 0.2f
+                ));
+            }
+            rayRenderer.Triangles = triangles.ToArray();
             fbArea.IsDirty = true;
         }
 #endif
