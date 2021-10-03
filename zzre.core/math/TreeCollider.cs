@@ -37,26 +37,34 @@ namespace zzre
         {
             ref readonly var split = ref Collision.splits[splitI];
             // the kd-optimization: no need for a full dot product
-            var directionDot = ray.Direction.Component(split.right.type.ToIndex());
+            var compIndex = split.right.type.ToIndex();
+            var startValue = ray.Start.Component(compIndex);
+            var directionDot = ray.Direction.Component(compIndex);
             var rightDist = ray.DistanceTo(split.right.type, split.right.value);
             var leftDist = ray.DistanceTo(split.left.type, split.left.value);
 
             Raycast? hit = null;
             if (directionDot < 0f)
             {
-                hit = RaycastSector(split.right, ray, minDist, rightDist ?? maxDist, hit);
-                if ((hit?.Distance ?? float.MaxValue) >= (leftDist ?? 0f))
+                if (startValue >= split.right.value)
                 {
-                    hit = RaycastSector(split.left, ray, leftDist ?? minDist, maxDist, hit);
+                    hit = RaycastSector(split.right, ray, minDist, rightDist ?? maxDist, hit);
+                    float hitValue = hit?.Point.Component(compIndex) ?? float.MinValue;
+                    if (hitValue > split.left.value)
+                        return hit;
                 }
+                hit = RaycastSector(split.left, ray, leftDist ?? minDist, maxDist, hit);
             }
             else
             {
-                hit = RaycastSector(split.left, ray, minDist, leftDist ?? maxDist, hit);
-                if ((hit?.Distance ?? float.MaxValue) >= (rightDist ?? 0f))
+                if (startValue <= split.left.value)
                 {
-                    hit = RaycastSector(split.right, ray, rightDist ?? minDist, maxDist, hit);
+                    hit = RaycastSector(split.left, ray, minDist, leftDist ?? maxDist, hit);
+                    float hitValue = hit?.Point.Component(compIndex) ?? float.MaxValue;
+                    if (hitValue < split.right.value)
+                         return hit;
                 }
+                hit = RaycastSector(split.right, ray, rightDist ?? minDist, maxDist, hit);
             }
 
             return hit;

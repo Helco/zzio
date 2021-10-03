@@ -44,11 +44,14 @@ namespace zzre
             if (rootPlane != null && rootAtomic != null)
                 throw new InvalidDataException("RWWorld has both a root plane and a root atomic");
 
-            return RaycastSection(rootSection, ray, maxLength, prevHit: null);
+            return RaycastSection(rootSection, ray, minDist: 0f, maxLength, prevHit: null);
         }
 
-        private Raycast? RaycastSection(Section section, Ray ray, float maxDist, Raycast? prevHit)
+        private Raycast? RaycastSection(Section section, Ray ray, float minDist, float maxDist, Raycast? prevHit)
         {
+            if (minDist > maxDist)
+                return prevHit;
+
             switch (section)
             {
                 case RWAtomicSection atomic:
@@ -64,7 +67,9 @@ namespace zzre
 
                 case RWPlaneSection plane:
                 {
-                    var directionDot = ray.Direction.Component(plane.sectorType.ToIndex());
+                    var compIndex = plane.sectorType.ToIndex();
+                    var startValue = ray.Start.Component(compIndex);
+                    var directionDot = ray.Direction.Component(compIndex);
                     var rightDist = ray.DistanceTo(plane.sectorType, plane.rightValue);
                     var leftDist = ray.DistanceTo(plane.sectorType, plane.leftValue);
                     var leftSection = plane.children[0];
@@ -73,19 +78,25 @@ namespace zzre
                     Raycast? hit = prevHit;
                     if (directionDot < 0f)
                     {
-                        hit = RaycastSection(rightSection, ray, rightDist ?? maxDist, hit);
-                        if ((hit?.Distance ?? float.MaxValue) >= (leftDist ?? 0f))
+                        if (startValue >= plane.rightValue)
                         {
-                            hit = RaycastSection(leftSection, ray, maxDist, hit);
+                            hit = RaycastSection(rightSection, ray, minDist, rightDist ?? maxDist, hit);
+                            float hitValue = hit?.Point.Component(compIndex) ?? float.MinValue;
+                            if (hitValue > plane.leftValue)
+                                return hit;
                         }
+                        hit = RaycastSection(leftSection, ray, leftDist ?? minDist, maxDist, hit);
                     }
                     else
                     {
-                        hit = RaycastSection(leftSection, ray, leftDist ?? maxDist, hit);
-                        if ((hit?.Distance ?? float.MaxValue) >= (rightDist ?? 0f))
+                        if (startValue <= plane.leftValue)
                         {
-                            hit = RaycastSection(rightSection, ray, maxDist, hit);
+                            hit = RaycastSection(leftSection, ray, minDist, leftDist ?? maxDist, hit);
+                            float hitValue = hit?.Point.Component(compIndex) ?? float.MaxValue;
+                            if (hitValue < plane.rightValue)
+                                return hit;
                         }
+                        hit = RaycastSection(rightSection, ray, rightDist ?? minDist, maxDist, hit);
                     }
                     return hit;
                 }
