@@ -14,6 +14,7 @@ namespace zzre
         private readonly ResourceFactory resourceFactory;
         private DeviceBuffer? vertexBuffer;
         private IColor color = IColor.White;
+        private IColor[]? colors = null;
         private bool isDirty = false;
         private Triangle[] triangles = new Triangle[0];
 
@@ -39,6 +40,19 @@ namespace zzre
             set
             {
                 color = value;
+                colors = null;
+                isDirty = true;
+            }
+        }
+
+        public IColor[] Colors
+        {
+            get => colors ?? new IColor[triangles.Length];
+            set
+            {
+                if (value.Length != triangles.Length)
+                    throw new ArgumentException("Color array is not as big as triangles array");
+                colors = value;
                 isDirty = true;
             }
         }
@@ -58,13 +72,15 @@ namespace zzre
 
         private void Regenerate(CommandList cl)
         {
+            IColor ColorFor(int i) => colors == null ? color : colors[i / 6];
+
             isDirty = false;
             var vertices = triangles.SelectMany(t => new[]
             {
                 t.A, t.B,
                 t.A, t.C,
                 t.B, t.C
-            }).Select(pos => new ColoredVertex(pos, Color)).ToArray();
+            }).Select((pos, i) => new ColoredVertex(pos, ColorFor(i))).ToArray();
             uint sizeInBytes = (uint)vertices.Length * ColoredVertex.Stride;
             if (vertexBuffer == null || vertexBuffer.SizeInBytes < sizeInBytes)
             {

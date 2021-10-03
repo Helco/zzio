@@ -214,10 +214,10 @@ namespace zzre.tools
             if (!updateViewFrustumCulling)
                 frustumRenderer.Render(cl);
 
+            triangleRenderer.Render(cl);
+
             if (atomicCollider != null && atomicCollider.Trace.Any())
                 rayRenderer.Render(cl);
-
-            triangleRenderer.Render(cl);
         }
 
         private void HandleResize() => camera.Aspect = fbArea.Ratio;
@@ -362,6 +362,11 @@ namespace zzre.tools
             SetPlanes(atomicCollider.Box, normal, split.left.value, split.right.value, centerValue: null);
 
             triangleRenderer.Triangles = SplitTriangles(split).ToArray();
+            triangleRenderer.Colors = Enumerable
+                .Repeat(IColor.Red, SectorTriangles(split.left).Count())
+                .Concat(Enumerable
+                    .Repeat(IColor.Blue, SectorTriangles(split.right).Count()))
+                .ToArray();
 
             fbArea.IsDirty = true;
 
@@ -469,6 +474,10 @@ namespace zzre.tools
                     traceIcons += "B";
                 if (traceFlags.HasFlag(TreeTraceFlags.TookLeftFirst))
                     traceIcons += "L";
+                if (traceFlags.HasFlag(TreeTraceFlags.GotCollisionLeft))
+                    traceIcons += "Cl";
+                if (traceFlags.HasFlag(TreeTraceFlags.GotCollisionRight))
+                    traceIcons += "Cr";
 #endif
 
                 var flags = (splitI == highlightedSplitI ? ImGuiTreeNodeFlags.Selected : 0) |

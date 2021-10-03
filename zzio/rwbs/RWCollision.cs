@@ -49,8 +49,8 @@ namespace zzio.rwbs
                 uint types = reader.ReadUInt32();
                 split.right.index = reader.ReadUInt16();
                 split.left.index = reader.ReadUInt16();
-                split.right.value = reader.ReadSingle();
                 split.left.value = reader.ReadSingle();
+                split.right.value = reader.ReadSingle();
 
                 split.right.type = (CollisionSectorType)(types >> 16);
                 split.left.type = split.right.type;
