@@ -120,10 +120,14 @@ namespace zzre
             return new Raycast(t, Start + Direction * t, plane.Normal);
         }
 
-        public float? DistanceTo(CollisionSectorType planeType, float planeDistance)
+        public float? DistanceTo(CollisionSectorType sectorType, float planeDistance) =>
+            DistanceToUnitPlane(sectorType.ToIndex(), planeDistance);
+        public float? DistanceTo(RWPlaneSectionType sectionType, float planeDistance) =>
+            DistanceToUnitPlane(sectionType.ToIndex(), planeDistance);
+        private float? DistanceToUnitPlane(int componentIndex, float planeDistance)
         {
-            float angle = Direction.Component(planeType.ToIndex());
-            float rayPos = Start.Component(planeType.ToIndex());
+            float angle = Direction.Component(componentIndex);
+            float rayPos = Start.Component(componentIndex);
             float t = (planeDistance - rayPos) / angle;
             return angle >= 0.0f || float.IsNaN(t) || t < 0 ? null : t;
         }

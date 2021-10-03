@@ -12,6 +12,7 @@ using System.Linq;
 using Quaternion = System.Numerics.Quaternion;
 using zzio.vfs;
 using zzio.rwbs;
+using System.Diagnostics;
 
 namespace zzre.tools
 {
@@ -126,29 +127,51 @@ namespace zzre.tools
             pixels = new IColor[PixelCount];
         }
 
+        private static DateTime lastOutput = DateTime.Now;
+        private static Stopwatch stopwatch = new Stopwatch();
+        private static long calls = 0;
+
         private void OnRender()
         {
             if (pixels == null)
                 OnResize();
 
+            int width = (int)fbArea.Framebuffer.Width;
+            int height = (int)fbArea.Framebuffer.Height;
+            stopwatch.Start();
+            //for (int i = 0; i < PixelCount; i++)
             Parallel.For(0, PixelCount, i =>
             {
-                int pixelX = i % (int)fbArea.Framebuffer.Width;
-                int pixelY = (int)fbArea.Framebuffer.Height - 1 - i / (int)fbArea.Framebuffer.Width;
+                int pixelX = i % width;
+                int pixelY = height - 1 - i / width;
                 var pixelPos = new Vector3(
-                    pixelX / (float)fbArea.Framebuffer.Width,
-                    pixelY / (float)fbArea.Framebuffer.Height,
+                    pixelX / (float)width,
+                    pixelY / (float)height,
                     1.0f) * 2f - Vector3.One;
                 var ray = camera.RayAt(new Vector2(pixelPos.X, pixelPos.Y));
 
-                var (cast, obj) = objects
-                    .Select(obj => (cast: obj.Geometry.Cast(ray), obj))
-                    .OrderBy(t => t.cast?.Distance ?? float.MaxValue)
-                    .FirstOrDefault();
+                var bestCast = (cast: null as Raycast?, obj: null as RaycastObject);
+                foreach (var newObj in objects)
+                {
+                    var newCast = newObj.Geometry.Cast(ray);
+                    if (bestCast.cast == null || newCast != null && newCast.Value.Distance < bestCast.cast.Value.Distance)
+                        bestCast = (newCast, newObj);
+                }
+                var (cast, obj) = bestCast;
                 pixels![i] = cast.HasValue
-                    ? obj.Shader(obj, pixelPos, cast.Value)
+                    ? obj!.Shader(obj, pixelPos, cast.Value)
                     : IColor.Black;
             });
+            stopwatch.Stop();
+            calls++;
+            if ((DateTime.Now - lastOutput).TotalSeconds > 3)
+            {
+                lastOutput = DateTime.Now;
+                var result = stopwatch.Elapsed.TotalSeconds / calls;
+                Console.WriteLine(result.ToString("F99").Trim('0'));
+                calls = 0;
+                stopwatch.Reset();
+            }
 
             device.UpdateTexture(fbArea.Framebuffer.ColorTargets.First().Target, pixels, 0, 0, 0,
                 fbArea.Framebuffer.Width, fbArea.Framebuffer.Height, 1,

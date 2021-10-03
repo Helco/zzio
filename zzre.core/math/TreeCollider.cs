@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using zzio.rwbs;
 
 namespace zzre
@@ -28,44 +27,35 @@ namespace zzre
 
         public Raycast? Cast(Ray ray, float maxLength)
         {
-            var first = ray.Cast(Box);
-            if (!first.HasValue)
-                return null;
-            var second = ray.PointOfExit(Box, first.Value);
-
-            var firstDist = first.Value.Distance;
-            var minDist = second.HasValue ? firstDist : 0f;
-            var maxDist = Math.Min(maxLength, second.HasValue ? second.Value.Distance : firstDist);
-            return RaycastNode(splitI: 0, ray, minDist, maxDist);
+            var coarse = ray.Cast(Box);
+            return coarse == null || coarse.Value.Distance > maxLength
+                ? null 
+                : RaycastNode(splitI: 0, ray, minDist: 0f, maxLength);
         }
 
         private Raycast? RaycastNode(int splitI, Ray ray, float minDist, float maxDist)
         {
             ref readonly var split = ref Collision.splits[splitI];
             // the kd-optimization: no need for a full dot product
-            float directionDot = ray.Direction.Component(split.right.type.ToIndex());
+            var directionDot = ray.Direction.Component(split.right.type.ToIndex());
             var rightDist = ray.DistanceTo(split.right.type, split.right.value);
             var leftDist = ray.DistanceTo(split.left.type, split.left.value);
 
             Raycast? hit = null;
             if (directionDot < 0f)
             {
-                leftDist ??= minDist;
-                rightDist ??= maxDist;
-                hit = RaycastSector(split.right, ray, minDist, rightDist.Value, hit);
-                if ((hit?.Distance ?? float.MaxValue) >= leftDist)
+                hit = RaycastSector(split.right, ray, minDist, rightDist ?? maxDist, hit);
+                if ((hit?.Distance ?? float.MaxValue) >= (leftDist ?? 0f))
                 {
-                    hit = RaycastSector(split.left, ray, leftDist.Value, maxDist, hit);
+                    hit = RaycastSector(split.left, ray, leftDist ?? minDist, maxDist, hit);
                 }
             }
             else
             {
-                leftDist ??= maxDist;
-                rightDist ??= minDist;
-                hit = RaycastSector(split.left, ray, minDist, leftDist.Value, hit);
-                if ((hit?.Distance ?? float.MaxValue) >= rightDist)
+                hit = RaycastSector(split.left, ray, minDist, leftDist ?? maxDist, hit);
+                if ((hit?.Distance ?? float.MaxValue) >= (rightDist ?? 0f))
                 {
-                    hit = RaycastSector(split.right, ray, rightDist.Value, maxDist, hit);
+                    hit = RaycastSector(split.right, ray, rightDist ?? minDist, maxDist, hit);
                 }
             }
 
@@ -74,6 +64,9 @@ namespace zzre
 
         private Raycast? RaycastSector(CollisionSector sector, Ray ray, float minDist, float maxDist, Raycast? prevHit)
         {
+            if (minDist > maxDist)
+                return prevHit;
+
             Raycast? myHit;
             if (sector.count == RWCollision.SplitCount)
                 myHit = RaycastNode(sector.index, ray, minDist, maxDist);
@@ -93,7 +86,7 @@ namespace zzre
                 }
             }
 
-            return prevHit == null || (myHit.HasValue && myHit.Value.Distance < prevHit.Value.Distance)
+            return prevHit == null || (myHit != null && myHit.Value.Distance < prevHit.Value.Distance)
                 ? myHit
                 : prevHit;
         }
