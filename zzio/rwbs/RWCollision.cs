@@ -13,6 +13,10 @@ namespace zzio.rwbs
         Y = 4,
         Z = 8
     }
+    public static class CollisionSectorTypeExtension
+    {
+        public static int ToIndex(this CollisionSectorType t) => ((int)t) / 4;
+    }
 
     [Serializable]
     public struct CollisionSector

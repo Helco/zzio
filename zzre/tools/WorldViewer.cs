@@ -216,7 +216,7 @@ namespace zzre.tools
 
             triangleRenderer.Render(cl);
 
-            if (atomicCollider != null && atomicCollider.Trace.Any())
+            if (atomicCollider != null)
                 rayRenderer.Render(cl);
         }
 
@@ -453,10 +453,8 @@ namespace zzre.tools
                 return;
             }
 
-#if DEBUG_TREE_COLLIDER
             if (Button("Shoot ray"))
                 ShootRay();
-#endif
 
             var coll = atomicCollider.Collision;
             fbArea.IsDirty |= Checkbox("Only render collision", ref renderOnlyCollision);
@@ -465,25 +463,10 @@ namespace zzre.tools
             void Split(int splitI)
             {
                 var split = coll.splits[splitI];
-                var traceIcons = "";
-#if DEBUG_TREE_COLLIDER
-                var traceFlags = atomicCollider.Trace.FirstOrDefault(t => t.split == splitI).flags;
-                if (traceFlags.HasFlag(TreeTraceFlags.Hit))
-                    traceIcons += " H";
-                if (traceFlags.HasFlag(TreeTraceFlags.TookBothBranches))
-                    traceIcons += "B";
-                if (traceFlags.HasFlag(TreeTraceFlags.TookLeftFirst))
-                    traceIcons += "L";
-                if (traceFlags.HasFlag(TreeTraceFlags.GotCollisionLeft))
-                    traceIcons += "Cl";
-                if (traceFlags.HasFlag(TreeTraceFlags.GotCollisionRight))
-                    traceIcons += "Cr";
-#endif
-
                 var flags = (splitI == highlightedSplitI ? ImGuiTreeNodeFlags.Selected : 0) |
                     ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow |
                     ImGuiTreeNodeFlags.DefaultOpen;
-                var isOpen = TreeNodeEx($"{split.left.type} {split.left.value}-{split.right.value}{traceIcons}", flags);
+                var isOpen = TreeNodeEx($"{split.left.type} {split.left.value}-{split.right.value}", flags);
                 if (IsItemClicked() && splitI != highlightedSplitI)
                     HighlightSplit(splitI);
 
@@ -504,7 +487,6 @@ namespace zzre.tools
             }
         }
 
-#if DEBUG_TREE_COLLIDER
         private void ShootRay()
         {
             if (atomicCollider == null)
@@ -512,31 +494,26 @@ namespace zzre.tools
 
             var ray = new Ray(camera.Location.GlobalPosition, camera.Location.GlobalForward);
             var cast = atomicCollider.Cast(ray);
-            /*rayRenderer.Bounds = new OrientedBox(
-                Box.FromMinMax(ray.Start, ray.Start + Vector3.UnitZ * 100f),
-                System.Numerics.Quaternion.CreateFromRotationMatrix(
-                    Matrix4x4.CreateLookAt(Vector3.Zero, ray.Direction, Vector3.UnitY)));*/
-            /*rayRenderer.Bounds = new OrientedBox(
-                new Box(ray.Start, Vector3.One * 0.3f),
-                System.Numerics.Quaternion.Identity);*/
-            var triangles = new List<Triangle>()
-            { new Triangle(
+            var triangles = new List<Triangle>(2)
+            {
+                new Triangle(
                     ray.Start,
                     ray.Start,
                     ray.Start + ray.Direction * 100f)
             };
+            var colors = new List<IColor>(2) { IColor.Green };
             if (cast.HasValue)
             {
-                triangles.Add(atomicCollider.HitTriangle);
                 triangles.Add(new Triangle(
                     cast.Value.Point,
                     cast.Value.Point,
                     cast.Value.Point + cast.Value.Normal * 0.2f
                 ));
+                colors.Add(new IColor(255, 0, 255, 255));
             }
             rayRenderer.Triangles = triangles.ToArray();
+            rayRenderer.Colors = colors.ToArray();
             fbArea.IsDirty = true;
         }
-#endif
     }
 }

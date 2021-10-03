@@ -6,25 +6,8 @@ using zzio.rwbs;
 
 namespace zzre
 {
-#if DEBUG_TREE_COLLIDER
-    public enum TreeTraceFlags : byte
-    {
-        Hit = (1 << 0), // so default is invalid
-        TookBothBranches = (1 << 1),
-        TookLeftFirst = (1 << 2),
-        GotCollisionLeft = (1 << 3),
-        GotCollisionRight = (1 << 4),
-    }
-#endif
-
     public abstract class TreeCollider : IRaycastable, IIntersectable
     {
-#if DEBUG_TREE_COLLIDER
-        private readonly List<(int split, TreeTraceFlags flags)> trace = new List<(int, TreeTraceFlags)>();
-        public IReadOnlyList<(int split, TreeTraceFlags flags)> Trace => trace;
-        public Triangle HitTriangle { get; private set; }
-#endif
-
         public RWCollision Collision { get; }
         public Box Box { get; }
 
@@ -45,10 +28,6 @@ namespace zzre
 
         public Raycast? Cast(Ray ray, float maxLength)
         {
-#if DEBUG_TREE_COLLIDER
-            trace.Clear();
-#endif
-
             var first = ray.Cast(Box);
             if (!first.HasValue)
                 return null;
@@ -62,65 +41,44 @@ namespace zzre
 
         private Raycast? RaycastNode(int splitI, Ray ray, float minDist, float maxDist)
         {
-            var split = Collision.splits[splitI];
-            var planeNormal = GetPlane(split.right).Normal;
-            var rightDist = ray.Cast(GetPlane(split.right))?.Distance;
-            var leftDist = ray.Cast(GetPlane(split.left))?.Distance;
+            ref readonly var split = ref Collision.splits[splitI];
+            // the kd-optimization: no need for a full dot product
+            float directionDot = ray.Direction.Component(split.right.type.ToIndex());
+            var rightDist = ray.DistanceTo(split.right.type, split.right.value);
+            var leftDist = ray.DistanceTo(split.left.type, split.left.value);
 
             Raycast? hit = null;
-#if DEBUG_TREE_COLLIDER
-            TreeTraceFlags flags = TreeTraceFlags.Hit;
-#endif
-            if (Vector3.Dot(ray.Direction, planeNormal) < 0f)
+            if (directionDot < 0f)
             {
                 leftDist ??= minDist;
                 rightDist ??= maxDist;
-                hit = RaycastSector(split.right, ray, minDist, rightDist.Value, hit, ref flags, TreeTraceFlags.GotCollisionRight);
+                hit = RaycastSector(split.right, ray, minDist, rightDist.Value, hit);
                 if ((hit?.Distance ?? float.MaxValue) >= leftDist)
                 {
-#if DEBUG_TREE_COLLIDER
-                    flags |= TreeTraceFlags.TookBothBranches;
-#endif
-                    hit = RaycastSector(split.left, ray, leftDist.Value, maxDist, hit, ref flags, TreeTraceFlags.GotCollisionLeft);
+                    hit = RaycastSector(split.left, ray, leftDist.Value, maxDist, hit);
                 }
             }
             else
             {
-#if DEBUG_TREE_COLLIDER
-                flags |= TreeTraceFlags.TookLeftFirst;
-#endif
                 leftDist ??= maxDist;
                 rightDist ??= minDist;
-                hit = RaycastSector(split.left, ray, minDist, leftDist.Value, hit, ref flags, TreeTraceFlags.GotCollisionLeft);
+                hit = RaycastSector(split.left, ray, minDist, leftDist.Value, hit);
                 if ((hit?.Distance ?? float.MaxValue) >= rightDist)
                 {
-#if DEBUG_TREE_COLLIDER
-                    flags |= TreeTraceFlags.TookBothBranches;
-#endif
-                    hit = RaycastSector(split.right, ray, rightDist.Value, maxDist, hit, ref flags, TreeTraceFlags.GotCollisionRight);
+                    hit = RaycastSector(split.right, ray, rightDist.Value, maxDist, hit);
                 }
             }
-
-#if DEBUG_TREE_COLLIDER
-            //trace.Add((splitI, flags));
-#endif
 
             return hit;
         }
 
-        private Raycast? RaycastSector(CollisionSector sector, Ray ray, float minDist, float maxDist, Raycast? prevHit, ref TreeTraceFlags flags, TreeTraceFlags newFlag)
+        private Raycast? RaycastSector(CollisionSector sector, Ray ray, float minDist, float maxDist, Raycast? prevHit)
         {
             Raycast? myHit;
             if (sector.count == RWCollision.SplitCount)
                 myHit = RaycastNode(sector.index, ray, minDist, maxDist);
             else
             {
-                /*myHit = Collision.map
-                    .Skip(sector.index)
-                    .Take(sector.count)
-                    .Select(i => ray.Cast(GetTriangle(i)))
-                    .OrderBy(c => c?.Distance ?? float.MaxValue)
-                    .FirstOrDefault();*/
                 myHit = null;
                 for (int i = 0; i < sector.count; i++)
                 {
@@ -128,18 +86,14 @@ namespace zzre
                     var newHit = ray.Cast(triangle);
                     if (newHit == null)
                         continue;
-                    flags |= newFlag;
                     if (newHit.Value.Distance < (myHit?.Distance ?? float.MaxValue))
                     {
                         myHit = newHit;
-#if DEBUG_TREE_COLLIDER
-                        HitTriangle = triangle;
-#endif
                     }
                 }
             }
 
-            return myHit.HasValue && (prevHit == null || myHit.Value.Distance < prevHit.Value.Distance)
+            return prevHit == null || (myHit.HasValue && myHit.Value.Distance < prevHit.Value.Distance)
                 ? myHit
                 : prevHit;
         }
@@ -180,13 +134,6 @@ namespace zzre
                 .Select(GetTriangle)
                 .Any(t => intersects(t, query));
 
-        private Plane GetPlane(CollisionSector sector) => new Plane(
-            sector.type switch
-            {
-                CollisionSectorType.X => Vector3.UnitX,
-                CollisionSectorType.Y => Vector3.UnitY,
-                CollisionSectorType.Z => Vector3.UnitZ,
-                _ => throw new ArgumentOutOfRangeException($"Unknown collision sector type {sector.type}")
-            }, sector.value);
+        private Plane GetPlane(CollisionSector sector) => new Plane(sector.type.ToNormal(), sector.value);
     }
 }

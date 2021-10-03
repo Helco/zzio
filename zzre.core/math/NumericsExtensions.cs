@@ -45,6 +45,16 @@ namespace zzre
         public static float MaxComponent(this Vector4 v) => Math.Max(Math.Max(Math.Max(v.X, v.Y), v.Z), v.W);
         public static float MinComponent(this Vector4 v) => Math.Min(Math.Min(Math.Min(v.X, v.Y), v.Z), v.W);
 
+        public static unsafe float Component(this Vector2 v, int i) => i >= 0 && i < 2
+            ? ((float*)&v)[i]
+            : throw new ArgumentOutOfRangeException(nameof(i));
+        public static unsafe float Component(this Vector3 v, int i) => i >= 0 && i < 3
+            ? ((float*)&v)[i]
+            : throw new ArgumentOutOfRangeException(nameof(i));
+        public static unsafe float Component(this Vector4 v, int i) => i >= 0 && i < 4
+            ? ((float*)&v)[i]
+            : throw new ArgumentOutOfRangeException(nameof(i));
+
         public static float NextFloat(this Random random) => (float)random.NextDouble();
 
         public static Vector2 InPositiveSquare(this Random random) => new Vector2(random.NextFloat(), random.NextFloat());

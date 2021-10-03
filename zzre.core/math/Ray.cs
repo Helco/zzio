@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using zzio.rwbs;
 
 namespace zzre
 {
@@ -117,6 +118,21 @@ namespace zzre
                 return null;
 
             return new Raycast(t, Start + Direction * t, plane.Normal);
+        }
+
+        public float? DistanceTo(CollisionSectorType planeType, float planeDistance)
+        {
+            float angle = Direction.Component(planeType.ToIndex());
+            float rayPos = Start.Component(planeType.ToIndex());
+            float t = (planeDistance - rayPos) / angle;
+            return angle >= 0.0f || float.IsNaN(t) || t < 0 ? null : t;
+        }
+        public Raycast? Cast(CollisionSectorType planeType, float planeDistance)
+        {
+            var t = DistanceTo(planeType, planeDistance);
+            return t.HasValue
+                ? new Raycast(t.Value, Start + Direction * t.Value, planeType.ToNormal())
+                : null;
         }
 
         public Raycast? Cast(Triangle triangle)
