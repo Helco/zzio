@@ -10,7 +10,7 @@ namespace zzre
         public static bool Cmp(float a, float b) =>
             Math.Abs(a - b) <= float.Epsilon * Math.Max(1f, Math.Max(Math.Abs(a), Math.Abs(b)));
 
-        public static bool CmpZero(float a) => Cmp(a, 0.0f);
+        public static bool CmpZero(float a) => Math.Abs(a) < 0.1E-10;
 
         public static Vector3 Project(Vector3 length, Vector3 dir)
         {
