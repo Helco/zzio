@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using zzio.rwbs;
@@ -28,7 +28,7 @@ namespace zzre
         public Raycast? Cast(Ray ray, float maxLength)
         {
             var coarse = ray.Cast(Box);
-            return coarse == null || coarse.Value.Distance > maxLength
+            return coarse == null
                 ? null 
                 : RaycastNode(splitI: 0, ray, minDist: 0f, maxLength);
         }
