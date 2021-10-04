@@ -66,8 +66,6 @@ namespace zzre
             diContainer.GetTag<OpenDocumentSet>()
                 .OpenWith<WorldViewer>("resources/worlds/sc_3302.bsp");
 
-            new TestRaycaster(diContainer);
-
             window.Resized += () =>
             {
                 graphicsDevice.ResizeMainWindow((uint)window.Width, (uint)window.Height);
