@@ -34,7 +34,7 @@ namespace zzre
                 PreferStandardClipSpaceYDirection = true,
                 SyncToVerticalBlank = true,
                 Debug = true
-            }, GraphicsBackend.Direct3D11);
+            }, GraphicsBackend.Vulkan);
 
             var pipelineCollection = new PipelineCollection(graphicsDevice);
             pipelineCollection.AddShaderResourceAssemblyOf<Program>();
@@ -42,7 +42,7 @@ namespace zzre
             var resourcePool = new CombinedResourcePool(new IResourcePool[]
             {
                 new PAKResourcePool(new FileStream(@"C:\dev\zanzarah\Resources\DATA_0.PAK", FileMode.Open, FileAccess.Read)),
-                new FileResourcePool(@"C:\dev\zanzarah")
+                new FileResourcePool(@"C:\dev\zanzarah\")
             });
             var time = new GameTime();
             var diContainer = new TagContainer();
@@ -64,7 +64,7 @@ namespace zzre
             windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
             diContainer.GetTag<OpenDocumentSet>()
-                .OpenWith<EffectEditor>("resources/effects/e1050.ed");
+                .OpenWith<WorldViewer>("resources/worlds/sc_3302.bsp");
 
             window.Resized += () =>
             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace zzre
@@ -40,5 +41,31 @@ namespace zzre
 
         public Raycast? Cast(Ray ray) => ray.Cast(this);
         public Raycast? Cast(Line line) => line.Cast(this);
+
+        public PlaneIntersections SideOf(Box box) => SideOf(box.Corners());
+        public PlaneIntersections SideOf(OrientedBox box) => SideOf(box.Box.Corners(box.Orientation));
+        public PlaneIntersections SideOf(Triangle triangle) => SideOf(triangle.Corners());
+        private PlaneIntersections SideOf(IEnumerable<Vector3> corners)
+        {
+            PlaneIntersections intersections = default;
+            foreach (var corner in corners)
+            {
+                intersections |= SideOf(corner) >= 0
+                    ? PlaneIntersections.Inside
+                    : PlaneIntersections.Outside;
+                if (intersections == PlaneIntersections.Intersecting)
+                    break;
+            }
+            return intersections;
+        }
+
+        public PlaneIntersections SideOf(Sphere sphere)
+        {
+            var dist = SignedDistanceTo(sphere.Center);
+            if (MathF.Abs(dist) <= sphere.Radius)
+                return PlaneIntersections.Intersecting;
+            else
+                return dist > 0 ? PlaneIntersections.Inside : PlaneIntersections.Outside;
+        }
     }
 }

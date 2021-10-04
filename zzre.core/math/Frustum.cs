@@ -6,7 +6,7 @@ using System.Numerics;
 namespace zzre
 {
     [Flags]
-    public enum FrustumIntersection
+    public enum PlaneIntersections
     {
         Inside = (1 << 0),
         Outside = (1 << 1),
@@ -94,7 +94,7 @@ namespace zzre
             planes[5].Distance = Projection.M44 - Projection.M43;
         }
 
-        public FrustumIntersection Intersects(Plane plane)
+        public PlaneIntersections Intersects(Plane plane)
         {
             var firstSide = plane.SideOf(corners.First());
             var isIntersecting = corners
@@ -102,9 +102,9 @@ namespace zzre
                 .Select(corner => plane.SideOf(corner))
                 .Any(cornerSide => cornerSide != firstSide);
             return
-                isIntersecting ? FrustumIntersection.Intersecting
-                : firstSide > 0 ? FrustumIntersection.Inside
-                : FrustumIntersection.Outside;
+                isIntersecting ? PlaneIntersections.Intersecting
+                : firstSide > 0 ? PlaneIntersections.Inside
+                : PlaneIntersections.Outside;
         }
     }
 }

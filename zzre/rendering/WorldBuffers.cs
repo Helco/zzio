@@ -16,42 +16,39 @@ namespace zzre.rendering
 {
     public class WorldBuffers : BaseDisposable
     {
-        public abstract class BaseSection
+        public abstract record BaseSection
         {
             public PlaneSection? Parent { get; set; }
             public abstract bool IsMesh { get; }
             public bool IsPlane => !IsMesh;
-            public Box Bounds { get; }
-
-            protected BaseSection(Box b) => Bounds = b;
+            public Box Bounds { get; init; }
         }
 
-        public class MeshSection : BaseSection
+        public record MeshSection : BaseSection
         {
             public override bool IsMesh => true;
-            public readonly int SubMeshStart, SubMeshCount;
-            public readonly int VertexCount, TriangleCount;
+            public Range SubMeshes { get; init; }
+            public int VertexCount { get; init; }
+            public int TriangleCount { get; init; }
+            public RWAtomicSection RWAtomicSection { get; }
 
-            public MeshSection(Box b, int sms, int smc, int vc, int tc) : base(b) =>
-                (SubMeshStart, SubMeshCount, VertexCount, TriangleCount) = (sms, smc, vc, tc);
+            public MeshSection(RWAtomicSection rwAtomicSection) => RWAtomicSection = rwAtomicSection;
         }
         
-        public class PlaneSection : BaseSection
+        public record PlaneSection : BaseSection
         {
             public override bool IsMesh => false;
-            public readonly BaseSection LeftChild, RightChild;
-            public readonly float CenterValue, LeftValue, RightValue;
-            public readonly RWPlaneSectionType PlaneType;
+            public BaseSection LeftChild { get; set; }
+            public BaseSection RightChild { get; set; }
+            public float CenterValue { get; init; }
+            public float LeftValue { get; init; }
+            public float RightValue { get; init; }
+            public RWPlaneSectionType PlaneType { get; init; }
 
-            public PlaneSection(Box b, BaseSection lc, BaseSection rc, float cv, float lv, float rv, RWPlaneSectionType t) : base(b)
-            {
-                (LeftChild, RightChild) = (lc, rc);
-                (CenterValue, LeftValue, RightValue) = (cv, lv, rv);
-                PlaneType = t;
-            }
+            public PlaneSection(BaseSection lc, BaseSection rc) => (LeftChild, RightChild) = (lc, rc);
         }
 
-        public struct SubMesh
+        public readonly struct SubMesh
         {
             public readonly int IndexOffset, IndexCount;
             public readonly int MaterialIndex;
@@ -72,6 +69,7 @@ namespace zzre.rendering
         public IReadOnlyList<BaseSection> Sections => sections;
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
         public Vector3 Origin { get; }
+        public RWWorld RWWorld { get; }
 
         public WorldBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
             throw new FileNotFoundException($"Could not find world at {path.ToPOSIXString()}"))
@@ -85,6 +83,7 @@ namespace zzre.rendering
             materials = materialList?.children.OfType<RWMaterial>().ToImmutableArray() ??
                 throw new InvalidDataException("RWWorld has no materials");
             Origin = world.origin.ToNumerics();
+            RWWorld = world;
 
             var sectionList = new List<BaseSection>();
             var subMeshList = new List<SubMesh>();
@@ -124,12 +123,14 @@ namespace zzre.rendering
                 var leftChild = LoadChild(0);
                 var rightChild = LoadChild(1);
                 var bounds = Box.Union(leftChild.Bounds, rightChild.Bounds);
-                var result = new PlaneSection(
-                    bounds,
-                    leftChild, rightChild,
-                    plane.centerValue, plane.leftValue, plane.rightValue,
-                    plane.sectorType
-                );
+                var result = new PlaneSection(leftChild, rightChild)
+                {
+                    Bounds = bounds,
+                    CenterValue = plane.centerValue,
+                    LeftValue = plane.leftValue,
+                    RightValue = plane.rightValue,
+                    PlaneType = plane.sectorType
+                };
                 sectionList[index] = result;
                 result.LeftChild.Parent = result;
                 result.RightChild.Parent = result;
@@ -172,7 +173,13 @@ namespace zzre.rendering
                 indexCount += triangleCount * 3;
 
                 var bounds = Box.FromMinMax(atomic.bbox1.ToNumerics(), atomic.bbox2.ToNumerics());
-                var result = new MeshSection(bounds, subMeshStart, subMeshCount, atomic.vertices.Count(), triangleCount);
+                var result = new MeshSection(atomic)
+                {
+                    Bounds = bounds,
+                    SubMeshes = subMeshStart..(subMeshStart + subMeshCount),
+                    VertexCount = atomic.vertices.Count(),
+                    TriangleCount = triangleCount
+                };
                 sectionList.Add(result);
                 return result;
             }

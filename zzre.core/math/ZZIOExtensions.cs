@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using Veldrid;
+using zzio.rwbs;
 
 namespace zzre
 {
@@ -37,5 +38,13 @@ namespace zzre
         public static RgbaByte ToVeldrid(this zzio.primitives.IColor c) => new RgbaByte(c.r, c.g, c.b, c.a);
         public static RgbaFloat ToVeldrid(this zzio.primitives.FColor c) => new RgbaFloat(c.r, c.g, c.b, c.a);
         public static zzio.primitives.FColor ToFColor(this Vector4 v) => new zzio.primitives.FColor(v.X, v.Y, v.Z, v.W);
+
+        public static Vector3 ToNormal(this CollisionSectorType sectorType) => sectorType switch
+        {
+            CollisionSectorType.X => Vector3.UnitX,
+            CollisionSectorType.Y => Vector3.UnitY,
+            CollisionSectorType.Z => Vector3.UnitZ,
+            _ => throw new ArgumentOutOfRangeException($"Unknown collision sector type {sectorType}")
+        };
     }
 }

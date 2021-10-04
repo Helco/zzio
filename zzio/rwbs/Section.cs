@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text;
 using zzio.utils;
+using System.Linq;
 
 namespace zzio.rwbs
 {
@@ -29,6 +30,7 @@ namespace zzio.rwbs
                 { SectionId.Struct,        () => new RWStruct() },
                 { SectionId.Texture,       () => new RWTexture() },
                 { SectionId.World,         () => new RWWorld() },
+                { SectionId.CollisionPLG,  () => new RWCollision() },
                 { SectionId.Unknown,       () => new UnknownSection() }
             };
 
@@ -115,5 +117,6 @@ namespace zzio.rwbs
         }
 
         public virtual Section? FindChildById(SectionId sectionId, bool recursive = true) => null;
+        public virtual IEnumerable<Section> FindAllChildrenById(SectionId sectionId, bool recursive = true) => Enumerable.Empty<Section>();
     }
 }

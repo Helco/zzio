@@ -7,14 +7,15 @@ using System.IO;
 
 namespace zzio.rwbs
 {
-    [Flags]
     public enum CollisionSectorType
     {
         X = 0,
         Y = 4,
-        Z = 8,
-
-        Negative = 1
+        Z = 8
+    }
+    public static class CollisionSectorTypeExtension
+    {
+        public static int ToIndex(this CollisionSectorType t) => ((int)t) / 4;
     }
 
     [Serializable]
@@ -33,7 +34,7 @@ namespace zzio.rwbs
     }
 
     [Serializable]
-    public class RWCollision : StructSection
+    public class RWCollision : Section
     {
         public const int SplitCount = -1;
         public override SectionId sectionId => SectionId.CollisionPLG;
@@ -41,7 +42,7 @@ namespace zzio.rwbs
         public CollisionSplit[] splits = Array.Empty<CollisionSplit>();
         public int[] map = Array.Empty<int>();
 
-        protected override void readStruct(Stream stream)
+        protected override void readBody(Stream stream)
         {
             using var reader = new BinaryReader(stream);
             splits = new CollisionSplit[reader.ReadInt32() - 1];
@@ -52,11 +53,11 @@ namespace zzio.rwbs
                 uint types = reader.ReadUInt32();
                 split.right.index = reader.ReadUInt16();
                 split.left.index = reader.ReadUInt16();
-                split.right.value = reader.ReadSingle();
                 split.left.value = reader.ReadSingle();
+                split.right.value = reader.ReadSingle();
 
                 split.right.type = (CollisionSectorType)(types >> 16);
-                split.left.type = split.right.type | CollisionSectorType.Negative;
+                split.left.type = split.right.type;
                 split.right.count = ((types >> 0) & 0xff) == 2 ? SplitCount : 0;
                 split.left.count = ((types >> 8) & 0xff) == 2 ? SplitCount : 0;
             }
@@ -84,7 +85,7 @@ namespace zzio.rwbs
             reader.ReadStructureArray(map);
         }
 
-        protected override void writeStruct(Stream stream)
+        protected override void writeBody(Stream stream)
         {
             using var writer = new BinaryWriter(stream);
             writer.Write(splits.Length + 1);

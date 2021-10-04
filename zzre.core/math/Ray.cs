@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Text;
+using zzio.rwbs;
 
 namespace zzre
 {
@@ -118,6 +120,25 @@ namespace zzre
             return new Raycast(t, Start + Direction * t, plane.Normal);
         }
 
+        public float? DistanceTo(CollisionSectorType sectorType, float planeDistance) =>
+            DistanceToUnitPlane(sectorType.ToIndex(), planeDistance);
+        public float? DistanceTo(RWPlaneSectionType sectionType, float planeDistance) =>
+            DistanceToUnitPlane(sectionType.ToIndex(), planeDistance);
+        private float? DistanceToUnitPlane(int componentIndex, float planeDistance)
+        {
+            float angle = Direction.Component(componentIndex);
+            float rayPos = Start.Component(componentIndex);
+            float t = (planeDistance - rayPos) / angle;
+            return angle >= 0.0f || float.IsNaN(t) || t < 0 ? null : t;
+        }
+        public Raycast? Cast(CollisionSectorType planeType, float planeDistance)
+        {
+            var t = DistanceTo(planeType, planeDistance);
+            return t.HasValue
+                ? new Raycast(t.Value, Start + Direction * t.Value, planeType.ToNormal())
+                : null;
+        }
+
         public Raycast? Cast(Triangle triangle)
         {
             var cast = Cast(triangle.Plane);
@@ -128,6 +149,21 @@ namespace zzre
                 bary.Y >= 0.0f && bary.Y <= 1.0f &&
                 bary.Z >= 0.0f && bary.Z <= 1.0f
                 ? cast : null;
+        }
+
+        public Raycast? PointOfExit(Box box, Raycast hit)
+        {
+            if (box.Intersects(Start))
+                return null;
+
+            var inner = new Ray(hit.Point + Direction * box.HalfSize.MinComponent(), Direction);
+            var exit = box.Planes()
+                .Select(Cast)
+                .OrderBy(h => h?.Distance ?? float.MaxValue)
+                .First();
+            if (exit.HasValue)
+                exit = new Raycast(exit.Value.Distance + hit.Distance + box.HalfSize.MinComponent(), exit.Value.Point, exit.Value.Normal);
+            return exit;
         }
 
         public bool Intersects(Box box) => Cast(box) != null;

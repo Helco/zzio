@@ -27,6 +27,8 @@ namespace zzio.rwbs
             RWPlaneSectionType.ZPlane => new Vector(0.0f, 0.0f, 1.0f),
             _ => throw new NotImplementedException("Unknown plane section type")
         };
+
+        public static int ToIndex(this RWPlaneSectionType t) => ((int)t) / 4;
     }
 
     public class RWPlaneSection : StructSection

@@ -10,6 +10,9 @@ using zzre.imgui;
 using zzre.rendering;
 using System.Linq;
 using Quaternion = System.Numerics.Quaternion;
+using zzio.vfs;
+using zzio.rwbs;
+using System.Diagnostics;
 
 namespace zzre.tools
 {
@@ -57,6 +60,10 @@ namespace zzre.tools
             Window.OnRender += OnRender; // on window to not update framebuffer texture during rendering
             Window.OnContent += OnContent;
 
+            var rwWorld = diContainer.GetTag<IResourcePool>().FindFile("resources/worlds/sc_3302.bsp")!.OpenAsRWBS<RWWorld>();
+            var worldCollider = new WorldCollider(rwWorld);
+            camera.Location.LocalPosition = -rwWorld.origin.ToNumerics();
+
             rotatingBox = new RaycastObject()
             {
                 Geometry = new OrientedBox(new Box(Vector3.UnitX * 3f, Vector3.One), Quaternion.Identity),
@@ -64,7 +71,7 @@ namespace zzre.tools
             };
             objects = new[]
             {
-                new RaycastObject()
+                /*new RaycastObject()
                 {
                     Geometry = new Sphere(Vector3.UnitZ * -3f, 1f),
                     Shader = ShaderNormal
@@ -87,7 +94,12 @@ namespace zzre.tools
                     Geometry = new Box(Vector3.UnitZ * 3f, Vector3.One),
                     Shader = ShaderNormal
                 },
-                rotatingBox
+                rotatingBox,*/
+                new RaycastObject()
+                {
+                    Geometry = worldCollider,
+                    Shader = ShaderNormal
+                }
             };
         }
 
@@ -115,32 +127,51 @@ namespace zzre.tools
             pixels = new IColor[PixelCount];
         }
 
+        private static DateTime lastOutput = DateTime.Now;
+        private static Stopwatch stopwatch = new Stopwatch();
+        private static long calls = 0;
+
         private void OnRender()
         {
             if (pixels == null)
                 OnResize();
 
-            if (!Matrix4x4.Invert(camera.Projection, out var invProj))
-                throw new InvalidProgramException("Could not invert camera projection");
-
+            int width = (int)fbArea.Framebuffer.Width;
+            int height = (int)fbArea.Framebuffer.Height;
+            stopwatch.Start();
+            //for (int i = 0; i < PixelCount; i++)
             Parallel.For(0, PixelCount, i =>
             {
-                int pixelX = i % (int)fbArea.Framebuffer.Width;
-                int pixelY = i / (int)fbArea.Framebuffer.Width;
+                int pixelX = i % width;
+                int pixelY = height - 1 - i / width;
                 var pixelPos = new Vector3(
-                    pixelX / (float)fbArea.Framebuffer.Width,
-                    pixelY / (float)fbArea.Framebuffer.Height,
+                    pixelX / (float)width,
+                    pixelY / (float)height,
                     1.0f) * 2f - Vector3.One;
                 var ray = camera.RayAt(new Vector2(pixelPos.X, pixelPos.Y));
 
-                var (cast, obj) = objects
-                    .Select(obj => (cast: obj.Geometry.Cast(ray), obj))
-                    .OrderBy(t => t.cast?.Distance ?? float.MaxValue)
-                    .FirstOrDefault();
+                var bestCast = (cast: null as Raycast?, obj: null as RaycastObject);
+                foreach (var newObj in objects)
+                {
+                    var newCast = newObj.Geometry.Cast(ray);
+                    if (bestCast.cast == null || newCast != null && newCast.Value.Distance < bestCast.cast.Value.Distance)
+                        bestCast = (newCast, newObj);
+                }
+                var (cast, obj) = bestCast;
                 pixels![i] = cast.HasValue
-                    ? obj.Shader(obj, pixelPos, cast.Value)
+                    ? obj!.Shader(obj, pixelPos, cast.Value)
                     : IColor.Black;
             });
+            stopwatch.Stop();
+            calls++;
+            if ((DateTime.Now - lastOutput).TotalSeconds > 3)
+            {
+                lastOutput = DateTime.Now;
+                var result = stopwatch.Elapsed.TotalSeconds / calls;
+                Console.WriteLine(result.ToString("F99").Trim('0'));
+                calls = 0;
+                stopwatch.Reset();
+            }
 
             device.UpdateTexture(fbArea.Framebuffer.ColorTargets.First().Target, pixels, 0, 0, 0,
                 fbArea.Framebuffer.Width, fbArea.Framebuffer.Height, 1,
@@ -171,9 +202,13 @@ namespace zzre.tools
 
         private IColor ShaderBarycentric(RaycastObject obj, Vector3 _1, Raycast r)
         {
-            if (obj.Geometry is not Triangle)
-                return new IColor(255, 0, 255, 255);
-            var triangle = (Triangle)obj.Geometry;
+            var triangle = obj.Geometry switch
+            {
+                Triangle t => t,
+                AtomicCollider a => a.LastTriangle,
+                WorldCollider w => w.LastTriangle,
+                _ => throw new InvalidOperationException()
+            };
             var bary = triangle.Barycentric(r.Point);
 
             byte Color(float p) => (byte)(p * 255f);
