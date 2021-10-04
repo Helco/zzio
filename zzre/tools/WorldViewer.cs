@@ -44,13 +44,14 @@ namespace zzre.tools
 
         private readonly UniformBuffer<Matrix4x4> worldTransform;
         private WorldBuffers? worldBuffers;
-        private AtomicCollider? atomicCollider;
+        private WorldCollider? worldCollider;
+        private RWAtomicSection? sectionAtomic;
+        private RWCollision? sectionCollision;
         private int[] sectionDepths = new int[0];
         private int highlightedSectionI = -1;
         private int highlightedSplitI = -1;
         private bool updateViewFrustumCulling = true;
         private bool renderCulledSections = false;
-        private bool renderOnlyCollision = false;
 
         public IResource? CurrentResource { get; private set; }
         public Window Window { get; }
@@ -66,6 +67,7 @@ namespace zzre.tools
             var onceAction = new OnceAction();
             Window.AddTag(onceAction);
             Window.OnContent += onceAction.Invoke;
+            Window.OnKeyDown += HandleKeyDown;
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddButton("Open", HandleMenuOpen);
             var gridRenderer = new DebugGridRenderer(diContainer);
@@ -99,7 +101,8 @@ namespace zzre.tools
             editor.AddInfoSection("Materials", HandleMaterialsContent, false);
             editor.AddInfoSection("Sections", HandleSectionsContent, false);
             editor.AddInfoSection("ViewFrustum Culling", HandleViewFrustumCulling, false);
-            editor.AddInfoSection("Collision", HandleCollision, true);
+            editor.AddInfoSection("Collision", HandleCollision, false);
+            editor.AddInfoSection("Raycast", HandleRaycast, true);
 
             boundsRenderer = new DebugBoxLineRenderer(diContainer);
             boundsRenderer.Color = IColor.Red;
@@ -156,14 +159,12 @@ namespace zzre.tools
 
             CurrentResource = resource;
             UpdateSectionDepths();
+            worldCollider = new WorldCollider(worldBuffers.RWWorld);
             HighlightSection(-1);
             controls.ResetView();
             camera.Location.LocalPosition = -worldBuffers.Origin;
             fbArea.IsDirty = true;
             Window.Title = $"World Viewer - {resource.Path.ToPOSIXString()}";
-
-            HighlightSection(worldBuffers.Sections.Indexed().First(s => s.Value.IsMesh).Index);
-            renderOnlyCollision = true;
         }
 
         private void UpdateSectionDepths()
@@ -195,12 +196,7 @@ namespace zzre.tools
                 worldRenderer.UpdateVisibility();
             }
 
-            if (renderOnlyCollision)
-            {
-                if (highlightedSectionI >= 0 && worldBuffers.Sections[highlightedSectionI] is WorldBuffers.MeshSection meshSection)
-                    worldRenderer.Render(cl, new[] { meshSection });
-            }
-            else if (renderCulledSections)
+            if (renderCulledSections)
                 worldRenderer.RenderForceAll(cl);
             else
                 worldRenderer.Render(cl);
@@ -215,12 +211,16 @@ namespace zzre.tools
                 frustumRenderer.Render(cl);
 
             triangleRenderer.Render(cl);
-
-            if (atomicCollider != null)
-                rayRenderer.Render(cl);
+            rayRenderer.Render(cl);
         }
 
         private void HandleResize() => camera.Aspect = fbArea.Ratio;
+
+        private void HandleKeyDown(Key key)
+        {
+            if (key == Key.Space)
+                ShootRay();
+        }
 
         private void HandleMenuOpen()
         {
@@ -321,8 +321,8 @@ namespace zzre.tools
         {
             highlightedSectionI = index;
             HighlightSplit(-1);
-            renderOnlyCollision = false;
-            atomicCollider = null;
+            sectionAtomic = null;
+            sectionCollision = null;
             if (worldBuffers == null || highlightedSectionI < 0)
                 return;
             boundsRenderer.Bounds = worldBuffers.Sections[index].Bounds;
@@ -335,10 +335,8 @@ namespace zzre.tools
             }
             else
             {
-                var worldSection = (WorldBuffers.MeshSection)worldBuffers.Sections[index];
-                var atomicSection = worldSection.RWAtomicSection;
-                if (atomicSection.FindChildById(SectionId.CollisionPLG, recursive: true) != null)
-                    atomicCollider = new AtomicCollider(atomicSection);
+                sectionAtomic = ((WorldBuffers.MeshSection)worldBuffers.Sections[index]).RWAtomicSection;
+                sectionCollision = (RWCollision?)sectionAtomic.FindChildById(SectionId.CollisionPLG, recursive: true);
             }
 
             fbArea.IsDirty = true;
@@ -348,10 +346,10 @@ namespace zzre.tools
         {
             highlightedSplitI = splitI;
             triangleRenderer.Triangles = Array.Empty<Triangle>();
-            if (atomicCollider == null || splitI < 0)
+            if (sectionCollision == null || sectionAtomic == null || splitI < 0)
                 return;
 
-            var split = atomicCollider.Collision.splits[splitI];
+            var split = sectionCollision.splits[splitI];
             var normal = split.left.type switch
             {
                 CollisionSectorType.X => Vector3.UnitX,
@@ -359,7 +357,7 @@ namespace zzre.tools
                 CollisionSectorType.Z => Vector3.UnitZ,
                 _ => throw new NotSupportedException($"Unsupported collision sector type: " + split.left.type)
             };
-            SetPlanes(atomicCollider.Box, normal, split.left.value, split.right.value, centerValue: null);
+            SetPlanes(boundsRenderer.Bounds.Box, normal, split.left.value, split.right.value, centerValue: null);
 
             triangleRenderer.Triangles = SplitTriangles(split).ToArray();
             triangleRenderer.Colors = Enumerable
@@ -374,11 +372,15 @@ namespace zzre.tools
                 SectorTriangles(split.left).Concat(SectorTriangles(split.right));
 
             IEnumerable<Triangle> SectorTriangles(CollisionSector sector) => sector.count == RWCollision.SplitCount
-                ? SplitTriangles(atomicCollider.Collision.splits[sector.index])
-                : atomicCollider.Collision.map
+                ? SplitTriangles(sectionCollision.splits[sector.index])
+                : sectionCollision.map
                     .Skip(sector.index)
                     .Take(sector.count)
-                    .Select(atomicCollider.GetTriangle)
+                    .Select(i => sectionAtomic.triangles[i])
+                    .Select(t => new Triangle(
+                        sectionAtomic.vertices[t.v1].ToNumerics(),
+                        sectionAtomic.vertices[t.v2].ToNumerics(),
+                        sectionAtomic.vertices[t.v3].ToNumerics()))
                     .ToArray();
         }
 
@@ -447,22 +449,16 @@ namespace zzre.tools
                 Text("No section selected");
                 return;
             }
-            else if (atomicCollider == null)
+            else if (sectionCollision == null)
             {
                 Text("No collision in selected section");
                 return;
             }
 
-            if (Button("Shoot ray"))
-                ShootRay();
-
-            var coll = atomicCollider.Collision;
-            fbArea.IsDirty |= Checkbox("Only render collision", ref renderOnlyCollision);
             Split(0);
-
             void Split(int splitI)
             {
-                var split = coll.splits[splitI];
+                var split = sectionCollision.splits[splitI];
                 var flags = (splitI == highlightedSplitI ? ImGuiTreeNodeFlags.Selected : 0) |
                     ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow |
                     ImGuiTreeNodeFlags.DefaultOpen;
@@ -487,28 +483,42 @@ namespace zzre.tools
             }
         }
 
+        private void HandleRaycast()
+        {
+            if (worldCollider == null)
+            {
+                Text("No world or collider loaded");
+                return;
+            }
+
+            if (Button("Shoot ray"))
+                ShootRay();
+        }
+
         private void ShootRay()
         {
-            if (atomicCollider == null)
+            if (worldCollider == null)
                 return;
 
             var ray = new Ray(camera.Location.GlobalPosition, camera.Location.GlobalForward);
-            var cast = atomicCollider.Cast(ray);
+            var cast = worldCollider.Cast(ray);
             var triangles = new List<Triangle>(2)
             {
                 new Triangle(
                     ray.Start,
                     ray.Start,
-                    ray.Start + ray.Direction * 100f)
+                    ray.Start + ray.Direction * (cast?.Distance ?? 100f))
             };
             var colors = new List<IColor>(2) { IColor.Green };
             if (cast.HasValue)
             {
+                triangles.Add(worldCollider.LastTriangle);
                 triangles.Add(new Triangle(
                     cast.Value.Point,
                     cast.Value.Point,
                     cast.Value.Point + cast.Value.Normal * 0.2f
                 ));
+                colors.Add(IColor.Green);
                 colors.Add(new IColor(255, 0, 255, 255));
             }
             rayRenderer.Triangles = triangles.ToArray();

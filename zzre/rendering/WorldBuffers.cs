@@ -69,6 +69,7 @@ namespace zzre.rendering
         public IReadOnlyList<BaseSection> Sections => sections;
         public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
         public Vector3 Origin { get; }
+        public RWWorld RWWorld { get; }
 
         public WorldBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
             throw new FileNotFoundException($"Could not find world at {path.ToPOSIXString()}"))
@@ -82,6 +83,7 @@ namespace zzre.rendering
             materials = materialList?.children.OfType<RWMaterial>().ToImmutableArray() ??
                 throw new InvalidDataException("RWWorld has no materials");
             Origin = world.origin.ToNumerics();
+            RWWorld = world;
 
             var sectionList = new List<BaseSection>();
             var subMeshList = new List<SubMesh>();

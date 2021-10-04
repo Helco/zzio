@@ -10,6 +10,7 @@ namespace zzre
     {
         public RWWorld World { get; }
         public Box Box { get; }
+        public Triangle LastTriangle { get; private set; }
 
         private readonly IReadOnlyDictionary<RWAtomicSection, AtomicCollider> atomicColliders;
 
@@ -60,7 +61,10 @@ namespace zzre
                         return prevHit;
 
                     var myHit = atomicCollider.Cast(ray, maxDist);
-                    return prevHit == null || (myHit != null && myHit.Value.Distance < prevHit.Value.Distance)
+                    var isBetterHit = prevHit == null || (myHit != null && myHit.Value.Distance < prevHit.Value.Distance);
+                    if (isBetterHit && myHit != null)
+                        LastTriangle = atomicCollider.LastTriangle;
+                    return isBetterHit
                         ? myHit
                         : prevHit;
                 }

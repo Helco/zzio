@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using zzio.rwbs;
@@ -9,6 +9,7 @@ namespace zzre
     {
         public RWCollision Collision { get; }
         public Box Box { get; }
+        public Triangle LastTriangle { get; private set; }
 
         protected TreeCollider(Box box, RWCollision collision) => (Box, Collision) = (box, collision);
 
@@ -76,6 +77,7 @@ namespace zzre
                 return prevHit;
 
             Raycast? myHit;
+            Triangle newTriangle = default;
             if (sector.count == RWCollision.SplitCount)
                 myHit = RaycastNode(sector.index, ray, minDist, maxDist);
             else
@@ -90,11 +92,15 @@ namespace zzre
                     if (newHit.Value.Distance < (myHit?.Distance ?? float.MaxValue))
                     {
                         myHit = newHit;
+                        newTriangle = triangle;
                     }
                 }
             }
 
-            return prevHit == null || (myHit != null && myHit.Value.Distance < prevHit.Value.Distance)
+            var isBetterHit = prevHit == null || (myHit != null && myHit.Value.Distance < prevHit.Value.Distance);
+            if (sector.count != RWCollision.SplitCount && isBetterHit && myHit != null)
+                LastTriangle = newTriangle;
+            return isBetterHit
                 ? myHit
                 : prevHit;
         }

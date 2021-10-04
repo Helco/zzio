@@ -202,9 +202,13 @@ namespace zzre.tools
 
         private IColor ShaderBarycentric(RaycastObject obj, Vector3 _1, Raycast r)
         {
-            if (obj.Geometry is not Triangle)
-                return new IColor(255, 0, 255, 255);
-            var triangle = (Triangle)obj.Geometry;
+            var triangle = obj.Geometry switch
+            {
+                Triangle t => t,
+                AtomicCollider a => a.LastTriangle,
+                WorldCollider w => w.LastTriangle,
+                _ => throw new InvalidOperationException()
+            };
             var bary = triangle.Barycentric(r.Point);
 
             byte Color(float p) => (byte)(p * 255f);
