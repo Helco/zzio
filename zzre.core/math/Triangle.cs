@@ -36,10 +36,17 @@ namespace zzre
             if (Intersects(closest))
                 return closest;
 
-            return new[] { AB, BC, AC }
-                .Select(edge => edge.ClosestPoint(point))
-                .OrderBy(p => (point - p).LengthSquared())
-                .First();
+            var closestAB = AB.ClosestPoint(point);
+            var closestBC = BC.ClosestPoint(point);
+            var closestAC = AC.ClosestPoint(point);
+            var distAB = (closestAB - point).LengthSquared();
+            var distBC = (closestBC - point).LengthSquared();
+            var distAC = (closestAC - point).LengthSquared();
+            if (distAB < distBC && distAB < distAC)
+                return closestAB;
+            if (distBC < distAB && distBC < distAC)
+                return closestBC;
+            return closestAC;
         }
 
         public bool Intersects(Vector3 point)
@@ -49,8 +56,8 @@ namespace zzre
             var normalPBC = Vector3.Cross(localB, localC);
             var normalPCA = Vector3.Cross(localC, localA);
             return
-                Vector3.Dot(normalPBC, normalPAB) < 0 ||
-                Vector3.Dot(normalPBC, normalPCA) < 0;
+                Vector3.Dot(normalPBC, normalPAB) >= 0 &&
+                Vector3.Dot(normalPBC, normalPCA) >= 0;
         }
 
         public bool Intersects(Box box) => Intersects(box.Corners(), Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ);
