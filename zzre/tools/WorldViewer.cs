@@ -21,6 +21,15 @@ namespace zzre.tools
 {
     public class WorldViewer : ListDisposable, IDocumentEditor
     {
+        private enum IntersectionPrimitive
+        {
+            None,
+            Box,
+            OrientedBox,
+            Sphere,
+            Triangle
+        }
+
         private const byte DebugPlaneAlpha = 0xA0;
 
         private readonly ITagContainer diContainer;
@@ -52,6 +61,9 @@ namespace zzre.tools
         private int highlightedSplitI = -1;
         private bool updateViewFrustumCulling = true;
         private bool renderCulledSections = false;
+        private IntersectionPrimitive intersectionPrimitive;
+        private bool updateIntersectionPrimitive;
+        private float intersectionSize = 0.5f;
 
         public IResource? CurrentResource { get; private set; }
         public Window Window { get; }
@@ -67,6 +79,7 @@ namespace zzre.tools
             var onceAction = new OnceAction();
             Window.AddTag(onceAction);
             Window.OnContent += onceAction.Invoke;
+            Window.OnContent += UpdateIntersectionPrimitive;
             Window.OnKeyDown += HandleKeyDown;
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddButton("Open", HandleMenuOpen);
@@ -493,6 +506,14 @@ namespace zzre.tools
 
             if (Button("Shoot ray"))
                 ShootRay();
+
+            Spacing();
+            Text("Intersections");
+            var shouldUpdate = ImGuiEx.EnumCombo("Primitive", ref intersectionPrimitive);
+            shouldUpdate |= SliderFloat("Size", ref intersectionSize, 0.01f, 20f);
+            shouldUpdate |= Checkbox("Update location", ref updateIntersectionPrimitive);
+            if (shouldUpdate)
+                UpdateIntersectionPrimitive();
         }
 
         private void ShootRay()
@@ -523,6 +544,38 @@ namespace zzre.tools
             }
             rayRenderer.Triangles = triangles.ToArray();
             rayRenderer.Colors = colors.ToArray();
+            fbArea.IsDirty = true;
+        }
+
+        private void UpdateIntersectionPrimitive()
+        {
+            if (!updateIntersectionPrimitive || worldCollider == null)
+                return;
+
+            Vector3 center = camera.Location.GlobalPosition;
+            IEnumerable<Intersection> intersections;
+            List<(Triangle, IColor)> triangles = new List<(Triangle, IColor)>();
+            switch(intersectionPrimitive)
+            {
+                case IntersectionPrimitive.Box:
+                    Box box = new Box(center, Vector3.One * intersectionSize);
+                    intersections = worldCollider.Intersections(box);
+                    triangles.AddRange(box.Triangles().Select(t => (t, intersections.Any() ? IColor.Red : IColor.Green)));
+                    break;
+
+                default: return;
+            }
+
+            foreach (var intersection in intersections)
+            {
+                var p1 = intersection.Point;
+                var p2 = p1 + intersection.Normal * 0.1f;
+                triangles.Add((intersection.Triangle, IColor.Green));
+                triangles.Add((new Triangle(p1, p1, p2), IColor.Blue));
+            }
+
+            rayRenderer.Triangles = triangles.Select(t => t.Item1).ToArray();
+            rayRenderer.Colors = triangles.Select(t => t.Item2).ToArray();
             fbArea.IsDirty = true;
         }
     }

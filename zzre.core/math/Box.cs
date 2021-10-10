@@ -199,5 +199,23 @@ namespace zzre
 
         public Raycast? Cast(Ray ray) => ray.Cast(this);
         public Raycast? Cast(Line line) => line.Cast(this);
+
+        public IEnumerable<Triangle> Triangles() => Triangles(Quaternion.Identity);
+        public IEnumerable<Triangle> Triangles(Quaternion q)
+        {
+            var corners = Corners(q);
+            yield return new Triangle(corners[0], corners[1], corners[2]);
+            yield return new Triangle(corners[2], corners[1], corners[3]);
+            yield return new Triangle(corners[5], corners[4], corners[7]);
+            yield return new Triangle(corners[7], corners[4], corners[6]);
+            yield return new Triangle(corners[4], corners[0], corners[6]);
+            yield return new Triangle(corners[6], corners[0], corners[2]);
+            yield return new Triangle(corners[1], corners[5], corners[3]);
+            yield return new Triangle(corners[3], corners[5], corners[7]);
+            yield return new Triangle(corners[2], corners[3], corners[6]);
+            yield return new Triangle(corners[6], corners[3], corners[7]);
+            yield return new Triangle(corners[4], corners[5], corners[0]);
+            yield return new Triangle(corners[0], corners[5], corners[1]);
+        }
     }
 }

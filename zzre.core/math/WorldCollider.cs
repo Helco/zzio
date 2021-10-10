@@ -12,6 +12,7 @@ namespace zzre
         public Box Box { get; }
         public Triangle LastTriangle { get; private set; }
 
+        private readonly Section rootSection;
         private readonly IReadOnlyDictionary<RWAtomicSection, AtomicCollider> atomicColliders;
 
         public WorldCollider(RWWorld world)
@@ -28,6 +29,12 @@ namespace zzre
             Box = atomicColliders.Values.Aggregate(
                 atomicColliders.Values.First().Box,
                 (box, atomic) => box.Union(atomic.Box));
+
+            var rootPlane = World.FindChildById(SectionId.PlaneSection, false);
+            var rootAtomic = World.FindChildById(SectionId.AtomicSection, false);
+            rootSection = rootPlane ?? rootAtomic ?? throw new InvalidDataException("RWWorld has no geometry");
+            if (rootPlane != null && rootAtomic != null)
+                throw new InvalidDataException("RWWorld has both a root plane and a root atomic");
         }
 
         public Raycast? Cast(Ray ray) => Cast(ray, float.MaxValue);
@@ -38,12 +45,6 @@ namespace zzre
             var coarse = ray.Cast(Box);
             if (coarse == null || coarse.Value.Distance > maxLength)
                 return null;
-
-            var rootPlane = World.FindChildById(SectionId.PlaneSection, false);
-            var rootAtomic = World.FindChildById(SectionId.AtomicSection, false);
-            var rootSection = rootPlane ?? rootAtomic ?? throw new InvalidDataException("RWWorld has no geometry");
-            if (rootPlane != null && rootAtomic != null)
-                throw new InvalidDataException("RWWorld has both a root plane and a root atomic");
 
             return RaycastSection(rootSection, ray, minDist: 0f, maxLength, prevHit: null);
         }
@@ -110,29 +111,71 @@ namespace zzre
             }
         }
 
-        public bool Intersects(Box box)
+        public bool Intersects(Box box) => Intersections(box, intersectionQueries).Any();
+        public bool Intersects(OrientedBox box) => Intersections(box, intersectionQueries).Any();
+        public bool Intersects(Sphere sphere) => Intersections(sphere, intersectionQueries).Any();
+        public bool Intersects(Triangle triangle) => Intersections(triangle, intersectionQueries).Any();
+        public IEnumerable<Intersection> Intersections(Box box) => Intersections(box, intersectionQueries);
+        public IEnumerable<Intersection> Intersections(OrientedBox box) => Intersections(box, intersectionQueries);
+        public IEnumerable<Intersection> Intersections(Sphere sphere) => Intersections(sphere, intersectionQueries);
+        public IEnumerable<Intersection> Intersections(Triangle triangle) => Intersections(triangle, intersectionQueries);
+
+        // only coarse query for planes
+        public bool Intersects(Plane plane) => Box.Intersects(plane);
+
+        private IEnumerable<Intersection> Intersections<T>(T primitive, IIntersectionQueries<T> queries) where T : struct, IIntersectable
         {
-            throw new NotImplementedException();
+            if (!Box.Intersects(primitive))
+                yield break;
+
+            var splitStack = new Stack<Section>();
+            splitStack.Push(rootSection);
+            while (splitStack.Any())
+            {
+                switch(splitStack.Pop())
+                {
+                    case RWAtomicSection atomic when atomicColliders.TryGetValue(atomic, out var collider):
+                        foreach (var i in queries.Intersections(collider, primitive))
+                            yield return i;
+                        break;
+
+                    case RWPlaneSection plane:
+                        var leftPlane = new Plane(plane.sectorType.AsNormal().ToNumerics(), plane.leftValue);
+                        var rightPlane = new Plane(plane.sectorType.AsNormal().ToNumerics(), plane.rightValue);
+                        var leftSection = plane.children[0];
+                        var rightSection = plane.children[1];
+
+                        if (queries.SideOf(rightPlane, primitive) != PlaneIntersections.Outside)
+                            splitStack.Push(rightSection);
+                        if (queries.SideOf(leftPlane, primitive) != PlaneIntersections.Inside)
+                            splitStack.Push(leftSection);
+                        break;
+                }
+            }
         }
 
-        public bool Intersects(OrientedBox box)
+        private interface IIntersectionQueries<T> where T : struct, IIntersectable
         {
-            throw new NotImplementedException();
+            PlaneIntersections SideOf(in Plane plane, in T primitive);
+            IEnumerable<Intersection> Intersections(AtomicCollider collider, in T primitive);
         }
 
-        public bool Intersects(Sphere sphere)
+        private readonly struct IntersectionQueries :
+            IIntersectionQueries<Box>,
+            IIntersectionQueries<OrientedBox>,
+            IIntersectionQueries<Sphere>,
+            IIntersectionQueries<Triangle>
         {
-            throw new NotImplementedException();
+            public PlaneIntersections SideOf(in Plane plane, in Box primitive) => plane.SideOf(primitive);
+            public PlaneIntersections SideOf(in Plane plane, in Triangle primitive) => plane.SideOf(primitive);
+            public PlaneIntersections SideOf(in Plane plane, in OrientedBox primitive) => plane.SideOf(primitive);
+            public PlaneIntersections SideOf(in Plane plane, in Sphere primitive) => plane.SideOf(primitive);
+            public IEnumerable<Intersection> Intersections(AtomicCollider collider, in Box primitive) => collider.Intersections(primitive);
+            public IEnumerable<Intersection> Intersections(AtomicCollider collider, in Triangle primitive) => collider.Intersections(primitive);
+            public IEnumerable<Intersection> Intersections(AtomicCollider collider, in OrientedBox primitive) => collider.Intersections(primitive);
+            public IEnumerable<Intersection> Intersections(AtomicCollider collider, in Sphere primitive) => collider.Intersections(primitive);
         }
 
-        public bool Intersects(Plane plane)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Intersects(Triangle triangle)
-        {
-            throw new NotImplementedException();
-        }
+        private static readonly IntersectionQueries intersectionQueries = default;
     }
 }
