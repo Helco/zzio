@@ -56,10 +56,12 @@ namespace zzre.core.tests
         }
 
         [Test]
-        public void CannotBeModified()
+        public void ModifiesMain()
         {
-            Assert.That(() => container.AddTag(new object()), Throws.Exception);
-            Assert.That(() => container.RemoveTag<object>(), Throws.Exception);
+            container.AddTag(new Tag4());
+            Assert.True(main.HasTag<Tag4>());
+            Assert.True(container.RemoveTag<Tag4>());
+            Assert.False(main.HasTag<Tag4>());
         }
     }
 }
