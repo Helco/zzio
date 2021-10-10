@@ -34,7 +34,7 @@ namespace zzre
                 PreferStandardClipSpaceYDirection = true,
                 SyncToVerticalBlank = true,
                 Debug = true
-            }, GraphicsBackend.Vulkan);
+            }, GraphicsBackend.Direct3D11);
 
             var pipelineCollection = new PipelineCollection(graphicsDevice);
             pipelineCollection.AddShaderResourceAssemblyOf<Program>();
@@ -75,8 +75,13 @@ namespace zzre
             window.KeyDown += (ev) =>
             {
                 windowContainer.HandleKeyEvent(ev.Key, ev.Down);
-                if (ev.Down == true && ev.Key == Key.F5)
+                if (ev.Key == Key.F5)
                     windowContainer.ImGuiRenderer.ResetContext(graphicsDevice, graphicsDevice.MainSwapchain.Framebuffer.OutputDescription);
+            };
+
+            window.KeyUp += (ev) =>
+            {
+                windowContainer.HandleKeyEvent(ev.Key, ev.Down);
             };
 
             while (window.Exists)

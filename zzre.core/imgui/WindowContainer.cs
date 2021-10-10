@@ -120,6 +120,8 @@ namespace zzre.imgui
                 if (window.IsFocused)
                     FocusedWindow = window;
             }
+            foreach (var window in this.OfType<Window>().Where(w => !w.IsOpen).ToArray())
+                window.Dispose();
             isInUpdateEnumeration = false;
             onceAfterUpdate.Invoke();
         }

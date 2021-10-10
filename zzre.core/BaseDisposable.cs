@@ -18,10 +18,10 @@ namespace zzre
         {
             if (isDisposed)
                 return;
+            isDisposed = true;
             if (disposing)
                 DisposeManaged();
             DisposeNative();
-            isDisposed = true;
         }
 
         protected virtual void DisposeManaged() { }

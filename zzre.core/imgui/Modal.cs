@@ -23,7 +23,7 @@ namespace zzre.imgui
         private bool isOpen = false;
         private NextAction nextAction = NextAction.None;
 
-        public override bool IsOpen => isOpen && nextAction != NextAction.Close;
+        public override bool IsOpen => (isOpen && nextAction != NextAction.Close);
         public bool HasCloseButton { get; set; } = true;
         public event Action OnOpen = () => { };
 

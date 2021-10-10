@@ -11,7 +11,7 @@ using static ImGuiNET.ImGui;
 
 namespace zzre.imgui
 {
-    public class OpenFileModal
+    public class OpenFileModal : BaseDisposable
     {
         private const float FilterColumnWidth = 75.0f;
         private const float FileTreeSize = 400.0f;
@@ -52,6 +52,8 @@ namespace zzre.imgui
             Modal.OnContent += HandleContent;
             Modal.OnOpen += HandleOpen;
         }
+
+        protected override void DisposeManaged() => Modal.Dispose();
 
         private void HandleOpen()
         {
