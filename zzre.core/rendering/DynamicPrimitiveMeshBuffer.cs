@@ -101,11 +101,12 @@ namespace zzre.rendering
                 .FirstOrDefault();
             if (bestFitPrim.Equals(default))
             {
+                var newMinCapacity = vertices.Length / verticesPerPrimitive + primitiveCount;
                 var newCapacity = Capacity;
-                var resultRange = newCapacity..(newCapacity + primitiveCount);
-                while (newCapacity < vertices.Length + primitiveCount)
+                while (newCapacity < newMinCapacity)
                     newCapacity = (int)(newCapacity * growFactor);
 
+                var resultRange = Capacity..(Capacity + primitiveCount);
                 Array.Resize(ref vertices, newCapacity * verticesPerPrimitive);
                 freePrims.MaxRangeValue = dirtyPrims.MaxRangeValue = newCapacity;
                 return resultRange;

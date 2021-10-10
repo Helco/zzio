@@ -539,20 +539,47 @@ namespace zzre.tools
 
             Vector3 center = camera.Location.GlobalPosition;
             IEnumerable<Intersection> intersections;
+            IEnumerable<Line> edges;
             rayRenderer.Clear();
             switch (intersectionPrimitive)
             {
                 case IntersectionPrimitive.Box:
-                    Box box = new Box(center, Vector3.One * intersectionSize);
+                    var box = new Box(center, Vector3.One * intersectionSize);
                     intersections = worldCollider.Intersections(box);
-                    rayRenderer.Add(
-                        intersections.Any() ? IColor.Red : IColor.Green,
-                        box.Edges());
+                    edges = box.Edges();
+                    break;
+
+                case IntersectionPrimitive.OrientedBox:
+                    var orientedBox = new OrientedBox(
+                        new Box(center, Vector3.One * intersectionSize),
+                        camera.Location.GlobalRotation);
+                    intersections = worldCollider.Intersections(orientedBox);
+                    edges = orientedBox.Edges();
+                    break;
+
+                case IntersectionPrimitive.Sphere:
+                    var sphere = new Sphere(center, intersectionSize);
+                    intersections = worldCollider.Intersections(sphere);
+                    edges = sphere.Edges();
+                    break;
+
+                case IntersectionPrimitive.Triangle:
+                    var hh = intersectionSize * MathF.Sqrt(3f) / 4f;
+                    var (right, up) = (camera.Location.GlobalRight, camera.Location.GlobalUp);
+                    var triangle = new Triangle(
+                        center - right * intersectionSize / 2f - up * hh,
+                        center + right * intersectionSize / 2f - up * hh,
+                        center + up * hh);
+                    intersections = worldCollider.Intersections(triangle);
+                    edges = triangle.Edges();
                     break;
 
                 default: return;
             }
 
+            rayRenderer.Add(
+                intersections.Any() ? IColor.Red : IColor.Green,
+                edges);
             foreach (var intersection in intersections)
             {
                 var p1 = intersection.Point;

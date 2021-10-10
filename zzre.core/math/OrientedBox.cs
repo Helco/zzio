@@ -24,5 +24,9 @@ namespace zzre
         public bool Intersects(Sphere sphere) => sphere.Intersects(this);
         public bool Intersects(Plane plane) => plane.Intersects(this);
         public bool Intersects(Triangle triangle) => triangle.Intersects(this);
+
+        public IReadOnlyList<Vector3> Corners() => Box.Corners(Orientation);
+        public IEnumerable<Triangle> Triangles() => Box.Triangles(Orientation);
+        public IEnumerable<Line> Edges() => Box.Edges(Orientation);
     }
 }
