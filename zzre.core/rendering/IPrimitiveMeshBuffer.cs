@@ -7,9 +7,9 @@ using Veldrid;
 
 namespace zzre.rendering
 {
-    public interface IQuadMeshBuffer<TVertex> : IDisposable where TVertex : unmanaged
+    public interface IPrimitiveMeshBuffer<TVertex> : IDisposable where TVertex : unmanaged
     {
-        int QuadCount { get; }
+        int PrimitiveCount { get; }
         DeviceBuffer VertexBuffer { get; }
         DeviceBuffer IndexBuffer { get; }
 
@@ -21,5 +21,11 @@ namespace zzre.rendering
         void Release(Range range);
         void Update(CommandList cl);
         void Render(CommandList cl, Range? quadRange = null, uint instanceStart = 1, uint instanceCount = 1);
+    }
+
+    public interface IQuadMeshBuffer<TVertex> : IPrimitiveMeshBuffer<TVertex> where TVertex : unmanaged
+    {
+        // invariant: VerticesPerPrimitive == 4
+        // invariant: IndicesPerPrimitive == 6
     }
 }
