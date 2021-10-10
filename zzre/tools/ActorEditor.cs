@@ -213,7 +213,10 @@ namespace zzre.tools
             if (description == null || body == null)
                 return;
             if (description.headBoneID < 0)
+            {
                 Text("This actor has no head.");
+                return;
+            }
 
             ImGuiEx.EnumRadioButtonGroup(ref headIKMode);
             var newValue = (description.headBoneID, camera.Location.GlobalPosition);
