@@ -6,7 +6,6 @@ using System.Numerics;
 using Veldrid;
 using zzio.scn;
 using zzio.vfs;
-using zzre.core;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-namespace zzre.core
+namespace zzre
 {
     public class FallbackTagContainer : BaseDisposable, ITagContainer
     {
