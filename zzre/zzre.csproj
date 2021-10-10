@@ -25,6 +25,7 @@
     <None Remove="shaders\Wireframe.vert" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DefaultEcs" Version="0.16.2" />
     <PackageReference Include="Pfim" Version="0.10.0" />
     <PackageReference Include="Veldrid" Version="4.8.0" />
     <PackageReference Include="Veldrid.ImageSharp" Version="4.8.0" />

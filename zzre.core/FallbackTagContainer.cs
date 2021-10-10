@@ -33,10 +33,10 @@ namespace zzre
             main.HasTag<TTag>() || fallback.HasTag<TTag>();
 
         public bool RemoveTag<TTag>() where TTag : class =>
-            throw new NotSupportedException("FallbackTagContainer should not be modified");
+            main.RemoveTag<TTag>();
 
         public ITagContainer AddTag<TTag>(TTag tag) where TTag : class =>
-            throw new NotSupportedException("FallbackTagContainer should not be modified");
+            main.AddTag(tag);
     }
 
     public static class FallbackTagContainerExtensions
