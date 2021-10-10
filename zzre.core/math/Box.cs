@@ -217,5 +217,25 @@ namespace zzre
             yield return new Triangle(corners[4], corners[5], corners[0]);
             yield return new Triangle(corners[0], corners[5], corners[1]);
         }
+
+        public IEnumerable<Line> Edges() => Edges(Quaternion.Identity);
+        public IEnumerable<Line> Edges(Quaternion q)
+        {
+            var corners = Corners(q);
+            yield return new Line(corners[0], corners[1]);
+            yield return new Line(corners[0], corners[2]);
+            yield return new Line(corners[3], corners[1]);
+            yield return new Line(corners[3], corners[2]);
+
+            yield return new Line(corners[4], corners[5]);
+            yield return new Line(corners[4], corners[6]);
+            yield return new Line(corners[7], corners[5]);
+            yield return new Line(corners[7], corners[6]);
+
+            yield return new Line(corners[0], corners[4]);
+            yield return new Line(corners[1], corners[5]);
+            yield return new Line(corners[2], corners[6]);
+            yield return new Line(corners[3], corners[7]);
+        }
     }
 }

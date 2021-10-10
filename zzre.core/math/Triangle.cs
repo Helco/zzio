@@ -30,6 +30,13 @@ namespace zzre
             yield return C;
         }
 
+        public IEnumerable<Line> Edges()
+        {
+            yield return AB;
+            yield return BC;
+            yield return CA;
+        }
+
         public Vector3 ClosestPoint(Vector3 point)
         {
             var closest = Plane.ClosestPoint(point);

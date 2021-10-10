@@ -40,7 +40,7 @@ namespace zzre.tools
         private readonly OpenFileModal openFileModal;
         private readonly ModelMaterialEdit modelMaterialEdit;
         private readonly DebugBoxLineRenderer boundsRenderer;
-        private readonly DebugTriangleLineRenderer rayRenderer;
+        private readonly DebugLineRenderer rayRenderer;
         private readonly DebugPlaneRenderer planeRenderer;
         private readonly DebugHexahedronLineRenderer frustumRenderer;
         private readonly DebugTriangleLineRenderer triangleRenderer;
@@ -138,8 +138,7 @@ namespace zzre.tools
             triangleRenderer.Material.LinkTransformsTo(world: worldTransform);
             AddDisposable(triangleRenderer);
 
-            rayRenderer = new DebugTriangleLineRenderer(diContainer);
-            rayRenderer.Color = IColor.Green;
+            rayRenderer = new DebugLineRenderer(diContainer);
             rayRenderer.Material.LinkTransformsTo(camera);
             rayRenderer.Material.LinkTransformsTo(world: worldTransform);
             AddDisposable(rayRenderer);
@@ -523,27 +522,13 @@ namespace zzre.tools
 
             var ray = new Ray(camera.Location.GlobalPosition, camera.Location.GlobalForward);
             var cast = worldCollider.Cast(ray);
-            var triangles = new List<Triangle>(2)
-            {
-                new Triangle(
-                    ray.Start,
-                    ray.Start,
-                    ray.Start + ray.Direction * (cast?.Distance ?? 100f))
-            };
-            var colors = new List<IColor>(2) { IColor.Green };
+            rayRenderer.Clear();
+            rayRenderer.Add(IColor.Green, ray.Start, ray.Start + ray.Direction * (cast?.Distance ?? 100f));
             if (cast.HasValue)
             {
-                triangles.Add(worldCollider.LastTriangle);
-                triangles.Add(new Triangle(
-                    cast.Value.Point,
-                    cast.Value.Point,
-                    cast.Value.Point + cast.Value.Normal * 0.2f
-                ));
-                colors.Add(IColor.Green);
-                colors.Add(new IColor(255, 0, 255, 255));
+                rayRenderer.Add(IColor.Green, worldCollider.LastTriangle.Edges());
+                rayRenderer.Add(new IColor(255, 0, 255, 255), cast.Value.Point, cast.Value.Point + cast.Value.Normal * 0.2f);
             }
-            rayRenderer.Triangles = triangles.ToArray();
-            rayRenderer.Colors = colors.ToArray();
             fbArea.IsDirty = true;
         }
 
@@ -554,13 +539,15 @@ namespace zzre.tools
 
             Vector3 center = camera.Location.GlobalPosition;
             IEnumerable<Intersection> intersections;
-            List<(Triangle, IColor)> triangles = new List<(Triangle, IColor)>();
-            switch(intersectionPrimitive)
+            rayRenderer.Clear();
+            switch (intersectionPrimitive)
             {
                 case IntersectionPrimitive.Box:
                     Box box = new Box(center, Vector3.One * intersectionSize);
                     intersections = worldCollider.Intersections(box);
-                    triangles.AddRange(box.Triangles().Select(t => (t, intersections.Any() ? IColor.Red : IColor.Green)));
+                    rayRenderer.Add(
+                        intersections.Any() ? IColor.Red : IColor.Green,
+                        box.Edges());
                     break;
 
                 default: return;
@@ -570,12 +557,10 @@ namespace zzre.tools
             {
                 var p1 = intersection.Point;
                 var p2 = p1 + intersection.Normal * 0.1f;
-                triangles.Add((intersection.Triangle, IColor.Green));
-                triangles.Add((new Triangle(p1, p1, p2), IColor.Blue));
+                rayRenderer.Add(IColor.Green, intersection.Triangle.Edges());
+                rayRenderer.Add(IColor.Blue, p1, p2);
             }
 
-            rayRenderer.Triangles = triangles.Select(t => t.Item1).ToArray();
-            rayRenderer.Colors = triangles.Select(t => t.Item2).ToArray();
             fbArea.IsDirty = true;
         }
     }
