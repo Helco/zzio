@@ -3,9 +3,9 @@ using System.Numerics;
 using DefaultEcs.System;
 using zzre.rendering;
 
-namespace zzre.game
+namespace zzre.game.systems
 {
-    public class BaseCameraSystem : ISystem<float>
+    public class BaseCamera : ISystem<float>
     {
         protected readonly IZanzarahContainer zzContainer;
         protected readonly Camera camera;
@@ -17,24 +17,24 @@ namespace zzre.game
             get => isEnabled;
             set
             {
-                if (world.Has<ActiveCameraSystem>())
+                if (world.Has<components.ActiveCamera>())
                 {
-                    ref readonly var activeCamera = ref world.Get<ActiveCameraSystem>();
+                    ref readonly var activeCamera = ref world.Get<components.ActiveCamera>();
                     if (value)
-                        activeCamera.System.isEnabled = activeCamera.System == this;
+                        activeCamera.system.isEnabled = activeCamera.system == this;
                     else
-                        world.Remove<ActiveCameraSystem>();
+                        world.Remove<components.ActiveCamera>();
                 }
                 else
-                    world.Set(new ActiveCameraSystem(this));
+                    world.Set(new components.ActiveCamera(this));
                 isEnabled = value;
             }
         }
 
-        protected BaseCameraSystem(ITagContainer diContainer)
+        protected BaseCamera(ITagContainer diContainer)
         {
             world = diContainer.GetTag<DefaultEcs.World>();
-            world.SetMaxCapacity<ActiveCameraSystem>(1);
+            world.SetMaxCapacity<components.ActiveCamera>(1);
             zzContainer = diContainer.GetTag<IZanzarahContainer>();
             camera = diContainer.GetTag<Camera>();
         }

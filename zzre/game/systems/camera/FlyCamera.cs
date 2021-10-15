@@ -2,16 +2,16 @@
 using System.Numerics;
 using Veldrid;
 
-namespace zzre.game
+namespace zzre.game.systems
 {
-    public class FlyCameraSystem : BaseCameraSystem
+    public class FlyCamera : BaseCamera
     {
         private const float DefaultSpeed = 10.0f;
 
         private float speed = DefaultSpeed;
         private Vector2 cameraAngle;
 
-        public FlyCameraSystem(ITagContainer diContainer) : base(diContainer)
+        public FlyCamera(ITagContainer diContainer) : base(diContainer)
         {
             zzContainer.OnMouseMove += HandleMouseMove;
         }
