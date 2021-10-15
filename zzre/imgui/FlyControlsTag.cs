@@ -33,9 +33,9 @@ namespace zzre.imgui
             ResetView();
         }
 
-        private void HandleDrag(ImGuiMouseButton button, Vector2 delta)
+        private void HandleDrag(MouseButton button, Vector2 delta)
         {
-            if (button == ImGuiMouseButton.Middle)
+            if (button == MouseButton.Middle)
             {
                 target.LocalPosition +=
                     delta.Y * speed * DragSpeedFactor * target.GlobalUp -
@@ -44,7 +44,7 @@ namespace zzre.imgui
                 return;
             }
 
-            if (button != ImGuiMouseButton.Right)
+            if (button != MouseButton.Right)
                 return;
 
             cameraAngle.Y -= delta.X * 0.01f;

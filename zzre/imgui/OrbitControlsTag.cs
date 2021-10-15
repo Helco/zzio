@@ -60,9 +60,9 @@ namespace zzre.imgui
             locationBuffer.Remove(rotationLocRange);
         }
 
-        private void HandleDrag(ImGuiMouseButton button, Vector2 delta)
+        private void HandleDrag(MouseButton button, Vector2 delta)
         {
-            if (button != ImGuiMouseButton.Right)
+            if (button != MouseButton.Right)
                 return;
 
             cameraAngle -= delta * 0.01f;

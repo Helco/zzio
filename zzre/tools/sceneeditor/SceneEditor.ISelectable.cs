@@ -87,7 +87,7 @@ namespace zzre.tools
                 editor.OnLoadScene += () => editor.Selected = null;
                 editor.OnNewSelection += HandleNewSelection;
                 fbArea.OnRender += HandleRender;
-                mouseEventArea.OnClick += HandleClick;
+                mouseEventArea.OnButtonUp += HandleClick;
             }
 
             protected override void DisposeManaged()
@@ -135,9 +135,9 @@ namespace zzre.tools
 
             private void HandleRender(CommandList cl) => activeBoundsRenderer?.Render(cl);
 
-            private void HandleClick(ImGuiMouseButton button, Vector2 pos)
+            private void HandleClick(MouseButton button, Vector2 pos)
             {
-                if (button != ImGuiMouseButton.Left || ImGuizmo.IsOver() || ImGuizmo.IsUsing())
+                if (button != MouseButton.Left || ImGuizmo.IsOver() || ImGuizmo.IsUsing())
                     return;
 
                 var ray = camera.RayAt((pos * 2f - Vector2.One) * new Vector2(1f, -1f));
