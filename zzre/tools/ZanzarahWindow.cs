@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Numerics;
 using Veldrid;
 using zzre.game;
 using zzre.imgui;
@@ -9,6 +11,30 @@ namespace zzre.tools
     {
         private readonly ITagContainer diContainer;
         private readonly FramebufferArea fbArea;
+        private readonly MouseEventArea mouseArea;
+        private readonly HashSet<Key> keysDown = new HashSet<Key>();
+        private readonly HashSet<MouseButton> buttonsDown = new HashSet<MouseButton>();
+        private Action<Vector2>? onMouseMove;
+        private bool moveCamWithDrag;
+
+        private bool MoveCamWithDrag
+        {
+            get => moveCamWithDrag;
+            set
+            {
+                moveCamWithDrag = value;
+                if (value)
+                {
+                    mouseArea.OnMove -= InvokeMouseMove;
+                    mouseArea.OnDrag += HandleMouseDrag;
+                }
+                else
+                {
+                    mouseArea.OnMove += InvokeMouseMove;
+                    mouseArea.OnDrag -= HandleMouseDrag;
+                }
+            }
+        }
 
         public event Action OnResize
         {
@@ -28,9 +54,29 @@ namespace zzre.tools
             remove => Window.OnKeyUp -= value;
         }
 
+        public event Action<MouseButton, Vector2> OnMouseDown
+        {
+            add => mouseArea.OnButtonDown += value;
+            remove => mouseArea.OnButtonDown -= value;
+        }
+
+        public event Action<MouseButton, Vector2> OnMouseUp
+        {
+            add => mouseArea.OnButtonUp += value;
+            remove => mouseArea.OnButtonUp -= value;
+        }
+
+        public event Action<Vector2> OnMouseMove
+        {
+            add => onMouseMove += value;
+            remove => onMouseMove -= value;
+        }
+
         public Window Window { get; }
         public Zanzarah Zanzarah { get; }
         public Framebuffer Framebuffer => fbArea.Framebuffer;
+        public Vector2 MousePos => mouseArea.MousePosition;
+        public bool IsMouseCaptured { get; set; }
 
         public ZanzarahWindow(ITagContainer diContainer)
         {
@@ -40,18 +86,51 @@ namespace zzre.tools
             Window.InitialBounds = new Rect(float.NaN, float.NaN, 1040, 800); // a bit more to compensate for borders (about)
 
             fbArea = new FramebufferArea(Window, diContainer.GetTag<GraphicsDevice>());
+            mouseArea = new MouseEventArea(Window);
             Zanzarah = new Zanzarah(diContainer, this);
             Window.AddTag(Zanzarah);
+            var menuBar = new MenuBarWindowTag(Window);
+            menuBar.AddCheckbox(
+                "Controls/Move camera by dragging",
+                () => ref moveCamWithDrag,
+                () => MoveCamWithDrag = MoveCamWithDrag);
 
             Window.OnContent += HandleContent;
             fbArea.OnRender += Zanzarah.Render;
+            OnKeyDown += HandleKeyDown;
+            OnKeyUp += HandleKeyUp;
+            OnMouseDown += HandleMouseDown;
+            OnMouseUp += HandleMouseUp;
+
+            MoveCamWithDrag = true;
         }
 
         private void HandleContent()
         {
+            if (!Window.IsFocused)
+            {
+                keysDown.Clear();
+                buttonsDown.Clear();
+            }
             Zanzarah.Update();
             fbArea.IsDirty = true;
+            mouseArea.Content();
             fbArea.Content();
         }
+
+        private void InvokeMouseMove(Vector2 delta) => onMouseMove?.Invoke(delta);
+
+        private void HandleMouseDrag(MouseButton button, Vector2 delta)
+        {
+            if (button == MouseButton.Right)
+                onMouseMove?.Invoke(delta);
+        }
+
+        private void HandleKeyDown(Key key) => keysDown.Add(key);
+        private void HandleKeyUp(Key key) => keysDown.Remove(key);
+        public bool IsKeyDown(Key key) => keysDown.Contains(key);
+        private void HandleMouseDown(MouseButton button, Vector2 _) => buttonsDown.Add(button);
+        private void HandleMouseUp(MouseButton button, Vector2 _) => buttonsDown.Remove(button);
+        public bool IsMouseDown(MouseButton button) => buttonsDown.Contains(button);
     }
 }

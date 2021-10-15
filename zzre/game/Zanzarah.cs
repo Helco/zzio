@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using Veldrid;
 
 namespace zzre.game
@@ -9,9 +10,18 @@ namespace zzre.game
     public interface IZanzarahContainer
     {
         Framebuffer Framebuffer { get; }
+        Vector2 MousePos { get; }
+        bool IsMouseCaptured { get; set; }
+
+        bool IsMouseDown(MouseButton mouseButton);
+        bool IsKeyDown(Key key);
+
         event Action OnResize;
         event Action<Key> OnKeyDown;
         event Action<Key> OnKeyUp;
+        event Action<MouseButton, Vector2> OnMouseDown;
+        event Action<MouseButton, Vector2> OnMouseUp;
+        event Action<Vector2> OnMouseMove;
     }
 
     public class Zanzarah : ITagContainer

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using DefaultEcs.System;
 using Veldrid;
 using zzio.scn;
 using zzio.utils;
@@ -9,7 +10,7 @@ using zzre.rendering;
 
 namespace zzre.game
 {
-    public class Game : ListDisposable, ITagContainer
+    public class Game : BaseDisposable, ITagContainer
     {
         private readonly ITagContainer tagContainer;
         private readonly IZanzarahContainer zzContainer;
@@ -20,6 +21,7 @@ namespace zzre.game
         private readonly Scene scene;
         private readonly WorldBuffers worldBuffers;
         private readonly WorldRenderer worldRenderer;
+        private readonly ISystem<float> allSystems;
 
         public Game(ITagContainer diContainer, string sceneName, int entryId)
         {
@@ -27,8 +29,8 @@ namespace zzre.game
             zzContainer = GetTag<IZanzarahContainer>();
             zzContainer.OnResize += HandleResize;
             time = GetTag<GameTime>();
-            AddTag(ecsWorld = new DefaultEcs.World());
 
+            AddTag(ecsWorld = new DefaultEcs.World());
             AddTag(locationBuffer = new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
             AddTag(camera = new Camera(this));
             AddTag(scene = LoadScene(sceneName));
@@ -36,12 +38,17 @@ namespace zzre.game
             AddTag(worldRenderer = new WorldRenderer(this));
             worldRenderer.WorldBuffers = worldBuffers;
 
+            var flyCameraSystem = new FlyCameraSystem(this);
+            flyCameraSystem.IsEnabled = true;
+            allSystems = new SequentialSystem<float>(flyCameraSystem);
+
             GetTag<Camera>().Location.LocalPosition = -worldBuffers.Origin;
         }
 
         protected override void DisposeManaged()
         {
-            base.DisposeManaged();
+            tagContainer.Dispose();
+            allSystems.Dispose();
             zzContainer.OnResize -= HandleResize;
         }
 
@@ -53,7 +60,7 @@ namespace zzre.game
 
         public void Update()
         {
-            camera.Location.LocalRotation *= Quaternion.CreateFromYawPitchRoll(90f * MathF.PI / 180f * time.Delta, 0f, 0f);
+            allSystems.Update(time.Delta);
             worldRenderer.UpdateVisibility();
         }
 
@@ -81,7 +88,6 @@ namespace zzre.game
             return new WorldBuffers(this, fullPath);
         }
 
-        public void Dispose() => tagContainer.Dispose();
         public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);
         public TTag GetTag<TTag>() where TTag : class => tagContainer.GetTag<TTag>();
         public IEnumerable<TTag> GetTags<TTag>() where TTag : class => tagContainer.GetTags<TTag>();
