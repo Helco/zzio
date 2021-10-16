@@ -26,7 +26,11 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DefaultEcs" Version="0.16.2" />
-    <PackageReference Include="Pfim" Version="0.10.0" />
+    <PackageReference Include="DefaultEcs.Analyzer" Version="0.16.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Pfim" Version="0.10.1" />
     <PackageReference Include="Veldrid" Version="4.8.0" />
     <PackageReference Include="Veldrid.ImageSharp" Version="4.8.0" />
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.14" />

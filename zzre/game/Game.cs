@@ -38,9 +38,17 @@ namespace zzre.game
             AddTag(worldRenderer = new WorldRenderer(this));
             worldRenderer.WorldBuffers = worldBuffers;
 
+            AddTag(new resources.Clump(this));
+            AddTag(new resources.Actor(this));
+            AddTag(new resources.SkeletalAnimation(this));
+
             var flyCameraSystem = new systems.FlyCamera(this);
             flyCameraSystem.IsEnabled = true;
-            allSystems = new SequentialSystem<float>(flyCameraSystem);
+            allSystems = new SequentialSystem<float>(
+                new systems.SyncedLocation(this),
+                new systems.Animal(this),
+                new systems.AdvanceAnimation(this),
+                flyCameraSystem);
 
             GetTag<Camera>().Location.LocalPosition = -worldBuffers.Origin;
 
@@ -69,7 +77,6 @@ namespace zzre.game
         public void Render(CommandList cl)
         {
             ecsWorld.Publish(new messages.Render(cl));
-            locationBuffer.Update(cl);
             camera.Update(cl);
             worldRenderer.Render(cl);
         }

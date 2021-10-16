@@ -5,8 +5,8 @@ namespace zzre.game.components
 {
     public readonly struct SyncedLocation
     {
-        public readonly DeviceBufferRange range;
+        public readonly DeviceBufferRange BufferRange;
 
-        public SyncedLocation(DeviceBufferRange range) => this.range = range;
+        public SyncedLocation(DeviceBufferRange range) => this.BufferRange = range;
     }
 }

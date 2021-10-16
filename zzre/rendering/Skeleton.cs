@@ -9,6 +9,7 @@ namespace zzre
 {
     public partial class Skeleton
     {
+        private bool didResetToBinding = false;
         private BoneAnimator[]? currentAnimators, nextAnimators;
 
         public IReadOnlyList<Matrix4x4> BindingBoneToObject { get; }
@@ -100,9 +101,14 @@ namespace zzre
         {
             if (currentAnimators == null)
             {
-                ResetToBinding();
+                if (!didResetToBinding)
+                {
+                    ResetToBinding();
+                    didResetToBinding = true;
+                }
                 return;
             }
+            didResetToBinding = false;
 
             foreach (var (bone, boneI) in Bones.Indexed())
             {

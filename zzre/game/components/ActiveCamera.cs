@@ -2,8 +2,8 @@
 {
     public readonly struct ActiveCamera
     {
-        public readonly systems.BaseCamera system;
+        public readonly systems.BaseCamera System;
 
-        public ActiveCamera(systems.BaseCamera system) => this.system = system;
+        public ActiveCamera(systems.BaseCamera system) => System = system;
     }
 }

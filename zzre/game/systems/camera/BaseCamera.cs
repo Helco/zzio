@@ -21,7 +21,7 @@ namespace zzre.game.systems
                 {
                     ref readonly var activeCamera = ref world.Get<components.ActiveCamera>();
                     if (value)
-                        activeCamera.system.isEnabled = activeCamera.system == this;
+                        activeCamera.System.isEnabled = activeCamera.System == this;
                     else
                         world.Remove<components.ActiveCamera>();
                 }
