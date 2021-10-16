@@ -56,6 +56,11 @@ namespace zzre.game.systems
                 {
                     entity.Set(ManagedResource<ActorExDescription>.Create(actorFile));
                 }
+
+                switch(type)
+                {
+                    case AnimalType.Butterfly: entity.Set(new components.Butterfly(trigger.ii2, GlobalRandom.Get)); break;
+                }
             }
         }
 

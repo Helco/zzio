@@ -172,7 +172,7 @@ namespace zzre.tools
                 var selected = editor.Selected;
                 var camera = editor.camera;
                 var distance = Math.Max(MinViewDistance, Math.Abs(selected.ViewSize / MathF.Sin(camera.VFoV / 2f)));
-                camera.Location.LocalPosition = selected.Location.GlobalPosition - camera.Location.GlobalForward * distance;
+                camera.Location.LocalPosition = selected.Location.GlobalPosition + camera.Location.GlobalForward * distance;
             }
         }
     }

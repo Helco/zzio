@@ -520,7 +520,7 @@ namespace zzre.tools
             if (worldCollider == null)
                 return;
 
-            var ray = new Ray(camera.Location.GlobalPosition, camera.Location.GlobalForward);
+            var ray = new Ray(camera.Location.GlobalPosition, -camera.Location.GlobalForward);
             var cast = worldCollider.Cast(ray);
             rayRenderer.Clear();
             rayRenderer.Add(IColor.Green, ray.Start, ray.Start + ray.Direction * (cast?.Distance ?? 100f));

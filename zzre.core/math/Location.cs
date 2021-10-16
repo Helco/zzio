@@ -61,7 +61,7 @@ namespace zzre
         public Vector3 GlobalPosition => LocalToWorld.Translation;
         public Quaternion GlobalRotation => (Parent?.GlobalRotation ?? Quaternion.Identity) * LocalRotation;
 
-        public Vector3 GlobalForward => Vector3.Transform(-Vector3.UnitZ, GlobalRotation);
+        public Vector3 GlobalForward => Vector3.Transform(Vector3.UnitZ, GlobalRotation);
         public Vector3 GlobalUp => Vector3.Transform(Vector3.UnitY, GlobalRotation);
         public Vector3 GlobalRight => Vector3.Transform(Vector3.UnitX, GlobalRotation);
     }

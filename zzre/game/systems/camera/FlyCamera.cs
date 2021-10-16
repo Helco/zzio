@@ -39,8 +39,8 @@ namespace zzre.game.systems
             var speedFactor = 1.0f;
             if (zzContainer.IsKeyDown(Key.ShiftLeft)) speedFactor *= 2.0f;
             if (zzContainer.IsKeyDown(Key.ControlLeft)) speedFactor /= 2.0f;
-            if (zzContainer.IsKeyDown(Key.W)) moveDir += target.GlobalForward;
-            if (zzContainer.IsKeyDown(Key.S)) moveDir -= target.GlobalForward;
+            if (zzContainer.IsKeyDown(Key.S)) moveDir += target.GlobalForward;
+            if (zzContainer.IsKeyDown(Key.W)) moveDir -= target.GlobalForward;
             if (zzContainer.IsKeyDown(Key.D)) moveDir += target.GlobalRight;
             if (zzContainer.IsKeyDown(Key.A)) moveDir -= target.GlobalRight;
             if (zzContainer.IsKeyDown(Key.E)) moveDir += target.GlobalUp;

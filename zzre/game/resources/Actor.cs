@@ -47,6 +47,8 @@ namespace zzre.game.resources
                 var wingsParentBone = skeleton.Bones[resource.attachWingsToBone];
                 actorParts.Wings.Value.Set(new Location() { Parent = wingsParentBone });
             }
+
+            entity.Set(actorParts);
         }
 
         private static DefaultEcs.Entity CreateActorPart(DefaultEcs.Entity parent, ActorPartDescription partDescr)
@@ -57,8 +59,6 @@ namespace zzre.game.resources
             part.Set(ManagedResource<zzio.SkeletalAnimation>.Create(partDescr.animations));
             part.Set<components.Visibility>();
             part.Set(new components.ActorPart(parent)); // add *after* resources have been loaded
-
-            part.Get<Skeleton>().JumpToAnimation(part.Get<components.AnimationPool>().First().Value);
             return part;
         }
     }

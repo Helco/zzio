@@ -46,6 +46,7 @@ namespace zzre.game
             flyCameraSystem.IsEnabled = true;
             updateSystems = new SequentialSystem<float>(
                 new systems.Animal(this),
+                new systems.Butterfly(this),
                 new systems.AdvanceAnimation(this),
                 flyCameraSystem);
 

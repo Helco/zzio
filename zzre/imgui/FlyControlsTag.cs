@@ -58,8 +58,8 @@ namespace zzre.imgui
             var speedFactor = 1.0f;
             if (ImGui.IsKeyDown((int)Key.ShiftLeft)) speedFactor *= 2.0f;
             if (ImGui.IsKeyDown((int)Key.ControlLeft)) speedFactor /= 2.0f;
-            if (ImGui.IsKeyDown((int)Key.W)) moveDir += target.GlobalForward;
-            if (ImGui.IsKeyDown((int)Key.S)) moveDir -= target.GlobalForward;
+            if (ImGui.IsKeyDown((int)Key.S)) moveDir += target.GlobalForward;
+            if (ImGui.IsKeyDown((int)Key.W)) moveDir -= target.GlobalForward;
             if (ImGui.IsKeyDown((int)Key.D)) moveDir += target.GlobalRight;
             if (ImGui.IsKeyDown((int)Key.A)) moveDir -= target.GlobalRight;
             if (ImGui.IsKeyDown((int)Key.E)) moveDir += target.GlobalUp;

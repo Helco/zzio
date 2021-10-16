@@ -18,7 +18,6 @@ namespace zzre.game.resources
     public readonly struct ClumpInfo : IEquatable<ClumpInfo>
     {
         private static readonly FilePath BasePath = new FilePath("resources/models/");
-        private static readonly string FileExtension = ".dff";
 
         public readonly ClumpType Type;
         public readonly string Name;
@@ -46,7 +45,7 @@ namespace zzre.game.resources
                 ClumpType.Actor => "actorsex",
                 ClumpType.Backdrop => "backdrops",
                 _ => throw new NotSupportedException($"Unsupported clump type {Type}")
-            }, Name.EndsWith(FileExtension) ? Name : Name + FileExtension);
+            }, Name);
     }
 
     public class Clump : AResourceManager<ClumpInfo, ClumpBuffers>
