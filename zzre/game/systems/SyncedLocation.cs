@@ -5,10 +5,9 @@ using zzre.rendering;
 
 namespace zzre.game.systems
 {
-    public class SyncedLocation : BaseDisposable, ISystem<float>
+    public class SyncedLocation : BaseDisposable, ISystem<CommandList>
     {
         private readonly LocationBuffer locationBuffer;
-        private readonly IDisposable renderSubscription;
         private readonly IDisposable addSubscription;
         private readonly IDisposable removeSubscription;
 
@@ -23,7 +22,6 @@ namespace zzre.game.systems
             diContainer.AddTag(this);
             locationBuffer = diContainer.GetTag<LocationBuffer>();
             var ecsWorld = diContainer.GetTag<DefaultEcs.World>();
-            renderSubscription = ecsWorld.Subscribe<messages.Render>(Render);
             addSubscription = ecsWorld.SubscribeComponentAdded<components.SyncedLocation>(HandleAddedComponent);
             removeSubscription = ecsWorld.SubscribeComponentRemoved<components.SyncedLocation>(HandleRemovedComponent);
         }
@@ -31,14 +29,11 @@ namespace zzre.game.systems
         protected override void DisposeManaged()
         {
             base.DisposeManaged();
-            renderSubscription.Dispose();
             addSubscription.Dispose();
             removeSubscription.Dispose();
         }
 
-        private void Render(in messages.Render message) => locationBuffer.Update(message.CommandList);
-
-        public void Update(float state) { }
+        public void Update(CommandList cl) => locationBuffer.Update(cl);
 
         private void HandleAddedComponent(in DefaultEcs.Entity entity, in components.SyncedLocation value)
         {

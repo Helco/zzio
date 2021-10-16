@@ -13,14 +13,12 @@ namespace zzre.game.systems
         private readonly Scene scene;
         private readonly DefaultEcs.World ecsWorld;
         private readonly IDisposable sceneLoadSubscription;
-        private readonly SyncedLocation syncedLocationSystem;
 
         public Animal(ITagContainer diContainer)
         {
             scene = diContainer.GetTag<Scene>();
             ecsWorld = diContainer.GetTag<DefaultEcs.World>();
             sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
-            syncedLocationSystem = diContainer.GetTag<SyncedLocation>();
         }
 
         protected override void DisposeManaged()
@@ -46,10 +44,11 @@ namespace zzre.game.systems
             {
                 var entity = ecsWorld.CreateEntity();
 
-                entity.Set<components.SyncedLocation>();
-                var location = entity.Get<Location>();
+                var location = new Location();
+                location.Parent = ecsWorld.Get<Location>();
                 location.LocalPosition = trigger.pos.ToNumerics();
                 location.LocalRotation = trigger.dir.ToNumericsRotation();
+                entity.Set(location);
 
                 var type = (AnimalType)trigger.ii1;
                 var actorFile = ChooseActorFile(type);

@@ -16,12 +16,12 @@ namespace zzre.game
         private readonly IZanzarahContainer zzContainer;
         private readonly GameTime time;
         private readonly DefaultEcs.World ecsWorld;
-        private readonly LocationBuffer locationBuffer;
         private readonly Camera camera;
         private readonly Scene scene;
         private readonly WorldBuffers worldBuffers;
         private readonly WorldRenderer worldRenderer;
-        private readonly ISystem<float> allSystems;
+        private readonly ISystem<float> updateSystems;
+        private readonly ISystem<CommandList> renderSystems;
 
         public Game(ITagContainer diContainer, string sceneName, int entryId)
         {
@@ -31,7 +31,7 @@ namespace zzre.game
             time = GetTag<GameTime>();
 
             AddTag(ecsWorld = new DefaultEcs.World());
-            AddTag(locationBuffer = new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
+            AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
             AddTag(camera = new Camera(this));
             AddTag(scene = LoadScene(sceneName));
             AddTag(worldBuffers = LoadWorldBuffers());
@@ -44,21 +44,28 @@ namespace zzre.game
 
             var flyCameraSystem = new systems.FlyCamera(this);
             flyCameraSystem.IsEnabled = true;
-            allSystems = new SequentialSystem<float>(
-                new systems.SyncedLocation(this),
+            updateSystems = new SequentialSystem<float>(
                 new systems.Animal(this),
                 new systems.AdvanceAnimation(this),
                 flyCameraSystem);
 
-            GetTag<Camera>().Location.LocalPosition = -worldBuffers.Origin;
+            renderSystems = new SequentialSystem<CommandList>(
+                new systems.SyncedLocation(this),
+                new systems.ActorRenderer(this));
+
+            var worldLocation = new Location();
+            ecsWorld.Set(worldLocation);
+            camera.Location.Parent = worldLocation;
+            camera.Location.LocalPosition = -worldBuffers.Origin;
 
             ecsWorld.Publish(new messages.SceneLoaded(entryId));
         }
 
         protected override void DisposeManaged()
         {
+            updateSystems.Dispose();
+            renderSystems.Dispose();
             tagContainer.Dispose();
-            allSystems.Dispose();
             zzContainer.OnResize -= HandleResize;
         }
 
@@ -70,14 +77,14 @@ namespace zzre.game
 
         public void Update()
         {
-            allSystems.Update(time.Delta);
+            updateSystems.Update(time.Delta);
             worldRenderer.UpdateVisibility();
         }
 
         public void Render(CommandList cl)
         {
-            ecsWorld.Publish(new messages.Render(cl));
             camera.Update(cl);
+            renderSystems.Update(cl);
             worldRenderer.Render(cl);
         }
 

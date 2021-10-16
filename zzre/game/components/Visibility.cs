@@ -2,7 +2,6 @@
 {
     public enum Visibility : byte
     {
-        Visible,
-        NotVisible
+        Visible
     }
 }

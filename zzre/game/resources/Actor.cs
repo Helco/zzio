@@ -17,6 +17,7 @@ namespace zzre.game.resources
         public Actor(ITagContainer diContainer)
         {
             resourcePool = diContainer.GetTag<IResourcePool>();
+            Manage(diContainer.GetTag<DefaultEcs.World>());
         }
 
         protected override ActorExDescription Load(string info)
@@ -38,7 +39,7 @@ namespace zzre.game.resources
                     ? CreateActorPart(entity, resource.wings)
                     : null
             };
-            actorParts.Body.Set(new Location() { Parent = entity.Get<Location>() });
+            actorParts.Body.Get<Location>().Parent = entity.Get<Location>();
 
             if (actorParts.Wings.HasValue)
             {
@@ -52,15 +53,12 @@ namespace zzre.game.resources
         {
             var part = parent.World.CreateEntity();
             part.Set<components.SyncedLocation>();
-            part.Set(new components.ActorPart(parent));
-            part.Set(ManagedResource<ClumpBuffers>.Create(partDescr.model));
-            part.Set(ManagedResource<SkeletalAnimation>.Create(partDescr.animations));
+            part.Set(ManagedResource<ClumpBuffers>.Create(ClumpInfo.Actor(partDescr.model)));
+            part.Set(ManagedResource<zzio.SkeletalAnimation>.Create(partDescr.animations));
             part.Set<components.Visibility>();
-            part.Set(ManagedResource<materials.ModelStandardMaterial>.Create(part
-                .Get<ClumpBuffers>()
-                .SubMeshes
-                .Select(sm => sm.Material)
-                .ToArray()));
+            part.Set(new components.ActorPart(parent)); // add *after* resources have been loaded
+
+            part.Get<Skeleton>().JumpToAnimation(part.Get<components.AnimationPool>().First().Value);
             return part;
         }
     }
