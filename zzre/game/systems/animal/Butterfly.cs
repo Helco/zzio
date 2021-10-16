@@ -16,6 +16,12 @@ namespace zzre.game.systems
             addDisposable = World.SubscribeComponentAdded<components.Butterfly>(HandleAddedComponent);
         }
 
+        public override void Dispose()
+        {
+            base.Dispose();
+            addDisposable.Dispose();
+        }
+
         private void HandleAddedComponent(in Entity entity, in components.Butterfly value)
         {
             var body = entity.Get<components.ActorParts>().Body;
