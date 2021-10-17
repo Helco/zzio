@@ -23,6 +23,8 @@ namespace zzre.game
         private readonly ISystem<float> updateSystems;
         private readonly ISystem<CommandList> renderSystems;
 
+        public DefaultEcs.Entity PlayerEntity { get; }
+
         public Game(ITagContainer diContainer, string sceneName, int entryId)
         {
             tagContainer = new TagContainer().FallbackTo(diContainer);
@@ -30,11 +32,13 @@ namespace zzre.game
             zzContainer.OnResize += HandleResize;
             time = GetTag<GameTime>();
 
+            AddTag(this);
             AddTag(ecsWorld = new DefaultEcs.World());
             AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
             AddTag(camera = new Camera(this));
             AddTag(scene = LoadScene(sceneName));
             AddTag(worldBuffers = LoadWorldBuffers());
+            AddTag(new WorldCollider(worldBuffers.RWWorld));
             AddTag(worldRenderer = new WorldRenderer(this));
             worldRenderer.WorldBuffers = worldBuffers;
 
@@ -48,6 +52,7 @@ namespace zzre.game
                 new systems.Animal(this),
                 new systems.Butterfly(this),
                 new systems.CirclingBird(this),
+                new systems.AnimalWaypointAI(this),
                 new systems.AdvanceAnimation(this),
                 flyCameraSystem);
 
@@ -59,6 +64,11 @@ namespace zzre.game
             ecsWorld.Set(worldLocation);
             camera.Location.Parent = worldLocation;
             camera.Location.LocalPosition = -worldBuffers.Origin;
+
+            PlayerEntity = ecsWorld.CreateEntity();
+            var playerLocation = new Location();
+            playerLocation.Parent = worldLocation;
+            PlayerEntity.Set(playerLocation);
 
             ecsWorld.Publish(new messages.SceneLoaded(entryId));
         }

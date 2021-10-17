@@ -42,9 +42,12 @@ namespace zzre
 
         public Raycast? Cast(Ray ray, float maxLength)
         {
-            var coarse = ray.Cast(Box);
-            if (coarse == null || coarse.Value.Distance > maxLength)
-                return null;
+            if (!Box.Intersects(ray.Start))
+            {
+                var coarse = ray.Cast(Box);
+                if (coarse == null || coarse.Value.Distance > maxLength)
+                    return null;
+            }
 
             return RaycastSection(rootSection, ray, minDist: 0f, maxLength, prevHit: null);
         }

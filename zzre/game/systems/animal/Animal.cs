@@ -6,6 +6,8 @@ using DefaultEcs.System;
 using zzio;
 using zzio.scn;
 
+using AnimalWaypointAIConfig = zzre.game.components.AnimalWaypointAI.Configuration;
+
 namespace zzre.game.systems
 {
     public class Animal : BaseDisposable, ISystem<float>
@@ -63,8 +65,32 @@ namespace zzre.game.systems
 
                 switch(type)
                 {
-                    case AnimalType.Butterfly: entity.Set(new components.Butterfly(trigger.ii2, GlobalRandom.Get)); break;
-                    case AnimalType.CirclingBird: entity.Set<components.CirclingBird>(); break;
+                    case AnimalType.Butterfly:
+                        entity.Set(new components.Butterfly(trigger.ii2, GlobalRandom.Get));
+                        break;
+                    case AnimalType.Dragonfly:
+                        entity.Set(new components.AnimalWaypointAI(AnimalWaypointAIConfig.Dragonfly));
+                        break;
+                    case AnimalType.Frog:
+                        entity.Set(new components.AnimalWaypointAI(AnimalWaypointAIConfig.Frog));
+                        break;
+                    case AnimalType.CirclingBird: entity.Set<components.CirclingBird>();
+                        break;
+                    case AnimalType.Firefly:
+                        entity.Set(new components.AnimalWaypointAI(AnimalWaypointAIConfig.Firefly));
+                        break;
+                    case AnimalType.Bug:
+                        entity.Set(new components.AnimalWaypointAI(AnimalWaypointAIConfig.Bug));
+                        break;
+                    case AnimalType.Rabbit:
+                        entity.Set(new components.AnimalWaypointAI(AnimalWaypointAIConfig.Rabbit));
+                        break;
+                    case AnimalType.Chicken:
+                        entity.Set(new components.AnimalWaypointAI(AnimalWaypointAIConfig.Chicken));
+                        break;
+                    case AnimalType.BlackPixie:
+                        entity.Set(new components.AnimalWaypointAI(AnimalWaypointAIConfig.BlackPixie));
+                        break;
                 }
             }
         }
@@ -77,7 +103,7 @@ namespace zzre.game.systems
             AnimalType.PooledBird => ChooseBetween("a003sa02", "a005sa04"),
             AnimalType.Frog => "a004sa03",
             AnimalType.CirclingBird => "a005sa04",
-            AnimalType.Bug => ChooseBetween("a006a05", "a007sa06"),
+            AnimalType.Bug => ChooseBetween("a006sa05", "a007sa06"),
             AnimalType.Rabbit => "a008sa07",
             AnimalType.Chicken => ChooseBetween("a020sa20", "a021sa20"),
             AnimalType.BlackPixie => "u010s10m",

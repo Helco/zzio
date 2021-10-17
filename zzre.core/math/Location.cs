@@ -69,11 +69,10 @@ namespace zzre
         public Vector3 InnerRight => Vector3.Transform(Vector3.UnitX, LocalRotation);
 
         public void LookIn(Vector3 dir, bool isLocalSpace = false) =>
-            LocalRotation = NumericsExtensions.LookAt(dir, FrontFor(isLocalSpace), UpFor(isLocalSpace));
+            LocalRotation = NumericsExtensions.LookIn(dir, UpFor(isLocalSpace));
         public void LookAt(Vector3 dest, bool isLocalSpace = false) =>
-            LocalRotation = NumericsExtensions.LookAt(isLocalSpace ? LocalPosition : GlobalPosition, dest, FrontFor(isLocalSpace), UpFor(isLocalSpace));
+            LocalRotation = NumericsExtensions.LookAt(isLocalSpace ? LocalPosition : GlobalPosition, dest, UpFor(isLocalSpace));
 
-        private Vector3 FrontFor(bool isLocalSpace) => isLocalSpace || Parent == null ? Vector3.UnitZ : Parent.GlobalForward;
         private Vector3 UpFor(bool isLocalSpace) => isLocalSpace || Parent == null ? Vector3.UnitY : Parent.GlobalUp;
     }
 }

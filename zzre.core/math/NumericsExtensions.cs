@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using zzio.primitives;
 using Quaternion = System.Numerics.Quaternion;
@@ -33,20 +35,20 @@ namespace zzre
             return euler;
         }
 
-        // from https://stackoverflow.com/questions/12435671/quaternion-lookat-function
-        public static Quaternion LookAt(Vector3 source, Vector3 dest) => LookAt(Vector3.Normalize(dest - source), Vector3.UnitZ, Vector3.UnitY);
-        public static Quaternion LookAt(Vector3 source, Vector3 dest, Vector3 front, Vector3 up) => LookAt(Vector3.Normalize(dest - source), front, up);
-        public static Quaternion LookAt(Vector3 dir) => LookAt(dir, Vector3.UnitZ, Vector3.UnitY);
-        public static Quaternion LookAt(Vector3 dir, Vector3 front, Vector3 up)
+        public static Quaternion LookAt(Vector3 source, Vector3 dest) => LookIn(Vector3.Normalize(dest - source), Vector3.UnitY);
+        public static Quaternion LookAt(Vector3 source, Vector3 dest, Vector3 up) => LookIn(Vector3.Normalize(dest - source), up);
+        public static Quaternion LookIn(Vector3 dir) => LookIn(dir, Vector3.UnitY);
+        public static Quaternion LookIn(Vector3 dir, Vector3 up)
         {
-            var rotAxis = Vector3.Normalize(Vector3.Cross(front, dir));
-            if (MathF.Abs(rotAxis.LengthSquared()) < 0.000001f)
-                rotAxis = up;
-
-            var dot = Vector3.Dot(front, dir);
-            var ang = MathF.Acos(dot);
-
-            return Quaternion.CreateFromAxisAngle(rotAxis, ang);
+            dir = Vector3.Normalize(dir);
+            var right = Vector3.Normalize(Vector3.Cross(up, dir));
+            up = Vector3.Cross(dir, right);
+            var matrix = new Matrix4x4(
+                right.X, right.Y, right.Z, 0f,
+                up.X, up.Y, up.Z, 0f,
+                dir.X, dir.Y, dir.Z, 0f,
+                0f, 0f, 0f, 1f);
+            return Quaternion.CreateFromRotationMatrix(matrix);
         }
 
         public static (Vector3 right, Vector3 up, Vector3 forward) UnitVectors(this Quaternion q) => (
@@ -102,5 +104,9 @@ namespace zzre
 
         public static float In(this Random random, ValueRangeAnimation range) =>
             range.value + random.InLine() * range.width;
+
+        public static T NextOf<T>(this Random random, IReadOnlyList<T> list) => !list.Any()
+            ? throw new ArgumentException("List is empty, cannot get random element")
+            : list[random.Next(list.Count)];
     }
 }

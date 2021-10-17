@@ -8,15 +8,18 @@ namespace zzre
 {
     public partial class Skeleton
     {
-        private class BoneAnimator
+        private struct BoneAnimator
         {
             private readonly AnimationKeyFrame[] frames;
             private readonly float duration;
-            private int currentFrameI = 0;
-            private float time = 0.0f;
+            private readonly bool loop;
+            private int currentFrameI;
+            private float time;
 
             public Quaternion CurRotation { get; private set; }
             public Vector3 CurTranslation { get; private set; }
+
+            public bool IsFinished => Time == duration;
 
             public float Time
             {
@@ -24,27 +27,34 @@ namespace zzre
                 set
                 {
                     time = value;
-                    NormalizeTime();
+                    NormalizeLoopTime();
                     UpdatePose();
                 }
             }
 
-            public BoneAnimator(AnimationKeyFrame[] frames, float duration)
+            public BoneAnimator(AnimationKeyFrame[] frames, float duration, bool loop)
             {
                 this.frames = frames;
                 this.duration = duration;
+                this.loop = loop;
                 currentFrameI = 0;
+                time = 0f;
+                CurRotation = Quaternion.Identity;
+                CurTranslation = Vector3.Zero;
                 UpdatePose();
             }
 
             public void AddTime(float delta)
             {
                 time += delta;
-                NormalizeTime();
+                if (loop)
+                    NormalizeLoopTime();
+                else
+                    time = Math.Clamp(time, 0f, duration);
                 UpdatePose();
             }
 
-            private void NormalizeTime()
+            private void NormalizeLoopTime()
             {
                 while (time >= duration)
                     time -= duration;
@@ -56,9 +66,9 @@ namespace zzre
             {
                 if (frames[currentFrameI].time > time)
                     currentFrameI = 0;
-                while (frames[currentFrameI].time <= time && currentFrameI < frames.Length)
+                while (currentFrameI < frames.Length && frames[currentFrameI].time <= time)
                     currentFrameI++;
-                int nextFrameI = currentFrameI;
+                int nextFrameI = currentFrameI % frames.Length;
                 currentFrameI = (currentFrameI + frames.Length - 1) % frames.Length;
 
                 float nextFrameTime = nextFrameI > 0
