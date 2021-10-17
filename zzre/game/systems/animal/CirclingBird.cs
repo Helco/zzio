@@ -26,7 +26,7 @@ namespace zzre.game.systems
             var trigger = entity.Get<zzio.scn.Trigger>();
             entity.Set(new components.CirclingBird()
             {
-                Center = location.LocalPosition + location.GlobalForward * (trigger.ii2 * 0.01f),
+                Center = location.LocalPosition + location.InnerForward * (trigger.ii2 * 0.01f),
                 Speed = unchecked((int)trigger.ii3) * 0.001f
             });
         }

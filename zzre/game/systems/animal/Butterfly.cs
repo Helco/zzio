@@ -26,7 +26,7 @@ namespace zzre.game.systems
             }
 
             location.LocalRotation *= Quaternion.CreateFromAxisAngle(Vector3.UnitY, angleDelta * butterfly.RotateDir);
-            location.LocalPosition += location.GlobalForward * butterfly.Speed * elapsedTime;
+            location.LocalPosition += location.InnerForward * butterfly.Speed * elapsedTime;
         }
     }
 }
