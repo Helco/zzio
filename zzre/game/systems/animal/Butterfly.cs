@@ -9,24 +9,8 @@ namespace zzre.game.systems
     {
         private const float AngleSpeed = 40f * MathF.PI / 180f;
 
-        private readonly IDisposable addDisposable;
-
         public Butterfly(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
         {
-            addDisposable = World.SubscribeComponentAdded<components.Butterfly>(HandleAddedComponent);
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            addDisposable.Dispose();
-        }
-
-        private void HandleAddedComponent(in Entity entity, in components.Butterfly value)
-        {
-            var body = entity.Get<components.ActorParts>().Body;
-            body.Get<Skeleton>().JumpToAnimation(
-                body.Get<components.AnimationPool>()[zzio.AnimationType.Idle0]);
         }
 
         [Update]

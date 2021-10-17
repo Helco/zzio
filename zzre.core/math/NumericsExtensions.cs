@@ -33,6 +33,22 @@ namespace zzre
             return euler;
         }
 
+        // from https://stackoverflow.com/questions/12435671/quaternion-lookat-function
+        public static Quaternion LookAt(Vector3 source, Vector3 dest) => LookAt(Vector3.Normalize(dest - source), Vector3.UnitZ, Vector3.UnitY);
+        public static Quaternion LookAt(Vector3 source, Vector3 dest, Vector3 front, Vector3 up) => LookAt(Vector3.Normalize(dest - source), front, up);
+        public static Quaternion LookAt(Vector3 dir) => LookAt(dir, Vector3.UnitZ, Vector3.UnitY);
+        public static Quaternion LookAt(Vector3 dir, Vector3 front, Vector3 up)
+        {
+            var rotAxis = Vector3.Normalize(Vector3.Cross(front, dir));
+            if (MathF.Abs(rotAxis.LengthSquared()) < 0.000001f)
+                rotAxis = up;
+
+            var dot = Vector3.Dot(front, dir);
+            var ang = MathF.Acos(dot);
+
+            return Quaternion.CreateFromAxisAngle(rotAxis, ang);
+        }
+
         public static (Vector3 right, Vector3 up, Vector3 forward) UnitVectors(this Quaternion q) => (
             Vector3.Transform(Vector3.UnitX, q),
             Vector3.Transform(Vector3.UnitY, q),

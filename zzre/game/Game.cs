@@ -47,6 +47,7 @@ namespace zzre.game
             updateSystems = new SequentialSystem<float>(
                 new systems.Animal(this),
                 new systems.Butterfly(this),
+                new systems.CirclingBird(this),
                 new systems.AdvanceAnimation(this),
                 flyCameraSystem);
 

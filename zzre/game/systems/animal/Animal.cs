@@ -43,6 +43,7 @@ namespace zzre.game.systems
                     t.ii1 != (uint)AnimalType.Unused))
             {
                 var entity = ecsWorld.CreateEntity();
+                entity.Set(trigger);
 
                 var location = new Location();
                 location.Parent = ecsWorld.Get<Location>();
@@ -55,11 +56,15 @@ namespace zzre.game.systems
                 if (actorFile != null)
                 {
                     entity.Set(ManagedResource<ActorExDescription>.Create(actorFile));
+                    var body = entity.Get<components.ActorParts>().Body;
+                    body.Get<Skeleton>().JumpToAnimation(
+                        body.Get<components.AnimationPool>()[AnimationType.Idle0]);
                 }
 
                 switch(type)
                 {
                     case AnimalType.Butterfly: entity.Set(new components.Butterfly(trigger.ii2, GlobalRandom.Get)); break;
+                    case AnimalType.CirclingBird: entity.Set<components.CirclingBird>(); break;
                 }
             }
         }
