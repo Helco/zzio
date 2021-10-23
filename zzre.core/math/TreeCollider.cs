@@ -33,9 +33,12 @@ namespace zzre
         public Raycast? Cast(Ray ray, float maxLength)
         {
             var coarse = ray.Cast(Box);
-            return coarse == null
+            var result = coarse == null
                 ? null 
                 : RaycastNode(splitI: 0, ray, minDist: 0f, maxLength);
+            if (result != null && result.Value.Distance > maxLength)
+                return null;
+            return result;
         }
 
         private Raycast? RaycastNode(int splitI, Ray ray, float minDist, float maxDist)

@@ -50,10 +50,10 @@ namespace zzre.tools
                 EnumCombo("Scene Type", ref dataset.sceneType);
                 InputText("Name UID", ref nameUID, 8);
                 InputInt("Unk1", ref unk1);
-                Checkbox("Unk2", ref dataset.unk2);
+                Checkbox("Unk2", ref dataset.isInterior);
                 Checkbox("Is London", ref dataset.isLondon);
                 InputInt("Unk4", ref unk4);
-                Checkbox("Unk5", ref dataset.unk5);
+                Checkbox("Unk5", ref dataset.isHotScene);
                 Checkbox("Unk6", ref dataset.unk6);
                 InputText("S1", ref dataset.s1, 256);
                 InputText("S2", ref dataset.s2, 256);
