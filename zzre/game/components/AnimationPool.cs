@@ -31,8 +31,7 @@ namespace zzre.game.components
         {
             if (animations == null)
                 throw new InvalidOperationException("Invalid animation pool cannot be modified");
-            if (animations[(int)type] != null)
-                throw new InvalidOperationException($"Animation pool already contains an animation {type}");
+            // Here was a check to see whether animations were overridden, but the original chr01.aed would not load...
             animations[(int)type] = animation;
         }
 

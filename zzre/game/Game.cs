@@ -49,11 +49,13 @@ namespace zzre.game
             var flyCameraSystem = new systems.FlyCamera(this);
             flyCameraSystem.IsEnabled = true;
             updateSystems = new SequentialSystem<float>(
+                new systems.PlayerControls(this),
                 new systems.Animal(this),
                 new systems.Butterfly(this),
                 new systems.CirclingBird(this),
                 new systems.AnimalWaypointAI(this),
                 new systems.AdvanceAnimation(this),
+                new systems.HumanPhysics(this),
                 flyCameraSystem);
 
             renderSystems = new SequentialSystem<CommandList>(
@@ -68,7 +70,16 @@ namespace zzre.game
             PlayerEntity = ecsWorld.CreateEntity();
             var playerLocation = new Location();
             playerLocation.Parent = worldLocation;
+            playerLocation.LocalPosition = new Vector3(195.02159f, 40.1f, 159.80594f);
             PlayerEntity.Set(playerLocation);
+            PlayerEntity.Set(DefaultEcs.Resource.ManagedResource<zzio.ActorExDescription>.Create("chr01"));
+            PlayerEntity.Set(components.Visibility.Visible);
+            PlayerEntity.Set<components.PlayerControls>();
+            PlayerEntity.Set(components.PhysicParameters.Standard);
+            var playerActorParts = PlayerEntity.Get<components.ActorParts>();
+            var playerBodyClump = playerActorParts.Body.Get<ClumpBuffers>();
+            var playerColliderSize = playerBodyClump.Bounds.Size.Y;
+            PlayerEntity.Set(new components.HumanPhysics(playerColliderSize));
 
             ecsWorld.Publish(new messages.SceneLoaded(entryId));
         }

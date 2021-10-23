@@ -23,9 +23,9 @@ namespace zzio.scn
         public SceneType sceneType;
         public uint nameUID;
         public ushort unk1;
-        public bool unk2, isLondon;
+        public bool isInterior, isLondon;
         public uint unk4;
-        public bool unk5, unk6;
+        public bool isHotScene, unk6;
         public string s1 = "", s2 = "";
 
         public void Read(Stream stream)
@@ -39,11 +39,11 @@ namespace zzio.scn
             nameUID = reader.ReadUInt32();
             unk1 = reader.ReadUInt16();
             reader.ReadUInt16(); // padding
-            unk2 = reader.ReadUInt32() != 0;
+            isInterior = reader.ReadUInt32() != 0;
             isLondon = reader.ReadByte() != 0;
             reader.ReadBytes(3); // padding
             unk4 = reader.ReadUInt32();
-            unk5 = reader.ReadUInt32() != 0;
+            isHotScene = reader.ReadUInt32() != 0;
             if (dataSize > 0x20)
                 unk6 = reader.ReadUInt32() != 0;
             else
@@ -61,12 +61,12 @@ namespace zzio.scn
             writer.Write(nameUID);
             writer.Write(unk1);
             writer.Write((UInt16)0); // padding
-            writer.Write((uint)(unk2 ? 1 : 0));
+            writer.Write((uint)(isInterior ? 1 : 0));
             writer.Write(isLondon);
             writer.Write((UInt16)0); // padding
             writer.Write((byte)0);
             writer.Write(unk4);
-            writer.Write((uint)(unk5 ? 1 : 0));
+            writer.Write((uint)(isHotScene ? 1 : 0));
             writer.Write((uint)(unk6 ? 1 : 0));
             writer.WriteZString(s1);
             writer.WriteZString(s2);
