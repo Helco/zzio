@@ -31,6 +31,8 @@ jobs:
       uses: github/codeql-action/init@v1
       with:
         languages: csharp
+        config-file: ./zzio/.github/codeql-config.yml
+        source-root: zzio
     - name: Install dependencies
       run: dotnet restore
     - name: Build
