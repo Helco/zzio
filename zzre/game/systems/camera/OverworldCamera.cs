@@ -6,7 +6,7 @@ namespace zzre.game.systems
 {
     public class OverworldCamera : BaseGameCamera
     {
-        private static readonly Vector2 SpeedFactor = new Vector2(0.1f, 15f);
+        private static readonly Vector2 SpeedFactor = new Vector2(15f, 0.1f);
         private static readonly Vector3 CameraDirectionFactor = new Vector3(1f, 0.2f, 1f);
         private const float HorizontalDeadzone = 0.5f;
         private const float AdditionalHeight = 1f;
@@ -40,17 +40,20 @@ namespace zzre.game.systems
             delta.X = DeadZone(delta.X, HorizontalDeadzone);
             delta = delta * SpeedFactor * elapsedTime;
 
+            playerLocation.LocalRotation *= Quaternion.CreateFromAxisAngle(Vector3.UnitY, delta.X * MathEx.DegToRad);
+
             var (newPos, newDir) = FindTarget(elapsedTime, delta);
             float lerpSpeed = curCamDistance > MinFastLerpDistance
                 ? FastLerpSpeed
                 : SlowLerpSpeed;
+            newDir = -newDir; // cameras point backwards
             Lerp(elapsedTime, lerpSpeed, ref newPos, ref newDir);
 
             if (curCamDistance < NearHeightDistance)
                 newPos.Y += (NearHeightDistance - curCamDistance) * NearHeightFactor;
 
             camera.Location.LocalPosition = newPos;
-            camera.Location.LookIn(-newDir); // cameras point backwards
+            camera.Location.LookIn(newDir);
         }
 
         private (Vector3 pos, Vector3 dir) FindTarget(float elapsedTime, Vector2 delta)
@@ -58,7 +61,7 @@ namespace zzre.game.systems
             var newCamPos = playerLocation.LocalPosition + Vector3.UnitY * AdditionalHeight;
             currentVerAngle = Math.Clamp(currentVerAngle + delta.Y, -MaxVerAngle, +MaxVerAngle);
 
-            var newCamDir = new Vector3(MathF.Cos(currentVerAngle));
+            var newCamDir = new Vector3(MathF.Cos(currentVerAngle)) * playerLocation.InnerForward;
             newCamDir.Y = MathF.Sin(currentVerAngle) + playerLocation.InnerForward.Y;
             newCamDir = Vector3.Normalize(newCamDir);
             newCamPos -= newCamDir * new Vector3(1f, 0.5f, 1f) * maxCameraDistance;
@@ -78,7 +81,7 @@ namespace zzre.game.systems
             if (clipDistance < curCamDistance) // this is framerate dependant
                 curCamDistance -= (curCamDistance - clipDistance) * ForwardFraction;
 
-            newCamPos = playerLocation.LocalPosition + Vector3.UnitY * ClipDistance;
+            newCamPos = playerLocation.LocalPosition + Vector3.UnitY * (ClipDistance + AdditionalHeight);
             newCamPos -= newCamDir * CameraDirectionFactor * curCamDistance;
 
             // TODO: Add water handling for the overworld camera

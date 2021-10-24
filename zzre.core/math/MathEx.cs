@@ -7,6 +7,9 @@ namespace zzre
 {
     public static class MathEx
     {
+        public const float DegToRad = MathF.PI / 180f;
+        public const float RadToDeg = 180f / MathF.PI;
+
         public static bool Cmp(float a, float b) =>
             Math.Abs(a - b) <= float.Epsilon * Math.Max(1f, Math.Max(Math.Abs(a), Math.Abs(b)));
 
