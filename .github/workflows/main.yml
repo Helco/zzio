@@ -21,11 +21,4 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: TODO to Issue
-      uses: alstr/todo-to-issue-action@v1.3-beta
-      with:
-        REPO: ${{ github.repository }}
-        BEFORE: ${{ github.event.before }}
-        SHA: ${{ github.sha }}
-        TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        LABEL: "// TODO"
-        COMMENT_MARKER: "//"
+      uses: alstr/todo-to-issue-action@v4.3
