@@ -106,7 +106,9 @@ namespace zzre.imgui
             MenuBar.Update();
             End();
 
+#if DEBUG
             ShowDemoWindow();
+#endif
             if (nextFocusedWindow != null && !IsMouseDown(ImGuiMouseButton.Left))
             {
                 SetWindowFocus(nextFocusedWindow.Title);
