@@ -24,6 +24,8 @@ namespace zzre.game.systems
 
         private void HandleMouseMove(Vector2 delta)
         {
+            if (!IsEnabled)
+                return;
             cameraAngle.Y -= delta.X * 0.01f;
             cameraAngle.X -= delta.Y * 0.01f;
             while (cameraAngle.Y > MathF.PI) cameraAngle.Y -= 2 * MathF.PI;
@@ -34,6 +36,8 @@ namespace zzre.game.systems
 
         public override void Update(float elapsedTime)
         {
+            if (!IsEnabled)
+                return;
             var target = camera.Location;
             var moveDir = Vector3.Zero;
             var speedFactor = 1.0f;

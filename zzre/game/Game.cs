@@ -47,7 +47,8 @@ namespace zzre.game
             AddTag(new resources.SkeletalAnimation(this));
 
             var flyCameraSystem = new systems.FlyCamera(this);
-            flyCameraSystem.IsEnabled = true;
+            var owCameraSystem = new systems.OverworldCamera(this);
+            owCameraSystem.IsEnabled = true;
             updateSystems = new SequentialSystem<float>(
                 new systems.PlayerControls(this),
                 new systems.Animal(this),
@@ -56,7 +57,8 @@ namespace zzre.game
                 new systems.AnimalWaypointAI(this),
                 new systems.AdvanceAnimation(this),
                 new systems.HumanPhysics(this),
-                flyCameraSystem);
+                flyCameraSystem,
+                owCameraSystem);
 
             renderSystems = new SequentialSystem<CommandList>(
                 new systems.SyncedLocation(this),
