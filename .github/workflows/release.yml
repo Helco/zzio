@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version'
+        required: false
+        default: 'indev'
+      prerelease:
+        description: 'Prerelease'
+        required: false
+        default: 'true'
+      draft:
+        description: 'Draft'
+        required: false
+        default: 'false'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - target: 'win-x64'
+            host: 'windows-latest'
+          #- target: 'linux-x64' # Without testing the native cimgui dependency no build for you...
+          #  host: 'ubuntu-latest'
+          #- target: 'osx-x64'
+          #  host: 'ubuntu-latest'
+    runs-on: ${{ matrix.host }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: zzio
+      - uses: actions/checkout@v2
+        with:
+          repository: Helco/zzio-feed
+          path: zzio-feed
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+      - name: Install dependencies
+        run: dotnet restore zzio/zzio.sln -r ${{ matrix.target }} -p:NoWarn=NU1605
+      - name: Build
+        run: |
+          dotnet build zzio/zzio.sln --configuration Release --no-restore
+          dotnet build zzio/zzre/zzre.csproj -c Release --no-restore -r ${{ matrix.target }}
+      - name: Publish
+        run: dotnet publish zzio/zzre/zzre.csproj -f net5.0 -c Release --no-build --self-contained true -r ${{ matrix.target }} -o ./zzre
+      - name: Fixup cimgui dependency
+        run: cp zzio-feed/cimguizmo.dll ./zzre/
+      - name: Create archive
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          filename: zzre-${{ matrix.target }}
+          directory: zzre
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: zzre
+          path: ./zzre/zzre-${{ matrix.target }}.zip
+          if-no-files-found: error
+          retention-days: 1
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: zzio
+      - uses: actions/download-artifact@v2
+      - uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          draft: ${{ github.event.inputs.draft == 'true' }}
+          body_path: 'zzio/.github/notes/prerelease.md'
+          files: ./zzre/*.zip
