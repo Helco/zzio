@@ -57,6 +57,8 @@ namespace zzre.game
                 new systems.AnimalWaypointAI(this),
                 new systems.AdvanceAnimation(this),
                 new systems.HumanPhysics(this),
+                new systems.PlayerPuppet(this),
+                new systems.PuppetActorMovement(this),
                 flyCameraSystem,
                 owCameraSystem);
 
@@ -77,8 +79,10 @@ namespace zzre.game
             PlayerEntity.Set(DefaultEcs.Resource.ManagedResource<zzio.ActorExDescription>.Create("chr01"));
             PlayerEntity.Set(components.Visibility.Visible);
             PlayerEntity.Set<components.PlayerControls>();
+            PlayerEntity.Set<components.PlayerPuppet>();
             PlayerEntity.Set(components.PhysicParameters.Standard);
             var playerActorParts = PlayerEntity.Get<components.ActorParts>();
+            playerActorParts.Body.Set<components.PuppetActorMovement>();
             var playerBodyClump = playerActorParts.Body.Get<ClumpBuffers>();
             var playerColliderSize = playerBodyClump.Bounds.Size.Y;
             PlayerEntity.Set(new components.HumanPhysics(playerColliderSize));
