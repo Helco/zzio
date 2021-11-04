@@ -59,6 +59,7 @@ namespace zzre.game
                 new systems.HumanPhysics(this),
                 new systems.PlayerPuppet(this),
                 new systems.PuppetActorMovement(this),
+                new systems.NonFairyAnimation(this),
                 flyCameraSystem,
                 owCameraSystem);
 
@@ -81,6 +82,7 @@ namespace zzre.game
             PlayerEntity.Set<components.PlayerControls>();
             PlayerEntity.Set<components.PlayerPuppet>();
             PlayerEntity.Set(components.PhysicParameters.Standard);
+            PlayerEntity.Set(new components.NonFairyAnimation(GlobalRandom.Get));
             var playerActorParts = PlayerEntity.Get<components.ActorParts>();
             playerActorParts.Body.Set<components.PuppetActorMovement>();
             var playerBodyClump = playerActorParts.Body.Get<ClumpBuffers>();
