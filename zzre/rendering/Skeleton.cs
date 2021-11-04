@@ -137,6 +137,8 @@ namespace zzre
                 blendTime += delta;
                 if (blendTime >= blendDuration)
                     SwapNextToCurrent();
+                else
+                    nextBlendWeight = blendTime / blendDuration;
             }
 
             foreach (var (bone, boneI) in Bones.Indexed())
