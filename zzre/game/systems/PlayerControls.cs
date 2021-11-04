@@ -7,10 +7,10 @@ namespace zzre.game.systems
 {
     public class PlayerControls : AComponentSystem<float, components.PlayerControls>
     {
-        private const Key ForwardKey = Key.Y;
-        private const Key BackwardKey = Key.H;
-        private const Key LeftKey = Key.G;
-        private const Key RightKey = Key.J;
+        private const Key ForwardKey = Key.W;
+        private const Key BackwardKey = Key.S;
+        private const Key LeftKey = Key.A;
+        private const Key RightKey = Key.D;
         private const Key JumpKey = Key.Space;
         private readonly IZanzarahContainer zzContainer;
         private components.PlayerControls nextControls;
