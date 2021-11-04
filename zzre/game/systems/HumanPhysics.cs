@@ -60,6 +60,7 @@ namespace zzre.game.systems
             float quarterColliderSize = state.ColliderSize * 0.25f;
             Collision collision = default;
             state.HitCeiling = state.HitFloor = false;
+            state.State = AnimationState.Idle;
 
             var stepCount = state.Velocity.Length() / (quarterColliderSize * quarterColliderSize) + 1;
             var elapsedStepTime = elapsedTime / stepCount;
@@ -129,7 +130,10 @@ namespace zzre.game.systems
             var collider = new Sphere(newPos, colliderRadius);
 
             // TODO: Add player<->model collision
-            var worldIntersections = worldCollider.Intersections(collider);
+            var velocity = state.Velocity;
+            var worldIntersections = worldCollider
+                .Intersections(collider)
+                .Where(i => Vector3.Dot(velocity, i.Normal) < 0f);
             if (!worldIntersections.Any())
                 return newPos - colliderOffset * Vector3.UnitY;
             collision = new Collision(worldIntersections
@@ -144,8 +148,7 @@ namespace zzre.game.systems
                 collision.dirToPlayer.Y = Math.Max(0f, collision.dirToPlayer.Y);
             }
             collision.dirToPlayer = Vector3.Normalize(collision.dirToPlayer);
-            if (collision.dirToPlayer.Y > parameters.MinFloorYDir)
-                state.HitFloor = true;
+            state.HitFloor |= collision.dirToPlayer.Y > parameters.MinFloorYDir;
 
             if (parameters.PreserveVelocityAtCollision)
             {

@@ -32,13 +32,14 @@ namespace zzre.game.systems
             float elapsedTime,
             ref components.PlayerPuppet puppet,
             ref components.HumanPhysics physics,
+            ref components.NonFairyAnimation animation,
             in components.ActorParts actorParts)
         {
             if (physics.IsDrowning)
                 Console.WriteLine("Player died of drowning"); // TODO: Add player death caused by drowning
 
-            Animation(elapsedTime, ref puppet, physics);
-            Falling(elapsedTime, ref puppet, physics);
+            Animation(elapsedTime, ref puppet, physics, ref animation);
+            Falling(elapsedTime, ref puppet, physics, ref animation);
             // TODO: Add player idle behavior (voice and horizontal velocity)
             // TODO: Add NPC comfort zone
             ActorTargetDirection(physics, actorParts);
@@ -47,7 +48,8 @@ namespace zzre.game.systems
         private void Animation(
             float elapsedTime,
             ref components.PlayerPuppet puppet,
-            in components.HumanPhysics physics)
+            in components.HumanPhysics physics,
+            ref components.NonFairyAnimation animation)
         {
             var newAnimation = physics.State switch
             {
@@ -60,17 +62,17 @@ namespace zzre.game.systems
             };
             if (newAnimation != zzio.AnimationType.Fall)
             {
-                puppet.NextAnimation = newAnimation;
+                animation.Next = newAnimation;
                 puppet.FallAnimationTimer = 0f;
                 return;
             }
-            if (puppet.NextAnimation == zzio.AnimationType.Jump)
+            if (animation.Next == zzio.AnimationType.Jump)
                 return;
 
             puppet.FallAnimationTimer += elapsedTime;
             if (puppet.FallAnimationTimer >= MinFallAnimationTime)
             {
-                puppet.NextAnimation = newAnimation;
+                animation.Next = newAnimation;
                 puppet.FallAnimationTimer = 0f;
             }
         }
@@ -78,7 +80,8 @@ namespace zzre.game.systems
         private void Falling(
             float elapsedTime,
             ref components.PlayerPuppet puppet,
-            in components.HumanPhysics physics)
+            in components.HumanPhysics physics,
+            ref components.NonFairyAnimation animation)
         {
             float prevFallTimer = puppet.FallTimer; // as hitting the floor resets the timer
             if (physics.State == AnimationState.Fall)
@@ -108,7 +111,7 @@ namespace zzre.game.systems
             }
             else
             {
-                puppet.NextAnimation = zzio.AnimationType.ThudGround;
+                animation.Next = zzio.AnimationType.ThudGround;
                 lockControlsFor = BigControlLockTime;
                 voiceSample = GlobalRandom.Get.NextFloat() switch
                 {
