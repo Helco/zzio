@@ -2,7 +2,6 @@
 using System.Numerics;
 using DefaultEcs;
 using DefaultEcs.System;
-using zzre.game.messages;
 
 namespace zzre.game.systems
 {
@@ -33,7 +32,7 @@ namespace zzre.game.systems
             myLocation.Parent = parentLocation.Parent; // to prevent parent moving this actor
         }
 
-        private void HandleSceneLoaded(in SceneLoaded message)
+        private void HandleSceneLoaded(in messages.SceneLoaded message)
         {
             foreach (var entity in Set.GetEntities())
             {
@@ -70,7 +69,7 @@ namespace zzre.game.systems
             if (angleDelta < -MathF.PI)
                 angleDelta += 2 * MathF.PI;
             if (angleDelta > MathF.PI)
-                angleDelta -= 2 + MathF.PI;
+                angleDelta -= 2 * MathF.PI;
             var newAngle = (1f - 1f / MathF.Pow(curvature, time)) * angleDelta + fromAngle;
 
             return new Vector3(

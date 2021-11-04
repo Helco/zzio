@@ -15,7 +15,7 @@ namespace zzre.game.systems
         private const float SmallControlLockTime = 0.1f;
         private const float BigControlLockTime = 0.4f;
         private const float MinFallAnimationTime = 0.3f;
-        private const float CameraForwardYFactor = 0.7f;
+        private const float CameraForwardYFactor = -0.7f;
         private const string ThudVoiceSampleBase = "resources/AUDIO/SFX/VOICES/AMY/THD00";
         private const string ThudVoiceSample1 = ThudVoiceSampleBase + "A.WAV";
         private const string ThudVoiceSample2 = ThudVoiceSampleBase + "B.WAV";
