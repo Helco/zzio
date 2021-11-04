@@ -37,7 +37,7 @@ namespace zzre.game.systems
 
         protected override void Update(float elapsedTime, Vector2 delta)
         {
-            delta.X = DeadZone(delta.X, HorizontalDeadzone);
+            delta.X = -DeadZone(delta.X, HorizontalDeadzone);
             delta = delta * SpeedFactor * elapsedTime;
 
             playerLocation.LocalRotation *= Quaternion.CreateFromAxisAngle(Vector3.UnitY, delta.X * MathEx.DegToRad);
