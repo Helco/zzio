@@ -60,21 +60,10 @@ namespace zzre.game.systems
                 AnimationState.Fall => zzio.AnimationType.Fall,
                 _ => throw new NotSupportedException($"Unimplemented animation for physics state {physics.State}")
             };
-            if (newAnimation != zzio.AnimationType.Fall)
-            {
-                animation.Next = newAnimation;
-                puppet.FallAnimationTimer = 0f;
-                return;
-            }
-            if (animation.Next == zzio.AnimationType.Jump)
-                return;
 
-            puppet.FallAnimationTimer += elapsedTime;
-            if (puppet.FallAnimationTimer >= MinFallAnimationTime)
-            {
+            // there was a timer for the fall rotation originally, but it seems to also have been overridden
+            if (newAnimation != zzio.AnimationType.Fall || animation.Next == zzio.AnimationType.Jump)
                 animation.Next = newAnimation;
-                puppet.FallAnimationTimer = 0f;
-            }
         }
 
         private void Falling(
