@@ -53,8 +53,8 @@ namespace zzre.game.systems
             var oldPos = camera.Location.LocalPosition;
             var oldDir = camera.Location.InnerForward;
 
-            newPos = Vector3.Lerp(oldPos, newPos, MathF.Pow(lerpSpeed, elapsedTime));
-            newDir = Vector3.Lerp(oldDir, newDir, MathF.Pow(lerpSpeed * DirectionLerpSpeedFactor, elapsedTime));
+            newPos = Vector3.Lerp(newPos, oldPos, MathF.Pow(lerpSpeed, elapsedTime));
+            newDir = Vector3.Lerp(newDir, oldDir, MathF.Pow(lerpSpeed * DirectionLerpSpeedFactor, elapsedTime));
             newDir = Vector3.Normalize(newDir);
         }
     }
