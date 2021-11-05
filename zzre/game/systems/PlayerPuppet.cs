@@ -40,7 +40,7 @@ namespace zzre.game.systems
 
             Animation(elapsedTime, ref puppet, physics, ref animation);
             Falling(elapsedTime, ref puppet, physics, ref animation);
-            // TODO: Add player idle behavior (voice and horizontal velocity)
+            Idling(elapsedTime, ref puppet, ref physics);
             // TODO: Add NPC comfort zone
             ActorTargetDirection(physics, actorParts);
         }
@@ -115,6 +115,24 @@ namespace zzre.game.systems
             // TODO: Add force footstep sound for falls
             Console.WriteLine($"Player fell, cannot move for {lockControlsFor} and says {voiceSample}");
             puppet.DidResetPlanarVelocity = true; // but why?
+        }
+
+        private void Idling(
+            float elapsedTime,
+            ref components.PlayerPuppet puppet,
+            ref components.HumanPhysics physics)
+        {
+            if (physics.State != AnimationState.Idle)
+            {
+                puppet.DidResetPlanarVelocity = false;
+                return;
+            }
+
+            if (!puppet.DidResetPlanarVelocity)
+            {
+                puppet.DidResetPlanarVelocity = true;
+                physics.Velocity *= Vector3.UnitY;
+            }
         }
 
         private void ActorTargetDirection(
