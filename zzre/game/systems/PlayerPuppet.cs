@@ -40,7 +40,7 @@ namespace zzre.game.systems
 
             Animation(elapsedTime, ref puppet, physics, ref animation);
             Falling(elapsedTime, ref puppet, physics, ref animation);
-            Idling(elapsedTime, ref puppet, ref physics);
+            Idling(ref puppet, ref physics);
             // TODO: Add NPC comfort zone
             ActorTargetDirection(physics, actorParts);
         }
@@ -118,7 +118,6 @@ namespace zzre.game.systems
         }
 
         private void Idling(
-            float elapsedTime,
             ref components.PlayerPuppet puppet,
             ref components.HumanPhysics physics)
         {
