@@ -211,7 +211,7 @@ namespace zzre.game.systems
             in components.PhysicParameters parameters,
             ref components.HumanPhysics state)
         {
-            state.State = AnimationState.Walk;
+            state.State = AnimationState.Run;
             var controlAngle = Vector3.Dot(state.Velocity, axis);
             if (Math.Abs(controlAngle) < parameters.MaxSideControlAngle)
                 mainVelocity -= axis * elapsedStepTime * parameters.SpeedSide * state.SpeedModifier;
