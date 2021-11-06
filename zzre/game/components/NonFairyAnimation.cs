@@ -16,6 +16,6 @@ namespace zzre.game.components
             CanUseAlternativeIdles = false;
         }
 
-        public static float RandomStartTimer(Random random) => random.NextFloat() * 5000f + 0.2f;
+        public static float RandomStartTimer(Random random) => random.NextFloat() * 5f + 0.0002f;
     }
 }

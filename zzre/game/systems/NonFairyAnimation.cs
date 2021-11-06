@@ -7,6 +7,9 @@ namespace zzre.game.systems
 {
     public partial class NonFairyAnimation : AEntitySetSystem<float>
     {
+        private const float SmithCycleDuration = 1.2f;
+        private const float AltIdleCycleDuration = 6f;
+
         public NonFairyAnimation(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
         {
         }
@@ -22,18 +25,48 @@ namespace zzre.game.systems
 
             animation.Timer += elapsedTime;
             if (animation.Next == animation.Current)
-                Maintain(elapsedTime, bodySkeleton, pool, ref animation);
+                Maintain(bodySkeleton, pool, ref animation);
             else
                 Switch(bodySkeleton, pool, ref animation);
         }
 
         private void Maintain(
-            float elapsedTime,
             Skeleton bodySkeleton,
             in components.AnimationPool pool,
             ref components.NonFairyAnimation animation)
         {
+            switch(animation.Current)
+            {
+                case zzio.AnimationType.Idle0 when
+                    animation.CanUseAlternativeIdles &&
+                    animation.Timer > AltIdleCycleDuration:
+                    var attemptAni = GlobalRandom.Get.NextSign() <= 0
+                        ? zzio.AnimationType.Idle2
+                        : zzio.AnimationType.Idle1;
+                    if (pool.Contains(attemptAni))
+                        animation.Next = attemptAni;
+                    break;
 
+                case zzio.AnimationType.Smith when animation.Timer > SmithCycleDuration:
+                    animation.Timer = 0f;
+                    // TODO: Play sound effect on smithing animation
+                    bodySkeleton.BlendToAnimation(pool[zzio.AnimationType.Smith], 0f, loop: false);
+                    break;
+
+                case zzio.AnimationType.ThudGround when bodySkeleton.CurrentAnimation == null:
+                    animation.Next = zzio.AnimationType.Idle0;
+                    break;
+
+                case zzio.AnimationType.Talk0 when bodySkeleton.CurrentAnimation == null:
+                    bodySkeleton.BlendToAnimation(pool[zzio.AnimationType.Idle0], 0.2f, loop: true);
+                    break;
+
+                case zzio.AnimationType.Idle1 when bodySkeleton.CurrentAnimation == null:
+                case zzio.AnimationType.Idle2 when bodySkeleton.CurrentAnimation == null:
+                    animation.Timer = components.NonFairyAnimation.RandomStartTimer(GlobalRandom.Get);
+                    bodySkeleton.BlendToAnimation(pool[zzio.AnimationType.Idle0], 0.2f, loop: true);
+                    break;
+            }
         }
 
         private void Switch(
