@@ -1,3 +1,0 @@
-name: "Custom CodeQL Config"
-queries:
-  - uses: ./zzio/.github/codeql-queries.qls

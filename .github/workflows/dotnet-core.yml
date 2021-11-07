@@ -73,7 +73,6 @@ jobs:
       uses: github/codeql-action/init@v1
       with:
         languages: csharp
-        config-file: ./zzio/.github/codeql-config.yml
         source-root: zzio
     - name: Build projects to scan
       run: | # Currently zzmaps depends on zzre -> zzre.core -> zzio (all projects to scan)
