@@ -11,10 +11,8 @@ defaults:
     working-directory: ./zzio
 
 jobs:
-  build:
-
+  Release:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
       with:
@@ -27,17 +25,58 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v1
-      with:
-        languages: csharp
-        config-file: ./zzio/.github/codeql-config.yml
-        source-root: zzio
     - name: Install dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-restore --verbosity normal
+  Debug:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        path: zzio
+    - uses: actions/checkout@v2
+      with:
+        repository: Helco/zzio-feed
+        path: zzio-feed
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --configuration Debug --no-restore
+    - name: Test
+      run: dotnet test --no-restore --verbosity normal
+  CodeQL:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        path: zzio
+    - uses: actions/checkout@v2
+      with:
+        repository: Helco/zzio-feed
+        path: zzio-feed
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build dependencies
+      run: dotnet build Veldrid.ImGui/Veldrid.ImGui.csproj --configuration Release --no-restore
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v1
+      with:
+        languages: csharp
+        config-file: ./zzio/.github/codeql-config.yml
+        source-root: zzio
+    - name: Build projects to scan
+      run: | # Currently zzmaps depends on zzre -> zzre.core -> zzio (all projects to scan)
+        dotnet build zzmaps/zzmaps.csproj --configuration Release --no-restore
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
