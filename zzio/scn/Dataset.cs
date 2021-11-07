@@ -30,7 +30,7 @@ namespace zzio.scn
 
         public void Read(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             UInt32 dataSize = reader.ReadUInt32();
             if (dataSize != 0x20 && dataSize != 0x24)
                 throw new InvalidDataException("Unknown size for dataset structure");
@@ -54,7 +54,7 @@ namespace zzio.scn
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(0x24);
             writer.Write(sceneId);
             writer.Write((int)sceneType);

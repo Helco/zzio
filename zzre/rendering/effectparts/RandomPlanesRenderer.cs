@@ -54,7 +54,7 @@ namespace zzre.rendering.effectparts
             material.Sampler.Value = SamplerAddressMode.Clamp.AsDescription(SamplerFilter.MinLinear_MagLinear_MipLinear);
             AddDisposable(material);
 
-            planes = new RandomPlane[(int)(data.planeLife * data.spawnRate * 0.001f)];
+            planes = new RandomPlane[(int)(data.planeLife * data.spawnRate / 1000)];
             quadRange = quadMeshBuffer.Reserve(planes.Length);
             tileTexCoords = EffectPartUtility.GetTileUV(data.tileW, data.tileH, data.tileId, data.tileCount);
 

@@ -30,7 +30,7 @@ namespace zzio.tests.utils
         public void ReadZString()
         {
             MemoryStream stream = new MemoryStream(expectedZString, false);
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             Assert.AreEqual("Hello World!", reader.ReadZString());
         }
         
@@ -38,7 +38,7 @@ namespace zzio.tests.utils
         public void WriteZString()
         {
             MemoryStream stream = new MemoryStream();
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             writer.WriteZString("Hello World!");
             Assert.AreEqual(expectedZString, stream.ToArray());
         }
@@ -47,7 +47,7 @@ namespace zzio.tests.utils
         public void ReadSizedString()
         {
             MemoryStream stream = new MemoryStream(testCString, false);
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             Assert.AreEqual("TestOh no", reader.ReadSizedString((int)stream.Length));
         }
 
@@ -55,7 +55,7 @@ namespace zzio.tests.utils
         public void ReadSizedCString()
         {
             MemoryStream stream = new MemoryStream(testCString, false);
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             Assert.AreEqual("Test", reader.ReadSizedCString((int)stream.Length));
             Assert.AreEqual(stream.Position, stream.Length);
         }

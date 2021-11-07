@@ -7,7 +7,7 @@ namespace zzre
 {
     public class ResettableLazy<T> : BaseDisposable where T : class
     {
-        private readonly bool isThreadSafe;
+        private readonly object? locker;
         private readonly Func<T> creator;
         private T? value;
 
@@ -15,9 +15,9 @@ namespace zzre
         {
             get
             {
-                if (isThreadSafe)
+                if (locker != null)
                 {
-                    lock (this)
+                    lock (locker)
                     {
                         if (value == null)
                             value = creator();
@@ -34,15 +34,15 @@ namespace zzre
         public ResettableLazy(Func<T> creator, T? initialValue = null, bool isThreadSafe = false)
         {
             this.creator = creator;
-            this.isThreadSafe = isThreadSafe;
+            locker = isThreadSafe ? new object() : null;
             value = initialValue;
         }
 
         public void Reset()
         {
-            if (isThreadSafe)
+            if (locker != null)
             {
-                lock (this)
+                lock (locker)
                 {
                     value = null;
                 }
@@ -58,7 +58,7 @@ namespace zzre
 
     public class ResettableLazyValue<T> : BaseDisposable where T : struct
     {
-        private readonly bool isThreadSafe;
+        private readonly object? locker;
         private readonly Func<T> creator;
         private T? value;
 
@@ -66,9 +66,9 @@ namespace zzre
         {
             get
             {
-                if (isThreadSafe)
+                if (locker != null)
                 {
-                    lock (this)
+                    lock (locker)
                     {
                         if (!value.HasValue)
                             value = creator();
@@ -85,15 +85,15 @@ namespace zzre
         public ResettableLazyValue(Func<T> creator, T? initialValue = null, bool isThreadSafe = false)
         {
             this.creator = creator;
-            this.isThreadSafe = isThreadSafe;
+            locker = isThreadSafe ? new object() : null;
             value = initialValue;
         }
 
         public void Reset()
         {
-            if (isThreadSafe)
+            if (locker != null)
             {
-                lock (this)
+                lock (locker)
                 {
                     value = null;
                 }

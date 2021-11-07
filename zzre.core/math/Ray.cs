@@ -151,21 +151,6 @@ namespace zzre
                 ? cast : null;
         }
 
-        public Raycast? PointOfExit(Box box, Raycast hit)
-        {
-            if (box.Intersects(Start))
-                return null;
-
-            var inner = new Ray(hit.Point + Direction * box.HalfSize.MinComponent(), Direction);
-            var exit = box.Planes()
-                .Select(Cast)
-                .OrderBy(h => h?.Distance ?? float.MaxValue)
-                .First();
-            if (exit.HasValue)
-                exit = new Raycast(exit.Value.Distance + hit.Distance + box.HalfSize.MinComponent(), exit.Value.Point, exit.Value.Normal);
-            return exit;
-        }
-
         public bool Intersects(Box box) => Cast(box) != null;
         public bool Intersects(OrientedBox box) => Cast(box) != null;
         public bool Intersects(Sphere sphere) => Cast(sphere) != null;

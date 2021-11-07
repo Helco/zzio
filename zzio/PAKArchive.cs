@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using zzio.utils;
-using System.Reflection.PortableExecutable;
 
 namespace zzio
 {
@@ -49,7 +49,7 @@ namespace zzio
             if (!baseStream.CanRead || !baseStream.CanSeek)
                 throw new InvalidDataException("PAKArchive stream has to be readable and seekable");
             PAKArchive archive = new PAKArchive(baseStream);
-            BinaryReader reader = new BinaryReader(baseStream);
+            using BinaryReader reader = new BinaryReader(baseStream, Encoding.UTF8, leaveOpen: true);
             if (reader.ReadUInt32() != 0)
                 throw new InvalidDataException("Invalid PAKArchive magic (has to be 0x00000000)");
 

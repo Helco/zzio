@@ -72,7 +72,7 @@ INSERT OR REPLACE INTO SceneMeta VALUES (?, ?)");
                     block = ((MemoryStream)tile.Stream).ToArray();
                 else
                 {
-                    var memory = new MemoryStream((int)tile.Stream.Length);
+                    using var memory = new MemoryStream((int)tile.Stream.Length);
                     tile.Stream.CopyTo(memory);
                     block = memory.ToArray();
                 }

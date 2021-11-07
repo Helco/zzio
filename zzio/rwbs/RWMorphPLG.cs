@@ -15,13 +15,13 @@ namespace zzio.rwbs
 
         protected override void readBody(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             morphTargetIndex = reader.ReadUInt32();
         }
 
         protected override void writeBody(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(morphTargetIndex);
         }
     }

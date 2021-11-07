@@ -57,7 +57,7 @@ namespace zzio
             byte[] buffer = new byte[stream.Length - stream.Position];
             if (stream.Read(buffer, 0, buffer.Length) != buffer.Length)
                 throw new InvalidDataException("Could not read VarConfig buffer");
-            BinaryReader reader = new BinaryReader(new MemoryStream(buffer, false));
+            using BinaryReader reader = new BinaryReader(new MemoryStream(buffer, false));
 
             byte[] expectedChecksum = reader.ReadBytes(16);
             config.header = reader.ReadBytes(3);
@@ -86,18 +86,20 @@ namespace zzio
             long startPosition = stream.Position;
             stream.Seek(16, SeekOrigin.Current);
 
-            BinaryWriter writer = new BinaryWriter(stream);
-            writer.Write(header);
-            firstValue.Write(writer);
+            using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
+            {
+                writer.Write(header);
+                firstValue.Write(writer);
+            }
 
             MD5 md5 = MD5.Create();
             CryptoStream hashStream = new CryptoStream(stream, md5, CryptoStreamMode.Write);
-            writer = new BinaryWriter(hashStream);
-            foreach (KeyValuePair<string, VarConfigValue> pair in variables)
-            {
-                WriteEncryptedString(writer, pair.Key);
-                pair.Value.Write(writer);
-            }
+            using (var writer = new BinaryWriter(hashStream, Encoding.UTF8, leaveOpen: true))
+                foreach (KeyValuePair<string, VarConfigValue> pair in variables)
+                {
+                    WriteEncryptedString(writer, pair.Key);
+                    pair.Value.Write(writer);
+                }
 
             hashStream.FlushFinalBlock();
             stream.Seek(startPosition, SeekOrigin.Begin);

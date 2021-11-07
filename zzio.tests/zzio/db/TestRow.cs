@@ -35,7 +35,7 @@ namespace zzio.tests.db
         public void read()
         {
             MemoryStream stream = new MemoryStream(rowBytes, false);
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             Row row = new Row();
             row.Read(reader);
             testRow(row);
@@ -53,7 +53,7 @@ namespace zzio.tests.db
                 new Cell(new byte[] { 0xc0, 0xff, 0xee }, 3)
             };
             MemoryStream stream = new MemoryStream();
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             row.Write(writer);
             Assert.AreEqual(rowBytes, stream.ToArray());
         }

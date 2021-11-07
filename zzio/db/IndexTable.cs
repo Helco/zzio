@@ -15,7 +15,7 @@ namespace zzio.db
 
         public void Read(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             UInt32 columnCount = reader.ReadUInt32();
             columnNumbers = new UInt32[columnCount];
             columnNames = new string[columnCount];
@@ -28,7 +28,7 @@ namespace zzio.db
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(ColumnCount);
             for (int i = 0; i < ColumnCount; i++)
             {

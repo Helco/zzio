@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using System.Collections.Generic;
 using System.Text;
+using System.Collections.Generic;
 using zzio.utils;
 using System.Linq;
 
@@ -43,7 +43,7 @@ namespace zzio.rwbs
 
         public static void ReadHead(Stream stream, out SectionId sectionId, out UInt32 size, out UInt32 version)
         {
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
             sectionId = EnumUtils.intToEnum<SectionId>(reader.ReadInt32());
             size = reader.ReadUInt32();
             version = reader.ReadUInt32();
@@ -75,7 +75,7 @@ namespace zzio.rwbs
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
             writer.Write((Int32)sectionId);
             long sectionSizePos = stream.Position;
             writer.Write((UInt32)0);
@@ -91,12 +91,9 @@ namespace zzio.rwbs
 
         public static Section ReadNew(Stream stream, ListSection? parent = null)
         {
-            SectionId sectionId;
-            UInt32 size, version;
             long oldPosition = stream.Position;
-            ReadHead(stream, out sectionId, out size, out version);
+            ReadHead(stream, out var sectionId, out var size, out _);
             stream.Seek(oldPosition, SeekOrigin.Begin);
-            long afterPosition = oldPosition + 12 + size;
 
             Section section = CreateSection(sectionId);
             section.parent = parent;

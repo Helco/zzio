@@ -21,7 +21,7 @@ namespace zzre.debug
         public bool IsDirty
         {
             get => isDirty;
-            set => isDirty = true; // intentionally ignoring value
+            set => isDirty = value;
         }
 
         public DebugIcon[] Icons

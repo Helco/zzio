@@ -15,7 +15,7 @@ namespace zzio.db
         public void Read(Stream stream)
         {
             rows.Clear();
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             UInt32 rowCount = reader.ReadUInt32();
             for (UInt32 i = 0; i < rowCount; i++)
             {
@@ -27,7 +27,7 @@ namespace zzio.db
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(rows.Count);
             foreach (Row row in rows.Values)
                 row.Write(writer);

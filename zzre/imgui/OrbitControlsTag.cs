@@ -42,7 +42,6 @@ namespace zzre.imgui
         {
             window.AddTag(this);
             this.target = target;
-            var device = diContainer.GetTag<GraphicsDevice>();
             fbArea = window.GetTag<FramebufferArea>();
             mouseArea = window.GetTag<MouseEventArea>();
             mouseArea.OnDrag += HandleDrag;

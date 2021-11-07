@@ -20,7 +20,7 @@ namespace zzio.scn
 
         public void Read(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             worldFile = reader.ReadZString();
             worldPath = reader.ReadZString();
             texturePath = reader.ReadZString();
@@ -45,7 +45,7 @@ namespace zzio.scn
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             writer.WriteZString(worldFile);
             writer.WriteZString(worldPath);
             writer.WriteZString(texturePath);

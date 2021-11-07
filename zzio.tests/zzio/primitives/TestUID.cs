@@ -31,7 +31,7 @@ namespace zzio.tests.primitives
         {
             byte[] buffer = new byte[] { 0xef, 0xbe, 0xad, 0xde };
             MemoryStream stream = new MemoryStream(buffer, false);
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             
             UID uid = UID.ReadNew(reader);
             Assert.AreEqual(0xdeadbeef, uid.raw);
@@ -42,7 +42,7 @@ namespace zzio.tests.primitives
         public void write()
         {
             MemoryStream stream = new MemoryStream();
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
 
             UID uid = new UID(0xdeadbeef);
             uid.Write(writer);

@@ -35,7 +35,7 @@ namespace zzio.scn
 
         public void Read(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             idx = reader.ReadUInt32();
             type = EnumUtils.intToEnum<LightType>(reader.ReadInt32());
             color = FColor.ReadNew(reader);
@@ -63,7 +63,7 @@ namespace zzio.scn
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(idx);
             writer.Write((int)type);
             color.Write(writer);

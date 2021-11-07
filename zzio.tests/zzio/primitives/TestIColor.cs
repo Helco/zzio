@@ -23,7 +23,7 @@ namespace zzio.tests.primitives {
         [Test]
         public void read() {
             MemoryStream stream = new MemoryStream(expected, false);
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             IColor color = IColor.ReadNew(reader);
             Assert.AreEqual(0x12, color.r);
             Assert.AreEqual(0x34, color.g);
@@ -34,7 +34,7 @@ namespace zzio.tests.primitives {
         [Test]
         public void write() {
             MemoryStream stream = new MemoryStream();
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             IColor color = new IColor(0x12, 0x34, 0x56, 0x78);
             color.Write(writer);
 

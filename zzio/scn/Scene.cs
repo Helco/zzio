@@ -46,7 +46,7 @@ namespace zzio
             public void Read(Stream stream)
             {
                 bool shouldReadNext = true;
-                BinaryReader reader = new BinaryReader(stream);
+                using BinaryReader reader = new BinaryReader(stream);
                 if (reader.ReadZString() != "[Scenefile]")
                     throw new InvalidDataException("Magic section name missing in scene file");
 
@@ -109,7 +109,7 @@ namespace zzio
 
             public void Write(Stream stream)
             {
-                BinaryWriter writer = new BinaryWriter(stream);
+                using BinaryWriter writer = new BinaryWriter(stream);
                 writer.WriteZString("[Scenefile]");
 
                 // write primitives

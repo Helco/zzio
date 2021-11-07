@@ -56,19 +56,24 @@ namespace zzre
 
         private Texture? TryLoadDDSTexture(IResource resource)
         {
+            Pfim.IImage? TryCreate(Stream stream)
+            {
+                try
+                {
+                    return Pfim.Dds.Create(stream, new Pfim.PfimConfig());
+                }
+                catch(Exception)
+                {
+                    return null;
+                }
+            }
+
             using var textureStream = resource.OpenContent();
             if (textureStream == null)
                 return null;
-
-            Pfim.IImage? image = null;
-            try
-            {
-                image = Pfim.Dds.Create(textureStream, new Pfim.PfimConfig());
-            }
-            catch(Exception)
-            {
+            using var image = TryCreate(textureStream);
+            if (image == null)
                 return null;
-            }
 
             var textureFormat = TryConvertPixelFormat(image.Format);
             if (textureFormat == null)

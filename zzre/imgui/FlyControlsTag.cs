@@ -24,7 +24,6 @@ namespace zzre.imgui
         {
             window.AddTag(this);
             this.target = target;
-            var device = diContainer.GetTag<GraphicsDevice>();
             gameTime = diContainer.GetTag<GameTime>();
             fbArea = window.GetTag<FramebufferArea>();
             mouseArea = window.GetTag<MouseEventArea>();

@@ -45,7 +45,7 @@ namespace zzio
         public static SkeletalAnimation ReadNew(Stream stream)
         {
             SkeletalAnimation anim = new SkeletalAnimation();
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
 
             uint frameCount = reader.ReadUInt32();
             anim.flags = reader.ReadUInt32();
@@ -81,7 +81,7 @@ namespace zzio
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(boneFrames.Sum(frameSet => frameSet.Length));
             writer.Write(flags);
             writer.Write(duration);

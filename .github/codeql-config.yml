@@ -1,3 +1,9 @@
 name: "Custom CodeQL Config"
 queries:
-  - uses: security-and-quality
+  - uses: ./zzio/.github/codeql-queries.qls
+paths-ignore:
+  - '**/*.tests/'
+  - '**/zzio_cli/' # Legacy projects
+  - '**/zzio_dbsqlite/'
+  - '**/zzsc/'
+  - '**/Veldrid.ImGui/' # Forked project

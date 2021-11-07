@@ -67,8 +67,6 @@ namespace zzre.imgui
 
         private void HandleContent()
         {
-            var Invalid = new Vector2(float.NaN, float.NaN);
-
             var selectedName = SelectedResource?.Path.ToPOSIXString() ?? "";
             PushItemWidth(-1.0f);
             InputText("", ref selectedName, 512, ImGuiInputTextFlags.ReadOnly);

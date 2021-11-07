@@ -29,7 +29,7 @@ namespace zzio.utils
         /// <summary>Escapes a string using common escape sequences</summary>
         public static string Escape(string unescaped)
         {
-            StringReader reader = new StringReader(unescaped);
+            using StringReader reader = new StringReader(unescaped);
             StringBuilder writer = new StringBuilder();
             int ch;
 
@@ -71,7 +71,7 @@ namespace zzio.utils
         /// <summary>Unescapes a string using common escape sequences</summary>
         public static string Unescape(string escaped)
         {
-            StringReader reader = new StringReader(escaped);
+            using StringReader reader = new StringReader(escaped);
             StringBuilder writer = new StringBuilder();
             int ch;
 

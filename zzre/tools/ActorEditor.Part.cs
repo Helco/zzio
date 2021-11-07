@@ -213,14 +213,7 @@ namespace zzre.tools
                         foreach (var nextType in selectableTypes)
                         {
                             PushID((int)nextType);
-                            if (Selectable(nextType.ToString(), curType == nextType))
-                            {
-                                // Disabled for now to not actually change anything
-                                /*animations[index].type = nextType;
-                                skeleton.JumpToAnimation(null);
-                                isPlaying = false;
-                                hasChanged = true;*/
-                            }
+                            Selectable(nextType.ToString(), curType == nextType);
                             PopID();
                         }
                         EndCombo();
@@ -233,10 +226,7 @@ namespace zzre.tools
                     InputText("##name", ref nameDummy, 256, ImGuiNET.ImGuiInputTextFlags.ReadOnly);
                     SameLine();
                     PushStyleVar(ImGuiNET.ImGuiStyleVar.Alpha, 0.6f);
-                    if (Button(IconFonts.ForkAwesome.Pencil))
-                    {
-                        // not yet
-                    }
+                    Button(IconFonts.ForkAwesome.Pencil);
                     PopStyleVar();
 
                     NextColumn();

@@ -106,7 +106,7 @@ namespace zzio.tests.db
         private void testCellRead(Cell expected, byte[] sourceBytes)
         {
             MemoryStream stream = new MemoryStream(sourceBytes, false);
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             Cell readCell = Cell.ReadNew(reader);
             Assert.AreEqual(true, expected.Equals(readCell));
         }
@@ -124,7 +124,7 @@ namespace zzio.tests.db
         private void testCellWrite(byte[] expected, Cell sourceCell)
         {
             MemoryStream stream = new MemoryStream();
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             sourceCell.Write(writer);
             Assert.AreEqual(expected, stream.ToArray());
         }

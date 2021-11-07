@@ -14,7 +14,7 @@ namespace zzio.scn
 
         public void Read(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             name = reader.ReadZString();
             index = reader.ReadUInt32();
             type = reader.ReadUInt32();
@@ -22,7 +22,7 @@ namespace zzio.scn
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             writer.WriteZString(name);
             writer.Write(index);
             writer.Write(type);

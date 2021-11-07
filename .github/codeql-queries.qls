@@ -1,0 +1,10 @@
+- description: Security-and-quality queries for C#
+- qlpack: codeql-csharp
+- apply: security-and-quality-selectors.yml
+  from: codeql-suite-helpers
+- exclude:
+    query filename:
+      - CompilerError.ql
+      - ExtractorError.ql
+      - ExtractorMessage.ql
+      - TooManyRefParameters.ql

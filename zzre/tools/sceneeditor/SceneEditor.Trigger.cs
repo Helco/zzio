@@ -61,12 +61,11 @@ namespace zzre.tools
 
             public void Content()
             {
-                bool hasChanged = false;
-                hasChanged |= InputInt("Desc1", ref SceneTrigger.ii1);
-                hasChanged |= InputInt("Desc2", ref SceneTrigger.ii2);
-                hasChanged |= InputInt("Desc3", ref SceneTrigger.ii3);
-                hasChanged |= InputInt("Desc4", ref SceneTrigger.ii4);
-                hasChanged |= InputText("S", ref SceneTrigger.s, 256);
+                InputInt("Desc1", ref SceneTrigger.ii1);
+                InputInt("Desc2", ref SceneTrigger.ii2);
+                InputInt("Desc3", ref SceneTrigger.ii3);
+                InputInt("Desc4", ref SceneTrigger.ii4);
+                InputText("S", ref SceneTrigger.s, 256);
             }
         }
 

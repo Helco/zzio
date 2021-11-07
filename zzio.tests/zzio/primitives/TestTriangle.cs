@@ -26,7 +26,7 @@ namespace zzio.tests.primitives {
         [Test]
         public void read() {
             MemoryStream stream = new MemoryStream(expected, false);
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             Triangle tri = Triangle.ReadNew(reader);
             Assert.AreEqual(30806, tri.v1);
             Assert.AreEqual(48282, tri.v2);
@@ -37,7 +37,7 @@ namespace zzio.tests.primitives {
         [Test]
         public void write() {
             MemoryStream stream = new MemoryStream();
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             Triangle tri = new Triangle(30806, 48282, 61662, 13330);
             tri.Write(writer);
 

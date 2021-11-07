@@ -32,7 +32,7 @@ namespace zzio.rwbs
 
         protected override void writeBody(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write((Int32)SectionId.Struct);
             long sectionSizePos = stream.Position;
             writer.Write((UInt32)0);

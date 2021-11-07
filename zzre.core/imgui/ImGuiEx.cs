@@ -63,9 +63,6 @@ namespace zzre.imgui
             Array.Copy(inputBytes, outputBytes, inputBytes.Length);
             outputBytes[inputBytes.Length] = 0;
 
-            int utf8InputByteCount = Encoding.UTF8.GetByteCount(input);
-            int inputBufSize = Math.Max((int)maxLength + 1, utf8InputByteCount + 1);
-
             byte result = 0;
             fixed (byte* labelBytePtr = labelBytes)
             fixed (byte* hintBytePtr = hintBytes)

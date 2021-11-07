@@ -1,7 +1,6 @@
 using System;
-using System.Text;
 using System.IO;
-using zzio.utils;
+using System.Diagnostics;
 using zzio.primitives;
 
 // This surely needs some reverse engineering work being done...
@@ -10,87 +9,89 @@ namespace zzio.scn
     [Serializable]
     public struct WaypointInnerData
     {
-        public UInt32 iiv2;
-        public UInt32[] data;
+        public uint iiv2;
+        public uint[] data;
     }
 
     [Serializable]
     public struct WaypointData
     {
-        public UInt32 ii1, ii1ext, iiv2;
+        public uint ii1, ii1ext, iiv2;
         public Vector v1;
-        public UInt32[] innerdata1, innerdata2;
-        public UInt32[] inner3data1;
+        public uint[] innerdata1, innerdata2;
+        public uint[] inner3data1;
     }
 
     [Serializable]
     public class WaypointSystem : ISceneSection
     {
-        public UInt32 version;
+        public uint version;
         public byte[] data = new byte[0x18];
         public WaypointData[] waypointData = new WaypointData[0];
         public WaypointInnerData[] inner2data1 = new WaypointInnerData[0];
 
         public void Read(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new BinaryReader(stream);
             version = reader.ReadUInt32();
-            UInt32 mustBeZero = reader.ReadUInt32();
+            uint mustBeZero = reader.ReadUInt32();
+            Debug.Assert(mustBeZero == 0);
 
             if (version >= 5)
                 data = reader.ReadBytes(0x18);
-            UInt32 count1 = reader.ReadUInt32();
+            uint count1 = reader.ReadUInt32();
             WaypointData[] d = new WaypointData[count1];
-            for (UInt32 i = 0; i < count1; i++)
+            for (uint i = 0; i < count1; i++)
             {
                 d[i].ii1 = reader.ReadUInt32();
                 if (version >= 4)
                     d[i].ii1ext = reader.ReadUInt32();
                 d[i].v1 = Vector.ReadNew(reader);
 
-                UInt32 ci1 = reader.ReadUInt32();
-                d[i].innerdata1 = new UInt32[ci1];
-                for (UInt32 j = 0; j < ci1; j++)
+                uint ci1 = reader.ReadUInt32();
+                d[i].innerdata1 = new uint[ci1];
+                for (uint j = 0; j < ci1; j++)
                     d[i].innerdata1[j] = reader.ReadUInt32();
 
-                UInt32 ci2 = reader.ReadUInt32();
-                d[i].innerdata2 = new UInt32[ci2];
-                for (UInt32 j = 0; j < ci2; j++)
+                uint ci2 = reader.ReadUInt32();
+                d[i].innerdata2 = new uint[ci2];
+                for (uint j = 0; j < ci2; j++)
                     d[i].innerdata2[j] = reader.ReadUInt32();
             }
 
             if (version >= 2)
             {
-                UInt32 count2 = reader.ReadUInt32();
+                uint count2 = reader.ReadUInt32();
                 inner2data1 = new WaypointInnerData[count2];
-                for (UInt32 j = 0; j < count2; j++)
+                for (uint j = 0; j < count2; j++)
                 {
                     inner2data1[j].iiv2 = reader.ReadUInt32();
-                    UInt32 ci3 = reader.ReadUInt32();
-                    inner2data1[j].data = new UInt32[ci3];
-                    for (UInt32 k = 0; k < ci3; k++)
+                    uint ci3 = reader.ReadUInt32();
+                    inner2data1[j].data = new uint[ci3];
+                    for (uint k = 0; k < ci3; k++)
                         inner2data1[j].data[k] = reader.ReadUInt32();
                 }
             }
 
             if (version >= 3)
             {
-                for (UInt32 j = 0; j < count1; j++)
+                for (uint j = 0; j < count1; j++)
                 {
-                    UInt32 ci4 = reader.ReadUInt32();
-                    d[j].inner3data1 = new UInt32[ci4];
-                    for (UInt32 k = 0; k < ci4; k++)
+                    uint ci4 = reader.ReadUInt32();
+                    d[j].inner3data1 = new uint[ci4];
+                    for (uint k = 0; k < ci4; k++)
                         d[j].inner3data1[k] = reader.ReadUInt32();
                 }
             }
             waypointData = d;
 
-            UInt32 mustBeFFFF = reader.ReadUInt32();
+            uint mustBeFFFF = reader.ReadUInt32();
+            Debug.Assert(mustBeFFFF == 0xffff);
         }
 
         public void Write(Stream stream)
         {
-            BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(version);
             writer.Write(0);
             if (version >= 5)
