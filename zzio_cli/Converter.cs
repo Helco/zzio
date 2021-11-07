@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
 namespace zzio.cli
@@ -77,8 +76,8 @@ namespace zzio.cli
             }
         }
 
-        private Dictionary<FileType, IConverter> conversions;
-        private ParameterParser args;
+        private readonly Dictionary<FileType, IConverter> conversions;
+        private readonly ParameterParser args;
 
         public ConversionMgr(ParameterParser args)
         {
@@ -94,8 +93,8 @@ namespace zzio.cli
                 foreach (string target in convTypes)
                 {
                     FileType targetType = FileType.Unknown;
-                    if (!Enum.TryParse<FileType>(target as string, true, out targetType))
-                        throw new ParameterException("Unknown target format: \"" + (target as string) + "\"");
+                    if (!Enum.TryParse<FileType>(target, true, out targetType))
+                        throw new ParameterException("Unknown target format: \"" + target + "\"");
                     foreach (FileType type in formats)
                     {
                         IConverter conv = findConverter(type, targetType);

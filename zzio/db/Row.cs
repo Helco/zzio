@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using zzio.primitives;
-using zzio.utils;
 
 namespace zzio.db
 {

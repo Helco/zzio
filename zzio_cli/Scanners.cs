@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
+﻿using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using zzio.utils;
@@ -172,7 +170,7 @@ namespace zzio.cli
 
     public partial class ConversionMgr
     {
-        private static IFileScanner[] scanners =
+        private static readonly IFileScanner[] scanners =
         {
             new ScannerSKA(),
             new ScannerDFF(),

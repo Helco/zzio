@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using zzre.imgui;
-using static ImGuiNET.ImGui;
+﻿using static ImGuiNET.ImGui;
 using static zzre.imgui.ImGuiEx;
 
 namespace zzre.tools
@@ -39,7 +35,7 @@ namespace zzre.tools
                 Text("Dataset");
                 int sceneId = (int)dataset.sceneId;
                 var nameUID = dataset.nameUID.ToString("X8");
-                int unk1 = (int)dataset.unk1;
+                int unk1 = dataset.unk1;
                 int unk4 = (int)dataset.unk4;
                 int v3 = (int)version.v3;
                 int buildVersion = (int)version.buildVersion;

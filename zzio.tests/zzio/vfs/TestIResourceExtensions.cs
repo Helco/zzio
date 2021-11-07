@@ -1,6 +1,4 @@
 ﻿using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using zzio.tests.vfs;
 using zzio.vfs;
 

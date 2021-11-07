@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Numerics;
-using System.Text;
 using Veldrid;
 using zzio;
 using zzio.vfs;
-using zzre.core;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
@@ -38,8 +34,8 @@ namespace zzre.tools
         private ActorExDescription? description;
         private Part? body;
         private Part? wings;
-        private Location actorLocation = new Location();
-        private LocationBuffer locationBuffer;
+        private readonly Location actorLocation = new Location();
+        private readonly LocationBuffer locationBuffer;
         private HeadIKMode headIKMode = HeadIKMode.Disabled;
 
         public Window Window { get; }

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace zzre.core
 {
     public class RelativeOrderItem
     {
-        private List<RelativeOrderItem> predecessors = new List<RelativeOrderItem>();
-        private List<RelativeOrderItem> ancessors = new List<RelativeOrderItem>();
+        private readonly List<RelativeOrderItem> predecessors = new List<RelativeOrderItem>();
+        private readonly List<RelativeOrderItem> ancessors = new List<RelativeOrderItem>();
 
         public IReadOnlyCollection<RelativeOrderItem> Predecessors => predecessors;
         public IReadOnlyCollection<RelativeOrderItem> Ancessors => ancessors;

@@ -53,7 +53,7 @@ namespace zzmaps
                 material.PixelCounter.Buffer = counterBuffer;
                 AddDisposable(material);
                 return material as IMaterial;
-            }).ToList() as IReadOnlyList<IMaterial>;
+            }).ToList()!;
 
             objectMaterials = scene.Objects.Select(obj => obj.ClumpBuffers.SubMeshes.Select(subMesh =>
             {

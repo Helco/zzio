@@ -2,13 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace zzre.core
 {
     public class RelativeOrderSolver<T> : IReadOnlyList<T> where T : notnull
     {
-        private Func<T, RelativeOrderItem> orderOf;
+        private readonly Func<T, RelativeOrderItem> orderOf;
         private List<T> ordering = new List<T>();
 
         public RelativeOrderSolver(Func<T, RelativeOrderItem> orderOf)

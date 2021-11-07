@@ -1,5 +1,4 @@
-﻿using System;
-using zzio.vfs;
+﻿using zzio.vfs;
 using zzre.imgui;
 
 namespace zzre.tools

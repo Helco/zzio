@@ -1,13 +1,13 @@
-using System;
 using System.IO;
 using NUnit.Framework;
 using zzio.primitives;
 
-namespace zzio.tests.primitives {
+namespace zzio.tests.primitives
+{
     [TestFixture]
     public class TestNormal
     {
-        private static byte M123 = unchecked((byte)(sbyte)-123);
+        private static readonly byte M123 = unchecked((byte)-123);
         private static readonly byte[] expected = new byte[] {
             0x12, 0x34, 0x56, M123
         };

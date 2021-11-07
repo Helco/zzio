@@ -10,7 +10,7 @@ namespace zzre.game.systems
         private const float Curvature = 100f;
         private const float SlerpSpeed = 2f;
 
-        private IDisposable addSubscription;
+        private readonly IDisposable addSubscription;
 
         public PuppetActorMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
         {

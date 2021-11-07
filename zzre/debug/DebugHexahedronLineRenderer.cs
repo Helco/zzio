@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Numerics;
 using Veldrid;
 using zzio.primitives;
@@ -14,7 +12,7 @@ namespace zzre
         private readonly DeviceBuffer vertexBuffer;
         private IColor color = IColor.White;
         private bool isDirty = false;
-        private Vector3[] corners = new Vector3[8];
+        private readonly Vector3[] corners = new Vector3[8];
 
         public DebugLinesMaterial Material { get; }
 

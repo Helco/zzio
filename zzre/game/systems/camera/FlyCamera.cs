@@ -8,7 +8,7 @@ namespace zzre.game.systems
     {
         private const float DefaultSpeed = 10.0f;
 
-        private float speed = DefaultSpeed;
+        private readonly float speed = DefaultSpeed;
         private Vector2 cameraAngle;
 
         public FlyCamera(ITagContainer diContainer) : base(diContainer)

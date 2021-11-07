@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using zzio.effect.parts;
-using zzre.imgui;
+﻿using zzio.effect.parts;
 using zzre.rendering.effectparts;
 using static ImGuiNET.ImGui;
 using static zzre.imgui.ImGuiEx;
 
 namespace zzre.tools
 {
-    partial class EffectEditor
+    public partial class EffectEditor
     {
         private void HandlePart(RandomPlanes data, RandomPlanesRenderer ren)
         {

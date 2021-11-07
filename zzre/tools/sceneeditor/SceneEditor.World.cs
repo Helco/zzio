@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Veldrid;
+﻿using Veldrid;
 using zzio.utils;
 using zzre.imgui;
-using zzre.materials;
 using zzre.rendering;
 
 namespace zzre.tools

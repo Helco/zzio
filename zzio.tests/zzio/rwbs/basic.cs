@@ -1,10 +1,8 @@
-using System;
 using System.IO;
-using System.Linq;
 using NUnit.Framework;
 using zzio.rwbs;
 
-namespace zzio.tests.rwbs 
+namespace zzio.tests.rwbs
 {
     [TestFixture]
     public class TestRWBSBasic

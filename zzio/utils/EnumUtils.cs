@@ -1,7 +1,7 @@
 using System;
-using System.Linq;
 
-namespace zzio.utils {
+namespace zzio.utils
+{
     public static class EnumUtils
     {
         public static T intToEnum<T>(int i) where T : struct, IConvertible

@@ -1,10 +1,8 @@
-﻿using ImGuiNET;
-using ImGuizmoNET;
+﻿using ImGuizmoNET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using Veldrid;
 using zzio.primitives;
 using zzre.imgui;
@@ -24,7 +22,7 @@ namespace zzre.tools
             float ViewSize { get; }
         }
 
-        private List<IEnumerable<ISelectable>> selectableContainers = new List<IEnumerable<ISelectable>>();
+        private readonly List<IEnumerable<ISelectable>> selectableContainers = new List<IEnumerable<ISelectable>>();
         private IEnumerable<ISelectable> Selectables => selectableContainers.SelectMany(c => c);
 
         private ISelectable? _selected;

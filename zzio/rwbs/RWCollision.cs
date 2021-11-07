@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using zzio.utils;
-using zzio.primitives;
 using System.IO;
 
 namespace zzio.rwbs

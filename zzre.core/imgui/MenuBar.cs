@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using ImGuiNET;
 using static ImGuiNET.ImGui;
 
 namespace zzre.imgui
@@ -25,7 +23,7 @@ namespace zzre.imgui
             }
         }
 
-        private MenuBarItem RootItem = new MenuBarItem(null, "", null);
+        private readonly MenuBarItem RootItem = new MenuBarItem(null, "", null);
 
         public void AddItem(string path, Action<string> onContent)
         {

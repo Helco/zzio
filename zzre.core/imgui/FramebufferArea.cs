@@ -1,7 +1,5 @@
 ﻿using ImGuiNET;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using Veldrid;
 using static ImGuiNET.ImGui;
@@ -18,9 +16,9 @@ namespace zzre.imgui
         private IntPtr bindingHandle = IntPtr.Zero;
         private Texture targetColor;
         private Texture targetDepth;
-        private CommandList commandList;
-        private Fence fence;
-        private OnceAction onceBeforeContent = new OnceAction();
+        private readonly CommandList commandList;
+        private readonly Fence fence;
+        private readonly OnceAction onceBeforeContent = new OnceAction();
 
         public Framebuffer Framebuffer { get; private set; }
         public RgbaFloat ClearColor { get; set; }

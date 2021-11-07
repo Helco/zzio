@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace zzre.imgui
+﻿namespace zzre.imgui
 {
     public class MenuBarWindowTag : MenuBar
     {

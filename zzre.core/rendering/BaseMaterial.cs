@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Veldrid;
-using zzre.rendering;
 
 namespace zzre.rendering
 {
@@ -53,7 +52,7 @@ namespace zzre.rendering
             }
         }
 
-        private BindingSet[] bindingSets;
+        private readonly BindingSet[] bindingSets;
         public GraphicsDevice Device { get; }
         public IBuiltPipeline Pipeline { get; }
         public IEnumerable<BaseBinding> Bindings => bindingSets.SelectMany(set => set.Bindings);

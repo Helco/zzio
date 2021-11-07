@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Veldrid;
 using Veldrid.SPIRV;
 
@@ -11,8 +9,8 @@ namespace zzre.rendering
 {
     public partial class PipelineCollection
     {
-        private List<Assembly> shaderResourceAssemblies = new List<Assembly>();
-        private Dictionary<string, Shader[]> loadedShaders = new Dictionary<string, Shader[]>();
+        private readonly List<Assembly> shaderResourceAssemblies = new List<Assembly>();
+        private readonly Dictionary<string, Shader[]> loadedShaders = new Dictionary<string, Shader[]>();
 
         public void AddShaderResourceAssemblyOf<T>() => AddShaderResourceAssembly(typeof(T).Assembly);
 

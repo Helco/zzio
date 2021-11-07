@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
 using Veldrid;
 using zzio.primitives;
-using zzre.core;
 using zzre.imgui;
 using zzre.rendering;
 using System.Linq;
@@ -128,7 +126,7 @@ namespace zzre.tools
         }
 
         private static DateTime lastOutput = DateTime.Now;
-        private static Stopwatch stopwatch = new Stopwatch();
+        private static readonly Stopwatch stopwatch = new Stopwatch();
         private static long calls = 0;
 
         private void OnRender()

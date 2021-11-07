@@ -10,7 +10,7 @@ namespace zzio.db
 {
     public class MappedDB
     {
-        private Dictionary<ModuleType, Dictionary<UID, Row>> modules =
+        private readonly Dictionary<ModuleType, Dictionary<UID, Row>> modules =
             new Dictionary<ModuleType, Dictionary<UID, Row>>();
 
         public MappedDB()

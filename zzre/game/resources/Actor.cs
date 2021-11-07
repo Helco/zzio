@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using DefaultEcs.Resource;
+﻿using DefaultEcs.Resource;
 using zzio;
 using zzio.utils;
 using zzio.vfs;

@@ -2,17 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Text;
 using zzio.utils;
 using zzio.vfs;
-using zzre.imgui;
 
 namespace zzre.tools
 {
     public class OpenDocumentSet
     {
         private readonly ITagContainer diContainer;
-        private HashSet<IDocumentEditor> editors = new HashSet<IDocumentEditor>();
+        private readonly HashSet<IDocumentEditor> editors = new HashSet<IDocumentEditor>();
 
         public OpenDocumentSet(ITagContainer diContainer)
         {
@@ -71,7 +69,7 @@ namespace zzre.tools
             return newEditor;
         }
 
-        static Dictionary<Type, Func<ITagContainer, object>> knownConstructors = new Dictionary<Type, Func<ITagContainer, object>>();
+        private static readonly Dictionary<Type, Func<ITagContainer, object>> knownConstructors = new Dictionary<Type, Func<ITagContainer, object>>();
         private static Func<ITagContainer, TEditor> GetConstructorFor<TEditor>() where TEditor : IDocumentEditor
         {
             var type = typeof(TEditor);

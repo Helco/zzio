@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace zzio.effect
+﻿namespace zzio.effect
 {
     [System.Serializable]
     public enum EffectPartType

@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using Veldrid;
-using zzio.scn;
 using zzio.utils;
 using zzre.imgui;
 using zzre.materials;

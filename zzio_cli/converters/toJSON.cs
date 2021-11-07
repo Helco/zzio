@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
+﻿using System.IO;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -8,7 +6,7 @@ using System.Reflection;
 
 namespace zzio.cli.converters
 {
-    static class Utils
+    internal static class Utils
     {
         public static string convertToJSON(object obj, IContractResolver resolver = null)
         {

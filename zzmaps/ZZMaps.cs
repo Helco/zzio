@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text.RegularExpressions;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
 using System.Linq;
@@ -39,7 +38,7 @@ namespace zzmaps
 
     internal static class ZZMaps
     {
-        static Task Main(string[] args)
+        private static Task Main(string[] args)
         {
             var defaultOptions = new Options();
             var defaultTiler = new MapTiler(Box.Zero);

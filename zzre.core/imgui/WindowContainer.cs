@@ -2,10 +2,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using Veldrid;
 using static ImGuiNET.ImGui;
 
@@ -15,17 +13,17 @@ namespace zzre.imgui
     {
         private GraphicsDevice Device { get; }
         private ResourceFactory Factory => Device.ResourceFactory;
-        private List<BaseWindow> windows = new List<BaseWindow>();
-        private List<Fence> onceFences = new List<Fence>();
-        private CommandList commandList;
-        private Fence fence;
+        private readonly List<BaseWindow> windows = new List<BaseWindow>();
+        private readonly List<Fence> onceFences = new List<Fence>();
+        private readonly CommandList commandList;
+        private readonly Fence fence;
 
         public BaseWindow? FocusedWindow { get; private set; } = null;
         public int Count => windows.Count;
         public ImGuiRenderer ImGuiRenderer { get; }
         public MenuBar MenuBar { get; } = new MenuBar();
         private bool isInUpdateEnumeration = false;
-        private OnceAction onceAfterUpdate = new OnceAction();
+        private readonly OnceAction onceAfterUpdate = new OnceAction();
         private BaseWindow? nextFocusedWindow = null;
 
         public event Action OnceAfterUpdate

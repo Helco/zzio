@@ -1,8 +1,6 @@
-using System;
 using System.IO;
 using NUnit.Framework;
 using zzio.primitives;
-using zzio.utils;
 using zzio.db;
 
 namespace zzio.tests.db

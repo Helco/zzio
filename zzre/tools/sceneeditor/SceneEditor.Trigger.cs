@@ -80,7 +80,7 @@ namespace zzre.tools
             private readonly SceneEditor editor;
 
             private Trigger[] triggers = new Trigger[0];
-            private bool isVisible = true;
+            private readonly bool isVisible = true;
             private bool wasSelected = false;
             private float iconSize = 128f;
 

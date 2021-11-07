@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using zzio.utils;
-using System.Collections;
 
 namespace zzio.vfs
 {

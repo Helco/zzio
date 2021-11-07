@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Veldrid;
-using zzre.rendering;
+﻿using Veldrid;
 
 namespace zzre.rendering
 {

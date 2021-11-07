@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
 namespace zzmaps
 {
-    class BranchBlock<T> : IPropagatorBlock<T, T>
+    internal class BranchBlock<T> : IPropagatorBlock<T, T>
     {
         private readonly ExecutionDataflowBlockOptions options;
         private readonly TransformManyBlock<T, (int, T)> multiplyBlock;

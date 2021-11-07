@@ -1,15 +1,10 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
 namespace zzmaps
 {
-    class BackgroundTileRenderer
+    internal class BackgroundTileRenderer
     {
         private readonly int imageSize;
         private readonly ZZMapsBackground background;

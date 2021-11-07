@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Numerics;
 using Veldrid;
-using Vulkan;
 using zzio.primitives;
 using zzre.materials;
 using zzre.rendering;

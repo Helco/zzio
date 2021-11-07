@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
 using Veldrid;
 using zzre;
@@ -7,12 +6,12 @@ using zzre.rendering;
 
 namespace zzmaps
 {
-    class OrthoCamera : BaseDisposable
+    internal class OrthoCamera : BaseDisposable
     {
         private readonly LocationBuffer locationBuffer;
 
-        private UniformBuffer<Matrix4x4> projection;
-        private ResettableLazyValue<Matrix4x4> invProjection;
+        private readonly UniformBuffer<Matrix4x4> projection;
+        private readonly ResettableLazyValue<Matrix4x4> invProjection;
         private float nearPlane = 0.1f, addFarPlane = 2f;
         private Box bounds;
 

@@ -16,9 +16,9 @@ namespace zzio
 
         public class CommandLine
         {
-            private string[] argText;
-            private double[] argNumbers;
-            private CommandLineToken[] argTokens;
+            private readonly string[] argText;
+            private readonly double[] argNumbers;
+            private readonly CommandLineToken[] argTokens;
 
             public CommandLine() : this(Environment.CommandLine) { }
 

@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Threading.Tasks;
-using zzio.effect.parts;
-using zzre.rendering;
+﻿using zzio.effect.parts;
 using zzre.rendering.effectparts;
 using static ImGuiNET.ImGui;
 using static zzre.imgui.ImGuiEx;
 
 namespace zzre.tools
 {
-    partial class EffectEditor
+    public partial class EffectEditor
     {
         private void HandlePart(BeamStar data, BeamStarRenderer ren)
         {

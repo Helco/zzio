@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using Veldrid;
 using zzio.scn;
 using zzio.utils;
@@ -11,7 +10,6 @@ using zzre.materials;
 using zzre.rendering;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
-using System.Security.Cryptography.X509Certificates;
 using System.Collections;
 
 namespace zzre.tools

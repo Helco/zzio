@@ -1,5 +1,4 @@
-﻿using System;
-using zzio.vfs;
+﻿using zzio.vfs;
 using zzio.utils;
 using NUnit.Framework;
 using System.IO;

@@ -32,8 +32,8 @@ namespace zzio
     public class PAKArchive
     {
         private readonly Stream stream;
-        private Dictionary<string, PAKArchiveEntry> entries = new Dictionary<string, PAKArchiveEntry>();
-        private Dictionary<string, FilePath> directories = new Dictionary<string, FilePath>(); // use Dictionary to preserve case
+        private readonly Dictionary<string, PAKArchiveEntry> entries = new Dictionary<string, PAKArchiveEntry>();
+        private readonly Dictionary<string, FilePath> directories = new Dictionary<string, FilePath>(); // use Dictionary to preserve case
         private uint baseOffset;
 
         private PAKArchive(Stream str)

@@ -1,6 +1,4 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("zzio_cli")]
 [assembly: AssemblyDescription("Commandline-Interface for zzio")]

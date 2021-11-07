@@ -6,7 +6,7 @@ namespace zzre
 {
     public class GameTime
     {
-        private Stopwatch watch = new Stopwatch();
+        private readonly Stopwatch watch = new Stopwatch();
 
         private int curFPS = 0;
         private TimeSpan lastSecond;

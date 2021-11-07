@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -15,7 +14,7 @@ using Quaternion = System.Numerics.Quaternion;
 
 namespace zzmaps
 {
-    record TileSceneObject
+    internal record TileSceneObject
     {
         public TileSceneObject(IResource resource, ClumpBuffers clumpBuffers)
         {
@@ -30,7 +29,7 @@ namespace zzmaps
         public FColor Tint { get; init; }
     }
 
-    class TileScene : BaseDisposable
+    internal class TileScene : BaseDisposable
     {
         private static readonly FilePath[] TextureBasePaths = new[]
         {

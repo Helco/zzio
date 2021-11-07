@@ -1,11 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
+﻿using System.IO;
 using System.Linq;
 using Veldrid;
 using zzre.imgui;
-using zzio.rwbs;
-using zzre.core;
 using System.Numerics;
 using ImGuiNET;
 using zzio.vfs;

@@ -1,23 +1,19 @@
-﻿using System;
-using System.Numerics;
+﻿#if !DEBUG
+using System;
+#endif
+using System.IO;
 using Veldrid;
 using Veldrid.StartupUtilities;
-using ImGuiNET;
-using static ImGuiNET.ImGui;
-using System.IO;
 using zzre.imgui;
-using zzre.core;
 using zzio.vfs;
 using zzre.tools;
-using zzio;
 using zzre.rendering;
-using System.Net.WebSockets;
 
 namespace zzre
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
             var window = VeldridStartup.CreateWindow(new WindowCreateInfo

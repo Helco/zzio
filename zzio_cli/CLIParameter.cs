@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
 namespace zzio.cli
@@ -53,8 +52,8 @@ namespace zzio.cli
 
     public class ParameterParser
     {
-        private ParameterInfo[] classes;
-        private Dictionary<string, object> values;
+        private readonly ParameterInfo[] classes;
+        private readonly Dictionary<string, object> values;
 
         public ParameterParser(CommandLine args, ParameterInfo[] classes)
         {

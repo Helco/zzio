@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks.Dataflow;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -10,7 +9,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace zzmaps
 {
-    partial class Scheduler
+    internal partial class Scheduler
     {
         private IPropagatorBlock<RenderedSceneTile<TPixel>, EncodedSceneTile> CreateEncoder<TPixel>(ExecutionDataflowBlockOptions? dataflowOptions = null)
            where TPixel : unmanaged, IPixel<TPixel>

@@ -1,10 +1,7 @@
 ﻿using ImGuiNET;
-using Microsoft.VisualBasic.FileIO;
 using System;
-using System.Collections.Generic;
 using System.Numerics;
 using Veldrid;
-using zzre.rendering;
 
 namespace zzre.imgui
 {

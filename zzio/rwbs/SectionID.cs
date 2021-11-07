@@ -1,5 +1,7 @@
-﻿namespace zzio {
-    namespace rwbs {
+﻿namespace zzio
+{
+    namespace rwbs
+    {
         //Source: http://www.gtamodding.com/wiki/List_of_RW_section_IDs
         public enum SectionId {
             Struct = 0x0001,

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using Veldrid;
+﻿using Veldrid;
 
 namespace zzre.rendering
 {

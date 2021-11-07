@@ -1,7 +1,4 @@
-﻿using System;
-using System.Numerics;
-
-namespace zzre.game.components
+﻿namespace zzre.game.components
 {
 
     public struct AnimalWaypointAI

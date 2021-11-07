@@ -98,7 +98,7 @@ namespace zzsc
             {'7', "endIf" }
         };
 
-        private static IReadOnlyCollection<string> SectionStartCommands = new HashSet<string>()
+        private static readonly IReadOnlyCollection<string> SectionStartCommands = new HashSet<string>()
         {
             "label",
             "else",
@@ -114,7 +114,7 @@ namespace zzsc
             "ifTriggerIsEnabled"
         };
 
-        private static IReadOnlyCollection<string> SectionEndCommands = new HashSet<string>()
+        private static readonly IReadOnlyCollection<string> SectionEndCommands = new HashSet<string>()
         {
             "label",
             "else",
@@ -177,7 +177,7 @@ namespace zzsc
             output.Close();
         }
 
-        static void decompile(TextWriter output, RawInstruction[] instructions, string[] _)
+        private static void decompile(TextWriter output, RawInstruction[] instructions, string[] _)
         {
             int prefixLength = 4;
             int prefixTabs = 0;
@@ -195,7 +195,7 @@ namespace zzsc
             }
         }
 
-        static void compile(TextWriter output, RawInstruction[] instructions, string[] _)
+        private static void compile(TextWriter output, RawInstruction[] instructions, string[] _)
         {
             foreach (var _i in instructions)
             {

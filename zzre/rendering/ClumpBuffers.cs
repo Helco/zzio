@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -22,10 +21,10 @@ namespace zzre
             public SubMesh(int io, int ic, RWMaterial m) => (IndexOffset, IndexCount, Material) = (io, ic, m);
         }
 
-        private DeviceBuffer vertexBuffer;
-        private DeviceBuffer indexBuffer;
-        private DeviceBuffer? skinBuffer;
-        private SubMesh[] subMeshes;
+        private readonly DeviceBuffer vertexBuffer;
+        private readonly DeviceBuffer indexBuffer;
+        private readonly DeviceBuffer? skinBuffer;
+        private readonly SubMesh[] subMeshes;
 
         public int VertexCount => (int)(vertexBuffer.SizeInBytes / ModelStandardVertex.Stride);
         public int TriangleCount => (int)(indexBuffer.SizeInBytes / (sizeof(ushort) * 3));

@@ -6,7 +6,7 @@ using zzre;
 
 namespace zzmaps
 {
-    readonly struct TileID
+    internal readonly struct TileID
     {
         public TileID(int tileX, int tileZ, int zoomLevel) =>
             (TileX, TileZ, ZoomLevel) = (tileX, tileZ, zoomLevel);
@@ -16,7 +16,7 @@ namespace zzmaps
         public int ZoomLevel { get; }
     }
 
-    class MapTiler
+    internal class MapTiler
     {
         private readonly int globalMinZoomLevel = int.MinValue;
         private readonly int globalMaxZoomLevel = int.MaxValue;

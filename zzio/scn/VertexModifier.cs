@@ -1,8 +1,6 @@
 using System;
-using System.Text;
 using System.IO;
 using zzio.primitives;
-using zzio.utils;
 
 namespace zzio.scn
 {

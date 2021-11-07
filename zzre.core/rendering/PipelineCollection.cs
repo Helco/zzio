@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Veldrid;
-using Veldrid.SPIRV;
 
 namespace zzre.rendering
 {
@@ -26,7 +22,7 @@ namespace zzre.rendering
                 ShaderSetName = shaderSetName;
             }
         }
-        private List<BuiltPipeline> pipelines = new List<BuiltPipeline>();
+        private readonly List<BuiltPipeline> pipelines = new List<BuiltPipeline>();
 
         public GraphicsDevice Device { get; }
         public ResourceFactory Factory => Device.ResourceFactory;

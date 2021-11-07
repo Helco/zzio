@@ -12,7 +12,7 @@ namespace zzio.effect
     [System.Serializable]
     public partial class EffectCombiner
     {
-        private static Dictionary<string, Func<IEffectPart>> partTypeConstructors =
+        private static readonly Dictionary<string, Func<IEffectPart>> partTypeConstructors =
             new Dictionary<string, Func<IEffectPart>>()
             {
                 { "BeamStar",           () => new BeamStar() },
@@ -29,7 +29,7 @@ namespace zzio.effect
             };
 
         // all handlers except the effect parts
-        private static Dictionary<string, Action<EffectCombiner, BinaryReader>> sectionHandlers =
+        private static readonly Dictionary<string, Action<EffectCombiner, BinaryReader>> sectionHandlers =
             new Dictionary<string, Action<EffectCombiner, BinaryReader>>()
             {
                 { "Effect_Combiner_Description", (eff, r) => {

@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Reflection;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace Veldrid
 {
@@ -31,7 +29,7 @@ namespace Veldrid
         private Pipeline _pipeline;
         private ResourceSet _mainResourceSet;
         private ResourceSet _fontTextureResourceSet;
-        private IntPtr _fontAtlasID = (IntPtr)1;
+        private readonly IntPtr _fontAtlasID = (IntPtr)1;
         private bool _controlDown;
         private bool _shiftDown;
         private bool _altDown;

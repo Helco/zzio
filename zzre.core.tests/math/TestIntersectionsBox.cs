@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
 using NUnit.Framework;
 
@@ -8,7 +7,7 @@ namespace zzre.core.tests.math
     [TestFixture]
     public class TestIntersectionsBox
     {
-        const float EPS = 0.0001f;
+        private const float EPS = 0.0001f;
 
         [Test]
         public void TestOBBvsPoint()

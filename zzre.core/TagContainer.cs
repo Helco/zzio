@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using zzre.core;
 
 namespace zzre
 {
     public class TagContainer : BaseDisposable, ITagContainer
     {
-        private Dictionary<Type, object> tags = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, object> tags = new Dictionary<Type, object>();
 
         protected override void DisposeManaged()
         {

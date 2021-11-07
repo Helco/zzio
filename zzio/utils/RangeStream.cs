@@ -108,7 +108,7 @@ namespace zzio.utils
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int maxReadCount = (int)Math.Min((long)count, left);
+            int maxReadCount = (int)Math.Min(count, left);
             int readCount = parent.Read(buffer, offset, maxReadCount);
             left -= readCount;
             return readCount;
@@ -116,7 +116,7 @@ namespace zzio.utils
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            int writeCount = (int)Math.Min((long)count, left);
+            int writeCount = (int)Math.Min(count, left);
             parent.Write(buffer, offset, writeCount);
             left -= writeCount;
         }

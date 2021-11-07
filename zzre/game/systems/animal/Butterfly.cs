@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Numerics;
-using DefaultEcs;
 using DefaultEcs.System;
 
 namespace zzre.game.systems

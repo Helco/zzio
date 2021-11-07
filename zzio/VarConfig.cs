@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
-using zzio.utils;
 
 namespace zzio
 {
@@ -109,7 +108,7 @@ namespace zzio
         public static string ReadEncryptedString(BinaryReader reader)
         {
             byte stringLen = reader.ReadByte();
-            byte[] buffer = reader.ReadBytes((int)stringLen)
+            byte[] buffer = reader.ReadBytes(stringLen)
                 .Select(b => (byte)(b ^ XOR_KEY))
                 .ToArray();
             reader.ReadByte(); // ignored terminator byte

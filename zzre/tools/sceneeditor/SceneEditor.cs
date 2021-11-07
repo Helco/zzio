@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Numerics;
 using Veldrid;
@@ -26,7 +24,7 @@ namespace zzre.tools
 
         private event Action OnLoadScene = () => { };
 
-        private ITagContainer localDiContainer;
+        private readonly ITagContainer localDiContainer;
         private Scene? scene;
 
         public IResource? CurrentResource { get; private set; }

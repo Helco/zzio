@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using Veldrid;
 
@@ -11,13 +9,13 @@ namespace zzre.rendering
         private const uint MatrixSize = 4 * 4 * sizeof(float);
         private const uint MinimalMatrixStride = MatrixSize;
 
-        private uint matrixStride;
-        private int matrixStrideAsMultiple;
-        private WeakReference<Location>?[] locations;
-        private bool[] isInverted;
-        private Matrix4x4[] matrices;
+        private readonly uint matrixStride;
+        private readonly int matrixStrideAsMultiple;
+        private readonly WeakReference<Location>?[] locations;
+        private readonly bool[] isInverted;
+        private readonly Matrix4x4[] matrices;
         private int nextFreeIndex = 0;
-        private DeviceBuffer buffer;
+        private readonly DeviceBuffer buffer;
 
         public int Capacity => matrices.Length;
         public int Count { get; private set; } = 0;

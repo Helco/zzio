@@ -5,7 +5,7 @@ namespace zzre
 {
     public class ListDisposable : BaseDisposable
     {
-        private List<WeakReference<IDisposable>> disposables = new List<WeakReference<IDisposable>>();
+        private readonly List<WeakReference<IDisposable>> disposables = new List<WeakReference<IDisposable>>();
 
         protected override void DisposeManaged()
         {

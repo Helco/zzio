@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
@@ -10,8 +9,8 @@ namespace zzre.imgui
     {
         private readonly Window window;
         private Vector2? lastPosition;
-        private Vector2[] lastDragDelta = new Vector2[(int)ImGuiMouseButton.COUNT];
-        private bool[] triggerClickEvent = new bool[(int)ImGuiMouseButton.COUNT];
+        private readonly Vector2[] lastDragDelta = new Vector2[(int)ImGuiMouseButton.COUNT];
+        private readonly bool[] triggerClickEvent = new bool[(int)ImGuiMouseButton.COUNT];
         private Rect validBounds = Rect.Zero;
 
         public Vector2 MousePosition => GetIO().MousePos - validBounds.Min;

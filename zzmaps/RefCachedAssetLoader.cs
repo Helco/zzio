@@ -2,15 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using zzio.utils;
 using zzio.vfs;
 using zzre.rendering;
 
 namespace zzmaps
 {
-    class RefCachedAssetLoader<TAsset> : CachedAssetLoader<TAsset> where TAsset : class, IDisposable
+    internal class RefCachedAssetLoader<TAsset> : CachedAssetLoader<TAsset> where TAsset : class, IDisposable
     {
         private readonly Dictionary<FilePath, int> refCounts = new Dictionary<FilePath, int>();
 

@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
 namespace zzmaps
 {
-    class FileOutput : IOutput
+    internal class FileOutput : IOutput
     {
         private readonly DirectoryInfo outputDir;
         private readonly string outputPath, extension;

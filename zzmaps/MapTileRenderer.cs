@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Veldrid;
 using zzre;
 using zzre.rendering;
 
 namespace zzmaps
 {
-    class MapTileRenderer : ListDisposable
+    internal class MapTileRenderer : ListDisposable
     {
         private readonly ITagContainer diContainer;
         private readonly ITagContainer localDiContainer;

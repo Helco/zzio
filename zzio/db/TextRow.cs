@@ -1,5 +1,3 @@
-using System;
-
 namespace zzio.db
 {
     public class TextRow : MappedRow

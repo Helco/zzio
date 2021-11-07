@@ -3,9 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using zzio.vfs;
 using static ImGuiNET.ImGui;
 
@@ -17,8 +15,8 @@ namespace zzre.imgui
         private const float FileTreeSize = 400.0f;
 
         private readonly IResourcePool pool;
-        private List<(IResource res, string nameWithId, int depth)> content = new List<(IResource, string, int)>();
-        private HashSet<IResource> openDirectories = new HashSet<IResource>();
+        private readonly List<(IResource res, string nameWithId, int depth)> content = new List<(IResource, string, int)>();
+        private readonly HashSet<IResource> openDirectories = new HashSet<IResource>();
         private string filterText = "";
         private Regex filterRegex = new Regex("");
         private bool isFirstTreeContent = true;

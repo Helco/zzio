@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Veldrid;
 
 namespace zzre.rendering
@@ -15,15 +14,15 @@ namespace zzre.rendering
             private PixelFormat? depthTarget;
             private List<PixelFormat> colorTargets = new List<PixelFormat>();
             private TextureSampleCount sampleCount = TextureSampleCount.Count1;
-            private List<List<VertexElementDescription>> vertexElements = new List<List<VertexElementDescription>>()
+            private readonly List<List<VertexElementDescription>> vertexElements = new List<List<VertexElementDescription>>()
             {
                 new List<VertexElementDescription>()
             };
-            private List<uint> vertexLayoutInstanceStepRates = new List<uint>()
+            private readonly List<uint> vertexLayoutInstanceStepRates = new List<uint>()
             {
                 0
             };
-            private List<List<ResourceLayoutElementDescription>> resLayoutElements = new List<List<ResourceLayoutElementDescription>>()
+            private readonly List<List<ResourceLayoutElementDescription>> resLayoutElements = new List<List<ResourceLayoutElementDescription>>()
             {
                 new List<ResourceLayoutElementDescription>()
             };
@@ -226,7 +225,7 @@ namespace zzre.rendering
             }
 
             private OutputDescription OutputDescription => new OutputDescription(
-                    depthTarget != null ? new OutputAttachmentDescription(depthTarget.Value) : (OutputAttachmentDescription ?)null,
+                    depthTarget != null ? new OutputAttachmentDescription(depthTarget.Value) : null,
                     colorTargets.Select(f => new OutputAttachmentDescription(f)).ToArray(),
                     sampleCount);
 

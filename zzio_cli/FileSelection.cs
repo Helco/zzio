@@ -8,7 +8,7 @@ namespace zzio.cli
     public class FileSelection
     {
         private bool changedSet = true;
-        private HashSet<string> files;
+        private readonly HashSet<string> files;
         private string[] fileArray;
 
         public FileSelection()

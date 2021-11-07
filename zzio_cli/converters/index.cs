@@ -4,7 +4,7 @@ namespace zzio.cli
 {
     public partial class ConversionMgr
     {
-        private static IConverter[] converters =
+        private static readonly IConverter[] converters =
         {
             new AEDtoJSON(),
             new CFG_MaptoJSON(),

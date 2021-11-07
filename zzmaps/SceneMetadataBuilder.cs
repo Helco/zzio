@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Text.Json;
 using zzre;
@@ -13,7 +10,7 @@ using System.Text.RegularExpressions;
 namespace zzmaps
 {
     [Serializable]
-    struct NPCMetadata
+    internal struct NPCMetadata
     {
         public string Name;
         public string? Icon;
@@ -21,7 +18,7 @@ namespace zzmaps
     }
 
     [Serializable]
-    struct SceneMetadata
+    internal struct SceneMetadata
     {
         public string Name;
         public uint ID;
@@ -34,7 +31,7 @@ namespace zzmaps
         public NPCMetadata[] NPCs;
     }
 
-    class SceneMetadataBuilder
+    internal class SceneMetadataBuilder
     {
         private readonly MappedDB mappedDb;
         private readonly ZZMapsBackground background;

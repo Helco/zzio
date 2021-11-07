@@ -1,10 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-using zzio;
-using zzio.rwbs;
-using zzio.scn;
 
 namespace zzio.cli
 {
@@ -28,7 +23,7 @@ namespace zzio.cli
                 stdoutWriter = stderrWriter = null;
             }
         }
-        private static HandleGuard guard = new HandleGuard();
+        private static readonly HandleGuard guard = new HandleGuard();
         private static FileStream stdoutStream = null;
         private static FileStream stderrStream = null;
         private static StreamWriter stdoutWriter = null;
@@ -77,9 +72,9 @@ namespace zzio.cli
         }
     }
 
-    class Program
+    internal class Program
     {
-        private static ParameterInfo[] paramTypes = {
+        private static readonly ParameterInfo[] paramTypes = {
             new ParameterInfo('h', "help", "Displays this usage manual and returns", null),
             new ParameterInfo('\0', "stdout", "<file> - Redirects stdout to a file", ParameterType.Text, null),
             new ParameterInfo('\0', "stderr", "<file> - Redirects stderr to a file", ParameterType.Text, null),

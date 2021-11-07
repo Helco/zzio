@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using zzio.rwbs;
 using zzio.utils;
 using zzre.materials;
@@ -31,7 +29,7 @@ namespace zzre.rendering
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
         public IReadOnlyList<ModelStandardMaterial> Materials => materials;
 
-        private List<WorldBuffers.MeshSection> visibleMeshSections = new List<WorldBuffers.MeshSection>();
+        private readonly List<WorldBuffers.MeshSection> visibleMeshSections = new List<WorldBuffers.MeshSection>();
         public IReadOnlyList<WorldBuffers.MeshSection> VisibleMeshSections => visibleMeshSections;
 
         public Location Location { get; } = new Location();

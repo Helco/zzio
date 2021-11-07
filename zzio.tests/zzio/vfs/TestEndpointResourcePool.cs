@@ -1,9 +1,7 @@
 using System;
 using System.IO;
-using System.Text;
 using System.Linq;
 using NUnit.Framework;
-using zzio.utils;
 using zzio.vfs;
 
 namespace zzio.tests.vfs

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using Veldrid;
 using zzio.primitives;
 using zzre.materials;

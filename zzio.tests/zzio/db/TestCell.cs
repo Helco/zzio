@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using NUnit.Framework;
 using zzio.primitives;
@@ -9,33 +8,33 @@ namespace zzio.tests.db
     [TestFixture]
     public class TestCell
     {
-        private Cell stringCell = new Cell("Hello", 13);
+        private readonly Cell stringCell = new Cell("Hello", 13);
         private readonly byte[] stringCellBytes = new byte[]
         {
             0, 0, 0, 0, 13, 0, 0, 0, 6, 0, 0, 0,
             (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o', (byte)'\0'
         };
 
-        private Cell integerCell = new Cell(123456, 13);
+        private readonly Cell integerCell = new Cell(123456, 13);
         private readonly byte[] integerCellBytes = new byte[]
         {
             1, 0, 0, 0, 13, 0, 0, 0, 4, 0, 0, 0, 0x40, 0xE2, 0x01, 0x00
         };
 
-        private Cell byteCell = new Cell((byte)0xcd, 13);
+        private readonly Cell byteCell = new Cell((byte)0xcd, 13);
         private readonly byte[] byteCellBytes = new byte[]
         {
             4, 0, 0, 0, 13, 0, 0, 0, 1, 0, 0, 0, 0xcd
         };
 
-        private Cell foreignKeyCell = new Cell(new ForeignKey(new UID(0xc0fffeee), new UID(0xbadc0de)));
+        private readonly Cell foreignKeyCell = new Cell(new ForeignKey(new UID(0xc0fffeee), new UID(0xbadc0de)));
         private readonly byte[] foreignKeyCellBytes = new byte[]
         {
             3, 0, 0, 0, 255, 255, 255, 255, 8, 0, 0, 0,
             0xee, 0xfe, 0xff, 0xc0, 0xde, 0xc0, 0xad, 0xb
         };
 
-        private Cell bufferCell = new Cell(new byte[] { 0x37, 0x53, 0x73 });
+        private readonly Cell bufferCell = new Cell(new byte[] { 0x37, 0x53, 0x73 });
         private readonly byte[] bufferCellBytes = new byte[]
         {
             5, 0, 0, 0, 255, 255, 255, 255, 3, 0, 0, 0, 0x37, 0x53, 0x73

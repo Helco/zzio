@@ -1,9 +1,9 @@
-using System;
 using System.IO;
 using NUnit.Framework;
 using zzio.primitives;
 
-namespace zzio.tests.primitives {
+namespace zzio.tests.primitives
+{
     [TestFixture]
     public class TestTriangle
     {

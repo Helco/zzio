@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,7 +8,7 @@ namespace zzio.vfs
 {
     public class CombinedResourcePool : IResourcePool
     {
-        private IResourcePool[] pools;
+        private readonly IResourcePool[] pools;
         public IResource Root => new CombinedDirectory(this, null, "", pools.Reverse().Select(p => p.Root)); // reverse for easier overwrite behaviour
 
         public CombinedResourcePool(IResourcePool[] pools)

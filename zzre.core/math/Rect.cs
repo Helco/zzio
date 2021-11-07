@@ -1,6 +1,4 @@
-﻿using System;
-using System.Drawing;
-using System.Numerics;
+﻿using System.Numerics;
 
 namespace zzre
 {

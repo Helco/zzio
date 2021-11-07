@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
+﻿using System.Numerics;
 using Veldrid;
-using zzio.primitives;
 using zzre;
 using zzre.materials;
 using zzre.rendering;

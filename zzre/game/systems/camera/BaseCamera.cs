@@ -1,6 +1,4 @@
-﻿using System;
-using System.Numerics;
-using DefaultEcs.System;
+﻿using DefaultEcs.System;
 using zzre.rendering;
 
 namespace zzre.game.systems

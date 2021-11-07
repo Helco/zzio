@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Veldrid;
 using ImGuiNET;
-using static ImGuiNET.ImGui;
 using System.Numerics;
 
 namespace zzre.rendering

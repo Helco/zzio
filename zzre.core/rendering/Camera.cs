@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Text;
+﻿using System.Numerics;
 using Veldrid;
 
 namespace zzre.rendering
@@ -10,8 +7,8 @@ namespace zzre.rendering
     {
         private readonly LocationBuffer locationBuffer;
 
-        private UniformBuffer<Matrix4x4> projection;
-        private ResettableLazyValue<Matrix4x4> invProjection;
+        private readonly UniformBuffer<Matrix4x4> projection;
+        private readonly ResettableLazyValue<Matrix4x4> invProjection;
         private float aspect = 1.0f;
         private float vfov = 60.0f * 3.141592653f / 180.0f;
         private float nearPlane = 0.1f;

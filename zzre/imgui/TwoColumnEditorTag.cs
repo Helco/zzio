@@ -1,19 +1,8 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Linq;
 using Veldrid;
-using zzio.rwbs;
-using zzre.core;
-using zzio.utils;
 using System.Numerics;
 using ImGuiNET;
-using zzio.vfs;
-using zzre.rendering;
-using zzre.materials;
-using zzio.primitives;
-using SixLabors.ImageSharp.ColorSpaces;
-using SixLabors.ImageSharp;
 
 namespace zzre.imgui
 {
@@ -28,7 +17,7 @@ namespace zzre.imgui
         private readonly FramebufferArea fbArea;
 
         private int didSetColumnWidth = 0;
-        private List<(string name, Action content, bool defaultOpen, Action?)> infoSections = new List<(string, Action, bool, Action?)>();
+        private readonly List<(string name, Action content, bool defaultOpen, Action?)> infoSections = new List<(string, Action, bool, Action?)>();
 
         public Window Window { get; }
         

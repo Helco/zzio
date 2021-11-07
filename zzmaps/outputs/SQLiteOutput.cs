@@ -1,21 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using SQLitePCL.pretty;
 using zzre;
 
 namespace zzmaps
 {
-    class SQLiteOutput : ListDisposable, IOutput
+    internal class SQLiteOutput : ListDisposable, IOutput
     {
         private readonly SQLiteDatabaseConnection dbConnection;
         private readonly IStatement insertTileStmt, insertMetaStmt;
         private readonly string extension;
-        private uint tilesWritten, commitEvery;
+        private uint tilesWritten;
+        private readonly uint commitEvery;
 
         static SQLiteOutput() => SQLitePCL.Batteries_V2.Init();
 
