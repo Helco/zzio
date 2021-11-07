@@ -48,7 +48,6 @@ namespace zzre.tools
                 locationRange = diContainer.GetTag<LocationBuffer>().Add(Location);
                 Location.LocalPosition = sceneModel.pos.ToNumerics();
                 Location.LocalRotation = sceneModel.rot.ToNumericsRotation();
-                //Location.LocalScale = sceneModel.scale.ToNumerics(); // TODO: SceneModel scale seems bugged for some models (e.g. z == 0)
 
                 var clumpLoader = diContainer.GetTag<IAssetLoader<ClumpBuffers>>();
                 clumpBuffers = clumpLoader.Load(new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
@@ -108,12 +107,12 @@ namespace zzre.tools
                 hasChanged |= DragFloat3("Rotation", ref rotEuler);
                 NewLine();
 
-                int i1 = SceneModel.i1;
-                int i2 = SceneModel.i2;
-                int i15 = SceneModel.i15;
-                InputInt("I1", ref i1);
-                InputInt("I2", ref i2);
-                InputInt("I15", ref i15);
+                SliderFloat("Ambient", ref SceneModel.surfaceProps.ambient, -1f, 1f);
+                SliderFloat("Specular", ref SceneModel.surfaceProps.specular, -1f, 1f);
+                SliderFloat("Diffuse", ref SceneModel.surfaceProps.diffuse, -1f, 1f);
+                Checkbox("Use cached models", ref SceneModel.useCachedModels);
+                SliderInt("Wiggle Speed", ref SceneModel.wiggleSpeed, 0, 4);
+                Checkbox("Is only visual", ref SceneModel.isVisualOnly);
 
                 NewLine();
                 var behaviorType = SceneBehaviour?.type ?? BehaviourType.Unknown;

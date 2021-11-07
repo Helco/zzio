@@ -9,6 +9,7 @@ using zzre.materials;
 using zzre.rendering;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
+using static zzre.imgui.ImGuiEx;
 using System.Collections;
 using zzio;
 
@@ -45,7 +46,6 @@ namespace zzre.tools
                 locationRange = diContainer.GetTag<LocationBuffer>().Add(Location);
                 Location.LocalPosition = sceneModel.pos.ToNumerics();
                 Location.LocalRotation = sceneModel.rot.ToNumericsRotation();
-                //Location.LocalScale = sceneModel.scale.ToNumerics(); // TODO: SceneModel scale seems bugged for some models (e.g. z == 0)
 
                 clumpBuffers = new ClumpBuffers(diContainer, new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
                 materials = clumpBuffers.SubMeshes.Select(subMesh =>
@@ -104,26 +104,16 @@ namespace zzre.tools
                 hasChanged |= DragFloat3("Rotation", ref rotEuler);
                 NewLine();
 
-                var f1 = SceneFOModel.f1;
-                var f2 = SceneFOModel.f2;
-                var f3 = SceneFOModel.f3;
-                var f4 = SceneFOModel.f4;
-                var f5 = SceneFOModel.f5;
-                var ff2 = (int)SceneFOModel.ff2;
-                var ff3 = (int)SceneFOModel.ff3;
-                var i7 = SceneFOModel.i7;
-                var renderType = SceneFOModel.renderType;
-                var worldDetailLevel = (int)SceneFOModel.worldDetailLevel;
-                InputFloat("F1", ref f1);
-                InputFloat("F2", ref f2);
-                InputFloat("F3", ref f3);
-                InputFloat("F4", ref f4);
-                InputFloat("F5", ref f5);
-                InputInt("FF2", ref ff2);
-                InputInt("FF3", ref ff3);
-                InputInt("I7", ref i7);
-                SliderInt("Detail Level", ref worldDetailLevel, 0, 3);
-                ImGuiEx.EnumCombo("Render Type", ref renderType);
+
+                DragFloatRange2("FadeOut", ref SceneFOModel.fadeOutMin, ref SceneFOModel.fadeOutMax);
+                SliderFloat("Ambient", ref SceneFOModel.surfaceProps.ambient, -1f, 1f);
+                SliderFloat("Specular", ref SceneFOModel.surfaceProps.specular, -1f, 1f);
+                SliderFloat("Diffuse", ref SceneFOModel.surfaceProps.diffuse, -1f, 1f);
+                Checkbox("Use cached model", ref SceneFOModel.useCachedModels);
+                SliderInt("Wiggle Speed", ref SceneFOModel.wiggleSpeed, 0, 4);
+                SliderInt("Detail Level", ref SceneFOModel.worldDetailLevel, 0, 3);
+                EnumCombo("Render Type", ref SceneFOModel.renderType);
+                InputInt("Unused", ref SceneFOModel.unused);
 
                 if (hasChanged)
                 {

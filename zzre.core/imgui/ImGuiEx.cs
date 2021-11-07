@@ -213,5 +213,21 @@ namespace zzre.imgui
             Unindent();
             return result;
         }
+
+        public static bool SliderInt(string label, ref byte cur, byte min, byte max)
+        {
+            int curI = cur;
+            var result = ImGui.SliderInt(label, ref curI, min, max);
+            cur = (byte)curI;
+            return result;
+        }
+
+        public static bool InputInt(string label, ref byte cur)
+        {
+            int curI = cur;
+            var result = ImGui.InputInt(label, ref curI);
+            cur = (byte)Math.Clamp(curI, byte.MinValue, byte.MaxValue);
+            return result;
+        }
     }
 }

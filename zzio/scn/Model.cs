@@ -8,13 +8,14 @@ namespace zzio.scn
     [Serializable]
     public class Model : ISceneSection
     {
-        public UInt32 idx;
+        public uint idx;
         public string filename = "";
-        public Vector pos, rot, scale;
+        public Vector pos, rot;
+        public SurfaceProperties surfaceProps;
         public IColor color;
-        public byte i1;
-        public Int32 i15;
-        public byte i2;
+        public bool useCachedModels; // ignored except for the last model in the scene...
+        public int wiggleSpeed;
+        public bool isVisualOnly; // if 0 has collision
 
         public void Read(Stream stream)
         {
@@ -23,11 +24,11 @@ namespace zzio.scn
             filename = reader.ReadZString();
             pos = Vector.ReadNew(reader);
             rot = Vector.ReadNew(reader);
-            scale = Vector.ReadNew(reader);
+            surfaceProps = SurfaceProperties.ReadNew(reader);
             color = IColor.ReadNew(reader);
-            i1 = reader.ReadByte();
-            i15 = reader.ReadInt32();
-            i2 = reader.ReadByte();
+            useCachedModels = reader.ReadBoolean();
+            wiggleSpeed = reader.ReadInt32();
+            isVisualOnly = reader.ReadBoolean();
         }
 
         public void Write(Stream stream)
@@ -37,11 +38,11 @@ namespace zzio.scn
             writer.WriteZString(filename);
             pos.Write(writer);
             rot.Write(writer);
-            scale.Write(writer);
+            surfaceProps.Write(writer);
             color.Write(writer);
-            writer.Write(i1);
-            writer.Write(i15);
-            writer.Write(i2);
+            writer.Write(useCachedModels);
+            writer.Write(wiggleSpeed);
+            writer.Write(isVisualOnly);
         }
     }
 }
