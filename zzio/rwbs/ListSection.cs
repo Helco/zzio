@@ -18,7 +18,7 @@ namespace zzio.rwbs
             // there might be padding bytes, check if a header would fit
             while (streamLength - stream.Position > 12)
             {
-                children.Add(Section.ReadNew(new GatekeeperStream(stream), this));
+                children.Add(ReadNew(new GatekeeperStream(stream), this));
             }
         }
 
@@ -27,24 +27,11 @@ namespace zzio.rwbs
             children.ForEach((section) => section.Write(new GatekeeperStream(stream)));
         }
 
-        public override Section? FindChildById(SectionId sectionId, bool recursive)
-        {
-            foreach (Section child in children)
-            {
-                if (child.sectionId == sectionId)
-                    return child;
-            }
-            if (recursive)
-            {
-                foreach (Section child in children)
-                {
-                    var grandchild = child.FindChildById(sectionId, recursive);
-                    if (grandchild != null)
-                        return grandchild;
-                }
-            }
-            return null;
-        }
+        public override Section? FindChildById(SectionId sectionId, bool recursive) => recursive
+            ? FindChildById(sectionId, false) ?? children
+                .Select(c => c.FindChildById(sectionId, recursive))
+                .FirstNotNullOrNull()
+            : children.FirstOrDefault(c => c.sectionId == sectionId);
 
         public override IEnumerable<Section> FindAllChildrenById(SectionId sectionId, bool recursive = true)
         {

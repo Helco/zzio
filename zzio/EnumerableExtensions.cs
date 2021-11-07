@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace zzre
+namespace zzio
 {
     public static class EnumerableExtensions
     {
@@ -43,5 +43,11 @@ namespace zzre
             var (offset, length) = range.GetOffsetAndLength(roList.Count);
             return roList.Skip(offset).Take(length);
         }
+
+        public static T? FirstNotNullOrNull<T>(this IEnumerable<T?> set) where T : class =>
+            set.FirstOrDefault(e => e != null);
+
+        public static T FirstNotNull<T>(this IEnumerable<T?> set) where T : class =>
+            set.First(e => e != null)!;
     }
 }

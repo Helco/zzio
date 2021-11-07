@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Veldrid;
+using zzio;
 using zzio.rwbs;
 using zzio.utils;
 using zzio.vfs;

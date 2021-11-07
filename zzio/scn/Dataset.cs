@@ -42,10 +42,9 @@ namespace zzio.scn
             reader.ReadBytes(3); // padding
             unk4 = reader.ReadUInt32();
             isHotScene = reader.ReadUInt32() != 0;
-            if (dataSize > 0x20)
-                unk6 = reader.ReadUInt32() != 0;
-            else
-                unk6 = false;
+            unk6 = dataSize > 0x20
+                ? reader.ReadUInt32() != 0
+                : false;
             s1 = reader.ReadZString();
             s2 = reader.ReadZString();
         }

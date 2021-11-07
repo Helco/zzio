@@ -100,7 +100,7 @@ namespace zzio.utils
                 case SeekOrigin.Begin: newPosition = offset; break;
                 case SeekOrigin.End: newPosition = length + offset; break;
                 case SeekOrigin.Current: newPosition = Position + offset; break;
-                default: throw new NotSupportedException("SeekOrigin \"" + origin.ToString() + "\" is not supported");
+                default: throw new NotSupportedException("SeekOrigin \"" + origin + "\" is not supported");
             }
             Position = newPosition;
             return newPosition;

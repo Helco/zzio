@@ -62,10 +62,9 @@ namespace zzre
         public PlaneIntersections SideOf(Sphere sphere)
         {
             var dist = SignedDistanceTo(sphere.Center);
-            if (MathF.Abs(dist) <= sphere.Radius)
-                return PlaneIntersections.Intersecting;
-            else
-                return dist > 0 ? PlaneIntersections.Inside : PlaneIntersections.Outside;
+            return MathF.Abs(dist) <= sphere.Radius
+                ? PlaneIntersections.Intersecting
+                : dist > 0 ? PlaneIntersections.Inside : PlaneIntersections.Outside;
         }
     }
 }

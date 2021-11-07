@@ -83,12 +83,7 @@ namespace zzio.db
             ColumnIndex = columnIndex;
         }
 
-        public override bool Equals(object? obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-                return false;
-            return Equals((Cell)obj);
-        }
+        public override bool Equals(object? obj) => obj is Cell cell && Equals(cell);
 
         public bool Equals(Cell cell)
         {
@@ -104,15 +99,18 @@ namespace zzio.db
                 default: return false;
             }
         }
+
+        public static bool operator ==(Cell a, Cell b) => a.Equals(b);
+        public static bool operator !=(Cell a, Cell b) => !a.Equals(b);
         
         public override int GetHashCode()
         {
-            int hashCode = (((int)Type * 0x81f5cab) << 8) ^ ((ColumnIndex * 0xabc3dfe) << 4);
+            int hashCode = HashCode.Combine(Type, ColumnIndex);
             switch(Type)
             {
                 case CellDataType.String:     hashCode ^= stringValue!.GetHashCode(); break;
-                case CellDataType.Integer:    hashCode ^= integerValue.GetHashCode(); break;
-                case CellDataType.Byte:       hashCode ^= byteValue.GetHashCode(); break;
+                case CellDataType.Integer:    hashCode ^= integerValue; break;
+                case CellDataType.Byte:       hashCode ^= byteValue; break;
                 case CellDataType.ForeignKey: hashCode ^= foreignKeyValue.GetHashCode(); break;
                 case CellDataType.Buffer:     hashCode ^= bufferValue!.GetHashCode(); break;
                 default: break;
@@ -122,7 +120,7 @@ namespace zzio.db
 
         private static void readFixedSize(BinaryReader reader, UInt32 expectedSize)
         {
-            UInt32 actualSize = reader.ReadUInt32();
+            uint actualSize = reader.ReadUInt32();
             if (actualSize != expectedSize)
                 throw new InvalidDataException("Invalid cell size: " + actualSize);
         }

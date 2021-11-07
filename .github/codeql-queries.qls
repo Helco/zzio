@@ -5,6 +5,13 @@
 - exclude:
     query filename:
       - CompilerError.ql
+      - CompilerMessage.ql
       - ExtractorError.ql
       - ExtractorMessage.ql
       - TooManyRefParameters.ql
+      - EqualsUsesIs.ql
+      - EqualsUsesAs.ql
+      - ObjectComparison.ql
+      - LocalScopeVariableShadowsMember.ql
+      - MissedReadonlyOpportunity.ql
+      - CallsUnmanagedCode.ql

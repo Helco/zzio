@@ -64,7 +64,7 @@ namespace zzio.effect
         public void Read(Stream stream)
         {
             List<IEffectPart> partsList = new List<IEffectPart>();
-            BinaryReader r = new BinaryReader(stream);
+            using BinaryReader r = new BinaryReader(stream);
 
             if (r.ReadZString() != "[Effect Combiner]")
                 throw new InvalidDataException("File does not start with correct tag");
@@ -81,13 +81,13 @@ namespace zzio.effect
                 {
                     shouldReadNext = false;
                 }
-                else if (sectionHandlers.ContainsKey(sectionName))
+                else if (sectionHandlers.TryGetValue(sectionName, out var sectionHandler))
                 {
-                    sectionHandlers[sectionName](this, r);
+                    sectionHandler(this, r);
                 }
-                else if (partTypeConstructors.ContainsKey(sectionName))
+                else if (partTypeConstructors.TryGetValue(sectionName, out var partTypeCtor))
                 {
-                    IEffectPart newPart = partTypeConstructors[sectionName]();
+                    var newPart = partTypeCtor();
                     newPart.Read(r);
                     partsList.Add(newPart);
                 }

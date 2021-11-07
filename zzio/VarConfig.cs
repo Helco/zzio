@@ -70,7 +70,8 @@ namespace zzio
                 config.variables[name] = value;
             }
 
-            byte[] actualChecksum = MD5.Create().ComputeHash(buffer, startOfHashed, buffer.Length - startOfHashed);
+            using var md5 = MD5.Create();
+            byte[] actualChecksum = md5.ComputeHash(buffer, startOfHashed, buffer.Length - startOfHashed);
             if (!actualChecksum.SequenceEqual(expectedChecksum))
                 throw new InvalidDataException("VarConfig checksums do not match");
             

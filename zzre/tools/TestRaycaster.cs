@@ -125,10 +125,6 @@ namespace zzre.tools
             pixels = new IColor[PixelCount];
         }
 
-        private static DateTime lastOutput = DateTime.Now;
-        private static readonly Stopwatch stopwatch = new Stopwatch();
-        private static long calls = 0;
-
         private void OnRender()
         {
             if (pixels == null)
@@ -136,7 +132,6 @@ namespace zzre.tools
 
             int width = (int)fbArea.Framebuffer.Width;
             int height = (int)fbArea.Framebuffer.Height;
-            stopwatch.Start();
             //for (int i = 0; i < PixelCount; i++)
             Parallel.For(0, PixelCount, i =>
             {
@@ -160,16 +155,6 @@ namespace zzre.tools
                     ? obj!.Shader(obj, pixelPos, cast.Value)
                     : IColor.Black;
             });
-            stopwatch.Stop();
-            calls++;
-            if ((DateTime.Now - lastOutput).TotalSeconds > 3)
-            {
-                lastOutput = DateTime.Now;
-                var result = stopwatch.Elapsed.TotalSeconds / calls;
-                Console.WriteLine(result.ToString("F99").Trim('0'));
-                calls = 0;
-                stopwatch.Reset();
-            }
 
             device.UpdateTexture(fbArea.Framebuffer.ColorTargets.First().Target, pixels, 0, 0, 0,
                 fbArea.Framebuffer.Width, fbArea.Framebuffer.Height, 1,

@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace zzio.primitives
 {
     [Serializable]
-    public struct ForeignKey
+    public struct ForeignKey : IEquatable<ForeignKey>
     {
         public readonly UID uid, type;
 
@@ -12,11 +13,6 @@ namespace zzio.primitives
         {
             this.uid = uid;
             this.type = type;
-        }
-
-        public override int GetHashCode()
-        {
-            return (type.raw.GetHashCode() << 4) ^ 0x15fba3ce ^ uid.raw.GetHashCode();
         }
 
         public static ForeignKey ReadNew(BinaryReader reader)
@@ -30,9 +26,12 @@ namespace zzio.primitives
             type.Write(writer);
         }
 
-        public override string ToString()
-        {
-            return uid.ToString() + "|" + type.ToString();
-        }
+        public override string ToString() => $"{uid}|{type}";
+
+        public override bool Equals(object? obj) => obj is ForeignKey key && Equals(key);
+        public bool Equals(ForeignKey other) => uid == other.uid && type == other.type;
+        public override int GetHashCode() => HashCode.Combine(uid, type);
+        public static bool operator ==(ForeignKey left, ForeignKey right) => left.Equals(right);
+        public static bool operator !=(ForeignKey left, ForeignKey right) => !(left == right);
     }
 }

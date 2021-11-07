@@ -13,7 +13,7 @@ namespace zzre
                 throw new ArgumentException($"Could not open resource {resource.Path.ToPOSIXString()}");
             var root = Section.ReadNew(contentStream) as T;
             if (root == null)
-                throw new ArgumentException($"Unexpected {root?.sectionId.ToString() + " section" ?? "read error"}, trying to open {resource.Path.ToPOSIXString()}");
+                throw new ArgumentException($"Unexpected {root?.sectionId + " section" ?? "read error"}, trying to open {resource.Path.ToPOSIXString()}");
             return root;
         }
     }

@@ -81,8 +81,8 @@ namespace zzio
                 while (shouldReadNext)
                 {
                     string sectionName = reader.ReadZString();
-                    if (sectionHandlers.ContainsKey(sectionName))
-                        sectionHandlers[sectionName]();
+                    if (sectionHandlers.TryGetValue(sectionName, out var readSection))
+                        readSection();
                     else
                         throw new InvalidDataException("Invalid scene section \"" + sectionName + "\"");
                 }

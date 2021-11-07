@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Veldrid;
+using zzio;
 using zzio.vfs;
 using zzre.rendering;
 

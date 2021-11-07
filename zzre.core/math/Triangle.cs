@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -111,10 +112,11 @@ namespace zzre
             var da = plane.SignedDistanceTo(A);
             var db = plane.SignedDistanceTo(B);
             var dc = plane.SignedDistanceTo(C);
-            return
-                (CmpZero(da) && CmpZero(db) && CmpZero(dc)) ||
-                !(da < 0 && db < 0 && dc < 0) ||
-                !(da > 0 && db > 0 && dc > 0);
+
+            var liesOnPlane = CmpZero(da) && CmpZero(db) && CmpZero(dc);
+            var completlyOnLeft = da < 0 && db < 0 && dc < 0;
+            var completlyOnRight = da > 0 && db > 0 && dc > 0;
+            return liesOnPlane || !completlyOnLeft || !completlyOnRight;
         }
 
         public bool Intersects(Sphere sphere) => sphere.Intersects(this);

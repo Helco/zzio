@@ -98,7 +98,7 @@ namespace zzmaps
                         .SelectMany(basePath => new[] { ".dds", ".bmp" }.Select(
                             ext => basePath.Combine(textureName!.value + ext)))
                         .Select(basePath => resourcePool.FindFile(basePath))
-                        .FirstOrDefault(res => res == null ? false : textureLoader.TryLoad(res, out var _));
+                        .FirstOrDefault(res => res != null && textureLoader.TryLoad(res, out var _));
                     if (textureRes != null)
                         textures.Add(textureRes);
                 }

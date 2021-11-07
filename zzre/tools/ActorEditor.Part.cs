@@ -25,13 +25,13 @@ namespace zzre.tools
             private bool isPlaying = false;
             private int currentAnimationI = -1;
 
-            public Location location = new Location();
-            public DeviceBufferRange locationBufferRange;
-            public ClumpBuffers geometry;
-            public ModelSkinnedMaterial[] materials;
-            public Skeleton skeleton;
-            public DebugSkeletonRenderer skeletonRenderer;
-            public (AnimationType type, string fileName, SkeletalAnimation ani)[] animations;
+            public readonly Location location = new Location();
+            public readonly DeviceBufferRange locationBufferRange;
+            public readonly ClumpBuffers geometry;
+            public readonly ModelSkinnedMaterial[] materials;
+            public readonly Skeleton skeleton;
+            public readonly DebugSkeletonRenderer skeletonRenderer;
+            public readonly (AnimationType type, string fileName, SkeletalAnimation ani)[] animations;
             public (int BoneIdx, Vector3 TargetPos)? singleIK = null;
             
             public Part(ITagContainer diContainer, string modelName, (AnimationType type, string filename)[] animationNames)

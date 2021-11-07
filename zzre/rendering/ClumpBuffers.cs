@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
+using zzio;
 using zzio.primitives;
 using zzio.rwbs;
 using zzio.utils;

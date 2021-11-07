@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text.RegularExpressions;
+using zzio;
 using zzio.vfs;
 using static ImGuiNET.ImGui;
 
@@ -133,10 +134,9 @@ namespace zzre.imgui
                 if (isNodeOpen != openDirectories.Contains(resource))
                 {
                     // overwrite to force only one modification at a time
-                    if (isNodeOpen)
-                        onAfterTree = () => OpenResource(resource, index, depth);
-                    else
-                        onAfterTree = () => CloseResource(resource, index, depth);
+                    onAfterTree = isNodeOpen
+                        ? () => OpenResource(resource, index, depth)
+                        : () => CloseResource(resource, index, depth);
                 }
                 if (isNodeOpen)
                     curDepth++;

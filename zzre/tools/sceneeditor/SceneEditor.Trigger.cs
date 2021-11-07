@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
+using zzio;
 using zzio.primitives;
 using zzio.scn;
 using zzre.debug;
@@ -80,7 +81,6 @@ namespace zzre.tools
             private readonly SceneEditor editor;
 
             private Trigger[] triggers = new Trigger[0];
-            private readonly bool isVisible = true;
             private bool wasSelected = false;
             private float iconSize = 128f;
 
@@ -135,9 +135,8 @@ namespace zzre.tools
 
             private void HandleRender(CommandList cl)
             {
-                if (!isVisible)
-                    return;
-                iconRenderer.Render(cl);
+                if (iconSize > 0f)
+                    iconRenderer.Render(cl);
             }
 
             private void HandleSelectionEvent(ISelectable? selectable)

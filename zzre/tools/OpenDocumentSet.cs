@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using zzio.utils;
 using zzio.vfs;
+using System.Linq;
 
 namespace zzre.tools
 {
@@ -31,17 +32,8 @@ namespace zzre.tools
 
         public bool TryGetEditorFor(IResource resource, [NotNullWhen(true)] out IDocumentEditor? openEditor)
         {
-            foreach (var editor in editors)
-            {
-                if (resource.Equals(editor.CurrentResource))
-                {
-                    openEditor = editor;
-                    return true;
-                }
-            }
-
-            openEditor = null;
-            return false;
+            openEditor = editors.FirstOrDefault(editor => resource.Equals(editor.CurrentResource));
+            return openEditor != null;
         }
 
         public TEditor OpenWith<TEditor>(string pathText) where TEditor : IDocumentEditor =>

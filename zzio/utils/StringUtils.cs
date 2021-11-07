@@ -35,10 +35,10 @@ namespace zzio.utils
 
             while ((ch = reader.Read()) >= 0)
             {
-                if (escapes.ContainsKey((char)ch))
+                if (escapes.TryGetValue((char)ch, out var escapedChar))
                 {
                     writer.Append('\\');
-                    writer.Append(escapes[(char)ch]);
+                    writer.Append(escapedChar);
                 }
                 else if (ch >= 0x20 && ch < 0x7f)
                 {
@@ -84,9 +84,9 @@ namespace zzio.utils
                 }
                 
                 ch = reader.Read(); // sequence specifier
-                if (unescapes.ContainsKey((char)ch))
+                if (unescapes.TryGetValue((char)ch, out var unescapedChar))
                 {
-                    writer.Append(unescapes[(char)ch]);
+                    writer.Append(unescapedChar);
                 }
                 else if (ch == 'x')
                 {

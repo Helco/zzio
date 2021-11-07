@@ -192,7 +192,7 @@ namespace zzre.game.systems
                 state.State = AnimationState.Run;
                 mainVelocity += forward * foreAftMove;
             }
-            if (state.HitFloor && collision.dirToPlayer.Y != 1f && state.State == AnimationState.Run)
+            if (state.HitFloor && !MathEx.Cmp(collision.dirToPlayer.Y, 1f) && state.State == AnimationState.Run)
             {
                 state.State = AnimationState.Walk;
                 state.SpeedModifier *= parameters.SpeedFallFactor;

@@ -17,7 +17,7 @@ namespace zzre
             public Quaternion CurRotation { get; private set; }
             public Vector3 CurTranslation { get; private set; }
 
-            public bool IsFinished => Time == duration;
+            public bool IsFinished => MathEx.Cmp(Time, duration);
 
             public float Time
             {

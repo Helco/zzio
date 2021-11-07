@@ -7,6 +7,7 @@ using ImGuiNET;
 using zzio.vfs;
 using zzre.rendering;
 using zzre.materials;
+using zzio;
 
 namespace zzre.tools
 {

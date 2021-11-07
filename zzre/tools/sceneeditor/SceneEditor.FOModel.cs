@@ -10,6 +10,7 @@ using zzre.rendering;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
 using System.Collections;
+using zzio;
 
 namespace zzre.tools
 {
@@ -183,11 +184,8 @@ namespace zzre.tools
             {
                 if (detailLevel == 0)
                     return;
-                foreach (var model in models)
-                {
-                    if (model.SceneFOModel.worldDetailLevel <= detailLevel - 1)
-                        model.Render(cl);
-                }
+                foreach (var model in models.Where(model => model.SceneFOModel.worldDetailLevel <= detailLevel - 1))
+                    model.Render(cl);
             }
 
             private void HandleInfoSection()

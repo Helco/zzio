@@ -1,30 +1,29 @@
 using System;
+using System.Text;
 
 namespace zzio.utils
 {
     public static class EnumUtils
     {
-        public static T intToEnum<T>(int i) where T : struct, IConvertible
-        {
-            if (Enum.IsDefined(typeof(T), i))
-                return (T)Enum.Parse(typeof(T), i.ToString());
-            else
-                return (T)Enum.Parse(typeof(T), "Unknown");
-        }
+        public static T intToEnum<T>(int i) where T : struct, IConvertible => Enum.IsDefined(typeof(T), i)
+            ? (T)Enum.Parse(typeof(T), i.ToString())
+            : (T)Enum.Parse(typeof(T), "Unknown");
 
         public static T intToFlags<T>(uint value) where T : struct, IConvertible
         {
-            string flagString = "";
+            var flagString = new StringBuilder();
             for (int bit = 0; bit < 32; bit++)
             {
                 int intFlag = 1 << bit;
-                if ((value & intFlag) > 0 && Enum.IsDefined(typeof(T), intFlag))
-                    flagString += "," + Enum.Parse(typeof(T), intFlag.ToString()).ToString();
+                if ((value & intFlag) == 0 || !Enum.IsDefined(typeof(T), intFlag))
+                    continue;
+                if (flagString.Length > 0)
+                    flagString.Append(',');
+                flagString.Append(Enum.Parse(typeof(T), intFlag.ToString()));
             }
-            if (flagString.Length == 0)
-                return default(T);
-            else
-                return (T)Enum.Parse(typeof(T), flagString.Substring(1));
+            return flagString.Length == 0
+                ? default(T)
+                : (T)Enum.Parse(typeof(T), flagString.ToString());
         }
     }
 }

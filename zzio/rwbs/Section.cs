@@ -49,13 +49,9 @@ namespace zzio.rwbs
             version = reader.ReadUInt32();
         }
 
-        public static Section CreateSection(SectionId id)
-        {
-            if (sectionTypeCtors.ContainsKey(id))
-                return sectionTypeCtors[id]();
-            else
-                return new UnknownSection(id);
-        }
+        public static Section CreateSection(SectionId id) => sectionTypeCtors.TryGetValue(id, out var sectionCtor)
+            ? sectionCtor()
+            : new UnknownSection(id);
 
         public void Read(Stream stream)
         {

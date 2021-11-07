@@ -113,10 +113,8 @@ namespace zzmaps
                 string emptyLine = new string(' ', Console.BufferWidth - 1);
                 printedLines = 0;
                 int maxNameLen = scheduler.ProgressSteps.Max(s => s.Name.Length);
-                foreach (var step in scheduler.ProgressSteps)
+                foreach (var step in scheduler.ProgressSteps.Where(step => step.Current > 0))
                 {
-                    if (step.Current <= 0)
-                        continue;
                     Console.Write(emptyLine);
                     Console.CursorLeft = 0;
                     if (step.Total == null)

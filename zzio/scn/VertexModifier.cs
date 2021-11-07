@@ -21,10 +21,9 @@ namespace zzio.scn
             type = reader.ReadUInt32();
             v = Vector.ReadNew(reader);
             color = IColor.ReadNew(reader);
-            if (type == 1)
-                vv = Vector.ReadNew(reader);
-            else
-                vv = new Vector();
+            vv = type == 1
+                ? Vector.ReadNew(reader)
+                : new Vector();
             ii = reader.ReadUInt32();
             c = reader.ReadByte();
         }

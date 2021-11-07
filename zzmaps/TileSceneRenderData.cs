@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Numerics;
 using Veldrid;
+using zzio;
 using zzio.utils;
 using zzre;
 using zzre.materials;

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
+using zzio;
 using zzio.effect;
 using zzio.effect.parts;
 using zzio.vfs;

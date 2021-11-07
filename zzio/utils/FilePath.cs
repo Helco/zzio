@@ -40,15 +40,7 @@ namespace zzio.utils
             this.IsDirectory = isDirectory;
         }
 
-        private static bool hasDrivePart(string[] parts)
-        {
-            foreach (string part in parts)
-            {
-                if (part.EndsWith(":"))
-                    return true;
-            }
-            return false;
-        }
+        private static bool hasDrivePart(string[] parts) => parts.Any(p => p.EndsWith(":"));
 
         private static bool isDirectoryPart(string part)
         {
@@ -241,16 +233,9 @@ namespace zzio.utils
         }
 
         /// <value>The absolute and normalized path (based on the current directory)</value>
-        public FilePath Absolute
-        {
-            get
-            {
-                if (type == PathType.Relative)
-                    return new FilePath(Environment.CurrentDirectory).Combine(this);
-                else
-                    return Normalized;
-            }
-        }
+        public FilePath Absolute => type == PathType.Relative
+            ? new FilePath(Environment.CurrentDirectory).Combine(this)
+            : Normalized;
 
         /// <value>Wether a path is absolute (or relative)</value>
         public bool IsAbsolute => type != PathType.Relative;
@@ -414,12 +399,8 @@ namespace zzio.utils
         }
 
         /// <summary>Returns this path as string complying with the current platform</summary>
-        public override string ToString()
-        {
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                return ToWin32String();
-            else
-                return ToPOSIXString();
-        }
+        public override string ToString() => Environment.OSVersion.Platform == PlatformID.Win32NT
+            ? ToWin32String()
+            : ToPOSIXString();
     }
 }
