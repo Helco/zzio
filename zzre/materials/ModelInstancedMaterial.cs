@@ -92,33 +92,33 @@ namespace zzre.materials
 
     public class ModelInstancedBlendMaterial : BaseModelInstancedMaterial
     {
-        public ModelInstancedBlendMaterial(ITagContainer diContainer) : base(diContainer, GetPipeline(diContainer)) { }
+        public ModelInstancedBlendMaterial(ITagContainer diContainer, bool depthWrite = false) : base(diContainer, GetPipeline(diContainer, depthWrite)) { }
 
-        private static IBuiltPipeline GetPipeline(ITagContainer diContainer) => PipelineFor<ModelInstancedMaterial>.Get(diContainer, builder =>
+        private static IBuiltPipeline GetPipeline(ITagContainer diContainer, bool depthWrite) => PipelineFor<ModelInstancedMaterial>.Get(diContainer, builder =>
             BuildBasePipeline(builder)
-            .WithDepthWrite(false)
+            .WithDepthWrite(depthWrite)
             .With(BlendStateDescription.SingleAlphaBlend)
             .Build());
     }
 
     public class ModelInstancedAdditiveMaterial : BaseModelInstancedMaterial
     {
-        public ModelInstancedAdditiveMaterial(ITagContainer diContainer) : base(diContainer, GetPipeline(diContainer)) { }
+        public ModelInstancedAdditiveMaterial(ITagContainer diContainer, bool depthWrite = false) : base(diContainer, GetPipeline(diContainer, depthWrite)) { }
 
-        private static IBuiltPipeline GetPipeline(ITagContainer diContainer) => PipelineFor<ModelInstancedMaterial>.Get(diContainer, builder =>
+        private static IBuiltPipeline GetPipeline(ITagContainer diContainer, bool depthWrite) => PipelineFor<ModelInstancedMaterial>.Get(diContainer, builder =>
             BuildBasePipeline(builder)
-            .WithDepthWrite(false)
+            .WithDepthWrite(depthWrite)
             .With(BlendStateDescription.SingleAdditiveBlend)
             .Build());
     }
 
     public class ModelInstancedAdditiveAlphaMaterial : BaseModelInstancedMaterial
     {
-        public ModelInstancedAdditiveAlphaMaterial(ITagContainer diContainer) : base(diContainer, GetPipeline(diContainer)) { }
+        public ModelInstancedAdditiveAlphaMaterial(ITagContainer diContainer, bool depthWrite = false) : base(diContainer, GetPipeline(diContainer, depthWrite)) { }
 
-        private static IBuiltPipeline GetPipeline(ITagContainer diContainer) => PipelineFor<ModelInstancedMaterial>.Get(diContainer, builder =>
+        private static IBuiltPipeline GetPipeline(ITagContainer diContainer, bool depthWrite) => PipelineFor<ModelInstancedMaterial>.Get(diContainer, builder =>
             BuildBasePipeline(builder)
-            .WithDepthWrite(false)
+            .WithDepthWrite(depthWrite)
             .With(new BlendStateDescription(RgbaFloat.White,
                 new BlendAttachmentDescription(true,
                     sourceColorFactor: BlendFactor.SourceAlpha,

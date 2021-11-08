@@ -36,6 +36,9 @@ namespace zzre.game.systems
 
         private void HandleSceneLoaded(in messages.SceneLoaded message)
         {
+            if (!IsEnabled)
+                return;
+
             foreach (var trigger in scene.triggers
                 .Where(t => t.type == TriggerType.Animal)
                 .Where(t =>

@@ -8,8 +8,8 @@ namespace zzio.scn
     [Serializable]
     public enum FOModelRenderType
     {
-        SolidEarly = 0,
-        AdditiveLate = 1,
+        EarlySolid = 0,
+        LateAdditive = 1,
         EnvMap32 = 2,
         EnvMap64 = 3,
         EnvMap96 = 4, // Cathedral
@@ -17,9 +17,9 @@ namespace zzio.scn
         EnvMap196 = 6, // London windows
         EnvMap255 = 7, // London cupboard windows
         Solid = 8, // Metallic?
-        SolidLate = 9, // Plants?
+        LateSolid = 9, // Plants?
         Additive = 10, // Cob webs 
-        AdditiveEarly = 11,
+        EarlyAdditive = 11,
 
         Unknown = -1
     }

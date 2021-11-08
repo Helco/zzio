@@ -21,6 +21,7 @@ namespace zzre.game
         private readonly WorldRenderer worldRenderer;
         private readonly ISystem<float> updateSystems;
         private readonly ISystem<CommandList> renderSystems;
+        private readonly systems.SyncedLocation syncedLocation;
 
         public DefaultEcs.Entity PlayerEntity { get; }
 
@@ -42,6 +43,7 @@ namespace zzre.game
             worldRenderer.WorldBuffers = worldBuffers;
 
             AddTag(new resources.Clump(this));
+            AddTag(new resources.ClumpMaterial(this));
             AddTag(new resources.Actor(this));
             AddTag(new resources.SkeletalAnimation(this));
 
@@ -49,6 +51,7 @@ namespace zzre.game
             var owCameraSystem = new systems.OverworldCamera(this);
             owCameraSystem.IsEnabled = true;
             updateSystems = new SequentialSystem<float>(
+                new systems.ModelLoader(this),
                 new systems.PlayerControls(this),
                 new systems.Animal(this),
                 new systems.Butterfly(this),
@@ -62,9 +65,16 @@ namespace zzre.game
                 flyCameraSystem,
                 owCameraSystem);
 
+            syncedLocation = new systems.SyncedLocation(this);
             renderSystems = new SequentialSystem<CommandList>(
-                new systems.SyncedLocation(this),
-                new systems.ActorRenderer(this));
+                new systems.ActorRenderer(this),
+                new systems.ModelRenderer(this, components.RenderOrder.EarlySolid),
+                new systems.ModelRenderer(this, components.RenderOrder.EarlyAdditive),
+                new systems.ModelRenderer(this, components.RenderOrder.Solid),
+                new systems.ModelRenderer(this, components.RenderOrder.Additive),
+                new systems.ModelRenderer(this, components.RenderOrder.EnvMap),
+                new systems.ModelRenderer(this, components.RenderOrder.LateSolid),
+                new systems.ModelRenderer(this, components.RenderOrder.LateAdditive));
 
             var worldLocation = new Location();
             ecsWorld.Set(worldLocation);
@@ -114,8 +124,9 @@ namespace zzre.game
         public void Render(CommandList cl)
         {
             camera.Update(cl);
-            renderSystems.Update(cl);
+            syncedLocation.Update(cl);
             worldRenderer.Render(cl);
+            renderSystems.Update(cl);
         }
 
         private Scene LoadScene(string sceneName)

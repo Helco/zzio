@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace zzio.scn
+namespace zzio
 {
     [Serializable]
     public struct SurfaceProperties : IEquatable<SurfaceProperties>
