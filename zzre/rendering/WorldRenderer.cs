@@ -110,10 +110,15 @@ namespace zzre.rendering
             var visibleSubMeshes = sections
                 .SelectMany(m => worldBuffers.SubMeshes.Range(m.SubMeshes))
                 .GroupBy(s => s.MaterialIndex);
+            bool didSetBuffers = false;
             foreach (var group in visibleSubMeshes)
             {
                 (materials[group.Key] as IMaterial).Apply(cl);
-                worldBuffers.SetBuffers(cl);
+                if (!didSetBuffers)
+                {
+                    didSetBuffers = true;
+                    worldBuffers.SetBuffers(cl);
+                }
                 foreach (var subMesh in group)
                 {
                     cl.DrawIndexed(

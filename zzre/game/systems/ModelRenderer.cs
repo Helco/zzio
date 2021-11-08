@@ -98,7 +98,7 @@ namespace zzre.game.systems
             Location location,
             in components.ClumpMaterialInfo materialInfo)
         {
-            if (clumpCounts.FirstOrDefault().Clump != clumpBuffers)
+            if (clumpCounts.LastOrDefault().Clump != clumpBuffers)
                 clumpCounts.Add(new(clumpBuffers, materials));
             else
                 clumpCounts[^1] = clumpCounts[^1].Increment();
@@ -121,16 +121,27 @@ namespace zzre.game.systems
                 ref instanceSpan[0],
                 ModelInstance.Stride * (uint)instances.Count);
 
+            bool isFirstDraw;
+            bool isFirstClump = true;
             var curInstanceStart = instanceStart;
             foreach (var clumpCount in clumpCounts)
             {
                 var (clump, materials, count) = (clumpCount.Clump, clumpCount.Materials, clumpCount.Count);
-                
+
+                isFirstDraw = true;
                 foreach (var (subMesh, material) in clump.SubMeshes.Zip(materials))
                 {
                     (material as IMaterial).Apply(cl);
-                    clump.SetBuffers(cl);
-                    cl.SetVertexBuffer(1, instanceBuffer);
+                    if (isFirstDraw)
+                    {
+                        isFirstDraw = false;
+                        clump.SetBuffers(cl);
+                    }
+                    if (isFirstClump)
+                    {
+                        isFirstClump = false;
+                        cl.SetVertexBuffer(1, instanceBuffer);
+                    }
                     cl.DrawIndexed(
                         vertexOffset: 0,
                         indexStart: (uint)subMesh.IndexOffset,
