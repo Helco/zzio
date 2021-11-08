@@ -7,7 +7,8 @@ layout(location = 2) in vec4 fsin_tint;
 
 layout(location = 0) out vec4 fsout_color;
 
-layout(set = 0, binding = 0) uniform sampler2D mainTexture;
+layout(set = 0, binding = 0) uniform texture2D mainTexture;
+layout(set = 0, binding = 1) uniform sampler mainSampler;
 layout (set = 0, binding = 4) uniform MaterialUniforms
 {
 	float vectorColorFactor;
@@ -22,7 +23,7 @@ vec4 weighColor(vec4 color, float factor)
 
 void main()
 {
-	vec4 color = texture(mainTexture, fsin_uv)
+	vec4 color = texture(sampler2D(mainTexture, mainSampler), fsin_uv)
 		* weighColor(fsin_color, vectorColorFactor)
 		* weighColor(fsin_tint, tintFactor);
 	if (color.a < alphaReference)

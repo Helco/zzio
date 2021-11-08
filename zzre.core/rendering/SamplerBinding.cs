@@ -58,10 +58,9 @@ namespace zzre.rendering
 
         public override void Update(CommandList cl)
         {
-            if (!isContentDirty)
+            if (!isContentDirty || !ownsSampler)
                 return;
-            if (ownsSampler)
-                sampler?.Dispose();
+            sampler?.Dispose();
             sampler = Parent.Device.ResourceFactory.CreateSampler(description);
             isContentDirty = false;
         }
