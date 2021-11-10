@@ -105,7 +105,7 @@ namespace zzre.materials
     {
         public ModelInstancedAdditiveMaterial(ITagContainer diContainer, bool depthWrite = false) : base(diContainer, GetPipeline(diContainer, depthWrite)) { }
 
-        private static IBuiltPipeline GetPipeline(ITagContainer diContainer, bool depthWrite) => PipelineFor<ModelInstancedMaterial>.Get(diContainer, builder =>
+        private static IBuiltPipeline GetPipeline(ITagContainer diContainer, bool depthWrite) => PipelineFor<ModelInstancedAdditiveMaterial>.Get(diContainer, builder =>
             BuildBasePipeline(builder)
             .WithDepthWrite(depthWrite)
             .With(BlendStateDescription.SingleAdditiveBlend)
@@ -116,7 +116,7 @@ namespace zzre.materials
     {
         public ModelInstancedAdditiveAlphaMaterial(ITagContainer diContainer, bool depthWrite = false) : base(diContainer, GetPipeline(diContainer, depthWrite)) { }
 
-        private static IBuiltPipeline GetPipeline(ITagContainer diContainer, bool depthWrite) => PipelineFor<ModelInstancedMaterial>.Get(diContainer, builder =>
+        private static IBuiltPipeline GetPipeline(ITagContainer diContainer, bool depthWrite) => PipelineFor<ModelInstancedAdditiveAlphaMaterial>.Get(diContainer, builder =>
             BuildBasePipeline(builder)
             .WithDepthWrite(depthWrite)
             .With(new BlendStateDescription(RgbaFloat.White,
