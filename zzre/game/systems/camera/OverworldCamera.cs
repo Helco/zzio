@@ -90,7 +90,7 @@ namespace zzre.game.systems
 
         private float GetClipDistance(Vector3 baseCamPos, float direction)
         {
-            var camRight = camera.Location.InnerRight;
+            var camRight = -camera.Location.InnerRight;
             var target = baseCamPos + camRight * ClipDistance * direction;
             target.Y -= direction * ClipDistance;
             var cast = worldCollider.Cast(new Line(playerLocation.LocalPosition, target));

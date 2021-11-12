@@ -111,7 +111,7 @@ namespace zzre.tools
                 SliderFloat("Specular", ref SceneModel.surfaceProps.specular, -1f, 1f);
                 SliderFloat("Diffuse", ref SceneModel.surfaceProps.diffuse, -1f, 1f);
                 Checkbox("Use cached models", ref SceneModel.useCachedModels);
-                SliderInt("Wiggle Speed", ref SceneModel.wiggleSpeed, 0, 4);
+                SliderInt("Wiggle Speed", ref SceneModel.wiggleAmpl, 0, 4);
                 Checkbox("Is only visual", ref SceneModel.isVisualOnly);
 
                 NewLine();

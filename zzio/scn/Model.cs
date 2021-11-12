@@ -14,7 +14,7 @@ namespace zzio.scn
         public SurfaceProperties surfaceProps;
         public IColor color;
         public bool useCachedModels; // ignored except for the last model in the scene...
-        public int wiggleSpeed;
+        public int wiggleAmpl;
         public bool isVisualOnly; // if 0 has collision
 
         public void Read(Stream stream)
@@ -27,7 +27,7 @@ namespace zzio.scn
             surfaceProps = SurfaceProperties.ReadNew(reader);
             color = IColor.ReadNew(reader);
             useCachedModels = reader.ReadBoolean();
-            wiggleSpeed = reader.ReadInt32();
+            wiggleAmpl = reader.ReadInt32();
             isVisualOnly = reader.ReadBoolean();
         }
 
@@ -41,7 +41,7 @@ namespace zzio.scn
             surfaceProps.Write(writer);
             color.Write(writer);
             writer.Write(useCachedModels);
-            writer.Write(wiggleSpeed);
+            writer.Write(wiggleAmpl);
             writer.Write(isVisualOnly);
         }
     }

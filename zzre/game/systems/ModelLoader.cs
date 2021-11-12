@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using DefaultEcs.Resource;
 using DefaultEcs.System;
 using zzio;
@@ -46,6 +47,8 @@ namespace zzre.game.systems
                 throw new InvalidOperationException("ModelInstanceBuffer is already created");
             diContainer.AddTag(new ModelInstanceBuffer(diContainer, scene.models.Length + scene.foModels.Length, dynamic: true));
 
+            float plantWiggleDelay = 0f;
+
             foreach (var model in scene.models)
             {
                 var entity = ecsWorld.CreateEntity();
@@ -59,9 +62,11 @@ namespace zzre.game.systems
                     new resources.ClumpInfo(resources.ClumpType.Model, model.filename + ".dff")));
 
                 LoadMaterialsFor(entity, FOModelRenderType.Solid, model.color, model.surfaceProps);
-
-                // TODO: Add plant model wiggling
+                SetCollider(entity);
+                SetPlantWiggle(entity, model.wiggleAmpl, plantWiggleDelay);
                 // TODO: Add model colliders
+
+                plantWiggleDelay++;
             }
 
             foreach (var foModel in scene.foModels)
@@ -79,12 +84,16 @@ namespace zzre.game.systems
                     new resources.ClumpInfo(resources.ClumpType.Model, foModel.filename + ".dff")));
 
                 LoadMaterialsFor(entity, foModel.renderType, foModel.color, foModel.surfaceProps);
+                SetCollider(entity);
+                SetPlantWiggle(entity, foModel.wiggleAmpl, plantWiggleDelay);
 
                 // TODO: Add FOModel distance fading
+
+                plantWiggleDelay++;
             }
         }
 
-        private void LoadMaterialsFor(DefaultEcs.Entity entity, FOModelRenderType renderType, IColor color, SurfaceProperties surfaceProps)
+        private static void LoadMaterialsFor(DefaultEcs.Entity entity, FOModelRenderType renderType, IColor color, SurfaceProperties surfaceProps)
         {
             var clumpBuffers = entity.Get<ClumpBuffers>();
             entity.Set(components.Visibility.Visible);
@@ -103,7 +112,27 @@ namespace zzre.game.systems
                     new resources.ClumpMaterialInfo(renderType, rwMaterial)));
         }
 
-        private components.RenderOrder RenderOrderFromRenderType(FOModelRenderType type) => type switch
+        private static void SetCollider(DefaultEcs.Entity entity)
+        {
+            var clumpBuffers = entity.Get<ClumpBuffers>();
+            var halfSize = clumpBuffers.Bounds.HalfSize;
+            var radius = Math.Max(halfSize.Y, halfSize.Z); // yes, only y and z are relevant
+            entity.Set(new Sphere(0f, 0f, 0f, radius));
+        }
+
+        private static void SetPlantWiggle(DefaultEcs.Entity entity, int wiggleAmplitude, float delay)
+        {
+            wiggleAmplitude--;
+            if (wiggleAmplitude < 0 || wiggleAmplitude >= WiggleAmplitudes.Count)
+                return;
+            entity.Set(new components.PlantWiggle
+            {
+                Amplitude = WiggleAmplitudes[wiggleAmplitude],
+                Delay = delay
+            });
+        }
+
+        private static components.RenderOrder RenderOrderFromRenderType(FOModelRenderType type) => type switch
         {
             FOModelRenderType.EarlySolid    => components.RenderOrder.EarlySolid,
             FOModelRenderType.Solid         => components.RenderOrder.Solid,
@@ -119,6 +148,14 @@ namespace zzre.game.systems
             FOModelRenderType.EnvMap255     => components.RenderOrder.EnvMap,
 
             _ => throw new NotSupportedException($"Unsupported FOModelRenderType: {type}")
+        };
+
+        private static readonly IReadOnlyList<Vector2> WiggleAmplitudes = new[]
+        {
+            new Vector2(0.016f, 0.0004f),
+            new Vector2(0.012f, 0.016f),
+            new Vector2(0.024f, 0.024f),
+            new Vector2(0.036f, 0.036f)
         };
     }
 }

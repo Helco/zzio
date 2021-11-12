@@ -110,7 +110,7 @@ namespace zzre.tools
                 SliderFloat("Specular", ref SceneFOModel.surfaceProps.specular, -1f, 1f);
                 SliderFloat("Diffuse", ref SceneFOModel.surfaceProps.diffuse, -1f, 1f);
                 Checkbox("Use cached model", ref SceneFOModel.useCachedModels);
-                SliderInt("Wiggle Speed", ref SceneFOModel.wiggleSpeed, 0, 4);
+                SliderInt("Wiggle Speed", ref SceneFOModel.wiggleAmpl, 0, 4);
                 SliderInt("Detail Level", ref SceneFOModel.worldDetailLevel, 0, 3);
                 EnumCombo("Render Type", ref SceneFOModel.renderType);
                 InputInt("Unused", ref SceneFOModel.unused);

@@ -36,7 +36,7 @@ namespace zzio.scn
         public byte worldDetailLevel, unused;
         public FOModelRenderType renderType;
         public bool useCachedModels; // only acknoledged for last model
-        public int wiggleSpeed;
+        public int wiggleAmpl;
 
         public void Read(Stream stream)
         {
@@ -53,7 +53,7 @@ namespace zzio.scn
             unused = reader.ReadByte();
             renderType = EnumUtils.intToEnum<FOModelRenderType>(reader.ReadInt32());
             useCachedModels = reader.ReadBoolean();
-            wiggleSpeed = reader.ReadInt32();
+            wiggleAmpl = reader.ReadInt32();
         }
 
         public void Write(Stream stream)
@@ -71,7 +71,7 @@ namespace zzio.scn
             writer.Write(unused);
             writer.Write((int)renderType);
             writer.Write(useCachedModels);
-            writer.Write(wiggleSpeed);
+            writer.Write(wiggleAmpl);
         }
     }
 }

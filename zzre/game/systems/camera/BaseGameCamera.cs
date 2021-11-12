@@ -9,7 +9,6 @@ namespace zzre.game.systems
         private const float MaxMouseMove = 20f;
 
         protected readonly WorldCollider worldCollider;
-        protected readonly Game game;
         protected Location playerLocation => playerLocationLazy.Value;
 
         private readonly Lazy<Location> playerLocationLazy;
@@ -18,7 +17,7 @@ namespace zzre.game.systems
         protected BaseGameCamera(ITagContainer diContainer) : base(diContainer)
         {
             worldCollider = diContainer.GetTag<WorldCollider>();
-            game = diContainer.GetTag<Game>();
+            var game = diContainer.GetTag<Game>();
             zzContainer.OnMouseMove += HandleMouseMove;
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         }
