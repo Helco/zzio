@@ -52,6 +52,7 @@ jobs:
     - name: Test
       run: dotnet test --no-restore --verbosity normal
   CodeQL:
+    if: false
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
