@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Veldrid;
+using zzio.vfs;
 
 namespace zzre.game
 {
@@ -24,6 +25,7 @@ namespace zzre.game
 
     public class Zanzarah : ITagContainer
     {
+        private const int MaxDatabaseModule = (int)(zzio.db.ModuleType.Dialog + 1); // module filenames are one-based
         private readonly ITagContainer tagContainer;
         private readonly IZanzarahContainer zanzarahContainer;
 
@@ -34,6 +36,7 @@ namespace zzre.game
             tagContainer = new TagContainer().FallbackTo(diContainer);
             tagContainer.AddTag(this);
             tagContainer.AddTag(zanzarahContainer);
+            tagContainer.AddTag(LoadDatabase);
             this.zanzarahContainer = zanzarahContainer;
             CurrentGame = new Game(this, "sc_2411", -1);
         }
@@ -46,6 +49,22 @@ namespace zzre.game
         public void Render(CommandList finalCommandList)
         {
             CurrentGame?.Render(finalCommandList);
+        }
+
+        private zzio.db.MappedDB LoadDatabase()
+        {
+            var mappedDb = new zzio.db.MappedDB();
+            var resourcePool = GetTag<IResourcePool>();
+            for (int i = 1; i <= MaxDatabaseModule; i++)
+            {
+                using var tableStream = resourcePool.FindAndOpen($"Data/_fb0x0{i}.fbs");
+                if (tableStream == null)
+                    continue;
+                var table = new zzio.db.Table();
+                table.Read(tableStream);
+                mappedDb.AddTable(table);
+            }
+            return mappedDb;
         }
 
         public void Dispose() => tagContainer.Dispose();
