@@ -2,15 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
-    <PublishTrimmed>true</PublishTrimmed>
-    <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
-    <TrimMode>link</TrimMode>
+    <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>NU1605;nullable;CS8618</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RestoreSources>$(RestoreSources);../../zzio-feed;https://api.nuget.org/v3/index.json</RestoreSources>
-    <LangVersion>10.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -18,6 +14,12 @@
     <DebugSymbols>true</DebugSymbols>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
+    <TrimMode>link</TrimMode>
   </PropertyGroup>
 
   <ItemGroup>

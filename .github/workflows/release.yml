@@ -39,7 +39,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 6.0.x
       - name: Install dependencies
         run: dotnet restore zzio/zzio.sln -r ${{ matrix.target }} -p:NoWarn=NU1605
       - name: Build
@@ -47,7 +47,7 @@ jobs:
           dotnet build zzio/zzio.sln --configuration Release --no-restore
           dotnet build zzio/zzre/zzre.csproj -c Release --no-restore -r ${{ matrix.target }}
       - name: Publish
-        run: dotnet publish zzio/zzre/zzre.csproj -f net5.0 -c Release --no-build --self-contained true -r ${{ matrix.target }} -o ./zzre
+        run: dotnet publish zzio/zzre/zzre.csproj -f net6.0 -c Release --no-build --self-contained true -r ${{ matrix.target }} -o ./zzre
       - name: Fixup cimgui dependency
         run: cp zzio-feed/cimguizmo.dll ./zzre/
       - name: Create archive
