@@ -61,6 +61,7 @@ namespace zzre.game.systems
                 {
                     entity.Set(ManagedResource<ActorExDescription>.Create(actorFile));
                     var body = entity.Get<components.ActorParts>().Body;
+                    body.Get<Location>().Parent = location;
                     body.Get<Skeleton>().JumpToAnimation(
                         body.Get<components.AnimationPool>()[AnimationType.Idle0]);
                 }

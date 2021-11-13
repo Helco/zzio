@@ -36,7 +36,9 @@ namespace zzre.game.resources
                     ? CreateActorPart(entity, resource.wings)
                     : null
             };
-            actorParts.Body.Get<Location>().Parent = entity.Get<Location>();
+            
+            // attach to the "grandparent" as only animals are controlled directly by the entity
+            actorParts.Body.Get<Location>().Parent = entity.Get<Location>().Parent;
 
             if (actorParts.Wings.HasValue)
             {

@@ -111,7 +111,7 @@ namespace zzre.game.systems
                     return OpReturn.Pause;
 
                 case CmdSetNPCType:
-                    var type = int.Parse(args.Single());
+                    var type = Enum.Parse<components.NPCType>(args.Single());
                     SetNPCType(entity, type);
                     return OpReturn.Continue;
 

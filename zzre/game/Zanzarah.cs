@@ -36,7 +36,7 @@ namespace zzre.game
             tagContainer = new TagContainer().FallbackTo(diContainer);
             tagContainer.AddTag(this);
             tagContainer.AddTag(zanzarahContainer);
-            tagContainer.AddTag(LoadDatabase);
+            tagContainer.AddTag(LoadDatabase());
             this.zanzarahContainer = zanzarahContainer;
             CurrentGame = new Game(this, "sc_2411", -1);
         }

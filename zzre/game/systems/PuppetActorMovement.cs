@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Numerics;
-using DefaultEcs;
 using DefaultEcs.System;
 
 namespace zzre.game.systems
@@ -10,26 +9,9 @@ namespace zzre.game.systems
         private const float Curvature = 100f;
         private const float SlerpSpeed = 2f;
 
-        private readonly IDisposable addSubscription;
-
         public PuppetActorMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
         {
-            addSubscription = World.SubscribeComponentAdded<components.PuppetActorMovement>(HandleAddedComponent);
             World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            addSubscription.Dispose();
-        }
-
-        private void HandleAddedComponent(in Entity entity, in components.PuppetActorMovement value)
-        {
-            var parent = entity.Get<components.ActorPart>().ParentActor;
-            var myLocation = entity.Get<Location>();
-            var parentLocation = parent.Get<Location>();
-            myLocation.Parent = parentLocation.Parent; // to prevent parent moving this actor
         }
 
         private void HandleSceneLoaded(in messages.SceneLoaded message)

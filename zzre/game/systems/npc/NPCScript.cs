@@ -10,6 +10,9 @@ namespace zzre.game.systems
     [With(typeof(components.NPC))]
     public partial class NPCScript : BaseScript
     {
+        private const float FlyingColliderSize = 0.2f;
+        private const float ItemColliderSizeOffset = -0.05f;
+
         private readonly IDisposable executeScriptSubscription;
         private Location playerLocation => playerLocationLazy.Value;
         private readonly Lazy<Location> playerLocationLazy;
@@ -42,139 +45,162 @@ namespace zzre.game.systems
 
         // TODO: Missing NPC script instructions
 
-        private void SetModel(DefaultEcs.Entity entity, string v)
+        private void SetModel(DefaultEcs.Entity entity, string name)
         {
-            throw new NotImplementedException();
+            if (entity.Has<components.ActorParts>()) // not required by Zanzarah and a bit too much effort
+                throw new InvalidOperationException("NPC already has a model");
+            entity.Set(ManagedResource<zzio.ActorExDescription>.Create(name));
+
+            // type is already set at this point if it is set at all
+            var npcType = entity.Has<components.NPCType>()
+                ? entity.Get<components.NPCType>()
+                : default;
+            var actorParts = entity.Get<components.ActorParts>();
+            var bodyClump = actorParts.Body.Get<ClumpBuffers>();
+            var bodyHeight = bodyClump.Bounds.Size.Y;
+            var colliderSize = npcType switch
+            {
+                components.NPCType.Flying => FlyingColliderSize,
+                components.NPCType.Item => bodyHeight + ItemColliderSizeOffset,
+                _ => bodyHeight
+            };
+            entity.Set(new Sphere(Vector3.Zero, colliderSize));
         }
 
         private void SetCamera(DefaultEcs.Entity entity, int triggerArg)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"SetCamera\"");
         }
 
         private void Wizform(DefaultEcs.Entity entity, int atIndex, int fairyId, int level)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"Wizform\"");
         }
 
         private void Spell(DefaultEcs.Entity entity, int fairyI, int slotI, int spellId)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"Spell\"");
         }
 
         private void ChangeWaypoint(DefaultEcs.Entity entity, int fromWpId, int toWpId)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"ChangeWaypoint\"");
         }
 
         private void LookAtPlayer(DefaultEcs.Entity entity, int duration, int mode)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"LookAtPlayer\"");
         }
 
         private void RemoveNPC(DefaultEcs.Entity entity)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"RemoveNPC\"");
         }
 
         private bool IfTriggerIsActive(DefaultEcs.Entity entity, int triggerI)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"IfTriggerIsActive\"");
+            return false;
         }
 
         private void MoveSystem(DefaultEcs.Entity entity, int mode, int wpCategory)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"MoveSystem\"");
         }
 
         private void MovementSpeed(DefaultEcs.Entity entity, int speed)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"MovementSpeed\"");
         }
 
         private void LockUserInput(DefaultEcs.Entity entity, int isLocked)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"LockUserInput\"");
         }
 
         private void PlayAnimation(DefaultEcs.Entity entity, zzio.AnimationType animationType, int duration)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"PlayAnimation\"");
         }
 
         private void StartPrelude(DefaultEcs.Entity entity)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"StartPrelude\"");
         }
 
-        private void SetNPCType(DefaultEcs.Entity entity, int type)
+        private void SetNPCType(DefaultEcs.Entity entity, components.NPCType type)
         {
-            throw new NotImplementedException();
+            entity.Set(type);
         }
 
         private void DeployMeAtTrigger(DefaultEcs.Entity entity, int triggerI)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"DeployMeAtTrigger\"");
         }
 
         private void DeployPlayerAtTrigger(DefaultEcs.Entity entity, int triggerI)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"DeployPlayerAtTrigger\"");
         }
 
         private void DeployNPCAtTrigger(DefaultEcs.Entity entity, zzio.primitives.UID uid)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"DeployNPCAtTrigger\"");
         }
 
         private bool IfCloseToWaypoint(DefaultEcs.Entity entity, int waypointI)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"IfCloseToWaypoint\"");
+            return false;
         }
 
         private bool IfNPCModifierHasValue(DefaultEcs.Entity entity, int value)
         {
-            throw new NotImplementedException();
+            return entity.Get<components.NPCModifier>().Value == value;
         }
 
         private void SetNPCModifier(DefaultEcs.Entity entity, int scene, int triggerI, int value)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"SetNPCModifier\"");
         }
 
         private void DefaultWizform(DefaultEcs.Entity entity, int fairyId, int groupOrSlotI, int level)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"DefaultWizform\"");
         }
 
         private void Idle(DefaultEcs.Entity entity)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"Idle\"");
         }
 
         private bool IfPlayerIsClose(DefaultEcs.Entity entity, int maxDistSqr)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"IfPlayerIsClose\"");
+            return false;
         }
 
         private void SetCollision(DefaultEcs.Entity entity, bool isSolid)
         {
-            throw new NotImplementedException();
+            if (isSolid)
+                entity.Set<components.Collidable>();
+            else
+                entity.Remove<components.Collidable>();
         }
 
         private void CreateDynamicItems(DefaultEcs.Entity entity, int itemId, int count, int triggerI)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"CreateDynamicItems\"");
         }
 
         private void Revive(DefaultEcs.Entity entity)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"Revive\"");
         }
 
         private void LookAtTrigger(DefaultEcs.Entity entity, int duration, int triggerI)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Warning: unimplemented instruction \"LookAtTrigger\"");
         }
     }
 }
