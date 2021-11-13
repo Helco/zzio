@@ -7,7 +7,6 @@ using System.Linq;
 
 namespace zzre.game.systems
 {
-    [With(typeof(components.NPC))]
     public partial class NPCScript : BaseScript
     {
         private const float FlyingColliderSize = 0.2f;
@@ -29,6 +28,14 @@ namespace zzre.game.systems
             base.Dispose();
             executeScriptSubscription.Dispose();
         }
+
+        private static DefaultEcs.EntitySet CreateEntityContainer(object sender, DefaultEcs.World world) => world
+            .GetEntities()
+            .With<components.ScriptExecution>()
+            .With<components.NPCState>(IsScriptNPCState)
+            .AsSet();
+
+        private static bool IsScriptNPCState(in components.NPCState state) => state == components.NPCState.Script;
 
         private void HandleExecuteNPCScript(in messages.ExecuteNPCScript message)
         {

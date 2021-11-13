@@ -47,7 +47,7 @@ namespace zzre.game.systems
 
                 if (dbRow.InitScript.Length > 0)
                     entity.Set(new components.ScriptExecution(dbRow.InitScript));                
-                entity.Set<components.NPC>();
+                entity.Set(components.NPCState.Script);
                 entity.Set<components.NPCModifier>();
             }
 
@@ -88,14 +88,17 @@ namespace zzre.game.systems
                     entity.Set(components.NPCType.Biped);
                 var npcType = entity.Get<components.NPCType>();
                 if (npcType != components.NPCType.Flying && entity.Has<Sphere>())
-                {
                     PutOnGround(entity);
-                }
+
+                // TODO: Add SelectableNPC for Biped, Item, Flying
+                // TODO: Add Pixie behaviour
+                // TODO: Add PlantBlocker behaviour
+                // TODO: Add Biped behaviour (HeadIK, open doors)
             }
         }
 
         [Update]
-        private void Update(float elapsedTime, ref components.NPC npc)
+        private void Update(float elapsedTime, ref components.NPCState npc)
         {
         }
 
