@@ -104,7 +104,9 @@ namespace zzre
                 var length = (to - from).Length();
                 var baseSize = length * RhombusBaseSize;
 
-                var normal = (to - from) / length;
+                var normal = MathEx.CmpZero(length)
+                    ? Vector3.UnitY
+                    : (to - from) / length;
                 var tangent =  Vector3.Normalize(normal.SomeOrthogonal()) * baseSize;
                 var bitangent = Vector3.Normalize(Vector3.Cross(normal, tangent)) * baseSize;
                 var baseCenter = from + normal * length * RhombusBaseOffset; 
@@ -120,7 +122,7 @@ namespace zzre
                 }.Select(p => new ColoredVertex(p, Colors[index % Colors.Length])));
                 skinVertices = skinVertices.Concat(Enumerable.Repeat(new SkinVertex()
                 {
-                    bone0 = (byte)Skeleton.Parents[index],
+                    bone0 = unchecked((byte)Skeleton.Parents[index]),
                     weights = Vector4.UnitX
                 }, RhombusVertexCount));
                 indices = indices.Concat(RhombusIndices.Select(i => (ushort)(i + index * RhombusVertexCount)));
