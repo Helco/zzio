@@ -84,7 +84,7 @@ namespace zzmaps
             .Select(t =>
             {
                 var (trg, npc) = t;
-                var setModelMatch = SetModelRegex.Match(npc!.Script2);
+                var setModelMatch = SetModelRegex.Match(npc!.InitScript);
                 return new NPCMetadata()
                 {
                     Name = npc.Name,

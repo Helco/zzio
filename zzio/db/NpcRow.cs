@@ -6,12 +6,12 @@ namespace zzio.db
 
         public string Name    => foreignText(0);
 
-        public string Script1 => row.cells[1].String;
-        public string Script2 => row.cells[2].String;
-        public string Script3 => row.cells[3].String;
-        public string Script4 => row.cells[4].String;
-        public string Script5 => row.cells[5].String;
+        public string TriggerScript => row.cells[1].String;
+        public string InitScript => row.cells[2].String;
+        public string UpdateScript => row.cells[3].String;
+        public string DefeatedScript => row.cells[4].String;
+        public string VictoriousScript => row.cells[5].String;
 
-        public string Unknown => row.cells[6].String;
+        public string InternalName => row.cells[6].String;
     }
 }

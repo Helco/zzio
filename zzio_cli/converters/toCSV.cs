@@ -90,12 +90,12 @@ namespace zzio.cli.converters
                 writeCells(writer,
                     npc.Uid,
                     npc.Name,
-                    npc.Script1,
-                    npc.Script2,
-                    npc.Script3,
-                    npc.Script4,
-                    npc.Script5,
-                    npc.Unknown);
+                    npc.TriggerScript,
+                    npc.InitScript,
+                    npc.UpdateScript,
+                    npc.DefeatedScript,
+                    npc.VictoriousScript,
+                    npc.InternalName);
         }
 
         private void writeItemTable(StreamWriter writer, MappedDB mappedDb)
