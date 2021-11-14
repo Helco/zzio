@@ -6,9 +6,9 @@ namespace zzre.game.components
     public struct NPCMovement
     {
         public float Speed;
-        public int LastWaypointId;
-        public int CurWaypointId;
-        public int NextWaypointId;
+        public int LastWaypointId; // Funatics being themselves these refer to:
+        public int CurWaypointId;  //   - ii1 ("ID") if changeWaypoint is used
+        public int NextWaypointId; //   - idx ("Index") if moveSystem is used -_-
 
         public Vector3 TargetPos;
         public Vector3 LastTargetPos;

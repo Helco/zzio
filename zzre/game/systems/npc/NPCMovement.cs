@@ -29,6 +29,7 @@ namespace zzre.game.systems
         private readonly WorldCollider worldCollider;
         private readonly Scene scene;
         private IReadOnlyDictionary<int, Trigger> waypointById = new Dictionary<int, Trigger>();
+        private IReadOnlyDictionary<int, Trigger> waypointByIdx = new Dictionary<int, Trigger>();
         private ILookup<int, Trigger> waypointsByCategory = Enumerable.Empty<Trigger>().ToLookup(t => 0);
 
         public NPCMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, null, 0)
@@ -64,6 +65,7 @@ namespace zzre.game.systems
             waypointById = waypoints
                 .GroupBy(wp => (int)wp.ii1)
                 .ToDictionary(group => group.Key, group => group.First());
+            waypointByIdx = waypoints.ToDictionary(wp => (int)wp.idx, wp => wp);
             waypointsByCategory = waypoints.ToLookup(wp => (int)wp.ii2);
         }
 
@@ -104,7 +106,7 @@ namespace zzre.game.systems
                 return;
 
             if (move.CurWaypointId >= 0)
-                waypointById[move.CurWaypointId].ii3 = 0;
+                waypointByIdx[move.CurWaypointId].ii3 = 0;
             nextWaypoint.ii3 = 1; // reserving this waypoint
             move.NextWaypointId = (int)nextWaypoint.idx;
             move.TargetPos = nextWaypoint.pos.ToNumerics();
@@ -163,7 +165,6 @@ namespace zzre.game.systems
             entity.Get<Location>(),
             entity.Get<Sphere>(),
             ref entity.Get<components.NPCMovement>(),
-            ref entity.Get<components.PuppetActorMovement>(),
             ref entity.Get<components.NonFairyAnimation>());
 
         private void Update(
@@ -173,10 +174,9 @@ namespace zzre.game.systems
             Location location,
             in Sphere colliderSphere,
             ref components.NPCMovement move,
-            ref components.PuppetActorMovement puppet,
             ref components.NonFairyAnimation animation)
         {
-            var hasArrived = UpdateWalking(elapsedTime, npcType, location, colliderSphere, ref move, ref puppet);
+            var hasArrived = UpdateWalking(elapsedTime, entity, npcType, location, colliderSphere, ref move);
 
             if (hasArrived)
             {
@@ -196,11 +196,11 @@ namespace zzre.game.systems
 
         private bool UpdateWalking(
             float elapsedTime,
+            in DefaultEcs.Entity entity,
             components.NPCType npcType,
             Location location,
             in Sphere colliderSphere,
-            ref components.NPCMovement move,
-            ref components.PuppetActorMovement puppet)
+            ref components.NPCMovement move)
         {
             if (npcType != components.NPCType.Flying)
                 PutOnGround(location, colliderSphere);
@@ -215,9 +215,11 @@ namespace zzre.game.systems
                 {
                     var dir = location.InnerForward;
                     var targetDir = move.TargetPos - location.LocalPosition;
-                    dir = MathEx.HorizontalSlerp(dir, targetDir, SlerpCurvature, SlerpSpeed * elapsedTime);
-                    puppet.TargetDirection = dir;
+                    dir = MathEx.HorizontalSlerp(targetDir, dir, SlerpCurvature, SlerpSpeed * elapsedTime);
                     location.LookIn(dir);
+
+                    var body = entity.Get<components.ActorParts>().Body;
+                    body.Get<components.PuppetActorMovement>().TargetDirection = dir;
                 }
 
                 location.LocalPosition += moveDelta;

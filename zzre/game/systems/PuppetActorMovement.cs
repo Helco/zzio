@@ -4,6 +4,7 @@ using DefaultEcs.System;
 
 namespace zzre.game.systems
 {
+    // TODO: Move PuppetActorMovement to parent entity
     public partial class PuppetActorMovement : AEntitySetSystem<float>
     {
         private const float Curvature = 100f;
