@@ -92,7 +92,7 @@ namespace zzre.game.systems
 
         private void ChangeWaypoint(DefaultEcs.Entity entity, int fromWpId, int toWpId)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"ChangeWaypoint\"");
+            World.Publish(new messages.NPCChangeWaypoint(entity, fromWpId, toWpId));
         }
 
         private void LookAtPlayer(DefaultEcs.Entity entity, int duration, int mode)
@@ -111,14 +111,14 @@ namespace zzre.game.systems
             return false;
         }
 
-        private void MoveSystem(DefaultEcs.Entity entity, int mode, int wpCategory)
+        private void MoveSystem(DefaultEcs.Entity entity, messages.NPCMoveSystem.Mode mode, int wpCategory)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"MoveSystem\"");
+            World.Publish(new messages.NPCMoveSystem(entity, mode, wpCategory));
         }
 
         private void MovementSpeed(DefaultEcs.Entity entity, int speed)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"MovementSpeed\"");
+            entity.Get<components.NPCMovement>().Speed = speed * 0.1f;
         }
 
         private void LockUserInput(DefaultEcs.Entity entity, int isLocked)

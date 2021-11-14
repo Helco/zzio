@@ -63,7 +63,7 @@ namespace zzre.game.systems
             foreach (var entity in npcScripts)
             {
                 var dbRow = entity.Get<zzio.db.NpcRow>();
-                if (dbRow.UpdateScript.Length > 0 && false)
+                if (dbRow.UpdateScript.Length > 0)
                     entity.Set(new components.ScriptExecution(dbRow.UpdateScript));
                 else
                     entity.Remove<components.ScriptExecution>();

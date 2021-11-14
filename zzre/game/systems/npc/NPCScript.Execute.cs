@@ -83,9 +83,9 @@ namespace zzre.game.systems
                         : OpReturn.ConditionalSkip;
 
                 case CmdMoveSystem:
-                    mode = int.Parse(args[0]);
+                    var waypointMode = Enum.Parse<messages.NPCMoveSystem.Mode>(args[0]);
                     var wpCategory = int.Parse(args[1]);
-                    MoveSystem(entity, mode, wpCategory);
+                    MoveSystem(entity, waypointMode, wpCategory);
                     return OpReturn.Pause;
 
                 case CmdMovementSpeed:
