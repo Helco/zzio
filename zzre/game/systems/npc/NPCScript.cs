@@ -179,7 +179,8 @@ namespace zzre.game.systems
 
         private void Idle(DefaultEcs.Entity entity)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"Idle\"");
+            entity.Set(components.NPCIdle.Default);
+            entity.Set(components.NPCState.Idle);
         }
 
         private bool IfPlayerIsClose(DefaultEcs.Entity entity, int maxDistSqr)

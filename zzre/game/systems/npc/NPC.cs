@@ -49,6 +49,7 @@ namespace zzre.game.systems
                     entity.Set(new components.ScriptExecution(dbRow.InitScript));                
                 entity.Set(components.NPCState.Script);
                 entity.Set(components.NPCMovement.Default);
+                entity.Set<components.NPCIdle>();
                 entity.Set<components.NPCModifier>();
             }
 
