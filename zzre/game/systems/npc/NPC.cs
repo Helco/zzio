@@ -76,16 +76,6 @@ namespace zzre.game.systems
                 .AsEnumerable();
             foreach (var entity in npcs)
             {
-                if (entity.Has<components.ActorParts>())
-                {
-                    entity.Set(new components.NonFairyAnimation(GlobalRandom.Get));
-                    var body = entity.Get<components.ActorParts>().Body;
-                    body.Set(new components.PuppetActorMovement()
-                    {
-                        TargetDirection = entity.Get<Location>().InnerForward
-                    });
-                }
-
                 if (!entity.Has<components.NPCType>())
                     entity.Set(components.NPCType.Biped);
                 var npcType = entity.Get<components.NPCType>();

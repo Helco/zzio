@@ -11,8 +11,6 @@ namespace zzre.game.systems
 {
     public partial class NPCMovement : AEntitySetSystem<float>
     {
-        private const float GroundFromOffset = 1f;
-        private const float GroundToOffset = -7f;
         private const float MinSlerpDistance = 0.5f;
         private const float SlerpCurvature = 100f;
         private const float SlerpSpeed = 2f;
@@ -163,7 +161,6 @@ namespace zzre.game.systems
             entity,
             entity.Get<components.NPCType>(),
             entity.Get<Location>(),
-            entity.Get<Sphere>(),
             ref entity.Get<components.NPCMovement>(),
             ref entity.Get<components.NonFairyAnimation>());
 
@@ -172,11 +169,10 @@ namespace zzre.game.systems
             in DefaultEcs.Entity entity,
             components.NPCType npcType,
             Location location,
-            in Sphere colliderSphere,
             ref components.NPCMovement move,
             ref components.NonFairyAnimation animation)
         {
-            var hasArrived = UpdateWalking(elapsedTime, entity, npcType, location, colliderSphere, ref move);
+            var hasArrived = UpdateWalking(elapsedTime, entity, npcType, location, ref move);
 
             if (hasArrived)
             {
@@ -199,11 +195,10 @@ namespace zzre.game.systems
             in DefaultEcs.Entity entity,
             components.NPCType npcType,
             Location location,
-            in Sphere colliderSphere,
             ref components.NPCMovement move)
         {
             if (npcType != components.NPCType.Flying)
-                PutOnGround(location, colliderSphere);
+                World.Publish(new messages.CreaturePlaceToGround(entity));
 
             // TODO: Add NPC ActorHeadIK handling while walking
 
@@ -218,8 +213,7 @@ namespace zzre.game.systems
                     dir = MathEx.HorizontalSlerp(targetDir, dir, SlerpCurvature, SlerpSpeed * elapsedTime);
                     location.LookIn(dir);
 
-                    var body = entity.Get<components.ActorParts>().Body;
-                    body.Get<components.PuppetActorMovement>().TargetDirection = dir;
+                    entity.Get<components.PuppetActorMovement>().TargetDirection = dir;
                 }
 
                 location.LocalPosition += moveDelta;
@@ -234,16 +228,6 @@ namespace zzre.game.systems
                 move.DistanceToTarget = 0f;
                 return true;
             }
-        }
-
-        // TODO: Fix code duplication for NPC PutOnGround methods
-        private void PutOnGround(Location location, Sphere collider)
-        {
-            var cast = worldCollider.Cast(new Line(
-                location.LocalPosition + Vector3.UnitY * GroundFromOffset,
-                location.LocalPosition + Vector3.UnitY * GroundToOffset));
-            if (cast != null)
-                location.LocalPosition = cast.Value.Point + Vector3.UnitY * collider.Radius / 2f;
         }
     }
 }

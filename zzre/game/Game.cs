@@ -97,11 +97,12 @@ namespace zzre.game
             PlayerEntity.Set<components.PlayerPuppet>();
             PlayerEntity.Set(components.PhysicParameters.Standard);
             PlayerEntity.Set(new components.NonFairyAnimation(GlobalRandom.Get));
+            PlayerEntity.Set<components.PuppetActorMovement>();
             var playerActorParts = PlayerEntity.Get<components.ActorParts>();
-            playerActorParts.Body.Set<components.PuppetActorMovement>();
             var playerBodyClump = playerActorParts.Body.Get<ClumpBuffers>();
             var playerColliderSize = playerBodyClump.Bounds.Size.Y;
             PlayerEntity.Set(new components.HumanPhysics(playerColliderSize));
+            PlayerEntity.Set(new Sphere(Vector3.Zero, playerColliderSize));
 
             ecsWorld.Publish(new messages.SceneLoaded(entryId));
         }

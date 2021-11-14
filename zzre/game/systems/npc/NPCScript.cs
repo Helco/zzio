@@ -4,6 +4,7 @@ using DefaultEcs.System;
 using DefaultEcs.Resource;
 using zzio.script;
 using System.Linq;
+using zzio.scn;
 
 namespace zzre.game.systems
 {
@@ -13,12 +14,15 @@ namespace zzre.game.systems
         private const float ItemColliderSizeOffset = -0.05f;
 
         private readonly IDisposable executeScriptSubscription;
+        private readonly Game game;
+        private readonly Scene scene;
         private Location playerLocation => playerLocationLazy.Value;
         private readonly Lazy<Location> playerLocationLazy;
 
         public NPCScript(ITagContainer diContainer) : base(diContainer, CreateEntityContainer2)
         {
-            var game = diContainer.GetTag<Game>();
+            game = diContainer.GetTag<Game>();
+            scene = diContainer.GetTag<Scene>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
             executeScriptSubscription = World.Subscribe<messages.ExecuteNPCScript>(HandleExecuteNPCScript);
         }
@@ -73,6 +77,8 @@ namespace zzre.game.systems
                 _ => bodyHeight
             };
             entity.Set(new Sphere(Vector3.Zero, colliderSize));
+            entity.Set(new components.NonFairyAnimation(GlobalRandom.Get));
+            entity.Set<components.PuppetActorMovement>();
         }
 
         private void SetCamera(DefaultEcs.Entity entity, int triggerArg)
@@ -143,23 +149,24 @@ namespace zzre.game.systems
 
         private void DeployMeAtTrigger(DefaultEcs.Entity entity, int triggerI)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"DeployMeAtTrigger\"");
+            World.Publish(new messages.CreaturePlaceToTrigger(entity, triggerI));
         }
 
         private void DeployPlayerAtTrigger(DefaultEcs.Entity entity, int triggerI)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"DeployPlayerAtTrigger\"");
+            World.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, triggerI));
         }
 
         private void DeployNPCAtTrigger(DefaultEcs.Entity entity, zzio.primitives.UID uid)
         {
+            // In the original game, NPC scripts cannot execute this
             Console.WriteLine("Warning: unimplemented instruction \"DeployNPCAtTrigger\"");
         }
 
         private bool IfCloseToWaypoint(DefaultEcs.Entity entity, int waypointI)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"IfCloseToWaypoint\"");
-            return false;
+            ref readonly var move = ref entity.Get<components.NPCMovement>();
+            return move.CurWaypointId == waypointI;
         }
 
         private bool IfNPCModifierHasValue(DefaultEcs.Entity entity, int value)
@@ -185,8 +192,9 @@ namespace zzre.game.systems
 
         private bool IfPlayerIsClose(DefaultEcs.Entity entity, int maxDistSqr)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"IfPlayerIsClose\"");
-            return false;
+            // TODO: Check the gameflow state in NPC IfPlayerIsClose
+            var location = entity.Get<Location>();
+            return Vector3.DistanceSquared(location.LocalPosition, playerLocation.LocalPosition) < maxDistSqr;
         }
 
         private void SetCollision(DefaultEcs.Entity entity, bool isSolid)

@@ -33,7 +33,7 @@ namespace zzre.game.systems
             ref components.PlayerPuppet puppet,
             ref components.HumanPhysics physics,
             ref components.NonFairyAnimation animation,
-            in components.ActorParts actorParts)
+            ref components.PuppetActorMovement puppetActorMovement)
         {
             if (physics.IsDrowning)
                 Console.WriteLine("Player died of drowning"); // TODO: Add player death caused by drowning
@@ -42,7 +42,7 @@ namespace zzre.game.systems
             Falling(elapsedTime, ref puppet, physics, ref animation);
             Idling(ref puppet, ref physics);
             // TODO: Add NPC comfort zone
-            ActorTargetDirection(physics, actorParts);
+            ActorTargetDirection(physics, ref puppetActorMovement);
         }
 
         private void Animation(
@@ -136,7 +136,7 @@ namespace zzre.game.systems
 
         private void ActorTargetDirection(
             in components.HumanPhysics physics,
-            in components.ActorParts actorParts)
+            ref components.PuppetActorMovement puppetActorMovement)
         {
             // originally an addition, but that bug is too rare to implement
             if (MathEx.CmpZero(physics.Velocity.X) && MathEx.CmpZero(physics.Velocity.Z))
@@ -148,8 +148,7 @@ namespace zzre.game.systems
             targetDir = Vector3.Normalize(targetDir);
 
             targetDir.Y = camera.Location.InnerForward.Y * CameraForwardYFactor;
-            ref var actorMovement = ref actorParts.Body.Get<components.PuppetActorMovement>();
-            actorMovement.TargetDirection = Vector3.Normalize(targetDir);
+            puppetActorMovement.TargetDirection = Vector3.Normalize(targetDir);
         }
     }
 }

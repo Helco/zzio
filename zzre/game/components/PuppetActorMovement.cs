@@ -3,7 +3,7 @@
 namespace zzre.game.components
 {
     /// <summary>
-    /// An actor whose movement is controlled by some other entity in non-strictly-parent ways (e.g. player entity vs player actor)
+    /// An entity that controls its body location through non-parental ways (e.g. PlayerPuppet)
     /// </summary>
     public struct PuppetActorMovement
     {

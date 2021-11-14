@@ -1,40 +1,93 @@
 ﻿using System;
+using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
+using zzio.scn;
 
 namespace zzre.game.systems
 {
-    // TODO: Move PuppetActorMovement to parent entity
     public partial class PuppetActorMovement : AEntitySetSystem<float>
     {
         private const float Curvature = 100f;
         private const float SlerpSpeed = 2f;
+        private const float GroundFromOffset = 1f;
+        private const float GroundToOffset = -7f;
+
+        private readonly IDisposable addedSubscription;
+        private readonly IDisposable placeToGroundSubscription;
+        private readonly IDisposable placeToTriggerSubscription;
+        private readonly WorldCollider worldCollider;
+        private readonly Scene scene;
 
         public PuppetActorMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
         {
-            World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
+            worldCollider = diContainer.GetTag<WorldCollider>();
+            scene = diContainer.GetTag<Scene>();
+            addedSubscription = World.SubscribeComponentAdded<components.PuppetActorMovement>(HandleComponentAdded);
+            placeToGroundSubscription = World.Subscribe<messages.CreaturePlaceToGround>(HandlePlaceToGround);
+            placeToTriggerSubscription = World.Subscribe<messages.CreaturePlaceToTrigger>(HandlePlaceToTrigger);
         }
 
-        private void HandleSceneLoaded(in messages.SceneLoaded message)
+        public override void Dispose()
         {
-            foreach (var entity in Set.GetEntities())
-            {
-                var parent = entity.Get<components.ActorPart>().ParentActor;
-                var myLocation = entity.Get<Location>();
-                var parentLocation = parent.Get<Location>();
-                myLocation.LocalPosition = parentLocation.LocalPosition;
-                myLocation.LocalRotation = parentLocation.LocalRotation;
-                entity.Get<components.PuppetActorMovement>().TargetDirection = myLocation.InnerForward;
-            }
+            base.Dispose();
+            addedSubscription.Dispose();
+            placeToGroundSubscription.Dispose();
+            placeToTriggerSubscription.Dispose();
+        }
+
+        private void HandleComponentAdded(in DefaultEcs.Entity entity, in components.PuppetActorMovement movement)
+        {
+            var location = entity.Get<Location>();
+            entity.Set(movement with { TargetDirection = location.InnerForward });
+
+            if (!entity.Has<components.ActorParts>())
+                return;
+            var bodyLocation = entity.Get<components.ActorParts>().Body.Get<Location>();
+            bodyLocation.LocalPosition = location.LocalPosition;
+            bodyLocation.LocalRotation = location.LocalRotation;
+        }
+
+        private void HandlePlaceToGround(in messages.CreaturePlaceToGround msg) =>
+            PlaceToGround(msg.Entity, msg.Entity.Get<Location>());
+
+        private void HandlePlaceToTrigger(in messages.CreaturePlaceToTrigger msg)
+        {
+            var location = msg.Entity.Get<Location>();
+            var triggerIdx = msg.TriggerIdx;
+            var trigger = msg.TriggerIdx < 0
+                ? scene.triggers.OrderBy(t => Vector3.DistanceSquared(t.pos.ToNumerics(), location.LocalPosition)).FirstOrDefault()
+                : scene.triggers.FirstOrDefault(t => t.idx == triggerIdx);
+            if (trigger == null || trigger.type == TriggerType.NpcStartpoint || trigger.type == TriggerType.NpcAttackPosition)
+                return;
+
+            // TODO: Check whether puppet to ground placement is actually correct
+            location.LocalPosition = trigger.pos.ToNumerics();
+            if (msg.MoveToGround)
+                PlaceToGround(msg.Entity, location);
+            if (msg.OrientByTrigger)
+                location.LookIn(trigger.dir.ToNumerics() with { Y = 0.0001f });
+            if (msg.Entity.Has<components.PuppetActorMovement>())
+                msg.Entity.Get<components.PuppetActorMovement>().TargetDirection = location.InnerForward;
+        }
+
+        private void PlaceToGround(in DefaultEcs.Entity entity, Location location)
+        {
+            var colliderSphere = entity.Get<Sphere>();
+            var cast = worldCollider.Cast(new Line(
+                location.LocalPosition + Vector3.UnitY * GroundFromOffset,
+                location.LocalPosition + Vector3.UnitY * GroundToOffset));
+            if (cast != null)
+                location.LocalPosition = cast.Value.Point + Vector3.UnitY * colliderSphere.Radius / 2f;
         }
 
         [Update]
         private static void Update(float elapsedTime,
             in components.PuppetActorMovement movement,
-            in components.ActorPart actorPart,
-            in Location actorLocation)
+            in components.ActorParts actorParts,
+            in Location parentLocation)
         {
-            var parentLocation = actorPart.ParentActor.Get<Location>();
+            var actorLocation = actorParts.Body.Get<Location>();
             actorLocation.LocalPosition = parentLocation.LocalPosition; // definitly no interpolation for position
 
             // again weirdness from original engine
