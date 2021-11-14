@@ -40,24 +40,8 @@ namespace zzre.game.systems
             var targetDir = movement.TargetDirection;
             targetDir.Y = parentLocation.InnerForward.Y;
             targetDir = Vector3.Normalize(targetDir);
-            var newForward = HorizontalSlerp(actorLocation.InnerForward, targetDir, Curvature, elapsedTime * SlerpSpeed);
+            var newForward = MathEx.HorizontalSlerp(actorLocation.InnerForward, targetDir, Curvature, elapsedTime * SlerpSpeed);
             actorLocation.LookIn(newForward);
-        }
-
-        private static Vector3 HorizontalSlerp(Vector3 from, Vector3 to, float curvature, float time)
-        {
-            var fromAngle = MathF.Atan2(from.X, from.Z);
-            var angleDelta = MathF.Atan2(to.X, to.Z) - fromAngle;
-            if (angleDelta < -MathF.PI)
-                angleDelta += 2 * MathF.PI;
-            if (angleDelta > MathF.PI)
-                angleDelta -= 2 * MathF.PI;
-            var newAngle = (1f - 1f / MathF.Pow(curvature, time)) * angleDelta + fromAngle;
-
-            return new Vector3(
-                MathF.Sin(newAngle),
-                to.Y,
-                MathF.Cos(newAngle));
         }
     }
 }

@@ -48,6 +48,7 @@ namespace zzre.game.systems
                 if (dbRow.InitScript.Length > 0)
                     entity.Set(new components.ScriptExecution(dbRow.InitScript));                
                 entity.Set(components.NPCState.Script);
+                entity.Set(components.NPCMovement.Default);
                 entity.Set<components.NPCModifier>();
             }
 

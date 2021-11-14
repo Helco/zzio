@@ -16,7 +16,7 @@ namespace zzre.game.systems
         private Location playerLocation => playerLocationLazy.Value;
         private readonly Lazy<Location> playerLocationLazy;
 
-        public NPCScript(ITagContainer diContainer) : base(diContainer, CreateEntityContainer)
+        public NPCScript(ITagContainer diContainer) : base(diContainer, CreateEntityContainer2)
         {
             var game = diContainer.GetTag<Game>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
@@ -29,7 +29,7 @@ namespace zzre.game.systems
             executeScriptSubscription.Dispose();
         }
 
-        private static DefaultEcs.EntitySet CreateEntityContainer(object sender, DefaultEcs.World world) => world
+        private static DefaultEcs.EntitySet CreateEntityContainer2(object sender, DefaultEcs.World world) => world
             .GetEntities()
             .With<components.ScriptExecution>()
             .With<components.NPCState>(IsScriptNPCState)
@@ -44,7 +44,8 @@ namespace zzre.game.systems
                 Update(entity, ref executionPool[entity]);
         }
 
-        [Update]
+        protected override void Update(float state, in DefaultEcs.Entity entity) => Update(entity, ref entity.Get<components.ScriptExecution>());
+
         private void Update(in DefaultEcs.Entity entity, ref components.ScriptExecution execution)
         {
             Continue(entity, ref execution);

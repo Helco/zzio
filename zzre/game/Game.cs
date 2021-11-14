@@ -64,6 +64,7 @@ namespace zzre.game
                 new systems.PuppetActorMovement(this),
                 new systems.NPC(this),
                 new systems.NPCScript(this),
+                new systems.NPCMovement(this),
                 new systems.NonFairyAnimation(this),
                 flyCameraSystem,
                 owCameraSystem);
