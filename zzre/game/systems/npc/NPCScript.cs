@@ -101,9 +101,20 @@ namespace zzre.game.systems
             World.Publish(new messages.NPCChangeWaypoint(entity, fromWpId, toWpId));
         }
 
-        private void LookAtPlayer(DefaultEcs.Entity entity, int duration, int mode)
+        private void LookAtPlayer(DefaultEcs.Entity entity, int intDuration, components.NPCLookAtPlayer.Mode mode)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"LookAtPlayer\"");
+            intDuration *= 100;
+            float actualDuration = intDuration == 0 || intDuration > 20000
+                ? float.PositiveInfinity
+                : intDuration * 0.001f;
+            entity.Set(new components.NPCLookAtPlayer(mode, actualDuration));
+            entity.Set(components.NPCState.LookAtPlayer);
+
+            ref var anim = ref entity.Get<components.NonFairyAnimation>();
+            if (anim.Next != zzio.AnimationType.Idle0 &&
+                anim.Next != zzio.AnimationType.Idle1 &&
+                anim.Next != zzio.AnimationType.Idle2)
+                anim.Next = zzio.AnimationType.Idle0;
         }
 
         private void RemoveNPC(DefaultEcs.Entity entity)
@@ -215,9 +226,13 @@ namespace zzre.game.systems
             Console.WriteLine("Warning: unimplemented instruction \"Revive\"");
         }
 
-        private void LookAtTrigger(DefaultEcs.Entity entity, int duration, int triggerI)
+        private void LookAtTrigger(DefaultEcs.Entity entity, int intDuration, int triggerI)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"LookAtTrigger\"");
+            float actualDuration = intDuration == 0 || intDuration > 20000
+                ? float.PositiveInfinity
+                : intDuration * 0.001f;
+            entity.Set(new components.NPCLookAtTrigger(triggerI, actualDuration));
+            entity.Set(components.NPCState.LookAtTrigger);
         }
     }
 }

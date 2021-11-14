@@ -68,8 +68,8 @@ namespace zzre.game.systems
 
                 case CmdLookAtPlayer:
                     var duration = int.Parse(args[0]);
-                    var mode = int.Parse(args[1]);
-                    LookAtPlayer(entity, duration, mode);
+                    var rotationMode = Enum.Parse<components.NPCLookAtPlayer.Mode>(args[1]);
+                    LookAtPlayer(entity, duration, rotationMode);
                     return OpReturn.Pause;
 
                 case CmdRemoveNPC:

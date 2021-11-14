@@ -93,9 +93,7 @@ namespace zzre.game.systems
             // again weirdness from original engine
             var targetDir = movement.TargetDirection;
             targetDir.Y = parentLocation.InnerForward.Y;
-            targetDir = Vector3.Normalize(targetDir);
-            var newForward = MathEx.HorizontalSlerp(actorLocation.InnerForward, targetDir, Curvature, elapsedTime * SlerpSpeed);
-            actorLocation.LookIn(newForward);
+            actorLocation.HorizontalSlerpIn(targetDir, Curvature, elapsedTime * SlerpSpeed);
         }
     }
 }

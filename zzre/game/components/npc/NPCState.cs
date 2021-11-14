@@ -6,9 +6,7 @@ namespace zzre.game.components
     {
         Script,
         Waypoint,
-        SmoothLookAtPlayer,
-        HardLookAtPlayer,
-        BillboardLookAtPlayer,
+        LookAtPlayer,
         LookAtTrigger,
         BreakableAnimation,
         Idle

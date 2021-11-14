@@ -211,7 +211,7 @@ namespace zzre.game.systems
                     var dir = location.InnerForward;
                     var targetDir = move.TargetPos - location.LocalPosition;
                     dir = MathEx.HorizontalSlerp(targetDir, dir, SlerpCurvature, SlerpSpeed * elapsedTime);
-                    location.LookIn(dir);
+                    location.LookIn(dir); // ^ inverse arguments
 
                     entity.Get<components.PuppetActorMovement>().TargetDirection = dir;
                 }

@@ -83,5 +83,11 @@ namespace zzre
 
         private Vector3 ForwardFor(bool isLocalSpace) => isLocalSpace || Parent == null ? Vector3.UnitZ : Parent.GlobalForward;
         private Vector3 UpFor(bool isLocalSpace) => isLocalSpace || Parent == null ? Vector3.UnitY : Parent.GlobalUp;
+
+        public void HorizontalSlerpIn(Vector3 dir, float curvature, float time)
+        {
+            var newForward = MathEx.HorizontalSlerp(Vector3.Normalize(dir), InnerForward, curvature, time);
+            LookIn(newForward);
+        }
     }
 }
