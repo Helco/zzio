@@ -9,7 +9,7 @@ namespace zzre.game.systems
         private const float MaxCameraDistance = 6f;
         private const float MinColliderSize = 0.5f;
         private const float PlayerDuration = 3f;
-        private const float NormalSpeed = 30f;
+        private const float NormalSpeed = 3f;
         private const float PlayerSpeed = 10f;
         private const float PlayerAmplitudeFactor = 0.5f;
         private static readonly Vector3 PlayerDistanceShift = new Vector3(0f, 0.7f, 0f);
