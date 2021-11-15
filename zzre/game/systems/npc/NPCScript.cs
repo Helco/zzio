@@ -143,9 +143,17 @@ namespace zzre.game.systems
             Console.WriteLine("Warning: unimplemented instruction \"LockUserInput\"");
         }
 
-        private void PlayAnimation(DefaultEcs.Entity entity, zzio.AnimationType animationType, int duration)
+        private void PlayAnimation(DefaultEcs.Entity entity, zzio.AnimationType animationType, int intDuration)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"PlayAnimation\"");
+            intDuration *= 100;
+            float actualDuration = intDuration == 0 || intDuration > 20000
+                ? float.PositiveInfinity
+                : intDuration * 0.001f;
+            entity.Set(new components.NPCIdle() { TimeLeft = actualDuration });
+            entity.Set(components.NPCState.Idle);
+
+            ref var anim = ref entity.Get<components.NonFairyAnimation>();
+            anim.Next = animationType;
         }
 
         private void StartPrelude(DefaultEcs.Entity entity)

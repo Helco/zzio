@@ -8,7 +8,6 @@ namespace zzre.game.components
         Waypoint,
         LookAtPlayer,
         LookAtTrigger,
-        BreakableAnimation,
         Idle
     }
 }
