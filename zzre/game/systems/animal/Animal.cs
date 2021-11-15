@@ -47,7 +47,6 @@ namespace zzre.game.systems
                     t.ii1 != (uint)AnimalType.Unused))
             {
                 var entity = ecsWorld.CreateEntity();
-                entity.Set(trigger);
 
                 var location = new Location();
                 location.Parent = ecsWorld.Get<Location>();
@@ -77,7 +76,7 @@ namespace zzre.game.systems
                     case AnimalType.Frog:
                         entity.Set(new components.AnimalWaypointAI(AnimalWaypointAIConfig.Frog));
                         break;
-                    case AnimalType.CirclingBird: entity.Set<components.CirclingBird>();
+                    case AnimalType.CirclingBird: entity.Set(new components.CirclingBird(trigger));
                         break;
                     case AnimalType.Firefly:
                         entity.Set(new components.AnimalWaypointAI(AnimalWaypointAIConfig.Firefly));

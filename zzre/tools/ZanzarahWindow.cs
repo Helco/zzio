@@ -94,6 +94,7 @@ namespace zzre.tools
                 "Controls/Move camera by dragging",
                 () => ref moveCamWithDrag,
                 () => MoveCamWithDrag = MoveCamWithDrag);
+            menuBar.AddButton("Open scene", HandleOpenScene);
 
             Window.OnContent += HandleContent;
             fbArea.OnRender += Zanzarah.Render;
@@ -132,5 +133,14 @@ namespace zzre.tools
         private void HandleMouseDown(MouseButton button, Vector2 _) => buttonsDown.Add(button);
         private void HandleMouseUp(MouseButton button, Vector2 _) => buttonsDown.Remove(button);
         public bool IsMouseDown(MouseButton button) => buttonsDown.Contains(button);
+
+        private void HandleOpenScene()
+        {
+            var sceneResource = Zanzarah.CurrentGame?.SceneResource;
+            if (sceneResource == null)
+                return;
+
+            diContainer.GetTag<OpenDocumentSet>().OpenWith<SceneEditor>(sceneResource);
+        }
     }
 }

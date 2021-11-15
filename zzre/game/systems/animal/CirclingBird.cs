@@ -7,28 +7,8 @@ namespace zzre.game.systems
 {
     public partial class CirclingBird : AEntitySetSystem<float>
     {
-        private readonly IDisposable addSubscription;
-
         public CirclingBird(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
-            addSubscription = World.SubscribeComponentAdded<components.CirclingBird>(HandleAddedComponent);
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            addSubscription.Dispose();
-        }
-
-        private void HandleAddedComponent(in Entity entity, in components.CirclingBird value)
-        {
-            var location = entity.Get<Location>();
-            var trigger = entity.Get<zzio.scn.Trigger>();
-            entity.Set(new components.CirclingBird()
-            {
-                Center = location.LocalPosition + location.InnerForward * (trigger.ii2 * 0.01f),
-                Speed = unchecked((int)trigger.ii3) * 0.001f
-            });
         }
 
         [Update]

@@ -57,27 +57,18 @@ namespace zzre.game.systems
 
             World.Publish(default(messages.ExecuteNPCScript));
 
-            var npcScripts = World
-                .GetEntities()
-                .With<components.ScriptExecution>()
-                .With<zzio.db.NpcRow>()
-                .AsEnumerable()
-                .ToArray();
-            foreach (var entity in npcScripts)
-            {
-                var dbRow = entity.Get<zzio.db.NpcRow>();
-                if (dbRow.UpdateScript.Length > 0)
-                    entity.Set(new components.ScriptExecution(dbRow.UpdateScript));
-                else
-                    entity.Remove<components.ScriptExecution>();
-            }
-
             var npcs = World
                 .GetEntities()
                 .With<zzio.db.NpcRow>()
                 .AsEnumerable();
             foreach (var entity in npcs)
             {
+                var dbRow = entity.Get<zzio.db.NpcRow>();
+                if (dbRow.UpdateScript.Length > 0)
+                    entity.Set(new components.ScriptExecution(dbRow.UpdateScript));
+                else
+                    entity.Remove<components.ScriptExecution>();
+
                 if (!entity.Has<components.NPCType>())
                     entity.Set(components.NPCType.Biped);
                 var npcType = entity.Get<components.NPCType>();

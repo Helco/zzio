@@ -62,11 +62,23 @@ namespace zzre.tools
 
             public void Content()
             {
+                Checkbox("Requires looking", ref SceneTrigger.requiresLooking);
                 InputInt("Desc1", ref SceneTrigger.ii1);
                 InputInt("Desc2", ref SceneTrigger.ii2);
                 InputInt("Desc3", ref SceneTrigger.ii3);
                 InputInt("Desc4", ref SceneTrigger.ii4);
                 InputText("S", ref SceneTrigger.s, 256);
+                EnumCombo("Collider", ref SceneTrigger.colliderType);
+                switch(SceneTrigger.colliderType)
+                {
+                    case TriggerColliderType.Sphere:
+                        InputFloat("Radius", ref SceneTrigger.radius);
+                        break;
+
+                    case TriggerColliderType.Box:
+                        InputFloat3("Size", ref SceneTrigger.size);
+                        break;
+                }
             }
         }
 

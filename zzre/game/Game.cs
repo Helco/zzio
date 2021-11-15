@@ -24,6 +24,7 @@ namespace zzre.game
         private readonly systems.SyncedLocation syncedLocation;
 
         public DefaultEcs.Entity PlayerEntity { get; }
+        public IResource SceneResource { get; }
 
         public Game(ITagContainer diContainer, string sceneName, int entryId)
         {
@@ -36,11 +37,12 @@ namespace zzre.game
             AddTag(ecsWorld = new DefaultEcs.World());
             AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
             AddTag(camera = new Camera(this));
-            AddTag(scene = LoadScene(sceneName));
+            AddTag(scene = LoadScene(sceneName, out var sceneResource));
             AddTag(worldBuffers = LoadWorldBuffers());
             AddTag(new WorldCollider(worldBuffers.RWWorld));
             AddTag(worldRenderer = new WorldRenderer(this));
             worldRenderer.WorldBuffers = worldBuffers;
+            SceneResource = sceneResource;
 
             AddTag(new resources.Clump(this));
             AddTag(new resources.ClumpMaterial(this));
@@ -51,6 +53,7 @@ namespace zzre.game
             var owCameraSystem = new systems.OverworldCamera(this);
             owCameraSystem.IsEnabled = true;
             updateSystems = new SequentialSystem<float>(
+                new systems.TriggerActivation(this),
                 new systems.ModelLoader(this),
                 new systems.PlayerControls(this),
                 new systems.Animal(this),
@@ -137,10 +140,12 @@ namespace zzre.game
             renderSystems.Update(cl);
         }
 
-        private Scene LoadScene(string sceneName)
+        private Scene LoadScene(string sceneName, out IResource sceneResource)
         {
             var resourcePool = GetTag<IResourcePool>();
-            using var sceneStream = resourcePool.FindAndOpen($"resources/worlds/{sceneName}.scn");
+            sceneResource = resourcePool.FindFile($"resources/worlds/{sceneName}.scn") ??
+                throw new System.IO.FileNotFoundException($"Could not find scene: {sceneName}"); ;
+            using var sceneStream = sceneResource.OpenContent();
             if (sceneStream == null)
                 throw new System.IO.FileNotFoundException($"Could not open scene: {sceneName}");
             var scene = new Scene();

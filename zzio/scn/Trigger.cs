@@ -18,7 +18,8 @@ namespace zzio.scn
     [Serializable]
     public class Trigger : ISceneSection
     {
-        public UInt32 idx, normalizeDir;
+        public UInt32 idx;
+        public bool requiresLooking;
         public TriggerColliderType colliderType;
         public Vector dir;
         public TriggerType type;
@@ -34,7 +35,7 @@ namespace zzio.scn
             using BinaryReader reader = new BinaryReader(stream);
             idx = reader.ReadUInt32();
             colliderType = EnumUtils.intToEnum<TriggerColliderType>(reader.ReadInt32());
-            normalizeDir = reader.ReadUInt32();
+            requiresLooking = reader.ReadUInt32() != 0;
             dir = Vector.ReadNew(reader);
             type = EnumUtils.intToEnum<TriggerType>(reader.ReadInt32());
             ii1 = reader.ReadUInt32();
@@ -63,7 +64,7 @@ namespace zzio.scn
             using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(idx);
             writer.Write((int)colliderType);
-            writer.Write(normalizeDir);
+            writer.Write(requiresLooking ? 1 : 0);
             dir.Write(writer);
             writer.Write((int)type);
             writer.Write(ii1);
