@@ -8,7 +8,7 @@ namespace zzre.game.systems
 {
     public partial class NPC : AEntitySetSystem<float>
     {
-        private const string DefaultActor = "p000s00m"; // pixie...
+        private const uint MaxEnabledII2 = 1000;
         private const float GroundFromOffset = 1f;
         private const float GroundToOffset = -7f;
 
@@ -25,12 +25,26 @@ namespace zzre.game.systems
             sceneLoadSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         }
 
+        public override void Dispose()
+        {
+            base.Dispose();
+            sceneLoadSubscription.Dispose();
+        }
+
         private void HandleSceneLoaded(in messages.SceneLoaded message)
         {
             if (!IsEnabled)
                 return;
 
-            foreach (var trigger in scene.triggers.Where(t => t.type == TriggerType.NpcStartpoint))
+            var triggers = World
+                .GetEntities()
+                .With((in Trigger t) => t.type == TriggerType.NpcStartpoint)
+                .AsEnumerable()
+                .ToArray();
+            foreach (var trigger in triggers.Where(t => t.Get<Trigger>().ii2 >= MaxEnabledII2))
+                trigger.Disable();
+
+            foreach (var trigger in scene.triggers.Where(t => t.type == TriggerType.NpcStartpoint && t.ii2 < MaxEnabledII2))
             {
                 var entity = World.CreateEntity();
                 var location = new Location();

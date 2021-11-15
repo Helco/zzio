@@ -124,8 +124,12 @@ namespace zzre.game.systems
 
         private bool IfTriggerIsActive(DefaultEcs.Entity entity, int triggerI)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"IfTriggerIsActive\"");
-            return false;
+            return World
+                .GetEntities()
+                .With<components.ActiveTrigger>()
+                .With((in Trigger t) => t.idx == triggerI)
+                .AsEnumerable()
+                .Any();
         }
 
         private void MoveSystem(DefaultEcs.Entity entity, messages.NPCMoveSystem.Mode mode, int wpCategory)
