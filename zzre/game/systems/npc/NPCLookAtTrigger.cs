@@ -10,7 +10,7 @@ namespace zzre.game.systems
     {
         private readonly Scene scene;
 
-        public NPCLookAtTrigger(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, null, 0)
+        public NPCLookAtTrigger(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, useBuffer: true)
         {
             scene = diContainer.GetTag<Scene>();
         }

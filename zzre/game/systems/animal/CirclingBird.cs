@@ -9,7 +9,7 @@ namespace zzre.game.systems
     {
         private readonly IDisposable addSubscription;
 
-        public CirclingBird(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
+        public CirclingBird(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             addSubscription = World.SubscribeComponentAdded<components.CirclingBird>(HandleAddedComponent);
         }

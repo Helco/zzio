@@ -9,7 +9,7 @@ namespace zzre.game.systems
         private const float SmithCycleDuration = 1.2f;
         private const float AltIdleCycleDuration = 6f;
 
-        public NonFairyAnimation(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
+        public NonFairyAnimation(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
         }
 

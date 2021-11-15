@@ -34,7 +34,7 @@ namespace zzre.game.systems
         private readonly WorldCollider worldCollider;
         private readonly bool isInterior;
 
-        public HumanPhysics(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
+        public HumanPhysics(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             World.SetMaxCapacity<components.HumanPhysics>(1);
             worldCollider = diContainer.GetTag<WorldCollider>();

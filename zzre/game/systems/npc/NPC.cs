@@ -17,7 +17,7 @@ namespace zzre.game.systems
         private readonly Scene scene;
         private readonly zzio.db.MappedDB mappedDB;
 
-        public NPC(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
+        public NPC(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             worldCollider = diContainer.GetTag<WorldCollider>();
             scene = diContainer.GetTag<Scene>();
@@ -51,6 +51,8 @@ namespace zzre.game.systems
                 entity.Set(components.NPCMovement.Default);
                 entity.Set<components.NPCIdle>();
                 entity.Set<components.NPCModifier>();
+                entity.Set<components.NPCLookAtPlayer>();
+                entity.Set<components.NPCLookAtTrigger>();
             }
 
             World.Publish(default(messages.ExecuteNPCScript));

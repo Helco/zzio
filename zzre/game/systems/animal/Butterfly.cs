@@ -8,7 +8,7 @@ namespace zzre.game.systems
     {
         private const float AngleSpeed = 40f * MathF.PI / 180f;
 
-        public Butterfly(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
+        public Butterfly(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
         }
 

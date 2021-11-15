@@ -19,7 +19,7 @@ namespace zzre.game.systems
         private readonly WorldCollider worldCollider;
         private readonly Scene scene;
 
-        public PuppetActorMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
+        public PuppetActorMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             worldCollider = diContainer.GetTag<WorldCollider>();
             scene = diContainer.GetTag<Scene>();

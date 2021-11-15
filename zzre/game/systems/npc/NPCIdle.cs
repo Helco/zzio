@@ -5,7 +5,7 @@ namespace zzre.game.systems
 {
     public partial class NPCIdle : AEntitySetSystem<float>
     {
-        public NPCIdle(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, null, 0)
+        public NPCIdle(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, useBuffer: true)
         {
         }
 

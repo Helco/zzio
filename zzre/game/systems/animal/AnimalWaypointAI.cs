@@ -26,7 +26,7 @@ namespace zzre.game.systems
         private readonly IDisposable addSubscription;
         private Trigger[] waypoints = Array.Empty<Trigger>();
 
-        public AnimalWaypointAI(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
+        public AnimalWaypointAI(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             game = diContainer.GetTag<Game>();
             scene = diContainer.GetTag<Scene>();

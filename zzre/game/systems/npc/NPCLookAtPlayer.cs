@@ -15,7 +15,7 @@ namespace zzre.game.systems
         private Location playerLocation => playerLocationLazy.Value;
         private readonly Lazy<Location> playerLocationLazy;
 
-        public NPCLookAtPlayer(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, null, 0)
+        public NPCLookAtPlayer(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, useBuffer: true)
         {
             var game = diContainer.GetTag<Game>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());

@@ -40,7 +40,7 @@ namespace zzre.game.systems
         private uint instanceStart;
 
         public ModelRenderer(ITagContainer diContainer, components.RenderOrder responsibility) :
-            base(diContainer.GetTag<World>(), CreateEntityContainer, null, 0)
+            base(diContainer.GetTag<World>(), CreateEntityContainer, useBuffer: true)
         {
             this.diContainer = diContainer;
             this.responsibility = responsibility;

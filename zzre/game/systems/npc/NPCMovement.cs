@@ -30,7 +30,7 @@ namespace zzre.game.systems
         private IReadOnlyDictionary<int, Trigger> waypointByIdx = new Dictionary<int, Trigger>();
         private ILookup<int, Trigger> waypointsByCategory = Enumerable.Empty<Trigger>().ToLookup(t => 0);
 
-        public NPCMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, null, 0)
+        public NPCMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, useBuffer: true)
         {
             var game = diContainer.GetTag<Game>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());

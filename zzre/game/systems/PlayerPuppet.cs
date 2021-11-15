@@ -22,7 +22,7 @@ namespace zzre.game.systems
 
         private readonly Camera camera;
 
-        public PlayerPuppet(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
+        public PlayerPuppet(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             camera = diContainer.GetTag<Camera>();
         }

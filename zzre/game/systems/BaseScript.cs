@@ -27,7 +27,7 @@ namespace zzre.game.systems
         }
 
         protected BaseScript(ITagContainer diContainer, Func<object, DefaultEcs.World, DefaultEcs.EntitySet> entitySetCreation)
-            : base(diContainer.GetTag<DefaultEcs.World>(), entitySetCreation, null, 0)
+            : base(diContainer.GetTag<DefaultEcs.World>(), entitySetCreation, useBuffer: true)
         {
         }
 

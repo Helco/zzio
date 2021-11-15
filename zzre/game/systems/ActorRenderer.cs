@@ -21,7 +21,7 @@ namespace zzre.game.systems
         private readonly IDisposable removeSubscription;
 
         public ActorRenderer(ITagContainer diContainer) :
-            base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
+            base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             this.diContainer = diContainer;
             camera = diContainer.GetTag<Camera>();

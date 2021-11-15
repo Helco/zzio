@@ -20,7 +20,7 @@ namespace zzre.game.systems
         private readonly Location cameraLocation;
         private readonly GameTime gameTime;
 
-        public PlantWiggle(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, null, 0)
+        public PlantWiggle(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             var game = diContainer.GetTag<Game>();
             gameTime = diContainer.GetTag<GameTime>();
