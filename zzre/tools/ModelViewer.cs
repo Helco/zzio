@@ -1,18 +1,24 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
-using Veldrid;
-using zzre.imgui;
 using System.Numerics;
+using Veldrid;
 using ImGuiNET;
+using zzio;
 using zzio.vfs;
 using zzre.rendering;
 using zzre.materials;
-using zzio;
+using zzre.debug;
+using zzre.imgui;
+using zzio.primitives;
+using System.Collections.Generic;
 
 namespace zzre.tools
 {
     public class ModelViewer : ListDisposable, IDocumentEditor
     {
+        private const byte DebugPlaneAlpha = 0xA0;
+
         private readonly ITagContainer diContainer;
         private readonly TwoColumnEditorTag editor;
         private readonly Camera camera;
@@ -23,13 +29,17 @@ namespace zzre.tools
         private readonly IAssetLoader<Texture> textureLoader;
         private readonly IResourcePool resourcePool;
         private readonly DebugGridRenderer gridRenderer;
+        private readonly DebugTriangleLineRenderer triangleRenderer;
+        private readonly DebugPlaneRenderer planeRenderer;
         private readonly OpenFileModal openFileModal;
         private readonly ModelMaterialEdit modelMaterialEdit;
         private readonly LocationBuffer locationBuffer;
 
         private ClumpBuffers? geometryBuffers;
+        private GeometryTreeCollider? collider;
         private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
         private DebugSkeletonRenderer? skeletonRenderer;
+        private int highlightedSplitI = -1;
 
         public Window Window { get; }
         public IResource? CurrentResource { get; private set; }
@@ -63,19 +73,33 @@ namespace zzre.tools
 
             locationBuffer = new LocationBuffer(device);
             AddDisposable(locationBuffer);
+
             var localDiContainer = diContainer.ExtendedWith(locationBuffer);
             camera = new Camera(localDiContainer);
             AddDisposable(camera);
+
             controls = new OrbitControlsTag(Window, camera.Location, localDiContainer);
             AddDisposable(controls);
+
             gridRenderer = new DebugGridRenderer(diContainer);
             gridRenderer.Material.LinkTransformsTo(camera);
             gridRenderer.Material.World.Ref = Matrix4x4.Identity;
             AddDisposable(gridRenderer);
 
+            triangleRenderer = new DebugTriangleLineRenderer(diContainer);
+            triangleRenderer.Material.LinkTransformsTo(camera);
+            triangleRenderer.Material.World.Ref = Matrix4x4.Identity;
+            AddDisposable(triangleRenderer);
+
+            planeRenderer = new DebugPlaneRenderer(diContainer);
+            planeRenderer.Material.LinkTransformsTo(camera);
+            planeRenderer.Material.World.Ref = Matrix4x4.Identity;
+            AddDisposable(planeRenderer);
+
             editor.AddInfoSection("Statistics", HandleStatisticsContent);
             editor.AddInfoSection("Materials", HandleMaterialsContent);
             editor.AddInfoSection("Skeleton", HandleSkeletonContent);
+            editor.AddInfoSection("Collision", HandleCollisionContent);
         }
 
         public void Load(string pathText)
@@ -129,7 +153,12 @@ namespace zzre.tools
                 AddDisposable(skeletonRenderer);
             }
 
+            collider = geometryBuffers.RWGeometry.FindChildById(zzio.rwbs.SectionId.CollisionPLG, true) == null
+                ? null
+                : new GeometryTreeCollider(geometryBuffers.RWGeometry, location: null);
+
             controls.ResetView();
+            HighlightSplit(-1);
             fbArea.IsDirty = true;
             CurrentResource = resource;
             Window.Title = $"Model Viewer - {resource.Path.ToPOSIXString()}";
@@ -158,6 +187,8 @@ namespace zzre.tools
             }
 
             skeletonRenderer?.Render(cl);
+            planeRenderer.Render(cl);
+            triangleRenderer.Render(cl);
         }
 
         private void HandleStatisticsContent()
@@ -166,6 +197,8 @@ namespace zzre.tools
             ImGui.Text($"Triangles: {geometryBuffers?.TriangleCount}");
             ImGui.Text($"Submeshes: {geometryBuffers?.SubMeshes.Count}");
             ImGui.Text($"Bones: {skeletonRenderer?.Skeleton.Bones.Count}");
+            ImGui.Text($"Collision splits: {collider?.Collision.splits.Length}");
+            ImGui.Text("Collision test: " + (geometryBuffers?.IsSolid ?? false ? "yes" : "no"));
         }
 
         private void HandleMaterialsContent()
@@ -188,6 +221,121 @@ namespace zzre.tools
                 ImGui.Text("This model has no skeleton.");
             else if (skeletonRenderer.Content())
                 fbArea.IsDirty = true;
+        }
+
+        private void HighlightSplit(int splitI)
+        {
+            highlightedSplitI = splitI;
+            triangleRenderer.Triangles = Array.Empty<Triangle>();
+            planeRenderer.Planes = Array.Empty<DebugPlane>();
+            if (collider == null || geometryBuffers == null || highlightedSplitI < 0)
+                return;
+
+            var split = collider.Collision.splits[splitI];
+            var normal = split.left.type switch
+            {
+                zzio.rwbs.CollisionSectorType.X => Vector3.UnitX,
+                zzio.rwbs.CollisionSectorType.Y => Vector3.UnitY,
+                zzio.rwbs.CollisionSectorType.Z => Vector3.UnitZ,
+                _ => throw new NotSupportedException($"Unsupported collision sector type: " + split.left.type)
+            };
+            SetPlanes(geometryBuffers.Bounds, normal, split.left.value, split.right.value, centerValue: null);
+
+            triangleRenderer.Triangles = SplitTriangles(split).ToArray();
+            triangleRenderer.Colors = Enumerable
+                .Repeat(IColor.Red, SectorTriangles(split.left).Count())
+                .Concat(Enumerable
+                    .Repeat(IColor.Blue, SectorTriangles(split.right).Count()))
+                .ToArray();
+
+            fbArea.IsDirty = true;
+
+            IEnumerable<Triangle> SplitTriangles(zzio.rwbs.CollisionSplit split) =>
+                SectorTriangles(split.left).Concat(SectorTriangles(split.right));
+
+            IEnumerable<Triangle> SectorTriangles(zzio.rwbs.CollisionSector sector) => sector.count == zzio.rwbs.RWCollision.SplitCount
+                ? SplitTriangles(collider.Collision.splits[sector.index])
+                : collider.Collision.map
+                    .Skip(sector.index)
+                    .Take(sector.count)
+                    .Select(collider.GetTriangle)
+                    .ToArray();
+        }
+
+        private void SetPlanes(Box bounds, Vector3 normal, float leftValue, float rightValue, float? centerValue)
+        {
+            var planarCenter = bounds.Center * (Vector3.One - normal);
+            var otherSizes = bounds.Size * (Vector3.One - normal);
+            var size = Math.Max(Math.Max(otherSizes.X, otherSizes.Y), otherSizes.Z) * 0.5f;
+            planeRenderer.Planes = new[]
+            {
+                    new DebugPlane()
+                    {
+                        center = planarCenter + normal * leftValue,
+                        normal = normal,
+                        size = size * 0.7f,
+                        color = IColor.Red.WithA(DebugPlaneAlpha)
+                    },
+                    new DebugPlane()
+                    {
+                        center = planarCenter + normal * rightValue,
+                        normal = normal,
+                        size = size * 0.7f,
+                        color = IColor.Blue.WithA(DebugPlaneAlpha)
+                    }
+            };
+            if (centerValue.HasValue)
+            {
+                planeRenderer.Planes = planeRenderer.Planes.Append(
+                    new DebugPlane()
+                    {
+                        center = planarCenter + normal * centerValue.Value,
+                        normal = normal,
+                        size = size,
+                        color = IColor.Green.WithA(DebugPlaneAlpha)
+                    }).ToArray();
+            }
+        }
+
+        private void HandleCollisionContent()
+        {
+            if (geometryBuffers == null)
+            {
+                ImGui.Text("No model loaded");
+                return;
+            }
+            else if (collider == null)
+            {
+                ImGui.Text("No collision in model");
+                return;
+            }
+
+            Split(0);
+            void Split(int splitI)
+            {
+                var split = collider.Collision.splits[splitI];
+                var flags = (splitI == highlightedSplitI ? ImGuiTreeNodeFlags.Selected : 0) |
+                    ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow |
+                    ImGuiTreeNodeFlags.DefaultOpen;
+                var isOpen = ImGui.TreeNodeEx($"{split.left.type} {split.left.value}-{split.right.value}", flags);
+                if (ImGui.IsItemClicked() && splitI != highlightedSplitI)
+                    HighlightSplit(splitI);
+
+                if (isOpen)
+                {
+                    Sector(split.left, false);
+                    Sector(split.right, true);
+                    ImGui.TreePop();
+                }
+            }
+
+            void Sector(zzio.rwbs.CollisionSector sector, bool isRight)
+            {
+                if (sector.count == zzio.rwbs.RWCollision.SplitCount)
+                    Split(sector.index);
+                else
+                    ImGui.Text($"{(isRight ? "Right" : "Left")}: {sector.count} Triangles");
+            }
         }
     }
 }

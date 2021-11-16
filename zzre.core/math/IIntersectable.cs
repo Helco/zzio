@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace zzre
 {
@@ -9,6 +10,14 @@ namespace zzre
         public bool Intersects(Sphere sphere);
         public bool Intersects(Plane plane);
         public bool Intersects(Triangle triangle);
+    }
+
+    public interface IIntersectionable : IIntersectable
+    {
+        public IEnumerable<Intersection> Intersections(Box box);
+        public IEnumerable<Intersection> Intersections(OrientedBox box);
+        public IEnumerable<Intersection> Intersections(Sphere sphere);
+        public IEnumerable<Intersection> Intersections(Triangle triangle);
     }
 
     public static class IIntersectableExtensions

@@ -64,7 +64,6 @@ namespace zzre.game.systems
                 LoadMaterialsFor(entity, FOModelRenderType.Solid, model.color, model.surfaceProps);
                 SetCollider(entity);
                 SetPlantWiggle(entity, model.wiggleAmpl, plantWiggleDelay);
-                // TODO: Add model colliders
 
                 plantWiggleDelay++;
             }

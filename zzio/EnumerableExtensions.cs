@@ -49,5 +49,14 @@ namespace zzio
 
         public static T FirstNotNull<T>(this IEnumerable<T?> set) where T : class =>
             set.First(e => e != null)!;
+
+        public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> set) where T : struct
+        {
+            foreach (var element in set)
+            {
+                if (element.HasValue)
+                    yield return element.Value;
+            }
+        }
     }
 }

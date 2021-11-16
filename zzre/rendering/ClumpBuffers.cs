@@ -34,6 +34,8 @@ namespace zzre
         public Vector3 BSphereCenter { get; }
         public float BSphereRadius { get; }
         public Box Bounds { get; }
+        public bool IsSolid { get; }
+        public RWGeometry RWGeometry { get; }
 
         public ClumpBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
             throw new FileNotFoundException($"Could not find model at {path.ToPOSIXString()}"))
@@ -43,14 +45,17 @@ namespace zzre
         public ClumpBuffers(ITagContainer diContainer, RWClump clump)
         {
             var device = diContainer.GetTag<GraphicsDevice>();
+            var atomic = clump.FindChildById(SectionId.Atomic, recursive: false) as RWAtomic;
             var geometry = clump.FindChildById(SectionId.Geometry, true) as RWGeometry;
             var materialList = geometry?.FindChildById(SectionId.MaterialList, false) as RWMaterialList;
             var materials = materialList?.children.Where(s => s is RWMaterial).Cast<RWMaterial>().ToArray();
             var morphTarget = geometry?.morphTargets[0]; // TODO: morph support for the one model that uses it? 
-            if (geometry == null || morphTarget == null || materials == null)
+            if (geometry == null || morphTarget == null || materials == null || atomic == null)
                 throw new InvalidDataException("Could not find valid section structure in clump");
+            RWGeometry = geometry;
             BSphereCenter = morphTarget.bsphereCenter.ToNumerics();
             BSphereRadius = morphTarget.bsphereRadius;
+            IsSolid = atomic.flags.HasFlag(AtomicFlags.CollisionTest);
 
             var vertices = new ModelStandardVertex[morphTarget.vertices.Length];
             var bounds = new Box(morphTarget.vertices.First().ToNumerics(), Vector3.Zero);

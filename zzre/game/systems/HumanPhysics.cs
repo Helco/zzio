@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
@@ -32,12 +33,20 @@ namespace zzre.game.systems
         }
 
         private readonly WorldCollider worldCollider;
+        private readonly DefaultEcs.EntitySet collidableModels;
         private readonly bool isInterior;
 
         public HumanPhysics(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             World.SetMaxCapacity<components.HumanPhysics>(1);
             worldCollider = diContainer.GetTag<WorldCollider>();
+
+            collidableModels = World
+                .GetEntities()
+                .With<IIntersectionable>()
+                .With<components.Collidable>()
+                .With<ClumpBuffers>() // a model not a creature
+                .AsSet();
 
             var scene = diContainer.GetTag<zzio.scn.Scene>();
             isInterior = scene.dataset.isInterior;
@@ -131,12 +140,11 @@ namespace zzre.game.systems
 
             // TODO: Add player<->model collision
             var velocity = state.Velocity;
-            var worldIntersections = worldCollider
-                .Intersections(collider)
+            var intersections = FindAllIntersections(collider)
                 .Where(i => Vector3.Dot(velocity, i.Normal) < 0f);
-            if (!worldIntersections.Any())
+            if (!intersections.Any())
                 return newPos - colliderOffset * Vector3.UnitY;
-            collision = new Collision(worldIntersections
+            collision = new Collision(intersections
                 .OrderBy(i => Vector3.DistanceSquared(i.Point, newPos))
                 .First(),
                 CollisionType.World);
@@ -172,6 +180,15 @@ namespace zzre.game.systems
             }
 
             return newPos - colliderOffset * Vector3.UnitY;
+        }
+
+        private IEnumerable<Intersection> FindAllIntersections(Sphere collider)
+        {
+            var intersections = worldCollider.Intersections(collider);
+            foreach (ref readonly var model in collidableModels.GetEntities())
+                intersections = intersections.Concat(
+                    model.Get<IIntersectionable>().Intersections(collider));
+            return intersections;
         }
 
         private void ApplyControls(
