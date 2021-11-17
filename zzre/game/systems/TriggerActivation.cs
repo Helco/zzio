@@ -49,12 +49,10 @@ namespace zzre.game.systems
             Location location,
             Trigger trigger)
         {
-#pragma warning disable DEA0005 // Entity modification method in Update (false positive)
             if (ShouldBeActive(location, trigger))
                 entity.Set<components.ActiveTrigger>();
             else
                 entity.Remove<components.ActiveTrigger>();
-#pragma warning restore DEA0005
         }
 
         private bool ShouldBeActive(Location location, Trigger trigger)

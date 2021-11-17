@@ -7,6 +7,7 @@
     <WarningsAsErrors>NU1605;nullable;CS8618</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RestoreSources>$(RestoreSources);../../zzio-feed;https://api.nuget.org/v3/index.json</RestoreSources>
+    <NoWarn>1701;1702;DEA0005</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -32,8 +33,8 @@
     <None Remove="shaders\Wireframe.vert" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DefaultEcs" Version="0.16.2" />
-    <PackageReference Include="DefaultEcs.Analyzer" Version="0.16.0">
+    <PackageReference Include="DefaultEcs" Version="0.17.0" />
+    <PackageReference Include="DefaultEcs.Analyzer" Version="0.17.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

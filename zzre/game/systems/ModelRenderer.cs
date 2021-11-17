@@ -53,24 +53,6 @@ namespace zzre.game.systems
             sceneLoadedSubscription.Dispose();
         }
 
-        // TODO: Remove workaround after Doraku/DefaultEcs.Analyzer#7
-        private static EntityMultiMap<ClumpBuffers> CreateEntityContainer(object sender, World world) => world
-            .GetEntities()
-            .With<List<BaseModelInstancedMaterial>>()
-            .With<Location>()
-            .With<components.ClumpMaterialInfo>()
-            .With<components.Visibility>()
-            .With<components.RenderOrder>(((ModelRenderer)sender).Filter)
-            .AsMultiMap(sender as IEqualityComparer<ClumpBuffers>);
-
-        protected override void Update(CommandList cl, in ClumpBuffers key, in Entity entity)
-        {
-            var materials = entity.Get<List<BaseModelInstancedMaterial>>();
-            var location = entity.Get<Location>();
-            ref readonly var materialInfo = ref entity.Get<components.ClumpMaterialInfo>();
-            Update(cl, key, materials, location, materialInfo);
-        }
-
         private void HandleSceneLoaded(in messages.SceneLoaded message)
         {
             // only get the tag now, as it was only just created for us
@@ -91,6 +73,7 @@ namespace zzre.game.systems
             instances.Clear();
         }
 
+        [Update]
         private void Update(
             CommandList cl,
             in ClumpBuffers clumpBuffers,

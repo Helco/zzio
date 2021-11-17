@@ -30,7 +30,7 @@ namespace zzre.game.systems
         private IReadOnlyDictionary<int, Trigger> waypointByIdx = new Dictionary<int, Trigger>();
         private ILookup<int, Trigger> waypointsByCategory = Enumerable.Empty<Trigger>().ToLookup(t => 0);
 
-        public NPCMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, useBuffer: true)
+        public NPCMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             var game = diContainer.GetTag<Game>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
@@ -49,12 +49,7 @@ namespace zzre.game.systems
             moveSystemSubscription.Dispose();
         }
 
-        private static DefaultEcs.EntitySet CreateEntityContainer2(object sender, DefaultEcs.World world) => world
-            .GetEntities()
-            .With<components.NPCMovement>()
-            .With<components.NPCState>(IsMovementNPCState)
-            .AsSet();
-
+        [WithPredicate]
         private static bool IsMovementNPCState(in components.NPCState value) => value == components.NPCState.Waypoint;
         
         private void HandleSceneLoaded(in messages.SceneLoaded _)
@@ -156,14 +151,7 @@ namespace zzre.game.systems
             }
         }
 
-        protected override void Update(float elapsedTime, in DefaultEcs.Entity entity) => Update(
-            elapsedTime,
-            entity,
-            entity.Get<components.NPCType>(),
-            entity.Get<Location>(),
-            ref entity.Get<components.NPCMovement>(),
-            ref entity.Get<components.NonFairyAnimation>());
-
+        [Update]
         private void Update(
             float elapsedTime,
             in DefaultEcs.Entity entity,

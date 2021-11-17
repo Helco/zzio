@@ -6,7 +6,7 @@ using RotationMode = zzre.game.components.NPCLookAtPlayer.Mode;
 
 namespace zzre.game.systems
 {
-    public class NPCLookAtPlayer : AEntitySetSystem<float>
+    public partial class NPCLookAtPlayer : AEntitySetSystem<float>
     {
         private const float SlerpCurvature = 150f;
         private const float SlerpSpeed = 20f;
@@ -15,27 +15,16 @@ namespace zzre.game.systems
         private Location playerLocation => playerLocationLazy.Value;
         private readonly Lazy<Location> playerLocationLazy;
 
-        public NPCLookAtPlayer(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, useBuffer: true)
+        public NPCLookAtPlayer(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             var game = diContainer.GetTag<Game>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         }
 
-        private static DefaultEcs.EntitySet CreateEntityContainer2(object sender, DefaultEcs.World world) => world
-            .GetEntities()
-            .With<components.NPCLookAtPlayer>()
-            .With<components.NPCState>(IsLookAtPlayerNPCState)
-            .AsSet();
-
+        [WithPredicate]
         private static bool IsLookAtPlayerNPCState(in components.NPCState value) => value == components.NPCState.LookAtPlayer;
 
-        protected override void Update(float state, in DefaultEcs.Entity entity) =>
-            Update(state, entity,
-                entity.Get<components.NPCType>(),
-                entity.Get<Location>(),
-                ref entity.Get<components.NPCLookAtPlayer>(),
-                ref entity.Get<components.PuppetActorMovement>());
-
+        [Update]
         private void Update(
             float elapsedTime,
             in DefaultEcs.Entity entity,

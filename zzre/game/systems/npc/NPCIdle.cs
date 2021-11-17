@@ -5,21 +5,14 @@ namespace zzre.game.systems
 {
     public partial class NPCIdle : AEntitySetSystem<float>
     {
-        public NPCIdle(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, useBuffer: true)
+        public NPCIdle(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
         }
 
-        private static DefaultEcs.EntitySet CreateEntityContainer2(object sender, DefaultEcs.World world) => world
-            .GetEntities()
-            .With<components.NPCIdle>()
-            .With<components.NPCState>(IsIdleNPCState)
-            .AsSet();
-
+        [WithPredicate]
         private static bool IsIdleNPCState(in components.NPCState value) => value == components.NPCState.Idle;
 
-        protected override void Update(float state, in DefaultEcs.Entity entity) =>
-            Update(state, entity, ref entity.Get<components.NPCIdle>());
-
+        [Update]
         private void Update(
             float elapsedTime,
             in DefaultEcs.Entity entity,

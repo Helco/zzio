@@ -10,27 +10,16 @@ namespace zzre.game.systems
     {
         private readonly Scene scene;
 
-        public NPCLookAtTrigger(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer2, useBuffer: true)
+        public NPCLookAtTrigger(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             scene = diContainer.GetTag<Scene>();
         }
 
-        private static DefaultEcs.EntitySet CreateEntityContainer2(object sender, DefaultEcs.World world) => world
-            .GetEntities()
-            .With<components.NPCLookAtTrigger>()
-            .With<components.NPCState>(IsLookAtTriggerNPCState)
-            .AsSet();
-
+        [WithPredicate]
         private static bool IsLookAtTriggerNPCState(in components.NPCState value) =>
             value == components.NPCState.LookAtTrigger;
 
-        protected override void Update(float state, in DefaultEcs.Entity entity) =>
-            Update(state, entity,
-                entity.Get<components.NPCType>(),
-                entity.Get<Location>(),
-                ref entity.Get<components.NPCLookAtTrigger>(),
-                ref entity.Get<components.PuppetActorMovement>());
-
+        [Update]
         private void Update(
             float elapsedTime,
             in DefaultEcs.Entity entity,
