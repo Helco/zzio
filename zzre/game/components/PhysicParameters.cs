@@ -26,6 +26,9 @@
         public float MaxForcedJumpSpeed { get; init; }
         public float MinFloorYDir { get; init; }
         public float MinRunSpeed { get; init; }
+        public float PlantBlockerAddRadius { get; init; }
+        public float CreatureHalfHeight { get; init; }
+        public float CreatureRadius { get; init; }
         public bool CanJumpWithoutFloor { get; init; }
         public bool UseWorldForces { get; init; }
         public bool PreserveVelocityAtCollision { get; init; }
@@ -54,6 +57,9 @@
             MaxForcedJumpSpeed = 0.2f,
             MinFloorYDir = 0.4f,
             MinRunSpeed = 0.7f,
+            PlantBlockerAddRadius = 0.75f,
+            CreatureHalfHeight = 2.5f,
+            CreatureRadius = 1.3f,
             CanJumpWithoutFloor = false,
             UseWorldForces = true,
             PreserveVelocityAtCollision = true

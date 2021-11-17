@@ -67,6 +67,7 @@ namespace zzre.game.systems
                 entity.Set<components.NPCModifier>();
                 entity.Set<components.NPCLookAtPlayer>();
                 entity.Set<components.NPCLookAtTrigger>();
+                entity.Set<components.Collidable>();
             }
 
             World.Publish(default(messages.ExecuteNPCScript));

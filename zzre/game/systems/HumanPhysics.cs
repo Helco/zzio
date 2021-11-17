@@ -34,6 +34,7 @@ namespace zzre.game.systems
 
         private readonly WorldCollider worldCollider;
         private readonly DefaultEcs.EntitySet collidableModels;
+        private readonly DefaultEcs.EntitySet collidableCreatures;
         private readonly bool isInterior;
 
         public HumanPhysics(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
@@ -47,9 +48,21 @@ namespace zzre.game.systems
                 .With<components.Collidable>()
                 .With<ClumpBuffers>() // a model not a creature
                 .AsSet();
+            collidableCreatures = World
+                .GetEntities()
+                .With<components.Collidable>()
+                .With<components.ActorParts>() // the player is not collidable, don't worry
+                .AsSet();
 
             var scene = diContainer.GetTag<zzio.scn.Scene>();
             isInterior = scene.dataset.isInterior;
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            collidableModels.Dispose();
+            collidableCreatures.Dispose();
         }
 
         [Update]
@@ -108,7 +121,7 @@ namespace zzre.game.systems
 
             newPos = WorldAndModelCollision(quarterColliderSize, quarterColliderSize, newPos, parameters, ref state, ref collision);
             newPos = WorldAndModelCollision(-quarterColliderSize, quarterColliderSize, newPos, parameters, ref state, ref collision);
-            // TODO: Add player<->creature collision
+            newPos = CreatureCollision(newPos, parameters);
 
             var velocityAngle = Vector3.Dot(state.Velocity, forward);
             var mainVelocity = forward * velocityAngle;
@@ -138,7 +151,6 @@ namespace zzre.game.systems
             newPos += Vector3.UnitY * colliderOffset;
             var collider = new Sphere(newPos, colliderRadius);
 
-            // TODO: Add player<->model collision
             var velocity = state.Velocity;
             var intersections = FindAllIntersections(collider)
                 .Where(i => Vector3.Dot(velocity, i.Normal) < 0f);
@@ -180,6 +192,47 @@ namespace zzre.game.systems
             }
 
             return newPos - colliderOffset * Vector3.UnitY;
+        }
+        
+        private Vector3 CreatureCollision(
+            Vector3 newPos,
+            in components.PhysicParameters parameters)
+        {
+            var intersection = FindCreatureIntersection(newPos, parameters);
+            if (intersection == null)
+                return newPos;
+
+            var collisionToPlayer = Vector3.Normalize(newPos - intersection.Value);
+            return intersection.Value + collisionToPlayer * parameters.CreatureRadius;
+        }
+
+        private Vector3? FindCreatureIntersection(
+            Vector3 playerPos,
+            in components.PhysicParameters parameters)
+        {
+            // basically a axis-aligned capsule intersection test
+            // which is degenerated to a cylinder...
+
+            Vector3? bestPos = default;
+            float bestDistanceSqr = parameters.CreatureRadius * parameters.CreatureRadius;
+            foreach (var creature in collidableCreatures.GetEntities())
+            {
+                var comparePos = creature.Get<Location>().LocalPosition;
+                if (creature.Has<components.NPCType>() &&
+                    creature.Get<components.NPCType>() == components.NPCType.PlantBlocker)
+                    comparePos += Vector3.Normalize(playerPos - comparePos) * parameters.PlantBlockerAddRadius;
+
+                if (Math.Abs(comparePos.Y - playerPos.Y) < parameters.CreatureHalfHeight)
+                    comparePos.Y = playerPos.Y;
+
+                var currentDistance = Vector3.DistanceSquared(comparePos, playerPos);
+                if (currentDistance < bestDistanceSqr)
+                {
+                    bestDistanceSqr = currentDistance;
+                    bestPos = comparePos;
+                }
+            }
+            return bestPos;
         }
 
         private IEnumerable<Intersection> FindAllIntersections(Sphere collider)
