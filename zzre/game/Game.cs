@@ -66,6 +66,7 @@ namespace zzre.game
                 new systems.PlayerPuppet(this),
                 new systems.PuppetActorMovement(this),
                 new systems.NPC(this),
+                new systems.NPCActivator(this),
                 new systems.NPCScript(this),
                 new systems.NPCMovement(this),
                 new systems.NPCIdle(this),

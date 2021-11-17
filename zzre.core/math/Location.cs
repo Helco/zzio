@@ -89,5 +89,10 @@ namespace zzre
             var newForward = MathEx.HorizontalSlerp(Vector3.Normalize(dir), InnerForward, curvature, time);
             LookIn(newForward);
         }
+
+        public float Distance(Vector3 point) => Vector3.Distance(GlobalPosition, point);
+        public float DistanceSquared(Vector3 point) => Vector3.DistanceSquared(GlobalPosition, point);
+        public float Distance(Location other) => Vector3.Distance(GlobalPosition, other.GlobalPosition);
+        public float DistanceSquared(Location other) => Vector3.DistanceSquared(GlobalPosition, other.GlobalPosition);
     }
 }

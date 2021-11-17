@@ -16,6 +16,7 @@ namespace zzre.game.systems
         private const float BigControlLockTime = 0.4f;
         private const float MinFallAnimationTime = 0.3f;
         private const float CameraForwardYFactor = -0.7f;
+        private const float NPCComfortZoneSpeed = 0.6f;
         private const string ThudVoiceSampleBase = "resources/AUDIO/SFX/VOICES/AMY/THD00";
         private const string ThudVoiceSample1 = ThudVoiceSampleBase + "A.WAV";
         private const string ThudVoiceSample2 = ThudVoiceSampleBase + "B.WAV";
@@ -41,7 +42,7 @@ namespace zzre.game.systems
             Animation(elapsedTime, ref puppet, physics, ref animation);
             Falling(elapsedTime, ref puppet, physics, ref animation);
             Idling(ref puppet, ref physics);
-            // TODO: Add NPC comfort zone
+            NPCComfortZone(ref physics);
             ActorTargetDirection(physics, ref puppetActorMovement);
         }
 
@@ -132,6 +133,13 @@ namespace zzre.game.systems
                 puppet.DidResetPlanarVelocity = true;
                 physics.Velocity *= Vector3.UnitY;
             }
+        }
+
+        private void NPCComfortZone(ref components.HumanPhysics physics)
+        {
+            physics.SpeedModifier = World.Has<components.ActiveNPC>()
+                ? NPCComfortZoneSpeed
+                : components.HumanPhysics.DefaultSpeedModifier;
         }
 
         private void ActorTargetDirection(

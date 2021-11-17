@@ -4,6 +4,8 @@ namespace zzre.game.components
 {
     public struct HumanPhysics
     {
+        public const float DefaultSpeedModifier = 1f;
+
         public enum AnimationState
         {
             Idle,
@@ -29,7 +31,7 @@ namespace zzre.game.components
         {
             ColliderSize = colliderSize;
             GravityModifier = 1f;
-            SpeedModifier = 1f;
+            SpeedModifier = DefaultSpeedModifier;
             ShouldCollideWithModels = true;
 
             Velocity = Vector3.Zero;

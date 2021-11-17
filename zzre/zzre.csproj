@@ -7,7 +7,7 @@
     <WarningsAsErrors>NU1605;nullable;CS8618</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RestoreSources>$(RestoreSources);../../zzio-feed;https://api.nuget.org/v3/index.json</RestoreSources>
-    <NoWarn>1701;1702;DEA0005</NoWarn>
+    <NoWarn>1701;1702;DEA0005,DEA0022</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
