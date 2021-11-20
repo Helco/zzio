@@ -67,7 +67,7 @@ namespace zzre.game.systems
                 SetCollider(entity);
                 SetPlantWiggle(entity, model.wiggleAmpl, plantWiggleDelay);
                 if (behaviors.TryGetValue(model.idx, out var behaviour))
-                    SetBehaviour(entity, behaviour);
+                    SetBehaviour(entity, behaviour, model.idx);
                 if (entity.Has<components.Collidable>())
                     SetIntersectionable(entity);
 
@@ -170,7 +170,7 @@ namespace zzre.game.systems
             new Vector2(0.036f, 0.036f)
         };
 
-        private static void SetBehaviour(DefaultEcs.Entity entity, BehaviourType behaviour)
+        private static void SetBehaviour(DefaultEcs.Entity entity, BehaviourType behaviour, uint modelId)
         {
             switch (behaviour)
             {
@@ -214,6 +214,20 @@ namespace zzre.game.systems
                 case BehaviourType.CityDoorUp:       entity.Set(new components.behaviour.CityDoor(speed: 1.5f,  keyItemId: null)); break;
                 case BehaviourType.CityDoorDown:     entity.Set(new components.behaviour.CityDoor(speed: -1.5f, keyItemId: null)); break;
                 case BehaviourType.CityDoorLock:     entity.Set(new components.behaviour.CityDoor(speed: 1.5f,  keyItemId: StdItemId.HeavyIronKey)); break;
+
+                case BehaviourType.Collectable:
+                    entity.Set(new components.behaviour.Collectable() { IsDynamic = false, ModelId = modelId });
+                    // TODO: Add shadow to collectable
+                    break;
+                case BehaviourType.Collectable_EFF0:
+                case BehaviourType.Collectable_EFF1:
+                    entity.Set(new components.behaviour.Collectable() { IsDynamic = false, ModelId = modelId });
+                    // TODO: Add 4004 effect to collectable_eff0/1
+                    break;
+                case BehaviourType.Collectable_Physics:
+                    entity.Set(new components.behaviour.Collectable() { IsDynamic = true, ModelId = modelId });
+                    entity.Set<components.behaviour.CollectablePhysics>();
+                    break;
 
                 default: Console.WriteLine($"Warning: unsupported behaviour type {behaviour}"); break;
             }

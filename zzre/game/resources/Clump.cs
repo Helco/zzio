@@ -59,6 +59,7 @@ namespace zzre.game.resources
 
         protected override void OnResourceLoaded(in Entity entity, ClumpInfo info, ClumpBuffers resource)
         {
+            entity.Set(info);
             entity.Set(resource);
             if (resource.Skin != null)
                 entity.Set(new Skeleton(resource.Skin));

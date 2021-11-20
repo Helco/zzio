@@ -25,6 +25,7 @@ namespace zzio.scn
         Collectable = 1000,
         Collectable_EFF0 = 1001,
         Collectable_EFF1 = 1002,
+        Collectable_Physics = 1010,
         Lock = 1100,
         BlockerStone = 1500,
         BlockerPlant = 1501,

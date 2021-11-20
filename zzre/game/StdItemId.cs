@@ -4,8 +4,14 @@
 
     public enum StdItemId
     {
+        SmallHealingPotion = 0,
+        NormalHealingPotion = 1,
+        BigHealingPotion = 2,
+        HealingHerb = 3,
+        Gold = 4,
         FairyHorn = 8,
         CloverLeaf = 10,
+        GoldenCarrot = 13,
         Oister = 15,
         PixieBag = 16,
         SilverOrb = 17,
@@ -29,6 +35,7 @@
         RuneDarkzone = 36,
         FairyBook = 58,
         FairyBag = 59,
+        ManaPotion = 60,
         MapFairyGarden = 62,
         MapForest = 63,
         MapMountain = 64,

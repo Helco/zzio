@@ -12,7 +12,7 @@ namespace zzio.db
 
         public string Info   => foreignText(2);
 
-        public int Special   => row.cells[3].Integer;
+        public byte Special   => row.cells[3].Byte;
 
         public string Script => row.cells[4].String;
 

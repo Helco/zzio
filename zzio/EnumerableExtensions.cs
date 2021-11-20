@@ -58,5 +58,8 @@ namespace zzio
                     yield return element.Value;
             }
         }
+
+        public static IEnumerable<TElement> SelectMany<TElement>(this IEnumerable<IEnumerable<TElement>> set)
+            => set.SelectMany(s => s);
     }
 }
