@@ -21,6 +21,14 @@ namespace zzre
             return dir * (dot / dir.LengthSquared());
         }
 
+        public static Vector3 SafeNormalize(Vector3 v)
+        {
+            var lengthSqr = v.LengthSquared();
+            return CmpZero(lengthSqr)
+                ? Vector3.Zero
+                : v * (1f / lengthSqr);
+        }
+
         public static Vector3 Perpendicular(Vector3 length, Vector3 dir) =>
             length - Project(length, dir);
 

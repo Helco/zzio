@@ -167,7 +167,7 @@ namespace zzre.game.systems
                 state.HitCeiling = collision.dirToPlayer.Y < 0f;
                 collision.dirToPlayer.Y = Math.Max(0f, collision.dirToPlayer.Y);
             }
-            collision.dirToPlayer = Vector3.Normalize(collision.dirToPlayer);
+            collision.dirToPlayer = MathEx.SafeNormalize(collision.dirToPlayer);
             state.HitFloor |= collision.dirToPlayer.Y > parameters.MinFloorYDir;
 
             if (parameters.PreserveVelocityAtCollision)
@@ -177,7 +177,7 @@ namespace zzre.game.systems
                 else
                 {
                     collision.dirToPlayer.Y = 0f;
-                    collision.dirToPlayer = Vector3.Normalize(collision.dirToPlayer);
+                    collision.dirToPlayer = MathEx.SafeNormalize(collision.dirToPlayer);
                 }
             }
 
