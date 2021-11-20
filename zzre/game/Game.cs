@@ -69,6 +69,7 @@ namespace zzre.game
                 new systems.BehaviourCityDoor(this),
                 new systems.BehaviourCollectablePhysics(this),
                 new systems.BehaviourCollectable(this),
+                new systems.BehaviourMagicBridge(this),
                 new systems.AdvanceAnimation(this),
                 new systems.HumanPhysics(this),
                 new systems.PlayerPuppet(this),
@@ -105,6 +106,7 @@ namespace zzre.game
             var playerLocation = new Location();
             playerLocation.Parent = worldLocation;
             playerLocation.LocalPosition = new Vector3(195.02159f, 40.1f, 159.80594f);
+            playerLocation.LocalPosition = scene.triggers.First(t => t.type == TriggerType.Doorway).pos.ToNumerics();
             PlayerEntity.Set(playerLocation);
             PlayerEntity.Set(DefaultEcs.Resource.ManagedResource<zzio.ActorExDescription>.Create("chr01"));
             PlayerEntity.Set(components.Visibility.Visible);

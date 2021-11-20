@@ -229,6 +229,21 @@ namespace zzre.game.systems
                     entity.Set<components.behaviour.CollectablePhysics>();
                     break;
 
+                case BehaviourType.MagicBridgeStatic: entity.Set<components.Collidable>(); break;
+                case BehaviourType.MagicBridge0:
+                    var speed = 15f + MathF.Abs(GlobalRandom.Get.NextFloat()) * 10f;
+                    entity.Set(new components.behaviour.Rotate(Vector3.UnitX, speed));
+                    entity.Set<components.Collidable>();
+                    break;
+                case BehaviourType.MagicBridge1:
+                    entity.Set(new components.behaviour.MagicBridge(-2.2f));
+                    entity.Set<components.Collidable>();
+                    break;
+                case BehaviourType.MagicBridge2:
+                    entity.Set(new components.behaviour.MagicBridge(2.2f));
+                    entity.Set<components.Collidable>();
+                    break;
+
                 default: Console.WriteLine($"Warning: unsupported behaviour type {behaviour}"); break;
             }
         }
