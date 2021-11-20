@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
 using Veldrid;
@@ -65,6 +66,7 @@ namespace zzre.game
                 new systems.BehaviourRotate(this),
                 new systems.BehaviourUVShift(this),
                 new systems.BehaviourDoor(this),
+                new systems.BehaviourCityDoor(this),
                 new systems.AdvanceAnimation(this),
                 new systems.HumanPhysics(this),
                 new systems.PlayerPuppet(this),
@@ -99,7 +101,8 @@ namespace zzre.game
             PlayerEntity = ecsWorld.CreateEntity();
             var playerLocation = new Location();
             playerLocation.Parent = worldLocation;
-            playerLocation.LocalPosition = new Vector3(195.02159f, 40.1f, 159.80594f);
+            //playerLocation.LocalPosition = new Vector3(195.02159f, 40.1f, 159.80594f);
+            playerLocation.LocalPosition = scene.triggers.Where(t => t.type == TriggerType.Doorway).Skip(1).First().pos.ToNumerics();
             PlayerEntity.Set(playerLocation);
             PlayerEntity.Set(DefaultEcs.Resource.ManagedResource<zzio.ActorExDescription>.Create("chr01"));
             PlayerEntity.Set(components.Visibility.Visible);

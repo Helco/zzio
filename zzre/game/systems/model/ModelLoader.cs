@@ -211,6 +211,10 @@ namespace zzre.game.systems
                 case BehaviourType.SimpleDoorRight:  entity.Set(new components.behaviour.Door(isRight: true,  speed: -190f, keyItemId: null)); break;
                 case BehaviourType.MetalDoorLeft:    entity.Set(new components.behaviour.Door(isRight: false, speed: -190f, keyItemId: null)); break;
 
+                case BehaviourType.CityDoorUp:       entity.Set(new components.behaviour.CityDoor(speed: 1.5f,  keyItemId: null)); break;
+                case BehaviourType.CityDoorDown:     entity.Set(new components.behaviour.CityDoor(speed: -1.5f, keyItemId: null)); break;
+                case BehaviourType.CityDoorLock:     entity.Set(new components.behaviour.CityDoor(speed: 1.5f,  keyItemId: StdItemId.HeavyIronKey)); break;
+
                 default: Console.WriteLine($"Warning: unsupported behaviour type {behaviour}"); break;
             }
         }
