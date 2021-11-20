@@ -133,6 +133,7 @@ namespace zzre.rendering.effectparts
                         Matrix4x4.CreateFromAxisAngle(model.rotationAxis, model.rotation * MathF.PI / 180f) *
                         Matrix4x4.CreateTranslation(model.basic.pos);
                     instance.tint = model.basic.color.ToFColor();
+                    instance.texShift = Matrix3x2.Identity;
                 }
 
                 uint updateSize = (uint)CurrentParticles * ModelInstance.Stride;

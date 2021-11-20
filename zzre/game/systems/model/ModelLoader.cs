@@ -163,7 +163,7 @@ namespace zzre.game.systems
 
         private static void SetBehaviour(DefaultEcs.Entity entity, BehaviourType behaviour)
         {
-            switch(behaviour)
+            switch (behaviour)
             {
                 case BehaviourType.Swing: entity.Set<components.behaviour.Swing>(); break;
                 case BehaviourType.Lock: entity.Set<components.behaviour.Lock>(); break;
@@ -175,6 +175,15 @@ namespace zzre.game.systems
                 case BehaviourType.YRotate2: entity.Set(new components.behaviour.Rotate(Vector3.UnitX, 4.5f)); break;
                 case BehaviourType.ZRotate1: entity.Set(new components.behaviour.Rotate(Vector3.UnitZ, -5f)); break;
                 case BehaviourType.ZRotate2: entity.Set(new components.behaviour.Rotate(Vector3.UnitZ, -25f)); break;
+
+                case BehaviourType.River2: entity.Set(new components.behaviour.UVShift() { Shift = 1f }); break;
+                case BehaviourType.River3: entity.Set(new components.behaviour.UVShift() { Shift = 2f }); break;
+                case BehaviourType.River4: entity.Set(new components.behaviour.UVShift() { Shift = 3f }); break;
+                case BehaviourType.River5: entity.Set(new components.behaviour.UVShift() { Shift = 0.01f }); break;
+                case BehaviourType.River6: entity.Set(new components.behaviour.UVShift() { Shift = 0.02f }); break;
+                case BehaviourType.River7: entity.Set(new components.behaviour.UVShift() { Shift = 0.04f }); break;
+                case BehaviourType.River8: entity.Set(new components.behaviour.UVShift() { Shift = 0.06f }); break;
+                case BehaviourType.SkyMovement: entity.Set(new components.behaviour.UVShift() { Shift = 0.03f }); break;
 
                 default: Console.WriteLine($"Warning: unsupported behaviour type {behaviour}"); break;
             }

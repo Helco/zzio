@@ -8,6 +8,7 @@ using zzre.rendering;
 using zzre.materials;
 using zzio.scn;
 using DefaultEcs;
+using System.Numerics;
 
 namespace zzre.game.systems
 {
@@ -76,6 +77,7 @@ namespace zzre.game.systems
         [Update]
         private void Update(
             CommandList cl,
+            in DefaultEcs.Entity entity,
             in ClumpBuffers clumpBuffers,
             List<BaseModelInstancedMaterial> materials,
             Location location,
@@ -89,7 +91,10 @@ namespace zzre.game.systems
             instances.Add(new()
             {
                 tint = materialInfo.Color,
-                world = location.LocalToWorld
+                world = location.LocalToWorld,
+                texShift = entity.Has<components.TexShift>()
+                    ? entity.Get<components.TexShift>().Matrix
+                    : Matrix3x2.Identity
             });
         }
 

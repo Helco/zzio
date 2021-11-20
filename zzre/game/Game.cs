@@ -63,6 +63,7 @@ namespace zzre.game
                 new systems.PlantWiggle(this),
                 new systems.BehaviourSwing(this),
                 new systems.BehaviourRotate(this),
+                new systems.BehaviourUVShift(this),
                 new systems.AdvanceAnimation(this),
                 new systems.HumanPhysics(this),
                 new systems.PlayerPuppet(this),

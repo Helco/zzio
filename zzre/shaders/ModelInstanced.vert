@@ -8,6 +8,8 @@ layout(location = 4) in vec4 vsin_world1;
 layout(location = 5) in vec4 vsin_world2;
 layout(location = 6) in vec4 vsin_world3;
 layout(location = 7) in vec4 vsin_tint;
+layout(location = 8) in vec3 vsin_texShift0;
+layout(location = 9) in vec3 vsin_texShift1;
 
 layout(location = 0) out vec2 fsin_uv;
 layout(location = 1) out vec4 fsin_color;
@@ -24,7 +26,10 @@ void main()
 	pos = view * pos;
 	pos = projection * pos;
 	gl_Position = pos;
-	fsin_uv = vsin_uv;
+
+	mat3x2 texShift = mat3x2(vsin_texShift0, vsin_texShift1);
+	fsin_uv = texShift * vec3(vsin_uv, 1);
+
 	fsin_color = vsin_color;
 	fsin_tint = vsin_tint;
 }

@@ -13,7 +13,8 @@ namespace zzre.materials
     {
         public Matrix4x4 world;
         public FColor tint;
-        public static uint Stride = (4 * 4 + 4) * sizeof(float);
+        public Matrix3x2 texShift;
+        public static uint Stride = (4 * 4 + 4 + 3 * 2) * sizeof(float);
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -73,6 +74,8 @@ namespace zzre.materials
             .With("World2", VertexElementFormat.Float4, VertexElementSemantic.TextureCoordinate)
             .With("World3", VertexElementFormat.Float4, VertexElementSemantic.TextureCoordinate)
             .With("Tint", VertexElementFormat.Float4, VertexElementSemantic.Color)
+            .With("TexShift0", VertexElementFormat.Float3, VertexElementSemantic.TextureCoordinate)
+            .With("TexShift1", VertexElementFormat.Float3, VertexElementSemantic.TextureCoordinate)
             .With("Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)
             .With("Sampler", ResourceKind.Sampler, ShaderStages.Fragment)
             .With("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex)
