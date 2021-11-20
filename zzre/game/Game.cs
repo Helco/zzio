@@ -61,6 +61,8 @@ namespace zzre.game
                 new systems.CirclingBird(this),
                 new systems.AnimalWaypointAI(this),
                 new systems.PlantWiggle(this),
+                new systems.BehaviourSwing(this),
+                new systems.BehaviourRotate(this),
                 new systems.AdvanceAnimation(this),
                 new systems.HumanPhysics(this),
                 new systems.PlayerPuppet(this),

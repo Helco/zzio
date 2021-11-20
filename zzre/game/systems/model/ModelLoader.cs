@@ -49,6 +49,8 @@ namespace zzre.game.systems
 
             float plantWiggleDelay = 0f;
 
+            var behaviors = scene.behaviors.ToDictionary(b => b.modelId, b => b.type);
+
             foreach (var model in scene.models)
             {
                 var entity = ecsWorld.CreateEntity();
@@ -64,6 +66,8 @@ namespace zzre.game.systems
                 LoadMaterialsFor(entity, FOModelRenderType.Solid, model.color, model.surfaceProps);
                 SetCollider(entity);
                 SetPlantWiggle(entity, model.wiggleAmpl, plantWiggleDelay);
+                if (behaviors.TryGetValue(model.idx, out var behaviour))
+                    SetBehaviour(entity, behaviour);
 
                 plantWiggleDelay++;
             }
@@ -156,5 +160,24 @@ namespace zzre.game.systems
             new Vector2(0.024f, 0.024f),
             new Vector2(0.036f, 0.036f)
         };
+
+        private static void SetBehaviour(DefaultEcs.Entity entity, BehaviourType behaviour)
+        {
+            switch(behaviour)
+            {
+                case BehaviourType.Swing: entity.Set<components.behaviour.Swing>(); break;
+                case BehaviourType.Lock: entity.Set<components.behaviour.Lock>(); break;
+
+                // TODO: Check rotation direction for Y and Z
+                case BehaviourType.XRotate1: entity.Set(new components.behaviour.Rotate(Vector3.UnitX, -5f)); break;
+                case BehaviourType.XRotate2: entity.Set(new components.behaviour.Rotate(Vector3.UnitX, -25f)); break;
+                case BehaviourType.YRotate1: entity.Set(new components.behaviour.Rotate(Vector3.UnitX, 2f)); break;
+                case BehaviourType.YRotate2: entity.Set(new components.behaviour.Rotate(Vector3.UnitX, 4.5f)); break;
+                case BehaviourType.ZRotate1: entity.Set(new components.behaviour.Rotate(Vector3.UnitZ, -5f)); break;
+                case BehaviourType.ZRotate2: entity.Set(new components.behaviour.Rotate(Vector3.UnitZ, -25f)); break;
+
+                default: Console.WriteLine($"Warning: unsupported behaviour type {behaviour}"); break;
+            }
+        }
     }
 }
