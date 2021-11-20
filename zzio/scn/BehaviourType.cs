@@ -3,7 +3,7 @@ namespace zzio.scn
     public enum BehaviourType
     {
         Cloud = 800,
-        SmpleDoorLeft = 900,
+        SimpleDoorLeft = 900,
         SimpleDoorRight = 901,
         MetalDoorLeft = 902,
         CityDoorDown = 903,
