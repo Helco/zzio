@@ -153,13 +153,12 @@ namespace zzre.game.systems
 
             var velocity = state.Velocity;
             var intersections = FindAllIntersections(collider)
-                .Where(i => Vector3.Dot(velocity, i.Normal) < 0f);
+                .Where(i => Vector3.Dot(velocity, i.normal) < 0f);
             if (!intersections.Any())
                 return newPos - colliderOffset * Vector3.UnitY;
-            collision = new Collision(intersections
-                .OrderBy(i => Vector3.DistanceSquared(i.Point, newPos))
-                .First(),
-                CollisionType.World);
+            collision = intersections
+                .OrderBy(i => Vector3.DistanceSquared(i.point, newPos))
+                .First();
 
             collision.dirToPlayer = newPos - collision.point;
             if (colliderOffset > 0f) // only for the upper collider check
@@ -235,12 +234,15 @@ namespace zzre.game.systems
             return bestPos;
         }
 
-        private IEnumerable<Intersection> FindAllIntersections(Sphere collider)
+        private IEnumerable<Collision> FindAllIntersections(Sphere collider)
         {
-            var intersections = worldCollider.Intersections(collider);
+            var intersections = worldCollider
+                .Intersections(collider)
+                .Select(i => new Collision(i, CollisionType.World));
             foreach (ref readonly var model in collidableModels.GetEntities())
-                intersections = intersections.Concat(
-                    model.Get<IIntersectionable>().Intersections(collider));
+                intersections = intersections.Concat(model.Get<IIntersectionable>()
+                    .Intersections(collider)
+                    .Select(i => new Collision(i, CollisionType.Model)));
             return intersections;
         }
 
