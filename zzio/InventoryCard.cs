@@ -47,19 +47,19 @@ namespace zzio
 
     public class InventorySpell : InventoryCard
     {
-        public uint usageCount;
+        public uint usageCounter;
         public uint mana;
 
         protected override void ReadSub(BinaryReader r)
         {
-            usageCount = r.ReadUInt32();
+            usageCounter = r.ReadUInt32();
             mana = r.ReadUInt32();
         }
 
         public override void Write(BinaryWriter w)
         {
             base.Write(w);
-            w.Write(usageCount);
+            w.Write(usageCounter);
             w.Write(mana);
         }
     }
@@ -75,12 +75,20 @@ namespace zzio
         public uint xpChangeCount;
         public uint xp;
         public readonly SpellReq[] spellReqs = new SpellReq[SpellSlotCount];
-        public readonly uint[] spellIndices = new uint[SpellSlotCount];
-        public uint slotIndex;
+        public readonly int[] spellIndices = new int[SpellSlotCount];
+        public int slotIndex;
         public ZZPermSpellStatus status;
         public readonly byte[] unknown3 = new byte[20];
-        public uint mhp;
+        public uint maxMHP;
         public string name = "";
+
+        // unsaved
+        public uint currentMHP;
+        public float moveSpeed;
+        public float jumpPower;
+        public float jumpMana = 10000f;
+        public float maxJumpMana = 10000f;
+        public float criticalHit;
 
         protected override void ReadSub(BinaryReader r)
         {
@@ -93,11 +101,11 @@ namespace zzio
             for (int i = 0; i < spellReqs.Length; i++)
                 spellReqs[i] = SpellReq.ReadNew(r);
             for (int i = 0; i < spellIndices.Length; i++)
-                spellIndices[i] = r.ReadUInt32();
-            slotIndex = r.ReadUInt32();
+                spellIndices[i] = r.ReadInt32();
+            slotIndex = r.ReadInt32();
             status = EnumUtils.intToEnum<ZZPermSpellStatus>(r.ReadInt32());
             r.Read(unknown3.AsSpan());
-            mhp = r.ReadUInt32();
+            maxMHP = r.ReadUInt32();
             name = r.ReadZString();
         }
 
@@ -115,12 +123,12 @@ namespace zzio
             w.Write(slotIndex);
             w.Write((int)status);
             w.Write(unknown3);
-            w.Write(mhp);
+            w.Write(maxMHP);
             w.WriteZString(name);
         }
     }
 
-    public record struct SpellReq(ZZClass class0, ZZClass class1, ZZClass class2)
+    public record struct SpellReq(ZZClass class0, ZZClass class1 = ZZClass.None, ZZClass class2 = ZZClass.None)
     {
         public static SpellReq ReadNew(BinaryReader r) => new SpellReq(
             EnumUtils.intToEnum<ZZClass>(r.ReadByte()),

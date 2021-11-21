@@ -30,5 +30,15 @@ namespace zzio.db
         public int Damage        => row.cells[12].Integer;
 
         public int Behavior     => row.cells[13].Integer;
+
+        public uint MaxMana => Mana switch
+        {
+            0 => 5,
+            1 => 15,
+            2 => 30,
+            3 => 40,
+            4 => 55,
+            _ => 1000
+        };
     }
 }

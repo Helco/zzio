@@ -11,10 +11,20 @@ namespace zzio.db
         private readonly Dictionary<ModuleType, Dictionary<UID, Row>> modules =
             new Dictionary<ModuleType, Dictionary<UID, Row>>();
 
+        private readonly ResettableLazy<IReadOnlyDictionary<int, FairyRow>> fairiesByIndex;
+        private readonly ResettableLazy<IReadOnlyDictionary<int, ItemRow>> itemsByIndex;
+        private readonly ResettableLazy<IReadOnlyDictionary<int, SpellRow>> spellsByIndex;
+
         public MappedDB()
         {
             foreach (var moduleType in Enum.GetValues(typeof(ModuleType)).Cast<ModuleType>())
                 modules.Add(moduleType, new Dictionary<UID, Row>());
+            fairiesByIndex = new ResettableLazy<IReadOnlyDictionary<int, FairyRow>>(
+                () => Fairies.ToDictionary(f => f.CardId.EntityId, f => f));
+            itemsByIndex = new ResettableLazy<IReadOnlyDictionary<int, ItemRow>>(
+                () => Items.ToDictionary(i => i.CardId.EntityId, i => i));
+            spellsByIndex = new ResettableLazy<IReadOnlyDictionary<int, SpellRow>>(
+                () => Spells.ToDictionary(s => s.CardId.EntityId, s => s));
         }
 
         public void AddTable(Stream stream)
@@ -41,78 +51,35 @@ namespace zzio.db
                     group => group.Key,
                     group => group.Last().Value
                 );
-        }
-
-        public IEnumerable<FairyRow> Fairies
-        {
-            get
+            
+            switch(module)
             {
-                return modules[ModuleType.Fairy].Values
-                    .Select(row => new FairyRow(this, row));
+                case ModuleType.Fairy: fairiesByIndex.Reset(); break;
+                case ModuleType.Item: itemsByIndex.Reset(); break;
+                case ModuleType.Spell: spellsByIndex.Reset(); break;
             }
         }
 
-        public FairyRow GetFairy(UID uid)
-        {
-            return new FairyRow(this, modules[ModuleType.Fairy][uid]);
-        }
+        public IEnumerable<FairyRow> Fairies => modules[ModuleType.Fairy].Values.Select(row => new FairyRow(this, row));
+        public FairyRow GetFairy(UID uid) => new FairyRow(this, modules[ModuleType.Fairy][uid]);
+        public FairyRow GetFairy(int idx) => fairiesByIndex.Value[idx];
 
-        public IEnumerable<TextRow> Texts
-        {
-            get
-            {
-                return modules[ModuleType.Text].Values
-                    .Select(row => new TextRow(this, row));
-            }
-        }
+        public IEnumerable<TextRow> Texts => modules[ModuleType.Text].Values.Select(row => new TextRow(this, row));
+        public TextRow GetText(UID uid) => new TextRow(this, modules[ModuleType.Text][uid]);
 
-        public TextRow GetText(UID uid)
-        {
-            return new TextRow(this, modules[ModuleType.Text][uid]);
-        }
-
-        public IEnumerable<SpellRow> Spells
-        {
-            get
-            {
-                return modules[ModuleType.Spell].Values
+        public IEnumerable<SpellRow> Spells => modules[ModuleType.Spell].Values
                     .Select(row => new SpellRow(this, row));
-            }
-        }
+        public SpellRow GetSpell(UID uid) => new SpellRow(this, modules[ModuleType.Spell][uid]);
+        public SpellRow GetSpell(int idx) => spellsByIndex.Value[idx];
 
-        public SpellRow GetSpell(UID uid)
-        {
-            return new SpellRow(this, modules[ModuleType.Spell][uid]);
-        }
-
-        public IEnumerable<ItemRow> Items
-        {
-            get
-            {
-                return modules[ModuleType.Item].Values
+        public IEnumerable<ItemRow> Items => modules[ModuleType.Item].Values
                     .Select(row => new ItemRow(this, row));
-            }
-        }
+        public ItemRow GetItem(UID uid) => new ItemRow(this, modules[ModuleType.Item][uid]);
+        public ItemRow GetItem(int idx) => itemsByIndex.Value[idx];
 
-        public ItemRow GetItem(UID uid)
-        {
-            return new ItemRow(this, modules[ModuleType.Item][uid]);
-        }
-
-        public IEnumerable<NpcRow> Npcs
-        {
-            get
-            {
-                return modules[ModuleType.Npc].Values
+        public IEnumerable<NpcRow> Npcs => modules[ModuleType.Npc].Values
                     .Select(row => new NpcRow(this, row));
-            }
-        }
-
-        public NpcRow GetNpc(UID uid)
-        {
-            return new NpcRow(this, modules[ModuleType.Npc][uid]);
-        }
-
+        public NpcRow GetNpc(UID uid) => new NpcRow(this, modules[ModuleType.Npc][uid]);
         public bool TryGetNpc(UID uid, [NotNullWhen(true)] out NpcRow? npc)
         {
             npc = modules[ModuleType.Npc].TryGetValue(uid, out var row)
@@ -121,18 +88,8 @@ namespace zzio.db
             return npc != null;
         }
 
-        public IEnumerable<DialogRow> Dialogs
-        {
-            get
-            {
-                return modules[ModuleType.Dialog].Values
+        public IEnumerable<DialogRow> Dialogs => modules[ModuleType.Dialog].Values
                     .Select(row => new DialogRow(this, row));
-            }
-        }
-
-        public DialogRow GetDialog(UID uid)
-        {
-            return new DialogRow(this, modules[ModuleType.Dialog][uid]);
-        }
+        public DialogRow GetDialog(UID uid) => new DialogRow(this, modules[ModuleType.Dialog][uid]);
     }
 }
