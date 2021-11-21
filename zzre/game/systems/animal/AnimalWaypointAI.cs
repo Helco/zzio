@@ -112,11 +112,11 @@ namespace zzre.game.systems
                     ai.CurrentState = State.Moving;
                     ai.LastWaypoint = ai.CurrentWaypoint;
                     ai.CurrentWaypoint = nextWaypoint;
-                    ai.DistanceToWP = Vector3.Distance(nextWaypoint.pos.ToNumerics(), location.GlobalPosition);
+                    ai.DistanceToWP = Vector3.Distance(nextWaypoint.pos, location.GlobalPosition);
                     ai.MovedDistance = 0f;
                     nextAnimation = ai.WalkAnimation;
                     loopNextAnimation = !ai.Config.FullAnimationCycles;
-                    location.LookAt(nextWaypoint.pos.ToNumerics());
+                    location.LookAt(nextWaypoint.pos);
                     break;
 
                 case State.Moving when ai.Config.FullAnimationCycles:
@@ -192,7 +192,7 @@ namespace zzre.game.systems
             var potentialWaypoints = waypoints
                 .Where(wp =>
                 {
-                    var waypointPos = wp.pos.ToNumerics();
+                    var waypointPos = wp.pos;
                     var distanceToAnimal = Vector3.DistanceSquared(animalPos, waypointPos);
                     if (distanceToAnimal <= MinWaypointDistanceSqr || distanceToAnimal >= MaxWaypointDistanceSqr)
                         return false;

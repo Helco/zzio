@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using zzio.primitives;
-using zzio.utils;
+using System.Numerics;
+using zzio;
 
 namespace zzio.scn
 {
@@ -21,11 +21,11 @@ namespace zzio.scn
         public UInt32 idx;
         public bool requiresLooking;
         public TriggerColliderType colliderType;
-        public Vector dir;
+        public Vector3 dir;
         public TriggerType type;
         public UInt32 ii1, ii2, ii3, ii4;
         public string s = "";
-        public Vector // TODO: Move Collider out 
+        public Vector3 // TODO: Move Collider out 
             pos,
             size; // only if type == Box
         public float radius; // only if type == Sphere
@@ -36,20 +36,20 @@ namespace zzio.scn
             idx = reader.ReadUInt32();
             colliderType = EnumUtils.intToEnum<TriggerColliderType>(reader.ReadInt32());
             requiresLooking = reader.ReadUInt32() != 0;
-            dir = Vector.ReadNew(reader);
+            dir = reader.ReadVector3();
             type = EnumUtils.intToEnum<TriggerType>(reader.ReadInt32());
             ii1 = reader.ReadUInt32();
             ii2 = reader.ReadUInt32();
             ii3 = reader.ReadUInt32();
             ii4 = reader.ReadUInt32();
             s = reader.ReadZString();
-            pos = Vector.ReadNew(reader);
-            size = new Vector();
+            pos = reader.ReadVector3();
+            size = new Vector3();
             radius = 0.0f;
             switch (colliderType)
             {
                 case TriggerColliderType.Box:
-                    size = Vector.ReadNew(reader);
+                    size = reader.ReadVector3();
                     break;
                 case TriggerColliderType.Sphere:
                     radius = reader.ReadSingle();
@@ -65,18 +65,18 @@ namespace zzio.scn
             writer.Write(idx);
             writer.Write((int)colliderType);
             writer.Write(requiresLooking ? 1 : 0);
-            dir.Write(writer);
+            writer.Write(dir);
             writer.Write((int)type);
             writer.Write(ii1);
             writer.Write(ii2);
             writer.Write(ii3);
             writer.Write(ii4);
             writer.WriteZString(s);
-            pos.Write(writer);
+            writer.Write(pos);
             switch (colliderType)
             {
                 case TriggerColliderType.Box:
-                    size.Write(writer);
+                    writer.Write(size);
                     break;
                 case TriggerColliderType.Sphere:
                     writer.Write(radius);

@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Numerics;
 using Veldrid;
-using zzio.primitives;
 using zzre.imgui;
 using zzre.rendering;
 using System.Linq;
 using Quaternion = System.Numerics.Quaternion;
 using zzio.vfs;
 using zzio.rwbs;
-using System.Diagnostics;
+using zzio;
 
 namespace zzre.tools
 {
@@ -60,7 +59,7 @@ namespace zzre.tools
 
             var rwWorld = diContainer.GetTag<IResourcePool>().FindFile("resources/worlds/sc_3302.bsp")!.OpenAsRWBS<RWWorld>();
             var worldCollider = new WorldCollider(rwWorld);
-            camera.Location.LocalPosition = -rwWorld.origin.ToNumerics();
+            camera.Location.LocalPosition = -rwWorld.origin;
 
             rotatingBox = new RaycastObject()
             {

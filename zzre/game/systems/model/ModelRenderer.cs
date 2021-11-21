@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using DefaultEcs.System;
 using Veldrid;
-using zzio;
 using zzre.rendering;
 using zzre.materials;
-using zzio.scn;
 using DefaultEcs;
 using System.Numerics;
 

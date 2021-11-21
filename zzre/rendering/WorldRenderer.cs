@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using zzio.rwbs;
-using zzio.utils;
 using zzre.materials;
 using Veldrid;
 using zzio;
@@ -93,7 +92,7 @@ namespace zzre.rendering
                 }
 
                 var plane = (WorldBuffers.PlaneSection)section;
-                var intersection = viewFrustum.Intersects(new Plane(plane.PlaneType.AsNormal().ToNumerics(), plane.CenterValue));
+                var intersection = viewFrustum.Intersects(new Plane(plane.PlaneType.AsNormal(), plane.CenterValue));
                 if (intersection.HasFlag(PlaneIntersections.Inside))
                     sectionQueue.Enqueue(plane.RightChild);
                 if (intersection.HasFlag(PlaneIntersections.Outside))

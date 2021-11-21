@@ -142,8 +142,8 @@ namespace zzre
                         break;
 
                     case RWPlaneSection plane:
-                        var leftPlane = new Plane(plane.sectorType.AsNormal().ToNumerics(), plane.leftValue);
-                        var rightPlane = new Plane(plane.sectorType.AsNormal().ToNumerics(), plane.rightValue);
+                        var leftPlane = new Plane(plane.sectorType.AsNormal(), plane.leftValue);
+                        var rightPlane = new Plane(plane.sectorType.AsNormal(), plane.rightValue);
                         var leftSection = plane.children[0];
                         var rightSection = plane.children[1];
 

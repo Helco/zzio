@@ -4,7 +4,7 @@ using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace zzio.utils
+namespace zzio
 {
     public static class StringUtils
     {
@@ -63,9 +63,9 @@ namespace zzio.utils
                 (firstNibble < 0 ? '0' : (char)firstNibble) +
                 (secondNibble < 0 ? '0' : (char)secondNibble);
 
-            return (firstNibble < 0 && secondNibble < 0)
+            return firstNibble < 0 && secondNibble < 0
                 ? -1
-                : Convert.ToInt32(hexByte, 16);                    
+                : Convert.ToInt32(hexByte, 16);
         }
 
         /// <summary>Unescapes a string using common escape sequences</summary>
@@ -82,7 +82,7 @@ namespace zzio.utils
                     writer.Append((char)ch);
                     continue;
                 }
-                
+
                 ch = reader.Read(); // sequence specifier
                 if (unescapes.TryGetValue((char)ch, out var unescapedChar))
                 {

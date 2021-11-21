@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 
-namespace zzio.primitives
+namespace zzio
 {
     [Serializable]
     public struct ForeignKey : IEquatable<ForeignKey>

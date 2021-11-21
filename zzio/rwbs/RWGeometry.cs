@@ -1,16 +1,16 @@
 using System;
 using System.IO;
-using zzio.utils;
-using zzio.primitives;
+using System.Numerics;
+using zzio;
 
 namespace zzio.rwbs
 {
     [Serializable]
     public class MorphTarget
     {
-        public Vector bsphereCenter;
+        public Vector3 bsphereCenter;
         public float bsphereRadius;
-        public Vector[] vertices = new Vector[0], normals = new Vector[0];
+        public Vector3[] vertices = new Vector3[0], normals = new Vector3[0];
     }
 
     [Serializable]
@@ -21,15 +21,15 @@ namespace zzio.rwbs
         public GeometryFormat format;
         public float ambient, specular, diffuse;
         public IColor[] colors = new IColor[0];
-        public TexCoord[][] texCoords = new TexCoord[0][];
-        public Triangle[] triangles = new Triangle[0];
+        public Vector2[][] texCoords = new Vector2[0][];
+        public VertexTriangle[] triangles = new VertexTriangle[0];
         public MorphTarget[] morphTargets = new MorphTarget[0];
 
         protected override void readStruct(Stream stream)
         {
             using BinaryReader reader = new BinaryReader(stream);
             format = EnumUtils.intToFlags<GeometryFormat>(reader.ReadUInt32());
-            triangles = new Triangle[reader.ReadUInt32()];
+            triangles = new VertexTriangle[reader.ReadUInt32()];
             UInt32 vertexCount = reader.ReadUInt32();
             morphTargets = new MorphTarget[reader.ReadUInt32()];
             ambient = reader.ReadSingle();
@@ -52,12 +52,12 @@ namespace zzio.rwbs
                     if (texCount == 0)
                         texCount = ((format & GeometryFormat.Textured2) > 0 ? 2 : 1);
                     
-                    texCoords = new TexCoord[texCount][];
+                    texCoords = new Vector2[texCount][];
                     for (int i = 0; i < texCount; i++)
                     {
-                        texCoords[i] = new TexCoord[vertexCount];
+                        texCoords[i] = new Vector2[vertexCount];
                         for (int j = 0; j < vertexCount; j++)
-                            texCoords[i][j] = TexCoord.ReadNew(reader);
+                            texCoords[i][j] = reader.ReadVector2();
                     }
                 }
 
@@ -73,23 +73,23 @@ namespace zzio.rwbs
 
             for (int i = 0; i < morphTargets.Length; i++) {
                 morphTargets[i] = new MorphTarget();
-                morphTargets[i].bsphereCenter = Vector.ReadNew(reader);
+                morphTargets[i].bsphereCenter = reader.ReadVector3();
                 morphTargets[i].bsphereRadius = reader.ReadSingle();
-                morphTargets[i].vertices = new Vector[0];
-                morphTargets[i].normals = new Vector[0];
+                morphTargets[i].vertices = new Vector3[0];
+                morphTargets[i].normals = new Vector3[0];
                 bool hasVertices = reader.ReadUInt32() > 0;
                 bool hasNormals = reader.ReadUInt32() > 0;
                 if (hasVertices)
                 {
-                    morphTargets[i].vertices = new Vector[vertexCount];
+                    morphTargets[i].vertices = new Vector3[vertexCount];
                     for (uint j = 0; j < vertexCount; j++)
-                        morphTargets[i].vertices[j] = Vector.ReadNew(reader);
+                        morphTargets[i].vertices[j] = reader.ReadVector3();
                 }
                 if (hasNormals)
                 {
-                    morphTargets[i].normals = new Vector[vertexCount];
+                    morphTargets[i].normals = new Vector3[vertexCount];
                     for (uint j = 0; j < vertexCount; j++)
-                        morphTargets[i].normals[j] = Vector.ReadNew(reader);
+                        morphTargets[i].normals[j] = reader.ReadVector3();
                 }
             }
         }
@@ -123,11 +123,11 @@ namespace zzio.rwbs
                     for (int i = 0; i < texCount; i++)
                     {
                         for (int j = 0; j < vertexCount; j++)
-                            texCoords[i][j].Write(writer);
+                            writer.Write(texCoords[i][j]);
                     }
                 }
 
-                foreach (Triangle t in triangles)
+                foreach (VertexTriangle t in triangles)
                 {
                     writer.Write(t.v2);
                     writer.Write(t.v1);
@@ -138,14 +138,12 @@ namespace zzio.rwbs
 
             foreach (MorphTarget mt in morphTargets)
             {
-                mt.bsphereCenter.Write(writer);
+                writer.Write(mt.bsphereCenter);
                 writer.Write(mt.bsphereRadius);
                 writer.Write((UInt32)(mt.vertices.Length == 0 ? 0 : 1));
                 writer.Write((UInt32)(mt.normals.Length == 0 ? 0 : 1));
-                foreach (Vector v in mt.vertices)
-                    v.Write(writer);
-                foreach (Vector n in mt.normals)
-                    n.Write(writer);
+                Array.ForEach(mt.vertices, writer.Write);
+                Array.ForEach(mt.normals, writer.Write);
             }
         }
     }

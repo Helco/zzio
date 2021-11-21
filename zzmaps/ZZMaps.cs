@@ -11,7 +11,7 @@ using Veldrid;
 using zzio.vfs;
 using System.Threading;
 using zzio.db;
-using zzio.primitives;
+using zzio;
 
 namespace zzmaps
 {

@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
+using zzio;
 using zzio.effect;
 using zzio.effect.parts;
-using zzio.utils;
 using zzio.vfs;
 using zzre.rendering.effectparts;
 
@@ -77,9 +77,9 @@ namespace zzre.rendering
             locationBuffer = diContainer.GetTag<LocationBuffer>();
             locationRange = locationBuffer.Add(Location);
             Effect = effect;
-            Location.LocalPosition = effect.position.ToNumerics();
+            Location.LocalPosition = effect.position;
             Location.LocalRotation = Quaternion.CreateFromRotationMatrix(
-                Matrix4x4.CreateLookAt(Vector3.Zero, effect.forwards.ToNumerics(), effect.upwards.ToNumerics()));
+                Matrix4x4.CreateLookAt(Vector3.Zero, effect.forwards, effect.upwards));
 
             Parts = effect.parts.Select(part => part switch
                 {

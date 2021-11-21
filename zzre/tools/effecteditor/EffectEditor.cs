@@ -164,8 +164,8 @@ namespace zzre.tools
             ImGui.InputText("Description", ref Effect.description, 512);
 
             var pos = effectRenderer?.Location.LocalPosition ?? Vector3.Zero;
-            var forwards = Effect.forwards.ToNumerics();
-            var upwards = Effect.upwards.ToNumerics();
+            var forwards = Effect.forwards;
+            var upwards = Effect.upwards;
             if (ImGui.DragFloat3("Position", ref pos) && effectRenderer != null)
                 effectRenderer.Location.LocalPosition = pos;
             ImGui.DragFloat3("Forwards", ref forwards);

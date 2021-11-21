@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace zzio.utils
+namespace zzio
 {
     /// <summary>A Stream decorator limiting access to a fixed range</summary>
     /// <remarks>Modifying the parent stream while using RangeStream causes undefined behavior</remarks>
@@ -27,15 +27,16 @@ namespace zzio.utils
             {
                 parentStart = parent.Position;
                 parentLength = parent.Length;
-            } catch(NotSupportedException)
+            }
+            catch (NotSupportedException)
             {
                 parentStart = 0;
                 parentLength = 0;
             }
 
             this.parent = parent;
-            this.start = parent.Position;
-            this.length = this.left = Math.Min(parentLength - parentStart, length);
+            start = parent.Position;
+            this.length = left = Math.Min(parentLength - parentStart, length);
             this.canWrite = canWrite && parent.CanWrite;
             this.shouldClose = shouldClose;
         }

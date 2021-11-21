@@ -4,9 +4,7 @@ using System.Numerics;
 using System.Text;
 using ImGuiNET;
 using zzio;
-using zzio.primitives;
 using static ImGuiNET.ImGui;
-using Vector = zzio.primitives.Vector;
 
 namespace zzre.imgui
 {
@@ -180,21 +178,21 @@ namespace zzre.imgui
             return result;
         }
 
-        public static bool InputFloat3(string label, ref Vector v)
-        {
-            var numV = v.ToNumerics();
-            var result = ImGui.InputFloat3(label, ref numV);
-            if (result)
-                (v.x, v.y, v.z) = (numV.X, numV.Y, numV.Z);
-            return result;
-        }
-
         public static bool ColorEdit4(string label, ref IColor color, ImGuiColorEditFlags flags = ImGuiColorEditFlags.None)
         {
             var numColor = color.ToFColor().ToNumerics();
             var result = ImGui.ColorEdit4(label, ref numColor, (flags & ~ImGuiColorEditFlags.DataTypeMask) | ImGuiColorEditFlags.Uint8);
             if (result)
                 color = new IColor((byte)(numColor.X * 255f), (byte)(numColor.Y * 255f), (byte)(numColor.Z * 255f), (byte)(numColor.W * 255f));
+            return result;
+        }
+
+        public static bool ColorEdit4(string label, ref FColor color, ImGuiColorEditFlags flags = ImGuiColorEditFlags.None)
+        {
+            var numColor = color.ToNumerics();
+            var result = ImGui.ColorEdit4(label, ref numColor, (flags & ~ImGuiColorEditFlags.DataTypeMask) | ImGuiColorEditFlags.Uint8);
+            if (result)
+                color = numColor.ToFColor();
             return result;
         }
 

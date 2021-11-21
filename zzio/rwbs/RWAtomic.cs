@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using zzio.utils;
 
 namespace zzio.rwbs
 {

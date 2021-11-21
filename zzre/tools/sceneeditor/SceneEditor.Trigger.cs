@@ -7,7 +7,6 @@ using System.Linq;
 using System.Numerics;
 using Veldrid;
 using zzio;
-using zzio.primitives;
 using zzio.scn;
 using zzre.debug;
 using zzre.imgui;
@@ -37,14 +36,14 @@ namespace zzre.tools
 
             public IRaycastable? RenderedBounds => SceneTrigger.colliderType switch
             {
-                TriggerColliderType.Box => new Box(Vector3.Zero, SceneTrigger.size.ToNumerics()).TransformToWorld(Location),
+                TriggerColliderType.Box => new Box(Vector3.Zero, SceneTrigger.size).TransformToWorld(Location),
                 TriggerColliderType.Sphere => new Sphere(Location.GlobalPosition, SceneTrigger.radius),
                 TriggerColliderType.Point => null,
                 _ => throw new NotImplementedException("Unknown TriggerColliderType")
             };
             public float ViewSize => SceneTrigger.colliderType switch
             {
-                TriggerColliderType.Box => SceneTrigger.size.ToNumerics().MaxComponent(),
+                TriggerColliderType.Box => SceneTrigger.size.MaxComponent(),
                 TriggerColliderType.Sphere => SceneTrigger.radius * 2f,
                 TriggerColliderType.Point => PointTriggerSize * 2f,
                 _ => throw new NotImplementedException("Unknown TriggerColliderType")
@@ -56,8 +55,8 @@ namespace zzre.tools
                 SceneTrigger = sceneTrigger;
                 Index = index;
 
-                Location.LocalPosition = sceneTrigger.pos.ToNumerics();
-                Location.LocalRotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateLookAt(Vector3.Zero, sceneTrigger.dir.ToNumerics(), Vector3.UnitY));
+                Location.LocalPosition = sceneTrigger.pos;
+                Location.LocalRotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateLookAt(Vector3.Zero, sceneTrigger.dir, Vector3.UnitY));
             }
 
             public void Content()

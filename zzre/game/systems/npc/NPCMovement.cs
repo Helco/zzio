@@ -77,7 +77,7 @@ namespace zzre.game.systems
                 move.TargetPos = playerLocation.LocalPosition - dirToPlayer * TargetDistanceToPlayer;
             }
             else
-                move.TargetPos = waypointById[msg.ToWaypoint].pos.ToNumerics();
+                move.TargetPos = waypointById[msg.ToWaypoint].pos;
 
             move.DistanceToTarget = Vector3.Distance(location.LocalPosition, move.TargetPos);
             move.DistanceWalked = 0f;
@@ -102,7 +102,7 @@ namespace zzre.game.systems
                 waypointByIdx[move.CurWaypointId].ii3 = 0;
             nextWaypoint.ii3 = 1; // reserving this waypoint
             move.NextWaypointId = (int)nextWaypoint.idx;
-            move.TargetPos = nextWaypoint.pos.ToNumerics();
+            move.TargetPos = nextWaypoint.pos;
             move.DistanceToTarget = Vector3.Distance(location.LocalPosition, move.TargetPos);
             move.DistanceWalked = 0f;
             msg.Entity.Get<components.NonFairyAnimation>().Next = zzio.AnimationType.Walk0;
@@ -121,15 +121,15 @@ namespace zzre.game.systems
                         return ChooseNextWaypoint(WaypointMode.LuckyNearest, wpCategory, location, move);
                     return waypointsByCategory[wpCategory]
                         .Where(wp => wp.ii3 == 0 && wp.idx != curWaypointId)
-                        .Where(wp => Vector3.DistanceSquared(location.LocalPosition, wp.pos.ToNumerics()) < MaxWaypointDistanceSqr)
-                        .OrderByDescending(wp => Vector3.DistanceSquared(playerLocation.LocalPosition, wp.pos.ToNumerics()))
+                        .Where(wp => Vector3.DistanceSquared(location.LocalPosition, wp.pos) < MaxWaypointDistanceSqr)
+                        .OrderByDescending(wp => Vector3.DistanceSquared(playerLocation.LocalPosition, wp.pos))
                         .FirstOrDefault();
                 
                 case WaypointMode.LuckyNearest:
                 {
                     var potentialWps = waypointsByCategory[wpCategory]
                         .Where(wp => wp.ii3 == 0 && wp.idx != lastWaypointId && wp.idx != curWaypointId)
-                        .OrderBy(wp => Vector3.DistanceSquared(location.LocalPosition, wp.pos.ToNumerics()));
+                        .OrderBy(wp => Vector3.DistanceSquared(location.LocalPosition, wp.pos));
                     return move.CurWaypointId < 0
                         ? potentialWps.FirstOrDefault()
                         : potentialWps.FirstOrDefault(wp => random.NextFloat() > Mode1Chance);
@@ -140,7 +140,7 @@ namespace zzre.game.systems
                     var lastTargetPos = move.CurWaypointId < 0 ? location.LocalPosition : move.LastTargetPos;
                     var potentialWps = waypointsByCategory[wpCategory]
                         .Where(wp => wp.ii3 == 0 && wp.idx != lastWaypointId && wp.idx != curWaypointId)
-                        .Where(wp => Vector3.DistanceSquared(lastTargetPos, wp.pos.ToNumerics()) < MaxWaypointDistanceSqr)
+                        .Where(wp => Vector3.DistanceSquared(lastTargetPos, wp.pos) < MaxWaypointDistanceSqr)
                         .ToArray();
                     return potentialWps.Any()
                         ? random.NextOf(potentialWps)

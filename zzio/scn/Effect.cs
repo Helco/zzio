@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using zzio.primitives;
-using zzio.utils;
+using System.Numerics;
+using zzio;
 
 namespace zzio.scn
 {
@@ -24,7 +24,7 @@ namespace zzio.scn
     {
         public UInt32 idx;
         public EffectType type;
-        public Vector v1, v2, v3;
+        public Vector3 v1, v2, v3;
         public UInt32 param;
         public string effectFile = "";
 
@@ -33,7 +33,7 @@ namespace zzio.scn
             using BinaryReader reader = new BinaryReader(stream);
             idx = reader.ReadUInt32();
             type = EnumUtils.intToEnum<EffectType>(reader.ReadInt32());
-            v1 = v2 = v3 = new Vector();
+            v1 = v2 = v3 = new Vector3();
             param = 0;
             switch (type)
             {
@@ -42,22 +42,22 @@ namespace zzio.scn
                 case EffectType.Unknown6:
                 case EffectType.Unknown10:
                     param = reader.ReadUInt32();
-                    v1 = Vector.ReadNew(reader);
-                    v2 = Vector.ReadNew(reader);
+                    v1 = reader.ReadVector3();
+                    v2 = reader.ReadVector3();
                     break;
                 case EffectType.Unknown4:
                     param = reader.ReadUInt32();
-                    v1 = Vector.ReadNew(reader);
+                    v1 = reader.ReadVector3();
                     break;
                 case EffectType.Unknown7:
                     effectFile = reader.ReadZString();
-                    v1 = Vector.ReadNew(reader);
+                    v1 = reader.ReadVector3();
                     break;
                 case EffectType.Unknown13:
                     effectFile = reader.ReadZString();
-                    v1 = Vector.ReadNew(reader);
-                    v2 = Vector.ReadNew(reader);
-                    v3 = Vector.ReadNew(reader);
+                    v1 = reader.ReadVector3();
+                    v2 = reader.ReadVector3();
+                    v3 = reader.ReadVector3();
                     param = reader.ReadUInt32();
                     break;
                 default: { throw new InvalidDataException("Invalid effect type"); }
@@ -76,22 +76,22 @@ namespace zzio.scn
                 case EffectType.Unknown6:
                 case EffectType.Unknown10:
                     writer.Write(param);
-                    v1.Write(writer);
-                    v2.Write(writer);
+                    writer.Write(v1);
+                    writer.Write(v2);
                     break;
                 case EffectType.Unknown4:
                     writer.Write(param);
-                    v1.Write(writer);
+                    writer.Write(v1);
                     break;
                 case EffectType.Unknown7:
                     writer.WriteZString(effectFile);
-                    v1.Write(writer);
+                    writer.Write(v1);
                     break;
                 case EffectType.Unknown13:
                     writer.WriteZString(effectFile);
-                    v1.Write(writer);
-                    v2.Write(writer);
-                    v3.Write(writer);
+                    writer.Write(v1);
+                    writer.Write(v2);
+                    writer.Write(v3);
                     writer.Write(param);
                     break;
             }

@@ -2,7 +2,8 @@
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
-using zzio.primitives;
+using zzio;
+using System.Numerics;
 
 namespace zzio
 {
@@ -10,23 +11,23 @@ namespace zzio
     public struct AnimationKeyFrame
     {
         public Quaternion rot;
-        public Vector pos;
+        public Vector3 pos;
         public float time;
 
         public static AnimationKeyFrame ReadNew(BinaryReader reader)
         {
             return new AnimationKeyFrame
             {
-                rot = Quaternion.ReadNew(reader),
-                pos = Vector.ReadNew(reader),
+                rot = reader.ReadQuaternion(),
+                pos = reader.ReadVector3(),
                 time = reader.ReadSingle()
             };
         }
 
         public void Write(BinaryWriter writer)
         {
-            rot.Write(writer);
-            pos.Write(writer);
+            writer.Write(rot);
+            writer.Write(pos);
             writer.Write(time);
         }
     }

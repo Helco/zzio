@@ -1,6 +1,5 @@
 ﻿using System.IO;
-using zzio.primitives;
-using zzio.utils;
+using System.Numerics;
 
 namespace zzio.effect.parts
 {
@@ -55,9 +54,9 @@ namespace zzio.effect.parts
             colorB = new ValueRangeAnimation(1.0f, 0.0f, 1.0f),
             colorA = new ValueRangeAnimation(1.0f, 0.0f, 1.0f),
             acc = new ValueRangeAnimation(1.0f, 0.0f);
-        public Vector
-            gravity = new Vector(0.0f, 0.0f, 0.0f),
-            gravityMod = new Vector(0.0f, 0.0f, 0.0f);
+        public Vector3
+            gravity,
+            gravityMod;
         public bool
             hasDirection = false;
         public string
@@ -103,8 +102,8 @@ namespace zzio.effect.parts
             life.width = r.ReadSingle();
             acc.width = r.ReadSingle();
             scale.width = r.ReadSingle();
-            gravity = Vector.ReadNew(r);
-            gravityMod = Vector.ReadNew(r);
+            gravity = r.ReadVector3();
+            gravityMod = r.ReadVector3();
             type = EnumUtils.intToEnum<ParticleType>(r.ReadInt32());
             texName = r.ReadSizedCString(32);
             tileW = r.ReadUInt32();

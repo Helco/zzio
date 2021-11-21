@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace zzio.utils
+namespace zzio
 {
     /// <summary>A Stream decorator preventing the parent from being closed</summary>
     public class GatekeeperStream : Stream

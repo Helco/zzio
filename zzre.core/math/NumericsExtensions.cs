@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using zzio.primitives;
+using zzio;
 using Quaternion = System.Numerics.Quaternion;
 
 namespace zzre

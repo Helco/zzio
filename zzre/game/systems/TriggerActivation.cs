@@ -35,8 +35,8 @@ namespace zzre.game.systems
                 var entity = World.CreateEntity();
                 var location = new Location();
                 location.Parent = World.Get<Location>();
-                location.LocalPosition = trigger.pos.ToNumerics();
-                location.LocalRotation = trigger.dir.ToNumericsRotation();
+                location.LocalPosition = trigger.pos;
+                location.LocalRotation = trigger.dir.ToZZRotation();
                 entity.Set(location);
                 entity.Set(trigger);
             }
@@ -63,7 +63,7 @@ namespace zzre.game.systems
                 case TriggerColliderType.Point: return false;
 
                 case TriggerColliderType.Box:
-                    var box = new Box(Vector3.Zero, trigger.size.ToNumerics());
+                    var box = new Box(Vector3.Zero, trigger.size);
                     if (!box.Intersects(location, playerPos))
                         return false;
                     break;

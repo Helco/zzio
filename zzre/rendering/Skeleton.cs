@@ -39,7 +39,7 @@ namespace zzre
 
         public Skeleton(RWSkinPLG skin)
         {
-            BindingObjectToBone = skin.bones.Select(b => b.objectToBone.ResetRow3().ToNumerics()).ToArray();
+            BindingObjectToBone = skin.bones.Select(b => b.objectToBone with { M14 = 0f, M24 = 0f, M34 = 0f, M44 = 1f }).ToArray();
             UserIds = skin.bones.Select(b => (int)b.id).ToArray();            
 
             var roots = new List<int>();

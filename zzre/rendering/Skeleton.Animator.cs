@@ -75,8 +75,8 @@ namespace zzre
                 float frameDuration = nextFrameTime - frames[currentFrameI].time;
                 float nextFrameWeight = (time - frames[currentFrameI].time) / frameDuration;
 
-                CurRotation = Quaternion.Lerp(frames[currentFrameI].rot.ToNumerics(), frames[nextFrameI].rot.ToNumerics(), nextFrameWeight);
-                CurTranslation = Vector3.Lerp(frames[currentFrameI].pos.ToNumerics(), frames[nextFrameI].pos.ToNumerics(), nextFrameWeight);
+                CurRotation = Quaternion.Lerp(frames[currentFrameI].rot, frames[nextFrameI].rot, nextFrameWeight);
+                CurTranslation = Vector3.Lerp(frames[currentFrameI].pos, frames[nextFrameI].pos, nextFrameWeight);
             }
         }
     }

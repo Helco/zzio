@@ -1,6 +1,5 @@
 using System.IO;
 using NUnit.Framework;
-using zzio.primitives;
 
 namespace zzio.tests.primitives
 {
@@ -16,7 +15,7 @@ namespace zzio.tests.primitives
 
         [Test]
         public void ctor() {
-            Triangle tri = new Triangle(1, 2, 3, 4);
+            VertexTriangle tri = new VertexTriangle(1, 2, 3, 4);
             Assert.AreEqual(1, tri.v1);
             Assert.AreEqual(2, tri.v2);
             Assert.AreEqual(3, tri.v3);
@@ -27,7 +26,7 @@ namespace zzio.tests.primitives
         public void read() {
             MemoryStream stream = new MemoryStream(expected, false);
             using BinaryReader reader = new BinaryReader(stream);
-            Triangle tri = Triangle.ReadNew(reader);
+            VertexTriangle tri = VertexTriangle.ReadNew(reader);
             Assert.AreEqual(30806, tri.v1);
             Assert.AreEqual(48282, tri.v2);
             Assert.AreEqual(61662, tri.v3);
@@ -38,7 +37,7 @@ namespace zzio.tests.primitives
         public void write() {
             MemoryStream stream = new MemoryStream();
             using BinaryWriter writer = new BinaryWriter(stream);
-            Triangle tri = new Triangle(30806, 48282, 61662, 13330);
+            VertexTriangle tri = new VertexTriangle(30806, 48282, 61662, 13330);
             tri.Write(writer);
 
             byte[] actual = stream.ToArray();

@@ -37,9 +37,9 @@ namespace zzio.tests.rwbs
                  0.0f, 1.0f, 0.0f,
                  0.0f, 0.0f, 1.0f
             }, frame.rotMatrix);
-            Assert.AreEqual(0.0f, frame.position.x);
-            Assert.AreEqual(0.0f, frame.position.y);
-            Assert.AreEqual(0.0f, frame.position.z);
+            Assert.AreEqual(0.0f, frame.position.X);
+            Assert.AreEqual(0.0f, frame.position.Y);
+            Assert.AreEqual(0.0f, frame.position.Z);
 
             Assert.IsInstanceOf(typeof(RWExtension), clump.children[1]);
             RWExtension extension = (RWExtension)clump.children[1];

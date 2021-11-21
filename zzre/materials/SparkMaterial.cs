@@ -2,8 +2,8 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Veldrid;
+using zzio;
 using zzio.effect;
-using zzio.primitives;
 using zzre.rendering;
 
 namespace zzre.materials

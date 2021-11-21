@@ -7,6 +7,7 @@ using Veldrid;
 using zzio;
 using zzre.materials;
 using static ImGuiNET.ImGui;
+using static zzre.imgui.ImGuiEx;
 
 namespace zzre.imgui
 {
@@ -88,7 +89,7 @@ namespace zzre.imgui
                 SameLine();
                 if (!TreeNodeEx($"Material #{index}", OpenEntriesByDefault ? ImGuiTreeNodeFlags.DefaultOpen : 0))
                     continue;
-                var color = material.Uniforms.Value.tint.ToNumerics();
+                var color = material.Uniforms.Value.tint;
                 ColorEdit4("Color", ref color, ImGuiColorEditFlags.NoPicker | ImGuiColorEditFlags.Float);
                 TexturePreview(materials[index].MainTexture.Texture, textureBindings[index]);
 

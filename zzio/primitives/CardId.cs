@@ -1,7 +1,6 @@
 using System;
-using zzio.utils;
 
-namespace zzio.primitives
+namespace zzio
 {
     public enum CardType
     {
@@ -35,11 +34,11 @@ namespace zzio.primitives
         {
             if (type == CardType.Unknown)
                 throw new InvalidOperationException("Invalid CardType");
-            if (entityId < 0 || entityId > UInt16.MaxValue)
+            if (entityId < 0 || entityId > ushort.MaxValue)
                 throw new InvalidOperationException("Invalid EntityId");
             raw =
-                ((uint)type << 8) |
-                ((uint)entityId << 16);
+                (uint)type << 8 |
+                (uint)entityId << 16;
         }
 
         public override string ToString() => $"{Type}:{EntityId}";

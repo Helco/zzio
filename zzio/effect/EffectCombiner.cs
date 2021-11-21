@@ -2,9 +2,9 @@
 using System.IO;
 using System.Collections.Generic;
 using zzio.effect.parts;
-using zzio.primitives;
-using zzio.utils;
 using System.Linq;
+using zzio;
+using System.Numerics;
 
 namespace zzio.effect
 {
@@ -43,18 +43,15 @@ namespace zzio.effect
                     r.BaseStream.Seek(2 * 12, SeekOrigin.Current);
                 } },
                 { "Effect_Combiner_Form", (eff, r) => {
-                    eff.upwards = Vector.ReadNew(r);
-                    eff.forwards = Vector.ReadNew(r);
-                    eff.position = Vector.ReadNew(r);
+                    eff.upwards = r.ReadVector3();
+                    eff.forwards = r.ReadVector3();
+                    eff.position = r.ReadVector3();
                 } }
             };
 
         public string description = "";
         public bool isLooping = false;
-        public Vector
-            upwards = new Vector(),
-            forwards = new Vector(),
-            position = new Vector();
+        public Vector3 upwards, forwards, position;
         public IEffectPart[] parts = new IEffectPart[0];
 
         public float Duration => parts.Any() ? parts.Max(p => p.Duration) : 0f;

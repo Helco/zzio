@@ -1,7 +1,6 @@
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
-using zzio.utils;
 
 namespace zzio.tests.utils
 {

@@ -1,14 +1,14 @@
 using System;
 using System.IO;
 
-namespace zzio.primitives
+namespace zzio
 {
-    [System.Serializable]
-    public struct Triangle
+    [Serializable]
+    public struct VertexTriangle
     {
-        public UInt16 m, v1, v2, v3;
+        public ushort m, v1, v2, v3;
 
-        public Triangle(UInt16 v1, UInt16 v2, UInt16 v3, UInt16 m)
+        public VertexTriangle(ushort v1, ushort v2, ushort v3, ushort m)
         {
             this.m = m;
             this.v1 = v1;
@@ -16,9 +16,9 @@ namespace zzio.primitives
             this.v3 = v3;
         }
 
-        public static Triangle ReadNew(BinaryReader r)
+        public static VertexTriangle ReadNew(BinaryReader r)
         {
-            Triangle t;
+            VertexTriangle t;
             t.m = r.ReadUInt16();
             t.v1 = r.ReadUInt16();
             t.v2 = r.ReadUInt16();

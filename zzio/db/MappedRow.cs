@@ -1,7 +1,5 @@
 using System;
 using System.Linq;
-using zzio.utils;
-using zzio.primitives;
 
 namespace zzio.db
 {

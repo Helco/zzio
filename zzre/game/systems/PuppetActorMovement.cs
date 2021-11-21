@@ -56,17 +56,17 @@ namespace zzre.game.systems
             var location = msg.Entity.Get<Location>();
             var triggerIdx = msg.TriggerIdx;
             var trigger = msg.TriggerIdx < 0
-                ? scene.triggers.OrderBy(t => Vector3.DistanceSquared(t.pos.ToNumerics(), location.LocalPosition)).FirstOrDefault()
+                ? scene.triggers.OrderBy(t => Vector3.DistanceSquared(t.pos, location.LocalPosition)).FirstOrDefault()
                 : scene.triggers.FirstOrDefault(t => t.idx == triggerIdx);
             if (trigger == null || trigger.type == TriggerType.NpcStartpoint || trigger.type == TriggerType.NpcAttackPosition)
                 return;
 
             // TODO: Check whether puppet to ground placement is actually correct
-            location.LocalPosition = trigger.pos.ToNumerics();
+            location.LocalPosition = trigger.pos;
             if (msg.MoveToGround)
                 PlaceToGround(msg.Entity, location);
             if (msg.OrientByTrigger)
-                location.LookIn(trigger.dir.ToNumerics() with { Y = 0.0001f });
+                location.LookIn(trigger.dir with { Y = 0.0001f });
             if (msg.Entity.Has<components.PuppetActorMovement>())
                 msg.Entity.Get<components.PuppetActorMovement>().TargetDirection = location.InnerForward;
         }

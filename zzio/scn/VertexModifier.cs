@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using zzio.primitives;
+using System.Numerics;
 
 namespace zzio.scn
 {
@@ -8,9 +8,9 @@ namespace zzio.scn
     public class VertexModifier : ISceneSection
     {
         public UInt32 idx, type;
-        public Vector v;
+        public Vector3 v;
         public IColor color;
-        public Vector vv;
+        public Vector3 vv;
         public UInt32 ii;
         public byte c;
 
@@ -19,11 +19,11 @@ namespace zzio.scn
             using BinaryReader reader = new BinaryReader(stream);
             idx = reader.ReadUInt32();
             type = reader.ReadUInt32();
-            v = Vector.ReadNew(reader);
+            v = reader.ReadVector3();
             color = IColor.ReadNew(reader);
             vv = type == 1
-                ? Vector.ReadNew(reader)
-                : new Vector();
+                ? reader.ReadVector3()
+                : new Vector3();
             ii = reader.ReadUInt32();
             c = reader.ReadByte();
         }
@@ -33,10 +33,10 @@ namespace zzio.scn
             using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(idx);
             writer.Write(type);
-            v.Write(writer);
+            writer.Write(v);
             color.Write(writer);
             if (type == 1)
-                vv.Write(writer);
+                writer.Write(vv);
             writer.Write(ii);
             writer.Write(c);
         }

@@ -4,9 +4,7 @@ using System.Linq;
 using System.Numerics;
 using Veldrid;
 using zzio;
-using zzio.primitives;
 using zzio.rwbs;
-using zzio.utils;
 using zzio.vfs;
 using zzre.materials;
 
@@ -53,17 +51,17 @@ namespace zzre
             if (geometry == null || morphTarget == null || materials == null || atomic == null)
                 throw new InvalidDataException("Could not find valid section structure in clump");
             RWGeometry = geometry;
-            BSphereCenter = morphTarget.bsphereCenter.ToNumerics();
+            BSphereCenter = morphTarget.bsphereCenter;
             BSphereRadius = morphTarget.bsphereRadius;
             IsSolid = atomic.flags.HasFlag(AtomicFlags.CollisionTest);
 
             var vertices = new ModelStandardVertex[morphTarget.vertices.Length];
-            var bounds = new Box(morphTarget.vertices.First().ToNumerics(), Vector3.Zero);
+            var bounds = new Box(morphTarget.vertices.First(), Vector3.Zero);
             for (int i = 0; i < vertices.Length; i++)
             {
-                vertices[i].pos = morphTarget.vertices[i].ToNumerics();
+                vertices[i].pos = morphTarget.vertices[i];
                 vertices[i].color = geometry.colors.Length > 0 ? geometry.colors[i] : new IColor(255);
-                vertices[i].tex = geometry.texCoords.Length > 0 ? geometry.texCoords[0][i].ToNumerics() : Vector2.Zero;
+                vertices[i].tex = geometry.texCoords.Length > 0 ? geometry.texCoords[0][i] : Vector2.Zero;
                 bounds = bounds.Union(vertices[i].pos);
             }
             Bounds = bounds;

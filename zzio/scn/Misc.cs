@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using zzio.primitives;
-using zzio.utils;
+using System.Numerics;
+using zzio;
 
 namespace zzio.scn
 {
@@ -10,7 +10,7 @@ namespace zzio.scn
     {
         public string worldFile = "", worldPath = "", texturePath = "";
         public FColor ambientLight;
-        public Vector v1, v2;
+        public Vector3 v1, v2;
         public IColor clearColor;
         public byte fogType;
         public IColor fogColor;
@@ -24,8 +24,8 @@ namespace zzio.scn
             worldPath = reader.ReadZString();
             texturePath = reader.ReadZString();
             ambientLight = FColor.ReadNew(reader);
-            v1 = Vector.ReadNew(reader);
-            v2 = Vector.ReadNew(reader);
+            v1 = reader.ReadVector3();
+            v2 = reader.ReadVector3();
             clearColor = IColor.ReadNew(reader);
             fogType = reader.ReadByte();
             if (fogType != 0)
@@ -49,8 +49,8 @@ namespace zzio.scn
             writer.WriteZString(worldPath);
             writer.WriteZString(texturePath);
             ambientLight.Write(writer);
-            v1.Write(writer);
-            v2.Write(writer);
+            writer.Write(v1);
+            writer.Write(v2);
             clearColor.Write(writer);
             writer.Write(fogType);
             if (fogType != 0)

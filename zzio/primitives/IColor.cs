@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace zzio.primitives
+namespace zzio
 {
     [System.Serializable]
     public struct IColor
@@ -17,10 +17,10 @@ namespace zzio.primitives
 
         public IColor(uint c)
         {
-            this.r = (byte)((c >> 0) & 0xff);
-            this.g = (byte)((c >> 8) & 0xff);
-            this.b = (byte)((c >> 16) & 0xff);
-            this.a = (byte)((c >> 24) & 0xff);
+            r = (byte)(c >> 0 & 0xff);
+            g = (byte)(c >> 8 & 0xff);
+            b = (byte)(c >> 16 & 0xff);
+            a = (byte)(c >> 24 & 0xff);
         }
 
         public static IColor ReadNew(BinaryReader r)
@@ -44,7 +44,7 @@ namespace zzio.primitives
         public FColor ToFColor() => new FColor(r / 255f, g / 255f, b / 255f, a / 255f);
 
         public IColor WithA(byte newAlpha) => new IColor(r, g, b, newAlpha);
-        public static implicit operator FColor(IColor c) => new FColor(c.r / 255f, c.g / 255f, c.b / 255f, c.a/255f);
+        public static implicit operator FColor(IColor c) => new FColor(c.r / 255f, c.g / 255f, c.b / 255f, c.a / 255f);
 
         public static readonly IColor White = new IColor(0xFFFFFFFF);
         public static readonly IColor Black = new IColor(0xFF000000);

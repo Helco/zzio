@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
-using zzio.primitives;
+using zzio;
 
 namespace zzre.materials
 {

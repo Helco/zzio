@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
-using zzio.primitives;
+using zzio;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;

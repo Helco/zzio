@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 using Veldrid;
-using zzio.primitives;
+using zzio;
 using zzre.rendering;
 
 namespace zzre.materials

@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using zzio.utils;
-using zzio.primitives;
+using System.Numerics;
+using zzio;
 
 namespace zzio.rwbs
 {
@@ -11,7 +11,7 @@ namespace zzio.rwbs
         public override SectionId sectionId => SectionId.World;
 
         public bool rootIsWorldSector;
-        public Vector origin;
+        public Vector3 origin;
         public float ambient, specular, diffuse;
         public UInt32
             numTriangles,
@@ -25,7 +25,7 @@ namespace zzio.rwbs
         {
             using BinaryReader reader = new BinaryReader(stream);
             rootIsWorldSector = reader.ReadUInt32() > 0;
-            origin = Vector.ReadNew(reader);
+            origin = reader.ReadVector3();
             ambient = reader.ReadSingle();
             specular = reader.ReadSingle();
             diffuse = reader.ReadSingle();
@@ -41,7 +41,7 @@ namespace zzio.rwbs
         {
             using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write((UInt32)(rootIsWorldSector ? 1 : 0));
-            origin.Write(writer);
+            writer.Write(origin);
             writer.Write(ambient);
             writer.Write(specular);
             writer.Write(diffuse);

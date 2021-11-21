@@ -1,7 +1,7 @@
 using System;
 using System.Text;
 
-namespace zzio.utils
+namespace zzio
 {
     public static class EnumUtils
     {
@@ -22,7 +22,7 @@ namespace zzio.utils
                 flagString.Append(Enum.Parse(typeof(T), intFlag.ToString()));
             }
             return flagString.Length == 0
-                ? default(T)
+                ? default
                 : (T)Enum.Parse(typeof(T), flagString.ToString());
         }
     }

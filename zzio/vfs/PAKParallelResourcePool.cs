@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using zzio.utils;
+using zzio;
 
 namespace zzio.vfs
 {

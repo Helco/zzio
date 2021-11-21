@@ -1,7 +1,7 @@
 ﻿using System;
 using DefaultEcs;
 using DefaultEcs.Resource;
-using zzio.utils;
+using zzio;
 
 namespace zzre.game.resources
 {

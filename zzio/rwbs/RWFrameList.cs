@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using zzio.primitives;
+using System.Numerics;
 
 namespace zzio.rwbs
 {
@@ -8,7 +8,7 @@ namespace zzio.rwbs
     public struct Frame
     {
         public float[] rotMatrix;
-        public Vector position;
+        public Vector3 position;
         public UInt32 frameIndex; //propably previous sibling?
         public UInt32 creationFlags;
 
@@ -18,7 +18,7 @@ namespace zzio.rwbs
             f.rotMatrix = new float[9];
             for (int i = 0; i < 9; i++)
                 f.rotMatrix[i] = reader.ReadSingle();
-            f.position = Vector.ReadNew(reader);
+            f.position = reader.ReadVector3();
             f.frameIndex = reader.ReadUInt32();
             f.creationFlags = reader.ReadUInt32();
             return f;
@@ -28,7 +28,7 @@ namespace zzio.rwbs
         {
             for (int i = 0; i < 9; i++)
                 w.Write(rotMatrix[i]);
-            position.Write(w);
+            w.Write(position);
             w.Write(frameIndex);
             w.Write(creationFlags);
         }

@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using zzio.primitives;
-using zzio.utils;
+using System.Numerics;
+using zzio;
 
 namespace zzio.scn
 {
@@ -10,7 +10,7 @@ namespace zzio.scn
     {
         public UInt32 idx;
         public string filename = "";
-        public Vector pos, forward, up;
+        public Vector3 pos, forward, up;
         public float
             minDist,
             maxDist;
@@ -24,9 +24,9 @@ namespace zzio.scn
             using BinaryReader reader = new BinaryReader(stream);
             idx = reader.ReadUInt32();
             filename = reader.ReadZString();
-            pos = Vector.ReadNew(reader);
-            forward = Vector.ReadNew(reader);
-            up = Vector.ReadNew(reader);
+            pos = reader.ReadVector3();
+            forward = reader.ReadVector3();
+            up = reader.ReadVector3();
             minDist = reader.ReadSingle();
             maxDist = reader.ReadSingle();
             volume = reader.ReadUInt32();
@@ -39,9 +39,9 @@ namespace zzio.scn
             using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(idx);
             writer.WriteZString(filename);
-            pos.Write(writer);
-            forward.Write(writer);
-            up.Write(writer);
+            writer.Write(pos);
+            writer.Write(forward);
+            writer.Write(up);
             writer.Write(minDist);
             writer.Write(maxDist);
             writer.Write(volume);

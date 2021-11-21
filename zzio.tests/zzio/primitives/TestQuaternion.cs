@@ -1,6 +1,6 @@
 using System.IO;
+using System.Numerics;
 using NUnit.Framework;
-using zzio.primitives;
 
 namespace zzio.tests.primitives
 {
@@ -17,21 +17,21 @@ namespace zzio.tests.primitives
         [Test]
         public void ctor() {
             Quaternion quat = new Quaternion(0.1f, 0.2f, 0.3f, 0.4f);
-            Assert.AreEqual(0.1f, quat.x);
-            Assert.AreEqual(0.2f, quat.y);
-            Assert.AreEqual(0.3f, quat.z);
-            Assert.AreEqual(0.4f, quat.w);
+            Assert.AreEqual(0.1f, quat.X);
+            Assert.AreEqual(0.2f, quat.Y);
+            Assert.AreEqual(0.3f, quat.Z);
+            Assert.AreEqual(0.4f, quat.W);
         }
 
         [Test]
         public void read() {
             MemoryStream stream = new MemoryStream(expected, false);
             using BinaryReader reader = new BinaryReader(stream);
-            Quaternion quat = Quaternion.ReadNew(reader);
-            Assert.AreEqual(-345.0f, quat.x);
-            Assert.AreEqual(678.0f, quat.y);
-            Assert.AreEqual(23.8f, quat.z);
-            Assert.AreEqual(89.12f, quat.w);
+            Quaternion quat = reader.ReadQuaternion();
+            Assert.AreEqual(-345.0f, quat.X);
+            Assert.AreEqual(678.0f, quat.Y);
+            Assert.AreEqual(23.8f, quat.Z);
+            Assert.AreEqual(89.12f, quat.W);
         }
 
         [Test]
@@ -39,7 +39,7 @@ namespace zzio.tests.primitives
             MemoryStream stream = new MemoryStream();
             using BinaryWriter writer = new BinaryWriter(stream);
             Quaternion quat = new Quaternion(-345.0f, 678.0f, 23.8f, 89.12f);
-            quat.Write(writer);
+            writer.Write(quat);
 
             byte[] actual = stream.ToArray();
             Assert.AreEqual(actual, expected);

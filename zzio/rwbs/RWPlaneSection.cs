@@ -1,13 +1,12 @@
 using System;
 using System.IO;
-using zzio.utils;
-using zzio.primitives;
+using System.Numerics;
 
 namespace zzio.rwbs
 {
     public enum RWPlaneSectionType
     {
-        // *Plane has a *normal* vector in * direction
+        // *Plane has a *normal* Vector3 in * direction
 
         XPlane = 0,
         YPlane = 4,
@@ -18,11 +17,11 @@ namespace zzio.rwbs
 
     public static class RWPlaneSectionTypeExtensions
     {
-        public static Vector AsNormal(this RWPlaneSectionType t) => t switch
+        public static Vector3 AsNormal(this RWPlaneSectionType t) => t switch
         {
-            RWPlaneSectionType.XPlane => new Vector(1.0f, 0.0f, 0.0f),
-            RWPlaneSectionType.YPlane => new Vector(0.0f, 1.0f, 0.0f),
-            RWPlaneSectionType.ZPlane => new Vector(0.0f, 0.0f, 1.0f),
+            RWPlaneSectionType.XPlane => new Vector3(1.0f, 0.0f, 0.0f),
+            RWPlaneSectionType.YPlane => new Vector3(0.0f, 1.0f, 0.0f),
+            RWPlaneSectionType.ZPlane => new Vector3(0.0f, 0.0f, 1.0f),
             _ => throw new NotImplementedException("Unknown plane section type")
         };
 

@@ -48,8 +48,8 @@ namespace zzre.rendering.effectparts
                 data.colorA.mod + random.InLine() * data.colorA.width)
                 - color / maxLife;
 
-            gravity = Vector3.Clamp(data.gravity.ToNumerics(), Vector3.One * -0.5f, Vector3.One * +0.5f) * 9.8f;
-            gravityMod = 9.8f * data.gravityMod.ToNumerics() - gravity / maxLife;
+            gravity = Vector3.Clamp(data.gravity, Vector3.One * -0.5f, Vector3.One * +0.5f) * 9.8f;
+            gravityMod = 9.8f * data.gravityMod - gravity / maxLife;
 
             float horRot = random.InLine() * MathF.PI * 2f;
             float verRot = random.InLine() * MathF.PI * data.verticalDir;

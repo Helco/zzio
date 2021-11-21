@@ -6,7 +6,6 @@ using System.Linq;
 using System.Numerics;
 using Veldrid;
 using zzio;
-using zzio.primitives;
 using zzio.rwbs;
 using zzio.vfs;
 using zzre.debug;
@@ -341,7 +340,7 @@ namespace zzre.tools
             if (worldBuffers.Sections[index].IsPlane)
             {
                 var section = (WorldBuffers.PlaneSection)worldBuffers.Sections[index];
-                SetPlanes(section.Bounds, section.PlaneType.AsNormal().ToNumerics(), section.LeftValue, section.RightValue, section.CenterValue);
+                SetPlanes(section.Bounds, section.PlaneType.AsNormal(), section.LeftValue, section.RightValue, section.CenterValue);
             }
             else
             {
@@ -388,9 +387,9 @@ namespace zzre.tools
                     .Take(sector.count)
                     .Select(i => sectionAtomic.triangles[i])
                     .Select(t => new Triangle(
-                        sectionAtomic.vertices[t.v1].ToNumerics(),
-                        sectionAtomic.vertices[t.v2].ToNumerics(),
-                        sectionAtomic.vertices[t.v3].ToNumerics()))
+                        sectionAtomic.vertices[t.v1],
+                        sectionAtomic.vertices[t.v2],
+                        sectionAtomic.vertices[t.v3]))
                     .ToArray();
         }
 

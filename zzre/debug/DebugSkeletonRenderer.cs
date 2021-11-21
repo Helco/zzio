@@ -3,7 +3,6 @@ using System.Linq;
 using System.Numerics;
 using Veldrid;
 using zzio;
-using zzio.primitives;
 using zzre.materials;
 using zzre.rendering;
 using ImGuiNET;

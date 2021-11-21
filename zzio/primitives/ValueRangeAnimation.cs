@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace zzio.primitives
+namespace zzio
 {
     /*
      * Represents an effect value generated between [value-width, value+width] and animated by mod

@@ -1,6 +1,5 @@
 ﻿using System.IO;
-using zzio.primitives;
-using zzio.utils;
+using System.Numerics;
 
 namespace zzio.effect.parts
 {
@@ -20,9 +19,9 @@ namespace zzio.effect.parts
             minProgress = 1.0f,
             minSize = 11.0f,
             fflag = 0.0f;
-        public Vector
-            rotationAxis = new Vector(),
-            scaleSpeed = new Vector();
+        public Vector3
+            rotationAxis,
+            scaleSpeed;
         public string
             modelName = "sphere",
             name = "Model";
@@ -44,8 +43,8 @@ namespace zzio.effect.parts
             phase1 = r.ReadUInt32();
             phase2 = r.ReadUInt32();
             rotationSpeed = r.ReadSingle();
-            rotationAxis = Vector.ReadNew(r);
-            scaleSpeed = Vector.ReadNew(r);
+            rotationAxis = r.ReadVector3();
+            scaleSpeed = r.ReadVector3();
             texShift = r.ReadSingle();
             modelName = r.ReadSizedCString(32);
             ignoreHead = r.ReadBoolean();

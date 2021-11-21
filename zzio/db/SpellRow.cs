@@ -1,5 +1,3 @@
-using zzio.primitives;
-
 namespace zzio.db
 {
     public class SpellRow : MappedRow

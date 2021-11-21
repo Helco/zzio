@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using zzio.primitives;
-using zzio.utils;
+using System.Numerics;
+using zzio;
 
 namespace zzio.scn
 {
@@ -29,7 +29,7 @@ namespace zzio.scn
         public LightType type;
         public FColor color;
         public LightFlags flags;
-        public Vector pos, vec; // vec is either dir or a lookAt point
+        public Vector3 pos, vec; // vec is either dir or a lookAt point
         public float radius;
 
         public void Read(Stream stream)
@@ -39,23 +39,23 @@ namespace zzio.scn
             type = EnumUtils.intToEnum<LightType>(reader.ReadInt32());
             color = FColor.ReadNew(reader);
             flags = EnumUtils.intToFlags<LightFlags>(reader.ReadUInt32());
-            pos = new Vector();
-            vec = new Vector();
+            pos = new Vector3();
+            vec = new Vector3();
             radius = 0.0f;
             switch (type)
             {
                 case LightType.Directional:
-                    pos = Vector.ReadNew(reader);
-                    vec = Vector.ReadNew(reader);
+                    pos = reader.ReadVector3();
+                    vec = reader.ReadVector3();
                     break;
                 case LightType.Point:
                     radius = reader.ReadSingle();
-                    pos = Vector.ReadNew(reader);
+                    pos = reader.ReadVector3();
                     break;
                 case LightType.Spot:
                     radius = reader.ReadUInt32();
-                    pos = Vector.ReadNew(reader);
-                    vec = Vector.ReadNew(reader);
+                    pos = reader.ReadVector3();
+                    vec = reader.ReadVector3();
                     break;
             }
         }
@@ -70,17 +70,17 @@ namespace zzio.scn
             switch (type)
             {
                 case LightType.Directional:
-                    pos.Write(writer);
-                    vec.Write(writer);
+                    writer.Write(pos);
+                    writer.Write(vec);
                     break;
                 case LightType.Point:
                     writer.Write(radius);
-                    pos.Write(writer);
+                    writer.Write(pos);
                     break;
                 case LightType.Spot:
                     writer.Write(radius);
-                    pos.Write(writer);
-                    vec.Write(writer);
+                    writer.Write(pos);
+                    writer.Write(vec);
                     break;
             }
         }

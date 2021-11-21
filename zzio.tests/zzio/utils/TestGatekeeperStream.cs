@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
-using zzio.utils;
 
 namespace zzio.tests.utils
 {

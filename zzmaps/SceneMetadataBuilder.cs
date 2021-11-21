@@ -2,10 +2,11 @@
 using System.Linq;
 using System.Threading.Tasks.Dataflow;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Numerics;
 using zzre;
 using zzio.db;
-using zzio.primitives;
-using System.Text.RegularExpressions;
+using zzio;
 
 namespace zzmaps
 {
@@ -14,7 +15,7 @@ namespace zzmaps
     {
         public string Name;
         public string? Icon;
-        public Vector Pos;
+        public Vector3 Pos;
     }
 
     [Serializable]
@@ -25,7 +26,7 @@ namespace zzmaps
         public int MinZoom, MaxZoom;
         public float BasePixelsPerUnit;
         public uint TilePixelSize;
-        public Vector MinBounds, MaxBounds, Origin;
+        public Vector3 MinBounds, MaxBounds, Origin;
         public FColor BackgroundColor;
         public zzio.scn.Trigger[] Triggers;
         public NPCMetadata[] NPCs;
@@ -60,8 +61,8 @@ namespace zzmaps
                     MaxZoom = mapTiler.MaxZoomLevel,
                     BasePixelsPerUnit = mapTiler.BasePixelsPerUnit,
                     TilePixelSize = mapTiler.TilePixelSize,
-                    MinBounds = new Vector(mapBounds.Min.X, mapBounds.Min.Y, mapBounds.Min.Z),
-                    MaxBounds = new Vector(mapBounds.Max.X, mapBounds.Max.Y, mapBounds.Max.Z),
+                    MinBounds = mapBounds.Min,
+                    MaxBounds = mapBounds.Max,
                     Origin = scene.sceneOrigin,
                     BackgroundColor = background.AsColor(scene),
                     Triggers = scene.triggers,

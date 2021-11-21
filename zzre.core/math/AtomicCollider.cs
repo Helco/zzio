@@ -15,16 +15,16 @@ namespace zzre
             throw new ArgumentException("Given atomic section does not have a collision section"))
         {
             Atomic = atomic;
-            Box = Box.FromMinMax(atomic.bbox1.ToNumerics(), atomic.bbox2.ToNumerics());
+            Box = Box.FromMinMax(atomic.bbox1, atomic.bbox2);
         }
 
         public override Triangle GetTriangle(int i)
         {
             var t = Atomic.triangles[i];
             return new Triangle(
-                Atomic.vertices[t.v1].ToNumerics(),
-                Atomic.vertices[t.v2].ToNumerics(),
-                Atomic.vertices[t.v3].ToNumerics());
+                Atomic.vertices[t.v1],
+                Atomic.vertices[t.v2],
+                Atomic.vertices[t.v3]);
         }
     }
 }

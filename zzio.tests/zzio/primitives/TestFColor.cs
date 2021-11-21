@@ -1,6 +1,5 @@
 using System.IO;
 using NUnit.Framework;
-using zzio.primitives;
 
 namespace zzio.tests.primitives
 {

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
-using zzio.utils;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
@@ -44,8 +43,8 @@ namespace zzre.tools
                 var camera = diContainer.GetTag<Camera>();
                 SceneFOModel = sceneModel;
                 locationRange = diContainer.GetTag<LocationBuffer>().Add(Location);
-                Location.LocalPosition = sceneModel.pos.ToNumerics();
-                Location.LocalRotation = sceneModel.rot.ToNumericsRotation();
+                Location.LocalPosition = sceneModel.pos;
+                Location.LocalRotation = sceneModel.rot.ToZZRotation();
 
                 clumpBuffers = new ClumpBuffers(diContainer, new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
                 materials = clumpBuffers.SubMeshes.Select(subMesh =>
@@ -94,7 +93,7 @@ namespace zzre.tools
                     var fullPath = new FilePath("resources/models/models").Combine(SceneFOModel.filename + ".dff");
                     diContainer.GetTag<OpenDocumentSet>().OpenWith<ModelViewer>(fullPath);
                 }
-                var color = SceneFOModel.color.ToFColor().ToNumerics();
+                var color = SceneFOModel.color.ToFColor();
                 ColorEdit4("Color", ref color, ImGuiColorEditFlags.NoPicker);
                 NewLine();
                 

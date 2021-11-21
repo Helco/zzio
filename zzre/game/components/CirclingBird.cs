@@ -9,7 +9,7 @@ namespace zzre.game.components
 
         public CirclingBird(zzio.scn.Trigger trigger)
         {
-            Center = trigger.pos.ToNumerics() + trigger.dir.ToNumerics() * (trigger.ii2 * 0.01f);
+            Center = trigger.pos + trigger.dir * (trigger.ii2 * 0.01f);
             Speed = unchecked((int)trigger.ii3) * 0.001f;
         }
     }

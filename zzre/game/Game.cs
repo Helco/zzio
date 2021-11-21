@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
 using Veldrid;
 using zzio.scn;
-using zzio.utils;
 using zzio.vfs;
 using zzre.rendering;
 
@@ -106,7 +104,7 @@ namespace zzre.game
             var playerLocation = new Location();
             playerLocation.Parent = worldLocation;
             playerLocation.LocalPosition = new Vector3(195.02159f, 40.1f, 159.80594f);
-            playerLocation.LocalPosition = scene.triggers.First(t => t.type == TriggerType.Doorway).pos.ToNumerics();
+            //playerLocation.LocalPosition = scene.triggers.First(t => t.type == TriggerType.Doorway).pos;
             PlayerEntity.Set(playerLocation);
             PlayerEntity.Set(DefaultEcs.Resource.ManagedResource<zzio.ActorExDescription>.Create("chr01"));
             PlayerEntity.Set(components.Visibility.Visible);
@@ -167,7 +165,7 @@ namespace zzre.game
 
         private WorldBuffers LoadWorldBuffers()
         {
-            var fullPath = new FilePath("resources").Combine(scene.misc.worldPath, scene.misc.worldFile + ".bsp");
+            var fullPath = new zzio.FilePath("resources").Combine(scene.misc.worldPath, scene.misc.worldFile + ".bsp");
             return new WorldBuffers(this, fullPath);
         }
 

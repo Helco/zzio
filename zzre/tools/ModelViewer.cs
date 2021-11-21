@@ -10,7 +10,6 @@ using zzre.rendering;
 using zzre.materials;
 using zzre.debug;
 using zzre.imgui;
-using zzio.primitives;
 using System.Collections.Generic;
 
 namespace zzre.tools
@@ -121,8 +120,8 @@ namespace zzre.tools
             var texturePaths = new[]
             {
                 textureLoader.GetTexturePathFromModel(resource.Path),
-                new zzio.utils.FilePath("resources/textures/models"),
-                new zzio.utils.FilePath("resources/textures/worlds"),
+                new FilePath("resources/textures/models"),
+                new FilePath("resources/textures/worlds"),
             };
 
             geometryBuffers = new ClumpBuffers(diContainer, resource);

@@ -5,7 +5,6 @@ using System.Numerics;
 using DefaultEcs.Resource;
 using DefaultEcs.System;
 using zzio;
-using zzio.primitives;
 using zzio.scn;
 using zzre.rendering;
 
@@ -56,8 +55,8 @@ namespace zzre.game.systems
                 var entity = ecsWorld.CreateEntity();
                 var location = new Location();
                 location.Parent = ecsWorld.Get<Location>();
-                location.LocalPosition = model.pos.ToNumerics();
-                location.LocalRotation = model.rot.ToNumericsRotation();
+                location.LocalPosition = model.pos;
+                location.LocalRotation = model.rot.ToZZRotation();
                 entity.Set(location);
 
                 entity.Set(ManagedResource<ClumpBuffers>.Create(
@@ -81,8 +80,8 @@ namespace zzre.game.systems
                 var entity = ecsWorld.CreateEntity();
                 var location = new Location();
                 location.Parent = ecsWorld.Get<Location>();
-                location.LocalPosition = foModel.pos.ToNumerics();
-                location.LocalRotation = foModel.rot.ToNumericsRotation();
+                location.LocalPosition = foModel.pos;
+                location.LocalRotation = foModel.rot.ToZZRotation();
                 entity.Set(location);
 
                 entity.Set(ManagedResource<ClumpBuffers>.Create(

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
 using zzio.scn;
@@ -37,7 +36,7 @@ namespace zzre.game.systems
 
             var triggerIdx = lookAt.TriggerIdx;
             var trigger = scene.triggers.First(t => t.idx == triggerIdx);
-            puppet.TargetDirection = Vector3.Normalize(trigger.pos.ToNumerics() - location.LocalPosition);
+            puppet.TargetDirection = Vector3.Normalize(trigger.pos - location.LocalPosition);
             
             // TODO: Add ActorHeadIK behavior for LookAtTrigger
         }

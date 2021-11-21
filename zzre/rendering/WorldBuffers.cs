@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
+using zzio;
 using zzio.rwbs;
-using zzio.utils;
 using zzio.vfs;
 using zzre.materials;
 
@@ -80,7 +80,7 @@ namespace zzre.rendering
             var materialList = world.FindChildById(SectionId.MaterialList, false) as RWMaterialList;
             materials = materialList?.children.OfType<RWMaterial>().ToImmutableArray() ??
                 throw new InvalidDataException("RWWorld has no materials");
-            Origin = world.origin.ToNumerics();
+            Origin = world.origin;
             RWWorld = world;
 
             var sectionList = new List<BaseSection>();
@@ -157,8 +157,8 @@ namespace zzre.rendering
                     .Range(0, atomic.vertices.Count())
                     .Select(i => new ModelStandardVertex()
                     {
-                        pos = atomic.vertices[i].ToNumerics(),
-                        tex = atomic.texCoords1[i].ToNumerics(),
+                        pos = atomic.vertices[i],
+                        tex = atomic.texCoords1[i],
                         color = atomic.colors[i]
                     }));
                 int vertexBase = vertexCount;
@@ -170,7 +170,7 @@ namespace zzre.rendering
                 int triangleCount = trianglesByMaterial.Sum(group => group.Count());
                 indexCount += triangleCount * 3;
 
-                var bounds = Box.FromMinMax(atomic.bbox1.ToNumerics(), atomic.bbox2.ToNumerics());
+                var bounds = Box.FromMinMax(atomic.bbox1, atomic.bbox2);
                 var result = new MeshSection(atomic)
                 {
                     Bounds = bounds,

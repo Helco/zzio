@@ -1,7 +1,6 @@
 using System.IO;
 using NUnit.Framework;
 using zzio.db;
-using zzio.primitives;
 
 namespace zzio.tests.db
 {

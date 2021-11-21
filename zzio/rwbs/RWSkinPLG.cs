@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using zzio.utils;
-using zzio.primitives;
+using System.Numerics;
+using zzio;
 
 namespace zzio.rwbs
 {
@@ -21,7 +21,7 @@ namespace zzio.rwbs
     {
         public UInt32 id, idx;
         public BoneFlags flags;
-        public Matrix objectToBone;
+        public Matrix4x4 objectToBone;
     }
 
     [Serializable]
@@ -58,7 +58,7 @@ namespace zzio.rwbs
                 bones[i].id = reader.ReadUInt32();
                 bones[i].idx = reader.ReadUInt32();
                 bones[i].flags = EnumUtils.intToFlags<BoneFlags>(reader.ReadUInt32());
-                bones[i].objectToBone = Matrix.ReadNew(reader);
+                bones[i].objectToBone = reader.ReadMatrix4x4();
             }
         }
 
@@ -86,7 +86,7 @@ namespace zzio.rwbs
                 writer.Write(b.id);
                 writer.Write(b.idx);
                 writer.Write((uint)b.flags);
-                b.objectToBone.Write(writer);
+                writer.Write(b.objectToBone);
             }
         }
     }

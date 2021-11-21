@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using zzio.utils;
 using zzio.vfs;
 using System.Linq;
+using zzio;
 
 namespace zzre.tools
 {

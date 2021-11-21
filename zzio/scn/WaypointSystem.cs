@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Diagnostics;
-using zzio.primitives;
+using System.Numerics;
 
 // This surely needs some reverse engineering work being done...
 namespace zzio.scn
@@ -17,7 +17,7 @@ namespace zzio.scn
     public struct WaypointData
     {
         public uint ii1, ii1ext, iiv2;
-        public Vector v1;
+        public Vector3 v1;
         public uint[] innerdata1, innerdata2;
         public uint[] inner3data1;
     }
@@ -46,7 +46,7 @@ namespace zzio.scn
                 d[i].ii1 = reader.ReadUInt32();
                 if (version >= 4)
                     d[i].ii1ext = reader.ReadUInt32();
-                d[i].v1 = Vector.ReadNew(reader);
+                d[i].v1 = reader.ReadVector3();
 
                 uint ci1 = reader.ReadUInt32();
                 d[i].innerdata1 = new uint[ci1];
@@ -103,7 +103,7 @@ namespace zzio.scn
                 writer.Write(d[i].ii1);
                 if (version >= 4)
                     writer.Write(d[i].ii1ext);
-                d[i].v1.Write(writer);
+                writer.Write(d[i].v1);
 
                 writer.Write(d[i].innerdata1.Length);
                 for (int j = 0; j < d[i].innerdata1.Length; j++)

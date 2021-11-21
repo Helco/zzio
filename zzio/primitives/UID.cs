@@ -1,15 +1,15 @@
 using System;
 using System.IO;
 
-namespace zzio.primitives
+namespace zzio
 {
     [Serializable]
     public struct UID : IEquatable<UID>
     {
-        public readonly UInt32 raw;
+        public readonly uint raw;
         public int Module => (int)(raw % 16);
 
-        public UID(UInt32 raw = 0)
+        public UID(uint raw = 0)
         {
             this.raw = raw;
         }

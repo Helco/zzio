@@ -49,12 +49,12 @@ namespace zzre.game.systems
                 var entity = World.CreateEntity();
                 var location = new Location();
                 location.Parent = World.Get<Location>();
-                location.LocalPosition = trigger.pos.ToNumerics();
-                location.LocalRotation = trigger.dir.ToNumericsRotation();
+                location.LocalPosition = trigger.pos;
+                location.LocalRotation = trigger.dir.ToZZRotation();
                 location.LookIn(location.InnerForward with { Y = 0f });
                 entity.Set(location);
 
-                var dbUID = new zzio.primitives.UID(trigger.ii1);
+                var dbUID = new zzio.UID(trigger.ii1);
                 if (!mappedDB.TryGetNpc(dbUID, out var dbRow))
                     throw new System.IO.InvalidDataException($"Invalid NPC database UID: {dbUID}");
                 entity.Set(dbRow);

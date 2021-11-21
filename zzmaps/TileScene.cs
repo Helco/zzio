@@ -3,10 +3,9 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
-using zzio.primitives;
+using zzio;
 using zzio.rwbs;
 using zzio.scn;
-using zzio.utils;
 using zzio.vfs;
 using zzre;
 using zzre.rendering;
@@ -79,8 +78,8 @@ namespace zzmaps
                     continue;
                 objects.Add(new TileSceneObject(clumpResource, clumpBuffers)
                 {
-                    Position = pos.ToNumerics(),
-                    Rotation = rot.ToNumericsRotation(),
+                    Position = pos,
+                    Rotation = rot.ToZZRotation(),
                     Tint = color.ToFColor()
                 });
                 PreloadMaterial(clumpBuffers);

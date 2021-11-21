@@ -50,8 +50,8 @@ namespace zzre.game.systems
 
                 var location = new Location();
                 location.Parent = ecsWorld.Get<Location>();
-                location.LocalPosition = trigger.pos.ToNumerics();
-                location.LocalRotation = trigger.dir.ToNumericsRotation();
+                location.LocalPosition = trigger.pos;
+                location.LocalRotation = trigger.dir.ToZZRotation();
                 entity.Set(location);
 
                 var type = (AnimalType)trigger.ii1;

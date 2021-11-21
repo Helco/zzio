@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using zzio.primitives;
-using zzio.utils;
+using System.Numerics;
+using zzio;
 
 namespace zzio.scn
 {
@@ -29,7 +29,7 @@ namespace zzio.scn
     {
         public uint idx;
         public string filename = "";
-        public Vector pos, rot;
+        public Vector3 pos, rot;
         public float fadeOutMin, fadeOutMax;
         public SurfaceProperties surfaceProps;
         public IColor color;
@@ -43,8 +43,8 @@ namespace zzio.scn
             using BinaryReader reader = new BinaryReader(stream);
             idx = reader.ReadUInt32();
             filename = reader.ReadZString();
-            pos = Vector.ReadNew(reader);
-            rot = Vector.ReadNew(reader);
+            pos = reader.ReadVector3();
+            rot = reader.ReadVector3();
             fadeOutMin = reader.ReadSingle();
             fadeOutMax = reader.ReadSingle();
             surfaceProps = SurfaceProperties.ReadNew(reader);
@@ -61,8 +61,8 @@ namespace zzio.scn
             using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(idx);
             writer.WriteZString(filename);
-            pos.Write(writer);
-            rot.Write(writer);
+            writer.Write(pos);
+            writer.Write(rot);
             writer.Write(fadeOutMin);
             writer.Write(fadeOutMax);
             surfaceProps.Write(writer);

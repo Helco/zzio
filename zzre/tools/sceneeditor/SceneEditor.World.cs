@@ -1,5 +1,4 @@
 ﻿using Veldrid;
-using zzio.utils;
 using zzre.imgui;
 using zzre.rendering;
 
@@ -41,7 +40,7 @@ namespace zzre.tools
                 if (editor.scene == null)
                     return;
 
-                var fullPath = new FilePath("resources").Combine(editor.scene.misc.worldPath, editor.scene.misc.worldFile + ".bsp");
+                var fullPath = new zzio.FilePath("resources").Combine(editor.scene.misc.worldPath, editor.scene.misc.worldFile + ".bsp");
                 buffers = new WorldBuffers(diContainer, fullPath);
                 renderer.WorldBuffers = buffers;
                 editor.camera.Location.LocalPosition = -buffers.Origin;

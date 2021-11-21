@@ -2,8 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-using zzio.utils;
-using zzio.primitives;
 
 namespace zzio.db
 {

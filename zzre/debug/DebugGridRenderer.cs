@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
-using zzio.primitives;
+using zzio;
 using zzre.materials;
 using zzre.rendering;
 

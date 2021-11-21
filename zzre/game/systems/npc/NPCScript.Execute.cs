@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using zzio;
 using zzio.script;
 
 namespace zzre.game.systems
@@ -122,7 +123,7 @@ namespace zzre.game.systems
                         case "0": DeployMeAtTrigger(entity, triggerI); break;
                         case "1": DeployPlayerAtTrigger(entity, triggerI); break;
                         default:
-                            var uid = zzio.primitives.UID.Parse(args[1]);
+                            var uid = UID.Parse(args[1]);
                             DeployNPCAtTrigger(entity, uid);
                             break;
                     }

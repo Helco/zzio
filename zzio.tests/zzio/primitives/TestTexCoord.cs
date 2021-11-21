@@ -1,11 +1,11 @@
 using System.IO;
+using System.Numerics;
 using NUnit.Framework;
-using zzio.primitives;
 
 namespace zzio.tests.primitives
 {
     [TestFixture]
-    public class TestTexCoord
+    public class TestVector2
     {
         private static readonly byte[] expected = new byte[] {
             0x00, 0x80, 0xac, 0xc3, // -345.0f
@@ -14,26 +14,26 @@ namespace zzio.tests.primitives
 
         [Test]
         public void ctor() {
-            TexCoord tex = new TexCoord(0.1f, 0.2f);
-            Assert.AreEqual(0.1f, tex.u);
-            Assert.AreEqual(0.2f, tex.v);
+            Vector2 tex = new Vector2(0.1f, 0.2f);
+            Assert.AreEqual(0.1f, tex.X);
+            Assert.AreEqual(0.2f, tex.Y);
         }
 
         [Test]
         public void read() {
             MemoryStream stream = new MemoryStream(expected, false);
             using BinaryReader reader = new BinaryReader(stream);
-            TexCoord tex = TexCoord.ReadNew(reader);
-            Assert.AreEqual(-345.0f, tex.u);
-            Assert.AreEqual(678.0f, tex.v);
+            Vector2 tex = reader.ReadVector2();
+            Assert.AreEqual(-345.0f, tex.X);
+            Assert.AreEqual(678.0f, tex.Y);
         }
 
         [Test]
         public void write() {
             MemoryStream stream = new MemoryStream();
             using BinaryWriter writer = new BinaryWriter(stream);
-            TexCoord tex = new TexCoord(-345.0f, 678.0f);
-            tex.Write(writer);
+            Vector2 tex = new Vector2(-345.0f, 678.0f);
+            writer.Write(tex);
 
             byte[] actual = stream.ToArray();
             Assert.AreEqual(actual, expected);

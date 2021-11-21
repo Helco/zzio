@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using zzio.primitives;
-using zzio.utils;
+using zzio;
+using System.Numerics;
 
 namespace zzio
 {
@@ -15,7 +15,7 @@ namespace zzio
             public Misc misc = new Misc();
             public WaypointSystem waypointSystem = new WaypointSystem();
             public Dataset dataset = new Dataset();
-            public Vector sceneOrigin;
+            public Vector3 sceneOrigin;
             public string backdropFile = "";
             public Light[] lights                       = new Light[0];
             public Model[] models                       = new Model[0];
@@ -55,7 +55,7 @@ namespace zzio
                     { "[Misc]",              () => (misc =             new Misc()).Read(new GatekeeperStream(stream)) },
                     { "[WaypointSystem]",    () => (waypointSystem =   new WaypointSystem()).Read(new GatekeeperStream(stream)) },
                     { "[Dataset]",           () => (dataset =          new Dataset()).Read(new GatekeeperStream(stream)) },
-                    { "[SceneOrigin]",       () => sceneOrigin =       Vector.ReadNew(reader) },
+                    { "[SceneOrigin]",       () => sceneOrigin =       reader.ReadVector3() },
                     { "[Backdrop]",          () => backdropFile =      reader.ReadZString() },
                     { "[AmbientSound]",      () => ambientSound =      reader.ReadUInt32() },
                     { "[Music]",             () => music =             reader.ReadUInt32() },
@@ -113,7 +113,7 @@ namespace zzio
 
                 // write primitives
                 writer.WriteZString("[SceneOrigin]");
-                sceneOrigin.Write(writer);                
+                writer.Write(sceneOrigin);                
                 writer.WriteZString("[AmbientSound]");
                 writer.Write(ambientSound);
                 writer.WriteZString("[Music]");

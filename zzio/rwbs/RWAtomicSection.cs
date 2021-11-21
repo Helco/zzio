@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using zzio.primitives;
+using System.Numerics;
 
 namespace zzio.rwbs
 {
@@ -10,14 +10,14 @@ namespace zzio.rwbs
         public override SectionId sectionId => SectionId.AtomicSection;
 
         public UInt32 matIdBase;
-        public Vector bbox1, bbox2;
-        public Vector[] vertices = new Vector[0];
+        public Vector3 bbox1, bbox2;
+        public Vector3[] vertices = new Vector3[0];
         public Normal[] normals = new Normal[0];
         public IColor[] colors = new IColor[0];
-        public TexCoord[]
-            texCoords1 = new TexCoord[0],
-            texCoords2 = new TexCoord[0];
-        public Triangle[] triangles = new Triangle[0];
+        public Vector2[]
+            texCoords1 = new Vector2[0],
+            texCoords2 = new Vector2[0];
+        public VertexTriangle[] triangles = new VertexTriangle[0];
 
         protected override void readStruct(Stream stream)
         {
@@ -28,15 +28,15 @@ namespace zzio.rwbs
 
             using BinaryReader reader = new BinaryReader(stream);
             matIdBase = reader.ReadUInt32();
-            triangles = new Triangle[reader.ReadUInt32()];
-            vertices = new Vector[reader.ReadUInt32()];
-            bbox1 = Vector.ReadNew(reader);
-            bbox2 = Vector.ReadNew(reader);
+            triangles = new VertexTriangle[reader.ReadUInt32()];
+            vertices = new Vector3[reader.ReadUInt32()];
+            bbox1 = reader.ReadVector3();
+            bbox2 = reader.ReadVector3();
             reader.ReadUInt32(); // unused
             reader.ReadUInt32();
 
             for (int i = 0; i < vertices.Length; i++)
-                vertices[i] = Vector.ReadNew(reader);
+                vertices[i] = reader.ReadVector3();
 
             if ((worldFormat & GeometryFormat.Normals) > 0)
             {
@@ -55,20 +55,20 @@ namespace zzio.rwbs
             if ((worldFormat & GeometryFormat.Textured) > 0 ||
                 (worldFormat & GeometryFormat.Textured2) > 0)
             {
-                texCoords1 = new TexCoord[vertices.Length];
+                texCoords1 = new Vector2[vertices.Length];
                 for (int i = 0; i < texCoords1.Length; i++)
-                    texCoords1[i] = TexCoord.ReadNew(reader);
+                    texCoords1[i] = reader.ReadVector2();
             }
 
             if ((worldFormat & GeometryFormat.Textured2) > 0)
             {
-                texCoords2 = new TexCoord[vertices.Length];
+                texCoords2 = new Vector2[vertices.Length];
                 for (int i = 0; i < texCoords2.Length; i++)
-                    texCoords2[i] = TexCoord.ReadNew(reader);
+                    texCoords2[i] = reader.ReadVector2();
             }
 
             for (int i = 0; i < triangles.Length; i++)
-                triangles[i] = Triangle.ReadNew(reader);
+                triangles[i] = VertexTriangle.ReadNew(reader);
         }
 
         protected override void writeStruct(Stream stream)
@@ -82,13 +82,12 @@ namespace zzio.rwbs
             writer.Write(matIdBase);
             writer.Write(triangles.Length);
             writer.Write(vertices.Length);
-            bbox1.Write(writer);
-            bbox2.Write(writer);
+            writer.Write(bbox1);
+            writer.Write(bbox2);
             writer.Write(0U);
             writer.Write(0U);
-            
-            foreach (Vector v in vertices)
-                v.Write(writer);
+
+            Array.ForEach(vertices, writer.Write);
 
             if ((worldFormat & GeometryFormat.Normals) > 0)
             {
@@ -105,17 +104,15 @@ namespace zzio.rwbs
             if ((worldFormat & GeometryFormat.Textured) > 0 ||
                 (worldFormat & GeometryFormat.Textured2) > 0)
             {
-                foreach (TexCoord t in texCoords1)
-                    t.Write(writer);
+                Array.ForEach(texCoords1, writer.Write);
             }
 
             if ((worldFormat & GeometryFormat.Textured2) > 0)
             {
-                foreach (TexCoord t in texCoords2)
-                    t.Write(writer);
+                Array.ForEach(texCoords2, writer.Write);
             }
 
-            foreach (Triangle t in triangles)
+            foreach (VertexTriangle t in triangles)
                 t.Write(writer);
         }
     }

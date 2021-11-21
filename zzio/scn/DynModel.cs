@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using zzio.primitives;
-using zzio.utils;
+using System.Numerics;
+using zzio;
 
 namespace zzio.scn
 {
@@ -19,9 +19,9 @@ namespace zzio.scn
     public class DynModel : ISceneSection
     {
         public UInt32 idx, c1, c2;
-        public Vector pos, rot;
+        public Vector3 pos, rot;
         public float f1, f2;
-        public Vector v1;
+        public Vector3 v1;
         public UInt32 ii1, ii2;
         public DynModelData[] data = new DynModelData[0]; //always three
 
@@ -31,11 +31,11 @@ namespace zzio.scn
             idx = reader.ReadUInt32();
             c1 = reader.ReadUInt32();
             c2 = reader.ReadUInt32();
-            pos = Vector.ReadNew(reader);
-            rot = Vector.ReadNew(reader);
+            pos = reader.ReadVector3();
+            rot = reader.ReadVector3();
             f1 = reader.ReadSingle();
             f2 = reader.ReadSingle();
-            v1 = Vector.ReadNew(reader);
+            v1 = reader.ReadVector3();
             ii1 = reader.ReadUInt32();
             ii2 = reader.ReadUInt32();
             data = new DynModelData[3];
@@ -62,11 +62,11 @@ namespace zzio.scn
             writer.Write(idx);
             writer.Write(c1);
             writer.Write(c2);
-            pos.Write(writer);
-            rot.Write(writer);
+            writer.Write(pos);
+            writer.Write(rot);
             writer.Write(f1);
             writer.Write(f2);
-            v1.Write(writer);
+            writer.Write(v1);
             writer.Write(ii1);
             writer.Write(ii2);
             for (int i = 0; i < 3; i++)

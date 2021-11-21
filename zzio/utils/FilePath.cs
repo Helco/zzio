@@ -2,8 +2,9 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using zzio;
 
-namespace zzio.utils
+namespace zzio
 {
     /// <summary>Represents a path to a file</summary>
     /// <remarks>This supports windows and POSIX paths and tries to ignore as much inconsistencies as possible</remarks> 
@@ -37,7 +38,7 @@ namespace zzio.utils
         {
             this.parts = parts;
             this.type = type;
-            this.IsDirectory = isDirectory;
+            IsDirectory = isDirectory;
         }
 
         private static bool hasDrivePart(string[] parts) => parts.Any(p => p.EndsWith(":"));
@@ -67,7 +68,7 @@ namespace zzio.utils
                 type = PathType.Drive;
             IsDirectory =
                 path.LastIndexOfAny(separators) == path.Length - 1 ||
-                (parts.Length > 0 && isDirectoryPart(parts.Last()));
+                parts.Length > 0 && isDirectoryPart(parts.Last());
         }
 
         /// <summary>Constructs a new path as copy of another one</summary> 
@@ -96,7 +97,7 @@ namespace zzio.utils
         {
             if (path == null)
                 return false;
-            FilePath me = this.Absolute;
+            FilePath me = Absolute;
             path = path.Absolute;
             if (me.parts.Length != path.parts.Length || me.type != path.type)
                 return false;
@@ -144,8 +145,8 @@ namespace zzio.utils
             // simple hash combine with XOR and some random constants
             int hash = 0;
             foreach (string part in Normalized.Parts)
-                hash = (hash << 2) ^ part.ToLowerInvariant().GetHashCode();
-            hash = (hash << 2) ^ ((int)type * 0x3fa5bde0);
+                hash = hash << 2 ^ part.ToLowerInvariant().GetHashCode();
+            hash = hash << 2 ^ (int)type * 0x3fa5bde0;
             return hash;
         }
 
@@ -227,7 +228,7 @@ namespace zzio.utils
                         newParts.Add(part);
                 }
                 bool newIsDirectory = IsDirectory ||
-                    (newParts.Count > 0 && isDirectoryPart(newParts.Last()));
+                    newParts.Count > 0 && isDirectoryPart(newParts.Last());
                 return new FilePath(newParts.ToArray(), type, newIsDirectory);
             }
         }

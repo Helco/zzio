@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace zzio.primitives
+namespace zzio
 {
     [System.Serializable]
     public struct Normal

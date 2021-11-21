@@ -2,9 +2,9 @@
 using System.Numerics;
 using DefaultEcs.System;
 using DefaultEcs.Resource;
-using zzio.script;
 using System.Linq;
 using zzio.scn;
+using zzio;
 
 namespace zzre.game.systems
 {
@@ -174,7 +174,7 @@ namespace zzre.game.systems
             World.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, triggerI));
         }
 
-        private void DeployNPCAtTrigger(DefaultEcs.Entity entity, zzio.primitives.UID uid)
+        private void DeployNPCAtTrigger(DefaultEcs.Entity entity, UID uid)
         {
             // In the original game, NPC scripts cannot execute this
             Console.WriteLine("Warning: unimplemented instruction \"DeployNPCAtTrigger\"");

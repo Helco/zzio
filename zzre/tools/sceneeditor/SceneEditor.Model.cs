@@ -1,17 +1,17 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
+using zzio;
 using zzio.scn;
-using zzio.utils;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
-using System.Collections;
-using zzio;
+using static zzre.imgui.ImGuiEx;
 
 namespace zzre.tools
 {
@@ -46,8 +46,8 @@ namespace zzre.tools
                 SceneModel = sceneModel;
                 SceneBehaviour = sceneBehavior;
                 locationRange = diContainer.GetTag<LocationBuffer>().Add(Location);
-                Location.LocalPosition = sceneModel.pos.ToNumerics();
-                Location.LocalRotation = sceneModel.rot.ToNumericsRotation();
+                Location.LocalPosition = sceneModel.pos;
+                Location.LocalRotation = sceneModel.rot.ToZZRotation();
 
                 var clumpLoader = diContainer.GetTag<IAssetLoader<ClumpBuffers>>();
                 clumpBuffers = clumpLoader.Load(new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
@@ -97,7 +97,7 @@ namespace zzre.tools
                     var fullPath = new FilePath("resources/models/models").Combine(SceneModel.filename + ".dff");
                     diContainer.GetTag<OpenDocumentSet>().OpenWith<ModelViewer>(fullPath);
                 }
-                var color = SceneModel.color.ToFColor().ToNumerics();
+                var color = SceneModel.color.ToFColor();
                 ColorEdit4("Color", ref color, ImGuiColorEditFlags.NoPicker);
                 NewLine();
                 

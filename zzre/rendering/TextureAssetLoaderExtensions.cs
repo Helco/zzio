@@ -5,7 +5,6 @@ using System.Linq;
 using Veldrid;
 using zzio;
 using zzio.rwbs;
-using zzio.utils;
 using zzio.vfs;
 
 namespace zzre.rendering

@@ -5,7 +5,6 @@ using System.Data.SQLite;
 using CommandHandler = System.Action<System.Data.SQLite.SQLiteConnection, string[]>;
 using System.IO;
 using zzio.db;
-using zzio.primitives;
 
 namespace zzio.dbsqlitecli
 {
