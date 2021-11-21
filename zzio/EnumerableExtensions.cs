@@ -59,6 +59,15 @@ namespace zzio
             }
         }
 
+        public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> set) where T : class
+        {
+            foreach (var element in set)
+            {
+                if (element != null)
+                    yield return element;
+            }
+        }
+
         public static IEnumerable<TElement> SelectMany<TElement>(this IEnumerable<IEnumerable<TElement>> set)
             => set.SelectMany(s => s);
     }

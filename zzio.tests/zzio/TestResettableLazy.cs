@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 
-namespace zzre.core.tests
+namespace zzio.tests
 {
     public class TestResettableLazy
     {

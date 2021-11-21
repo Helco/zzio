@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace zzre
+namespace zzio
 {
     public class ResettableLazy<T> : BaseDisposable where T : class
     {

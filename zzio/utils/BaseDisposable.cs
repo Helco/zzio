@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace zzre
+namespace zzio
 {
     // see https://docs.microsoft.com/de-de/visualstudio/code-quality/ca1063?view=vs-2019
     public class BaseDisposable : IDisposable

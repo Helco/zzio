@@ -3,6 +3,7 @@ using System.Numerics;
 using Veldrid;
 using zzre;
 using zzre.rendering;
+using zzio;
 
 namespace zzmaps
 {
