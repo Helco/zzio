@@ -14,6 +14,7 @@ namespace zzio
         UnitedStates,
         Russia = 8,
 
+        ZZIO = 0x100,
         Unknown = -1
     }
 
@@ -24,6 +25,8 @@ namespace zzio
         WebDemo,
         CDDemo,
 
+        ZZIO = 0x100,
+        ZZIODebug = 0x101,
         Unknown = -1
     }
 
@@ -63,5 +66,22 @@ namespace zzio
             w.Write(Year);
             w.Write(Unknown2);
         }
+
+        public static ZZVersion CreateDefault() => new ZZVersion()
+        {
+            Author = "ZZIO " + typeof(ZZVersion).Assembly.GetName().Version,
+            BuildCountry = ZZBuildCountry.ZZIO,
+#if DEBUG
+            BuildType = ZZBuildType.ZZIODebug,
+#else
+            BuildType = ZZBuildType.ZZIO,
+#endif
+            Unknown1 = 0,
+            BuildVersion = 1,
+            Date = DateTime.Now.ToString("dd.MM.yyyy"),
+            Time = DateTime.Now.ToString("HH:mm"),
+            Year = (uint)DateTime.Now.Year,
+            Unknown2 = 0
+        };
     }
 }

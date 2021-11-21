@@ -11,16 +11,25 @@ namespace zzio
         public uint amount;
         public bool isInUse;
 
-        protected void ReadCore(BinaryReader r)
+        public static InventoryCard ReadNew(BinaryReader r)
         {
-            cardId = new CardId(r.ReadUInt32());
-            atIndex = r.ReadUInt32();
-            dbUID = UID.ReadNew(r);
-            amount = r.ReadUInt32();
-            isInUse = r.ReadBoolean();
+            var cardId = new CardId(r.ReadUInt32());
+            InventoryCard card = cardId.Type switch
+            {
+                CardType.Item => new InventoryItem(),
+                CardType.Spell => new InventorySpell(),
+                CardType.Fairy => new InventoryFairy(),
+                _ => throw new InvalidDataException($"Invalid inventory card type: {cardId.Type}")
+            };
+            card.atIndex = r.ReadUInt32();
+            card.dbUID = UID.ReadNew(r);
+            card.amount = r.ReadUInt32();
+            card.isInUse = r.ReadBoolean();
+            card.ReadSub(r);
+            return card;
         }
 
-        protected void WriteCore(BinaryWriter w)
+        public virtual void Write(BinaryWriter w)
         {
             w.Write(cardId.raw);
             w.Write(atIndex);
@@ -28,18 +37,12 @@ namespace zzio
             w.Write(amount);
             w.Write(isInUse);
         }
+
+        protected virtual void ReadSub(BinaryReader r) { }
     }
 
     public class InventoryItem : InventoryCard
     {
-        public static InventoryItem ReadNew(BinaryReader r)
-        {
-            var item = new InventoryItem();
-            item.ReadCore(r);
-            return item;
-        }
-
-        public void Write(BinaryWriter w) => WriteCore(w);
     }
 
     public class InventorySpell : InventoryCard
@@ -47,17 +50,15 @@ namespace zzio
         public uint usageCount;
         public uint mana;
 
-        public static InventorySpell ReadNew(BinaryReader r)
+        protected override void ReadSub(BinaryReader r)
         {
-            var spell = new InventorySpell();
-            spell.usageCount = r.ReadUInt32();
-            spell.mana = r.ReadUInt32();
-            return spell;
+            usageCount = r.ReadUInt32();
+            mana = r.ReadUInt32();
         }
 
-        public void Write(BinaryWriter w)
+        public override void Write(BinaryWriter w)
         {
-            WriteCore(w);
+            base.Write(w);
             w.Write(usageCount);
             w.Write(mana);
         }
@@ -81,31 +82,28 @@ namespace zzio
         public uint mhp;
         public string name = "";
 
-        public static InventoryFairy ReadNew(BinaryReader r)
+        protected override void ReadSub(BinaryReader r)
         {
-            var fairy = new InventoryFairy();
-            fairy.ReadCore(r);
-            fairy.levelChangeCount = r.ReadUInt32();
-            fairy.level = r.ReadUInt32();
-            fairy.unknown1 = r.ReadUInt32();
-            fairy.unknown2 = r.ReadUInt32();
-            fairy.xpChangeCount = r.ReadUInt32();
-            fairy.xp = r.ReadUInt32();
-            for (int i = 0; i < fairy.spellReqs.Length; i++)
-                fairy.spellReqs[i] = SpellReq.ReadNew(r);
-            for (int i = 0; i < fairy.spellIndices.Length; i++)
-                fairy.spellIndices[i] = r.ReadUInt32();
-            fairy.slotIndex = r.ReadUInt32();
-            fairy.status = EnumUtils.intToEnum<ZZPermSpellStatus>(r.ReadInt32());
-            r.Read(fairy.unknown3.AsSpan());
-            fairy.mhp = r.ReadUInt32();
-            fairy.name = r.ReadZString();
-            return fairy;
+            levelChangeCount = r.ReadUInt32();
+            level = r.ReadUInt32();
+            unknown1 = r.ReadUInt32();
+            unknown2 = r.ReadUInt32();
+            xpChangeCount = r.ReadUInt32();
+            xp = r.ReadUInt32();
+            for (int i = 0; i < spellReqs.Length; i++)
+                spellReqs[i] = SpellReq.ReadNew(r);
+            for (int i = 0; i < spellIndices.Length; i++)
+                spellIndices[i] = r.ReadUInt32();
+            slotIndex = r.ReadUInt32();
+            status = EnumUtils.intToEnum<ZZPermSpellStatus>(r.ReadInt32());
+            r.Read(unknown3.AsSpan());
+            mhp = r.ReadUInt32();
+            name = r.ReadZString();
         }
 
-        public void Write(BinaryWriter w)
+        public override void Write(BinaryWriter w)
         {
-            WriteCore(w);
+            base.Write(w);
             w.Write(levelChangeCount);
             w.Write(level);
             w.Write(unknown1);
