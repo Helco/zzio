@@ -49,6 +49,8 @@ namespace zzre
             Size = size;
         }
 
+        public static Rect FromMinMax(Vector2 min, Vector2 max) => new Rect((min + max) / 2f, max - min);
+
         public Rect OffsettedBy(float x, float y) => new Rect(Center + new Vector2(x, y), Size);
         public Rect OffsettedBy(Vector2 off) => new Rect(Center + off, Size);
         public Rect GrownBy(float x, float y) => new Rect(Center, Size + new Vector2(x, y));

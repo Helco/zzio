@@ -30,6 +30,7 @@ namespace zzre.game
         private readonly IZanzarahContainer zanzarahContainer;
 
         public Game? CurrentGame { get; private set; }
+        public UI UI { get; }
 
         public Zanzarah(ITagContainer diContainer, IZanzarahContainer zanzarahContainer)
         {
@@ -37,6 +38,7 @@ namespace zzre.game
             tagContainer.AddTag(this);
             tagContainer.AddTag(zanzarahContainer);
             tagContainer.AddTag(LoadDatabase());
+            tagContainer.AddTag(UI = new UI(this));
             this.zanzarahContainer = zanzarahContainer;
             CurrentGame = new Game(this, "sc_2411", -1);
         }
@@ -44,11 +46,13 @@ namespace zzre.game
         public void Update()
         {
             CurrentGame?.Update();
+            UI.Update();
         }
 
         public void Render(CommandList finalCommandList)
         {
             CurrentGame?.Render(finalCommandList);
+            UI.Render(finalCommandList);
         }
 
         private zzio.db.MappedDB LoadDatabase()
