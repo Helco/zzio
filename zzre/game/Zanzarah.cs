@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Veldrid;
 using zzio.vfs;
+using zzre.rendering;
 
 namespace zzre.game
 {
@@ -36,6 +37,7 @@ namespace zzre.game
         {
             tagContainer = new TagContainer().FallbackTo(diContainer);
             tagContainer.AddTag(this);
+            tagContainer.AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(tagContainer));
             tagContainer.AddTag(zanzarahContainer);
             tagContainer.AddTag(LoadDatabase());
             tagContainer.AddTag(UI = new UI(this));

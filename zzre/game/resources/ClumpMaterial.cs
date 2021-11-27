@@ -76,5 +76,11 @@ namespace zzre.game.resources
             var materialList = entity.Get<List<BaseModelInstancedMaterial>>();
             materialList.Add(resource);
         }
+
+        protected override void Unload(ClumpMaterialInfo info, BaseModelInstancedMaterial resource)
+        {
+            resource.MainTexture.Texture?.Dispose();
+            resource.Dispose();
+        }
     }
 }

@@ -10,7 +10,6 @@ using zzio;
 namespace zzre.game.systems.ui
 {
     [With(typeof(components.Visibility))]
-    //[WithEither(typeof(Rect), typeof(Rect[]))]
     public partial class Batcher : AEntitySetSystem<CommandList>
     {
         public record struct Batch(UIMaterial Material, uint Instances);
@@ -55,12 +54,10 @@ namespace zzre.game.systems.ui
             nextInstanceI = 0;
             nextInstanceCount = 0;
 
-            var rectArrayComponents = World.GetComponents<Rect[]>();
+            var tiles = World.GetComponents<components.ui.Tile[]>();
             var totalRects = 0;
             foreach (var entity in Set.GetEntities())
-                totalRects += entity.Has<Rect>()
-                    ? 1
-                    : rectArrayComponents[entity].Length;
+                totalRects += tiles[entity].Length;
 
             uint totalSizeInBytes = UIInstance.Stride * (uint)totalRects;
             if ((instanceBuffer?.SizeInBytes ?? 0) < totalSizeInBytes)
@@ -79,28 +76,25 @@ namespace zzre.game.systems.ui
             in DefaultEcs.Entity entity,
             UIMaterial? material,
             IColor color,
-            components.ui.TileId tileId)
+            components.ui.Tile[] tiles)
         {
             var newMaterial = material ?? lastMaterial ?? untexturedMaterial;
             if (lastMaterial != newMaterial)
                 FinishBatch(cl);
             lastMaterial = newMaterial;
 
-            var uvRectangle = Rect.FromMinMax(Vector2.Zero, Vector2.One);
-            if (tileId.Id >= 0)
+            foreach (var tile in tiles)
             {
-                var tileSheet = entity.Get<rendering.TileSheet>();
-                uvRectangle = tileSheet[tileId.Id];
-            }
+                var uvRectangle = Rect.FromMinMax(Vector2.Zero, Vector2.One);
+                if (tile.TileId >= 0)
+                {
+                    var tileSheet = entity.Get<rendering.TileSheet>();
+                    uvRectangle = tileSheet[tile.TileId];
+                }
 
-            var rectangles = entity.Has<Rect>()
-                ? new[] { entity.Get<Rect>() }
-                : entity.Get<Rect[]>();
-            foreach (var rectangle in rectangles)
-            {
                 ref var instance = ref mappedInstances[nextInstanceI++];
-                instance.center = rectangle.Center;
-                instance.size = rectangle.HalfSize;
+                instance.center = tile.Rect.Center;
+                instance.size = tile.Rect.HalfSize;
                 instance.color = color;
                 instance.textureWeight = material == null ? 0f : 1f;
                 instance.uvCenter = uvRectangle.Center;

@@ -41,9 +41,11 @@ namespace zzre.game
             AddTag(this);
             AddTag(ecsWorld = new DefaultEcs.World());
             AddTag(new resources.UIBitmap(this));
+            AddTag(new resources.UITileSheet(this));
 
             updateSystems = new SequentialSystem<float>(
-                new systems.Reaper(this));
+                new systems.Reaper(this),
+                new systems.ParentReaper(this));
 
             renderSystems = new SequentialSystem<CommandList>(
                 new systems.ui.Batcher(this));
@@ -51,10 +53,10 @@ namespace zzre.game
             var entity = ecsWorld.CreateEntity();
             entity.Set(IColor.White);
             entity.Set(Rect.FromMinMax(Vector2.Zero, new Vector2(1024f, 768f)));
-            entity.Set<materials.UIMaterial?>(null);
             entity.Set<components.Visibility>();
-            entity.Set(new components.ui.TileId(-1));
-            entity.Set(DefaultEcs.Resource.ManagedResource<materials.UIMaterial>.Create("hlp000"));
+            entity.Set(new components.ui.Tile[] { new(0, new Rect(200, 200, 35, 35)) });
+            entity.Set(DefaultEcs.Resource.ManagedResource<TileSheet>.Create(new resources.UITileSheetInfo("fsp000", IsFont: true)));
+            entity.Set(DefaultEcs.Resource.ManagedResource<TileSheet>.Create(new resources.UITileSheetInfo("inf000", IsFont: false)));
         }
 
         protected override void DisposeManaged()

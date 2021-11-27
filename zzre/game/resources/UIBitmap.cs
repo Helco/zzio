@@ -48,6 +48,12 @@ namespace zzre.game.resources
             entity.Set(resource);
         }
 
+        protected override void Unload(string info, materials.UIMaterial resource)
+        {
+            resource.Texture.Texture?.Dispose();
+            resource.Dispose();
+        }
+
         internal static Image<Rgba32> LoadMaskedBitmap(IResourcePool resourcePool, string name)
         {
             var bitmap = LoadBitmap<Rgba32>(resourcePool, name, ColorSuffix) ??
