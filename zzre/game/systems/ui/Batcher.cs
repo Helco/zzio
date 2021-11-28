@@ -10,7 +10,7 @@ using zzio;
 namespace zzre.game.systems.ui
 {
     [With(typeof(components.Visibility))]
-    public partial class Batcher : AEntitySetSystem<CommandList>
+    public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui.RenderOrder>
     {
         public record struct Batch(UIMaterial Material, uint Instances);
 
@@ -56,7 +56,7 @@ namespace zzre.game.systems.ui
 
             var tiles = World.GetComponents<components.ui.Tile[]>();
             var totalRects = 0;
-            foreach (var entity in Set.GetEntities())
+            foreach (var entity in SortedSet.GetEntities())
                 totalRects += tiles[entity].Length;
 
             uint totalSizeInBytes = UIInstance.Stride * (uint)totalRects;
@@ -99,6 +99,7 @@ namespace zzre.game.systems.ui
                 instance.textureWeight = material == null ? 0f : 1f;
                 instance.uvCenter = uvRectangle.Center;
                 instance.uvSize = uvRectangle.HalfSize;
+                
                 nextInstanceCount++;
             }
         }

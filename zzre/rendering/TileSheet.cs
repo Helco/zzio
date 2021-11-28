@@ -13,12 +13,15 @@ namespace zzre.rendering
 
         public Rect this[int index] => tiles[index];
         public int Count => tiles.Length;
+        public Vector2 OneTexel { get; }
+        public Vector2 TotalSize { get; }
 
         public TileSheet(Image<Rgba32> image, bool isFont)
         {
             var tiles = new List<Rect>();
             var height = image.Height - (isFont ? 0 : 1);
-            var oneTexel = new Vector2(1f / image.Width, 1f / height);
+            TotalSize = new Vector2(image.Width, height);
+            OneTexel = Vector2.One / TotalSize;
             var firstRow = image.GetPixelRowSpan(0);
             int tileStartX = 0;
             var tileEndXOffset = isFont ? -1f : 0f;
@@ -29,14 +32,16 @@ namespace zzre.rendering
                     tileEndX == tileStartX)
                     continue;
 
-                var min = (new Vector2(tileStartX, isFont ? 0 : 1f) + oneHalf) * oneTexel;
-                var max = (new Vector2(tileEndX + tileEndXOffset, height - 1) + oneHalf) * oneTexel;
+                var min = (new Vector2(tileStartX, isFont ? 0 : 1f) + oneHalf) * OneTexel;
+                var max = (new Vector2(tileEndX + tileEndXOffset, height - 1) + oneHalf) * OneTexel;
                 tiles.Add(Rect.FromMinMax(min, max));
 
                 tileStartX = tileEndX + 1;
             }
             this.tiles = tiles.ToArray();
         }
+
+        public Vector2 GetPixelSize(int tileId) => tiles[tileId].Size * TotalSize;
 
         public IEnumerator<Rect> GetEnumerator() => ((IEnumerable<Rect>)tiles).GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => tiles.GetEnumerator();

@@ -24,6 +24,8 @@ namespace zzre.game
         private readonly DeviceBuffer projectionBuffer;
 
         public DeviceBuffer ProjectionBuffer => projectionBuffer;
+        public Rect LogicalScreen { get; set; }
+        public DefaultEcs.Entity CursorEntity { get; }
 
         public UI(ITagContainer diContainer)
         {
@@ -43,7 +45,14 @@ namespace zzre.game
             AddTag(new resources.UIBitmap(this));
             AddTag(new resources.UITileSheet(this));
 
+            CursorEntity = ecsWorld.CreateEntity();
+            CursorEntity.Set<Rect>();
+            CursorEntity.Set<components.Visibility>();
+
             updateSystems = new SequentialSystem<float>(
+                new systems.ui.Cursor(this),
+                new systems.ui.ImgButton(this),
+                new systems.ui.CorrectRenderOrder(this),
                 new systems.Reaper(this),
                 new systems.ParentReaper(this));
 
@@ -51,12 +60,23 @@ namespace zzre.game
                 new systems.ui.Batcher(this));
 
             var entity = ecsWorld.CreateEntity();
+            entity.Set(new components.ui.ElementId(1));
+            entity.Set(new components.ui.RenderOrder(0));
             entity.Set(IColor.White);
-            entity.Set(Rect.FromMinMax(Vector2.Zero, new Vector2(1024f, 768f)));
             entity.Set<components.Visibility>();
-            entity.Set(new components.ui.Tile[] { new(0, new Rect(200, 200, 35, 35)) });
-            entity.Set(DefaultEcs.Resource.ManagedResource<TileSheet>.Create(new resources.UITileSheetInfo("fsp000", IsFont: true)));
-            entity.Set(DefaultEcs.Resource.ManagedResource<TileSheet>.Create(new resources.UITileSheetInfo("inf000", IsFont: false)));
+            entity.Set(new Rect(200f, 200f, 0f, 0f));
+            entity.Set(DefaultEcs.Resource.ManagedResource<TileSheet>.Create(new resources.UITileSheetInfo("btn000", IsFont: false)));
+            entity.Set(new components.ui.ImgButtonTiles(13, 14, 15, 16));
+            
+            entity = ecsWorld.CreateEntity();
+            entity.Set(new components.ui.RenderOrder(0));
+            entity.Set(IColor.White);
+            entity.Set(new components.ui.ElementId(2));
+            entity.Set<components.Visibility>();
+            entity.Set(new Rect(400f, 200f, 0f, 0f));
+            entity.Set(DefaultEcs.Resource.ManagedResource<TileSheet>.Create(new resources.UITileSheetInfo("btn000", IsFont: false)));
+            entity.Set(new components.ui.ImgButtonTiles(13, 14, 15, 16));
+            entity.Set<components.ui.Active>();
         }
 
         protected override void DisposeManaged()
@@ -80,12 +100,13 @@ namespace zzre.game
                 size.Y = CanonicalSize.X / ratio;
             else
                 size.X = CanonicalSize.Y * ratio;
+            LogicalScreen = new Rect(CanonicalSize / 2f, size);
             
             var matrix = Matrix4x4.CreateOrthographicOffCenter(
-                left: CanonicalSize.X / 2 - size.X / 2,
-                right: CanonicalSize.X / 2 + size.X / 2,
-                top: CanonicalSize.Y / 2 - size.Y / 2,
-                bottom: CanonicalSize.Y / 2 + size.Y / 2,
+                left: LogicalScreen.Min.X,
+                right: LogicalScreen.Max.X,
+                top: LogicalScreen.Min.Y,
+                bottom: LogicalScreen.Max.Y,
                 zNearPlane: 0.01f, // Z will always be 0.5 in the UI shader
                 zFarPlane: 1f); // near/far just has to encapsulate this value
             graphicsDevice.UpdateBuffer(projectionBuffer, 0, ref matrix);

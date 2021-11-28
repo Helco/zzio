@@ -68,5 +68,11 @@ namespace zzre
         /// </summary>
         /// <returns>A vector whose components are clamped to 0..1 when inside of the rectangle</returns>
         public Vector2 RelativePos(Vector2 pos) => (pos - Min) / Size;
+
+        /// <summary>
+        /// Calculates the absolute position of a point relative of the rectangle
+        /// </summary>
+        /// <returns>A position inside the rectangle if the parameter was clamped to 0..1</returns>
+        public Vector2 AbsolutePos(Vector2 pos) => Min + pos * Size;
     }
 }
