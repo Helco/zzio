@@ -10,38 +10,52 @@ namespace zzre.rendering
     public class TileSheet : IReadOnlyList<Rect>
     {
         private readonly Rect[] tiles;
+        private readonly Vector2[] pixelSizes;
 
+        public string Name { get; }
+        public bool IsFont { get; }
         public Rect this[int index] => tiles[index];
         public int Count => tiles.Length;
         public Vector2 OneTexel { get; }
         public Vector2 TotalSize { get; }
+        public float LineHeight { get; set; }
+        public float LineOffset { get; set; }
+        public float CharSpacing { get; set; }
+        public IList<TileSheet> Alternatives { get; } = new List<TileSheet>();
 
-        public TileSheet(Image<Rgba32> image, bool isFont)
+        public TileSheet(string name, Image<Rgba32> image, bool isFont)
         {
-            var tiles = new List<Rect>();
-            var height = image.Height - (isFont ? 0 : 1);
+            Name = name;
+            IsFont = isFont;
+            var height = image.Height - 1;
             TotalSize = new Vector2(image.Width, height);
             OneTexel = Vector2.One / TotalSize;
+            LineHeight = TotalSize.Y;
+
             var firstRow = image.GetPixelRowSpan(0);
             int tileStartX = 0;
-            var tileEndXOffset = isFont ? -1f : 0f;
-            var oneHalf = Vector2.One / 2f;
+            var tileEndXOffset = isFont ? 0 : 1;
+            var tiles = new List<Rect>();
+            var pixelSizes = new List<Vector2>();
             for (int tileEndX = 0; tileEndX < image.Width; tileEndX++)
             {
                 if (firstRow[tileEndX].R == 0 && firstRow[tileEndX].G == 0 && firstRow[tileEndX].B == 0 ||
                     tileEndX == tileStartX)
                     continue;
 
-                var min = (new Vector2(tileStartX, isFont ? 0 : 1f) + oneHalf) * OneTexel;
-                var max = (new Vector2(tileEndX + tileEndXOffset, height - 1) + oneHalf) * OneTexel;
+                var pixelSize = new Vector2(tileEndX - tileStartX + tileEndXOffset, height);
+                var min = new Vector2(tileStartX, 0f) * OneTexel;
+                var max = min + pixelSize * OneTexel;
                 tiles.Add(Rect.FromMinMax(min, max));
+                pixelSizes.Add(pixelSize + Vector2.One);
 
                 tileStartX = tileEndX + 1;
             }
             this.tiles = tiles.ToArray();
+            this.pixelSizes = pixelSizes.ToArray();
         }
 
-        public Vector2 GetPixelSize(int tileId) => tiles[tileId].Size * TotalSize;
+        public Vector2 GetPixelSize(int tileId) => pixelSizes[tileId];
 
         public IEnumerator<Rect> GetEnumerator() => ((IEnumerable<Rect>)tiles).GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => tiles.GetEnumerator();

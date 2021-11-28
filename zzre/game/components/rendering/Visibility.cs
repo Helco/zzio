@@ -2,6 +2,7 @@
 {
     public enum Visibility : byte
     {
-        Visible
+        Visible,
+        Invisible // somewhat rarely used, but useful when entities should share visibility, renderer has to support this
     }
 }

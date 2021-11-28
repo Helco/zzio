@@ -26,6 +26,7 @@ namespace zzre.game
         public DeviceBuffer ProjectionBuffer => projectionBuffer;
         public Rect LogicalScreen { get; set; }
         public DefaultEcs.Entity CursorEntity { get; }
+        public systems.ui.UIPreloader Preload { get; }
 
         public UI(ITagContainer diContainer)
         {
@@ -44,6 +45,7 @@ namespace zzre.game
             AddTag(ecsWorld = new DefaultEcs.World());
             AddTag(new resources.UIBitmap(this));
             AddTag(new resources.UITileSheet(this));
+            AddTag(Preload = new systems.ui.UIPreloader(this));
 
             CursorEntity = ecsWorld.CreateEntity();
             CursorEntity.Set<Rect>();
@@ -52,6 +54,7 @@ namespace zzre.game
             updateSystems = new SequentialSystem<float>(
                 new systems.ui.Cursor(this),
                 new systems.ui.ImgButton(this),
+                new systems.ui.Label(this),
                 new systems.ui.CorrectRenderOrder(this),
                 new systems.Reaper(this),
                 new systems.ParentReaper(this));
@@ -60,23 +63,32 @@ namespace zzre.game
                 new systems.ui.Batcher(this));
 
             var entity = ecsWorld.CreateEntity();
+            var entity1 = entity;
             entity.Set(new components.ui.ElementId(1));
             entity.Set(new components.ui.RenderOrder(0));
             entity.Set(IColor.White);
-            entity.Set<components.Visibility>();
+            entity.Set(components.Visibility.Visible);
             entity.Set(new Rect(200f, 200f, 0f, 0f));
-            entity.Set(DefaultEcs.Resource.ManagedResource<TileSheet>.Create(new resources.UITileSheetInfo("btn000", IsFont: false)));
+            entity.Set(Preload.Btn000);
             entity.Set(new components.ui.ImgButtonTiles(13, 14, 15, 16));
             
             entity = ecsWorld.CreateEntity();
             entity.Set(new components.ui.RenderOrder(0));
             entity.Set(IColor.White);
             entity.Set(new components.ui.ElementId(2));
-            entity.Set<components.Visibility>();
+            entity.SetSameAs<components.Visibility>(entity1);
             entity.Set(new Rect(400f, 200f, 0f, 0f));
-            entity.Set(DefaultEcs.Resource.ManagedResource<TileSheet>.Create(new resources.UITileSheetInfo("btn000", IsFont: false)));
-            entity.Set(new components.ui.ImgButtonTiles(13, 14, 15, 16));
+            entity.Set(Preload.Fsp000);
+            entity.Set(new components.ui.ImgButtonTiles(0, 1, 3, 3));
             entity.Set<components.ui.Active>();
+
+            entity = ecsWorld.CreateEntity();
+            entity.Set(new components.ui.RenderOrder(0));
+            entity.Set(IColor.White);
+            entity.Set<components.Visibility>();
+            entity.Set(new Rect(300, 150f, 0f, 0f));
+            entity.Set(Preload.Fnt000);
+            entity.Set(new components.ui.Label(diContainer.GetTag<zzio.db.MappedDB>().GetText(new UID(0x18AFD201)).Text));
         }
 
         protected override void DisposeManaged()

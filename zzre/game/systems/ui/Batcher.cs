@@ -9,7 +9,6 @@ using zzio;
 
 namespace zzre.game.systems.ui
 {
-    [With(typeof(components.Visibility))]
     public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui.RenderOrder>
     {
         public record struct Batch(UIMaterial Material, uint Instances);
@@ -34,7 +33,7 @@ namespace zzre.game.systems.ui
 
             emptyTexture = resourceFactory.CreateTexture(
                 new TextureDescription(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
-            untexturedMaterial = new UIMaterial(diContainer);
+            untexturedMaterial = new UIMaterial(diContainer, isFont: false);
             untexturedMaterial.Texture.Texture = emptyTexture;
             untexturedMaterial.Projection.Buffer = diContainer.GetTag<UI>().ProjectionBuffer;
         }
@@ -46,6 +45,9 @@ namespace zzre.game.systems.ui
             untexturedMaterial.Dispose();
             emptyTexture.Dispose();
         }
+
+        [WithPredicate]
+        private bool IsVisible(in components.Visibility visibility) => visibility == components.Visibility.Visible;
 
         protected override void PreUpdate(CommandList _)
         {

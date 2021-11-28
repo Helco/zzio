@@ -20,7 +20,8 @@ namespace zzre.game.resources
         private readonly GraphicsDevice graphicsDevice;
         private readonly ResourceFactory resourceFactory;
         private readonly IResourcePool resourcePool;
-        private readonly Sampler sampler; // a linear, non-bleeding sampler
+        private readonly Sampler linearSampler; // a linear, non-bleeding sampler
+        private readonly Sampler fontSampler; // a linear, non-bleeding sampler
 
         public UITileSheet(ITagContainer diContainer)
         {
@@ -31,7 +32,15 @@ namespace zzre.game.resources
             resourcePool = diContainer.GetTag<IResourcePool>();
             Manage(diContainer.GetTag<DefaultEcs.World>());
 
-            sampler = resourceFactory.CreateSampler(new SamplerDescription(
+            linearSampler = resourceFactory.CreateSampler(new SamplerDescription(
+                SamplerAddressMode.Clamp,
+                SamplerAddressMode.Clamp,
+                SamplerAddressMode.Clamp,
+                SamplerFilter.MinLinear_MagLinear_MipLinear,
+                comparisonKind: null,
+                0, 0, 0, 0, SamplerBorderColor.TransparentBlack));
+
+            fontSampler = resourceFactory.CreateSampler(new SamplerDescription(
                 SamplerAddressMode.Clamp,
                 SamplerAddressMode.Clamp,
                 SamplerAddressMode.Clamp,
@@ -43,7 +52,8 @@ namespace zzre.game.resources
         public new void Dispose()
         {
             base.Dispose();
-            sampler.Dispose();
+            linearSampler.Dispose();
+            fontSampler.Dispose();
             foreach (var material in materials.Values)
             {
                 material.Texture?.Dispose();
@@ -54,23 +64,24 @@ namespace zzre.game.resources
         protected override TileSheet Load(UITileSheetInfo info)
         {
             using var bitmap = UIBitmap.LoadMaskedBitmap(resourcePool, info.Name);
-            var tileSheet = new TileSheet(bitmap, info.IsFont);
+            var tileSheet = new TileSheet(info.Name, bitmap, info.IsFont);
 
             var texture = resourceFactory.CreateTexture(
                 new TextureDescription(
                     (uint)bitmap.Width,
-                    (uint)(bitmap.Height - (info.IsFont ? 0 : 1)),
+                    (uint)(bitmap.Height - 1),
                     depth: 1,
                     mipLevels: 1,
                     arrayLayers: 1,
                     PixelFormat.R8_G8_B8_A8_UNorm,
                     TextureUsage.Sampled,
-                    TextureType.Texture2D));
+                    TextureType.Texture2D,
+                    TextureSampleCount.Count4));
             UploadTileSheet(bitmap, texture, info.IsFont);
 
-            var material = new UIMaterial(diContainer);
+            var material = new UIMaterial(diContainer, info.IsFont);
             material.Texture.Texture = texture;
-            material.Sampler.Sampler = sampler;
+            material.Sampler.Sampler = info.IsFont? fontSampler : linearSampler;
             material.Projection.Buffer = ui.ProjectionBuffer;
             materials.Add(tileSheet, material);
             return tileSheet;
@@ -97,27 +108,29 @@ namespace zzre.game.resources
             if (!bitmap.TryGetSinglePixelSpan(out var totalSpan) || totalSpan.Length != bitmap.Width * bitmap.Height)
                 throw new System.ArgumentException("TileSheets can only be uploaded for contiguous bitmaps");
 
-            AntiBleedingPass(bitmap, totalSpan);
+            AntiBleedingPass(bitmap, totalSpan, isFont);
 
             fixed (Rgba32* src = totalSpan)
             {
                 graphicsDevice.UpdateTexture(texture,
-                    new(src + (isFont ? 0 : bitmap.Width)), (uint)totalSpan.Length * 4,
+                    new(src + bitmap.Width), (uint)totalSpan.Length * 4,
                     x: 0, y: 0, z: 0,
-                    (uint)bitmap.Width, (uint)(bitmap.Height - (isFont ? 0 : 1)), depth: 1,
+                    (uint)bitmap.Width, (uint)bitmap.Height - 1, depth: 1,
                     mipLevel: 0,
                     arrayLayer: 0);
             }
         }
 
-        private void AntiBleedingPass(Image<Rgba32> bitmap, System.Span<Rgba32> totalSpan)
+        private void AntiBleedingPass(Image<Rgba32> bitmap, System.Span<Rgba32> totalSpan, bool isFont)
         {
             for (int y = 0; y < bitmap.Height; y++)
             {
                 for (int x = 0; x < bitmap.Width; x++)
                 {
                     ref var myself = ref totalSpan[y * bitmap.Width + x];
-                    if (myself.A != 0)
+                    if (isFont && totalSpan[x].R != 0)
+                        myself.A = 0;
+                    if (myself.A != 0 || (isFont && y == 0))
                         continue;
 
                     Vector4 solid = Vector4.Zero;

@@ -36,7 +36,7 @@ namespace zzre.game.resources
             using var bitmap = LoadMaskedBitmap(resourcePool, name);
             var texture = new ImageSharpTexture(bitmap, mipmap: false)
                 .CreateDeviceTexture(graphicsDevice, resourceFactory);
-            var material = new materials.UIMaterial(diContainer);
+            var material = new materials.UIMaterial(diContainer, isFont: false);
             material.Texture.Texture = texture;
             material.Sampler.Sampler = graphicsDevice.LinearSampler;
             material.Projection.Buffer = ui.ProjectionBuffer;

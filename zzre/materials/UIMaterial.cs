@@ -23,7 +23,7 @@ namespace zzre.materials
         public SamplerBinding Sampler { get; }
         public UniformBinding<Matrix4x4> Projection { get; }
 
-        public UIMaterial(ITagContainer diContainer) : base(diContainer.GetTag<GraphicsDevice>(), GetPipeline(diContainer))
+        public UIMaterial(ITagContainer diContainer, bool isFont) : base(diContainer.GetTag<GraphicsDevice>(), GetPipeline(diContainer, isFont))
         {
             Configure()
                 .Add(Texture = new TextureBinding(this))
@@ -32,11 +32,12 @@ namespace zzre.materials
                 .NextBindingSet();
         }
 
-        private static IBuiltPipeline GetPipeline(ITagContainer diContainer) => PipelineFor<UIMaterial>.Get(diContainer,
-            builder => builder
+        private static IBuiltPipeline GetPipeline(ITagContainer diContainer, bool isFont)
+        {
+            System.Func<IPipelineBuilder, IBuiltPipeline> bla = builder => builder
             .WithDepthTarget(PixelFormat.D24_UNorm_S8_UInt)
             .WithColorTarget(PixelFormat.R8_G8_B8_A8_UNorm)
-            .WithShaderSet("UI")
+            .WithShaderSet(isFont ? "UIFont" : "UI")
             .WithInstanceStepRate(1)
             .With("Center", VertexElementFormat.Float2, VertexElementSemantic.Position)
             .With("HalfSize", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate)
@@ -52,6 +53,11 @@ namespace zzre.materials
             .WithDepthWrite(false)
             .WithDepthTest(false)
             .With(FaceCullMode.Back)
-            .Build());
+            .Build();
+
+            return isFont
+                ? PipelineFor<int>.Get(diContainer, bla)
+                : PipelineFor<UIMaterial>.Get(diContainer, bla);
+        }
     }
 }
