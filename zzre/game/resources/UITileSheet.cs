@@ -75,8 +75,7 @@ namespace zzre.game.resources
                     arrayLayers: 1,
                     PixelFormat.R8_G8_B8_A8_UNorm,
                     TextureUsage.Sampled,
-                    TextureType.Texture2D,
-                    TextureSampleCount.Count4));
+                    TextureType.Texture2D));
             UploadTileSheet(bitmap, texture, info.IsFont);
 
             var material = new UIMaterial(diContainer, info.IsFont);

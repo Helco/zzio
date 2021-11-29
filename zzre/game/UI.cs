@@ -53,7 +53,7 @@ namespace zzre.game
 
             updateSystems = new SequentialSystem<float>(
                 new systems.ui.Cursor(this),
-                new systems.ui.ImgButton(this),
+                new systems.ui.ButtonTiles(this),
                 new systems.ui.Label(this),
                 new systems.ui.CorrectRenderOrder(this),
                 new systems.Reaper(this),
@@ -62,33 +62,14 @@ namespace zzre.game
             renderSystems = new SequentialSystem<CommandList>(
                 new systems.ui.Batcher(this));
 
-            var entity = ecsWorld.CreateEntity();
-            var entity1 = entity;
-            entity.Set(new components.ui.ElementId(1));
-            entity.Set(new components.ui.RenderOrder(0));
-            entity.Set(IColor.White);
-            entity.Set(components.Visibility.Visible);
-            entity.Set(new Rect(200f, 200f, 0f, 0f));
-            entity.Set(Preload.Btn000);
-            entity.Set(new components.ui.ImgButtonTiles(13, 14, 15, 16));
-            
-            entity = ecsWorld.CreateEntity();
-            entity.Set(new components.ui.RenderOrder(0));
-            entity.Set(IColor.White);
-            entity.Set(new components.ui.ElementId(2));
-            entity.SetSameAs<components.Visibility>(entity1);
-            entity.Set(new Rect(400f, 200f, 0f, 0f));
-            entity.Set(Preload.Fsp000);
-            entity.Set(new components.ui.ImgButtonTiles(0, 1, 3, 3));
-            entity.Set<components.ui.Active>();
-
-            entity = ecsWorld.CreateEntity();
-            entity.Set(new components.ui.RenderOrder(0));
-            entity.Set(IColor.White);
-            entity.Set<components.Visibility>();
-            entity.Set(new Rect(300, 150f, 0f, 0f));
-            entity.Set(Preload.Fnt000);
-            entity.Set(new components.ui.Label(diContainer.GetTag<zzio.db.MappedDB>().GetText(new UID(0x18AFD201)).Text));
+            Preload.CreateButton(
+                new(34),
+                new(200f, 200f),
+                new UID(0x53CC6191),
+                new(0, 1),
+                Preload.Btn000,
+                Preload.Fnt002,
+                out _);
         }
 
         protected override void DisposeManaged()
@@ -98,6 +79,8 @@ namespace zzre.game
             tagContainer.Dispose();
             zzContainer.OnResize -= HandleResize;
         }
+
+        public void Publish<T>(in T message) => ecsWorld.Publish(message);
 
         public void Update() => updateSystems.Update(time.Delta);
 

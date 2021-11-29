@@ -61,11 +61,12 @@ namespace zzre.game.systems.ui
             in components.ui.Label label,
             ref components.ui.Tile[] tiles)
         {
+            entity.Remove<components.ui.LabelNeedsTiling>();
+
             var (text, doFormat) = label;
             if (!doFormat)
             {
                 tiles = TileWithoutFormatting(rect, rootTileSheet, text);
-                entity.Remove<components.ui.LabelNeedsTiling>();
                 return;
             }
 
@@ -203,7 +204,7 @@ namespace zzre.game.systems.ui
 
         private static Rect TileRect(Vector2 cursor, Vector2 pixelSize, float lineOffset = 0f)
         {
-            cursor.Y += lineOffset;
+            cursor.Y -= lineOffset;
             return Rect.FromMinMax(cursor, cursor + pixelSize);
         }
     }

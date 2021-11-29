@@ -3,23 +3,30 @@ using DefaultEcs.System;
 
 namespace zzre.game.systems.ui
 {
-    public partial class ImgButton : AEntitySetSystem<float>
+    public partial class ButtonTiles : AEntitySetSystem<float>
     {
         private readonly IDisposable addedSubscription;
 
-        public ImgButton(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
+        public ButtonTiles(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
         {
-            addedSubscription = World.SubscribeComponentAdded<components.ui.ImgButtonTiles>(HandleComponentAdded);
+            addedSubscription = World.SubscribeComponentAdded<components.ui.ButtonTiles>(HandleComponentAdded);
         }
 
-        private void HandleComponentAdded(in DefaultEcs.Entity entity, in components.ui.ImgButtonTiles tiles)
+        public override void Dispose()
+        {
+            base.Dispose();
+            addedSubscription.Dispose();
+        }
+
+        private void HandleComponentAdded(in DefaultEcs.Entity entity, in components.ui.ButtonTiles tiles)
         {
             ref var rect = ref entity.Get<Rect>();
-            if (rect.Size.MaxComponent() > 0f)
-                return;
-
-            var tileSheet = entity.Get<rendering.TileSheet>();
-            rect.Size = tileSheet.GetPixelSize(tiles.Normal);
+            if (MathEx.CmpZero(rect.Size.MaxComponent()))
+            {
+                var tileSheet = entity.Get<rendering.TileSheet>();
+                rect.Size = tileSheet.GetPixelSize(tiles.Normal);
+                rect.Center += rect.HalfSize; // the user intended to set a top-left position
+            }
 
             if (!entity.Has<components.ui.Tile[]>())
                 entity.Set(new components.ui.Tile[] { new(tiles.Normal, rect) });
@@ -29,7 +36,7 @@ namespace zzre.game.systems.ui
         private void Update(
             in DefaultEcs.Entity entity,
             in components.ui.Tile[] tiles,
-            in components.ui.ImgButtonTiles imgButton)
+            in components.ui.ButtonTiles imgButton)
         {
             bool isActive = entity.Has<components.ui.Active>();
             bool isHovered = entity.Has<components.ui.Hovered>();

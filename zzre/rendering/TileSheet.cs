@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System.Linq;
 
 namespace zzre.rendering
 {
@@ -56,6 +57,11 @@ namespace zzre.rendering
         }
 
         public Vector2 GetPixelSize(int tileId) => pixelSizes[tileId];
+
+        public float GetUnformattedWidth(string text) => text
+            .Select(ch => ch - ' ')
+            .Where(tileI => tileI >= 0 && tileI < pixelSizes.Length)
+            .Sum(tileI => pixelSizes[tileI].X + CharSpacing);
 
         public IEnumerator<Rect> GetEnumerator() => ((IEnumerable<Rect>)tiles).GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => tiles.GetEnumerator();
