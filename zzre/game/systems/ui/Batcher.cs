@@ -14,6 +14,7 @@ namespace zzre.game.systems.ui
         public record struct Batch(UIMaterial Material, uint Instances);
 
         private readonly List<Batch> batches = new List<Batch>();
+        private readonly UI ui;
         private readonly GraphicsDevice graphicsDevice;
         private readonly ResourceFactory resourceFactory;
         private readonly UIMaterial untexturedMaterial;
@@ -27,6 +28,7 @@ namespace zzre.game.systems.ui
 
         public Batcher(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
         {
+            ui = diContainer.GetTag<UI>();
             graphicsDevice = diContainer.GetTag<GraphicsDevice>();
             resourceFactory = diContainer.GetTag<ResourceFactory>();
             instanceBuffer = null!;
@@ -35,7 +37,7 @@ namespace zzre.game.systems.ui
                 new TextureDescription(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
             untexturedMaterial = new UIMaterial(diContainer, isFont: false);
             untexturedMaterial.Texture.Texture = emptyTexture;
-            untexturedMaterial.Projection.Buffer = diContainer.GetTag<UI>().ProjectionBuffer;
+            untexturedMaterial.ScreenSize.Buffer = diContainer.GetTag<UI>().ProjectionBuffer;
         }
 
         public override void Dispose()
@@ -76,6 +78,7 @@ namespace zzre.game.systems.ui
         private void Update(
             CommandList cl,
             in DefaultEcs.Entity entity,
+            in components.ui.UIOffset offset,
             UIMaterial? material,
             IColor color,
             components.ui.Tile[] tiles)
@@ -95,12 +98,12 @@ namespace zzre.game.systems.ui
                 }
 
                 ref var instance = ref mappedInstances[nextInstanceI++];
-                instance.center = tile.Rect.Center;
-                instance.size = tile.Rect.HalfSize;
+                instance.pos = offset.Calc(tile.Rect.Min, ui.LogicalScreen);
+                instance.size = tile.Rect.Size;
                 instance.color = color;
                 instance.textureWeight = material == null ? 0f : 1f;
-                instance.uvCenter = uvRectangle.Center;
-                instance.uvSize = uvRectangle.HalfSize;
+                instance.uvPos = uvRectangle.Min;
+                instance.uvSize = uvRectangle.Size;
                 
                 nextInstanceCount++;
             }

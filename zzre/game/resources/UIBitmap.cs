@@ -39,7 +39,7 @@ namespace zzre.game.resources
             var material = new materials.UIMaterial(diContainer, isFont: false);
             material.Texture.Texture = texture;
             material.Sampler.Sampler = graphicsDevice.LinearSampler;
-            material.Projection.Buffer = ui.ProjectionBuffer;
+            material.ScreenSize.Buffer = ui.ProjectionBuffer;
             return material;
         }
 

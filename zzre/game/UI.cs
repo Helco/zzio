@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
 using Veldrid;
@@ -12,8 +13,6 @@ namespace zzre.game
 {
     public class UI : BaseDisposable, ITagContainer
     {
-        private static readonly Vector2 CanonicalSize = new Vector2(1024f, 768f);
-
         private readonly ITagContainer tagContainer;
         private readonly IZanzarahContainer zzContainer;
         private readonly GameTime time;
@@ -38,7 +37,8 @@ namespace zzre.game
             var resourceFactory = GetTag<ResourceFactory>();
             graphicsDevice = GetTag<GraphicsDevice>();
             projectionBuffer = resourceFactory.CreateBuffer(
-                new BufferDescription(sizeof(float) * 4 * 4, BufferUsage.UniformBuffer));
+                // Buffer has to be multiple of 16 bytes big even though we only need 8
+                new BufferDescription(sizeof(float) * 4, BufferUsage.UniformBuffer));
             HandleResize();
 
             AddTag(this);
@@ -53,6 +53,7 @@ namespace zzre.game
 
             updateSystems = new SequentialSystem<float>(
                 new systems.ui.Cursor(this),
+                new systems.ui.ScrDeck(this),
                 new systems.ui.ButtonTiles(this),
                 new systems.ui.Label(this),
                 new systems.ui.CorrectRenderOrder(this),
@@ -62,14 +63,7 @@ namespace zzre.game
             renderSystems = new SequentialSystem<CommandList>(
                 new systems.ui.Batcher(this));
 
-            Preload.CreateButton(
-                new(34),
-                new(200f, 200f),
-                new UID(0x53CC6191),
-                new(0, 1),
-                Preload.Btn000,
-                Preload.Fnt002,
-                out _);
+            Publish<messages.ui.OpenDeck>();
         }
 
         protected override void DisposeManaged()
@@ -80,6 +74,7 @@ namespace zzre.game
             zzContainer.OnResize -= HandleResize;
         }
 
+        public void Publish<T>() => ecsWorld.Publish(default(T));
         public void Publish<T>(in T message) => ecsWorld.Publish(message);
 
         public void Update() => updateSystems.Update(time.Delta);
@@ -89,22 +84,12 @@ namespace zzre.game
         private void HandleResize()
         {
             var fb = zzContainer.Framebuffer;
-            var ratio = fb.Width / (float)fb.Height;
-            var size = CanonicalSize;
-            if (ratio < CanonicalSize.X / CanonicalSize.Y)
-                size.Y = CanonicalSize.X / ratio;
-            else
-                size.X = CanonicalSize.Y * ratio;
-            LogicalScreen = new Rect(CanonicalSize / 2f, size);
-            
-            var matrix = Matrix4x4.CreateOrthographicOffCenter(
-                left: LogicalScreen.Min.X,
-                right: LogicalScreen.Max.X,
-                top: LogicalScreen.Min.Y,
-                bottom: LogicalScreen.Max.Y,
-                zNearPlane: 0.01f, // Z will always be 0.5 in the UI shader
-                zFarPlane: 1f); // near/far just has to encapsulate this value
-            graphicsDevice.UpdateBuffer(projectionBuffer, 0, ref matrix);
+            LogicalScreen = Rect.FromMinMax(
+                Vector2.Zero,
+                new Vector2(fb.Width, fb.Height));
+
+            var size = LogicalScreen.Size;
+            graphicsDevice.UpdateBuffer(projectionBuffer, 0, ref size);
         }
 
         public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);

@@ -118,32 +118,42 @@ namespace zzre.game.systems.ui
             return resource;
         }
 
-        private DefaultEcs.Entity CreateBase(Rect rect, int renderOrder)
+        private DefaultEcs.Entity CreateBase(
+            DefaultEcs.Entity parent,
+            Rect rect,
+            int renderOrder,
+            components.ui.UIOffset? offset)
         {
             var entity = world.CreateEntity();
+            entity.Set(new components.Parent(parent));
             entity.Set(new components.ui.RenderOrder(renderOrder));
             entity.Set(components.Visibility.Visible);
             entity.Set(zzio.IColor.White);
             entity.Set(rect);
+            entity.Set(offset ?? components.ui.UIOffset.Center);
             return entity;
         }
 
         public DefaultEcs.Entity CreateImageButton(
+            DefaultEcs.Entity parent,
             components.ui.ElementId elementId,
             Vector2 pos,
             components.ui.ButtonTiles buttonTiles,
             ManagedResource<resources.UITileSheetInfo, TileSheet> tileSheet,
-            int renderOrder = 0) =>
-            CreateImageButton(elementId, Rect.FromMinMax(pos, pos), buttonTiles, tileSheet, renderOrder);
+            int renderOrder = 0,
+            components.ui.UIOffset? offset = null) =>
+            CreateImageButton(parent, elementId, Rect.FromMinMax(pos, pos), buttonTiles, tileSheet, renderOrder, offset);
 
         public DefaultEcs.Entity CreateImageButton(
+            DefaultEcs.Entity parent,
             components.ui.ElementId elementId,
             Rect rect,
             components.ui.ButtonTiles buttonTiles,
             ManagedResource<resources.UITileSheetInfo, TileSheet> tileSheet,
-            int renderOrder = 0)
+            int renderOrder = 0,
+            components.ui.UIOffset? offset = null)
         {
-            var entity = CreateBase(rect, renderOrder);
+            var entity = CreateBase(parent, rect, renderOrder, offset);
             entity.Set(elementId);
             entity.Set(tileSheet);
             entity.Set(buttonTiles);
@@ -151,12 +161,14 @@ namespace zzre.game.systems.ui
         }
 
         public DefaultEcs.Entity CreateLabel(
+            DefaultEcs.Entity parent,
             Vector2 pos,
             zzio.UID textUID,
             ManagedResource<resources.UITileSheetInfo, TileSheet> font,
             int renderOrder = 0,
-            bool doFormat = true) =>
-            CreateLabel(pos, GetDBText(textUID), font, renderOrder, doFormat);
+            bool doFormat = true,
+            components.ui.UIOffset? offset = null) =>
+            CreateLabel(parent, pos, GetDBText(textUID), font, renderOrder, doFormat, offset);
 
         private string GetDBText(zzio.UID textUID) => textUID.Module switch
         {
@@ -166,19 +178,22 @@ namespace zzre.game.systems.ui
         };
 
         public DefaultEcs.Entity CreateLabel(
+            DefaultEcs.Entity parent,
             Vector2 pos,
             string text,
             ManagedResource<resources.UITileSheetInfo, TileSheet> font,
             int renderOrder = 0,
-            bool doFormat = true)
+            bool doFormat = true,
+            components.ui.UIOffset? offset = null)
         {
-            var entity = CreateBase(Rect.FromMinMax(pos, pos), renderOrder);
+            var entity = CreateBase(parent, Rect.FromMinMax(pos, pos), renderOrder, offset);
             entity.Set(font);
             entity.Set(new components.ui.Label(text, doFormat));
             return entity;
         }
 
         public DefaultEcs.Entity CreateButton(
+            DefaultEcs.Entity parent,
             components.ui.ElementId elementId,
             Vector2 pos,
             zzio.UID textUID,
@@ -187,10 +202,13 @@ namespace zzre.game.systems.ui
             ManagedResource<resources.UITileSheetInfo, TileSheet> font,
             out DefaultEcs.Entity label,
             int renderOrder = 0,
-            bool doFormat = true) =>
-            CreateButton(elementId, pos, GetDBText(textUID), buttonTiles, border, font, out label, renderOrder, doFormat);
+            bool doFormat = true,
+            components.ui.TextAlignment align = components.ui.TextAlignment.Center,
+            components.ui.UIOffset? offset = null) =>
+            CreateButton(parent, elementId, pos, GetDBText(textUID), buttonTiles, border, font, out label, renderOrder, doFormat, align, offset);
 
         public DefaultEcs.Entity CreateButton(
+            DefaultEcs.Entity parent,
             components.ui.ElementId elementId,
             Vector2 pos,
             string text,
@@ -200,11 +218,12 @@ namespace zzre.game.systems.ui
             out DefaultEcs.Entity label,
             int renderOrder = 0,
             bool doFormat = true,
-            components.ui.TextAlignment align = components.ui.TextAlignment.Center)
+            components.ui.TextAlignment align = components.ui.TextAlignment.Center,
+            components.ui.UIOffset? offset = null)
         {
-            var button = CreateImageButton(elementId, pos, buttonTiles, border, renderOrder);
+            var button = CreateImageButton(parent, elementId, pos, buttonTiles, border, renderOrder, offset);
 
-            label = CreateLabel(pos, text, font, renderOrder - 1, doFormat);
+            label = CreateLabel(button, pos, text, font, renderOrder - 1, doFormat, offset);
             var fontTileSheet = label.Get<TileSheet>();
             var buttonSize = button.Get<Rect>().Size;
             var textWidth = fontTileSheet.GetUnformattedWidth(text);
@@ -217,10 +236,25 @@ namespace zzre.game.systems.ui
             };
             var labelPos = pos + new Vector2(labelPosX, buttonSize.Y / 2 - fontTileSheet.TotalSize.Y / 2);
             label.Set(Rect.FromMinMax(labelPos, labelPos));
-            label.Set(new components.Parent(button));
             label.Set<components.ui.LabelNeedsTiling>(); // we changed the position
 
             return button;
+        }
+
+        public DefaultEcs.Entity CreateImage(
+            DefaultEcs.Entity parent,
+            Vector2 pos,
+            string bitmap,
+            int renderOrder,
+            components.ui.UIOffset? offset = null)
+        {
+            var entity = CreateBase(parent, Rect.FromMinMax(pos, pos), renderOrder, offset);
+            entity.Set(ManagedResource<materials.UIMaterial>.Create(bitmap));
+            var texture = entity.Get<materials.UIMaterial>().Texture.Texture!;
+            var rect = Rect.FromMinMax(pos, pos + new Vector2(texture.Width, texture.Height));
+            entity.Set(rect);
+            entity.Set(new components.ui.Tile[] { new(-1, rect) });
+            return entity;
         }
     }
 }
