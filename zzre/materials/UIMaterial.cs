@@ -9,8 +9,8 @@ namespace zzre.materials
     [StructLayout(LayoutKind.Sequential)]
     public struct UIInstance
     {
-        public Vector2 center, size;
-        public Vector2 uvCenter, uvSize;
+        public Vector2 pos, size;
+        public Vector2 uvPos, uvSize;
         public float textureWeight;
         public IColor color;
 
@@ -21,14 +21,14 @@ namespace zzre.materials
     {
         public TextureBinding Texture { get; }
         public SamplerBinding Sampler { get; }
-        public UniformBinding<Matrix4x4> Projection { get; }
+        public UniformBinding<Vector2> ScreenSize { get; }
 
         public UIMaterial(ITagContainer diContainer, bool isFont) : base(diContainer.GetTag<GraphicsDevice>(), GetPipeline(diContainer, isFont))
         {
             Configure()
                 .Add(Texture = new TextureBinding(this))
                 .Add(Sampler = new SamplerBinding(this))
-                .Add(Projection = new UniformBinding<Matrix4x4>(this))
+                .Add(ScreenSize = new UniformBinding<Vector2>(this))
                 .NextBindingSet();
         }
 
@@ -39,9 +39,9 @@ namespace zzre.materials
             .WithColorTarget(PixelFormat.R8_G8_B8_A8_UNorm)
             .WithShaderSet(isFont ? "UIFont" : "UI")
             .WithInstanceStepRate(1)
-            .With("Center", VertexElementFormat.Float2, VertexElementSemantic.Position)
-            .With("HalfSize", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate)
-            .With("UVCenter", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate)
+            .With("Pos", VertexElementFormat.Float2, VertexElementSemantic.Position)
+            .With("Size", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate)
+            .With("UVPos", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate)
             .With("UVSize", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate)
             .With("TextureWeight", VertexElementFormat.Float1, VertexElementSemantic.TextureCoordinate)
             .With("Color", VertexElementFormat.Byte4_Norm, VertexElementSemantic.Color)
@@ -52,7 +52,7 @@ namespace zzre.materials
             .With(PrimitiveTopology.TriangleStrip)
             .WithDepthWrite(false)
             .WithDepthTest(false)
-            .With(FaceCullMode.Back)
+            .With(FaceCullMode.None)
             .Build();
 
             return isFont

@@ -13,14 +13,6 @@ namespace zzre.game
 {
     public class UI : BaseDisposable, ITagContainer
     {
-        private static readonly Vector2[] CanonicalSizes = new[]
-        {
-            new Vector2(1024f, 768f),
-            new Vector2(800f, 600f),
-            new Vector2(640f, 480f)
-        };
-        private static readonly float CanonicalRatio = 1024f / 768f;
-
         private readonly ITagContainer tagContainer;
         private readonly IZanzarahContainer zzContainer;
         private readonly GameTime time;
@@ -45,7 +37,8 @@ namespace zzre.game
             var resourceFactory = GetTag<ResourceFactory>();
             graphicsDevice = GetTag<GraphicsDevice>();
             projectionBuffer = resourceFactory.CreateBuffer(
-                new BufferDescription(sizeof(float) * 4 * 4, BufferUsage.UniformBuffer));
+                // Buffer has to be multiple of 16 bytes big even though we only need 8
+                new BufferDescription(sizeof(float) * 4, BufferUsage.UniformBuffer));
             HandleResize();
 
             AddTag(this);
@@ -91,30 +84,12 @@ namespace zzre.game
         private void HandleResize()
         {
             var fb = zzContainer.Framebuffer;
-            var ratio = fb.Width / (float)fb.Height;
-            var emergencySize = fb.Height * CanonicalRatio > fb.Width
-                ? new Vector2(fb.Width, fb.Width / CanonicalRatio)
-                : new Vector2(fb.Height * CanonicalRatio, fb.Height);
-            var canonicalSize = CanonicalSizes
-                .Where(s => s.X <= fb.Width && s.Y <= fb.Height)
-                .Append(emergencySize)
-                .First();
+            LogicalScreen = Rect.FromMinMax(
+                Vector2.Zero,
+                new Vector2(fb.Width, fb.Height));
 
-            var size = canonicalSize;
-            if (ratio < canonicalSize.X / canonicalSize.Y)
-                size.Y = canonicalSize.X / ratio;
-            else
-                size.X = canonicalSize.Y * ratio;
-            LogicalScreen = new Rect(canonicalSize / 2f, size);
-            
-            var matrix = Matrix4x4.CreateOrthographicOffCenter(
-                left: LogicalScreen.Min.X,
-                right: LogicalScreen.Max.X,
-                top: LogicalScreen.Min.Y,
-                bottom: LogicalScreen.Max.Y,
-                zNearPlane: 0.01f, // Z will always be 0.5 in the UI shader
-                zFarPlane: 1f); // near/far just has to encapsulate this value
-            graphicsDevice.UpdateBuffer(projectionBuffer, 0, ref matrix);
+            var size = LogicalScreen.Size;
+            graphicsDevice.UpdateBuffer(projectionBuffer, 0, ref size);
         }
 
         public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);

@@ -12,13 +12,7 @@ layout(set = 0, binding = 1) uniform sampler mainSampler;
 
 void main()
 {
-	vec2 texSize = textureSize(sampler2D(mainTexture, mainSampler), 0);
-	vec2 uv = texSize * fsin_uv;
-	vec2 uvPixel = floor(uv);
-	vec2 uvFrac = fract(uv);
-	uv = (uvPixel + 0.5 + ) / texSize;
-
-	vec4 color = texture(sampler2D(mainTexture, mainSampler), uv) * fsin_texWeight;
+	vec4 color = texture(sampler2D(mainTexture, mainSampler), fsin_uv) * fsin_texWeight;
 	color += (1 - fsin_texWeight) * fsin_color;
 	if (color.a < 0.1)
 		discard;

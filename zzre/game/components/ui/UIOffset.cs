@@ -24,7 +24,7 @@ namespace zzre.game.components.ui
                 }
             }
 
-            return logicalScreen.AbsolutePos(Offset) + position;
+            return MathEx.Floor(logicalScreen.AbsolutePos(Offset)) + position;
         }
 
         public static readonly UIOffset ScreenUpperLeft = new UIOffset(Vector2.Zero, GameOnly: false);

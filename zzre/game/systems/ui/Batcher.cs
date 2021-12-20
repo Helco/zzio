@@ -37,7 +37,7 @@ namespace zzre.game.systems.ui
                 new TextureDescription(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
             untexturedMaterial = new UIMaterial(diContainer, isFont: false);
             untexturedMaterial.Texture.Texture = emptyTexture;
-            untexturedMaterial.Projection.Buffer = diContainer.GetTag<UI>().ProjectionBuffer;
+            untexturedMaterial.ScreenSize.Buffer = diContainer.GetTag<UI>().ProjectionBuffer;
         }
 
         public override void Dispose()
@@ -98,12 +98,12 @@ namespace zzre.game.systems.ui
                 }
 
                 ref var instance = ref mappedInstances[nextInstanceI++];
-                instance.center = offset.Calc(tile.Rect.Center, ui.LogicalScreen);
-                instance.size = tile.Rect.HalfSize;
+                instance.pos = offset.Calc(tile.Rect.Min, ui.LogicalScreen);
+                instance.size = tile.Rect.Size;
                 instance.color = color;
                 instance.textureWeight = material == null ? 0f : 1f;
-                instance.uvCenter = uvRectangle.Center;
-                instance.uvSize = uvRectangle.HalfSize;
+                instance.uvPos = uvRectangle.Min;
+                instance.uvSize = uvRectangle.Size;
                 
                 nextInstanceCount++;
             }
