@@ -14,6 +14,7 @@ namespace zzre.game.systems.ui
         public record struct Batch(UIMaterial Material, uint Instances);
 
         private readonly List<Batch> batches = new List<Batch>();
+        private readonly UI ui;
         private readonly GraphicsDevice graphicsDevice;
         private readonly ResourceFactory resourceFactory;
         private readonly UIMaterial untexturedMaterial;
@@ -27,6 +28,7 @@ namespace zzre.game.systems.ui
 
         public Batcher(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
         {
+            ui = diContainer.GetTag<UI>();
             graphicsDevice = diContainer.GetTag<GraphicsDevice>();
             resourceFactory = diContainer.GetTag<ResourceFactory>();
             instanceBuffer = null!;
@@ -76,6 +78,7 @@ namespace zzre.game.systems.ui
         private void Update(
             CommandList cl,
             in DefaultEcs.Entity entity,
+            in components.ui.UIOffset offset,
             UIMaterial? material,
             IColor color,
             components.ui.Tile[] tiles)
@@ -95,7 +98,7 @@ namespace zzre.game.systems.ui
                 }
 
                 ref var instance = ref mappedInstances[nextInstanceI++];
-                instance.center = tile.Rect.Center;
+                instance.center = offset.Calc(tile.Rect.Center, ui.LogicalScreen);
                 instance.size = tile.Rect.HalfSize;
                 instance.color = color;
                 instance.textureWeight = material == null ? 0f : 1f;

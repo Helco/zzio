@@ -46,7 +46,7 @@ namespace zzre.rendering
 
                 var pixelSize = new Vector2(tileEndX - tileStartX + tileEndXOffset, height);
                 var min = new Vector2(tileStartX, 0f) * OneTexel;
-                var max = min + pixelSize * OneTexel;
+                var max = min + (pixelSize - Vector2.One) * OneTexel;
                 tiles.Add(Rect.FromMinMax(min, max));
                 pixelSizes.Add(pixelSize + Vector2.One);
 

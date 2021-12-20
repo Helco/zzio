@@ -34,9 +34,13 @@ namespace zzre.game.systems.ui
         private void Update(
             in DefaultEcs.Entity entity,
             in components.ui.ElementId elementId,
-            in Rect elementBounds)
+            in Rect elementBounds,
+            in components.ui.UIOffset offset)
         {
-            if (hoveredElement == null && elementBounds.IsInside(mousePos))
+            var actualBounds = new Rect(
+                offset.Calc(elementBounds.Center, ui.LogicalScreen),
+                elementBounds.Size);
+            if (hoveredElement == null && actualBounds.IsInside(mousePos))
             {
                 if (!entity.Has<components.ui.Hovered>())
                 {

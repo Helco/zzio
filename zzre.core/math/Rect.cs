@@ -50,6 +50,7 @@ namespace zzre
         }
 
         public static Rect FromMinMax(Vector2 min, Vector2 max) => new Rect((min + max) / 2f, max - min);
+        public static Rect FromTopLeftSize(Vector2 min, Vector2 size) => new Rect(min + size / 2, size);
 
         public Rect OffsettedBy(float x, float y) => new Rect(Center + new Vector2(x, y), Size);
         public Rect OffsettedBy(Vector2 off) => new Rect(Center + off, Size);

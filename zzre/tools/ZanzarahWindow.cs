@@ -98,12 +98,14 @@ namespace zzre.tools
 
             Window.OnContent += HandleContent;
             fbArea.OnRender += Zanzarah.Render;
+            fbArea.OnResize += HandleResize;
             OnKeyDown += HandleKeyDown;
             OnKeyUp += HandleKeyUp;
             OnMouseDown += HandleMouseDown;
             OnMouseUp += HandleMouseUp;
 
             MoveCamWithDrag = true;
+            HandleResize();
         }
 
         private void HandleContent()
@@ -133,6 +135,11 @@ namespace zzre.tools
         private void HandleMouseDown(MouseButton button, Vector2 _) => buttonsDown.Add(button);
         private void HandleMouseUp(MouseButton button, Vector2 _) => buttonsDown.Remove(button);
         public bool IsMouseDown(MouseButton button) => buttonsDown.Contains(button);
+
+        private void HandleResize()
+        {
+            Window.Title = $"Zanzarah {fbArea.Framebuffer.Width}x{fbArea.Framebuffer.Height}###Zanzarah";
+        }
 
         private void HandleOpenScene()
         {

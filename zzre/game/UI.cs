@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
 using Veldrid;
@@ -12,7 +13,13 @@ namespace zzre.game
 {
     public class UI : BaseDisposable, ITagContainer
     {
-        private static readonly Vector2 CanonicalSize = new Vector2(1024f, 768f);
+        private static readonly Vector2[] CanonicalSizes = new[]
+        {
+            new Vector2(1024f, 768f),
+            new Vector2(800f, 600f),
+            new Vector2(640f, 480f)
+        };
+        private static readonly float CanonicalRatio = 1024f / 768f;
 
         private readonly ITagContainer tagContainer;
         private readonly IZanzarahContainer zzContainer;
@@ -53,6 +60,7 @@ namespace zzre.game
 
             updateSystems = new SequentialSystem<float>(
                 new systems.ui.Cursor(this),
+                new systems.ui.ScrDeck(this),
                 new systems.ui.ButtonTiles(this),
                 new systems.ui.Label(this),
                 new systems.ui.CorrectRenderOrder(this),
@@ -62,14 +70,7 @@ namespace zzre.game
             renderSystems = new SequentialSystem<CommandList>(
                 new systems.ui.Batcher(this));
 
-            Preload.CreateButton(
-                new(34),
-                new(200f, 200f),
-                new UID(0x53CC6191),
-                new(0, 1),
-                Preload.Btn000,
-                Preload.Fnt002,
-                out _);
+            Publish<messages.ui.OpenDeck>();
         }
 
         protected override void DisposeManaged()
@@ -80,6 +81,7 @@ namespace zzre.game
             zzContainer.OnResize -= HandleResize;
         }
 
+        public void Publish<T>() => ecsWorld.Publish(default(T));
         public void Publish<T>(in T message) => ecsWorld.Publish(message);
 
         public void Update() => updateSystems.Update(time.Delta);
@@ -90,12 +92,20 @@ namespace zzre.game
         {
             var fb = zzContainer.Framebuffer;
             var ratio = fb.Width / (float)fb.Height;
-            var size = CanonicalSize;
-            if (ratio < CanonicalSize.X / CanonicalSize.Y)
-                size.Y = CanonicalSize.X / ratio;
+            var emergencySize = fb.Height * CanonicalRatio > fb.Width
+                ? new Vector2(fb.Width, fb.Width / CanonicalRatio)
+                : new Vector2(fb.Height * CanonicalRatio, fb.Height);
+            var canonicalSize = CanonicalSizes
+                .Where(s => s.X <= fb.Width && s.Y <= fb.Height)
+                .Append(emergencySize)
+                .First();
+
+            var size = canonicalSize;
+            if (ratio < canonicalSize.X / canonicalSize.Y)
+                size.Y = canonicalSize.X / ratio;
             else
-                size.X = CanonicalSize.Y * ratio;
-            LogicalScreen = new Rect(CanonicalSize / 2f, size);
+                size.X = canonicalSize.Y * ratio;
+            LogicalScreen = new Rect(canonicalSize / 2f, size);
             
             var matrix = Matrix4x4.CreateOrthographicOffCenter(
                 left: LogicalScreen.Min.X,

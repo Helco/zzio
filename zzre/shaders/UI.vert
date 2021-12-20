@@ -23,7 +23,7 @@ void main()
 		vec2(-1, +1),
 		vec2(+1, +1)
 	};
-	vec2 pos = vsin_center + vsin_hsize * VertexOffsets[gl_VertexIndex];
+	vec2 pos = vsin_center + (vsin_hsize + 0.5) * VertexOffsets[gl_VertexIndex];
 	gl_Position = projection * vec4(pos, -0.5, 1);
 
 	fsin_uv = vsin_uvCenter + vsin_uvSize * VertexOffsets[gl_VertexIndex];

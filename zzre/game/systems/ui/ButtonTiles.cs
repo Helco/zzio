@@ -25,7 +25,7 @@ namespace zzre.game.systems.ui
             {
                 var tileSheet = entity.Get<rendering.TileSheet>();
                 rect.Size = tileSheet.GetPixelSize(tiles.Normal);
-                rect.Center += rect.HalfSize; // the user intended to set a top-left position
+                rect.Center += rect.HalfSize + System.Numerics.Vector2.One /2; // the user intended to set a top-left position
             }
 
             if (!entity.Has<components.ui.Tile[]>())
