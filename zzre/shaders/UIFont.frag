@@ -20,6 +20,7 @@ void main()
 	vec2 fuv = fract(iuv);
 	fuv = clamp(alpha * fuv, 0.0, 0.5) +
 		clamp(alpha * (fuv - 1.0) + 0.5, 0.0, 0.5);
+		fuv = vec2(0.5,0.5);
 	vec2 uv = (floor(iuv) + fuv) / tsize;
 
 	vec4 color = texture(sampler2D(mainTexture, mainSampler), uv) * fsin_texWeight;

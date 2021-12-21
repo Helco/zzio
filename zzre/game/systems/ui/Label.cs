@@ -98,6 +98,7 @@ namespace zzre.game.systems.ui
             entity.SetSameAs<zzio.IColor>(parent);
             entity.SetSameAs<components.ui.RenderOrder>(parent);
             entity.SetSameAs<components.Visibility>(parent);
+            entity.SetSameAs<components.ui.UIOffset>(parent);
             entity.Set<components.ui.SubLabel>();
             entity.Set(tiles.Select(t => t.tile).ToArray());
             entity.Set(new components.Parent(parent));
