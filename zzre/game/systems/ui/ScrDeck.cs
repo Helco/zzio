@@ -6,6 +6,9 @@ using DefaultEcs.System;
 using zzio;
 using zzre.game.messages.ui;
 
+
+using static zzre.game.systems.ui.InGameScreen;
+
 namespace zzre.game.systems.ui
 {
     public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.OpenDeck>
@@ -30,8 +33,7 @@ namespace zzre.game.systems.ui
             ref var deck = ref entity.Get<components.ui.ScrDeck>();
             CreateBackgrounds(entity, ref deck);
             CreateListControls(entity, ref deck);
-
-            preload.CreateTooltip(entity, new Vector2(-320 + 11, -240 + 11), "{205} - ");
+            CreateTopButtons(preload, entity, IDOpenDeck);
         }
 
         private void CreateBackgrounds(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
@@ -53,34 +55,34 @@ namespace zzre.game.systems.ui
                 - new Vector2(320, 240),
                 "dec002",
                 renderOrder: 1);
+
+            preload.CreateTooltip(entity, new Vector2(-320 + 11, -240 + 11), "{205} - ");
         }
 
         private void CreateListControls(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
         {
-            var mid = - new Vector2(320, 240);
-
             preload.CreateImageButton(
                 entity,
                 IDSliderUp,
-                mid + new Vector2(592, 73),
+                Mid + new Vector2(592, 73),
                 new(16, 17),
                 preload.Btn001);
 
             preload.CreateImageButton(
                 entity,
                 IDSliderDown,
-                mid + new Vector2(592, 291),
+                Mid + new Vector2(592, 291),
                 new(18, 19),
                 preload.Btn001);
 
             deck.ListSlider = preload.CreateImageButton(
                 entity,
                 IDSlider,
-                mid + new Vector2(592, 112),
+                Mid + new Vector2(592, 112),
                 new(14, 15),
                 preload.Btn001);
 
-            var tabButtonRect = Rect.FromTopLeftSize(mid + new Vector2(281, 0f), new Vector2(35, 35));
+            var tabButtonRect = Rect.FromTopLeftSize(Mid + new Vector2(281, 0f), new Vector2(35, 35));
             preload.CreateImageButton(
                 entity,
                 IDTabFairies,
