@@ -140,9 +140,10 @@ namespace zzre.game.systems.ui
             Vector2 pos,
             components.ui.ButtonTiles buttonTiles,
             ManagedResource<resources.UITileSheetInfo, TileSheet> tileSheet,
+            zzio.UID? tooltipUID = null,
             int renderOrder = 0,
             components.ui.UIOffset? offset = null) =>
-            CreateImageButton(parent, elementId, Rect.FromMinMax(pos, pos), buttonTiles, tileSheet, renderOrder, offset);
+            CreateImageButton(parent, elementId, Rect.FromMinMax(pos, pos), buttonTiles, tileSheet, tooltipUID, renderOrder, offset);
 
         public DefaultEcs.Entity CreateImageButton(
             DefaultEcs.Entity parent,
@@ -150,6 +151,7 @@ namespace zzre.game.systems.ui
             Rect rect,
             components.ui.ButtonTiles buttonTiles,
             ManagedResource<resources.UITileSheetInfo, TileSheet> tileSheet,
+            zzio.UID? tooltipUID = null,
             int renderOrder = 0,
             components.ui.UIOffset? offset = null)
         {
@@ -157,6 +159,8 @@ namespace zzre.game.systems.ui
             entity.Set(elementId);
             entity.Set(tileSheet);
             entity.Set(buttonTiles);
+            if (tooltipUID.HasValue)
+                entity.Set<components.ui.TooltipUID>(tooltipUID.Value);
             return entity;
         }
 
@@ -192,6 +196,16 @@ namespace zzre.game.systems.ui
             return entity;
         }
 
+        public DefaultEcs.Entity CreateTooltip(
+            DefaultEcs.Entity parent,
+            Vector2 pos,
+            string prefix)
+        {
+            var entity = CreateLabel(parent, pos, "", Fnt002, renderOrder: 0);
+            entity.Set(new components.ui.TooltipTarget(prefix));
+            return entity;
+        }
+
         public DefaultEcs.Entity CreateButton(
             DefaultEcs.Entity parent,
             components.ui.ElementId elementId,
@@ -201,11 +215,12 @@ namespace zzre.game.systems.ui
             ManagedResource<resources.UITileSheetInfo, TileSheet> border,
             ManagedResource<resources.UITileSheetInfo, TileSheet> font,
             out DefaultEcs.Entity label,
+            zzio.UID? tooltipUID = null,
             int renderOrder = 0,
             bool doFormat = true,
             components.ui.TextAlignment align = components.ui.TextAlignment.Center,
             components.ui.UIOffset? offset = null) =>
-            CreateButton(parent, elementId, pos, GetDBText(textUID), buttonTiles, border, font, out label, renderOrder, doFormat, align, offset);
+            CreateButton(parent, elementId, pos, GetDBText(textUID), buttonTiles, border, font, out label, tooltipUID, renderOrder, doFormat, align, offset);
 
         public DefaultEcs.Entity CreateButton(
             DefaultEcs.Entity parent,
@@ -216,12 +231,13 @@ namespace zzre.game.systems.ui
             ManagedResource<resources.UITileSheetInfo, TileSheet> border,
             ManagedResource<resources.UITileSheetInfo, TileSheet> font,
             out DefaultEcs.Entity label,
+            zzio.UID? tooltipUID = null,
             int renderOrder = 0,
             bool doFormat = true,
             components.ui.TextAlignment align = components.ui.TextAlignment.Center,
             components.ui.UIOffset? offset = null)
         {
-            var button = CreateImageButton(parent, elementId, pos, buttonTiles, border, renderOrder, offset);
+            var button = CreateImageButton(parent, elementId, pos, buttonTiles, border, tooltipUID, renderOrder, offset);
 
             label = CreateLabel(button, pos, text, font, renderOrder - 1, doFormat, offset);
             var fontTileSheet = label.Get<TileSheet>();

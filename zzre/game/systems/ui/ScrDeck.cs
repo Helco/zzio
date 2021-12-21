@@ -30,6 +30,8 @@ namespace zzre.game.systems.ui
             ref var deck = ref entity.Get<components.ui.ScrDeck>();
             CreateBackgrounds(entity, ref deck);
             CreateListControls(entity, ref deck);
+
+            preload.CreateTooltip(entity, new Vector2(-320 + 11, -240 + 11), "{205} - ");
         }
 
         private void CreateBackgrounds(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
@@ -78,42 +80,46 @@ namespace zzre.game.systems.ui
                 new(14, 15),
                 preload.Btn001);
 
-            var tabButtonRect = Rect.FromTopLeftSize(mid + new Vector2(282, 0f), new Vector2(35, 35));
+            var tabButtonRect = Rect.FromTopLeftSize(mid + new Vector2(281, 0f), new Vector2(35, 35));
             preload.CreateImageButton(
                 entity,
                 IDTabFairies,
                 tabButtonRect.OffsettedBy(0, 79),
                 new(0, 1, 2),
-                preload.Btn002);
+                preload.Btn002,
+                tooltipUID: new UID(0x7DB4EEB1));
 
             preload.CreateImageButton(
                 entity,
                 IDTabItems,
                 tabButtonRect.OffsettedBy(0, 123),
                 new(3, 4, 5),
-                preload.Btn002);
+                preload.Btn002,
+                tooltipUID: new UID(0x93530331));
 
             preload.CreateImageButton(
                 entity,
                 IDTabAttackSpells,
                 tabButtonRect.OffsettedBy(0, 167),
                 new(6, 7, 8),
-                preload.Btn002);
+                preload.Btn002,
+                tooltipUID: new UID(0xB5E80331));
 
             preload.CreateImageButton(
                 entity,
                 IDTabSupportSpells,
                 tabButtonRect.OffsettedBy(0, 211),
                 new(9, 10, 11),
-                preload.Btn002);
+                preload.Btn002,
+                tooltipUID: new UID(0x9D0DAD11));
 
             preload.CreateImageButton(
                 entity,
                 IDSwitchListMode,
                 tabButtonRect.Min + new Vector2(15, 261),
                 new(28, 29),
-                preload.Btn002);
-            // TODO: Add tooltip to switch deck list mode button
+                preload.Btn002,
+                tooltipUID: new UID(0xA086B911));
 
             // TODO: Add pixie count label
         }

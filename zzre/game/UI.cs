@@ -56,6 +56,7 @@ namespace zzre.game
                 new systems.ui.ScrDeck(this),
                 new systems.ui.ButtonTiles(this),
                 new systems.ui.Label(this),
+                new systems.ui.Tooltip(this),
                 new systems.ui.CorrectRenderOrder(this),
                 new systems.Reaper(this),
                 new systems.ParentReaper(this));
