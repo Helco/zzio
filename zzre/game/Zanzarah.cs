@@ -42,7 +42,15 @@ namespace zzre.game
             tagContainer.AddTag(LoadDatabase());
             tagContainer.AddTag(UI = new UI(this));
             this.zanzarahContainer = zanzarahContainer;
-            CurrentGame = new Game(this, "sc_2411", -1);
+
+            var savegame = new zzio.Savegame();
+            using (var fileStream = new System.IO.FileStream(@"C:\dev\zanzarah\Save\_0004.dat", System.IO.FileMode.Open, System.IO.FileAccess.Read))
+            using (var reader = new System.IO.BinaryReader(fileStream))
+                savegame = zzio.Savegame.ReadNew(reader);
+            savegame.sceneId = 2411;
+            CurrentGame = new Game(this, savegame);
+
+            UI.Publish<messages.ui.OpenDeck>();
         }
 
         public void Update()

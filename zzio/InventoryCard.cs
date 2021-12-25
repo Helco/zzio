@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace zzio
 {
@@ -21,6 +24,7 @@ namespace zzio
                 CardType.Fairy => new InventoryFairy(),
                 _ => throw new InvalidDataException($"Invalid inventory card type: {cardId.Type}")
             };
+            card.cardId = cardId;
             card.atIndex = r.ReadUInt32();
             card.dbUID = UID.ReadNew(r);
             card.amount = r.ReadUInt32();
@@ -79,11 +83,12 @@ namespace zzio
         public int slotIndex;
         public ZZPermSpellStatus status;
         public readonly byte[] unknown3 = new byte[20];
-        public uint maxMHP;
+        public uint currentMHP;
+        public uint mhpChangeCount;
         public string name = "";
 
         // unsaved
-        public uint currentMHP;
+        public uint maxMHP;
         public float moveSpeed;
         public float jumpPower;
         public float jumpMana = 10000f;
@@ -105,7 +110,8 @@ namespace zzio
             slotIndex = r.ReadInt32();
             status = EnumUtils.intToEnum<ZZPermSpellStatus>(r.ReadInt32());
             r.Read(unknown3.AsSpan());
-            maxMHP = r.ReadUInt32();
+            mhpChangeCount = r.ReadUInt32();
+            currentMHP = r.ReadUInt32();
             name = r.ReadZString();
         }
 
@@ -123,12 +129,13 @@ namespace zzio
             w.Write(slotIndex);
             w.Write((int)status);
             w.Write(unknown3);
-            w.Write(maxMHP);
+            w.Write(mhpChangeCount);
+            w.Write(currentMHP);
             w.WriteZString(name);
         }
     }
 
-    public record struct SpellReq(ZZClass class0, ZZClass class1 = ZZClass.None, ZZClass class2 = ZZClass.None)
+    public record struct SpellReq(ZZClass class0, ZZClass class1 = ZZClass.None, ZZClass class2 = ZZClass.None) : IEnumerable<ZZClass>
     {
         public static SpellReq ReadNew(BinaryReader r) => new SpellReq(
             EnumUtils.intToEnum<ZZClass>(r.ReadByte()),
@@ -141,6 +148,14 @@ namespace zzio
             w.Write((byte)class1);
             w.Write((byte)class2);
         }
+
+        public IEnumerator<ZZClass> GetEnumerator()
+        {
+            if (class0 != ZZClass.None) yield return class0;
+            if (class1 != ZZClass.None) yield return class1;
+            if (class2 != ZZClass.None) yield return class2;
+        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     public enum ZZPermSpellStatus

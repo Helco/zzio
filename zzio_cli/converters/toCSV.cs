@@ -149,7 +149,7 @@ namespace zzio.cli.converters
                     fairy.Glow,
                     fairy.LevelUp,
                     fairy.Voice,
-                    fairy.Class1);
+                    fairy.WingSound);
         }
 
         private void writeDialogTable(StreamWriter writer, MappedDB mappedDb)

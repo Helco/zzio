@@ -15,6 +15,7 @@ namespace zzre.game
     {
         private readonly zzio.db.MappedDB mappedDB;
         private readonly List<InventoryCard?> cards = new List<InventoryCard?>();
+        private readonly InventoryFairy?[] fairySlots = new InventoryFairy?[FairySlotCount];
         public int Count { get; private set; }
 
         public Inventory(ITagContainer diContainer, Savegame? savegame = null)
@@ -25,13 +26,21 @@ namespace zzre.game
             this.mappedDB = mappedDB;
             if (savegame == null)
                 return;
-            cards = Enumerable.Repeat<InventoryCard?>(null, savegame.inventory.Count).ToList();
+            var maxIndex = savegame.inventory.Max(i => i.atIndex);
+            cards = Enumerable.Repeat<InventoryCard?>(null, (int)maxIndex + 1).ToList();
             foreach (var card in savegame.inventory)
             {
                 var atIndex = card.atIndex;
                 if (atIndex < 0 || atIndex >= cards.Count)
                     throw new ArgumentOutOfRangeException("Save inventory card index is not valid");
                 cards[(int)atIndex] = card;
+            }
+
+            foreach (var fairy in cards.OfType<InventoryFairy>())
+            {
+                Update(fairy);
+                if (fairy.slotIndex >= 0)
+                    fairySlots[fairy.slotIndex] = fairy;
             }
 
             Count = cards.NotNull().Count();
@@ -132,6 +141,14 @@ namespace zzre.game
         public int CountCards(CardId cardId) => cards
             .Where(c => c?.cardId == cardId)
             .Sum(c => (int)c!.amount);
+
+        public InventoryFairy? GetFairyAtSlot(int slot) => fairySlots[slot];
+
+        public InventorySpell? GetSpellAtSlot(InventoryFairy fairy, int slot)
+        {
+            var spellI = fairy.spellIndices[slot];
+            return spellI < 0 ? null : (InventorySpell)cards[spellI]!;
+        }
 
         public IEnumerator<InventoryCard> GetEnumerator() => cards.NotNull().GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

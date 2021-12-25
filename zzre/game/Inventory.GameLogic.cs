@@ -6,8 +6,10 @@ namespace zzre.game
 {
     public partial class Inventory
     {
+        public const int FairySlotCount = 5;
         private const int MaxLevel = 60;
         private const int MaxXP = 15000;
+        private const double XPExponentFactor = 0.001;
 
         public void SetLevel(InventoryFairy fairy, int level)
         {
@@ -115,6 +117,35 @@ namespace zzre.game
             return (uint)(Math.Pow(fairy.xp, levelUpFactor) * MaxLevel / Math.Pow(MaxXP, levelUpFactor));
         }
 
-        private double GetLevelFactor(InventoryFairy fairy) => fairy.level / MaxLevel;
+        private double GetLevelFactor(InventoryFairy fairy) => fairy.level / (double)MaxLevel;
+
+        public void SetSlot(InventoryFairy fairy, int newSlotI)
+        {
+            if (fairy.slotIndex >= 0)
+                fairySlots[fairy.slotIndex] = null;
+
+            var swappedFairy = newSlotI < 0 ? null : fairySlots[newSlotI];
+            if (swappedFairy != null)
+                SetSlotRaw(swappedFairy, fairy.slotIndex);
+            SetSlotRaw(fairy, newSlotI);
+
+            void SetSlotRaw(InventoryFairy fairy, int newSlotI)
+            {
+                fairy.slotIndex = newSlotI;
+                fairy.isInUse = newSlotI >= 0;
+                if (newSlotI >= 0)
+                    fairySlots[newSlotI] = fairy;
+            }
+        }
+
+        public uint? GetLevelupXP(InventoryFairy fairy)
+        {
+            if (fairy.level >= MaxLevel - 1)
+                return null;
+            var dbFairy = mappedDB.GetFairy(fairy.dbUID);
+            var baseXP = Math.Pow(MaxXP, dbFairy.LevelUp * XPExponentFactor);
+            var exp = 1 / (dbFairy.LevelUp * XPExponentFactor);
+            return (uint)Math.Pow(baseXP * (fairy.level + 1) / MaxLevel, exp);
+        }
     }
 }

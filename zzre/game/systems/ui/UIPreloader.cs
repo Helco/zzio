@@ -134,6 +134,22 @@ namespace zzre.game.systems.ui
             return entity;
         }
 
+        public DefaultEcs.Entity CreateTooltipArea(
+            DefaultEcs.Entity parent,
+            components.ui.ElementId elementId,
+            Rect rect,
+            zzio.UID tooltipUID,
+            components.ui.UIOffset? offset = null)
+        {
+            var entity = world.CreateEntity();
+            entity.Set(elementId);
+            entity.Set(new components.Parent(parent));
+            entity.Set(rect);
+            entity.Set(offset ?? components.ui.UIOffset.Center);
+            entity.Set(new components.ui.TooltipUID(tooltipUID));
+            return entity;
+        }
+
         public DefaultEcs.Entity CreateImageButton(
             DefaultEcs.Entity parent,
             components.ui.ElementId elementId,

@@ -51,11 +51,11 @@ namespace zzio.db
 
         public int Glow        => row.cells[23].Integer;
 
-        public int LevelUp     => row.cells[24].Integer;
+        public int Unknown24   => row.cells[24].Integer;
 
-        public int Voice       => row.cells[25].Integer;
+        public int LevelUp     => row.cells[25].Integer;
         
-        public int Class1      => row.cells[26].Integer;
+        public int WingSound   => row.cells[26].Integer;
 
         public double BaseMoveSpeed => MovSpeed switch
         {

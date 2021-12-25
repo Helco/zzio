@@ -11,6 +11,8 @@ namespace zzio
 
         public ZZVersion version = ZZVersion.CreateDefault();
         public string name = "";
+        public int secondsPlayed;
+        public int progress;
         public int sceneId = -1;
         public int entryId = -1;
         public readonly Dictionary<string, List<IGameStateMod>> gameState = new Dictionary<string, List<IGameStateMod>>();
@@ -25,6 +27,8 @@ namespace zzio
             Savegame sg = new Savegame();
             sg.version = ZZVersion.ReadNew(r);
             sg.name = r.ReadZString();
+            sg.secondsPlayed = r.ReadInt32();
+            sg.progress = r.ReadInt32();
             if (r.ReadUInt32() != LocationBlockSize)
                 throw new InvalidDataException("Invalid size of savegame location block");
             sg.sceneId = r.ReadInt32();
@@ -38,7 +42,7 @@ namespace zzio
                 var modCount = r.ReadInt32();
                 var mods = new List<IGameStateMod>(modCount);
                 for (int j = 0; j < modCount; j++)
-                    mods[j] = IGameStateMod.ReadNew(r);
+                    mods.Add(IGameStateMod.ReadNew(r));
                 sg.gameState[sceneName] = mods;
             }
 

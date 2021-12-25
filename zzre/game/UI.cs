@@ -63,8 +63,6 @@ namespace zzre.game
 
             renderSystems = new SequentialSystem<CommandList>(
                 new systems.ui.Batcher(this));
-
-            Publish<messages.ui.OpenDeck>();
         }
 
         protected override void DisposeManaged()

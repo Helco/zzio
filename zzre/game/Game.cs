@@ -26,7 +26,7 @@ namespace zzre.game
         public DefaultEcs.Entity PlayerEntity { get; }
         public IResource SceneResource { get; }
 
-        public Game(ITagContainer diContainer, string sceneName, int entryId)
+        public Game(ITagContainer diContainer, Savegame savegame)
         {
             tagContainer = new TagContainer().FallbackTo(diContainer);
             zzContainer = GetTag<IZanzarahContainer>();
@@ -34,10 +34,11 @@ namespace zzre.game
             time = GetTag<GameTime>();
 
             AddTag(this);
+            AddTag(savegame);
             AddTag(ecsWorld = new DefaultEcs.World());
             AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
             AddTag(camera = new Camera(this));
-            AddTag(scene = LoadScene(sceneName, out var sceneResource));
+            AddTag(scene = LoadScene($"sc_{savegame.sceneId}", out var sceneResource));
             AddTag(worldBuffers = LoadWorldBuffers());
             AddTag(new WorldCollider(worldBuffers.RWWorld));
             AddTag(worldRenderer = new WorldRenderer(this));
@@ -119,8 +120,9 @@ namespace zzre.game
             var playerColliderSize = playerBodyClump.Bounds.Size.Y;
             PlayerEntity.Set(new components.HumanPhysics(playerColliderSize));
             PlayerEntity.Set(new Sphere(Vector3.Zero, playerColliderSize));
+            PlayerEntity.Set(new Inventory(this, savegame));
 
-            ecsWorld.Publish(new messages.SceneLoaded(entryId));
+            ecsWorld.Publish(new messages.SceneLoaded(savegame.entryId));
         }
 
         protected override void DisposeManaged()

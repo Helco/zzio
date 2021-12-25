@@ -21,7 +21,7 @@ namespace zzre.game.systems.ui
         private void HandleComponentAdded(in DefaultEcs.Entity entity, in components.ui.ButtonTiles tiles)
         {
             ref var rect = ref entity.Get<Rect>();
-            if (MathEx.CmpZero(rect.Size.MaxComponent()))
+            if (MathEx.CmpZero(rect.Size.MaxComponent()) && tiles.Normal >= 0)
             {
                 var tileSheet = entity.Get<rendering.TileSheet>();
                 rect.Size = tileSheet.GetPixelSize(tiles.Normal);
