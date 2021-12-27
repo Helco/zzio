@@ -148,7 +148,7 @@ namespace zzio.cli.converters
                     fairy.Sphere,
                     fairy.Glow,
                     fairy.LevelUp,
-                    fairy.Voice,
+                    fairy.Unknown24,
                     fairy.WingSound);
         }
 

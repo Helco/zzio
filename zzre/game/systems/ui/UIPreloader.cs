@@ -268,7 +268,6 @@ namespace zzre.game.systems.ui
             };
             var labelPos = pos + new Vector2(labelPosX, buttonSize.Y / 2 - fontTileSheet.TotalSize.Y / 2);
             label.Set(Rect.FromMinMax(labelPos, labelPos));
-            label.Set<components.ui.LabelNeedsTiling>(); // we changed the position
 
             return button;
         }
@@ -286,6 +285,26 @@ namespace zzre.game.systems.ui
             var rect = Rect.FromMinMax(pos, pos + new Vector2(texture.Width, texture.Height));
             entity.Set(rect);
             entity.Set(new components.ui.Tile[] { new(-1, rect) });
+            return entity;
+        }
+
+        public DefaultEcs.Entity CreateImage(
+            DefaultEcs.Entity parent,
+            Vector2 pos,
+            ManagedResource<resources.UITileSheetInfo, TileSheet> tileSheet,
+            int tileI,
+            int renderOrder = 0,
+            components.ui.UIOffset? offset = null)
+        {
+            var entity = CreateBase(parent, Rect.FromMinMax(pos, pos), renderOrder, offset);
+            entity.Set(tileSheet);
+            if (tileI >= 0)
+            {
+                var tileSize = entity.Get<TileSheet>().GetPixelSize(tileI);
+                var rect = Rect.FromTopLeftSize(pos, tileSize);
+                entity.Set(rect);
+                entity.Set(new components.ui.Tile[] { new(tileI, rect) });
+            }
             return entity;
         }
     }

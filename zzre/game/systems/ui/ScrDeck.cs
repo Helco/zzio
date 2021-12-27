@@ -13,6 +13,8 @@ namespace zzre.game.systems.ui
 {
     public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.OpenDeck>
     {
+        private const int ListRows = 6;
+
         private static readonly UID UIDChooseFairyToSwap = new UID(0x41912581);
         private static readonly UID[] UIDSpellSlotNames = new UID[]
         {
@@ -42,6 +44,8 @@ namespace zzre.game.systems.ui
         private static readonly components.ui.ElementId LastFairySlot = new(19 + Inventory.FairySlotCount);
         private static readonly components.ui.ElementId FirstSpellSlot = new(30);
         private static readonly components.ui.ElementId LastSpellSlot = new(29 + Inventory.FairySlotCount * InventoryFairy.SpellSlotCount);
+        private static readonly components.ui.ElementId FirstListCell = new(50);
+        private static readonly components.ui.ElementId LastListCell = new(49 + 6 * 6);
 
         private readonly Zanzarah zanzarah;
         private readonly zzio.db.MappedDB mappedDB;
@@ -66,7 +70,7 @@ namespace zzre.game.systems.ui
             CreateFairySlots(entity, ref deck);
 
             if (deck.ActiveTab == Tab.None)
-                OpenTab(entity, ref deck, Tab.AttackSpells);
+                OpenTab(entity, ref deck, Tab.Fairies);
         }
 
         private void CreateBackgrounds(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
@@ -341,6 +345,18 @@ namespace zzre.game.systems.ui
             return builder.ToString();
         }
 
+        private string FormatSummary(InventoryItem item) => item.amount > 1
+            ? $"{item.amount} x {mappedDB.GetItem(item.dbUID).Name}"
+            : mappedDB.GetItem(item.dbUID).Name;
+
+        private string FormatSummary(InventorySpell spell)
+        {
+            var dbSpell = mappedDB.GetSpell(spell.dbUID);
+            var mana = dbSpell.Mana == 5 ? "-/-" : $"{spell.mana}/{dbSpell.MaxMana}";
+            var sheet = dbSpell.Type == 0 ? '5' : '4';
+            return $"{dbSpell.Name}\n{{104}}{mana} {{{sheet}{dbSpell.PriceA}}}{{{sheet}{dbSpell.PriceB}}}{{{sheet}{dbSpell.PriceC}}}";
+        }
+
         private void CreateFairyInfos(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
         {
             deck.SpellBackground.Set(components.Visibility.Invisible);
@@ -351,15 +367,141 @@ namespace zzre.game.systems.ui
                 CreateFairyInfo(entity, ref deck, i);
         }
 
+        private void ResetList(ref components.ui.ScrDeck deck)
+        {
+            var allEntities = new[]
+            {
+                deck.ListButtons,
+                deck.ListSummaries,
+                deck.ListUsedMarkers
+            }.NotNull().SelectMany();
+            foreach (var entity in allEntities)
+                entity.Dispose();
+            deck.ListButtons = deck.ListSummaries = deck.ListUsedMarkers =
+                Array.Empty<DefaultEcs.Entity>();
+        }
+
+        private Vector2 ListCellPos(int column, int row) =>
+            Mid + new Vector2(322 + column * 42, 70 + row * 43);
+
+        private DefaultEcs.Resource.ManagedResource<resources.UITileSheetInfo, rendering.TileSheet> ListTileSheet(in components.ui.ScrDeck deck) => deck.ActiveTab switch
+        {
+            Tab.Fairies => preload.Wiz000,
+            Tab.Items => preload.Itm000,
+            Tab.SupportSpells => preload.Spl000,
+            Tab.AttackSpells => preload.Spl000,
+            _ => preload.Wiz000
+        };
+
+        private void CreateListCells(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, int columns, int rows = ListRows)
+        {
+            var buttonTileSheet = ListTileSheet(deck);
+            deck.ListButtons = new DefaultEcs.Entity[rows * columns];
+            deck.ListUsedMarkers = new DefaultEcs.Entity[rows * columns];
+            for (int y = 0; y < rows; y++)
+            {
+                for (int x = 0; x < columns; x++)
+                {
+                    var i = y * columns + x;
+                    deck.ListButtons[i] = preload.CreateImageButton(
+                        entity,
+                        FirstListCell + i,
+                        ListCellPos(x, y),
+                        new(-1),
+                        buttonTileSheet);
+
+                    deck.ListUsedMarkers[i] = preload.CreateImage(
+                        entity,
+                        ListCellPos(x, y),
+                        preload.Inf000,
+                        tileI: 16,
+                        renderOrder: -1);
+                    deck.ListUsedMarkers[i].Set(components.Visibility.Invisible);
+                }
+            }
+        }
+
+        private void CreateRowList(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
+        {
+            ResetList(ref deck);
+            CreateListCells(entity, ref deck, columns: 1);
+            var summaryOffset = new Vector2(42, deck.ActiveTab == Tab.Items ? 14 : 5);
+            deck.ListSummaries = new DefaultEcs.Entity[ListRows];
+            for (int i = 0; i < ListRows; i++)
+            {
+                deck.ListSummaries[i % ListRows] = preload.CreateLabel(
+                    entity,
+                    ListCellPos(column: 0, row: i) + summaryOffset,
+                    "",
+                    preload.Fnt002);
+            }
+        }
+
+        private void CreateGridList(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
+        {
+            ResetList(ref deck);
+            CreateListCells(entity, ref deck, columns: 6);
+        }
+
+        private void FillList(ref components.ui.ScrDeck deck)
+        {
+            var allCardsOfType = deck.ActiveTab switch
+            {
+                Tab.Items => deck.Inventory.Items,
+                Tab.Fairies => deck.Inventory.Fairies,
+                Tab.AttackSpells => deck.Inventory.AttackSpells,
+                Tab.SupportSpells => deck.Inventory.SupportSpells,
+                _ => Enumerable.Empty<InventoryCard>()
+            };
+            var count = allCardsOfType.Count();
+            deck.Scroll = Math.Clamp(deck.Scroll, 0, count - 1);
+            var shownCards = allCardsOfType
+                .Skip(deck.Scroll)
+                .Take(deck.ListButtons.Length)
+                .ToArray();
+
+            for (int i = 0; i < shownCards.Length; i++)
+            {
+                deck.ListButtons[i].Set(ListTileSheet(deck));
+                deck.ListButtons[i].Set(new components.ui.ButtonTiles(shownCards[i].cardId.EntityId));
+                deck.ListUsedMarkers[i].Set(shownCards[i].isInUse
+                    ? components.Visibility.Visible
+                    : components.Visibility.Invisible);
+            }
+
+            if (deck.IsGridMode)
+                return;
+            for (int i = 0; i < shownCards.Length; i++)
+            {
+                var summary = shownCards[i] switch
+                {
+                    InventoryItem item => FormatSummary(item),
+                    InventorySpell spell => FormatSummary(spell),
+                    InventoryFairy fairy => FormatSummary(deck.Inventory, fairy),
+                    _ => throw new NotSupportedException("Unknown inventory card type")
+                };
+                deck.ListSummaries[i].Set(new components.ui.Label(summary));
+            }
+        }
+
         private static bool IsInfoTab(Tab tab) => tab == Tab.Fairies || tab == Tab.Items;
         private static bool IsSpellTab(Tab tab) => tab == Tab.AttackSpells|| tab == Tab.SupportSpells;
 
         private void OpenTab(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, Tab newTab)
         {
-            if (IsInfoTab(newTab) && !IsInfoTab(deck.ActiveTab))
+            var oldTab = deck.ActiveTab;
+            deck.ActiveTab = newTab;
+
+            if (IsInfoTab(newTab) && !IsInfoTab(oldTab))
                 CreateFairyInfos(entity, ref deck);
-            if (IsSpellTab(newTab) && !IsSpellTab(deck.ActiveTab))
+            if (IsSpellTab(newTab) && !IsSpellTab(oldTab))
                 CreateSpellSlots(entity, ref deck);
+
+            if (deck.IsGridMode)
+                CreateGridList(entity, ref deck);
+            else
+                CreateRowList(entity, ref deck);
+            FillList(ref deck);
         }
 
         protected override void Update(

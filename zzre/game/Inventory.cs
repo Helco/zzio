@@ -150,6 +150,15 @@ namespace zzre.game
             return spellI < 0 ? null : (InventorySpell)cards[spellI]!;
         }
 
+        public IEnumerable<InventoryItem> Items => this.OfType<InventoryItem>();
+        public IEnumerable<InventoryFairy> Fairies => this.OfType<InventoryFairy>();
+        public IEnumerable<InventorySpell> Spells => this.OfType<InventorySpell>();
+
+        public IEnumerable<InventorySpell> AttackSpells =>
+            Spells.Where(s => mappedDB.GetSpell(s.dbUID).Type == 0);
+        public IEnumerable<InventorySpell> SupportSpells =>
+            Spells.Where(s => mappedDB.GetSpell(s.dbUID).Type != 0);
+
         public IEnumerator<InventoryCard> GetEnumerator() => cards.NotNull().GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }

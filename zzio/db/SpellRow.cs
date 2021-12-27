@@ -10,10 +10,9 @@ namespace zzio.db
 
         public CardId CardId     => new CardId(row.cells[2].Integer);
 
-        public int[] Prices      => integerRange(3, 3);
-        public int PriceA        => row.cells[3].Integer;
-        public int PriceB        => row.cells[4].Integer;
-        public int PriceC        => row.cells[5].Integer;
+        public byte PriceA        => row.cells[3].Byte;
+        public byte PriceB        => row.cells[4].Byte;
+        public byte PriceC        => row.cells[5].Byte;
 
         public string Info       => row.cells[6].String;
 

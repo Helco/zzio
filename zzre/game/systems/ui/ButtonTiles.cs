@@ -6,17 +6,24 @@ namespace zzre.game.systems.ui
     public partial class ButtonTiles : AEntitySetSystem<float>
     {
         private readonly IDisposable addedSubscription;
+        private readonly IDisposable changedSubscription;
 
         public ButtonTiles(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
         {
             addedSubscription = World.SubscribeComponentAdded<components.ui.ButtonTiles>(HandleComponentAdded);
+            changedSubscription = World.SubscribeComponentChanged<components.ui.ButtonTiles>(HandleComponentChanged);
         }
 
         public override void Dispose()
         {
             base.Dispose();
             addedSubscription.Dispose();
+            changedSubscription.Dispose();
         }
+
+        private void HandleComponentChanged(in DefaultEcs.Entity entity,
+            in components.ui.ButtonTiles oldValue, in components.ui.ButtonTiles newValue) =>
+            HandleComponentAdded(entity, newValue);
 
         private void HandleComponentAdded(in DefaultEcs.Entity entity, in components.ui.ButtonTiles tiles)
         {
@@ -35,6 +42,7 @@ namespace zzre.game.systems.ui
         [Update]
         private void Update(
             in DefaultEcs.Entity entity,
+            in Rect rect,
             in components.ui.Tile[] tiles,
             in components.ui.ButtonTiles imgButton)
         {
@@ -48,7 +56,11 @@ namespace zzre.game.systems.ui
                 _ => imgButton.Normal
             };
             foreach (ref var tile in tiles.AsSpan())
+            {
                 tile.TileId = newTileI;
+                if (MathEx.CmpZero(tile.Rect.Size.MaxComponent()))
+                    tile.Rect = Rect.FromTopLeftSize(tile.Rect.Center, rect.Size);
+            }
         }
     }
 }

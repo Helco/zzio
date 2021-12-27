@@ -5,7 +5,7 @@ namespace zzre.game.systems.ui
 {
     public partial class CorrectRenderOrder : AEntitySetSystem<float>
     {
-        public CorrectRenderOrder(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
+        public CorrectRenderOrder(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
         }
 

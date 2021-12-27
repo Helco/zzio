@@ -17,7 +17,7 @@ namespace zzre.game
         private readonly IZanzarahContainer zzContainer;
         private readonly GameTime time;
         private readonly DefaultEcs.World ecsWorld;
-        private readonly ISystem<float> updateSystems;
+        private readonly systems.RecordingSequentialSystem<float> updateSystems;
         private readonly ISystem<CommandList> renderSystems;
         private readonly GraphicsDevice graphicsDevice;
         private readonly DeviceBuffer projectionBuffer;
@@ -51,7 +51,8 @@ namespace zzre.game
             CursorEntity.Set<Rect>();
             CursorEntity.Set<components.Visibility>();
 
-            updateSystems = new SequentialSystem<float>(
+            updateSystems = new systems.RecordingSequentialSystem<float>(this);
+            updateSystems.Add(
                 new systems.ui.Cursor(this),
                 new systems.ui.ScrDeck(this),
                 new systems.ui.ButtonTiles(this),

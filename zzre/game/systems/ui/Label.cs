@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Text.RegularExpressions;
 using DefaultEcs.Resource;
 using DefaultEcs.System;
+using DefaultEcs.Command;
 using zzre.rendering;
 
 namespace zzre.game.systems.ui
@@ -21,11 +22,13 @@ namespace zzre.game.systems.ui
             ")",
             RegexOptions.Compiled);
 
+        private readonly EntityCommandRecorder recorder;
         private readonly IDisposable addedSubscription;
         private readonly IDisposable changedSubscription;
 
         public Label(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
+            recorder = diContainer.GetTag<EntityCommandRecorder>();
             addedSubscription = World.SubscribeComponentAdded<components.ui.Label>(SetLabelNeedsTiling);
             changedSubscription = World.SubscribeComponentChanged<components.ui.Label>(SetLabelNeedsTiling);
         }
@@ -61,7 +64,7 @@ namespace zzre.game.systems.ui
             in components.ui.Label label,
             ref components.ui.Tile[] tiles)
         {
-            entity.Remove<components.ui.LabelNeedsTiling>();
+            recorder.Record(entity).Remove<components.ui.LabelNeedsTiling>();
 
             var (text, doFormat) = label;
             if (!doFormat)
@@ -82,7 +85,7 @@ namespace zzre.game.systems.ui
                 .With((in components.Parent p) => p.Entity == entity)
                 .AsEnumerable();
             foreach (var oldSubLabel in oldSubLabels)
-                oldSubLabel.Dispose();
+                recorder.Record(oldSubLabel).Dispose();
 
             var newSubLabels = newTiles
                 .GroupBy(t => t.tileSheet)
@@ -93,12 +96,12 @@ namespace zzre.game.systems.ui
 
         private void CreateSubLabel(DefaultEcs.Entity parent, IGrouping<TileSheet, (TileSheet, components.ui.Tile tile)> tiles)
         {
-            var entity = World.CreateEntity();
-            entity.SetSameAs<Rect>(parent);
-            entity.SetSameAs<zzio.IColor>(parent);
-            entity.SetSameAs<components.ui.RenderOrder>(parent);
-            entity.SetSameAs<components.Visibility>(parent);
-            entity.SetSameAs<components.ui.UIOffset>(parent);
+            var entity = recorder.Record(World).CreateEntity();
+            entity.Set(parent.Get<Rect>());
+            entity.Set(parent.Get<zzio.IColor>());
+            entity.Set(parent.Get<components.ui.RenderOrder>());
+            entity.Set(parent.Get<components.Visibility>());
+            entity.Set(parent.Get<components.ui.UIOffset>());
             entity.Set<components.ui.SubLabel>();
             entity.Set(tiles.Select(t => t.tile).ToArray());
             entity.Set(new components.Parent(parent));
@@ -177,7 +180,7 @@ namespace zzre.game.systems.ui
                     return;
                 var pixelSize = curTileSheet.GetPixelSize(tileI);
                 var lineOffset = rootTileSheet.LineOffset +
-                    (rootTileSheet.TotalSize.Y - curTileSheet.TotalSize.Y) / 2;
+                    (curTileSheet.TotalSize.Y - rootTileSheet.TotalSize.Y) / 2;
                 var tile = new components.ui.Tile(
                     tileI,
                     TileRect(cursor, pixelSize, lineOffset));
