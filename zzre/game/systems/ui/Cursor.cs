@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using DefaultEcs.Command;
 using DefaultEcs.System;
 
 namespace zzre.game.systems.ui
@@ -7,6 +8,7 @@ namespace zzre.game.systems.ui
     public partial class Cursor : AEntitySetSystem<float>
     {
         private readonly IZanzarahContainer zzContainer;
+        private readonly EntityCommandRecorder recorder;
         private readonly UI ui;
 
         private Vector2 mousePos;
@@ -15,6 +17,7 @@ namespace zzre.game.systems.ui
         public Cursor(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
         {
             zzContainer = diContainer.GetTag<IZanzarahContainer>();
+            recorder = diContainer.GetTag<EntityCommandRecorder>();
             ui = diContainer.GetTag<UI>();
         }
 
@@ -58,7 +61,7 @@ namespace zzre.game.systems.ui
             if (hoveredElement == null)
                 World.Remove<components.ui.HoveredElement>();
             else
-                World.Set(hoveredElement);
+                World.Set(hoveredElement.Value);
         }
     }
 }

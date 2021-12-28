@@ -54,6 +54,7 @@ namespace zzre.game.systems.ui
         {
             zanzarah = diContainer.GetTag<Zanzarah>();
             mappedDB = diContainer.GetTag<zzio.db.MappedDB>();
+            OnElementDown += HandleElementDown;
         }
 
         protected override void HandleOpen(in OpenDeck message)
@@ -484,6 +485,15 @@ namespace zzre.game.systems.ui
             }
         }
 
+        private void RecreateList(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
+        {
+            if (deck.IsGridMode)
+                CreateGridList(entity, ref deck);
+            else
+                CreateRowList(entity, ref deck);
+            FillList(ref deck);
+        }
+
         private static bool IsInfoTab(Tab tab) => tab == Tab.Fairies || tab == Tab.Items;
         private static bool IsSpellTab(Tab tab) => tab == Tab.AttackSpells|| tab == Tab.SupportSpells;
 
@@ -497,11 +507,19 @@ namespace zzre.game.systems.ui
             if (IsSpellTab(newTab) && !IsSpellTab(oldTab))
                 CreateSpellSlots(entity, ref deck);
 
-            if (deck.IsGridMode)
-                CreateGridList(entity, ref deck);
-            else
-                CreateRowList(entity, ref deck);
-            FillList(ref deck);
+            RecreateList(entity, ref deck);
+        }
+
+        private void HandleElementDown(DefaultEcs.Entity clickedEntity, components.ui.ElementId id)
+        {
+            var deckEntity = Set.GetEntities()[0];
+            ref var deck = ref deckEntity.Get<components.ui.ScrDeck>();
+
+            if (id == IDSwitchListMode)
+            {
+                deck.IsGridMode = !deck.IsGridMode;
+                RecreateList(deckEntity, ref deck);
+            }
         }
 
         protected override void Update(
