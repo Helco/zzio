@@ -15,7 +15,6 @@ namespace zzre.game.systems.ui
         protected event Action<DefaultEcs.Entity, components.ui.ElementId>? OnElementDown;
         protected event Action<DefaultEcs.Entity, components.ui.ElementId>? OnElementUp;
 
-        protected bool IsMouseDown { get; private set; }
         protected Vector2 ScreenCenter => ui.LogicalScreen.Center;
 
         protected BaseScreen(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
@@ -56,7 +55,6 @@ namespace zzre.game.systems.ui
         {
             if (button != Veldrid.MouseButton.Left)
                 return;
-            IsMouseDown = isDown;
 
             if (!World.Has<components.ui.HoveredElement>())
                 return;
@@ -70,7 +68,7 @@ namespace zzre.game.systems.ui
         protected abstract void HandleOpen(in TMessage message);
 
         [Update]
-        protected abstract void Update(float timeElapsed, ref TComponent component);
+        protected abstract void Update(float timeElapsed, in DefaultEcs.Entity entity, ref TComponent component);
 
     }
 }

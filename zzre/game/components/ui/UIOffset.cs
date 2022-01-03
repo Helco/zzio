@@ -6,7 +6,7 @@ namespace zzre.game.components.ui
     {
         private const float CanonicalRatio = 1024f / 768f;
 
-        public Vector2 Calc(Vector2 position, Rect logicalScreen)
+        public Vector2 GetOffset(Rect logicalScreen)
         {
             if (GameOnly)
             {
@@ -24,8 +24,14 @@ namespace zzre.game.components.ui
                 }
             }
 
-            return MathEx.Floor(logicalScreen.AbsolutePos(Offset)) + position;
+            return MathEx.Floor(logicalScreen.AbsolutePos(Offset));
         }
+
+        public Vector2 Calc(Vector2 position, Rect logicalScreen) =>
+            GetOffset(logicalScreen) + position;
+
+        public Vector2 CalcReverse(Vector2 position, Rect logicalScreen) =>
+            position - GetOffset(logicalScreen);
 
         public static readonly UIOffset ScreenUpperLeft = new UIOffset(Vector2.Zero, GameOnly: false);
         public static readonly UIOffset GameUpperLeft = new UIOffset(Vector2.Zero, GameOnly: true);

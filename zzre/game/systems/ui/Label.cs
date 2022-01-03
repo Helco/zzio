@@ -67,6 +67,7 @@ namespace zzre.game.systems.ui
             recorder.Record(entity).Remove<components.ui.LabelNeedsTiling>();
 
             var (text, doFormat) = label;
+            text ??= "";
             if (!doFormat)
             {
                 tiles = TileWithoutFormatting(rect, rootTileSheet, text);

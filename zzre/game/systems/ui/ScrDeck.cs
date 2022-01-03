@@ -116,12 +116,14 @@ namespace zzre.game.systems.ui
             deck.ListSlider = preload.CreateImageButton(
                 entity,
                 IDSlider,
-                Mid + new Vector2(592, 112),
+                Rect.FromTopLeftSize(Mid + new Vector2(590, 110), new Vector2(40, 182)),
                 new(14, 15),
                 preload.Btn001);
+            deck.ListSlider.Set(components.ui.Slider.Vertical);
 
+            deck.ListTabs = new DefaultEcs.Entity[4];
             var tabButtonRect = Rect.FromTopLeftSize(Mid + new Vector2(281, 0f), new Vector2(35, 35));
-            preload.CreateImageButton(
+            deck.ListTabs[(int)Tab.Fairies - 1] = preload.CreateImageButton(
                 entity,
                 IDTabFairies,
                 tabButtonRect.OffsettedBy(0, 79),
@@ -129,7 +131,7 @@ namespace zzre.game.systems.ui
                 preload.Btn002,
                 tooltipUID: new UID(0x7DB4EEB1));
 
-            preload.CreateImageButton(
+            deck.ListTabs[(int)Tab.Items - 1] = preload.CreateImageButton(
                 entity,
                 IDTabItems,
                 tabButtonRect.OffsettedBy(0, 123),
@@ -137,7 +139,7 @@ namespace zzre.game.systems.ui
                 preload.Btn002,
                 tooltipUID: new UID(0x93530331));
 
-            preload.CreateImageButton(
+            deck.ListTabs[(int)Tab.AttackSpells - 1] = preload.CreateImageButton(
                 entity,
                 IDTabAttackSpells,
                 tabButtonRect.OffsettedBy(0, 167),
@@ -145,7 +147,7 @@ namespace zzre.game.systems.ui
                 preload.Btn002,
                 tooltipUID: new UID(0xB5E80331));
 
-            preload.CreateImageButton(
+            deck.ListTabs[(int)Tab.SupportSpells - 1] = preload.CreateImageButton(
                 entity,
                 IDTabSupportSpells,
                 tabButtonRect.OffsettedBy(0, 211),
@@ -444,16 +446,18 @@ namespace zzre.game.systems.ui
             CreateListCells(entity, ref deck, columns: 6);
         }
 
+        private IEnumerable<InventoryCard> AllCardsOfType(in components.ui.ScrDeck deck) => deck.ActiveTab switch
+        {
+            Tab.Items => deck.Inventory.Items,
+            Tab.Fairies => deck.Inventory.Fairies,
+            Tab.AttackSpells => deck.Inventory.AttackSpells,
+            Tab.SupportSpells => deck.Inventory.SupportSpells,
+            _ => Enumerable.Empty<InventoryCard>()
+        };
+
         private void FillList(ref components.ui.ScrDeck deck)
         {
-            var allCardsOfType = deck.ActiveTab switch
-            {
-                Tab.Items => deck.Inventory.Items,
-                Tab.Fairies => deck.Inventory.Fairies,
-                Tab.AttackSpells => deck.Inventory.AttackSpells,
-                Tab.SupportSpells => deck.Inventory.SupportSpells,
-                _ => Enumerable.Empty<InventoryCard>()
-            };
+            var allCardsOfType = AllCardsOfType(deck);
             var count = allCardsOfType.Count();
             deck.Scroll = Math.Clamp(deck.Scroll, 0, count - 1);
             var shownCards = allCardsOfType
@@ -461,18 +465,25 @@ namespace zzre.game.systems.ui
                 .Take(deck.ListButtons.Length)
                 .ToArray();
 
-            for (int i = 0; i < shownCards.Length; i++)
+            int i;
+            for (i = 0; i < shownCards.Length; i++)
             {
+                deck.ListButtons[i].Set(components.Visibility.Visible);
                 deck.ListButtons[i].Set(ListTileSheet(deck));
                 deck.ListButtons[i].Set(new components.ui.ButtonTiles(shownCards[i].cardId.EntityId));
                 deck.ListUsedMarkers[i].Set(shownCards[i].isInUse
                     ? components.Visibility.Visible
                     : components.Visibility.Invisible);
             }
+            for (; i < deck.ListButtons.Length; i++)
+            {
+                deck.ListButtons[i].Set(components.Visibility.Invisible);
+                deck.ListUsedMarkers[i].Set(components.Visibility.Invisible);
+            }
 
             if (deck.IsGridMode)
                 return;
-            for (int i = 0; i < shownCards.Length; i++)
+            for (i = 0; i < shownCards.Length; i++)
             {
                 var summary = shownCards[i] switch
                 {
@@ -483,6 +494,8 @@ namespace zzre.game.systems.ui
                 };
                 deck.ListSummaries[i].Set(new components.ui.Label(summary));
             }
+            for (; i < deck.ListButtons.Length; i++)
+                deck.ListSummaries[i].Set(new components.ui.Label(""));
         }
 
         private void RecreateList(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
@@ -502,6 +515,10 @@ namespace zzre.game.systems.ui
             var oldTab = deck.ActiveTab;
             deck.ActiveTab = newTab;
 
+            if (oldTab != Tab.None)
+                deck.ListTabs[(int)oldTab - 1].Remove<components.ui.Active>();
+            deck.ListTabs[(int)newTab - 1].Set<components.ui.Active>();
+
             if (IsInfoTab(newTab) && !IsInfoTab(oldTab))
                 CreateFairyInfos(entity, ref deck);
             if (IsSpellTab(newTab) && !IsSpellTab(oldTab))
@@ -520,13 +537,44 @@ namespace zzre.game.systems.ui
                 deck.IsGridMode = !deck.IsGridMode;
                 RecreateList(deckEntity, ref deck);
             }
+            else if (id == IDTabFairies) OpenTab(deckEntity, ref deck, Tab.Fairies);
+            else if (id == IDTabItems) OpenTab(deckEntity, ref deck, Tab.Items);
+            else if (id == IDTabAttackSpells) OpenTab(deckEntity, ref deck, Tab.AttackSpells);
+            else if (id == IDTabSupportSpells) OpenTab(deckEntity, ref deck, Tab.SupportSpells);
+            else if (id == IDSliderDown)
+            {
+                deck.Scroll += deck.IsGridMode ? ListRows : 1;
+                UpdateSliderPosition(deck);
+                FillList(ref deck);
+            }
+            else if (id == IDSliderUp)
+            {
+                deck.Scroll -= deck.IsGridMode ? ListRows : 1;
+                UpdateSliderPosition(deck);
+                FillList(ref deck);
+            }
+        }
+
+        private void UpdateSliderPosition(in components.ui.ScrDeck deck)
+        {
+            var allCardsCount = AllCardsOfType(deck).Count();
+            ref var slider = ref deck.ListSlider.Get<components.ui.Slider>();
+            slider = slider with { Current = Vector2.UnitY * Math.Clamp(deck.Scroll / (allCardsCount - 1f), 0, 1f) };
         }
 
         protected override void Update(
-            float timeElapsed,
-            ref components.ui.ScrDeck component)
+            float elapsedTime,
+            in DefaultEcs.Entity entity,
+            ref components.ui.ScrDeck deck)
         {
-            //throw new NotImplementedException();
+            var slider = deck.ListSlider.Get<components.ui.Slider>();
+            var allCardsCount = AllCardsOfType(deck).Count();
+            var newScrollI = (int)MathF.Round(slider.Current.Y * (allCardsCount - 1));
+            if (newScrollI != deck.Scroll)
+            {
+                deck.Scroll = newScrollI;
+                FillList(ref deck);
+            }
         }
     }
 }

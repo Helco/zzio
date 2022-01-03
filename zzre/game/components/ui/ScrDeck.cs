@@ -21,6 +21,7 @@ namespace zzre.game.components.ui
         public DefaultEcs.Entity SpellBackground;
         public DefaultEcs.Entity ListSlider;
         public DefaultEcs.Entity FairyHoverSummary;
+        public DefaultEcs.Entity[] ListTabs;
         public DefaultEcs.Entity[] ListButtons;
         public DefaultEcs.Entity[] ListUsedMarkers;
         public DefaultEcs.Entity[] ListSummaries;
