@@ -8,6 +8,7 @@ using zzre.game.messages.ui;
 
 using Tab = zzre.game.components.ui.ScrDeck.Tab;
 using static zzre.game.systems.ui.InGameScreen;
+using Veldrid;
 
 namespace zzre.game.systems.ui
 {
@@ -47,12 +48,10 @@ namespace zzre.game.systems.ui
         private static readonly components.ui.ElementId FirstListCell = new(50);
         private static readonly components.ui.ElementId LastListCell = new(49 + 6 * 6);
 
-        private readonly Zanzarah zanzarah;
         private readonly zzio.db.MappedDB mappedDB;
 
         public ScrDeck(ITagContainer diContainer) : base(diContainer)
         {
-            zanzarah = diContainer.GetTag<Zanzarah>();
             mappedDB = diContainer.GetTag<zzio.db.MappedDB>();
             OnElementDown += HandleElementDown;
         }
@@ -574,6 +573,17 @@ namespace zzre.game.systems.ui
             {
                 deck.Scroll = newScrollI;
                 FillList(ref deck);
+            }
+        }
+
+        protected override void HandleKeyDown(Key key)
+        {
+            base.HandleKeyDown(key);
+
+            if (key == Key.Enter)
+            {
+                foreach (var entity in Set.GetEntities())
+                    entity.Dispose();
             }
         }
     }

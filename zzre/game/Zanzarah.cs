@@ -49,8 +49,6 @@ namespace zzre.game
                 savegame = zzio.Savegame.ReadNew(reader);
             savegame.sceneId = 2411;
             CurrentGame = new Game(this, savegame);
-
-            UI.Publish<messages.ui.OpenDeck>();
         }
 
         public void Update()

@@ -11,11 +11,14 @@ namespace zzre.game.systems
         protected readonly WorldCollider worldCollider;
         protected Location playerLocation => playerLocationLazy.Value;
 
+        private IDisposable lockPlayerSubscription;
         private readonly Lazy<Location> playerLocationLazy;
         private Vector2 nextMove;
+        private float lockTimer;
 
         protected BaseGameCamera(ITagContainer diContainer) : base(diContainer)
         {
+            lockPlayerSubscription = world.Subscribe<messages.LockPlayerControl>(HandleLockPlayerControl);
             worldCollider = diContainer.GetTag<WorldCollider>();
             var game = diContainer.GetTag<Game>();
             zzContainer.OnMouseMove += HandleMouseMove;
@@ -26,11 +29,15 @@ namespace zzre.game.systems
         {
             base.Dispose();
             zzContainer.OnMouseMove -= HandleMouseMove;
+            lockPlayerSubscription.Dispose();
         }
+
+        private void HandleLockPlayerControl(in messages.LockPlayerControl msg) => lockTimer = msg.Duration;
 
         public override void Update(float elapsedTime)
         {
-            if (!IsEnabled)
+            lockTimer = Math.Max(0f, lockTimer - elapsedTime);
+            if (!IsEnabled || lockTimer > 0f)
                 return;
             Update(elapsedTime, nextMove);
             nextMove = Vector2.Zero;

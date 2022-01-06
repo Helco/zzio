@@ -26,6 +26,12 @@ namespace zzre.game
         public DefaultEcs.Entity PlayerEntity { get; }
         public IResource SceneResource { get; }
 
+        public bool IsUpdateEnabled
+        {
+            get => updateSystems.IsEnabled;
+            set => updateSystems.IsEnabled = value;
+        }
+
         public Game(ITagContainer diContainer, Savegame savegame)
         {
             tagContainer = new TagContainer().FallbackTo(diContainer);
@@ -132,6 +138,9 @@ namespace zzre.game
             tagContainer.Dispose();
             zzContainer.OnResize -= HandleResize;
         }
+
+        public void Publish<T>() => ecsWorld.Publish(default(T));
+        public void Publish<T>(in T message) => ecsWorld.Publish(message);
 
         private void HandleResize()
         {

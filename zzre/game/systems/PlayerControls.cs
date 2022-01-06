@@ -12,8 +12,12 @@ namespace zzre.game.systems
         private const Key LeftKey = Key.A;
         private const Key RightKey = Key.D;
         private const Key JumpKey = Key.Space;
+        private const Key MenuKey = Key.Enter;
         private readonly IZanzarahContainer zzContainer;
+        private readonly UI ui;
+        private readonly IDisposable lockMessageSubscription;
 
+        private float lockTimer;
         private float jumpLockTimer;
         private bool jumpChanged;
         private components.PlayerControls nextControls;
@@ -21,6 +25,8 @@ namespace zzre.game.systems
         public PlayerControls(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>())
         {
             World.SetMaxCapacity<components.PlayerControls>(1);
+            lockMessageSubscription = World.Subscribe<messages.LockPlayerControl>(HandleLockPlayerControl);
+            ui = diContainer.GetTag<UI>();
             zzContainer = diContainer.GetTag<IZanzarahContainer>();
             zzContainer.OnKeyDown += HandleKeyDown;
             zzContainer.OnKeyUp += HandleKeyUp;
@@ -31,10 +37,20 @@ namespace zzre.game.systems
             base.Dispose();
             zzContainer.OnKeyDown -= HandleKeyDown;
             zzContainer.OnKeyUp -= HandleKeyUp;
+            lockMessageSubscription.Dispose();
         }
+
+        private void HandleLockPlayerControl(in messages.LockPlayerControl msg) => lockTimer = msg.Duration;
 
         protected override void Update(float elapsedTime, ref components.PlayerControls component)
         {
+            lockTimer = Math.Max(0f, lockTimer - elapsedTime);
+            if (lockTimer > 0)
+            {
+                component = default;
+                return;
+            }
+
             jumpLockTimer = Math.Max(0f, jumpLockTimer - elapsedTime);
             component.GoesForward = nextControls.GoesForward;
             component.GoesBackward = nextControls.GoesBackward;
@@ -61,17 +77,32 @@ namespace zzre.game.systems
                 case LeftKey: nextControls.GoesLeft = isDown; break;
                 case RightKey: nextControls.GoesRight = isDown; break;
 
-                case JumpKey when isDown == nextControls.Jumps:
-                    return;
-                case JumpKey when !isDown:
-                    nextControls.Jumps = false;
-                    jumpChanged = true;
-                    break;
-                case JumpKey when isDown && jumpLockTimer <= 0f:
-                    jumpLockTimer = JumpLockDuration;
-                    nextControls.Jumps = true;
-                    jumpChanged = true;
-                    break;
+                case JumpKey: HandleJump(isDown); break;
+            }
+
+            if (isDown && lockTimer <= 0f)
+            {
+                switch(key)
+                {
+                    case MenuKey: ui.Publish<messages.ui.OpenDeck>(); break;
+                }
+            }
+        }
+
+        private void HandleJump(bool isDown)
+        {
+            if (isDown == nextControls.Jumps)
+                return;
+            if (!isDown)
+            {
+                nextControls.Jumps = isDown;
+                jumpChanged = true;
+            }
+            else if (jumpLockTimer <= 0f)
+            {
+                jumpLockTimer = JumpLockDuration;
+                nextControls.Jumps = true;
+                jumpChanged = true;
             }
         }
     }

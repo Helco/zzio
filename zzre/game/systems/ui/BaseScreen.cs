@@ -10,6 +10,7 @@ namespace zzre.game.systems.ui
         private readonly IDisposable addedSubscription;
         private readonly IDisposable removedSubscription;
         protected readonly IZanzarahContainer zzContainer;
+        protected readonly Zanzarah zanzarah;
         protected readonly UI ui;
         protected readonly UIPreloader preload;
         protected event Action<DefaultEcs.Entity, components.ui.ElementId>? OnElementDown;
@@ -20,6 +21,7 @@ namespace zzre.game.systems.ui
         protected BaseScreen(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
         {
             zzContainer = diContainer.GetTag<IZanzarahContainer>();
+            zanzarah = diContainer.GetTag<Zanzarah>();
             ui = diContainer.GetTag<UI>();
             preload = diContainer.GetTag<UIPreloader>();
             World.SetMaxCapacity<TComponent>(1);
@@ -35,18 +37,32 @@ namespace zzre.game.systems.ui
             addedSubscription.Dispose();
             removedSubscription.Dispose();
             HandleRemoved(default, default!);
+            RemoveContainerEvents();
         }
 
         private void HandleAdded(in DefaultEcs.Entity entity, in TComponent _)
         {
             zzContainer.OnMouseDown += HandleMouseDown;
             zzContainer.OnMouseUp += HandleMouseUp;
+            zzContainer.OnKeyDown += HandleKeyDown;
+            if (zanzarah.CurrentGame != null)
+                zanzarah.CurrentGame.IsUpdateEnabled = false;
+            zanzarah.CurrentGame?.Publish(messages.LockPlayerControl.Forever);
+        }
+
+        private void RemoveContainerEvents()
+        {
+            zzContainer.OnMouseDown -= HandleMouseDown;
+            zzContainer.OnMouseUp -= HandleMouseUp;
+            zzContainer.OnKeyDown -= HandleKeyDown;
         }
 
         private void HandleRemoved(in DefaultEcs.Entity entity, in TComponent _)
         {
-            zzContainer.OnMouseDown -= HandleMouseDown;
-            zzContainer.OnMouseUp -= HandleMouseUp;
+            RemoveContainerEvents();
+            if (zanzarah.CurrentGame != null)
+                zanzarah.CurrentGame.IsUpdateEnabled = true;
+            zanzarah.CurrentGame?.Publish(messages.LockPlayerControl.Unlock);
         }
 
         private void HandleMouseDown(Veldrid.MouseButton button, Vector2 pos) => HandleMouse(button, pos, isDown: true);
@@ -63,6 +79,10 @@ namespace zzre.game.systems.ui
                 OnElementDown?.Invoke(hovered.Entity, hovered.Id);
             else
                 OnElementUp?.Invoke(hovered.Entity, hovered.Id);
+        }
+
+        protected virtual void HandleKeyDown(Veldrid.Key key)
+        {
         }
 
         protected abstract void HandleOpen(in TMessage message);

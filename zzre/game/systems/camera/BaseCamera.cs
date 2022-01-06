@@ -7,7 +7,7 @@ namespace zzre.game.systems
     {
         protected readonly IZanzarahContainer zzContainer;
         protected readonly Camera camera;
-        private readonly DefaultEcs.World world;
+        protected readonly DefaultEcs.World world;
 
         private bool isEnabled;
         public bool IsEnabled
