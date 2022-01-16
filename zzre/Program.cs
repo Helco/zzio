@@ -20,8 +20,8 @@ namespace zzre
             {
                 X = 100,
                 Y = 100,
-                WindowWidth = 1024 * 1,
-                WindowHeight = 768 * 1,
+                WindowWidth = 1024 * 3 / 2,
+                WindowHeight = 768 * 3 / 2,
                 WindowTitle = "Zanzarah"
             });
             var graphicsDevice = VeldridStartup.CreateGraphicsDevice(window, new GraphicsDeviceOptions

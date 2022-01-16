@@ -6,7 +6,6 @@ using SixLabors.ImageSharp.PixelFormats;
 using zzio.vfs;
 using zzre.materials;
 using zzre.rendering;
-using System.Numerics;
 
 namespace zzre.game.resources
 {
@@ -107,8 +106,6 @@ namespace zzre.game.resources
             if (!bitmap.TryGetSinglePixelSpan(out var totalSpan) || totalSpan.Length != bitmap.Width * bitmap.Height)
                 throw new System.ArgumentException("TileSheets can only be uploaded for contiguous bitmaps");
 
-            AntiBleedingPass(bitmap, totalSpan, isFont);
-
             fixed (Rgba32* src = totalSpan)
             {
                 graphicsDevice.UpdateTexture(texture,
@@ -117,52 +114,6 @@ namespace zzre.game.resources
                     (uint)bitmap.Width, (uint)bitmap.Height - 1, depth: 1,
                     mipLevel: 0,
                     arrayLayer: 0);
-            }
-        }
-
-        private void AntiBleedingPass(Image<Rgba32> bitmap, System.Span<Rgba32> totalSpan, bool isFont)
-        {
-            for (int y = 0; y < bitmap.Height; y++)
-            {
-                for (int x = 0; x < bitmap.Width; x++)
-                {
-                    ref var myself = ref totalSpan[y * bitmap.Width + x];
-                    if (isFont && totalSpan[x].R != 0)
-                        myself.A = 0;
-                    if (myself.A != 0 || (isFont && y == 0))
-                        continue;
-
-                    Vector4 solid = Vector4.Zero;
-                    Vector4 transp = Vector4.Zero;
-                    int solidCount = 0, transpCount = 0;
-                    for (int dy = -1; dy < 2; dy++)
-                    {
-                        for (int dx = -1; dx < 2; dx++)
-                        {
-                            int nx = x + dx, ny = y + dy;
-                            if (nx < 0 || ny < 0 || nx >= bitmap.Width || ny >= bitmap.Height || nx == ny)
-                                continue;
-                            var neighbor = totalSpan[ny * bitmap.Width + nx];
-                            if (neighbor.A == 0)
-                            {
-                                transp += neighbor.ToVector4();
-                                transpCount++;
-                            }
-                            else
-                            {
-                                solid += neighbor.ToVector4();
-                                solidCount++;
-                            }
-                        }
-                    }
-
-                    var newColor = solidCount == 0
-                        ? transp / transpCount * 255f
-                        : solid / solidCount * 255f;
-                    myself.R = (byte)(newColor.X);
-                    myself.G = (byte)(newColor.Y);
-                    myself.B = (byte)(newColor.Z);
-                }
             }
         }
     }
