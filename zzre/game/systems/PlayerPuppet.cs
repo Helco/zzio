@@ -6,6 +6,7 @@ using AnimationState = zzre.game.components.HumanPhysics.AnimationState;
 
 namespace zzre.game.systems
 {
+    [PauseDuringUIScreen]
     public partial class PlayerPuppet : AEntitySetSystem<float>
     {
         private const float MaxFallTime = 0.9f;

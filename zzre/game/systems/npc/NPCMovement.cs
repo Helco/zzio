@@ -9,6 +9,7 @@ using WaypointMode = zzre.game.messages.NPCMoveSystem.Mode;
 
 namespace zzre.game.systems
 {
+    [PauseDuringUIScreen]
     public partial class NPCMovement : AEntitySetSystem<float>
     {
         private const float MinSlerpDistance = 0.5f;

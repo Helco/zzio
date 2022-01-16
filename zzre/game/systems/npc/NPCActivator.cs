@@ -3,6 +3,7 @@ using DefaultEcs.System;
 
 namespace zzre.game.systems
 {
+    [PauseDuringUIScreen]
     public partial class NPCActivator : AEntitySetSystem<float>
     {
         private const float NPCComfortZoneSqr = 2.5f * 2.5f;

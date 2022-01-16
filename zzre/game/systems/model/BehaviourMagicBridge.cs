@@ -4,6 +4,7 @@ using DefaultEcs.System;
 
 namespace zzre.game.systems
 {
+    [PauseDuringUIScreen]
     public partial class BehaviourMagicBridge : AEntitySetSystem<float>
     {
         private const float Speed = 0.6f;

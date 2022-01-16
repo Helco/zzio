@@ -6,6 +6,7 @@ using RotationMode = zzre.game.components.NPCLookAtPlayer.Mode;
 
 namespace zzre.game.systems
 {
+    [PauseDuringUIScreen]
     public partial class NPCLookAtPlayer : AEntitySetSystem<float>
     {
         private const float SlerpCurvature = 150f;

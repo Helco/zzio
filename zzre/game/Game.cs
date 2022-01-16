@@ -56,10 +56,10 @@ namespace zzre.game
             AddTag(new resources.Actor(this));
             AddTag(new resources.SkeletalAnimation(this));
 
-            var flyCameraSystem = new systems.FlyCamera(this);
-            var owCameraSystem = new systems.OverworldCamera(this);
-            owCameraSystem.IsEnabled = true;
-            updateSystems = new SequentialSystem<float>(
+            ISystem<float> activeCameraSystem;
+            var updateSystems = new systems.RecordingSequentialSystem<float>(this);
+            this.updateSystems = updateSystems;
+            updateSystems.Add(
                 new systems.TriggerActivation(this),
                 new systems.ModelLoader(this),
                 new systems.PlayerControls(this),
@@ -88,9 +88,11 @@ namespace zzre.game
                 new systems.NPCLookAtPlayer(this),
                 new systems.NPCLookAtTrigger(this),
                 new systems.NonFairyAnimation(this),
-                flyCameraSystem,
-                owCameraSystem,
+                new systems.FlyCamera(this),
+                activeCameraSystem = new systems.OverworldCamera(this),
                 new systems.Reaper(this));
+            updateSystems.Add(new systems.PauseDuringUIScreen(this, updateSystems.Systems));
+            activeCameraSystem.IsEnabled = true;
 
             syncedLocation = new systems.SyncedLocation(this);
             renderSystems = new SequentialSystem<CommandList>(
