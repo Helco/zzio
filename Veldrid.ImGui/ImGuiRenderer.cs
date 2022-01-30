@@ -170,7 +170,7 @@ namespace Veldrid
                 _projMatrixBuffer,
                 gd.PointSampler));
 
-            RecreateFontDeviceTexture(gd);
+            //RecreateFontDeviceTexture(gd);
         }
 
         /// <summary>
