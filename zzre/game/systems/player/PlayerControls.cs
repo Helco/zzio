@@ -23,8 +23,11 @@ namespace zzre.game.systems
         private bool jumpChanged;
         private components.PlayerControls nextControls;
 
+        public bool IsLocked => lockTimer > 0;
+
         public PlayerControls(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>())
         {
+            diContainer.AddTag(this);
             World.SetMaxCapacity<components.PlayerControls>(1);
             lockMessageSubscription = World.Subscribe<messages.LockPlayerControl>(HandleLockPlayerControl);
             ui = diContainer.GetTag<UI>();
@@ -46,7 +49,7 @@ namespace zzre.game.systems
         protected override void Update(float elapsedTime, ref components.PlayerControls component)
         {
             lockTimer = Math.Max(0f, lockTimer - elapsedTime);
-            if (lockTimer > 0)
+            if (IsLocked)
             {
                 component = default;
                 return;
@@ -81,7 +84,7 @@ namespace zzre.game.systems
                 case JumpKey: HandleJump(isDown); break;
             }
 
-            if (isDown && lockTimer <= 0f)
+            if (isDown && !IsLocked)
             {
                 switch(key)
                 {

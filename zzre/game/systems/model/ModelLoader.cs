@@ -97,7 +97,8 @@ namespace zzre.game.systems
             }
         }
 
-        private static void LoadMaterialsFor(DefaultEcs.Entity entity, FOModelRenderType renderType, IColor color, SurfaceProperties surfaceProps)
+        // Used by e.g. NPCTrigger
+        internal static void LoadMaterialsFor(DefaultEcs.Entity entity, FOModelRenderType renderType, IColor color, SurfaceProperties surfaceProps)
         {
             var clumpBuffers = entity.Get<ClumpBuffers>();
             entity.Set(components.Visibility.Visible);
