@@ -116,7 +116,7 @@ namespace zzre.imgui
                 EndTooltip();
             }
             NextColumn();
-            Text(texture?.Name);
+            Text(texture?.Name ?? "");
             Text($"{texture?.Width}x{texture?.Height}");
             Text($"{texture?.Format}");
             Columns(1);

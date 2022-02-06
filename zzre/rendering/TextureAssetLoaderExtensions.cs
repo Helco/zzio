@@ -11,6 +11,12 @@ namespace zzre.rendering
 {
     public static class TextureAssetLoaderExtensions
     {
+        // yeeess funatics, just don't provide the textures you use
+        private static readonly IReadOnlySet<string> ExceptionTextures = new HashSet<string>()
+        {
+            "marker"
+        };
+
         public static FilePath GetTexturePathFromModel(this IAssetLoader<Texture> _, FilePath modelPath)
         {
             var modelDirPartI = modelPath.Parts.IndexOf(p => p.ToLowerInvariant() == "models");
@@ -58,6 +64,9 @@ namespace zzre.rendering
 
         public static Texture LoadTexture(this IAssetLoader<Texture> loader, IEnumerable<FilePath> basePaths, string texName)
         {
+            if (ExceptionTextures.Contains(texName))
+                return loader.CreateExceptionTexture(texName);
+
             var resourcePool = loader.DIContainer.GetTag<IResourcePool>();
             var texture = basePaths
                 .Select(basePath => basePath.Combine(texName))
@@ -73,6 +82,16 @@ namespace zzre.rendering
             return texture;
         }
 
+        private static Texture CreateExceptionTexture(this IAssetLoader<Texture> loader, string name)
+        {
+            var device = loader.DIContainer.GetTag<GraphicsDevice>();
+            var texture = device.ResourceFactory.CreateTexture(
+                new TextureDescription(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D, TextureSampleCount.Count1));
+            device.UpdateTexture(texture, new[] { 0xFFFFFFFF }, 0, 0, 0, 1, 1, 1, 0, 0);
+            texture.Name = $"{name} (white)";
+            return texture;
+        }
+
         private static SamplerAddressMode ConvertAddressMode(TextureAddressingMode mode, SamplerAddressMode? altMode = null) => mode switch
         {
             TextureAddressingMode.Wrap => SamplerAddressMode.Wrap,
@@ -84,6 +103,7 @@ namespace zzre.rendering
             TextureAddressingMode.Unknown => throw new NotImplementedException(),
             _ => throw new NotImplementedException(),
         };
+
 
         private static SamplerFilter ConvertFilterMode(TextureFilterMode mode) => mode switch
         {

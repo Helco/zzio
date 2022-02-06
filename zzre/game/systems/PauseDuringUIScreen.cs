@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using DefaultEcs.System;
-using zzre.game.messages.ui;
 
 namespace zzre.game.systems
 {
@@ -24,13 +23,13 @@ namespace zzre.game.systems
             closeSubscription = ecsWorld.Subscribe<messages.ui.GameScreenClosed>(HandleClosed);
         }
 
-        private void HandleOpened(in GameScreenOpened message)
+        private void HandleOpened(in messages.ui.GameScreenOpened message)
         {
             foreach (var system in systems)
                 system.IsEnabled = false;
         }
 
-        private void HandleClosed(in GameScreenClosed message)
+        private void HandleClosed(in messages.ui.GameScreenClosed message)
         {
             foreach (var system in systems)
                 system.IsEnabled = true;
