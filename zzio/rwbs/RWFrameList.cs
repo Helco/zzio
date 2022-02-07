@@ -5,7 +5,7 @@ using System.Numerics;
 namespace zzio.rwbs
 {
     [Serializable]
-    public struct Frame
+    public unsafe struct Frame
     {
         public float[] rotMatrix;
         public Vector3 position;
