@@ -4,7 +4,6 @@ using Veldrid;
 
 namespace zzre.game.systems
 {
-    [PauseDuringUIScreen]
     public class PlayerControls : AComponentSystem<float, components.PlayerControls>
     {
         private const float JumpLockDuration = 0.8f;

@@ -68,6 +68,9 @@ namespace zzre.game.systems
             dialogEntityRecord.Set(new components.DialogNPC(message.NpcEntity));
             dialogEntityRecord.Set(new components.ScriptExecution(GetScriptSource(message)));
 
+            var playerRecord = recorder.Record(game.PlayerEntity);
+            playerRecord.Set(game.PlayerEntity.Get<components.NonFairyAnimation>() with { Next = AnimationType.Idle0 });
+
             World.Publish(default(messages.ui.GameScreenOpened));
             World.Publish(messages.LockPlayerControl.Forever);
         }
@@ -265,8 +268,9 @@ namespace zzre.game.systems
 
         private void Delay(DefaultEcs.Entity entity, int duration)
         {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+            var dialogRecord = recorder.Record(entity);
+            dialogRecord.Set(new components.DialogDelay(duration * 0.1f));
+            dialogRecord.Set(components.DialogState.Delay);
         }
 
         private void RemoveWizforms(DefaultEcs.Entity entity)

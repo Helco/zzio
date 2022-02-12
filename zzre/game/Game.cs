@@ -89,6 +89,7 @@ namespace zzre.game
                 new systems.NPCLookAtTrigger(this),
                 new systems.PlayerTriggers(this),
                 new systems.DialogScript(this),
+                new systems.DialogDelay(this),
                 new systems.NonFairyAnimation(this),
                 new systems.FlyCamera(this),
                 activeCameraSystem = new systems.OverworldCamera(this),

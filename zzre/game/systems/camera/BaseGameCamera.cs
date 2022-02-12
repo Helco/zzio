@@ -37,7 +37,9 @@ namespace zzre.game.systems
         public override void Update(float elapsedTime)
         {
             lockTimer = Math.Max(0f, lockTimer - elapsedTime);
-            if (!IsEnabled || lockTimer > 0f)
+            if (lockTimer > 0f)
+                nextMove = Vector2.Zero;
+            if (!IsEnabled)
                 return;
             Update(elapsedTime, nextMove);
             nextMove = Vector2.Zero;
