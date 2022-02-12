@@ -50,7 +50,7 @@ namespace zzre.game.systems
             Continue(entity, ref execution);
         }
 
-        // TODO: Missing NPC script instructions
+        // TODO: Missing NPC script NPC instructions
 
         private void SetModel(DefaultEcs.Entity entity, string name)
         {
@@ -78,17 +78,17 @@ namespace zzre.game.systems
 
         private void SetCamera(DefaultEcs.Entity entity, int triggerArg)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"SetCamera\"");
+            Console.WriteLine("Warning: unimplemented NPC instruction \"SetCamera\"");
         }
 
         private void Wizform(DefaultEcs.Entity entity, int atIndex, int fairyId, int level)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"Wizform\"");
+            Console.WriteLine("Warning: unimplemented NPC instruction \"Wizform\"");
         }
 
         private void Spell(DefaultEcs.Entity entity, int fairyI, int slotI, int spellId)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"Spell\"");
+            Console.WriteLine("Warning: unimplemented NPC instruction \"Spell\"");
         }
 
         private void ChangeWaypoint(DefaultEcs.Entity entity, int fromWpId, int toWpId)
@@ -114,7 +114,7 @@ namespace zzre.game.systems
 
         private void RemoveNPC(DefaultEcs.Entity entity)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"RemoveNPC\"");
+            Console.WriteLine("Warning: unimplemented NPC instruction \"RemoveNPC\"");
         }
 
         private bool IfTriggerIsActive(DefaultEcs.Entity entity, int triggerI)
@@ -139,7 +139,7 @@ namespace zzre.game.systems
 
         private void LockUserInput(DefaultEcs.Entity entity, int isLocked)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"LockUserInput\"");
+            Console.WriteLine("Warning: unimplemented NPC instruction \"LockUserInput\"");
         }
 
         private void PlayAnimation(DefaultEcs.Entity entity, zzio.AnimationType animationType, int intDuration)
@@ -157,7 +157,7 @@ namespace zzre.game.systems
 
         private void StartPrelude(DefaultEcs.Entity entity)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"StartPrelude\"");
+            World.Publish(new messages.StartDialog(entity, DialogCause.Trigger));
         }
 
         private void SetNPCType(DefaultEcs.Entity entity, components.NPCType type)
@@ -178,7 +178,7 @@ namespace zzre.game.systems
         private void DeployNPCAtTrigger(DefaultEcs.Entity entity, UID uid)
         {
             // In the original game, NPC scripts cannot execute this
-            Console.WriteLine("Warning: unimplemented instruction \"DeployNPCAtTrigger\"");
+            Console.WriteLine("Warning: unimplemented NPC instruction \"DeployNPCAtTrigger\"");
         }
 
         private bool IfCloseToWaypoint(DefaultEcs.Entity entity, int waypointI)
@@ -194,12 +194,12 @@ namespace zzre.game.systems
 
         private void SetNPCModifier(DefaultEcs.Entity entity, int scene, int triggerI, int value)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"SetNPCModifier\"");
+            Console.WriteLine("Warning: unimplemented NPC instruction \"SetNPCModifier\"");
         }
 
         private void DefaultWizform(DefaultEcs.Entity entity, int fairyId, int groupOrSlotI, int level)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"DefaultWizform\"");
+            Console.WriteLine("Warning: unimplemented NPC instruction \"DefaultWizform\"");
         }
 
         private void Idle(DefaultEcs.Entity entity)
@@ -225,12 +225,12 @@ namespace zzre.game.systems
 
         private void CreateDynamicItems(DefaultEcs.Entity entity, int itemId, int count, int triggerI)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"CreateDynamicItems\"");
+            Console.WriteLine("Warning: unimplemented NPC instruction \"CreateDynamicItems\"");
         }
 
         private void Revive(DefaultEcs.Entity entity)
         {
-            Console.WriteLine("Warning: unimplemented instruction \"Revive\"");
+            Console.WriteLine("Warning: unimplemented NPC instruction \"Revive\"");
         }
 
         private void LookAtTrigger(DefaultEcs.Entity entity, int intDuration, int triggerI)

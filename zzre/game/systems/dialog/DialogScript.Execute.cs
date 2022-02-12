@@ -212,11 +212,11 @@ namespace zzre.game.systems
                     triggerI = int.Parse(args[0]);
                     switch (args[1])
                     {
-                        case "0": DeployMeAtTrigger(entity, triggerI); break;
-                        case "1": DeployPlayerAtTrigger(entity, triggerI); break;
+                        case "0": DeployMeAtTrigger(triggerI); break;
+                        case "1": DeployPlayerAtTrigger(triggerI); break;
                         default:
                             uid = UID.Parse(args[1]);
-                            DeployNPCAtTrigger(entity, uid);
+                            DeployNPCAtTrigger(triggerI, uid);
                             break;
                     }
                     return OpReturn.Continue;
