@@ -9,10 +9,7 @@ namespace zzre.game.systems
         private const float MaxMouseMove = 20f;
 
         protected readonly WorldCollider worldCollider;
-        protected Location playerLocation => playerLocationLazy.Value;
-
-        private IDisposable lockPlayerSubscription;
-        private readonly Lazy<Location> playerLocationLazy;
+        private readonly IDisposable lockPlayerSubscription;
         private Vector2 nextMove;
         private float lockTimer;
 
@@ -20,9 +17,7 @@ namespace zzre.game.systems
         {
             lockPlayerSubscription = world.Subscribe<messages.LockPlayerControl>(HandleLockPlayerControl);
             worldCollider = diContainer.GetTag<WorldCollider>();
-            var game = diContainer.GetTag<Game>();
             zzContainer.OnMouseMove += HandleMouseMove;
-            playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         }
 
         public override void Dispose()

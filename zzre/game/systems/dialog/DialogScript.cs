@@ -79,6 +79,7 @@ namespace zzre.game.systems
         {
             World.Publish(default(messages.ui.GameScreenClosed));
             World.Publish(messages.LockPlayerControl.Unlock);
+            World.Publish(messages.SetCameraMode.Overworld);
         }
 
         [WithPredicate]
@@ -109,10 +110,11 @@ namespace zzre.game.systems
             Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
         }
 
-        private void SetCamera(DefaultEcs.Entity entity, int triggerArg)
+        private void SetCamera(DefaultEcs.Entity entity, int cameraMode)
         {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+            // TODO: Add NpcCamera for modes 2100-2105 and 2110-2115
+            // TODO: Add CreatureCamera for modes 1000-1007 and 2000-2007
+            World.Publish(new messages.SetCameraMode(cameraMode, NPCEntity));
         }
 
         private void ChangeWaypoint(DefaultEcs.Entity entity, int fromWpId, int toWpId)

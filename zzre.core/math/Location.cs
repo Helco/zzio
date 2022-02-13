@@ -71,6 +71,9 @@ namespace zzre
         public void LookAt(Vector3 dest, bool isLocalSpace = false) =>
             LookIn(dest - (isLocalSpace ? LocalPosition : GlobalPosition), isLocalSpace);
 
+        public void LookNotAt(Vector3 dest, bool isLocalSpace = false) => // useful for camera which looks backwards
+            LookIn((isLocalSpace ? LocalPosition : GlobalPosition) - dest, isLocalSpace);
+
         public void LookIn(Vector3 dir, bool isLocalSpace = false)
         {
             if (MathEx.CmpZero(dir.LengthSquared()))

@@ -1,4 +1,5 @@
-﻿using DefaultEcs.System;
+﻿using System;
+using DefaultEcs.System;
 using zzre.rendering;
 
 namespace zzre.game.systems
@@ -8,6 +9,8 @@ namespace zzre.game.systems
         protected readonly IZanzarahContainer zzContainer;
         protected readonly Camera camera;
         protected readonly DefaultEcs.World world;
+        private readonly Lazy<Location> playerLocationLazy;
+        protected Location playerLocation => playerLocationLazy.Value;
 
         private bool isEnabled;
         public bool IsEnabled
@@ -18,13 +21,13 @@ namespace zzre.game.systems
                 if (world.Has<components.ActiveCamera>())
                 {
                     ref readonly var activeCamera = ref world.Get<components.ActiveCamera>();
-                    if (value)
-                        activeCamera.System.isEnabled = activeCamera.System == this;
-                    else
-                        world.Remove<components.ActiveCamera>();
+                    if (activeCamera.System != this)
+                        activeCamera.System.isEnabled = false;
                 }
-                else
+                if (value)
                     world.Set(new components.ActiveCamera(this));
+                else
+                    world.Remove<components.ActiveCamera>();
                 isEnabled = value;
             }
         }
@@ -35,6 +38,9 @@ namespace zzre.game.systems
             world.SetMaxCapacity<components.ActiveCamera>(1);
             zzContainer = diContainer.GetTag<IZanzarahContainer>();
             camera = diContainer.GetTag<Camera>();
+
+            var game = diContainer.GetTag<Game>();
+            playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         }
 
         public virtual void Dispose()

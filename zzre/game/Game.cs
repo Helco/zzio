@@ -93,6 +93,7 @@ namespace zzre.game
                 new systems.NonFairyAnimation(this),
                 new systems.FlyCamera(this),
                 activeCameraSystem = new systems.OverworldCamera(this),
+                new systems.TriggerCamera(this),
                 new systems.Reaper(this));
             updateSystems.Add(new systems.PauseDuringUIScreen(this, updateSystems.Systems));
             activeCameraSystem.IsEnabled = true;

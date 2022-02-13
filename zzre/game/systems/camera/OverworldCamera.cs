@@ -21,6 +21,7 @@ namespace zzre.game.systems
         private const float NearHeightDistance = 0.5f;
         private const float NearHeightFactor = 1f / 5f;
 
+        private readonly IDisposable setCameraModeDisposable;
         private readonly float maxCameraDistance;
         private float currentVerAngle;
         private float curCamDistance;
@@ -32,6 +33,20 @@ namespace zzre.game.systems
                 ? MaxCamDistInterior
                 : MaxCamDistExterior;
             curCamDistance = maxCameraDistance;
+
+            setCameraModeDisposable = world.Subscribe<messages.SetCameraMode>(HandleSetCameraMode);
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            setCameraModeDisposable.Dispose();
+        }
+
+        private void HandleSetCameraMode(in messages.SetCameraMode mode)
+        {
+            if (mode.Mode == -1)
+                IsEnabled = true;
         }
 
         protected override void Update(float elapsedTime, Vector2 delta)
