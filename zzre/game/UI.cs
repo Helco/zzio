@@ -60,6 +60,7 @@ namespace zzre.game
                 new systems.ui.Label(this),
                 new systems.ui.Tooltip(this),
                 new systems.ui.CorrectRenderOrder(this),
+                new systems.ui.Fade(this),
                 new systems.Reaper(this),
                 new systems.ParentReaper(this));
 

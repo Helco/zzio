@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Numerics;
 using DefaultEcs.Command;
 using DefaultEcs.System;
 using zzio;
@@ -28,6 +29,9 @@ namespace zzre.game.systems
             ChestPuzzle = 0,
             ElfGame
         }
+
+        private const int UpperLetterboxHeight = 20;
+        private const int LowerLetterboxHeight = 100;
 
         private readonly UI ui;
         private readonly Scene scene;
@@ -65,14 +69,41 @@ namespace zzre.game.systems
             dialogEntity = World.CreateEntity();
             var dialogEntityRecord = RecordDialogEntity();
             dialogEntityRecord.Set(components.DialogState.NextScriptOp);
-            dialogEntityRecord.Set(new components.DialogNPC(message.NpcEntity));
             dialogEntityRecord.Set(new components.ScriptExecution(GetScriptSource(message)));
+            dialogEntityRecord.Set(new components.DialogNPC(message.NpcEntity));
+            dialogEntityRecord.Set(new components.DialogCommonUI
+            {
+                Letterbox = CreateLetterbox()
+            });
 
             var playerRecord = recorder.Record(game.PlayerEntity);
             playerRecord.Set(game.PlayerEntity.Get<components.NonFairyAnimation>() with { Next = AnimationType.Idle0 });
 
             World.Publish(default(messages.ui.GameScreenOpened));
             World.Publish(messages.LockPlayerControl.Forever);
+        }
+
+        private DefaultEcs.Entity CreateLetterbox()
+        {
+            var uiWorld = ui.GetTag<DefaultEcs.World>();
+            var letterboxEntity = uiWorld.CreateEntity();
+            letterboxEntity.Set(new components.Parent(dialogEntity));
+            letterboxEntity.Set(components.Visibility.Visible);
+            letterboxEntity.Set(new components.ui.RenderOrder(0));
+            letterboxEntity.Set(components.ui.UIOffset.ScreenUpperLeft);
+            letterboxEntity.Set(null as materials.UIMaterial);
+            letterboxEntity.Set(IColor.Clear);
+            letterboxEntity.Set(components.ui.Fade.StdIn);
+            letterboxEntity.Set(new components.ui.Tile[]
+            {
+                new(-1, Rect.FromTopLeftSize(
+                    Vector2.Zero,
+                    ui.LogicalScreen.Size with { Y = UpperLetterboxHeight })),
+                new(-1, Rect.FromTopLeftSize(
+                    Vector2.UnitY * (ui.LogicalScreen.Size.Y - LowerLetterboxHeight),
+                    ui.LogicalScreen.Size with { Y = LowerLetterboxHeight }))
+            });
+            return letterboxEntity;
         }
 
         private void HandleDialogStateRemoved(in DefaultEcs.Entity _, in components.DialogState __)
@@ -89,7 +120,7 @@ namespace zzre.game.systems
         private void Update(in DefaultEcs.Entity entity, ref components.ScriptExecution execution)
         {
             if (!Continue(entity, ref execution))
-                recorder.Record(dialogEntity).Dispose();
+                dialogEntity.Set(components.DialogState.FadeOut);
         }
 
         private void Say(DefaultEcs.Entity entity, UID uid, bool silent)
