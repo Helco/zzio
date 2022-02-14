@@ -57,6 +57,7 @@ namespace zzre.game
                 new systems.ui.ScrDeck(this),
                 new systems.ui.ButtonTiles(this),
                 new systems.ui.Slider(this),
+                new systems.ui.AnimatedLabel(this),
                 new systems.ui.Label(this),
                 new systems.ui.Tooltip(this),
                 new systems.ui.CorrectRenderOrder(this),

@@ -63,6 +63,43 @@ namespace zzre.rendering
             .Where(tileI => tileI >= 0 && tileI < pixelSizes.Length)
             .Sum(tileI => pixelSizes[tileI].X + CharSpacing);
 
+        private static readonly char[] LineWrappers = new[] { ' ', '\n' };
+        public string WrapLines(string text, float maxWidth)
+        {
+            var newText = text.ToCharArray();
+            float spaceWidth = pixelSizes.First().X;
+            float curLineWidth = 0;
+            int nonSpaceI = text.IndexOfAnyNot(LineWrappers);
+            int lastSpaceI = 0;
+            while(nonSpaceI >= 0)
+            {
+                int spaceI = text.IndexOfAny(LineWrappers, nonSpaceI);
+                float wordWidth = spaceI < 0 ? 0f : GetUnformattedWidth(text[nonSpaceI..spaceI]);
+                wordWidth += spaceWidth * (nonSpaceI - lastSpaceI);
+
+                if (spaceI < 0 || text[spaceI] != '\n')
+                {
+                    if (curLineWidth + wordWidth <= maxWidth)
+                        curLineWidth += wordWidth;
+                    else
+                    {
+                        if (wordWidth > maxWidth && spaceI >= 0)
+                            newText[spaceI] = '\n';
+
+                        if (lastSpaceI > 0)
+                            newText[lastSpaceI] = '\n';
+
+                        curLineWidth = wordWidth;
+                    }
+                }
+                else
+                    curLineWidth = 0f;
+
+                nonSpaceI = text.IndexOfAnyNot(LineWrappers, spaceI);
+            }
+            return new string(newText);
+        }
+
         public IEnumerator<Rect> GetEnumerator() => ((IEnumerable<Rect>)tiles).GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => tiles.GetEnumerator();
     }

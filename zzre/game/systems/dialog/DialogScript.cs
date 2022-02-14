@@ -5,6 +5,7 @@ using DefaultEcs.Command;
 using DefaultEcs.System;
 using zzio;
 using zzio.scn;
+using zzio.db;
 
 namespace zzre.game.systems
 {
@@ -32,7 +33,9 @@ namespace zzre.game.systems
 
         private const int UpperLetterboxHeight = 20;
         private const int LowerLetterboxHeight = 100;
+        private const int SegmentsPerAddSay = 8;
 
+        private readonly MappedDB db;
         private readonly UI ui;
         private readonly Scene scene;
         private readonly Game game;
@@ -47,6 +50,7 @@ namespace zzre.game.systems
         public DialogScript(ITagContainer diContainer) : base(diContainer, CreateEntityContainer)
         {
             World.SetMaxCapacity<components.DialogState>(1);
+            db = diContainer.GetTag<MappedDB>();
             ui = diContainer.GetTag<UI>();
             scene = diContainer.GetTag<Scene>();
             game = diContainer.GetTag<Game>();
@@ -73,7 +77,8 @@ namespace zzre.game.systems
             dialogEntityRecord.Set(new components.DialogNPC(message.NpcEntity));
             dialogEntityRecord.Set(new components.DialogCommonUI
             {
-                Letterbox = CreateLetterbox()
+                Letterbox = CreateLetterbox(),
+                SayLabel = CreateSayLabel()
             });
 
             var playerRecord = recorder.Record(game.PlayerEntity);
@@ -89,7 +94,7 @@ namespace zzre.game.systems
             var letterboxEntity = uiWorld.CreateEntity();
             letterboxEntity.Set(new components.Parent(dialogEntity));
             letterboxEntity.Set(components.Visibility.Visible);
-            letterboxEntity.Set(new components.ui.RenderOrder(0));
+            letterboxEntity.Set(new components.ui.RenderOrder(1));
             letterboxEntity.Set(components.ui.UIOffset.ScreenUpperLeft);
             letterboxEntity.Set(null as materials.UIMaterial);
             letterboxEntity.Set(IColor.Clear);
@@ -104,6 +109,16 @@ namespace zzre.game.systems
                     ui.LogicalScreen.Size with { Y = LowerLetterboxHeight }))
             });
             return letterboxEntity;
+        }
+
+        private DefaultEcs.Entity CreateSayLabel()
+        {
+            return ui.Preload.CreateLabel(
+                dialogEntity,
+                new Vector2(25, ui.LogicalScreen.Size.Y - 90),
+                text: "",
+                ui.Preload.Fnt003,
+                offset: components.ui.UIOffset.ScreenUpperLeft);
         }
 
         private void HandleDialogStateRemoved(in DefaultEcs.Entity _, in components.DialogState __)
@@ -125,8 +140,13 @@ namespace zzre.game.systems
 
         private void Say(DefaultEcs.Entity entity, UID uid, bool silent)
         {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+            var sayLabel = entity.Get<components.DialogCommonUI>().SayLabel;
+            var tileSheet = sayLabel.Get<rendering.TileSheet>();
+            var text = db.GetDialog(uid).Text;
+            text = tileSheet.WrapLines(text, ui.LogicalScreen.Size.X - 60);
+            sayLabel.Set(new components.ui.AnimatedLabel(text, SegmentsPerAddSay, isBlinking: !silent));
+
+            // TODO: Play voice sample on say instruction
         }
 
         private void Choice(DefaultEcs.Entity entity, int targetLabel, UID uid)
