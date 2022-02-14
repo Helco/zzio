@@ -47,6 +47,8 @@ namespace zzre.game.systems
             foreach (var trigger in scene.triggers.Where(t => t.type == TriggerType.NpcStartpoint && t.ii2 < MaxEnabledII2))
             {
                 var entity = World.CreateEntity();
+                entity.Set(trigger);
+
                 var location = new Location();
                 location.Parent = World.Get<Location>();
                 location.LocalPosition = trigger.pos;

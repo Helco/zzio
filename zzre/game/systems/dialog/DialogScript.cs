@@ -188,8 +188,25 @@ namespace zzre.game.systems
 
         private void RemoveNpc(DefaultEcs.Entity entity)
         {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+            var npcEntity = NPCEntity;
+            npcEntity.Set<components.Dead>();
+            var npcTrigger = npcEntity.Get<Trigger>();
+            if (npcTrigger.type != TriggerType.NpcAttackPosition || npcTrigger.ii3 == 100)
+                World.Publish(new GSModDisableTrigger(npcTrigger.idx));
+            else
+            {
+                var triggerEntity = World.GetEntities()
+                    .With((in Trigger t) => t == npcTrigger)
+                    .AsEnumerable()
+                    .FirstOrDefault();
+                if (triggerEntity.IsAlive)
+                    triggerEntity.Set<components.Disabled>();
+            }
+
+            ref var playerPuppet = ref game.PlayerEntity.Get<components.PuppetActorMovement>();
+            playerPuppet.TargetDirection = MathEx.SafeNormalize(playerPuppet.TargetDirection with { Y = 0f });
+
+            entity.Set(components.DialogState.FadeOut);
         }
 
         private void CatchWizform(DefaultEcs.Entity entity)

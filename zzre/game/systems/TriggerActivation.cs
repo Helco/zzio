@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Numerics;
 using DefaultEcs.System;
+using zzio;
 using zzio.scn;
 
 namespace zzre.game.systems
 {
+    [Without(typeof(components.Disabled))]
     public partial class TriggerActivation : AEntitySetSystem<float>
     {
         private readonly float MaxLookingDistSqr = 0.81f;
 
         private readonly IDisposable sceneLoadedSubscription;
+        private readonly IDisposable disableTriggerSubscription;
         private readonly Scene scene;
         private Location playerLocation => playerLocationLazy.Value;
         private readonly Lazy<Location> playerLocationLazy;
@@ -20,16 +23,20 @@ namespace zzre.game.systems
             scene = diContainer.GetTag<Scene>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
             sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
+            disableTriggerSubscription = World.Subscribe<zzio.GSModDisableTrigger>(HandleDisableTrigger);
         }
 
         public override void Dispose()
         {
             base.Dispose();
             sceneLoadedSubscription?.Dispose();
+            disableTriggerSubscription?.Dispose();
         }
 
         private void HandleSceneLoaded(in messages.SceneLoaded msg)
         {
+            // TODO: TriggerActivation creates double triggers for e.g. NPCs
+
             foreach (var trigger in scene.triggers)
             {
                 var entity = World.CreateEntity();
@@ -39,6 +46,19 @@ namespace zzre.game.systems
                 location.LocalRotation = trigger.dir.ToZZRotation();
                 entity.Set(location);
                 entity.Set(trigger);
+            }
+        }
+
+        private void HandleDisableTrigger(in GSModDisableTrigger message)
+        {
+            var triggers = World.GetComponents<Trigger>();
+            foreach (ref readonly var entity in Set.GetEntities())
+            {
+                if (triggers[entity].idx == message.TriggerId)
+                {
+                    entity.Set<components.Disabled>();
+                    break;
+                }
             }
         }
 
