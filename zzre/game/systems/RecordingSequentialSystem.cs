@@ -36,10 +36,10 @@ namespace zzre.game.systems
         {
             if (!IsEnabled)
                 return;
+            recorder.Execute();
 
             foreach (var system in Systems)
             {
-                recorder.Clear();
                 system.Update(state);
                 recorder.Execute();
             }
