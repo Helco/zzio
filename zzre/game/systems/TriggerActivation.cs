@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
 using zzio;
@@ -35,9 +36,13 @@ namespace zzre.game.systems
 
         private void HandleSceneLoaded(in messages.SceneLoaded msg)
         {
-            // TODO: TriggerActivation creates double triggers for e.g. NPCs
+            var triggersWithEntities = World.GetEntities()
+                .With<Trigger>()
+                .AsEnumerable()
+                .Select(e => e.Get<Trigger>())
+                .ToHashSet();
 
-            foreach (var trigger in scene.triggers)
+            foreach (var trigger in scene.triggers.Except(triggersWithEntities))
             {
                 var entity = World.CreateEntity();
                 var location = new Location();
@@ -52,7 +57,10 @@ namespace zzre.game.systems
         private void HandleDisableTrigger(in GSModDisableTrigger message)
         {
             var triggers = World.GetComponents<Trigger>();
-            foreach (ref readonly var entity in Set.GetEntities())
+            var triggerEntities = World.GetEntities()
+                .With<Trigger>()
+                .AsEnumerable();
+            foreach (var entity in triggerEntities)
             {
                 if (triggers[entity].idx == message.TriggerId)
                 {
@@ -61,6 +69,9 @@ namespace zzre.game.systems
                 }
             }
         }
+
+        [WithPredicate]
+        private bool IsActivatableTrigger(in Trigger trigger) => trigger.colliderType != TriggerColliderType.Point;
 
         [Update]
         private void Update(

@@ -60,7 +60,6 @@ namespace zzre.game
             var updateSystems = new systems.RecordingSequentialSystem<float>(this);
             this.updateSystems = updateSystems;
             updateSystems.Add(
-                new systems.TriggerActivation(this),
                 new systems.ModelLoader(this),
                 new systems.PlayerControls(this),
                 new systems.Animal(this),
@@ -87,6 +86,7 @@ namespace zzre.game
                 new systems.NPCIdle(this),
                 new systems.NPCLookAtPlayer(this),
                 new systems.NPCLookAtTrigger(this),
+                new systems.TriggerActivation(this),
                 new systems.PlayerTriggers(this),
                 new systems.DialogScript(this),
                 new systems.DialogDelay(this),
