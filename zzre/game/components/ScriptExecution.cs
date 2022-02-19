@@ -17,7 +17,7 @@ namespace zzre.game.components
         {
             Instructions = script
                 .Split("\n")
-                .Where(s => s.Trim().Length > 0 && !s.StartsWith("#"))
+                .Where(s => s.Trim().Length > 0 && !s.StartsWith("//"))
                 .Select(s => new RawInstruction(s))
                 .Select(Compile)
                 .ToArray();

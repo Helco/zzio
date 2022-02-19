@@ -30,20 +30,20 @@ delay.10
 npcWizFormEscapes";
 
         private const string DefaultCaughtScript = @"
-# Do you want to catch this fairy - Yes/no
+// Do you want to catch this fairy - Yes/no
 say.2627D615.1
 choice.0.B2153621
 choice.1.2F5B3621
 waitForUser
 
-# User chose Yes
+// User chose Yes
 label.0
 removePlayerCards.1.0.ITEM
 catchWizform
 waitForUser
 exit
 
-# User chose No
+// User chose No
 label.1
 npcWizFormEscapes
 waitForUser
