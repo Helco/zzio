@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
 using Veldrid;
@@ -91,6 +92,7 @@ namespace zzre.game
                 new systems.DialogScript(this),
                 new systems.DialogDelay(this),
                 new systems.DialogFadeOut(this),
+                new systems.DialogWaitForSayString(this),
                 new systems.NonFairyAnimation(this),
                 new systems.FlyCamera(this),
                 activeCameraSystem = new systems.OverworldCamera(this),
@@ -136,6 +138,11 @@ namespace zzre.game
             PlayerEntity.Set(new Inventory(this, savegame));
 
             ecsWorld.Publish(new messages.SceneLoaded(savegame.entryId));
+
+            ecsWorld.GetEntities()
+                .With((in Trigger t) => t.idx == 88)
+                .AsEnumerable()
+                .First().Dispose();
         }
 
         protected override void DisposeManaged()

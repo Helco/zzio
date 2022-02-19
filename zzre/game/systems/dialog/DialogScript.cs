@@ -157,8 +157,7 @@ namespace zzre.game.systems
 
         private void WaitForUser(DefaultEcs.Entity entity)
         {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+            dialogEntity.Set(components.DialogState.WaitForSayString);
         }
 
         private void SetCamera(DefaultEcs.Entity entity, int cameraMode)
@@ -279,12 +278,6 @@ namespace zzre.game.systems
         }
 
         private void ModifyTrigger(DefaultEcs.Entity entity, int enableTrigger, int id, int triggerI)
-        {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
-        }
-
-        private void PlayAnimation(DefaultEcs.Entity entity, AnimationType animation)
         {
             var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
             Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
@@ -473,10 +466,14 @@ namespace zzre.game.systems
             Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
         }
 
+        private void PlayAnimation(DefaultEcs.Entity entity, AnimationType animation)
+        {
+            NPCEntity.Get<components.NonFairyAnimation>().Next = animation;
+        }
+
         private void PlayPlayerAnimation(DefaultEcs.Entity entity, AnimationType animation)
         {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+            game.PlayerEntity.Get<components.NonFairyAnimation>().Next = animation;
         }
 
         private void PlayAmyVoice(string v)

@@ -5,8 +5,8 @@ namespace zzre.game.components.ui
     public struct AnimatedLabel
     {
         public readonly string FullText;
-        public readonly int SegmentsPerAdd;
         public readonly bool IsBlinking;
+        public int SegmentsPerAdd;
         public int NextCharI;
         public int NextBlinkI;
         public float Timer;

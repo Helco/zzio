@@ -4,10 +4,10 @@
     {
         NextScriptOp,
         FadeOut,
-        Say, // might be split into ~5 other states
+        WaitForSayString,
         PreFightWild,
         PreFightNpc,
-        Npcwalking,
+        NpcWalking,
         NpcEscapes,
         CaughtFairy,
         Delay
