@@ -63,17 +63,20 @@ namespace zzre.rendering
             .Where(tileI => tileI >= 0 && tileI < pixelSizes.Length)
             .Sum(tileI => pixelSizes[tileI].X + CharSpacing);
 
-        private static readonly char[] LineWrappers = new[] { ' ', '\n' };
+        public float GetTextHeight(string text, float? overrideLineHeight = null) =>
+            text.Count(ch => ch == '\n') * (overrideLineHeight ?? LineHeight);
+
+        private static readonly char[] SpaceChars = new[] { ' ', '\n' };
         public string WrapLines(string text, float maxWidth)
         {
             var newText = text.ToCharArray();
             float spaceWidth = pixelSizes.First().X;
             float curLineWidth = 0;
-            int nonSpaceI = text.IndexOfAnyNot(LineWrappers);
+            int nonSpaceI = text.IndexOfAnyNot(SpaceChars);
             int lastSpaceI = 0;
             while(nonSpaceI >= 0)
             {
-                int spaceI = text.IndexOfAny(LineWrappers, nonSpaceI);
+                int spaceI = text.IndexOfAny(SpaceChars, nonSpaceI);
                 float wordWidth = spaceI < 0 ? 0f : GetUnformattedWidth(text[nonSpaceI..spaceI]);
                 wordWidth += spaceWidth * (nonSpaceI - lastSpaceI);
 
@@ -95,7 +98,8 @@ namespace zzre.rendering
                 else
                     curLineWidth = 0f;
 
-                nonSpaceI = text.IndexOfAnyNot(LineWrappers, spaceI);
+                lastSpaceI = spaceI;
+                nonSpaceI = text.IndexOfAnyNot(SpaceChars, spaceI);
             }
             return new string(newText);
         }

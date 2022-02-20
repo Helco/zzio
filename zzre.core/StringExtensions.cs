@@ -14,11 +14,11 @@ namespace zzre
 
         public static int IndexOfAnyNot(this string thiz, char[] characters, int startIndex, int count)
         {
+            count = Math.Min(count, thiz.Length - startIndex);
             if (startIndex < 0 || startIndex >= thiz.Length || count <= 0)
                 return -1;
-            count = Math.Min(count, thiz.Length - startIndex);
 
-            for (int i = startIndex; i < count; i++)
+            for (int i = startIndex; i < startIndex + count; i++)
             {
                 if (Array.IndexOf(characters, thiz[i]) < 0)
                     return i;
