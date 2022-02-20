@@ -11,6 +11,11 @@ namespace zzre.game.systems
 {
     public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.DialogTalk>
     {
+        private static readonly components.ui.ElementId IDExit = new(1);
+        private static readonly components.ui.ElementId IDContinue = new(2);
+        private static readonly components.ui.ElementId IDYes = new(3);
+        private static readonly components.ui.ElementId IDNo = new(4);
+
         private readonly MappedDB db;
         private readonly IResourcePool resourcePool;
         private readonly IDisposable resetUIDisposable;
@@ -47,17 +52,19 @@ namespace zzre.game.systems
             uiEntity.Set(new components.Parent(message.DialogEntity));
             uiEntity.Set(new components.DialogTalk(message.DialogEntity));
 
-            preload.CreateLabel( // TODO: Remove workaround after Doraku/DefaultEcs#159
-                uiEntity,
-                Vector2.One * 10000,
-                "abcdef",
-                preload.Fnt001);
-
             preload.CreateDialogBackground(uiEntity, animateOverlay: !wasAlreadyOpen, out var bgRect);
             CreateTalkLabel(uiEntity, message.DialogUID, bgRect);
             var npcEntity = message.DialogEntity.Get<components.DialogNPC>().Entity;
             var faceWidth = TryCreateFace(uiEntity, npcEntity, bgRect);
             CreateNameLabel(uiEntity, npcEntity, bgRect, faceWidth);
+
+            var talkLabels = message.DialogEntity.Get<components.DialogTalkLabels>();
+            if (talkLabels == components.DialogTalkLabels.Exit)
+                CreateSingleButton(uiEntity, new UID(0xF7DFDC21), IDExit, bgRect);
+            else if (talkLabels == components.DialogTalkLabels.Continue)
+                CreateSingleButton(uiEntity, new UID(0xCABAD411), IDContinue, bgRect);
+            else
+                CreateYesNoButtons(uiEntity, bgRect);
         }
 
         private const float MaxTextWidth = 400f;
@@ -120,6 +127,48 @@ namespace zzre.game.systems
                     : bgRect.Center.X - tileSheet.GetUnformattedWidth(npcName) / 2,
                 bgRect.Min.Y + NameOffsetY,
                 0f, 0f);
+        }
+
+        private const float YesNoButtonOffsetX = 4f;
+        private const float ButtonOffsetY = -50f;
+        private void CreateSingleButton(DefaultEcs.Entity parent, UID textUID, components.ui.ElementId elementId, Rect bgRect)
+        {
+            preload.CreateButton(
+                parent,
+                elementId,
+                new(bgRect.Center.X, bgRect.Max.Y + ButtonOffsetY),
+                textUID,
+                new(0, 1),
+                preload.Btn000,
+                preload.Fnt000,
+                out _,
+                btnAlign: new(components.ui.Alignment.Center, components.ui.Alignment.Min));
+
+            // TODO: Set cursor position in dialog talk
+        }
+
+        private void CreateYesNoButtons(DefaultEcs.Entity parent, Rect bgRect)
+        {
+            preload.CreateButton(
+                parent,
+                IDYes,
+                new(bgRect.Center.X + YesNoButtonOffsetX, bgRect.Max.Y + ButtonOffsetY),
+                new UID(0xB2153621),
+                new(0, 1),
+                preload.Btn000,
+                preload.Fnt000,
+                out _,
+                btnAlign: new(components.ui.Alignment.Max, components.ui.Alignment.Min));
+
+            preload.CreateButton(
+                parent,
+                IDNo,
+                new(bgRect.Center.X + YesNoButtonOffsetX, bgRect.Max.Y + ButtonOffsetY),
+                new UID(0x2F5B3621),
+                new(0, 1),
+                preload.Btn000,
+                preload.Fnt000,
+                out _);
         }
 
         protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.DialogTalk component)

@@ -159,8 +159,9 @@ namespace zzre.game.systems.ui
             ManagedResource<resources.UITileSheetInfo, TileSheet> tileSheet,
             zzio.UID? tooltipUID = null,
             int renderOrder = 0,
+            components.ui.FullAlignment btnAlign = default,
             components.ui.UIOffset? offset = null) =>
-            CreateImageButton(parent, elementId, Rect.FromMinMax(pos, pos), buttonTiles, tileSheet, tooltipUID, renderOrder, offset);
+            CreateImageButton(parent, elementId, Rect.FromMinMax(pos, pos), buttonTiles, tileSheet, tooltipUID, renderOrder, btnAlign, offset);
 
         public DefaultEcs.Entity CreateImageButton(
             DefaultEcs.Entity parent,
@@ -170,11 +171,13 @@ namespace zzre.game.systems.ui
             ManagedResource<resources.UITileSheetInfo, TileSheet> tileSheet,
             zzio.UID? tooltipUID = null,
             int renderOrder = 0,
+            components.ui.FullAlignment btnAlign = default,
             components.ui.UIOffset? offset = null)
         {
             var entity = CreateBase(parent, rect, renderOrder, offset);
             entity.Set(elementId);
             entity.Set(tileSheet);
+            entity.Set(btnAlign);
             entity.Set(buttonTiles);
             if (tooltipUID.HasValue)
                 entity.Set<components.ui.TooltipUID>(tooltipUID.Value);
@@ -257,9 +260,10 @@ namespace zzre.game.systems.ui
             zzio.UID? tooltipUID = null,
             int renderOrder = 0,
             bool doFormat = true,
-            components.ui.TextAlignment align = components.ui.TextAlignment.Center,
+            components.ui.Alignment textAlign = components.ui.Alignment.Center,
+            components.ui.FullAlignment btnAlign = default,
             components.ui.UIOffset? offset = null) =>
-            CreateButton(parent, elementId, pos, GetDBText(textUID), buttonTiles, border, font, out label, tooltipUID, renderOrder, doFormat, align, offset);
+            CreateButton(parent, elementId, pos, GetDBText(textUID), buttonTiles, border, font, out label, tooltipUID, renderOrder, doFormat, textAlign, btnAlign, offset);
 
         public DefaultEcs.Entity CreateButton(
             DefaultEcs.Entity parent,
@@ -273,23 +277,24 @@ namespace zzre.game.systems.ui
             zzio.UID? tooltipUID = null,
             int renderOrder = 0,
             bool doFormat = true,
-            components.ui.TextAlignment align = components.ui.TextAlignment.Center,
+            components.ui.Alignment textAlign = components.ui.Alignment.Center,
+            components.ui.FullAlignment btnAlign = default,
             components.ui.UIOffset? offset = null)
         {
-            var button = CreateImageButton(parent, elementId, pos, buttonTiles, border, tooltipUID, renderOrder, offset);
+            var button = CreateImageButton(parent, elementId, pos, buttonTiles, border, tooltipUID, renderOrder, btnAlign, offset);
 
             label = CreateLabel(button, pos, text, font, renderOrder - 1, doFormat, offset);
             var fontTileSheet = label.Get<TileSheet>();
-            var buttonSize = button.Get<Rect>().Size;
+            var buttonRect = button.Get<Rect>();
             var textWidth = fontTileSheet.GetUnformattedWidth(text);
-            var labelPosX = align switch
+            var labelPosX = textAlign switch
             {
-                components.ui.TextAlignment.Left => ButtonTextSpacing,
-                components.ui.TextAlignment.Right => buttonSize.X - textWidth - ButtonTextSpacing,
-                components.ui.TextAlignment.Center => buttonSize.X / 2 - textWidth / 2,
-                _ => throw new NotSupportedException($"Unsupported text alignment {align}")
+                components.ui.Alignment.Min => ButtonTextSpacing,
+                components.ui.Alignment.Max => buttonRect.Size.X - textWidth - ButtonTextSpacing,
+                components.ui.Alignment.Center => buttonRect.Size.X / 2 - textWidth / 2,
+                _ => throw new NotSupportedException($"Unsupported text alignment {textAlign}")
             };
-            var labelPos = pos + new Vector2(labelPosX, buttonSize.Y / 2 - fontTileSheet.TotalSize.Y / 2);
+            var labelPos = buttonRect.Min + new Vector2(labelPosX, buttonRect.Size.Y / 2 - fontTileSheet.TotalSize.Y / 2);
             label.Set(Rect.FromMinMax(labelPos, labelPos));
 
             return button;

@@ -30,9 +30,14 @@ namespace zzre.game.systems.ui
             ref var rect = ref entity.Get<Rect>();
             if (MathEx.CmpZero(rect.Size.MaxComponent()) && tiles.Normal >= 0)
             {
+                var alignment = entity.Has<components.ui.FullAlignment>()
+                    ? entity.Get<components.ui.FullAlignment>()
+                    : components.ui.FullAlignment.TopLeft;
                 var tileSheet = entity.Get<rendering.TileSheet>();
-                rect.Size = tileSheet.GetPixelSize(tiles.Normal);
-                rect.Center += rect.HalfSize + System.Numerics.Vector2.One /2; // the user intended to set a top-left position
+                var tileSize = tileSheet.GetPixelSize(tiles.Normal);
+                rect = Rect.FromTopLeftSize(
+                    rect.Center - alignment.AsFactor * tileSize,
+                    tileSize);
             }
 
             if (!entity.Has<components.ui.Tile[]>())
