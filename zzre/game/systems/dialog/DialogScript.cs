@@ -344,9 +344,7 @@ namespace zzre.game.systems
 
         private bool IfNPCModifierHasValue(DefaultEcs.Entity entity, int value)
         {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
-            return false;
+            return NPCEntity.Get<components.NPCModifier>().Value == value;
         }
 
         private void SetNPCModifier(DefaultEcs.Entity entity, int scene, int triggerI, int value)
