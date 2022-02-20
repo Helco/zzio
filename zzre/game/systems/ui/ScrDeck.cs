@@ -50,7 +50,7 @@ namespace zzre.game.systems.ui
 
         private readonly zzio.db.MappedDB mappedDB;
 
-        public ScrDeck(ITagContainer diContainer) : base(diContainer)
+        public ScrDeck(ITagContainer diContainer) : base(diContainer, isBlocking: true)
         {
             mappedDB = diContainer.GetTag<zzio.db.MappedDB>();
             OnElementDown += HandleElementDown;

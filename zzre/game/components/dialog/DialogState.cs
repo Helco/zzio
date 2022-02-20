@@ -5,6 +5,7 @@
         NextScriptOp,
         FadeOut,
         WaitForSayString,
+        Talk,
         PreFightWild,
         PreFightNpc,
         NpcWalking,

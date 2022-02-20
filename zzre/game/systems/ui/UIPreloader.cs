@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using DefaultEcs.Resource;
+using zzio;
 using zzre.rendering;
 
 namespace zzre.game.systems.ui
@@ -212,6 +213,28 @@ namespace zzre.game.systems.ui
             return entity;
         }
 
+        public DefaultEcs.Entity CreateAnimatedLabel(
+            DefaultEcs.Entity parent,
+            Vector2 pos,
+            string text,
+            ManagedResource<resources.UITileSheetInfo, TileSheet> font,
+            int renderOrder = 0,
+            bool doFormat = true,
+            components.ui.UIOffset? offset = null,
+            int segmentsPerAdd = 4,
+            float wrapLines = float.NaN,
+            bool isBlinking = false)
+        {
+            var entity = CreateLabel(parent, pos, "", font, renderOrder, doFormat, offset);
+            if (float.IsFinite(wrapLines) && wrapLines > 0f)
+            {
+                var tileSheet = entity.Get<TileSheet>();
+                text = tileSheet.WrapLines(text, wrapLines);
+            }
+            entity.Set(new components.ui.AnimatedLabel(text, segmentsPerAdd, isBlinking));
+            return entity;
+        }
+
         public DefaultEcs.Entity CreateTooltip(
             DefaultEcs.Entity parent,
             Vector2 pos,
@@ -306,6 +329,28 @@ namespace zzre.game.systems.ui
                 entity.Set(new components.ui.Tile[] { new(tileI, rect) });
             }
             return entity;
+        }
+
+        public void CreateDialogBackground(
+            DefaultEcs.Entity parent,
+            bool animateOverlay,
+            out Rect backgroundRect)
+        {
+            var image = CreateImage(parent, Vector2.Zero, "std000", renderOrder: 1);
+            ref var imageRect = ref image.Get<Rect>();
+            imageRect = Rect.FromTopLeftSize(-imageRect.HalfSize, imageRect.Size);
+            image.Get<components.ui.Tile[]>()[0].Rect = imageRect;
+            backgroundRect = imageRect;
+
+            var overlay = CreateBase(parent, imageRect, renderOrder: 2, components.ui.UIOffset.Center);
+            overlay.Set<IColor>(new FColor(0.029999999f, 0.050000001f, 0.029999999f, animateOverlay ? 0f : 0.8f));
+            overlay.Set<materials.UIMaterial>(null!);
+            overlay.Set(new components.ui.Tile[]
+            {
+                new(-1, imageRect)
+            });
+            if (animateOverlay)
+                overlay.Set(new components.ui.Fade(0f, 0.8f, 1.5f));
         }
     }
 }

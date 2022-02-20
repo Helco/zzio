@@ -2,6 +2,7 @@
 using System.Numerics;
 using DefaultEcs.System;
 using Veldrid;
+using zzre.game.messages;
 
 namespace zzre.game.systems
 {
@@ -12,18 +13,28 @@ namespace zzre.game.systems
         private const int FastSegmentsToAdd = 16;
 
         private readonly IZanzarahContainer zzContainer;
+        private readonly IDisposable resetUIDisposable;
         private bool didClick = false;
 
         public DialogWaitForSayString(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
         {
             zzContainer = diContainer.GetTag<IZanzarahContainer>();
             zzContainer.OnMouseDown += HandleMouseDown;
+            resetUIDisposable = World.Subscribe<messages.DialogResetUI>(HandleResetUI);
         }
 
         public override void Dispose()
         {
             base.Dispose();
             zzContainer.OnMouseDown -= HandleMouseDown;
+            resetUIDisposable?.Dispose();
+        }
+
+        private void HandleResetUI(in DialogResetUI message)
+        {
+            var sayLabel = message.DialogEntity.Get<components.DialogCommonUI>().SayLabel;
+            sayLabel.Remove<components.ui.AnimatedLabel>();
+            sayLabel.Set(new components.ui.Label(""));
         }
 
         private void HandleMouseDown(MouseButton button, Vector2 _)

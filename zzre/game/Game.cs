@@ -93,6 +93,7 @@ namespace zzre.game
                 new systems.DialogDelay(this),
                 new systems.DialogFadeOut(this),
                 new systems.DialogWaitForSayString(this),
+                new systems.DialogTalk(this),
                 new systems.NonFairyAnimation(this),
                 new systems.FlyCamera(this),
                 activeCameraSystem = new systems.OverworldCamera(this),

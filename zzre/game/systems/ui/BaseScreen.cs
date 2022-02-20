@@ -18,12 +18,15 @@ namespace zzre.game.systems.ui
 
         protected Vector2 ScreenCenter => ui.LogicalScreen.Center;
 
-        protected BaseScreen(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
+        public bool IsBlocking { get; }
+
+        protected BaseScreen(ITagContainer diContainer, bool isBlocking) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
         {
+            IsBlocking = isBlocking;
             zzContainer = diContainer.GetTag<IZanzarahContainer>();
             zanzarah = diContainer.GetTag<Zanzarah>();
             ui = diContainer.GetTag<UI>();
-            preload = diContainer.GetTag<UIPreloader>();
+            preload = ui.GetTag<UIPreloader>();
             World.SetMaxCapacity<TComponent>(1);
             openSubscription = World.Subscribe<TMessage>(HandleOpen);
             addedSubscription = World.SubscribeComponentAdded<TComponent>(HandleAdded);
@@ -37,29 +40,29 @@ namespace zzre.game.systems.ui
             addedSubscription.Dispose();
             removedSubscription.Dispose();
             HandleRemoved(default, default!);
-            RemoveContainerEvents();
         }
 
-        private void HandleAdded(in DefaultEcs.Entity entity, in TComponent _)
+        protected virtual void HandleAdded(in DefaultEcs.Entity entity, in TComponent _)
         {
             zzContainer.OnMouseDown += HandleMouseDown;
             zzContainer.OnMouseUp += HandleMouseUp;
             zzContainer.OnKeyDown += HandleKeyDown;
+
+            if (!IsBlocking)
+                return;
             if (zanzarah.CurrentGame != null)
                 zanzarah.CurrentGame.IsUpdateEnabled = false;
             zanzarah.CurrentGame?.Publish(messages.LockPlayerControl.Forever);
         }
 
-        private void RemoveContainerEvents()
+        protected virtual void HandleRemoved(in DefaultEcs.Entity entity, in TComponent _)
         {
             zzContainer.OnMouseDown -= HandleMouseDown;
             zzContainer.OnMouseUp -= HandleMouseUp;
             zzContainer.OnKeyDown -= HandleKeyDown;
-        }
 
-        private void HandleRemoved(in DefaultEcs.Entity entity, in TComponent _)
-        {
-            RemoveContainerEvents();
+            if (!IsBlocking)
+                return;
             if (zanzarah.CurrentGame != null)
                 zanzarah.CurrentGame.IsUpdateEnabled = true;
             zanzarah.CurrentGame?.Publish(messages.LockPlayerControl.Unlock);

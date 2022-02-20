@@ -11,6 +11,7 @@ namespace zzre.game.resources
 {
     public class UIBitmap : AResourceManager<string, materials.UIMaterial>
     {
+        private const string UnmaskedSuffix = ".bmp";
         private const string ColorSuffix = "T.bmp";
         private const string MaskSuffix = "M.bmp";
         private static readonly FilePath BasePath = new FilePath("resources/bitmaps");
@@ -56,7 +57,9 @@ namespace zzre.game.resources
 
         internal static Image<Rgba32> LoadMaskedBitmap(IResourcePool resourcePool, string name)
         {
-            var bitmap = LoadBitmap<Rgba32>(resourcePool, name, ColorSuffix) ??
+            var bitmap =
+                LoadBitmap<Rgba32>(resourcePool, name, UnmaskedSuffix) ??
+                LoadBitmap<Rgba32>(resourcePool, name, ColorSuffix) ??
                 throw new System.IO.FileNotFoundException($"Could not open bitmap {name}");
 
             using var maskBitmap = LoadBitmap<Rgb24>(resourcePool, name, MaskSuffix);

@@ -2,7 +2,7 @@
 
 namespace zzre.game.components.ui
 {
-    public record struct Fade(float From, float To, float Duration, float Time)
+    public record struct Fade(float From, float To, float Duration, float Time = 0f)
     {
         public float Value => MathEx.Lerp(From, To, Time / Duration);
 

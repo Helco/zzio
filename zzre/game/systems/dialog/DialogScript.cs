@@ -31,6 +31,13 @@ namespace zzre.game.systems
             ElfGame
         }
 
+        public enum TalkMode
+        {
+            Exit = 0,
+            YesNo,
+            Continue
+        }
+
         private const int UpperLetterboxHeight = 20;
         private const int LowerLetterboxHeight = 100;
         private const int SegmentsPerAddSay = 8;
@@ -291,8 +298,18 @@ namespace zzre.game.systems
 
         private void Talk(DefaultEcs.Entity entity, UID uid)
         {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+            World.Publish(new messages.DialogTalk(entity, uid));
+        }
+
+        private void SetTalkLabels(DefaultEcs.Entity entity, int labelYes, int labelNo, TalkMode mode)
+        {
+            entity.Set(mode switch
+            {
+                TalkMode.Exit => components.DialogTalkLabels.Exit,
+                TalkMode.Continue => components.DialogTalkLabels.Continue,
+                TalkMode.YesNo => components.DialogTalkLabels.YesNo(labelYes, labelNo),
+                _ => throw new NotSupportedException($"Unsupported talk mode: {mode}")
+            });
         }
 
         private void ChafferWizforms(UID uid, UID uid2, UID uid3)
@@ -368,12 +385,6 @@ namespace zzre.game.systems
         }
 
         private void StartEffect(DefaultEcs.Entity entity, int effectType, int triggerI)
-        {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
-        }
-
-        private void SetTalkLabels(DefaultEcs.Entity entity, int labelYes, int labelNo, int mode)
         {
             var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
             Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");

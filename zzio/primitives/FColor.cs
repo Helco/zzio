@@ -35,6 +35,12 @@ namespace zzio
 
         public static FColor operator *(FColor a, FColor b) => new FColor(a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a);
 
+        public static implicit operator IColor(FColor c) => new IColor(
+            (byte)(c.r * 255f),
+            (byte)(c.g * 255f),
+            (byte)(c.b * 255f),
+            (byte)(c.a * 255f));
+
         public static FColor White => new FColor(1.0f, 1.0f, 1.0f, 1.0f);
         public static FColor Black => new FColor(0.0f, 0.0f, 0.0f, 1.0f);
         public static FColor Clear => new FColor(0.0f, 0.0f, 0.0f, 0.0f);

@@ -265,8 +265,8 @@ namespace zzre.game.systems
                 case CmdSetTalkLabels:
                     var labelYes = int.Parse(args[0]);
                     var labelNo = int.Parse(args[1]);
-                    mode = int.Parse(args[2]);
-                    SetTalkLabels(entity, labelYes, labelNo, mode);
+                    var talkMode = Enum.Parse<TalkMode>(args[2]);
+                    SetTalkLabels(entity, labelYes, labelNo, talkMode);
                     return OpReturn.Continue;
 
                 case CmdTradeWizform:
