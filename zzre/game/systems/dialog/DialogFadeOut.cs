@@ -24,7 +24,10 @@ namespace zzre.game.systems
         private void HandleState(in DefaultEcs.Entity entity, in components.DialogState oldValue, in components.DialogState newValue)
         {
             if (newValue == components.DialogState.FadeOut)
+            {
+                World.Publish(new messages.DialogResetUI(entity));
                 entity.Get<components.DialogCommonUI>().Letterbox.Set(components.ui.Fade.StdOut);
+            }
         }
 
         [WithPredicate]

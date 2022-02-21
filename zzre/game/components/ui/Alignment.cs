@@ -15,7 +15,8 @@ namespace zzre.game.components.ui
         {
             Alignment.Min => 0f,
             Alignment.Max => 1f,
-            Alignment.Center => 0.5f
+            Alignment.Center => 0.5f,
+            _ => throw new System.NotSupportedException($"Unsupported alignment: {a}")
         };
 
         public Vector2 AsFactor => new Vector2(GetAsFactor(Horizontal), GetAsFactor(Vertical));

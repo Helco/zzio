@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using DefaultEcs.System;
 using zzio;
 using zzio.db;
 using zzio.vfs;
 
 namespace zzre.game.systems
 {
-    public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.DialogTalk>
+    public partial class DialogTalk : ui.BaseScreen<components.ui.DialogTalk, messages.DialogTalk>
     {
         private static readonly components.ui.ElementId IDExit = new(1);
         private static readonly components.ui.ElementId IDContinue = new(2);
@@ -25,6 +22,7 @@ namespace zzre.game.systems
             db = diContainer.GetTag<MappedDB>();
             resourcePool = diContainer.GetTag<IResourcePool>();
             resetUIDisposable = World.Subscribe<messages.DialogResetUI>(HandleResetUI);
+            OnElementDown += HandleElementDown;
         }
 
         public override void Dispose()
@@ -48,9 +46,9 @@ namespace zzre.game.systems
             var wasAlreadyOpen = Set.Count > 0;
             World.Publish(new messages.DialogResetUI(message.DialogEntity));
             var uiWorld = ui.GetTag<DefaultEcs.World>();
-            var uiEntity = uiWorld.CreateEntity();
+            var uiEntity = World.CreateEntity();
             uiEntity.Set(new components.Parent(message.DialogEntity));
-            uiEntity.Set(new components.DialogTalk(message.DialogEntity));
+            uiEntity.Set(new components.ui.DialogTalk(message.DialogEntity));
 
             preload.CreateDialogBackground(uiEntity, animateOverlay: !wasAlreadyOpen, out var bgRect);
             CreateTalkLabel(uiEntity, message.DialogUID, bgRect);
@@ -171,7 +169,26 @@ namespace zzre.game.systems
                 out _);
         }
 
-        protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.DialogTalk component)
+        private void HandleElementDown(DefaultEcs.Entity clickedEntity, components.ui.ElementId clickedId)
+        {
+            var talkEntity = Set.GetEntities()[0];
+            var dialogEntity = talkEntity.Get<components.ui.DialogTalk>().DialogEntity;
+            if (clickedId == IDContinue || clickedId == IDExit)
+            {
+                // TODO: Play sound sample on dialog talk button clicked
+                dialogEntity.Set(components.DialogState.NextScriptOp);
+            }
+            if (clickedId == IDYes || clickedId == IDNo)
+            {
+                var talkLabels = dialogEntity.Get<components.DialogTalkLabels>();
+                int targetLabel = clickedId == IDYes ? talkLabels.LabelYes : talkLabels.LabelNo;
+                ref var scriptExec = ref dialogEntity.Get<components.ScriptExecution>();
+                scriptExec.CurrentI = scriptExec.LabelTargets[targetLabel];
+                dialogEntity.Set(components.DialogState.NextScriptOp);
+            }
+        }
+
+        protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.ui.DialogTalk component)
         {
         }
     }

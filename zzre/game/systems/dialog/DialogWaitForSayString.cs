@@ -2,7 +2,6 @@
 using System.Numerics;
 using DefaultEcs.System;
 using Veldrid;
-using zzre.game.messages;
 
 namespace zzre.game.systems
 {
@@ -30,10 +29,10 @@ namespace zzre.game.systems
             resetUIDisposable?.Dispose();
         }
 
-        private void HandleResetUI(in DialogResetUI message)
+        private void HandleResetUI(in messages.DialogResetUI message)
         {
             var sayLabel = message.DialogEntity.Get<components.DialogCommonUI>().SayLabel;
-            sayLabel.Remove<components.ui.AnimatedLabel>();
+            sayLabel.Set<components.ui.AnimatedLabel>();
             sayLabel.Set(new components.ui.Label(""));
         }
 
