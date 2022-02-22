@@ -71,7 +71,7 @@ namespace zzre.game.systems
         private void CreateTalkLabel(DefaultEcs.Entity parent, UID dialogUID, Rect bgRect)
         {
             var text = db.GetDialog(dialogUID).Text;
-            if (text.Length > 0 && text[0] >= 'A' && text[0] <= 'Z' && false)
+            if (text.Length > 0 && text[0] >= 'A' && text[0] <= 'Z')
                 text = $"{{8*{text[0]}}}{text[1..]}"; // use the ridiculous font for the first letter
 
             var entity = preload.CreateAnimatedLabel(
