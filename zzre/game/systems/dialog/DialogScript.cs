@@ -364,10 +364,17 @@ namespace zzre.game.systems
             return NPCEntity.Get<components.NPCModifier>().Value == value;
         }
 
-        private void SetNPCModifier(DefaultEcs.Entity entity, int scene, int triggerI, int value)
+        private void SetNPCModifier(DefaultEcs.Entity entity, int scene, int optTriggerI, int value)
         {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+            uint triggerI = optTriggerI < 0
+                ? NPCEntity.Get<Trigger>().idx
+                : (uint)optTriggerI;
+            var gsmod = new GSModSetNPCModifier(triggerI, value);
+
+            if (scene < 0)
+                World.Publish(gsmod);
+            else
+                World.Publish(new messages.GSModForScene(scene, gsmod));
         }
 
         private bool IfPlayerIsClose(DefaultEcs.Entity entity, int maxDistSqr)

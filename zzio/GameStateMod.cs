@@ -117,12 +117,12 @@ namespace zzio
         }
     }
 
-    public record struct GSModSetNPCModifier(uint TriggerId, uint Value) : IGameStateMod
+    public record struct GSModSetNPCModifier(uint TriggerId, int Value) : IGameStateMod
     {
         public GameStateModType Type => GameStateModType.SetNPCModifier;
 
         public static GSModSetNPCModifier ReadNew(BinaryReader r) =>
-            new GSModSetNPCModifier(r.ReadUInt32(), r.ReadUInt32());
+            new GSModSetNPCModifier(r.ReadUInt32(), r.ReadInt32());
 
         public void Write(BinaryWriter w)
         {

@@ -22,6 +22,13 @@ namespace zzio
         public readonly GlobalVar[] globalVars = GlobalVar.CreateSet();
         public uint switchGameMinMoves = 9999;
 
+        public void Add(string scene, IGameStateMod mod)
+        {
+            if (!gameState.TryGetValue(scene, out var sceneMods))
+                gameState.Add(scene, sceneMods = new List<IGameStateMod>());
+            sceneMods.Add(mod);
+        }
+
         public static Savegame ReadNew(BinaryReader r)
         {
             Savegame sg = new Savegame();

@@ -192,9 +192,17 @@ namespace zzre.game.systems
             return entity.Get<components.NPCModifier>().Value == value;
         }
 
-        private void SetNPCModifier(DefaultEcs.Entity entity, int scene, int triggerI, int value)
+        private void SetNPCModifier(DefaultEcs.Entity entity, int scene, int optTriggerI, int value)
         {
-            Console.WriteLine("Warning: unimplemented NPC instruction \"SetNPCModifier\"");
+            uint triggerI = optTriggerI < 0
+                ? entity.Get<Trigger>().idx
+                : (uint)optTriggerI;
+            var gsmod = new GSModSetNPCModifier(triggerI, value);
+
+            if (scene < 0)
+                World.Publish(gsmod);
+            else
+                World.Publish(new messages.GSModForScene(scene, gsmod));
         }
 
         private void DefaultWizform(DefaultEcs.Entity entity, int fairyId, int groupOrSlotI, int level)

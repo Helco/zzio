@@ -95,6 +95,7 @@ namespace zzre.game
                 new systems.DialogWaitForSayString(this),
                 new systems.DialogTalk(this),
                 new systems.NonFairyAnimation(this),
+                new systems.Savegame(this),
                 new systems.FlyCamera(this),
                 activeCameraSystem = new systems.OverworldCamera(this),
                 new systems.TriggerCamera(this),

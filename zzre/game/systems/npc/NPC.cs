@@ -13,6 +13,7 @@ namespace zzre.game.systems
         private const float GroundToOffset = -7f;
 
         private readonly IDisposable sceneLoadSubscription;
+        private readonly IDisposable setNpcModifierSubscription;
         private readonly WorldCollider worldCollider;
         private readonly Scene scene;
         private readonly zzio.db.MappedDB mappedDB;
@@ -23,12 +24,14 @@ namespace zzre.game.systems
             scene = diContainer.GetTag<Scene>();
             mappedDB = diContainer.GetTag<zzio.db.MappedDB>();
             sceneLoadSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
+            setNpcModifierSubscription = World.Subscribe<zzio.GSModSetNPCModifier>(HandleSetNpcModifier);
         }
 
         public override void Dispose()
         {
             base.Dispose();
             sceneLoadSubscription.Dispose();
+            setNpcModifierSubscription.Dispose();
         }
 
         private void HandleSceneLoaded(in messages.SceneLoaded message)
@@ -113,6 +116,18 @@ namespace zzre.game.systems
                 location.LocalPosition + Vector3.UnitY * GroundToOffset));
             if (cast != null)
                 location.LocalPosition = cast.Value.Point + Vector3.UnitY * collider.Radius / 2f;
+        }
+
+        private void HandleSetNpcModifier(in zzio.GSModSetNPCModifier gsmod)
+        {
+            foreach (var entity in Set.GetEntities())
+            {
+                if (entity.Get<Trigger>().idx == gsmod.TriggerId)
+                {
+                    entity.Set(new components.NPCModifier(gsmod.Value));
+                    return;
+                }
+            }
         }
     }
 }
