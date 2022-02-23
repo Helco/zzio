@@ -68,6 +68,7 @@ namespace zzre.game.systems
         private const float MaxTextWidth = 400f;
         private const float TextOffsetX = 55f;
         private const float TextOffsetY = 195f;
+        private const float TalkLineHeight = 30f;
         private void CreateTalkLabel(DefaultEcs.Entity parent, UID dialogUID, Rect bgRect)
         {
             var text = db.GetDialog(dialogUID).Text;
@@ -80,8 +81,10 @@ namespace zzre.game.systems
                 text,
                 preload.Fnt003,
                 wrapLines: 400f);
+            entity.Set(new components.ui.Label("", DoFormat: true, TalkLineHeight));
+            var wrappedText = entity.Get<components.ui.AnimatedLabel>().FullText;
             var tileSheet = entity.Get<rendering.TileSheet>();
-            var textHeight = tileSheet.GetTextHeight(text);
+            var textHeight = tileSheet.GetTextHeight(wrappedText, TalkLineHeight);
             ref var labelRect = ref entity.Get<Rect>();
             labelRect = new Rect(
                 bgRect.Min.X + TextOffsetX,

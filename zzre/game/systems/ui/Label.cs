@@ -66,15 +66,16 @@ namespace zzre.game.systems.ui
         {
             recorder.Record(entity).Remove<components.ui.LabelNeedsTiling>();
 
-            var (text, doFormat) = label;
+            var (text, doFormat, optLineHeight) = label;
             text ??= "";
+            var lineHeight = optLineHeight ?? rootTileSheet.LineHeight;
             if (!doFormat)
             {
                 tiles = TileWithoutFormatting(rect, rootTileSheet, text);
                 return;
             }
 
-            var newTiles = FormatToTiles(rect, rootTileSheet, text);
+            var newTiles = FormatToTiles(rect, rootTileSheet, text, lineHeight);
             tiles = newTiles
                 .Where(t => t.tileSheet == rootTileSheet)
                 .Select(t => t.tile)
@@ -109,7 +110,7 @@ namespace zzre.game.systems.ui
             entity.Set(ManagedResource<TileSheet>.Create(new resources.UITileSheetInfo(tiles.Key.Name, tiles.Key.IsFont)));
         }
 
-        private static IReadOnlyList<(TileSheet tileSheet, components.ui.Tile tile)> FormatToTiles(in Rect rect, TileSheet rootTileSheet, string text)
+        private static IReadOnlyList<(TileSheet tileSheet, components.ui.Tile tile)> FormatToTiles(in Rect rect, TileSheet rootTileSheet, string text, float lineHeight)
         {
             var curTileSheet = rootTileSheet;
             var lineOffset = 0f;
@@ -124,7 +125,7 @@ namespace zzre.game.systems.ui
                     case '\n':
                     case '~':
                         cursor.X = rect.Min.X;
-                        cursor.Y += rootTileSheet.LineHeight;
+                        cursor.Y += lineHeight;
                         break;
 
                     case '}':

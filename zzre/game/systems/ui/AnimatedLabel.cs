@@ -22,7 +22,8 @@ namespace zzre.game.systems.ui
         private void Update(
             float elapsedTime,
             DefaultEcs.Entity entity,
-            ref components.ui.AnimatedLabel anim)
+            ref components.ui.AnimatedLabel anim,
+            in components.ui.Label label)
         {
             anim.Timer += elapsedTime;
             if (!anim.IsDone && anim.Timer > SegmentDuration)
@@ -30,13 +31,13 @@ namespace zzre.game.systems.ui
                 anim.Timer = 0f;
                 for (int i = 0; i < anim.SegmentsPerAdd && !anim.IsDone; i++)
                     AdvanceSegment(ref anim);
-                entity.Set(new components.ui.Label(anim.FullText[0..anim.NextCharI]));
+                entity.Set(label with { Text = anim.FullText[0..anim.NextCharI] });
             }
             else if (anim.IsBlinking && anim.Timer > BlinkDuration)
             {
                 anim.Timer = 0f;
                 var nextText = Blink(ref anim);
-                entity.Set(new components.ui.Label(nextText));
+                entity.Set(label with { Text = nextText });
             }
         }
 
