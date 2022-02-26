@@ -39,13 +39,10 @@ namespace zzre.game.systems
 
         protected override void HandleOpen(in messages.DialogTalk message)
         {
-            // TODO: Fix talk text layout by overriding line height per label
-
             message.DialogEntity.Set(components.DialogState.Talk);
 
             var wasAlreadyOpen = Set.Count > 0;
             World.Publish(new messages.DialogResetUI(message.DialogEntity));
-            var uiWorld = ui.GetTag<DefaultEcs.World>();
             var uiEntity = World.CreateEntity();
             uiEntity.Set(new components.Parent(message.DialogEntity));
             uiEntity.Set(new components.ui.DialogTalk(message.DialogEntity));
