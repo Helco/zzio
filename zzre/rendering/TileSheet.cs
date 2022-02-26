@@ -77,10 +77,14 @@ namespace zzre.rendering
             while(nonSpaceI >= 0)
             {
                 int spaceI = text.IndexOfAny(SpaceChars, nonSpaceI);
-                float wordWidth = spaceI < 0 ? 0f : GetUnformattedWidth(text[nonSpaceI..spaceI]);
+                float wordWidth = GetUnformattedWidth(spaceI < 0
+                    ? text[nonSpaceI..]
+                    : text[nonSpaceI..spaceI]);
                 wordWidth += spaceWidth * (nonSpaceI - lastSpaceI);
 
-                if (spaceI < 0 || text[spaceI] != '\n')
+                if (spaceI >= 0 && text[spaceI] == '\n')
+                    curLineWidth = 0f;
+                else
                 {
                     if (curLineWidth + wordWidth <= maxWidth)
                         curLineWidth += wordWidth;
@@ -95,8 +99,6 @@ namespace zzre.rendering
                         curLineWidth = wordWidth;
                     }
                 }
-                else
-                    curLineWidth = 0f;
 
                 lastSpaceI = spaceI;
                 nonSpaceI = text.IndexOfAnyNot(SpaceChars, spaceI);
