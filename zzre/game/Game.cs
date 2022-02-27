@@ -57,7 +57,6 @@ namespace zzre.game
             AddTag(new resources.Actor(this));
             AddTag(new resources.SkeletalAnimation(this));
 
-            ISystem<float> activeCameraSystem;
             var updateSystems = new systems.RecordingSequentialSystem<float>(this);
             this.updateSystems = updateSystems;
             updateSystems.Add(
@@ -79,6 +78,7 @@ namespace zzre.game
                 new systems.AdvanceAnimation(this),
                 new systems.HumanPhysics(this),
                 new systems.PlayerPuppet(this),
+                new systems.PuppetActorTarget(this),
                 new systems.PuppetActorMovement(this),
                 new systems.NPC(this),
                 new systems.NPCActivator(this),
@@ -94,14 +94,16 @@ namespace zzre.game
                 new systems.DialogFadeOut(this),
                 new systems.DialogWaitForSayString(this),
                 new systems.DialogTalk(this),
+                new systems.DialogLookAt(this),
                 new systems.NonFairyAnimation(this),
                 new systems.Savegame(this),
                 new systems.FlyCamera(this),
-                activeCameraSystem = new systems.OverworldCamera(this),
+                new systems.OverworldCamera(this),
                 new systems.TriggerCamera(this),
+                new systems.CreatureCamera(this),
                 new systems.Reaper(this));
             updateSystems.Add(new systems.PauseDuringUIScreen(this, updateSystems.Systems));
-            activeCameraSystem.IsEnabled = true;
+            ecsWorld.Publish(new messages.SetCameraMode(-1, default));
 
             syncedLocation = new systems.SyncedLocation(this);
             renderSystems = new SequentialSystem<CommandList>(

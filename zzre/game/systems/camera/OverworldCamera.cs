@@ -45,7 +45,7 @@ namespace zzre.game.systems
 
         private void HandleSetCameraMode(in messages.SetCameraMode mode)
         {
-            if (mode.Mode == -1)
+            if (mode.Mode == -1 || mode.Mode == 1006) // the latter one is a special case by Funatics
                 IsEnabled = true;
         }
 

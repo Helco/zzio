@@ -84,6 +84,8 @@ namespace zzre
             LocalRotation = NumericsExtensions.LookIn(dir, up);
         }
 
+        public void LookNotIn(Vector3 dir, bool isLocalSpace = false) => LookIn(-dir, isLocalSpace);
+
         private Vector3 ForwardFor(bool isLocalSpace) => isLocalSpace || Parent == null ? Vector3.UnitZ : Parent.GlobalForward;
         private Vector3 UpFor(bool isLocalSpace) => isLocalSpace || Parent == null ? Vector3.UnitY : Parent.GlobalUp;
 

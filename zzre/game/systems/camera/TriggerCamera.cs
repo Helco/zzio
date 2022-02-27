@@ -56,7 +56,7 @@ namespace zzre.game.systems
                 camera.Location.LookIn(-trigger.dir);
         }
 
-        public override void Update(float state)
+        public override void Update(float elapsedTime)
         {
             if (!IsEnabled)
                 return;
@@ -65,7 +65,7 @@ namespace zzre.game.systems
                 camera.Location.LocalPosition = Vector3.Lerp(
                     camera.Location.LocalPosition,
                     trigger.pos,
-                    (float)Math.Pow(LerpSpeed, state));
+                    (float)Math.Pow(LerpSpeed, elapsedTime));
 
             if (majorMode == MajorModeLookAtNpc)
                 camera.Location.LookNotAt(npcLocation.LocalPosition);

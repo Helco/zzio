@@ -22,8 +22,6 @@ namespace zzre.game.systems
             in DefaultEcs.Entity dialogEntity,
             ref components.DialogDelay delay)
         {
-            // TODO: Slerp player and NPC towards each other during dialog delay
-
             var newTimeLeft = Math.Max(0f, delay.TimeLeft - timeElapsed);
             if (newTimeLeft == 0f)
                 dialogEntity.Set(components.DialogState.NextScriptOp);

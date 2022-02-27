@@ -170,7 +170,6 @@ namespace zzre.game.systems
         private void SetCamera(DefaultEcs.Entity entity, int cameraMode)
         {
             // TODO: Add NpcCamera for modes 2100-2105 and 2110-2115
-            // TODO: Add CreatureCamera for modes 1000-1007 and 2000-2007
             World.Publish(new messages.SetCameraMode(cameraMode, NPCEntity));
         }
 
