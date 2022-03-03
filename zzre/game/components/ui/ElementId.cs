@@ -13,7 +13,7 @@
         public bool InRange(ElementId FirstElement, ElementId LastElement, out int index)
         {
             index = -1;
-            if (Value < FirstElement.Value && Value > LastElement.Value)
+            if (Value < FirstElement.Value || Value > LastElement.Value)
                 return false;
             index = Value - FirstElement.Value;
             return true;

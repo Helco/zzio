@@ -63,7 +63,7 @@ namespace zzre.game.systems
                     return;
             }
 
-            World.Publish(default(messages.DialogSayStringFinished));
+            World.Publish(new messages.DialogSayStringFinished(entity));
 
             // but what if nobody reacted to the message? - then we are click to continue
             if (didClick && entity.Get<components.DialogState>() == components.DialogState.WaitForSayString)

@@ -6,6 +6,7 @@
         FadeOut,
         WaitForSayString,
         Talk,
+        Choice,
         PreFightWild,
         PreFightNpc,
         NpcWalking,

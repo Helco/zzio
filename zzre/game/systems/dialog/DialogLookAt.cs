@@ -69,7 +69,8 @@ namespace zzre.game.systems
         private bool ShouldNPCLookAt(components.DialogState state) =>
             state == components.DialogState.Delay ||
             state == components.DialogState.WaitForSayString ||
-            state == components.DialogState.Talk;
+            state == components.DialogState.Talk ||
+            state == components.DialogState.Choice;
 
         private void HandleNPCLookAt(DefaultEcs.Entity dialogEntity, bool isEnabled)
         {

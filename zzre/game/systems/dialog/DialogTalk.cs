@@ -178,6 +178,9 @@ namespace zzre.game.systems
                 // TODO: Play sound sample on dialog talk button clicked
                 dialogEntity.Set(components.DialogState.NextScriptOp);
             }
+            if (clickedId == IDExit)
+                talkEntity.Dispose();
+
             if (clickedId == IDYes || clickedId == IDNo)
             {
                 var talkLabels = dialogEntity.Get<components.DialogTalkLabels>();
@@ -185,6 +188,7 @@ namespace zzre.game.systems
                 ref var scriptExec = ref dialogEntity.Get<components.ScriptExecution>();
                 scriptExec.CurrentI = scriptExec.LabelTargets[targetLabel];
                 dialogEntity.Set(components.DialogState.NextScriptOp);
+                talkEntity.Dispose();
             }
         }
 

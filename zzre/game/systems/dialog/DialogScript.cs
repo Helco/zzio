@@ -158,8 +158,7 @@ namespace zzre.game.systems
 
         private void Choice(DefaultEcs.Entity entity, int targetLabel, UID uid)
         {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+            World.Publish(new messages.DialogAddChoice(entity, targetLabel, uid));
         }
 
         private void WaitForUser(DefaultEcs.Entity entity)
