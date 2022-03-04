@@ -25,6 +25,7 @@ namespace zzre.game.systems
         {
             base.Dispose();
             resetUISubscription.Dispose();
+            addChoiceSubscription.Dispose();
         }
 
         private void HandleResetUI(in messages.DialogResetUI message)
