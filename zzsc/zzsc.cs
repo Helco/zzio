@@ -167,7 +167,7 @@ namespace zzsc
             while ((line = input.ReadLine()) != null && line != "EOF")
             {
                 int i;
-                if ((i = line.IndexOf("#")) >= 0)
+                if ((i = line.IndexOf("//")) >= 0)
                     line = line.Substring(0, i).Trim();
                 if (line.Length > 0)
                     instructions.Add(new RawInstruction(line));
