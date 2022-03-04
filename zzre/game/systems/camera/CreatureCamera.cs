@@ -9,7 +9,7 @@ namespace zzre.game.systems
     {
         private enum SubMode
         {
-            LeftTop,
+            LeftTop = 0,
             LeftBottom,
             LeftCenter,
             RightTop,
@@ -44,7 +44,7 @@ namespace zzre.game.systems
         {
             var majorMode = message.Mode / 100;
             mode = (SubMode)(message.Mode % 100);
-            if ((majorMode != 10 && majorMode != 20) || mode == SubMode.Behind)
+            if ((majorMode != 10 && majorMode != 20) || mode == SubMode.Overworld)
                 return;
 
             Location npcLocation;

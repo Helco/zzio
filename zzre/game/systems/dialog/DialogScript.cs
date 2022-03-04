@@ -46,6 +46,7 @@ namespace zzre.game.systems
         private readonly UI ui;
         private readonly Scene scene;
         private readonly Game game;
+        private readonly zzio.Savegame savegame;
         private readonly EntityCommandRecorder recorder;
         private readonly IDisposable startDialogDisposable;
         private readonly IDisposable removedDisposable;
@@ -61,6 +62,7 @@ namespace zzre.game.systems
             ui = diContainer.GetTag<UI>();
             scene = diContainer.GetTag<Scene>();
             game = diContainer.GetTag<Game>();
+            savegame = diContainer.GetTag<zzio.Savegame>();
             recorder = diContainer.GetTag<EntityCommandRecorder>();
             startDialogDisposable = World.Subscribe<messages.StartDialog>(HandleStartDialog);
             removedDisposable = World.SubscribeComponentRemoved<components.DialogState>(HandleDialogStateRemoved);
@@ -237,30 +239,10 @@ namespace zzre.game.systems
             Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
         }
 
-        private void GivePlayerCards(DefaultEcs.Entity entity, int count, int type, int id)
-        {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
-        }
-
         private void SetupGambling(DefaultEcs.Entity entity, int count, int type, int id)
         {
             var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
             Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
-        }
-
-        private bool IfPlayerHasCards(DefaultEcs.Entity entity, int count, int type, int id)
-        {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
-            return false;
-        }
-
-        private bool IfPlayerHasSpecials(DefaultEcs.Entity entity, SpecialInventoryCheck specialType, int arg)
-        {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
-            return false;
         }
 
         private bool IfTriggerIsActive(DefaultEcs.Entity entity, int triggerI)
@@ -268,12 +250,6 @@ namespace zzre.game.systems
             var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
             Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
             return false;
-        }
-
-        private void RemovePlayerCards(DefaultEcs.Entity entity, int count, int type, int id)
-        {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
         }
 
         private void LockUserInput(DefaultEcs.Entity entity, int mode)
@@ -351,12 +327,6 @@ namespace zzre.game.systems
             dialogRecord.Set(components.DialogState.Delay);
         }
 
-        private void RemoveWizforms(DefaultEcs.Entity entity)
-        {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
-        }
-
         private bool IfNPCModifierHasValue(DefaultEcs.Entity entity, int value)
         {
             return NPCEntity.Get<components.NPCModifier>().Value == value;
@@ -414,12 +384,6 @@ namespace zzre.game.systems
         }
 
         private void RemoveNpcAtTrigger(int triggerI)
-        {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
-        }
-
-        private void Revive(DefaultEcs.Entity entity)
         {
             var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
             Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
@@ -503,12 +467,6 @@ namespace zzre.game.systems
         }
 
         private void DeploySound(DefaultEcs.Entity entity, int id, int triggerI)
-        {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
-        }
-
-        private void GivePlayerPresent(DefaultEcs.Entity entity)
         {
             var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
             Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");

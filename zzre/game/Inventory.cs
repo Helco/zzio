@@ -132,14 +132,44 @@ namespace zzre.game
             return fairy;
         }
 
+        public void RemoveCards(CardId cardId, uint maxCount, bool? inUse = null)
+        {
+            var cardSlots = cards
+                .Where(c => c?.cardId == cardId)
+                .Where(c => inUse == null || c!.isInUse == inUse.Value);
+
+            for (int i = 0; i < cards.Count; i++)
+            {
+                if (maxCount == 0)
+                    break;
+                if (cards[i]?.cardId != cardId)
+                    continue;
+                if (inUse != null && cards[i]!.isInUse != inUse.Value)
+                    continue;
+
+                if (cards[i]!.amount <= maxCount)
+                {
+                    maxCount -= cards[i]!.amount;
+                    cards[i] = null;
+                }
+                else
+                {
+                    var removeCount = Math.Min(maxCount, cards[i]!.amount);
+                    maxCount -= removeCount;
+                    cards[i]!.amount -= removeCount;
+                }
+            }
+        }
+
         public bool TryGetCard(CardId cardId, [NotNullWhen(true)] out InventoryCard card)
         {
             card = cards.FirstOrDefault(c => c?.cardId == cardId)!;
             return card != null;
         }
 
-        public int CountCards(CardId cardId) => cards
+        public int CountCards(CardId cardId, bool? inUse = null) => cards
             .Where(c => c?.cardId == cardId)
+            .Where(c => inUse == null || c!.isInUse == inUse.Value)
             .Sum(c => (int)c!.amount);
 
         public InventoryFairy? GetFairyAtSlot(int slot) => fairySlots[slot];

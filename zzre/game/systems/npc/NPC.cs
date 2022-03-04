@@ -73,6 +73,7 @@ namespace zzre.game.systems
                 entity.Set<components.NPCLookAtPlayer>();
                 entity.Set<components.NPCLookAtTrigger>();
                 entity.Set<components.Collidable>();
+                entity.Set(new Inventory(mappedDB));
             }
 
             World.Publish(default(messages.ExecuteNPCScript));

@@ -133,23 +133,23 @@ namespace zzre.game.systems
 
                 case CmdGivePlayerCards:
                     var count = int.Parse(args[0]);
-                    var type = int.Parse(args[1]);
+                    var cardType = Enum.Parse<CardType>(args[1]);
                     var id = int.Parse(args[2]);
-                    GivePlayerCards(entity, count, type, id);
+                    GivePlayerCards(entity, count, cardType, id);
                     return OpReturn.Continue; // TODO: Confirm givePlayerCards, there could be a dialog happening
 
                 case CmdSetupGambling:
                     count = int.Parse(args[0]);
-                    type = int.Parse(args[1]);
+                    var type = int.Parse(args[1]);
                     id = int.Parse(args[2]);
                     SetupGambling(entity, count, type, id);
                     return OpReturn.Continue;
 
                 case CmdIfPlayerHasCards:
                     count = int.Parse(args[0]);
-                    type = int.Parse(args[1]);
+                    cardType = Enum.Parse<CardType>(args[1]);
                     id = int.Parse(args[2]);
-                    return IfPlayerHasCards(entity, count, type, id)
+                    return IfPlayerHasCards(entity, count, cardType, id)
                         ? OpReturn.Continue
                         : OpReturn.ConditionalSkip;
 
@@ -168,9 +168,9 @@ namespace zzre.game.systems
 
                 case CmdRemovePlayerCards:
                     count = int.Parse(args[0]);
-                    type = int.Parse(args[1]);
+                    cardType = Enum.Parse<CardType>(args[1]);
                     id = int.Parse(args[2]);
-                    RemovePlayerCards(entity, count, type, id);
+                    RemovePlayerCards(entity, count, cardType, id);
                     return OpReturn.Continue;
 
                 case CmdLockUserInput:

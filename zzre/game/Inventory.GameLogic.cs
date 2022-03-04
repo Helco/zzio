@@ -138,6 +138,19 @@ namespace zzre.game
             }
         }
 
+        public void ClearDeck()
+        {
+            for (int i = 0; i < fairySlots.Length; i++)
+            {
+                if (fairySlots[i] != null)
+                {
+                    fairySlots[i]!.isInUse = false;
+                    fairySlots[i]!.slotIndex = -1;
+                }
+                fairySlots[i] = null;
+            }
+        }
+
         public uint? GetLevelupXP(InventoryFairy fairy)
         {
             if (fairy.level >= MaxLevel - 1)
