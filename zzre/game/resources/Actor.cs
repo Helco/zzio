@@ -56,7 +56,8 @@ namespace zzre.game.resources
             part.Set(ManagedResource<ClumpBuffers>.Create(ClumpInfo.Actor(partDescr.model)));
             part.Set(ManagedResource<zzio.SkeletalAnimation>.Create(partDescr.animations));
             part.Set<components.Visibility>();
-            part.Set(new components.ActorPart(parent)); // add *after* resources have been loaded
+            part.Set<components.ActorPart>(); // add *after* resources have been loaded
+            part.Set(new components.Parent(parent));
             return part;
         }
     }

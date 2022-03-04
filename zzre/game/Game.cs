@@ -102,7 +102,8 @@ namespace zzre.game
                 new systems.OverworldCamera(this),
                 new systems.TriggerCamera(this),
                 new systems.CreatureCamera(this),
-                new systems.Reaper(this));
+                new systems.Reaper(this),
+                new systems.ParentReaper(this));
             updateSystems.Add(new systems.PauseDuringUIScreen(this, updateSystems.Systems));
             ecsWorld.Publish(new messages.SetCameraMode(-1, default));
 
