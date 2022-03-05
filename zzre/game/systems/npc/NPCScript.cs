@@ -94,6 +94,7 @@ namespace zzre.game.systems
         private void ChangeWaypoint(DefaultEcs.Entity entity, int fromWpId, int toWpId)
         {
             World.Publish(new messages.NPCChangeWaypoint(entity, fromWpId, toWpId));
+            entity.Set(components.NPCState.Waypoint);
         }
 
         private void LookAtPlayer(DefaultEcs.Entity entity, int intDuration, components.NPCLookAtPlayer.Mode mode)

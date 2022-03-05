@@ -2,6 +2,8 @@
 
 namespace zzre.game.components
 {
+    public record struct NPCIsWalkingByDialog(DefaultEcs.Entity DialogEntity);
+
     public struct NPCMovement
     {
         public float Speed;

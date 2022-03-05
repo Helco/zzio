@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
+using DefaultEcs.Command;
 using zzio.scn;
 
 using WaypointMode = zzre.game.messages.NPCMoveSystem.Mode;
@@ -10,34 +10,20 @@ using WaypointMode = zzre.game.messages.NPCMoveSystem.Mode;
 namespace zzre.game.systems
 {
     [PauseDuringUIScreen]
-    public partial class NPCMovement : AEntitySetSystem<float>
+    public partial class NPCMovementByState : NPCMovementBase
     {
-        private const float MinSlerpDistance = 0.5f;
-        private const float SlerpCurvature = 100f;
-        private const float SlerpSpeed = 2f;
         private const float TargetDistanceToPlayer = 1.1f;
         private const float MaxPlayerDistanceSqr = 81f;
         private const float MaxWaypointDistanceSqr = 49f;
         private const float Mode1Chance = 0.3f;
 
-        private Location playerLocation => playerLocationLazy.Value;
-        private readonly Lazy<Location> playerLocationLazy;
-        private readonly IDisposable sceneLoadedSubscription;
+        private readonly EntityCommandRecorder recorder;
         private readonly IDisposable changeWaypointSubscription;
         private readonly IDisposable moveSystemSubscription;
-        private readonly WorldCollider worldCollider;
-        private readonly Scene scene;
-        private IReadOnlyDictionary<int, Trigger> waypointById = new Dictionary<int, Trigger>();
-        private IReadOnlyDictionary<int, Trigger> waypointByIdx = new Dictionary<int, Trigger>();
-        private ILookup<int, Trigger> waypointsByCategory = Enumerable.Empty<Trigger>().ToLookup(t => 0);
 
-        public NPCMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
+        public NPCMovementByState(ITagContainer diContainer) : base(diContainer, CreateEntityContainer, useBuffer: false)
         {
-            var game = diContainer.GetTag<Game>();
-            playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
-            worldCollider = diContainer.GetTag<WorldCollider>();
-            scene = diContainer.GetTag<Scene>();
-            sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
+            recorder = diContainer.GetTag<EntityCommandRecorder>();
             changeWaypointSubscription = World.Subscribe<messages.NPCChangeWaypoint>(HandleChangeWaypoint);
             moveSystemSubscription = World.Subscribe<messages.NPCMoveSystem>(HandleMoveSystem);
         }
@@ -45,23 +31,12 @@ namespace zzre.game.systems
         public override void Dispose()
         {
             base.Dispose();
-            sceneLoadedSubscription.Dispose();
             changeWaypointSubscription.Dispose();
             moveSystemSubscription.Dispose();
         }
 
         [WithPredicate]
         private static bool IsMovementNPCState(in components.NPCState value) => value == components.NPCState.Waypoint;
-        
-        private void HandleSceneLoaded(in messages.SceneLoaded _)
-        {
-            var waypoints = scene.triggers.Where(t => t.type == TriggerType.Waypoint).ToArray();
-            waypointById = waypoints
-                .GroupBy(wp => (int)wp.ii1)
-                .ToDictionary(group => group.Key, group => group.First());
-            waypointByIdx = waypoints.ToDictionary(wp => (int)wp.idx, wp => wp);
-            waypointsByCategory = waypoints.ToLookup(wp => (int)wp.ii2);
-        }
 
         private void HandleChangeWaypoint(in messages.NPCChangeWaypoint msg)
         {
@@ -74,8 +49,8 @@ namespace zzre.game.systems
 
             if (msg.ToWaypoint == -1)
             {
-                var dirToPlayer = Vector3.Normalize(playerLocation.LocalPosition - location.LocalPosition);
-                move.TargetPos = playerLocation.LocalPosition - dirToPlayer * TargetDistanceToPlayer;
+                var dirToPlayer = Vector3.Normalize(PlayerLocation.LocalPosition - location.LocalPosition);
+                move.TargetPos = PlayerLocation.LocalPosition - dirToPlayer * TargetDistanceToPlayer;
             }
             else
                 move.TargetPos = waypointById[msg.ToWaypoint].pos;
@@ -83,7 +58,6 @@ namespace zzre.game.systems
             move.DistanceToTarget = Vector3.Distance(location.LocalPosition, move.TargetPos);
             move.DistanceWalked = 0f;
             msg.Entity.Get<components.NonFairyAnimation>().Next = zzio.AnimationType.Walk0;
-            msg.Entity.Set(components.NPCState.Waypoint);
         }
 
         private void HandleMoveSystem(in messages.NPCMoveSystem msg)
@@ -93,7 +67,7 @@ namespace zzre.game.systems
 
             var waypointMode = msg.WaypointMode;
             if (waypointMode == WaypointMode.FarthestFromPlayer &&
-                Vector3.DistanceSquared(location.LocalPosition, playerLocation.LocalPosition) > MaxPlayerDistanceSqr)
+                Vector3.DistanceSquared(location.LocalPosition, PlayerLocation.LocalPosition) > MaxPlayerDistanceSqr)
                 waypointMode = WaypointMode.LuckyNearest;
             var nextWaypoint = ChooseNextWaypoint(waypointMode, msg.WaypointCategory, location, move);
             if (nextWaypoint == null)
@@ -118,12 +92,12 @@ namespace zzre.game.systems
             switch(waypointMode)
             {
                 case WaypointMode.FarthestFromPlayer:
-                    if (Vector3.DistanceSquared(location.LocalPosition, playerLocation.LocalPosition) > MaxPlayerDistanceSqr)
+                    if (Vector3.DistanceSquared(location.LocalPosition, PlayerLocation.LocalPosition) > MaxPlayerDistanceSqr)
                         return ChooseNextWaypoint(WaypointMode.LuckyNearest, wpCategory, location, move);
                     return waypointsByCategory[wpCategory]
                         .Where(wp => wp.ii3 == 0 && wp.idx != curWaypointId)
                         .Where(wp => Vector3.DistanceSquared(location.LocalPosition, wp.pos) < MaxWaypointDistanceSqr)
-                        .OrderByDescending(wp => Vector3.DistanceSquared(playerLocation.LocalPosition, wp.pos))
+                        .OrderByDescending(wp => Vector3.DistanceSquared(PlayerLocation.LocalPosition, wp.pos))
                         .FirstOrDefault();
                 
                 case WaypointMode.LuckyNearest:
@@ -170,52 +144,12 @@ namespace zzre.game.systems
                     // TODO: Add missing UI and currentNPC behavior for arriving NPCs 
                     animation.Next = zzio.AnimationType.Idle0;
                 }
-                entity.Set(components.NPCState.Script);
+                recorder.Record(entity).Set(components.NPCState.Script);
             }
             else
             {
                 animation.Next = zzio.AnimationType.Walk0;
                 // TODO: Check whether player slerping to walking NPCs is a thing
-            }
-        }
-
-        private bool UpdateWalking(
-            float elapsedTime,
-            in DefaultEcs.Entity entity,
-            components.NPCType npcType,
-            Location location,
-            ref components.NPCMovement move)
-        {
-            if (npcType != components.NPCType.Flying)
-                World.Publish(new messages.CreaturePlaceToGround(entity));
-
-            // TODO: Add NPC ActorHeadIK handling while walking
-
-            var moveDist = elapsedTime * move.Speed;
-            var moveDelta = Vector3.Normalize(location.InnerForward with { Y = 0f }) * moveDist;
-            if (move.DistanceWalked + moveDist < move.DistanceToTarget)
-            {
-                if (move.DistanceToTarget - move.DistanceWalked > MinSlerpDistance)
-                {
-                    var dir = location.InnerForward;
-                    var targetDir = move.TargetPos - location.LocalPosition;
-                    dir = MathEx.HorizontalSlerp(targetDir, dir, SlerpCurvature, SlerpSpeed * elapsedTime);
-                    location.LookIn(dir); // ^ inverse arguments
-
-                    entity.Get<components.PuppetActorMovement>().TargetDirection = dir;
-                }
-
-                location.LocalPosition += moveDelta;
-                move.DistanceWalked += moveDist;
-                return false;
-            }
-            else
-            {
-                (move.LastWaypointId, move.CurWaypointId, move.NextWaypointId) = (move.CurWaypointId, move.NextWaypointId, -1);
-                move.LastTargetPos = move.TargetPos;
-                move.DistanceWalked = 0f;
-                move.DistanceToTarget = 0f;
-                return true;
             }
         }
     }

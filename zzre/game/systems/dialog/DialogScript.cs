@@ -165,7 +165,7 @@ namespace zzre.game.systems
 
         private void WaitForUser(DefaultEcs.Entity entity)
         {
-            dialogEntity.Set(components.DialogState.WaitForSayString);
+            entity.Set(components.DialogState.WaitForSayString);
         }
 
         private void SetCamera(DefaultEcs.Entity entity, int cameraMode)
@@ -176,8 +176,9 @@ namespace zzre.game.systems
 
         private void ChangeWaypoint(DefaultEcs.Entity entity, int fromWpId, int toWpId)
         {
-            var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-            Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+            World.Publish(new messages.NPCChangeWaypoint(NPCEntity, fromWpId, toWpId));
+            NPCEntity.Set(new components.NPCIsWalkingByDialog(entity));
+            entity.Set(components.DialogState.NpcWalking);
         }
 
         private void Fight(DefaultEcs.Entity entity, int stage, bool canFlee)
