@@ -73,6 +73,7 @@ namespace zzre.game.systems
             var labelWidth = labelTileSheet.GetUnformattedWidth(labelEntity.Get<components.ui.Label>().Text);
             
             labelRect = new Rect(labelRect.Center - Vector2.UnitY * labelTileSheet.GetPixelSize(0).Y / 2, labelRect.Size);
+            buttonRect = ref buttonEntity.Get<Rect>(); // creating the label could have invalidated the reference
             buttonRect = Rect.FromTopLeftSize(buttonRect.Min, buttonRect.Size with { X = buttonRect.Size.X + labelWidth + 20 });
 
             // TODO: Set cursor position to first choice button
