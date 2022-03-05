@@ -112,10 +112,10 @@ namespace zzre.game.systems
                 };
             }
 
-            // TODO: Add control locking because of falls
             // TODO: Add voice sample for falls
             // TODO: Add force footstep sound for falls
             Console.WriteLine($"Player fell, cannot move for {lockControlsFor} and says {voiceSample}");
+            World.Publish(new messages.LockPlayerControl(lockControlsFor));
             puppet.DidResetPlanarVelocity = true; // but why?
         }
 
