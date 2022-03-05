@@ -105,7 +105,7 @@ namespace zzre.game
                 new systems.CreatureCamera(this),
                 new systems.Reaper(this),
                 new systems.ParentReaper(this));
-            updateSystems.Add(new systems.PauseDuringUIScreen(this, updateSystems.Systems));
+            updateSystems.Add(new systems.PauseDuring(this, updateSystems.Systems));
             ecsWorld.Publish(new messages.SetCameraMode(-1, default));
 
             syncedLocation = new systems.SyncedLocation(this);

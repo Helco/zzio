@@ -6,7 +6,7 @@ using DefaultEcs.System;
 
 namespace zzre.game.systems
 {
-    [PauseDuringUIScreen]
+    [PauseDuring(PauseTrigger.UIScreen)]
     public class PlayerTriggers : ISystem<float>
     {
         private const Veldrid.MouseButton TriggerButton = Veldrid.MouseButton.Left;

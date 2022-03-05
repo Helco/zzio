@@ -9,7 +9,6 @@ namespace zzre
 {
     public partial class Skeleton
     {
-        private bool didResetToBinding = false;
         private BoneAnimator[]? animators;
 
         public IReadOnlyList<Matrix4x4> BindingBoneToObject { get; }

@@ -3,7 +3,7 @@ using DefaultEcs.System;
 
 namespace zzre.game.systems
 {
-    [PauseDuringUIScreen] // actually only xrotate -_-
+    [PauseDuring(PauseTrigger.UIScreen)] // actually only xrotate -_-
     public partial class BehaviourRotate : AEntitySetSystem<float>
     {
         public BehaviourRotate(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)

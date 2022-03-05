@@ -8,7 +8,7 @@ using zzio;
 
 namespace zzre.game.systems
 {
-    [PauseDuringUIScreen]
+    [PauseDuring(PauseTrigger.UIScreen)]
     public partial class NPCScript : BaseScript
     {
         private const float FlyingColliderSize = 0.2f;

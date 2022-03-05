@@ -9,7 +9,7 @@ using WaypointMode = zzre.game.messages.NPCMoveSystem.Mode;
 
 namespace zzre.game.systems
 {
-    [PauseDuringUIScreen]
+    [PauseDuring(PauseTrigger.UIScreen)]
     public partial class NPCMovementByState : NPCMovementBase
     {
         private const float TargetDistanceToPlayer = 1.1f;

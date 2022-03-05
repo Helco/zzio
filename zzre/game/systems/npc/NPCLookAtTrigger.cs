@@ -5,7 +5,7 @@ using zzio.scn;
 
 namespace zzre.game.systems
 {
-    [PauseDuringUIScreen]
+    [PauseDuring(PauseTrigger.UIScreen)]
     public partial class NPCLookAtTrigger : AEntitySetSystem<float>
     {
         private readonly Scene scene;

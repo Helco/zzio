@@ -2,7 +2,7 @@
 
 namespace zzre.game.systems
 {
-    [PauseDuringUIScreen]
+    [PauseDuring(PauseTrigger.UIScreen)]
     public partial class NPCIdle : AEntitySetSystem<float>
     {
         public NPCIdle(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)

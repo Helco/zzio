@@ -4,7 +4,7 @@ using DefaultEcs.System;
 
 namespace zzre.game.systems
 {
-    [PauseDuringUIScreen]
+    [PauseDuring(PauseTrigger.UIScreen)]
     public partial class BehaviourSwing : AEntitySetSystem<float>
     {
         private const float Speed = 2f;
