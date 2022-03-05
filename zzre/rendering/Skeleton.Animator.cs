@@ -9,15 +9,17 @@ namespace zzre
         private struct BoneAnimator
         {
             private readonly AnimationKeyFrame[] frames;
-            private readonly float duration;
+            private readonly float duration, blendDuration;
             private readonly bool loop;
+            private readonly Quaternion startRotation;
+            private readonly Vector3 startTranslation;
             private int currentFrameI;
-            private float time;
+            private float time, blendTime;
 
             public Quaternion CurRotation { get; private set; }
             public Vector3 CurTranslation { get; private set; }
 
-            public bool IsFinished => MathEx.Cmp(Time, duration);
+            public bool IsFinished => MathEx.Cmp(Time, duration) && !loop;
 
             public float Time
             {
@@ -36,19 +38,36 @@ namespace zzre
                 this.duration = duration;
                 this.loop = loop;
                 currentFrameI = 0;
-                time = 0f;
-                CurRotation = Quaternion.Identity;
-                CurTranslation = Vector3.Zero;
+                time = blendTime = 0f;
+                blendDuration = float.NaN;
+                CurRotation = startRotation = Quaternion.Identity;
+                CurTranslation = startTranslation = Vector3.Zero;
                 UpdatePose();
+            }
+
+            public BoneAnimator(AnimationKeyFrame[] frames, float duration, bool loop, float blendDuration, Quaternion startRotation, Vector3 startTranslation)
+                : this(frames, duration, loop)
+            {
+                this.blendDuration = blendDuration;
+                this.startRotation = startRotation;
+                this.startTranslation = startTranslation;
             }
 
             public void AddTime(float delta)
             {
+                if (float.IsFinite(blendTime))
+                {
+                    blendTime += delta;
+                    if (blendTime >= blendDuration)
+                        blendTime = float.NaN;
+                }
+
                 time += delta;
                 if (loop)
                     NormalizeLoopTime();
                 else
                     time = Math.Clamp(time, 0f, duration);
+
                 UpdatePose();
             }
 
@@ -66,17 +85,44 @@ namespace zzre
                     currentFrameI = 0;
                 while (currentFrameI < frames.Length && frames[currentFrameI].time <= time)
                     currentFrameI++;
-                int nextFrameI = currentFrameI % frames.Length;
-                currentFrameI = (currentFrameI + frames.Length - 1) % frames.Length;
+                int nextFrameI;
+                if (loop)
+                {
+                    nextFrameI = currentFrameI % frames.Length;
+                    currentFrameI = (currentFrameI + frames.Length - 1) % frames.Length;
+                }
+                else
+                {
+                    nextFrameI = Math.Min(currentFrameI, frames.Length - 1);
+                    currentFrameI = Math.Max(0, currentFrameI - 1);
+                }
 
-                float nextFrameTime = nextFrameI > 0
-                    ? frames[nextFrameI].time
-                    : duration + frames[nextFrameI].time;
-                float frameDuration = nextFrameTime - frames[currentFrameI].time;
-                float nextFrameWeight = (time - frames[currentFrameI].time) / frameDuration;
+                float nextFrameWeight;
+                if (currentFrameI == nextFrameI)
+                    nextFrameWeight = 1f;
+                else
+                {
+                    float nextFrameTime = nextFrameI > 0
+                        ? frames[nextFrameI].time
+                        : duration + frames[nextFrameI].time;
+                    float frameDuration = nextFrameTime - frames[currentFrameI].time;
+                    nextFrameWeight = (time - frames[currentFrameI].time) / frameDuration;
+                }
 
-                CurRotation = Quaternion.Lerp(frames[currentFrameI].rot, frames[nextFrameI].rot, nextFrameWeight);
-                CurTranslation = Vector3.Lerp(frames[currentFrameI].pos, frames[nextFrameI].pos, nextFrameWeight);
+                var targetRotation = Quaternion.Lerp(frames[currentFrameI].rot, frames[nextFrameI].rot, nextFrameWeight);
+                var targetTranslation = Vector3.Lerp(frames[currentFrameI].pos, frames[nextFrameI].pos, nextFrameWeight);
+
+                if (float.IsFinite(blendTime))
+                {
+                    var blendWeight = blendTime / blendDuration;
+                    CurRotation = Quaternion.Lerp(startRotation, targetRotation, blendWeight);
+                    CurTranslation = Vector3.Lerp(startTranslation, targetTranslation, blendWeight);
+                }
+                else
+                {
+                    CurRotation = targetRotation;
+                    CurTranslation = targetTranslation;
+                }
             }
         }
     }

@@ -52,16 +52,16 @@ namespace zzre.game.systems
                     bodySkeleton.BlendToAnimation(pool[zzio.AnimationType.Smith], 0f, loop: false);
                     break;
 
-                case zzio.AnimationType.ThudGround when bodySkeleton.CurrentAnimation == null:
+                case zzio.AnimationType.ThudGround when bodySkeleton.Animation == null:
                     animation.Next = zzio.AnimationType.Idle0;
                     break;
 
-                case zzio.AnimationType.Talk0 when bodySkeleton.CurrentAnimation == null:
+                case zzio.AnimationType.Talk0 when bodySkeleton.Animation == null:
                     bodySkeleton.BlendToAnimation(pool[zzio.AnimationType.Idle0], 0.2f, loop: true);
                     break;
 
-                case zzio.AnimationType.Idle1 when bodySkeleton.CurrentAnimation == null:
-                case zzio.AnimationType.Idle2 when bodySkeleton.CurrentAnimation == null:
+                case zzio.AnimationType.Idle1 when bodySkeleton.Animation == null:
+                case zzio.AnimationType.Idle2 when bodySkeleton.Animation == null:
                     animation.Timer = components.NonFairyAnimation.RandomStartTimer(GlobalRandom.Get);
                     bodySkeleton.BlendToAnimation(pool[zzio.AnimationType.Idle0], 0.2f, loop: true);
                     break;

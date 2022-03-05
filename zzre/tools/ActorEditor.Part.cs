@@ -151,7 +151,7 @@ namespace zzre.tools
                 }
 
                 float time = skeleton.AnimationTime;
-                if (skeleton.CurrentAnimation == null)
+                if (skeleton.Animation == null)
                 {
                     SliderFloat("Time", ref time, 0.0f, 0.0f);
                     SmallButton(IconFonts.ForkAwesome.FastBackward);
@@ -162,7 +162,7 @@ namespace zzre.tools
                 }
                 else
                 {
-                    if (SliderFloat("Time", ref time, 0.0f, skeleton.CurrentAnimation.duration))
+                    if (SliderFloat("Time", ref time, 0.0f, skeleton.Animation.duration))
                     {
                         skeleton.AnimationTime = time;
                         foreach (var mat in materials)
@@ -171,7 +171,7 @@ namespace zzre.tools
                         hasChanged = true;
                     }
                     if (SmallButton(IconFonts.ForkAwesome.FastBackward))
-                        skeleton.JumpToAnimation(skeleton.CurrentAnimation);
+                        skeleton.JumpToAnimation(skeleton.Animation);
                     SameLine();
                     if (isPlaying && SmallButton(IconFonts.ForkAwesome.Pause))
                         isPlaying = false;
@@ -179,7 +179,7 @@ namespace zzre.tools
                         isPlaying = true;
                     SameLine();
                     if (SmallButton(IconFonts.ForkAwesome.FastForward))
-                        skeleton.JumpToAnimation(skeleton.CurrentAnimation);
+                        skeleton.JumpToAnimation(skeleton.Animation);
                 }
 
                 PopID();

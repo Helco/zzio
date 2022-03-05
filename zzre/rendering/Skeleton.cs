@@ -10,8 +10,7 @@ namespace zzre
     public partial class Skeleton
     {
         private bool didResetToBinding = false;
-        private BoneAnimator[]? currentAnimators, nextAnimators;
-        private float blendTime, blendDuration;
+        private BoneAnimator[]? animators;
 
         public IReadOnlyList<Matrix4x4> BindingBoneToObject { get; }
         public IReadOnlyList<Matrix4x4> BindingObjectToBone { get; }
@@ -21,21 +20,20 @@ namespace zzre
         public IReadOnlyList<int> Roots { get; }
         public Location Location { get; } = new Location();
 
-        public SkeletalAnimation? CurrentAnimation { get; private set; }
-        public SkeletalAnimation? NextAnimation { get; private set; }
+        public SkeletalAnimation? Animation { get; private set; }
         public float AnimationTime
         {
-            get => currentAnimators == null ? 0.0f : currentAnimators[0].Time;
+            get => animators == null ? 0.0f : animators[0].Time;
             set
             {
-                if (currentAnimators == null)
+                if (animators == null)
                     return;
-                foreach (ref var a in currentAnimators.AsSpan())
+                foreach (ref var a in animators.AsSpan())
                     a.Time = value;
                 AddTime(0.0f);
             }
         }
-        public float NormalizedAnimationTime => AnimationTime / (CurrentAnimation?.duration ?? 1.0f);
+        public float NormalizedAnimationTime => AnimationTime / (Animation?.duration ?? 1.0f);
 
         public Skeleton(RWSkinPLG skin)
         {
@@ -80,100 +78,50 @@ namespace zzre
                 bone.LocalToWorld = BindingBoneToObject[index] * Location.LocalToWorld;
         }
 
-        public void JumpToAnimation(SkeletalAnimation? animation, bool loop = true)
+        public void JumpToAnimation(SkeletalAnimation? nextAnimation, bool loop = true)
         {
-            NextAnimation = null;
-            nextAnimators = null;
-            if (animation == null)
+            if (nextAnimation == null)
             {
-                CurrentAnimation = null;
-                currentAnimators = null;
+                Animation = null;
+                animators = null;
                 return;
             }
 
-            CurrentAnimation = animation;
-            currentAnimators = animation.boneFrames
-                .Select(frameSet => new BoneAnimator(frameSet, animation.duration, loop))
+            Animation = nextAnimation;
+            animators = nextAnimation.boneFrames
+                .Select(frameSet => new BoneAnimator(frameSet, nextAnimation.duration, loop))
                 .ToArray();
             AddTime(0.0f);
         }
 
-        public void BlendToAnimation(SkeletalAnimation animation, float blendDuration, bool loop = true)
+        public void BlendToAnimation(SkeletalAnimation nextAnimation, float blendDuration, bool loop = true)
         {
-            if (currentAnimators == null)
-            {
-                JumpToAnimation(animation, loop);
-                return;
-            }
-
-            if (nextAnimators != null && blendTime >= blendDuration / 2f)
-                SwapNextToCurrent();
-
-            NextAnimation = animation;
-            nextAnimators = animation.boneFrames
-                .Select(frameSet => new BoneAnimator(frameSet, animation.duration, loop))
+            Animation = nextAnimation;
+            animators = nextAnimation.boneFrames
+                .Select((frameSet, i) => new BoneAnimator(frameSet, nextAnimation.duration, loop,
+                    blendDuration, Quaternion.Conjugate(Bones[i].LocalRotation), Bones[i].LocalPosition))
                 .ToArray();
-            blendTime = 0f;
-            this.blendDuration = blendDuration;
             AddTime(0f);
         }
 
         public void AddTime(float delta)
         {
-            if (currentAnimators == null)
-            {
-                if (!didResetToBinding)
-                {
-                    ResetToBinding();
-                    didResetToBinding = true;
-                }
+            if (animators == null)
                 return;
-            }
-            didResetToBinding = false;
-
-            float nextBlendWeight = 0f;
-            if (nextAnimators != null)
-            {
-                blendTime += delta;
-                if (blendTime >= blendDuration)
-                    SwapNextToCurrent();
-                else
-                    nextBlendWeight = blendTime / blendDuration;
-            }
 
             foreach (var (bone, boneI) in Bones.Indexed())
             {
-                currentAnimators[boneI].AddTime(delta);
-                nextAnimators?[boneI].AddTime(delta);
-
-                if (nextAnimators == null)
-                {
-                    // unfortunately no idea why the conjugate has to be used
-                    bone.LocalRotation = Quaternion.Conjugate(currentAnimators[boneI].CurRotation);
-                    bone.LocalPosition = currentAnimators[boneI].CurTranslation;
-                }
-                else
-                {
-                    bone.LocalRotation = Quaternion.Conjugate(
-                        Quaternion.Lerp(currentAnimators[boneI].CurRotation, nextAnimators[boneI].CurRotation, nextBlendWeight));
-                    bone.LocalPosition = Vector3.Lerp(currentAnimators[boneI].CurTranslation, nextAnimators[boneI].CurTranslation, nextBlendWeight);
-                }
+                // unfortunately no idea why the conjugate has to be used
+                animators[boneI].AddTime(delta);
+                bone.LocalRotation = Quaternion.Conjugate(animators[boneI].CurRotation);
+                bone.LocalPosition = animators[boneI].CurTranslation;
             }
 
-            if (currentAnimators.All(a => a.IsFinished))
+            if (animators.All(a => a.IsFinished))
             {
-                SwapNextToCurrent();
-                if (currentAnimators?.All(a => a.IsFinished) ?? false)
-                    SwapNextToCurrent();
+                Animation = null;
+                animators = null;
             }
-        }
-
-        private void SwapNextToCurrent()
-        {
-            currentAnimators = nextAnimators;
-            CurrentAnimation = NextAnimation;
-            nextAnimators = null;
-            NextAnimation = null;
         }
 
         public void ApplySingleIK(int boneIdx, Vector3 worldTargetPos)

@@ -122,7 +122,7 @@ namespace zzre.game.systems
                 case State.Moving when ai.Config.FullAnimationCycles:
                     var body = entity.Get<components.ActorParts>().Body;
                     var skeleton = body.Get<Skeleton>();
-                    if (skeleton.CurrentAnimation == null)
+                    if (skeleton.Animation == null)
                     {
                         if (ai.MovedDistance <= ai.DistanceToWP)
                         {

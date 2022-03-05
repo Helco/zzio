@@ -44,7 +44,7 @@ namespace zzre.game.systems
         {
             foreach (var (subMesh, material) in clumpBuffers.SubMeshes.Zip(materials))
             {
-                if (material.Pose.Skeleton?.CurrentAnimation != null)
+                if (material.Pose.Skeleton?.Animation != null)
                     material.Pose.MarkPoseDirty();
                 (material as IMaterial).Apply(cl);
                 clumpBuffers.SetBuffers(cl);
