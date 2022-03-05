@@ -76,6 +76,8 @@ namespace zzre
 
             window.KeyDown += (ev) =>
             {
+                if (ev.Repeat)
+                    return;
                 windowContainer.HandleKeyEvent(ev.Key, ev.Down);
                 if (ev.Key == Key.F5)
                     windowContainer.ImGuiRenderer.ResetContext(graphicsDevice, graphicsDevice.MainSwapchain.Framebuffer.OutputDescription);
@@ -83,6 +85,8 @@ namespace zzre
 
             window.KeyUp += (ev) =>
             {
+                if (ev.Repeat)
+                    return;
                 windowContainer.HandleKeyEvent(ev.Key, ev.Down);
             };
 

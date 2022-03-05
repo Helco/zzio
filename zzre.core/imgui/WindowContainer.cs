@@ -146,7 +146,7 @@ namespace zzre.imgui
 
         public void HandleKeyEvent(Key sym, bool isDown)
         {
-            if (!GetIO().WantCaptureKeyboard)
+            if (!GetIO().WantTextInput)
                 FocusedWindow?.HandleKeyEvent(sym, isDown);
         }
 
