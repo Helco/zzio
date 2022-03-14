@@ -13,8 +13,23 @@ namespace zzre
 {
     internal class Program
     {
+        // We preload some assemblies as they are likely to be loaded during gameplay
+        // which causes very noticeable hickups.
+        // Nevertheless this is symptom based fixing and this list should be checked
+        // regularly and on different platforms.
+        private static readonly string[] PreloadAssemblies = new[]
+        {
+            "System.Text.RegularExpressions",
+            "System.Reflection.Emit.Lightweight",
+            "System.Reflection.Emit.ILGeneration",
+            "System.Reflection.Primitives",
+            "Veldrid.ImageSharp"
+        };
+
         private static void Main(string[] args)
         {
+            System.Array.ForEach(PreloadAssemblies, n => System.Reflection.Assembly.Load(n));
+
             System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
             var window = VeldridStartup.CreateWindow(new WindowCreateInfo
             {
