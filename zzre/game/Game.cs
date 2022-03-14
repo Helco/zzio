@@ -120,9 +120,9 @@ namespace zzre.game
                 new systems.ModelRenderer(this, components.RenderOrder.LateAdditive));
 
             var worldLocation = new Location();
-            ecsWorld.Set(worldLocation);
             camera.Location.Parent = worldLocation;
             camera.Location.LocalPosition = -worldBuffers.Origin;
+            ecsWorld.Set(worldLocation);
 
             PlayerEntity = ecsWorld.CreateEntity();
             var playerLocation = new Location();
@@ -143,6 +143,7 @@ namespace zzre.game
             PlayerEntity.Set(new components.HumanPhysics(playerColliderSize));
             PlayerEntity.Set(new Sphere(Vector3.Zero, playerColliderSize));
             PlayerEntity.Set(new Inventory(this, savegame));
+            PlayerEntity.Set(components.GameFlow.Normal);
 
             ecsWorld.Publish(new messages.SceneLoaded(savegame.entryId));
 
