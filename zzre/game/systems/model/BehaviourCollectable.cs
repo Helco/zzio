@@ -98,7 +98,7 @@ namespace zzre.game.systems
             collectable.Age = 0f;
             // TODO: Play soundeffect on collectable grab
             if (!collectable.IsDynamic)
-                CreateRemoveItemGameState(collectable.ModelId);
+                game.Publish(new GSModRemoveItem(collectable.ModelId));
             Collect(clumpInfo);
         }
 
@@ -118,16 +118,11 @@ namespace zzre.game.systems
             int amount = itemId == (int)StdItemId.Gold
                 ? random.Next(MinGoldAmount, MaxGoldAmount)
                 : 1;
-            // TODO: Trigger item collection event for collectables
+            game.PlayerEntity.Get<Inventory>().AddItem(itemId, amount);
 
             var dbRow = mappedDb.Items.First(i => i.CardId.EntityId == itemId);
             if (dbRow.Special != 0 || parsedItemId < 0)
-                return; // TODO: Trigger UI for special or random collectables
-        }
-
-        private void CreateRemoveItemGameState(uint modelId)
-        {
-            // TODO: Create RemoveItem GameState for collectables
+                game.Publish(new messages.GotCard(dbRow.Uid, amount));
         }
 
         private static readonly ImmutableArray<StdItemId> ItemPoolXXX = new[]

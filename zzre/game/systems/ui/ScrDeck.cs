@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using DefaultEcs.System;
 using zzio;
-using zzre.game.messages.ui;
 
 using Tab = zzre.game.components.ui.ScrDeck.Tab;
 using static zzre.game.systems.ui.InGameScreen;
@@ -50,13 +49,13 @@ namespace zzre.game.systems.ui
 
         private readonly zzio.db.MappedDB mappedDB;
 
-        public ScrDeck(ITagContainer diContainer) : base(diContainer, isBlocking: true)
+        public ScrDeck(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
         {
             mappedDB = diContainer.GetTag<zzio.db.MappedDB>();
             OnElementDown += HandleElementDown;
         }
 
-        protected override void HandleOpen(in OpenDeck message)
+        protected override void HandleOpen(in messages.ui.OpenDeck message)
         {
             var entity = World.CreateEntity();
             entity.Set<components.ui.ScrDeck>();

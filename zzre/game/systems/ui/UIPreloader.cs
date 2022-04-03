@@ -119,6 +119,16 @@ namespace zzre.game.systems.ui
             return resource;
         }
 
+        public ManagedResource<resources.UITileSheetInfo, TileSheet> GetTileSheetByCardType(CardType type) => type switch
+        {
+            CardType.Fairy => Wiz000,
+            CardType.Item => Itm000,
+            CardType.Spell => Spl000,
+            _ => throw new NotSupportedException($"Unsupported card type {type}")
+        };
+
+        // TODO: Refactor UI factory methods to reduce overloads and increase feature parity
+
         private DefaultEcs.Entity CreateBase(
             DefaultEcs.Entity parent,
             Rect rect,
@@ -208,11 +218,28 @@ namespace zzre.game.systems.ui
             ManagedResource<resources.UITileSheetInfo, TileSheet> font,
             int renderOrder = 0,
             bool doFormat = true,
-            components.ui.UIOffset? offset = null)
+            components.ui.UIOffset? offset = null,
+            components.ui.FullAlignment? textAlign = null,
+            float? lineHeight = null,
+            float wrapLines = float.NaN)
         {
             var entity = CreateBase(parent, Rect.FromMinMax(pos, pos), renderOrder, offset);
             entity.Set(font);
-            entity.Set(new components.ui.Label(text, doFormat));
+
+            if (float.IsFinite(wrapLines) && wrapLines > 0f)
+            {
+                var tileSheet = entity.Get<TileSheet>();
+                text = tileSheet.WrapLines(text, wrapLines);
+            }
+            entity.Set(new components.ui.Label(text, doFormat, lineHeight));
+
+            if (textAlign != null)
+            {
+                var tileSheet = entity.Get<TileSheet>();
+                var size = new Vector2(tileSheet.GetUnformattedWidth(text), tileSheet.GetTextHeight(text, lineHeight));
+                pos -= textAlign.Value.AsFactor * size;
+                entity.Set(Rect.FromMinMax(pos, pos));
+            }
             return entity;
         }
 
@@ -225,15 +252,12 @@ namespace zzre.game.systems.ui
             bool doFormat = true,
             components.ui.UIOffset? offset = null,
             int segmentsPerAdd = 4,
+            float? lineHeight = null,
             float wrapLines = float.NaN,
             bool isBlinking = false)
         {
-            var entity = CreateLabel(parent, pos, "", font, renderOrder, doFormat, offset);
-            if (float.IsFinite(wrapLines) && wrapLines > 0f)
-            {
-                var tileSheet = entity.Get<TileSheet>();
-                text = tileSheet.WrapLines(text, wrapLines);
-            }
+            var entity = CreateLabel(parent, pos, text, font, renderOrder, doFormat, offset, lineHeight: lineHeight, wrapLines: wrapLines);
+            text = entity.Get<components.ui.Label>().Text; // wrapping could have occured
             entity.Set(new components.ui.AnimatedLabel(text, segmentsPerAdd, isBlinking));
             return entity;
         }
@@ -322,14 +346,16 @@ namespace zzre.game.systems.ui
             ManagedResource<resources.UITileSheetInfo, TileSheet> tileSheet,
             int tileI,
             int renderOrder = 0,
-            components.ui.UIOffset? offset = null)
+            components.ui.UIOffset? offset = null,
+            components.ui.FullAlignment? alignment = null)
         {
             var entity = CreateBase(parent, Rect.FromMinMax(pos, pos), renderOrder, offset);
             entity.Set(tileSheet);
             if (tileI >= 0)
             {
                 var tileSize = entity.Get<TileSheet>().GetPixelSize(tileI);
-                var rect = Rect.FromTopLeftSize(pos, tileSize);
+                var align = alignment ?? components.ui.FullAlignment.TopLeft;
+                var rect = Rect.FromTopLeftSize(pos - align.AsFactor * tileSize, tileSize);
                 entity.Set(rect);
                 entity.Set(new components.ui.Tile[] { new(tileI, rect) });
             }

@@ -23,5 +23,6 @@ namespace zzre.game.components.ui
 
         public static readonly FullAlignment Center = new(Alignment.Center, Alignment.Center);
         public static readonly FullAlignment TopLeft = default;
+        public static readonly FullAlignment TopCenter = new(Alignment.Center, Alignment.Min);
     }
 }

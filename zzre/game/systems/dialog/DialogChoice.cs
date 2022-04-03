@@ -14,7 +14,7 @@ namespace zzre.game.systems
         private readonly IDisposable resetUISubscription;
         private readonly IDisposable addChoiceSubscription;
 
-        public DialogChoice(ITagContainer diContainer) : base(diContainer, isBlocking: false)
+        public DialogChoice(ITagContainer diContainer) : base(diContainer, BlockFlags.None)
         {
             resetUISubscription = World.Subscribe<messages.DialogResetUI>(HandleResetUI);
             addChoiceSubscription = World.Subscribe<messages.DialogAddChoice>(HandleAddChoice);

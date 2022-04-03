@@ -49,6 +49,7 @@ namespace zzre.game
                 savegame = zzio.Savegame.ReadNew(reader);
             savegame.sceneId = 2411;
             CurrentGame = new Game(this, savegame);
+            tagContainer.AddTag(CurrentGame);
         }
 
         public void Update()

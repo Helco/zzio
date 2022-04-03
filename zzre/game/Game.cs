@@ -103,6 +103,7 @@ namespace zzre.game
                 new systems.OverworldCamera(this),
                 new systems.TriggerCamera(this),
                 new systems.CreatureCamera(this),
+                new systems.GotCard(this),
                 new systems.Reaper(this),
                 new systems.ParentReaper(this));
             updateSystems.Add(new systems.PauseDuring(this, updateSystems.Systems));
@@ -127,7 +128,7 @@ namespace zzre.game
             PlayerEntity = ecsWorld.CreateEntity();
             var playerLocation = new Location();
             playerLocation.Parent = worldLocation;
-            playerLocation.LocalPosition = new Vector3(195.02159f, 40.1f, 159.80594f);
+            playerLocation.LocalPosition = new Vector3(216f, 40.5f, 219f);
             //playerLocation.LocalPosition = scene.triggers.First(t => t.type == TriggerType.Doorway).pos;
             PlayerEntity.Set(playerLocation);
             PlayerEntity.Set(DefaultEcs.Resource.ManagedResource<zzio.ActorExDescription>.Create("chr01"));

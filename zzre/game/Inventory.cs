@@ -77,13 +77,16 @@ namespace zzre.game
             _ => throw new ArgumentException($"Invalid inventory card type: {cardId.Type}")
         };
 
-        public InventoryItem AddItem(int entityId)
+        public InventoryItem AddItem(int entityId, int amount = 1)
         {
+            if (amount < 1)
+                throw new ArgumentOutOfRangeException(nameof(amount), "Cannot remove items with Add methods");
+
             var cardId = new CardId(CardType.Item, entityId);
             if (TryGetCard(cardId, out var previous))
             {
                 var previousItem = (InventoryItem)previous;
-                previousItem.amount++;
+                previousItem.amount += (uint)amount;
                 return previousItem;
             }
 
@@ -91,7 +94,7 @@ namespace zzre.game
             {
                 cardId = cardId,
                 dbUID = mappedDB.GetItem(entityId).Uid,
-                amount = 1
+                amount = (uint)amount
             };
             Add(item);
             return item;

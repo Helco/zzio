@@ -27,7 +27,11 @@ namespace zzre.game.systems
             lockPlayerSubscription.Dispose();
         }
 
-        private void HandleLockPlayerControl(in messages.LockPlayerControl msg) => lockTimer = msg.Duration;
+        private void HandleLockPlayerControl(in messages.LockPlayerControl msg)
+        {
+            if (msg == messages.LockPlayerControl.Unlock || lockTimer != float.PositiveInfinity)
+                lockTimer = msg.Duration;
+        }
 
         public override void Update(float elapsedTime)
         {

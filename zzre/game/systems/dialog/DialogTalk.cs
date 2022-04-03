@@ -17,7 +17,7 @@ namespace zzre.game.systems
         private readonly IResourcePool resourcePool;
         private readonly IDisposable resetUIDisposable;
 
-        public DialogTalk(ITagContainer diContainer) : base(diContainer, isBlocking: false)
+        public DialogTalk(ITagContainer diContainer) : base(diContainer, BlockFlags.None)
         {
             db = diContainer.GetTag<MappedDB>();
             resourcePool = diContainer.GetTag<IResourcePool>();
@@ -77,8 +77,8 @@ namespace zzre.game.systems
                 Vector2.Zero,
                 text,
                 preload.Fnt003,
+                lineHeight: TalkLineHeight,
                 wrapLines: 400f);
-            entity.Set(new components.ui.Label("", DoFormat: true, TalkLineHeight));
             var wrappedText = entity.Get<components.ui.AnimatedLabel>().FullText;
             var tileSheet = entity.Get<rendering.TileSheet>();
             var textHeight = tileSheet.GetTextHeight(wrappedText, TalkLineHeight);

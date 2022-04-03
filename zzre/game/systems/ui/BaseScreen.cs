@@ -6,6 +6,17 @@ namespace zzre.game.systems.ui
 {
     public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSystem<float>
     {
+        [Flags]
+        protected enum BlockFlags
+        {
+            None = 0,
+            All = DisableGameUpdate | LockPlayerControl,
+
+            DisableGameUpdate = (1 << 0),
+            LockPlayerControl = (1 << 1)
+        }
+
+        private readonly BlockFlags blockFlags;
         private readonly IDisposable openSubscription;
         private readonly IDisposable addedSubscription;
         private readonly IDisposable removedSubscription;
@@ -19,11 +30,9 @@ namespace zzre.game.systems.ui
 
         protected Vector2 ScreenCenter => ui.LogicalScreen.Center;
 
-        public bool IsBlocking { get; }
-
-        protected BaseScreen(ITagContainer diContainer, bool isBlocking) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
+        protected BaseScreen(ITagContainer diContainer, BlockFlags blockFlags) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
         {
-            IsBlocking = isBlocking;
+            this.blockFlags = blockFlags;
             zzContainer = diContainer.GetTag<IZanzarahContainer>();
             zanzarah = diContainer.GetTag<Zanzarah>();
             ui = diContainer.GetTag<UI>();
@@ -50,11 +59,10 @@ namespace zzre.game.systems.ui
             zzContainer.OnMouseUp += HandleMouseUp;
             zzContainer.OnKeyDown += HandleKeyDown;
 
-            if (!IsBlocking)
-                return;
-            if (zanzarah.CurrentGame != null)
+            if (zanzarah.CurrentGame != null && blockFlags.HasFlag(BlockFlags.DisableGameUpdate))
                 zanzarah.CurrentGame.IsUpdateEnabled = false;
-            zanzarah.CurrentGame?.Publish(messages.LockPlayerControl.Forever);
+            if (blockFlags.HasFlag(BlockFlags.LockPlayerControl))
+                zanzarah.CurrentGame?.Publish(messages.LockPlayerControl.Forever);
         }
 
         protected virtual void HandleRemoved(in DefaultEcs.Entity entity, in TComponent _)
@@ -63,11 +71,10 @@ namespace zzre.game.systems.ui
             zzContainer.OnMouseUp -= HandleMouseUp;
             zzContainer.OnKeyDown -= HandleKeyDown;
 
-            if (!IsBlocking)
-                return;
-            if (zanzarah.CurrentGame != null)
+            if (zanzarah.CurrentGame != null && blockFlags.HasFlag(BlockFlags.DisableGameUpdate))
                 zanzarah.CurrentGame.IsUpdateEnabled = true;
-            zanzarah.CurrentGame?.Publish(messages.LockPlayerControl.Unlock);
+            if (blockFlags.HasFlag(BlockFlags.LockPlayerControl))
+                zanzarah.CurrentGame?.Publish(messages.LockPlayerControl.Unlock);
         }
 
         private void HandleMouseDown(Veldrid.MouseButton button, Vector2 pos) => HandleMouse(button, pos, isDown: true);

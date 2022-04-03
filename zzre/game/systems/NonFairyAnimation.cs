@@ -9,8 +9,17 @@ namespace zzre.game.systems
         private const float SmithCycleDuration = 1.2f;
         private const float AltIdleCycleDuration = 6f;
 
+        private readonly IDisposable switchDisposable;
+
         public NonFairyAnimation(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
+            switchDisposable = World.Subscribe<messages.SwitchAnimation>(HandleSwitchAnimation);
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            switchDisposable?.Dispose();
         }
 
         [Update]
@@ -66,6 +75,17 @@ namespace zzre.game.systems
                     bodySkeleton.BlendToAnimation(pool[zzio.AnimationType.Idle0], 0.2f, loop: true);
                     break;
             }
+        }
+
+        private void HandleSwitchAnimation(in messages.SwitchAnimation message)
+        {
+            var bodyEntity = message.Entity.Get<components.ActorParts>().Body;
+            var bodySkeleton = bodyEntity.Get<Skeleton>();
+            var bodyPool = bodyEntity.Get<components.AnimationPool>();
+            ref var animation = ref message.Entity.Get<components.NonFairyAnimation>();
+
+            animation.Next = message.Animation;
+            Switch(bodySkeleton, bodyPool, ref animation);
         }
 
         private void Switch(
