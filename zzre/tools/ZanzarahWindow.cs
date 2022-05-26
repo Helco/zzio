@@ -16,6 +16,7 @@ namespace zzre.tools
         private readonly HashSet<MouseButton> buttonsDown = new HashSet<MouseButton>();
         private Action<Vector2>? onMouseMove;
         private bool moveCamWithDrag;
+        private ECSExplorerWindow? ecsExplorer;
 
         private bool MoveCamWithDrag
         {
@@ -95,6 +96,7 @@ namespace zzre.tools
                 () => ref moveCamWithDrag,
                 () => MoveCamWithDrag = MoveCamWithDrag);
             menuBar.AddButton("Open scene", HandleOpenScene);
+            menuBar.AddButton("ECS Explorer", HandleOpenECSExplorer);
 
             Window.OnContent += HandleContent;
             fbArea.OnRender += Zanzarah.Render;
@@ -148,6 +150,17 @@ namespace zzre.tools
                 return;
 
             diContainer.GetTag<OpenDocumentSet>().OpenWith<SceneEditor>(sceneResource);
+        }
+
+        private void HandleOpenECSExplorer()
+        {
+            if (ecsExplorer == null)
+            {
+                ecsExplorer = new ECSExplorerWindow(diContainer, this);
+                ecsExplorer.Window.OnClose += () => ecsExplorer = null;
+            }
+            else
+                diContainer.GetTag<WindowContainer>().SetNextFocusedWindow(ecsExplorer.Window);
         }
     }
 }

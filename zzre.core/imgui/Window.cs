@@ -63,5 +63,11 @@ namespace zzre.imgui
         }
 
         public void Focus() => Container.SetNextFocusedWindow(this);
+
+        protected override void DisposeManaged()
+        {
+            OpenState = WindowOpenState.Closed;
+            base.DisposeManaged();
+        }
     }
 }
