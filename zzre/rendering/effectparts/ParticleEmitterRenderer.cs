@@ -52,7 +52,7 @@ namespace zzre.rendering.effectparts
         public void AddTime(float deltaTime, float newProgress)
         {
             behaviour.SpawnRate = 0f;
-            switch(data.spawnMode)
+            switch (data.spawnMode)
             {
                 case ParticleSpawnMode.Constant:
                     behaviour.SpawnRate = data.spawnRate;

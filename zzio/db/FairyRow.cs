@@ -5,17 +5,17 @@ namespace zzio.db
 {
     public class FairyRow : MappedRow
     {
-        public FairyRow(MappedDB mappedDB, Row row) : base(ModuleType.Fairy, mappedDB, row) {}
+        public FairyRow(MappedDB mappedDB, Row row) : base(ModuleType.Fairy, mappedDB, row) { }
 
-        public string Mesh     => row.cells[0].String;
+        public string Mesh => row.cells[0].String;
 
-        public string Name     => foreignText(1);
+        public string Name => foreignText(1);
 
-        public ZZClass Class0      => (ZZClass)row.cells[2].Integer;
+        public ZZClass Class0 => (ZZClass)row.cells[2].Integer;
 
-        public CardId CardId   => new CardId(row.cells[3].Integer);
+        public CardId CardId => new CardId(row.cells[3].Integer);
 
-        public int Unknown     => row.cells[4].Integer;
+        public int Unknown => row.cells[4].Integer;
 
         public FairyLevelData[] Levels => Enumerable
             .Range(5, 10)
@@ -33,29 +33,29 @@ namespace zzio.db
         public FairyLevelData Level8 => new FairyLevelData(unchecked((uint)row.cells[13].Integer));
         public FairyLevelData Level9 => new FairyLevelData(unchecked((uint)row.cells[14].Integer));
 
-        public string Info     => foreignText(15);
+        public string Info => foreignText(15);
 
-        public int MHP         => row.cells[16].Integer;
+        public int MHP => row.cells[16].Integer;
 
-        public int EvolCId     => row.cells[17].Integer;
+        public int EvolCId => row.cells[17].Integer;
 
-        public int EvolVar     => row.cells[18].Integer;
+        public int EvolVar => row.cells[18].Integer;
 
-        public int MovSpeed    => row.cells[19].Integer;
-        
-        public int JumpPower   => row.cells[20].Integer;
+        public int MovSpeed => row.cells[19].Integer;
+
+        public int JumpPower => row.cells[20].Integer;
 
         public int CriticalHit => row.cells[21].Integer;
 
-        public int Sphere      => row.cells[22].Integer;
+        public int Sphere => row.cells[22].Integer;
 
-        public int Glow        => row.cells[23].Integer;
+        public int Glow => row.cells[23].Integer;
 
-        public int Unknown24   => row.cells[24].Integer;
+        public int Unknown24 => row.cells[24].Integer;
 
-        public int LevelUp     => row.cells[25].Integer;
-        
-        public int WingSound   => row.cells[26].Integer;
+        public int LevelUp => row.cells[25].Integer;
+
+        public int WingSound => row.cells[26].Integer;
 
         public double BaseMoveSpeed => MovSpeed switch
         {

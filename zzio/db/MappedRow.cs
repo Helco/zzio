@@ -38,7 +38,7 @@ namespace zzio.db
         }
 
         public ModuleType Module
-        { 
+        {
             get
             {
                 return EnumUtils.intToEnum<ModuleType>(Uid.Module);

@@ -157,7 +157,7 @@ namespace zzre.tools
             ModelLink("Body: ", description?.body.model);
             Text($"Body animations: {description?.body.animations.Length ?? 0}");
             Text($"Body bones: {body?.skeleton.Bones.Count ?? 0}");
-            
+
             NewLine();
             ModelLink("Wings: ", description?.wings.model);
             Text($"Wings animations: {description?.wings.animations.Length ?? 0}");

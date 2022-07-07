@@ -12,7 +12,7 @@ namespace zzre.imgui
             public string Name { get; }
             public Action<string>? OnContent { get; }
             public MenuBarItem? Parent { get; }
-            public List<MenuBarItem> Children { get; } = new List<MenuBarItem>(); 
+            public List<MenuBarItem> Children { get; } = new List<MenuBarItem>();
 
             public MenuBarItem(MenuBarItem? parent, string name, Action<string>? onClick)
             {

@@ -89,7 +89,7 @@ namespace zzre.game.systems
             var random = GlobalRandom.Get;
             var (lastWaypointId, curWaypointId) = (move.LastWaypointId, move.CurWaypointId);
 
-            switch(waypointMode)
+            switch (waypointMode)
             {
                 case WaypointMode.FarthestFromPlayer:
                     if (Vector3.DistanceSquared(location.LocalPosition, PlayerLocation.LocalPosition) > MaxPlayerDistanceSqr)
@@ -99,28 +99,28 @@ namespace zzre.game.systems
                         .Where(wp => Vector3.DistanceSquared(location.LocalPosition, wp.pos) < MaxWaypointDistanceSqr)
                         .OrderByDescending(wp => Vector3.DistanceSquared(PlayerLocation.LocalPosition, wp.pos))
                         .FirstOrDefault();
-                
+
                 case WaypointMode.LuckyNearest:
-                {
-                    var potentialWps = waypointsByCategory[wpCategory]
-                        .Where(wp => wp.ii3 == 0 && wp.idx != lastWaypointId && wp.idx != curWaypointId)
-                        .OrderBy(wp => Vector3.DistanceSquared(location.LocalPosition, wp.pos));
-                    return move.CurWaypointId < 0
-                        ? potentialWps.FirstOrDefault()
-                        : potentialWps.FirstOrDefault(wp => random.NextFloat() > Mode1Chance);
-                }
+                    {
+                        var potentialWps = waypointsByCategory[wpCategory]
+                            .Where(wp => wp.ii3 == 0 && wp.idx != lastWaypointId && wp.idx != curWaypointId)
+                            .OrderBy(wp => Vector3.DistanceSquared(location.LocalPosition, wp.pos));
+                        return move.CurWaypointId < 0
+                            ? potentialWps.FirstOrDefault()
+                            : potentialWps.FirstOrDefault(wp => random.NextFloat() > Mode1Chance);
+                    }
 
                 case WaypointMode.Random:
-                {
-                    var lastTargetPos = move.CurWaypointId < 0 ? location.LocalPosition : move.LastTargetPos;
-                    var potentialWps = waypointsByCategory[wpCategory]
-                        .Where(wp => wp.ii3 == 0 && wp.idx != lastWaypointId && wp.idx != curWaypointId)
-                        .Where(wp => Vector3.DistanceSquared(lastTargetPos, wp.pos) < MaxWaypointDistanceSqr)
-                        .ToArray();
-                    return potentialWps.Any()
-                        ? random.NextOf(potentialWps)
-                        : null;
-                }
+                    {
+                        var lastTargetPos = move.CurWaypointId < 0 ? location.LocalPosition : move.LastTargetPos;
+                        var potentialWps = waypointsByCategory[wpCategory]
+                            .Where(wp => wp.ii3 == 0 && wp.idx != lastWaypointId && wp.idx != curWaypointId)
+                            .Where(wp => Vector3.DistanceSquared(lastTargetPos, wp.pos) < MaxWaypointDistanceSqr)
+                            .ToArray();
+                        return potentialWps.Any()
+                            ? random.NextOf(potentialWps)
+                            : null;
+                    }
 
                 default: throw new NotImplementedException($"Unimplemented waypoint mode {waypointMode}");
             }

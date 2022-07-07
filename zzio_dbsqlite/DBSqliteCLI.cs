@@ -82,7 +82,7 @@ namespace zzio.dbsqlitecli
                     for (int i = 0; i < row.cells.Length; i++)
                     {
                         var cell = row.cells[i];
-                        switch(cell.Type)
+                        switch (cell.Type)
                         {
                             case CellDataType.Buffer:
                             case CellDataType.Unknown:

@@ -49,7 +49,7 @@ namespace zzre.rendering
             loadedShaders.Clear();
         }
 
-        
+
 
         public IPipelineBuilder GetPipeline() => new PipelineBuilder(this);
     }

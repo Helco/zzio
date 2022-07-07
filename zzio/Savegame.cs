@@ -108,7 +108,7 @@ namespace zzio
 
         public static GlobalVar ReadNew(BinaryReader r) =>
             new GlobalVar(r.ReadUInt32(), r.ReadUInt32());
-        
+
         public void Write(BinaryWriter w)
         {
             w.Write(ChangeCount);

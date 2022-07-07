@@ -74,7 +74,7 @@ namespace zzio
             byte[] actualChecksum = md5.ComputeHash(buffer, startOfHashed, buffer.Length - startOfHashed);
             if (!actualChecksum.SequenceEqual(expectedChecksum))
                 throw new InvalidDataException("VarConfig checksums do not match");
-            
+
             return config;
         }
 

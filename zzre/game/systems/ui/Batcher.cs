@@ -104,7 +104,7 @@ namespace zzre.game.systems.ui
                 instance.textureWeight = material == null ? 0f : 1f;
                 instance.uvPos = uvRectangle.Min;
                 instance.uvSize = uvRectangle.Size;
-                
+
                 nextInstanceCount++;
             }
         }

@@ -13,8 +13,8 @@ namespace zzre.rendering.effectparts
         private struct Spark
         {
             public BasicParticle basic;
-            
-            public void Update (float timeDelta, in ParticleEmitter data) => basic.Update(timeDelta);
+
+            public void Update(float timeDelta, in ParticleEmitter data) => basic.Update(timeDelta);
 
             public void Spawn(Random random, Vector3 pos, in ParticleEmitter data) =>
                 basic.SpawnLifeGravityColorDirVel(random, data, out var dir);

@@ -3,7 +3,8 @@
     namespace rwbs
     {
         //Source: http://www.gtamodding.com/wiki/List_of_RW_section_IDs
-        public enum SectionId {
+        public enum SectionId
+        {
             Struct = 0x0001,
             String = 0x0002,
             Extension = 0x0003,

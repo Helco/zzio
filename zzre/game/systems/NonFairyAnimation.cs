@@ -43,7 +43,7 @@ namespace zzre.game.systems
             in components.AnimationPool pool,
             ref components.NonFairyAnimation animation)
         {
-            switch(animation.Current)
+            switch (animation.Current)
             {
                 case zzio.AnimationType.Idle0 when
                     animation.CanUseAlternativeIdles &&
@@ -97,7 +97,7 @@ namespace zzre.game.systems
             float blendDuration;
             bool loops = true;
 
-            switch(animation.Next)
+            switch (animation.Next)
             {
                 case zzio.AnimationType _ when SimpleSwitches.TryGetValue(animation.Next, out var simple):
                     blendDuration = simple.BlendDuration;
@@ -123,7 +123,7 @@ namespace zzre.game.systems
                         zzio.AnimationType.Walk0 => 0.1f,
                         zzio.AnimationType.Walk1 => 0.4f,
                         zzio.AnimationType.Idle0 => 0.2f,
-                        zzio.AnimationType.Fall  => 0.1f,
+                        zzio.AnimationType.Fall => 0.1f,
                         _ => 0f
                     };
                     break;

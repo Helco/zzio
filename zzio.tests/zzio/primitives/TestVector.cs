@@ -14,7 +14,8 @@ namespace zzio.tests.primitives
         };
 
         [Test]
-        public void ctor() {
+        public void ctor()
+        {
             Vector3 vec = new Vector3(0.1f, 0.2f, 0.3f);
             Assert.AreEqual(0.1f, vec.X);
             Assert.AreEqual(0.2f, vec.Y);
@@ -22,7 +23,8 @@ namespace zzio.tests.primitives
         }
 
         [Test]
-        public void read() {
+        public void read()
+        {
             MemoryStream stream = new MemoryStream(expected, false);
             using BinaryReader reader = new BinaryReader(stream);
             Vector3 vec = reader.ReadVector3();
@@ -32,7 +34,8 @@ namespace zzio.tests.primitives
         }
 
         [Test]
-        public void write() {
+        public void write()
+        {
             MemoryStream stream = new MemoryStream();
             using BinaryWriter writer = new BinaryWriter(stream);
             Vector3 vec = new Vector3(-345.0f, 678.0f, 23.8f);

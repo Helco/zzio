@@ -192,7 +192,7 @@ namespace zzre.game.systems
 
             return newPos - colliderOffset * Vector3.UnitY;
         }
-        
+
         private Vector3 CreatureCollision(
             Vector3 newPos,
             in components.PhysicParameters parameters)
@@ -305,7 +305,7 @@ namespace zzre.game.systems
                 || collision.type != CollisionType.World
                 || !state.HitFloor
                 || worldCollider.Cast(new Line(
-                    pos + Vector3.UnitY * 1f, 
+                    pos + Vector3.UnitY * 1f,
                     pos - Vector3.UnitY * 1.6f)) != null)
                 return;
 

@@ -83,7 +83,7 @@ namespace zzmaps
         public int MinZoomLevelFor(float min, float max)
         {
             // TODO: Get the formula for that
-            for (int i = 1; ;i++)
+            for (int i = 1; ; i++)
             {
                 if (TileCountForAndAt(min, max, i) > 1)
                     return i;

@@ -74,7 +74,7 @@ namespace zzio
 #if DEBUG
             BuildType = ZZBuildType.ZZIODebug,
 #else
-            BuildType = ZZBuildType.ZZIO,
+        BuildType = ZZBuildType.ZZIO,
 #endif
             Unknown1 = 0,
             BuildVersion = 1,

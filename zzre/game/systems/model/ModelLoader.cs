@@ -32,7 +32,7 @@ namespace zzre.game.systems
         }
 
         public bool IsEnabled { get; set; } = true;
-        
+
         public void Update(float state)
         {
         }
@@ -146,18 +146,18 @@ namespace zzre.game.systems
 
         private static components.RenderOrder RenderOrderFromRenderType(FOModelRenderType type) => type switch
         {
-            FOModelRenderType.EarlySolid    => components.RenderOrder.EarlySolid,
-            FOModelRenderType.Solid         => components.RenderOrder.Solid,
-            FOModelRenderType.LateSolid     => components.RenderOrder.LateSolid,
+            FOModelRenderType.EarlySolid => components.RenderOrder.EarlySolid,
+            FOModelRenderType.Solid => components.RenderOrder.Solid,
+            FOModelRenderType.LateSolid => components.RenderOrder.LateSolid,
             FOModelRenderType.EarlyAdditive => components.RenderOrder.EarlyAdditive,
-            FOModelRenderType.Additive      => components.RenderOrder.Additive,
-            FOModelRenderType.LateAdditive  => components.RenderOrder.LateAdditive,
-            FOModelRenderType.EnvMap32      => components.RenderOrder.EnvMap,
-            FOModelRenderType.EnvMap64      => components.RenderOrder.EnvMap,
-            FOModelRenderType.EnvMap96      => components.RenderOrder.EnvMap,
-            FOModelRenderType.EnvMap128     => components.RenderOrder.EnvMap,
-            FOModelRenderType.EnvMap196     => components.RenderOrder.EnvMap,
-            FOModelRenderType.EnvMap255     => components.RenderOrder.EnvMap,
+            FOModelRenderType.Additive => components.RenderOrder.Additive,
+            FOModelRenderType.LateAdditive => components.RenderOrder.LateAdditive,
+            FOModelRenderType.EnvMap32 => components.RenderOrder.EnvMap,
+            FOModelRenderType.EnvMap64 => components.RenderOrder.EnvMap,
+            FOModelRenderType.EnvMap96 => components.RenderOrder.EnvMap,
+            FOModelRenderType.EnvMap128 => components.RenderOrder.EnvMap,
+            FOModelRenderType.EnvMap196 => components.RenderOrder.EnvMap,
+            FOModelRenderType.EnvMap255 => components.RenderOrder.EnvMap,
 
             _ => throw new NotSupportedException($"Unsupported FOModelRenderType: {type}")
         };
@@ -185,35 +185,35 @@ namespace zzre.game.systems
                 case BehaviourType.ZRotate1: entity.Set(new components.behaviour.Rotate(Vector3.UnitZ, -5f)); break;
                 case BehaviourType.ZRotate2: entity.Set(new components.behaviour.Rotate(Vector3.UnitZ, -25f)); break;
 
-                case BehaviourType.River2:      entity.Set(new components.behaviour.UVShift() { Shift = 1f }); break;
-                case BehaviourType.River3:      entity.Set(new components.behaviour.UVShift() { Shift = 2f }); break;
-                case BehaviourType.River4:      entity.Set(new components.behaviour.UVShift() { Shift = 3f }); break;
-                case BehaviourType.River5:      entity.Set(new components.behaviour.UVShift() { Shift = 0.01f }); break;
-                case BehaviourType.River6:      entity.Set(new components.behaviour.UVShift() { Shift = 0.02f }); break;
-                case BehaviourType.River7:      entity.Set(new components.behaviour.UVShift() { Shift = 0.04f }); break;
-                case BehaviourType.River8:      entity.Set(new components.behaviour.UVShift() { Shift = 0.06f }); break;
+                case BehaviourType.River2: entity.Set(new components.behaviour.UVShift() { Shift = 1f }); break;
+                case BehaviourType.River3: entity.Set(new components.behaviour.UVShift() { Shift = 2f }); break;
+                case BehaviourType.River4: entity.Set(new components.behaviour.UVShift() { Shift = 3f }); break;
+                case BehaviourType.River5: entity.Set(new components.behaviour.UVShift() { Shift = 0.01f }); break;
+                case BehaviourType.River6: entity.Set(new components.behaviour.UVShift() { Shift = 0.02f }); break;
+                case BehaviourType.River7: entity.Set(new components.behaviour.UVShift() { Shift = 0.04f }); break;
+                case BehaviourType.River8: entity.Set(new components.behaviour.UVShift() { Shift = 0.06f }); break;
                 case BehaviourType.SkyMovement: entity.Set(new components.behaviour.UVShift() { Shift = 0.03f }); break;
 
                 // parameters and names are correct because original, don't mind the the inconsistencies
-                case BehaviourType.DoorYellow:       entity.Set(new components.behaviour.Door(isRight: false, speed: 190f,  keyItemId: StdItemId.GreenBoneKey)); break;
-                case BehaviourType.DoorRed:          entity.Set(new components.behaviour.Door(isRight: false, speed: 190f,  keyItemId: StdItemId.RedBoneKey)); break;
-                case BehaviourType.DoorBlue:         entity.Set(new components.behaviour.Door(isRight: false, speed: 190f,  keyItemId: StdItemId.BlueBoneKey)); break;
-                case BehaviourType.DoorSilver:       entity.Set(new components.behaviour.Door(isRight: true,  speed: 190f,  keyItemId: StdItemId.HeavyIronKey)); break;
-                case BehaviourType.DoorGold:         entity.Set(new components.behaviour.Door(isRight: true,  speed: 190f,  keyItemId: StdItemId.CatacombsKey)); break;
-                case BehaviourType.DoorIron:         entity.Set(new components.behaviour.Door(isRight: true,  speed: 190f,  keyItemId: StdItemId.DwarvFactoryKey)); break;
-                case BehaviourType.DoorBronze:       entity.Set(new components.behaviour.Door(isRight: true,  speed: 190f,  keyItemId: StdItemId.RufusKey)); break;
-                case BehaviourType.DoorCopper:       entity.Set(new components.behaviour.Door(isRight: true,  speed: 190f,  keyItemId: StdItemId.KeyOfPixieGuard)); break;
-                case BehaviourType.DoorPlating:      entity.Set(new components.behaviour.Door(isRight: true,  speed: 190f,  keyItemId: null)); break;
-                case BehaviourType.DoorGlass:        entity.Set(new components.behaviour.Door(isRight: true,  speed: 190f,  keyItemId: StdItemId.TownsHallKey)); break;
-                case BehaviourType.LockedMetalDoor:  entity.Set(new components.behaviour.Door(isRight: false, speed: 190f,  keyItemId: null)); break;
-                case BehaviourType.LockedWoodenDoor: entity.Set(new components.behaviour.Door(isRight: true,  speed: 190f,  keyItemId: null)); break;
-                case BehaviourType.SimpleDoorLeft:   entity.Set(new components.behaviour.Door(isRight: true,  speed: 190f,  keyItemId: null)); break;
-                case BehaviourType.SimpleDoorRight:  entity.Set(new components.behaviour.Door(isRight: true,  speed: -190f, keyItemId: null)); break;
-                case BehaviourType.MetalDoorLeft:    entity.Set(new components.behaviour.Door(isRight: false, speed: -190f, keyItemId: null)); break;
+                case BehaviourType.DoorYellow: entity.Set(new components.behaviour.Door(isRight: false, speed: 190f, keyItemId: StdItemId.GreenBoneKey)); break;
+                case BehaviourType.DoorRed: entity.Set(new components.behaviour.Door(isRight: false, speed: 190f, keyItemId: StdItemId.RedBoneKey)); break;
+                case BehaviourType.DoorBlue: entity.Set(new components.behaviour.Door(isRight: false, speed: 190f, keyItemId: StdItemId.BlueBoneKey)); break;
+                case BehaviourType.DoorSilver: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: StdItemId.HeavyIronKey)); break;
+                case BehaviourType.DoorGold: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: StdItemId.CatacombsKey)); break;
+                case BehaviourType.DoorIron: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: StdItemId.DwarvFactoryKey)); break;
+                case BehaviourType.DoorBronze: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: StdItemId.RufusKey)); break;
+                case BehaviourType.DoorCopper: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: StdItemId.KeyOfPixieGuard)); break;
+                case BehaviourType.DoorPlating: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: null)); break;
+                case BehaviourType.DoorGlass: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: StdItemId.TownsHallKey)); break;
+                case BehaviourType.LockedMetalDoor: entity.Set(new components.behaviour.Door(isRight: false, speed: 190f, keyItemId: null)); break;
+                case BehaviourType.LockedWoodenDoor: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: null)); break;
+                case BehaviourType.SimpleDoorLeft: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: null)); break;
+                case BehaviourType.SimpleDoorRight: entity.Set(new components.behaviour.Door(isRight: true, speed: -190f, keyItemId: null)); break;
+                case BehaviourType.MetalDoorLeft: entity.Set(new components.behaviour.Door(isRight: false, speed: -190f, keyItemId: null)); break;
 
-                case BehaviourType.CityDoorUp:       entity.Set(new components.behaviour.CityDoor(speed: 1.5f,  keyItemId: null)); break;
-                case BehaviourType.CityDoorDown:     entity.Set(new components.behaviour.CityDoor(speed: -1.5f, keyItemId: null)); break;
-                case BehaviourType.CityDoorLock:     entity.Set(new components.behaviour.CityDoor(speed: 1.5f,  keyItemId: StdItemId.HeavyIronKey)); break;
+                case BehaviourType.CityDoorUp: entity.Set(new components.behaviour.CityDoor(speed: 1.5f, keyItemId: null)); break;
+                case BehaviourType.CityDoorDown: entity.Set(new components.behaviour.CityDoor(speed: -1.5f, keyItemId: null)); break;
+                case BehaviourType.CityDoorLock: entity.Set(new components.behaviour.CityDoor(speed: 1.5f, keyItemId: StdItemId.HeavyIronKey)); break;
 
                 case BehaviourType.Collectable:
                     entity.Set(new components.behaviour.Collectable() { IsDynamic = false, ModelId = modelId });

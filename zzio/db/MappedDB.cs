@@ -51,8 +51,8 @@ namespace zzio.db
                     group => group.Key,
                     group => group.Last().Value
                 );
-            
-            switch(module)
+
+            switch (module)
             {
                 case ModuleType.Fairy: fairiesByIndex.Reset(); break;
                 case ModuleType.Item: itemsByIndex.Reset(); break;

@@ -23,7 +23,7 @@ namespace zzio.tests
             Assert.True(archive.ContainsFile("a/e/f/g.txt"));
             Assert.True(archive.ContainsFile("a/A.tXT"));
             Assert.True(archive.ContainsFile("a/../a/./\\..\\A\\a.txt"));
-            
+
             Assert.False(archive.ContainsFile("a.txt"));
             Assert.False(archive.ContainsFile(".."));
             Assert.False(archive.ContainsFile("../A/"));

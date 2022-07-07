@@ -76,19 +76,19 @@ namespace zzre.game.systems.ui
         {
             preload.CreateImage(
                 entity,
-                - new Vector2(52, 240),
+                -new Vector2(52, 240),
                 "dec000",
                 renderOrder: 1);
 
             deck.SpellBackground = preload.CreateImage(
                 entity,
-                - new Vector2(320, 240),
+                -new Vector2(320, 240),
                 "dec001",
                 renderOrder: 1);
 
             deck.SummaryBackground = preload.CreateImage(
                 entity,
-                - new Vector2(320, 240),
+                -new Vector2(320, 240),
                 "dec002",
                 renderOrder: 1);
 
@@ -332,7 +332,7 @@ namespace zzre.game.systems.ui
             builder.Append(" L-");
             builder.Append(fairy.level);
             if (fairy.level < 10)
-                builder.Append (' ');
+                builder.Append(' ');
 
             builder.Append("  {101}");
             builder.Append(fairy.xp);
@@ -506,7 +506,7 @@ namespace zzre.game.systems.ui
         }
 
         private static bool IsInfoTab(Tab tab) => tab == Tab.Fairies || tab == Tab.Items;
-        private static bool IsSpellTab(Tab tab) => tab == Tab.AttackSpells|| tab == Tab.SupportSpells;
+        private static bool IsSpellTab(Tab tab) => tab == Tab.AttackSpells || tab == Tab.SupportSpells;
 
         private void OpenTab(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, Tab newTab)
         {

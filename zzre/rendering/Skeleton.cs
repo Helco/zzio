@@ -37,7 +37,7 @@ namespace zzre
         public Skeleton(RWSkinPLG skin)
         {
             BindingObjectToBone = skin.bones.Select(b => b.objectToBone with { M14 = 0f, M24 = 0f, M34 = 0f, M44 = 1f }).ToArray();
-            UserIds = skin.bones.Select(b => (int)b.id).ToArray();            
+            UserIds = skin.bones.Select(b => (int)b.id).ToArray();
 
             var roots = new List<int>();
             var bones = new Location[skin.bones.Length];
@@ -58,7 +58,7 @@ namespace zzre
                 else if (!bone.flags.HasFlag(BoneFlags.HasNextSibling))
                 {
                     while (parentStack.Any() &&
-                        !skin.bones[parentStack.Pop()].flags.HasFlag(BoneFlags.HasNextSibling));
+                        !skin.bones[parentStack.Pop()].flags.HasFlag(BoneFlags.HasNextSibling)) ;
                 }
 
                 bones[index] = new Location();

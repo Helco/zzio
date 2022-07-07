@@ -43,7 +43,7 @@ namespace zzre.core.tests.math
             Assert.AreEqual(0.0f, Vector3.Distance(new Vector3(-1.0f, -22.0f, -3.0f), box.ClosestPoint(loc, Vector3.One * -100)), EPS);
             Assert.AreEqual(0.0f, Vector3.Distance(new Vector3(1.0f, -18.0f, 3.0f), box.ClosestPoint(loc, Vector3.One * 100)), EPS);
             Assert.AreEqual(0.0f, Vector3.Distance(new Vector3(1.0f, -22.0f, 0.0f), box.ClosestPoint(loc, new Vector3(1, -1, 0) * 100)), EPS);
-            
+
         }
     }
 }

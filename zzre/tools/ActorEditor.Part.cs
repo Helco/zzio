@@ -32,7 +32,7 @@ namespace zzre.tools
             public readonly DebugSkeletonRenderer skeletonRenderer;
             public readonly (AnimationType type, string fileName, SkeletalAnimation ani)[] animations;
             public (int BoneIdx, Vector3 TargetPos)? singleIK = null;
-            
+
             public Part(ITagContainer diContainer, string modelName, (AnimationType type, string filename)[] animationNames)
             {
                 this.diContainer = diContainer;
@@ -217,7 +217,7 @@ namespace zzre.tools
                     PopItemWidth();
                     NextColumn();
 
-                    
+
                     var nameDummy = filename;
                     InputText("##name", ref nameDummy, 256, ImGuiNET.ImGuiInputTextFlags.ReadOnly);
                     SameLine();

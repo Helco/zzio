@@ -15,7 +15,7 @@ namespace zzio.tests.utils
         [Test]
         public void equals()
         {
-            #pragma warning disable CS1718
+#pragma warning disable CS1718
             FilePath path = new FilePath("a/b/c/d");
             Assert.AreEqual(true, path == new FilePath(path));
             Assert.AreEqual(true, path == "a/b/c/d");
@@ -37,7 +37,7 @@ namespace zzio.tests.utils
             Assert.AreEqual(false, new FilePath("a/b") == nullPath);
             Assert.AreEqual(true, new FilePath("a/b") != nullPath);
 
-            #pragma warning restore CS1718
+#pragma warning restore CS1718
         }
 
         [Test]

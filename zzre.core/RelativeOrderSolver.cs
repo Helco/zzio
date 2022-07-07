@@ -27,7 +27,7 @@ namespace zzre.core
                 .ToDictionary(group => group.Key, group => group.ToList());
 
             var newOrdering = new List<T>();
-            while(dependsOn.Any())
+            while (dependsOn.Any())
             {
                 var nextItem = dependsOn.FirstOrDefault(p => p.Value.Count == 1).Key;
                 if (nextItem == null)

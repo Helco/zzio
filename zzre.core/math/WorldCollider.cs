@@ -59,7 +59,6 @@ namespace zzre
             switch (section)
             {
                 case RWAtomicSection atomic:
-                {
                     if (!atomicColliders.TryGetValue(atomic, out var atomicCollider))
                         return prevHit;
 
@@ -70,10 +69,8 @@ namespace zzre
                     return isBetterHit
                         ? myHit
                         : prevHit;
-                }
 
                 case RWPlaneSection plane:
-                {
                     var compIndex = plane.sectorType.ToIndex();
                     var startValue = ray.Start.Component(compIndex);
                     var directionDot = ray.Direction.Component(compIndex);
@@ -106,7 +103,6 @@ namespace zzre
                         hit = RaycastSection(rightSection, ray, rightDist ?? minDist, maxDist, hit);
                     }
                     return hit;
-                }
 
                 default:
                     throw new InvalidDataException("Unexpected non-world section");
@@ -134,7 +130,7 @@ namespace zzre
             splitStack.Push(rootSection);
             while (splitStack.Any())
             {
-                switch(splitStack.Pop())
+                switch (splitStack.Pop())
                 {
                     case RWAtomicSection atomic when atomicColliders.TryGetValue(atomic, out var collider):
                         foreach (var i in queries.Intersections(collider, primitive))

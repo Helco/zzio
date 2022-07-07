@@ -2,9 +2,9 @@ namespace zzio.db
 {
     public class NpcRow : MappedRow
     {
-        public NpcRow(MappedDB mappedDB, Row row) : base(ModuleType.Npc, mappedDB, row) {}
+        public NpcRow(MappedDB mappedDB, Row row) : base(ModuleType.Npc, mappedDB, row) { }
 
-        public string Name    => foreignText(0);
+        public string Name => foreignText(0);
 
         public string TriggerScript => row.cells[1].String;
         public string InitScript => row.cells[2].String;

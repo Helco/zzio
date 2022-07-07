@@ -65,7 +65,7 @@ namespace zzre.game.systems
                         body.Get<components.AnimationPool>()[AnimationType.Idle0]);
                 }
 
-                switch(type)
+                switch (type)
                 {
                     case AnimalType.Butterfly:
                         entity.Set(new components.Butterfly(trigger.ii2, GlobalRandom.Get));
@@ -76,7 +76,8 @@ namespace zzre.game.systems
                     case AnimalType.Frog:
                         entity.Set(new components.AnimalWaypointAI(AnimalWaypointAIConfig.Frog));
                         break;
-                    case AnimalType.CirclingBird: entity.Set(new components.CirclingBird(trigger));
+                    case AnimalType.CirclingBird:
+                        entity.Set(new components.CirclingBird(trigger));
                         break;
                     case AnimalType.Firefly:
                         entity.Set(new components.AnimalWaypointAI(AnimalWaypointAIConfig.Firefly));

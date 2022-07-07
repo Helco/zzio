@@ -64,7 +64,7 @@ namespace zzio.rwbs
             var stack = new Stack<(int splitI, bool isRight)>();
             stack.Push((0, true));
             stack.Push((0, false));
-            while(stack.Any())
+            while (stack.Any())
             {
                 var (splitI, isRight) = stack.Pop();
                 ref var cur = ref isRight

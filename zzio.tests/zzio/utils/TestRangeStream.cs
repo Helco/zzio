@@ -28,7 +28,7 @@ namespace zzio.tests.utils
             Assert.AreEqual(0x01, part1[0]);
             Assert.AreEqual(0x02, part1[1]);
             Assert.AreEqual(0x03, part1[2]);
-            
+
             byte[] part2 = new byte[4];
             int part2Len = rangeStream.Read(part2, 1, 3);
             Assert.AreEqual(1, part2Len);
@@ -42,7 +42,7 @@ namespace zzio.tests.utils
             MemoryStream memStream = new MemoryStream(actual, true);
             memStream.Seek(testDataOffset, SeekOrigin.Current);
             RangeStream rangeStream = new RangeStream(memStream, 4, true);
-            
+
             byte[] expected = testData.ToArray();
             expected[testDataOffset + 0] = 0x10;
             expected[testDataOffset + 1] = 0x20;

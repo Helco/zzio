@@ -15,7 +15,7 @@ namespace zzio.tests.db
             // integer cell
             1, 0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, 0xff, 0xff, 0x00, 0x00,
             // buffer cell
-            5, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 0xc0, 0xff, 0xee 
+            5, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 0xc0, 0xff, 0xee
         };
 
         private void testRow(Row row)

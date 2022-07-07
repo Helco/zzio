@@ -161,7 +161,8 @@ namespace zzmaps
             if (sources.Length == 0) { target.Complete(); return; }
             Task.Factory.ContinueWhenAll(
                 sources.Select(b => b.Completion).ToArray(),
-                tasks => {
+                tasks =>
+                {
                     var exceptions = (from t in tasks where t.IsFaulted select t.Exception).ToList();
                     if (exceptions.Count != 0)
                     {

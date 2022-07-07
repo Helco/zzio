@@ -96,7 +96,7 @@ namespace zzre.tools
                 var color = SceneFOModel.color.ToFColor();
                 ColorEdit4("Color", ref color, ImGuiColorEditFlags.NoPicker);
                 NewLine();
-                
+
                 var pos = Location.LocalPosition;
                 var rotEuler = Location.LocalRotation.ToEuler() * 180.0f / MathF.PI;
                 hasChanged |= DragFloat3("Position", ref pos);
@@ -123,7 +123,7 @@ namespace zzre.tools
                 }
             }
         }
-        
+
         private class FOModelComponent : BaseDisposable, IEnumerable<ISelectable>
         {
             private readonly ITagContainer diContainer;

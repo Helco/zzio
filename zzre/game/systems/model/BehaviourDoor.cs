@@ -56,7 +56,7 @@ namespace zzre.game.systems
 
             // TODO: Add door unlock behaviour
 
-            switch(door.State)
+            switch (door.State)
             {
                 case DoorState.Closed when keepOpen && !door.IsLocked:
                     door.State = DoorState.StartToOpen;

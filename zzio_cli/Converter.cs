@@ -57,7 +57,7 @@ namespace zzio.cli
 
         public static string getFileTypeExt(FileType type)
         {
-            switch(type)
+            switch (type)
             {
                 case (FileType.AED): { return ".aed"; }
                 case (FileType.CFG_Game):
@@ -123,7 +123,7 @@ namespace zzio.cli
             }
         }
 
-        public static FileType scanFile (Stream stream, FileType extType)
+        public static FileType scanFile(Stream stream, FileType extType)
         {
             long startPosition = stream.Position;
             foreach (IFileScanner scanner in scanners)
@@ -137,7 +137,7 @@ namespace zzio.cli
                         return scanner.ScannerType;
                     }
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     //let just hope stream does not get destroyed
                 }
@@ -146,10 +146,10 @@ namespace zzio.cli
             return extType;
         }
 
-        public static FileType[] scanFiles (IReadOnlyList<string> files)
+        public static FileType[] scanFiles(IReadOnlyList<string> files)
         {
             FileType[] result = new FileType[files.Count];
-            for (int i=0; i<files.Count; i++)
+            for (int i = 0; i < files.Count; i++)
             {
                 try
                 {
@@ -180,7 +180,7 @@ namespace zzio.cli
             convertScannedFile(name, from, to, type);
         }
 
-        public void convertScannedFile (string name, Stream from, Stream to, FileType type)
+        public void convertScannedFile(string name, Stream from, Stream to, FileType type)
         {
             if (type == FileType.Unknown)
                 throw new Exception("File format of \"" + name + "\" could not be determined");

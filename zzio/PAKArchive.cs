@@ -38,7 +38,7 @@ namespace zzio
         private PAKArchive(Stream str)
         {
             stream = str;
-        }   
+        }
 
         // transform a path into a comparable path string as key to the entry map
         private static string getPathKey(FilePath path) => path.Normalized.ToPOSIXString().ToLowerInvariant();

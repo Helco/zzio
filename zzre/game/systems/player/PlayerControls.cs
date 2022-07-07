@@ -77,7 +77,7 @@ namespace zzre.game.systems
         private void HandleKeyUp(Key obj) => HandleKey(obj, false);
         private void HandleKey(Key key, bool isDown)
         {
-            switch(key)
+            switch (key)
             {
                 case ForwardKey: nextControls.GoesForward = isDown; break;
                 case BackwardKey: nextControls.GoesBackward = isDown; break;
@@ -89,7 +89,7 @@ namespace zzre.game.systems
 
             if (isDown && !IsLocked)
             {
-                switch(key)
+                switch (key)
                 {
                     case MenuKey: ui.Publish<messages.ui.OpenDeck>(); break;
                 }

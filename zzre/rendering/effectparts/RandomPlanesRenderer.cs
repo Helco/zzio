@@ -101,7 +101,7 @@ namespace zzre.rendering.effectparts
                     AddTime(0f, newProgress);
                 }
             }
-            
+
             if (data.ignorePhases || curPhase1 > 0f || curPhase2 > 0f)
                 SpawnPlanes(deltaTime);
             areQuadsDirty = true;

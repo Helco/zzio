@@ -22,7 +22,7 @@
         public float GravityModifierSpeed { get; init; }
         public float MaxElapsedTime { get; init; }
         public float MaxSideControlAngle { get; init; }
-        public float MaxCollisionYDir { get; init; } 
+        public float MaxCollisionYDir { get; init; }
         public float MaxForcedJumpSpeed { get; init; }
         public float MinFloorYDir { get; init; }
         public float MinRunSpeed { get; init; }

@@ -29,7 +29,7 @@ namespace zzre.game.systems
 
         private bool IfPlayerHasSpecials(DefaultEcs.Entity entity, SpecialInventoryCheck specialType, int arg)
         {
-            switch(specialType)
+            switch (specialType)
             {
                 case SpecialInventoryCheck.HasFivePixies:
                     if (savegame.pixiesHolding < 5)

@@ -105,7 +105,7 @@ namespace zzre.materials
             .With(BlendStateDescription.SingleAlphaBlend)
             .Build());
     }
-    
+
 
     public class SparkAdditiveMaterial : SparkMaterial
     {
@@ -120,7 +120,7 @@ namespace zzre.materials
     public class SparkAdditiveAlphaMaterial : SparkMaterial
     {
         public SparkAdditiveAlphaMaterial(ITagContainer diContainer, bool isTwoSided) : base(diContainer, GetPipeline(diContainer, isTwoSided))
-        {}
+        { }
 
         private static IBuiltPipeline GetPipeline(ITagContainer diContainer, bool isTwoSided) => PipelineFor<SparkAdditiveAlphaMaterial>.Get(diContainer, builder =>
             BuildBasePipeline(builder, isTwoSided)

@@ -46,7 +46,8 @@ namespace zzio.cli
         }
     }
 
-    public class ParameterException : Exception {
+    public class ParameterException : Exception
+    {
         public ParameterException(string m) : base(m) { }
     }
 
@@ -62,7 +63,7 @@ namespace zzio.cli
             foreach (ParameterInfo info in classes)
                 values[info.longName] = info.defaultValue;
 
-            for (int i=1; i<args.Length; i++) //skip over executable path
+            for (int i = 1; i < args.Length; i++) //skip over executable path
             {
                 string argFull = args.Text[i].ToLowerInvariant();
                 if (args[i] != CommandLineToken.LongArg && args[i] != CommandLineToken.ShortArg)
@@ -70,7 +71,7 @@ namespace zzio.cli
 
                 //count parameter values
                 int paramCount = 0;
-                for (int j=i+1; j<args.Length; j++)
+                for (int j = i + 1; j < args.Length; j++)
                 {
                     if (args[j] == CommandLineToken.LongArg || args[j] == CommandLineToken.ShortArg)
                         break;
@@ -143,7 +144,7 @@ namespace zzio.cli
                 else
                 {
                     object[] valueArr = new object[paramCount];
-                    for (int a=0; a<paramCount; a++)
+                    for (int a = 0; a < paramCount; a++)
                     {
                         if (paramInfo.values[a] == ParameterType.Text)
                         {

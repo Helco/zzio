@@ -138,7 +138,7 @@ namespace zzio.cli
                 }
                 Console.Out.WriteLine();
                 Console.Out.WriteLine("Formats:");
-                Array formats = Enum.GetValues(typeof (FileType));
+                Array formats = Enum.GetValues(typeof(FileType));
                 foreach (FileType type in formats)
                 {
                     if (type != FileType.Unknown)
@@ -154,7 +154,7 @@ namespace zzio.cli
             {
                 convMgr = new ConversionMgr(paramParser);
             }
-            catch(ParameterException e)
+            catch (ParameterException e)
             {
                 Console.Error.WriteLine(e.Message);
                 Environment.Exit(-1);
@@ -167,7 +167,7 @@ namespace zzio.cli
             if (doMapDB)
             {
                 int indexI = -1, firstDataI = -1;
-                for (int i=0; i<types.Length; i++)
+                for (int i = 0; i < types.Length; i++)
                 {
                     if (types[i] == FileType.FBS_Index)
                     {
@@ -191,7 +191,7 @@ namespace zzio.cli
             }
 
             string outDir = Path.GetFullPath(paramParser["output"] as string);
-            for (int i=0; i<fs.Files.Count; i++)
+            for (int i = 0; i < fs.Files.Count; i++)
             {
                 string f = fs.Files[i];
                 if (types[i] == FileType.Unknown)
@@ -238,7 +238,7 @@ namespace zzio.cli
                         toStream.Close();
                     fromStream.Close();
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     Console.Error.WriteLine("Warning: Could not open input file: " + f);
                 }

@@ -14,7 +14,8 @@ namespace zzio.tests.primitives
         };
 
         [Test]
-        public void ctor() {
+        public void ctor()
+        {
             FColor color = new FColor(0.1f, 0.2f, 0.3f, 0.4f);
             Assert.AreEqual(0.1f, color.r);
             Assert.AreEqual(0.2f, color.g);
@@ -23,7 +24,8 @@ namespace zzio.tests.primitives
         }
 
         [Test]
-        public void read() {
+        public void read()
+        {
             MemoryStream stream = new MemoryStream(expected, false);
             using BinaryReader reader = new BinaryReader(stream);
             FColor color = FColor.ReadNew(reader);
@@ -34,7 +36,8 @@ namespace zzio.tests.primitives
         }
 
         [Test]
-        public void write() {
+        public void write()
+        {
             MemoryStream stream = new MemoryStream();
             using BinaryWriter writer = new BinaryWriter(stream);
             FColor color = new FColor(0.1f, 0.3f, 0.7f, 1.0f);

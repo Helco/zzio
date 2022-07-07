@@ -12,7 +12,7 @@ namespace zzre.materials
 
     public static class IStandardTransformMaterialExtensions
     {
-        public static void LinkTransformsTo (this IStandardTransformMaterial me, IStandardTransformMaterial other)
+        public static void LinkTransformsTo(this IStandardTransformMaterial me, IStandardTransformMaterial other)
         {
             me.Projection.Buffer = other.Projection.Buffer;
             me.View.Buffer = other.View.Buffer;
