@@ -91,61 +91,61 @@ namespace zzio.db
     public record struct FairyLevelData(uint Raw)
     {
         public int StartLevel
+    {
+        get => (int)(Raw >> 16);
+        set
         {
-            get => (int)(Raw >> 16);
-            set
-            {
-                if (value < 0 || value >= 2 << 16)
-                    throw new ArgumentOutOfRangeException($"Invalid LevelData start level: {value}");
-                Raw = (Raw & 0xffff) | (uint)(value << 16);
-            }
-        }
-
-        public int SpellSlot
-        {
-            get => (int)(Raw >> 12) & 3;
-            set
-            {
-                if (value < 0 || value > 3)
-                    throw new ArgumentOutOfRangeException($"Invalid LevelData spell slot: {value}");
-                Raw = (Raw & 0xffff) | (Raw & 0b1100_1111_1111_1111) | (uint)(value << 12);
-            }
-        }
-
-        public ZZClass Class0
-        {
-            get => (ZZClass)((Raw >> 8) & 0xf);
-            set
-            {
-                var iValue = (uint)value;
-                if (iValue > 15)
-                    throw new ArgumentOutOfRangeException($"Invalid LevelData class 0: {value}");
-                Raw = (Raw & 0xffff_f0ff) | (iValue << 8);
-            }
-        }
-
-        public ZZClass Class1
-        {
-            get => (ZZClass)((Raw >> 4) & 0xf);
-            set
-            {
-                var iValue = (uint)value;
-                if (iValue > 15)
-                    throw new ArgumentOutOfRangeException($"Invalid LevelData class 1: {value}");
-                Raw = (Raw & 0xffff_ff0f) | (iValue << 4);
-            }
-        }
-
-        public ZZClass Class2
-        {
-            get => (ZZClass)(Raw & 0xf);
-            set
-            {
-                var iValue = (uint)value;
-                if (iValue > 15)
-                    throw new ArgumentOutOfRangeException($"Invalid LevelData class 2: {value}");
-                Raw = (Raw & 0xffff_fff0) | iValue;
-            }
+            if (value < 0 || value >= 2 << 16)
+                throw new ArgumentOutOfRangeException($"Invalid LevelData start level: {value}");
+            Raw = (Raw & 0xffff) | (uint)(value << 16);
         }
     }
+
+    public int SpellSlot
+    {
+        get => (int)(Raw >> 12) & 3;
+        set
+        {
+            if (value < 0 || value > 3)
+                throw new ArgumentOutOfRangeException($"Invalid LevelData spell slot: {value}");
+            Raw = (Raw & 0xffff) | (Raw & 0b1100_1111_1111_1111) | (uint)(value << 12);
+        }
+    }
+
+    public ZZClass Class0
+    {
+        get => (ZZClass)((Raw >> 8) & 0xf);
+        set
+        {
+            var iValue = (uint)value;
+            if (iValue > 15)
+                throw new ArgumentOutOfRangeException($"Invalid LevelData class 0: {value}");
+            Raw = (Raw & 0xffff_f0ff) | (iValue << 8);
+        }
+    }
+
+    public ZZClass Class1
+    {
+        get => (ZZClass)((Raw >> 4) & 0xf);
+        set
+        {
+            var iValue = (uint)value;
+            if (iValue > 15)
+                throw new ArgumentOutOfRangeException($"Invalid LevelData class 1: {value}");
+            Raw = (Raw & 0xffff_ff0f) | (iValue << 4);
+        }
+    }
+
+    public ZZClass Class2
+    {
+        get => (ZZClass)(Raw & 0xf);
+        set
+        {
+            var iValue = (uint)value;
+            if (iValue > 15)
+                throw new ArgumentOutOfRangeException($"Invalid LevelData class 2: {value}");
+            Raw = (Raw & 0xffff_fff0) | iValue;
+        }
+    }
+}
 }

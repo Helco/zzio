@@ -106,22 +106,22 @@ namespace zzio
     {
         public const int Count = 49;
 
-        public static GlobalVar ReadNew(BinaryReader r) =>
-            new GlobalVar(r.ReadUInt32(), r.ReadUInt32());
+    public static GlobalVar ReadNew(BinaryReader r) =>
+        new GlobalVar(r.ReadUInt32(), r.ReadUInt32());
 
-        public void Write(BinaryWriter w)
-        {
-            w.Write(ChangeCount);
-            w.Write(Value);
-        }
-
-        public static GlobalVar[] CreateSet()
-        {
-            var random = new Random();
-            return Enumerable
-                .Range(0, Count)
-                .Select(i => new GlobalVar(ChangeCount: (uint)random.Next(0, 2 << 16), Value: 0))
-                .ToArray();
-        }
+    public void Write(BinaryWriter w)
+    {
+        w.Write(ChangeCount);
+        w.Write(Value);
     }
+
+    public static GlobalVar[] CreateSet()
+    {
+        var random = new Random();
+        return Enumerable
+            .Range(0, Count)
+            .Select(i => new GlobalVar(ChangeCount: (uint)random.Next(0, 2 << 16), Value: 0))
+            .ToArray();
+    }
+}
 }
