@@ -132,7 +132,7 @@ namespace zzio.dbsqlitecli
                     for (int i = 1; i < reader.FieldCount; i++)
                     {
                         var columnName = reader.GetName(i);
-                        var type = Enum.Parse<CellDataType>(columnName.Substring(1 + columnName.LastIndexOf('_')));
+                        var type = Enum.Parse<CellDataType>(columnName[(1 + columnName.LastIndexOf('_'))..]);
                         switch (type)
                         {
                             case CellDataType.Buffer:

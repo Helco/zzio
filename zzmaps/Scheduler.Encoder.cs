@@ -60,8 +60,8 @@ namespace zzmaps
                 : options.Optimizer.IndexOf(' ');
             if (splitIndex < 1)
                 throw new InvalidOperationException("Invalid optimizer string");
-            var optimizerFile = options.Optimizer.Substring(0, splitIndex);
-            var optimizerArgs = options.Optimizer.Substring(splitIndex);
+            var optimizerFile = options.Optimizer[..splitIndex];
+            var optimizerArgs = options.Optimizer[splitIndex..];
 
             options.TempFolder.Create();
             return new TransformBlock<EncodedSceneTile, EncodedSceneTile>(async tile =>

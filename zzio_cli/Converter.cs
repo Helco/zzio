@@ -40,7 +40,7 @@ namespace zzio.cli
     {
         private static FileType getExtensionFileType(string ext)
         {
-            switch (ext.Substring(1).ToLowerInvariant())
+            switch (ext[1..].ToLowerInvariant())
             {
                 case ("ska"): { return FileType.SKA; }
                 case ("aed"): { return FileType.AED; }

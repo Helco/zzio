@@ -359,7 +359,7 @@ namespace zzio
                 int extensionMarker = parts.Last().LastIndexOf('.');
                 if (extensionMarker < 0 || extensionMarker + 1 == parts.Last().Length)
                     return null;
-                return parts.Last().Substring(extensionMarker + 1);
+                return parts.Last()[(extensionMarker + 1)..];
             }
         }
 

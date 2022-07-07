@@ -70,7 +70,7 @@ namespace zzio.effect
                 string sectionName = r.ReadZString();
                 if (!sectionName.StartsWith("[") || !sectionName.EndsWith("]"))
                     throw new InvalidDataException("Invalid section name format: \"" + sectionName + "\"");
-                sectionName = sectionName.Substring(1, sectionName.Length - 2);
+                sectionName = sectionName[1..^1];
 
                 if (sectionName == "EOF")
                 {

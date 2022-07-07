@@ -168,7 +168,7 @@ namespace zzsc
             {
                 int i;
                 if ((i = line.IndexOf("//")) >= 0)
-                    line = line.Substring(0, i).Trim();
+                    line = line[..i].Trim();
                 if (line.Length > 0)
                     instructions.Add(new RawInstruction(line));
             }

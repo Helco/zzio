@@ -35,7 +35,7 @@ namespace zzio
 
                         if (part.EndsWith("\\"))
                         {
-                            curArg += part.Substring(0, part.Length - 1);
+                            curArg += part[..^1];
                             curArg += '"';
                         }
                         else
@@ -64,7 +64,7 @@ namespace zzio
                     var matchesNumber = Regex.Match(args[i], @"^[-+]?\d+(\.\d+)?$").Success;
                     if (args[i].StartsWith("\""))
                     {
-                        args[i] = args[i].Substring(1);
+                        args[i] = args[i][1..];
                         numbers.Add(double.NaN);
                         tokens.Add(CommandLineToken.String);
                     }

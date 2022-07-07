@@ -152,7 +152,7 @@ namespace zzre.rendering.effectparts
 
         private void SetPlane(Span<EffectVertex> vertices, int planeI, float w, float h)
         {
-            vertices = vertices.Slice(planeI * 4 * 2);
+            vertices = vertices[(planeI * 4 * 2)..];
 
             vertices[0] = new() { pos = new(-w, -h, curShrink), color = startColor, tex = new(0f, texVStart) };
             vertices[1] = new() { pos = new(+w, +h, curShrink), color = startColor, tex = new(1f, texVStart) };

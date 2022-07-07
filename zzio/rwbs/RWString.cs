@@ -17,7 +17,7 @@ namespace zzio.rwbs
             value = Encoding.UTF8.GetString(buffer);
             int terminator = value.IndexOf('\0');
             if (terminator >= 0)
-                value = value.Substring(0, terminator);
+                value = value[..terminator];
         }
 
         protected override void writeBody(Stream stream)
