@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Veldrid;
 using zzio;
@@ -14,7 +14,7 @@ namespace zzre
         private IColor color = IColor.White;
         private IColor[]? colors = null;
         private bool isDirty = false;
-        private Triangle[] triangles = new Triangle[0];
+        private Triangle[] triangles = Array.Empty<Triangle>();
 
         public DebugLinesMaterial Material { get; }
 

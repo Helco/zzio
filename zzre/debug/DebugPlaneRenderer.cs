@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Numerics;
 using Veldrid;
 using zzio;
@@ -20,7 +20,7 @@ namespace zzre.debug
         private readonly GraphicsDevice device;
         private DeviceBuffer? vertexBuffer;
         private bool isDirty = false;
-        private DebugPlane[] planes = new DebugPlane[0];
+        private DebugPlane[] planes = Array.Empty<DebugPlane>();
 
         public DebugMaterial Material { get; }
 

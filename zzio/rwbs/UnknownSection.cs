@@ -8,7 +8,7 @@ namespace zzio.rwbs
     {
         private readonly SectionId _sectionId;
         public override SectionId sectionId => _sectionId;
-        public byte[] data = new byte[0];
+        public byte[] data = Array.Empty<byte>();
 
         public UnknownSection() : this(SectionId.Unknown) { }
 

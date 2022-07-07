@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using zzio.rwbs;
 using zzre.materials;
@@ -26,7 +26,7 @@ namespace zzre.rendering
         private readonly DeviceBufferRange locationRange;
         private readonly Camera camera;
         private Frustum viewFrustum;
-        private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
+        private ModelStandardMaterial[] materials = Array.Empty<ModelStandardMaterial>();
         public IReadOnlyList<ModelStandardMaterial> Materials => materials;
 
         private readonly List<WorldBuffers.MeshSection> visibleMeshSections = new List<WorldBuffers.MeshSection>();

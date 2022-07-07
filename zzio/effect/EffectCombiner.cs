@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using zzio.effect.parts;
@@ -52,7 +52,7 @@ namespace zzio.effect
         public string description = "";
         public bool isLooping = false;
         public Vector3 upwards, forwards, position;
-        public IEffectPart[] parts = new IEffectPart[0];
+        public IEffectPart[] parts = Array.Empty<IEffectPart>();
 
         public float Duration => parts.Any() ? parts.Max(p => p.Duration) : 0f;
 

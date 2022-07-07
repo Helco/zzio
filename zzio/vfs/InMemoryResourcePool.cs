@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -84,7 +84,7 @@ namespace zzio.vfs
                 Path = path;
                 Pool = parent.Pool;
                 Parent = parent;
-                this.content = content ?? new byte[0];
+                this.content = content ?? Array.Empty<byte>();
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using IconFonts;
+using IconFonts;
 using ImGuiNET;
 using System;
 using System.Collections;
@@ -91,7 +91,7 @@ namespace zzre.tools
             private readonly IconFont iconFont;
             private readonly SceneEditor editor;
 
-            private Trigger[] triggers = new Trigger[0];
+            private Trigger[] triggers = Array.Empty<Trigger>();
             private bool wasSelected = false;
             private float iconSize = 128f;
 
@@ -129,7 +129,7 @@ namespace zzre.tools
             {
                 foreach (var oldTrigger in triggers)
                     oldTrigger.Dispose();
-                triggers = new Trigger[0];
+                triggers = Array.Empty<Trigger>();
                 if (editor.scene == null)
                     return;
 

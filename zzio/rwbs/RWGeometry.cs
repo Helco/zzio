@@ -10,7 +10,7 @@ namespace zzio.rwbs
     {
         public Vector3 bsphereCenter;
         public float bsphereRadius;
-        public Vector3[] vertices = new Vector3[0], normals = new Vector3[0];
+        public Vector3[] vertices = Array.Empty<Vector3>(), normals = Array.Empty<Vector3>();
     }
 
     [Serializable]
@@ -20,10 +20,10 @@ namespace zzio.rwbs
 
         public GeometryFormat format;
         public float ambient, specular, diffuse;
-        public IColor[] colors = new IColor[0];
-        public Vector2[][] texCoords = new Vector2[0][];
-        public VertexTriangle[] triangles = new VertexTriangle[0];
-        public MorphTarget[] morphTargets = new MorphTarget[0];
+        public IColor[] colors = Array.Empty<IColor>();
+        public Vector2[][] texCoords = Array.Empty<Vector2>();
+        public VertexTriangle[] triangles = Array.Empty<VertexTriangle>();
+        public MorphTarget[] morphTargets = Array.Empty<MorphTarget>();
 
         protected override void readStruct(Stream stream)
         {
@@ -76,8 +76,8 @@ namespace zzio.rwbs
                 morphTargets[i] = new MorphTarget();
                 morphTargets[i].bsphereCenter = reader.ReadVector3();
                 morphTargets[i].bsphereRadius = reader.ReadSingle();
-                morphTargets[i].vertices = new Vector3[0];
-                morphTargets[i].normals = new Vector3[0];
+                morphTargets[i].vertices = Array.Empty<Vector3>();
+                morphTargets[i].normals = Array.Empty<Vector3>();
                 bool hasVertices = reader.ReadUInt32() > 0;
                 bool hasNormals = reader.ReadUInt32() > 0;
                 if (hasVertices)

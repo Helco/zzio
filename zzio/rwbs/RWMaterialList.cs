@@ -8,7 +8,7 @@ namespace zzio.rwbs
     {
         public override SectionId sectionId => SectionId.MaterialList;
 
-        public Int32[] materialIndices = new Int32[0];
+        public Int32[] materialIndices = Array.Empty<Int32>();
 
         protected override void readStruct(Stream stream)
         {

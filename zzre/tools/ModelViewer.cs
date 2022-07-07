@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -36,7 +36,7 @@ namespace zzre.tools
 
         private ClumpBuffers? geometryBuffers;
         private GeometryTreeCollider? collider;
-        private ModelStandardMaterial[] materials = new ModelStandardMaterial[0];
+        private ModelStandardMaterial[] materials = Array.Empty<ModelStandardMaterial>();
         private DebugSkeletonRenderer? skeletonRenderer;
         private int highlightedSplitI = -1;
 

@@ -11,13 +11,13 @@ namespace zzio.rwbs
 
         public UInt32 matIdBase;
         public Vector3 bbox1, bbox2;
-        public Vector3[] vertices = new Vector3[0];
-        public Normal[] normals = new Normal[0];
-        public IColor[] colors = new IColor[0];
+        public Vector3[] vertices = Array.Empty<Vector3>();
+        public Normal[] normals = Array.Empty<Normal>();
+        public IColor[] colors = Array.Empty<IColor>();
         public Vector2[]
-            texCoords1 = new Vector2[0],
-            texCoords2 = new Vector2[0];
-        public VertexTriangle[] triangles = new VertexTriangle[0];
+            texCoords1 = Array.Empty<Vector2>(),
+            texCoords2 = Array.Empty<Vector2>();
+        public VertexTriangle[] triangles = Array.Empty<VertexTriangle>();
 
         protected override void readStruct(Stream stream)
         {

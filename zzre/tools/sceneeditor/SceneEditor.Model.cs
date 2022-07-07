@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -133,7 +133,7 @@ namespace zzre.tools
             private readonly ITagContainer diContainer;
             private readonly SceneEditor editor;
 
-            private Model[] models = new Model[0];
+            private Model[] models = Array.Empty<Model>();
             private bool isVisible = true;
 
             public ModelComponent(ITagContainer diContainer)
@@ -159,7 +159,7 @@ namespace zzre.tools
             {
                 foreach (var oldModel in models)
                     oldModel.Dispose();
-                models = new Model[0];
+                models = Array.Empty<Model>();
                 if (editor.scene == null)
                     return;
 

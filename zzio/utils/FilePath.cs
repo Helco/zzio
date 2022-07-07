@@ -54,7 +54,7 @@ namespace zzio
             path = path.Trim();
             if (path.Length == 0)
             {
-                parts = new string[0];
+                parts = Array.Empty<string>();
                 type = PathType.Relative;
                 IsDirectory = false;
                 return;
@@ -159,7 +159,7 @@ namespace zzio
                 if (type == PathType.Relative)
                     return new FilePath(Environment.CurrentDirectory).Root;
                 else if (type == PathType.Root)
-                    return new FilePath(new string[0], PathType.Root, true);
+                    return new FilePath(Array.Empty<string>(), PathType.Root, true);
                 else if (type == PathType.Drive)
                 {
                     string drive = parts.Last(part => part.EndsWith(":"));
@@ -342,7 +342,7 @@ namespace zzio
             }
             // Case 4: "a/b/c" relative to "a/b/c" should return ""
             else
-                return new FilePath(new string[0], PathType.Relative, false);
+                return new FilePath(Array.Empty<string>(), PathType.Relative, false);
 
             // Only to silent the compiler
             throw new InvalidOperationException("This should never happen");

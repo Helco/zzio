@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -129,7 +129,7 @@ namespace zzre.tools
             private readonly ITagContainer diContainer;
             private readonly SceneEditor editor;
 
-            private FOModel[] models = new FOModel[0];
+            private FOModel[] models = Array.Empty<FOModel>();
             private int detailLevel = 4; // Detail levels from 1, invisible is 0
 
             public FOModelComponent(ITagContainer diContainer)
@@ -162,7 +162,7 @@ namespace zzre.tools
             {
                 foreach (var oldModel in models)
                     oldModel.Dispose();
-                models = new FOModel[0];
+                models = Array.Empty<FOModel>();
                 if (editor.scene == null)
                     return;
 

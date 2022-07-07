@@ -62,7 +62,7 @@ namespace zzio.tests
             MemoryStream stream = new MemoryStream(sampleData, false);
             PAKArchive archive = PAKArchive.ReadNew(stream);
 
-            Assert.AreEqual(new string[0], archive.GetDirectoryContent("G/H/I"));
+            Assert.AreEqual(Array.Empty<string>(), archive.GetDirectoryContent("G/H/I"));
 
             Assert.That(archive.GetDirectoryContent("", true), Is.EquivalentTo(new string[]
             {

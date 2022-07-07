@@ -6,8 +6,8 @@ namespace zzio.db
     [Serializable]
     public class IndexTable
     {
-        public string[] columnNames = new string[0];
-        public UInt32[] columnNumbers = new UInt32[0];
+        public string[] columnNames = Array.Empty<string>();
+        public UInt32[] columnNumbers = Array.Empty<UInt32>();
 
         public int ColumnCount => columnNames.Length;
 

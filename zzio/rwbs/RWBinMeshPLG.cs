@@ -25,7 +25,7 @@ namespace zzio.rwbs
 
         public BinMeshType type;
         public UInt32 totalIndexCount;
-        public SubMesh[] subMeshes = new SubMesh[0];
+        public SubMesh[] subMeshes = Array.Empty<SubMesh>();
 
         protected override void readBody(Stream stream)
         {
