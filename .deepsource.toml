@@ -1,5 +1,21 @@
 version = 1
 
+test_patterns = [
+  ".test/**/*.cs",
+  ".tests/**/*.cs"
+]
+
+exclude_patterns = [
+  "zzsc/**/*",
+  "zzio_cli/**/*",
+  "zzio_dbsqlite/**/*",
+  "Veldrid.ImGui/**/*"
+]
+
 [[analyzers]]
 name = "csharp"
+enabled = true
+
+[[transformers]]
+name = "dotnet-format"
 enabled = true
