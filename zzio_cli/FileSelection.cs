@@ -135,8 +135,7 @@ namespace zzio.cli
 
         public void addFromParameters(ParameterParser args)
         {
-            List<object> entries = args["input", true] as List<object>;
-            if (entries != null)
+            if (args["input", true] is List<object> entries)
             {
                 foreach (object s in entries)
                 {

@@ -29,8 +29,7 @@ namespace zzre.rendering
 
         public static (Texture, Sampler) LoadTexture(this IAssetLoader<Texture> loader, IEnumerable<FilePath> basePaths, RWMaterial material)
         {
-            var texSection = material.FindChildById(SectionId.Texture, true) as RWTexture;
-            if (texSection == null)
+            if (material.FindChildById(SectionId.Texture, true) is not RWTexture texSection)
                 throw new InvalidOperationException("Given material is not textured");
             return loader.LoadTexture(basePaths, texSection);
         }
@@ -51,8 +50,7 @@ namespace zzre.rendering
             };
             var sampler = device.ResourceFactory.CreateSampler(samplerDescription);
 
-            var nameSection = texSection.FindChildById(SectionId.String, true) as RWString;
-            if (nameSection == null)
+            if (texSection.FindChildById(SectionId.String, true) is not RWString nameSection)
                 throw new InvalidDataException("Could not find filename section in RWTexture");
 
             var texture = loader.LoadTexture(basePaths, nameSection.value);

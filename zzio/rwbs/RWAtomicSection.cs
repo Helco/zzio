@@ -21,8 +21,7 @@ namespace zzio.rwbs
 
         protected override void readStruct(Stream stream)
         {
-            var world = FindParentById(SectionId.World) as RWWorld;
-            if (world == null)
+            if (FindParentById(SectionId.World) is not RWWorld world)
                 throw new InvalidDataException("RWAtomicSection has to be child of RWWorld");
             GeometryFormat worldFormat = world.format;
 
@@ -73,8 +72,7 @@ namespace zzio.rwbs
 
         protected override void writeStruct(Stream stream)
         {
-            var world = FindParentById(SectionId.World) as RWWorld;
-            if (world == null)
+            if (FindParentById(SectionId.World) is not RWWorld world)
                 throw new InvalidDataException("RWAtomicSection has to be child of RWWorld");
             GeometryFormat worldFormat = world.format;
 

@@ -87,8 +87,7 @@ namespace zzio.cli
             foreach (FileType type in formats)
                 conversions[type] = null;
 
-            var convTypes = args["target", true] as List<object>;
-            if (convTypes != null)
+            if (args["target", true] is List<object> convTypes)
             {
                 foreach (string target in convTypes)
                 {
