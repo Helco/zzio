@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Veldrid;
 using zzio;
@@ -11,7 +11,7 @@ namespace zzre.debug
     {
         private readonly ITagContainer diContainer;
         private DeviceBuffer? iconBuffer = null;
-        private DebugIcon[] icons = new DebugIcon[0];
+        private DebugIcon[] icons = Array.Empty<DebugIcon>();
         private bool isDirty = true;
         private int Capacity => (int)((iconBuffer?.SizeInBytes ?? 0) / DebugIcon.Stride);
         private uint Count => (uint)(icons?.Count() ?? 0);

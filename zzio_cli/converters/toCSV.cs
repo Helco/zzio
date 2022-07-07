@@ -39,7 +39,7 @@ namespace zzio.cli.converters
 
         private void writeCells(StreamWriter writer, params object[] args)
         {
-            writer.WriteLine(String.Join(",", args.Select(arg =>
+            writer.WriteLine(string.Join(",", args.Select(arg =>
             {
                 if (arg is string)
                     return escapeString((string)arg);
@@ -182,7 +182,7 @@ namespace zzio.cli.converters
                             return BitConverter.ToString(cell.Buffer).Replace("-", "");
                     }
                 });
-                writer.WriteLine(row.uid.ToString() + "," + String.Join(',', cellStrings));
+                writer.WriteLine(row.uid.ToString() + "," + string.Join(',', cellStrings));
             }
         }
     }

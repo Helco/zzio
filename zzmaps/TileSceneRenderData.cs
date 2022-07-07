@@ -11,7 +11,7 @@ namespace zzmaps
 {
     internal class TileSceneRenderData : ListDisposable
     {
-        private static readonly FilePath[] TextureBasePaths = new[]
+        private static readonly FilePath[] TextureBasePaths =
         {
             new FilePath("resources/textures/models"),
             new FilePath("resources/textures/worlds")
@@ -57,9 +57,11 @@ namespace zzmaps
 
             objectMaterials = scene.Objects.Select(obj => obj.ClumpBuffers.SubMeshes.Select(subMesh =>
             {
-                var objectLocation = new Location();
-                objectLocation.LocalPosition = obj.Position;
-                objectLocation.LocalRotation = obj.Rotation;
+                var objectLocation = new Location()
+                {
+                    LocalPosition = obj.Position,
+                    LocalRotation = obj.Rotation
+                };
                 var objectLocationRange = locationBuffer.Add(objectLocation);
                 locationRanges.Add(objectLocationRange);
 

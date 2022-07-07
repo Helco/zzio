@@ -15,7 +15,7 @@ namespace zzio.rwbs
     {
         public override SectionId sectionId => SectionId.Atomic;
 
-        public UInt32 frameIndex, geometryIndex;
+        public uint frameIndex, geometryIndex;
         public AtomicFlags flags;
 
         protected override void readStruct(Stream stream)
@@ -31,8 +31,8 @@ namespace zzio.rwbs
             using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(frameIndex);
             writer.Write(geometryIndex);
-            writer.Write((UInt32)flags);
-            writer.Write((UInt32)0); // unused value
+            writer.Write((uint)flags);
+            writer.Write((uint)0); // unused value
         }
     }
 }

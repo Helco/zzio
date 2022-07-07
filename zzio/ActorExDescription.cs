@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 
@@ -10,18 +10,18 @@ namespace zzio
     {
         public string model = "";
         public int animationPoolID = -1;
-        public (AnimationType type, string filename)[] animations = new (AnimationType, string)[0];
+        public (AnimationType type, string filename)[] animations = Array.Empty<(AnimationType, string)>();
 
         public void Write(BinaryWriter writer, string partName)
         {
-            writer.WriteZString(String.Format("[ModelFilename_{0}]", partName));
+            writer.WriteZString(string.Format("[ModelFilename_{0}]", partName));
             writer.WriteZString(model);
-            writer.WriteZString(String.Format("[AnimationPoolID_{0}]", partName));
+            writer.WriteZString(string.Format("[AnimationPoolID_{0}]", partName));
             writer.Write(animationPoolID);
 
             foreach (var (type, filename) in animations)
             {
-                writer.WriteZString(String.Format("[AnimationFilename_{0}]", partName));
+                writer.WriteZString(string.Format("[AnimationFilename_{0}]", partName));
                 writer.WriteZString(filename);
                 writer.Write((int)type);
             }

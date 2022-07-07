@@ -10,7 +10,7 @@ namespace zzio.rwbs
     {
         public Vector3 bsphereCenter;
         public float bsphereRadius;
-        public Vector3[] vertices = new Vector3[0], normals = new Vector3[0];
+        public Vector3[] vertices = Array.Empty<Vector3>(), normals = Array.Empty<Vector3>();
     }
 
     [Serializable]
@@ -20,17 +20,17 @@ namespace zzio.rwbs
 
         public GeometryFormat format;
         public float ambient, specular, diffuse;
-        public IColor[] colors = new IColor[0];
-        public Vector2[][] texCoords = new Vector2[0][];
-        public VertexTriangle[] triangles = new VertexTriangle[0];
-        public MorphTarget[] morphTargets = new MorphTarget[0];
+        public IColor[] colors = Array.Empty<IColor>();
+        public Vector2[][] texCoords = Array.Empty<Vector2[]>();
+        public VertexTriangle[] triangles = Array.Empty<VertexTriangle>();
+        public MorphTarget[] morphTargets = Array.Empty<MorphTarget>();
 
         protected override void readStruct(Stream stream)
         {
             using BinaryReader reader = new BinaryReader(stream);
             format = EnumUtils.intToFlags<GeometryFormat>(reader.ReadUInt32());
             triangles = new VertexTriangle[reader.ReadUInt32()];
-            UInt32 vertexCount = reader.ReadUInt32();
+            uint vertexCount = reader.ReadUInt32();
             morphTargets = new MorphTarget[reader.ReadUInt32()];
             ambient = reader.ReadSingle();
             specular = reader.ReadSingle();
@@ -76,8 +76,8 @@ namespace zzio.rwbs
                 morphTargets[i] = new MorphTarget();
                 morphTargets[i].bsphereCenter = reader.ReadVector3();
                 morphTargets[i].bsphereRadius = reader.ReadSingle();
-                morphTargets[i].vertices = new Vector3[0];
-                morphTargets[i].normals = new Vector3[0];
+                morphTargets[i].vertices = Array.Empty<Vector3>();
+                morphTargets[i].normals = Array.Empty<Vector3>();
                 bool hasVertices = reader.ReadUInt32() > 0;
                 bool hasNormals = reader.ReadUInt32() > 0;
                 if (hasVertices)
@@ -141,8 +141,8 @@ namespace zzio.rwbs
             {
                 writer.Write(mt.bsphereCenter);
                 writer.Write(mt.bsphereRadius);
-                writer.Write((UInt32)(mt.vertices.Length == 0 ? 0 : 1));
-                writer.Write((UInt32)(mt.normals.Length == 0 ? 0 : 1));
+                writer.Write((uint)(mt.vertices.Length == 0 ? 0 : 1));
+                writer.Write((uint)(mt.normals.Length == 0 ? 0 : 1));
                 Array.ForEach(mt.vertices, writer.Write);
                 Array.ForEach(mt.normals, writer.Write);
             }

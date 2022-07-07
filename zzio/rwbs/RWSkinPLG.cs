@@ -19,7 +19,7 @@ namespace zzio.rwbs
     [System.Serializable]
     public struct Bone
     {
-        public UInt32 id, idx;
+        public uint id, idx;
         public BoneFlags flags;
         public Matrix4x4 objectToBone;
     }
@@ -31,13 +31,13 @@ namespace zzio.rwbs
 
         public byte[,] vertexIndices = new byte[0, 0]; // 4 per vertex
         public float[,] vertexWeights = new float[0, 0]; // 4 per vertex
-        public Bone[] bones = new Bone[0];
+        public Bone[] bones = Array.Empty<Bone>();
 
         protected override void readBody(Stream stream)
         {
             using BinaryReader reader = new BinaryReader(stream);
             bones = new Bone[reader.ReadUInt32()];
-            UInt32 vertexCount = reader.ReadUInt32();
+            uint vertexCount = reader.ReadUInt32();
             vertexIndices = new byte[vertexCount, 4];
             vertexWeights = new float[vertexCount, 4];
 

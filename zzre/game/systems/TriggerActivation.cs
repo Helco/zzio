@@ -45,11 +45,12 @@ namespace zzre.game.systems
             foreach (var trigger in scene.triggers.Except(triggersWithEntities))
             {
                 var entity = World.CreateEntity();
-                var location = new Location();
-                location.Parent = World.Get<Location>();
-                location.LocalPosition = trigger.pos;
-                location.LocalRotation = trigger.dir.ToZZRotation();
-                entity.Set(location);
+                entity.Set(new Location()
+                {
+                    Parent = World.Get<Location>(),
+                    LocalPosition = trigger.pos,
+                    LocalRotation = trigger.dir.ToZZRotation()
+                });
                 entity.Set(trigger);
             }
         }

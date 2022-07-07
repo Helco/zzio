@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -29,8 +29,7 @@ namespace zzio.vfs
             InMemoryDirectory curDir = root;
             foreach (var nextDirName in path.Parts.SkipLast(1))
             {
-                var nextDir = curDir.Directories.FirstOrDefault(d => d.Name.Equals(nextDirName, comparison)) as InMemoryDirectory;
-                if (nextDir == null)
+                if (curDir.Directories.FirstOrDefault(d => d.Name.Equals(nextDirName, comparison)) is not InMemoryDirectory nextDir)
                 {
                     nextDir = new InMemoryDirectory(this, curDir, curDir.Path.Combine(nextDirName));
                     curDir.directories.Add(nextDir);
@@ -84,7 +83,7 @@ namespace zzio.vfs
                 Path = path;
                 Pool = parent.Pool;
                 Parent = parent;
-                this.content = content ?? new byte[0];
+                this.content = content ?? Array.Empty<byte>();
             }
         }
     }

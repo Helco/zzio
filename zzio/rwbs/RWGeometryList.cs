@@ -8,7 +8,7 @@ namespace zzio.rwbs
     {
         public override SectionId sectionId => SectionId.GeometryList;
 
-        public UInt32 geometryCount;
+        public uint geometryCount;
 
         protected override void readStruct(Stream stream)
         {

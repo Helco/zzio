@@ -49,9 +49,8 @@ namespace zzre.tools
                 var clump = Section.ReadNew(contentStream);
                 if (clump.sectionId != SectionId.Clump)
                     throw new InvalidDataException($"Expected a root clump section, got a {clump.sectionId}");
-                var skin = clump.FindChildById(SectionId.SkinPLG) as RWSkinPLG;
-                if (skin == null)
-                    throw new InvalidDataException($"Attached actor part model does not have a skin");
+                if (clump.FindChildById(SectionId.SkinPLG) is not RWSkinPLG skin)
+                    throw new InvalidDataException("Attached actor part model does not have a skin");
 
                 geometry = new ClumpBuffers(diContainer, (RWClump)clump);
                 AddDisposable(geometry);

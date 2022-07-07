@@ -59,8 +59,7 @@ namespace zzmaps
             };
 
             output = CreateOutput(options);
-            var outputDisposable = output as IDisposable;
-            if (outputDisposable != null)
+            if (output is IDisposable outputDisposable)
                 AddDisposable(outputDisposable);
         }
 

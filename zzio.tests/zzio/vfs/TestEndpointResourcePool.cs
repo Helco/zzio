@@ -40,7 +40,7 @@ namespace zzio.tests.vfs
 
             var a = pool.Root.Directories.Single();
             MyAssert.ContainsExactly(
-                new IResource[0],
+                Array.Empty<IResource>(),
                 a.Files);
             MyAssert.ContainsExactly(
                 new[] { "a/b", "a/c" },
@@ -51,7 +51,7 @@ namespace zzio.tests.vfs
                 new[] { "a/b/content.txt" },
                 b.Files.Select(f => f.Path.ToPOSIXString()));
             MyAssert.ContainsExactly(
-                new IResource[0],
+                Array.Empty<IResource>(),
                 b.Directories);
 
             var c = a.Directories.Single(d => d.Path.Parts.Last() == "c");
@@ -59,7 +59,7 @@ namespace zzio.tests.vfs
                 new[] { "a/c/content.txt" },
                 c.Files.Select(f => f.Path.ToPOSIXString()));
             MyAssert.ContainsExactly(
-                new IResource[0],
+                Array.Empty<IResource>(),
                 c.Directories);
         }
 

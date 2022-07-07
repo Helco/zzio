@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 
 namespace zzre.tests
@@ -9,7 +9,7 @@ namespace zzre.tests
         public void AddSimple()
         {
             var coll = new RangeCollection();
-            Assert.AreEqual(new Range[0], coll);
+            Assert.AreEqual(Array.Empty<Range>(), coll);
             coll.Add(0..1);
             coll.Add(6..9);
             Assert.AreEqual(new[] { 0..1, 6..9 }, coll);

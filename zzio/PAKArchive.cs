@@ -66,7 +66,7 @@ namespace zzio
                     parent = parent.Parent?.WithoutDirectoryMarker();
                 }
             }
-            archive.baseOffset = (UInt32)baseStream.Position;
+            archive.baseOffset = (uint)baseStream.Position;
             return archive;
         }
 

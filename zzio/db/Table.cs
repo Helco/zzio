@@ -13,8 +13,8 @@ namespace zzio.db
         {
             rows.Clear();
             using BinaryReader reader = new BinaryReader(stream);
-            UInt32 rowCount = reader.ReadUInt32();
-            for (UInt32 i = 0; i < rowCount; i++)
+            uint rowCount = reader.ReadUInt32();
+            for (uint i = 0; i < rowCount; i++)
             {
                 Row row = new Row();
                 row.Read(reader);

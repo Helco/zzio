@@ -9,7 +9,7 @@ namespace zzre.game.systems.ui
     {
         private const float SegmentDuration = 0.03f;
         private const float BlinkDuration = 0.5f;
-        private static readonly string[] BlinkTexts = new[] { "{21}", "{20}" };
+        private static readonly string[] BlinkTexts = { "{21}", "{20}" };
 
         public AnimatedLabel(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
         {

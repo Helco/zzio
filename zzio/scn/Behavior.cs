@@ -7,7 +7,7 @@ namespace zzio.scn
     public class Behavior : ISceneSection
     {
         public BehaviourType type;
-        public UInt32 modelId;
+        public uint modelId;
 
         public void Read(Stream stream)
         {

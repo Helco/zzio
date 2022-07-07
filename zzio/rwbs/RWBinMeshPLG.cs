@@ -14,8 +14,8 @@ namespace zzio.rwbs
     [System.Serializable]
     public struct SubMesh
     {
-        public UInt32 matIndex;
-        public UInt32[] indices; // as ZanZarah uses DirectX, this should always be 32 bit 
+        public uint matIndex;
+        public uint[] indices; // as ZanZarah uses DirectX, this should always be 32 bit 
     }
 
     [Serializable]
@@ -24,8 +24,8 @@ namespace zzio.rwbs
         public override SectionId sectionId => SectionId.BinMeshPLG;
 
         public BinMeshType type;
-        public UInt32 totalIndexCount;
-        public SubMesh[] subMeshes = new SubMesh[0];
+        public uint totalIndexCount;
+        public SubMesh[] subMeshes = Array.Empty<SubMesh>();
 
         protected override void readBody(Stream stream)
         {
@@ -36,7 +36,7 @@ namespace zzio.rwbs
 
             for (int i = 0; i < subMeshes.Length; i++)
             {
-                subMeshes[i].indices = new UInt32[reader.ReadUInt32()];
+                subMeshes[i].indices = new uint[reader.ReadUInt32()];
                 subMeshes[i].matIndex = reader.ReadUInt32();
 
                 for (int j = 0; j < subMeshes[i].indices.Length; j++)
@@ -56,7 +56,7 @@ namespace zzio.rwbs
                 writer.Write(m.indices.Length);
                 writer.Write(m.matIndex);
 
-                foreach (UInt32 i in m.indices)
+                foreach (uint i in m.indices)
                     writer.Write(i);
             }
         }

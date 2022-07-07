@@ -52,8 +52,8 @@ namespace zzio.rwbs
             using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write((int)sectorType);
             writer.Write(centerValue);
-            writer.Write((UInt32)(leftIsWorldSector ? 1 : 0));
-            writer.Write((UInt32)(rightIsWorldSector ? 1 : 0));
+            writer.Write((uint)(leftIsWorldSector ? 1 : 0));
+            writer.Write((uint)(rightIsWorldSector ? 1 : 0));
             writer.Write(leftValue);
             writer.Write(rightValue);
         }

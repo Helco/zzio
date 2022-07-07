@@ -21,8 +21,6 @@ namespace zzio.effect.parts
 
         public float Duration => 0f;
 
-        public Sound() { }
-
         public void Read(BinaryReader r)
         {
             uint size = r.ReadUInt32();

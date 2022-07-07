@@ -40,7 +40,7 @@ namespace zzio.cli
     {
         private static FileType getExtensionFileType(string ext)
         {
-            switch (ext.Substring(1).ToLowerInvariant())
+            switch (ext[1..].ToLowerInvariant())
             {
                 case ("ska"): { return FileType.SKA; }
                 case ("aed"): { return FileType.AED; }
@@ -87,8 +87,7 @@ namespace zzio.cli
             foreach (FileType type in formats)
                 conversions[type] = null;
 
-            var convTypes = args["target", true] as List<object>;
-            if (convTypes != null)
+            if (args["target", true] is List<object> convTypes)
             {
                 foreach (string target in convTypes)
                 {

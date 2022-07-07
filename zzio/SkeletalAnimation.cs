@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
@@ -37,9 +37,9 @@ namespace zzio
     {
         private static readonly int KEYFRAME_SIZE = (4 + 3 + 1 + 1) * 4;
 
-        public UInt32 flags = 0; // TODO: Format of flags are still unknown 
+        public uint flags = 0; // TODO: Format of flags are still unknown 
         public float duration = 0.0f;
-        public AnimationKeyFrame[][] boneFrames = new AnimationKeyFrame[0][]; // a set of keyframes for every bone
+        public AnimationKeyFrame[][] boneFrames = Array.Empty<AnimationKeyFrame[]>(); // a set of keyframes for every bone
 
         public int BoneCount => boneFrames.Length;
 

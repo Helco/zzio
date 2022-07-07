@@ -8,13 +8,13 @@ namespace zzio.scn
     [System.Serializable]
     public class Sample3D : ISceneSection
     {
-        public UInt32 idx;
+        public uint idx;
         public string filename = "";
         public Vector3 pos, forward, up;
         public float
             minDist,
             maxDist;
-        public UInt32
+        public uint
             volume, // between 0-100
             loopCount,
             falloff;

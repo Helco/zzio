@@ -22,10 +22,10 @@ namespace zzio.scn
     [Serializable]
     public class Effect : ISceneSection
     {
-        public UInt32 idx;
+        public uint idx;
         public EffectType type;
         public Vector3 v1, v2, v3;
-        public UInt32 param;
+        public uint param;
         public string effectFile = "";
 
         public void Read(Stream stream)

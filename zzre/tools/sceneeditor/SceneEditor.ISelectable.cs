@@ -1,4 +1,4 @@
-﻿using ImGuizmoNET;
+using ImGuizmoNET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,7 +60,7 @@ namespace zzre.tools
             private readonly DebugDiamondSphereLineRenderer sphereBoundsRenderer;
 
             private IRenderable? activeBoundsRenderer = null;
-            private ISelectable[] lastPotentials = new ISelectable[0];
+            private ISelectable[] lastPotentials = Array.Empty<ISelectable>();
             private int lastPotentialI;
 
             public SelectionComponent(ITagContainer diContainer)

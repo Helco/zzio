@@ -1,4 +1,4 @@
-﻿using ImGuiNET;
+using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,8 +18,8 @@ namespace zzre.imgui
 
         private readonly ResourceFactory resourceFactory;
         private readonly ImGuiRenderer imGuiRenderer;
-        private IReadOnlyList<ModelStandardMaterial> materials = new ModelStandardMaterial[0];
-        private IntPtr[] textureBindings = new IntPtr[0];
+        private IReadOnlyList<ModelStandardMaterial> materials = Array.Empty<ModelStandardMaterial>();
+        private IntPtr[] textureBindings = Array.Empty<IntPtr>();
 
         public bool OpenEntriesByDefault { get; set; } = true;
 
@@ -48,7 +48,7 @@ namespace zzre.imgui
         protected override void DisposeManaged()
         {
             base.DisposeManaged();
-            Materials = new ModelStandardMaterial[0];
+            Materials = Array.Empty<ModelStandardMaterial>();
         }
 
         public bool Content()

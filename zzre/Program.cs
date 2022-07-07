@@ -17,7 +17,7 @@ namespace zzre
         // which causes very noticeable hickups.
         // Nevertheless this is symptom based fixing and this list should be checked
         // regularly and on different platforms.
-        private static readonly string[] PreloadAssemblies = new[]
+        private static readonly string[] PreloadAssemblies =
         {
             "System.Text.RegularExpressions",
             "System.Reflection.Emit.Lightweight",

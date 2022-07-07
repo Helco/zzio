@@ -67,8 +67,6 @@ namespace zzio.effect.parts
 
         public float Duration => (phase1 + phase2) / 1000f;
 
-        public ParticleEmitter() { }
-
         public void Read(BinaryReader r)
         {
             uint size = r.ReadUInt32();

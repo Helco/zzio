@@ -41,7 +41,7 @@ namespace zzio
     [Serializable]
     public class VarConfig
     {
-        private static readonly byte XOR_KEY = 0x75;
+        private const byte XOR_KEY = 0x75;
 
         public byte[] header = new byte[3]; // 3 bytes, meaning unknown
         public VarConfigValue firstValue; // name is always empty

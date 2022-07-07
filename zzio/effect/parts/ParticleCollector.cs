@@ -38,8 +38,6 @@ namespace zzio.effect.parts
 
         public float Duration => 1f;
 
-        public ParticleCollector() { }
-
         public void Read(BinaryReader r)
         {
             uint size = r.ReadUInt32();

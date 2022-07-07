@@ -163,8 +163,7 @@ namespace zzio.cli
                         else
                             throw new Exception();
                     }
-                    List<object> valueList = values[paramInfo.longName] as List<object>;
-                    if (valueList == null)
+                    if (values[paramInfo.longName] is not List<object> valueList)
                         values[paramInfo.longName] = valueList = new List<object>();
                     valueList.Add(valueArr.Length == 1 ? valueArr[0] : valueArr);
                     i += paramCount;

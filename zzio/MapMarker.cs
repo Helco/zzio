@@ -20,9 +20,9 @@ namespace zzio
     [Serializable]
     public struct MapMarker
     {
-        public Int32 posX, posY;
+        public int posX, posY;
         public MapMarkerSection section;
-        public UInt32 sceneId;
+        public uint sceneId;
 
         public static MapMarker ReadNew(BinaryReader reader)
         {

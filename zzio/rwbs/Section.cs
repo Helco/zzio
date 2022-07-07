@@ -40,7 +40,7 @@ namespace zzio.rwbs
         protected abstract void readBody(Stream stream);
         protected abstract void writeBody(Stream stream);
 
-        public static void ReadHead(Stream stream, out SectionId sectionId, out UInt32 size, out UInt32 version)
+        public static void ReadHead(Stream stream, out SectionId sectionId, out uint size, out uint version)
         {
             using BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
             sectionId = EnumUtils.intToEnum<SectionId>(reader.ReadInt32());
@@ -55,12 +55,12 @@ namespace zzio.rwbs
         public void Read(Stream stream)
         {
             SectionId readSectionId;
-            UInt32 readSize, readVersion;
+            uint readSize, readVersion;
             ReadHead(stream, out readSectionId, out readSize, out readVersion);
 
             if (readSectionId != sectionId)
             {
-                String msg = String.Format("Trying to read a \"{0}\" from a \"{1}\"", readSectionId, sectionId);
+                string msg = string.Format("Trying to read a \"{0}\" from a \"{1}\"", readSectionId, sectionId);
                 throw new InvalidDataException(msg);
             }
             version = readVersion;
@@ -72,9 +72,9 @@ namespace zzio.rwbs
         public void Write(Stream stream)
         {
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
-            writer.Write((Int32)sectionId);
+            writer.Write((int)sectionId);
             long sectionSizePos = stream.Position;
-            writer.Write((UInt32)0);
+            writer.Write((uint)0);
             writer.Write(version);
 
             writeBody(new GatekeeperStream(stream));

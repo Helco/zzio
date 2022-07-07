@@ -1,4 +1,4 @@
-﻿using ImGuiNET;
+using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -53,7 +53,7 @@ namespace zzre.tools
         private WorldCollider? worldCollider;
         private RWAtomicSection? sectionAtomic;
         private RWCollision? sectionCollision;
-        private int[] sectionDepths = new int[0];
+        private int[] sectionDepths = Array.Empty<int>();
         private int highlightedSectionI = -1;
         private int highlightedSplitI = -1;
         private bool updateViewFrustumCulling = true;
@@ -335,7 +335,7 @@ namespace zzre.tools
             if (worldBuffers == null || highlightedSectionI < 0)
                 return;
             boundsRenderer.Bounds = worldBuffers.Sections[index].Bounds;
-            planeRenderer.Planes = new DebugPlane[0];
+            planeRenderer.Planes = Array.Empty<DebugPlane>();
 
             if (worldBuffers.Sections[index].IsPlane)
             {
@@ -364,7 +364,7 @@ namespace zzre.tools
                 CollisionSectorType.X => Vector3.UnitX,
                 CollisionSectorType.Y => Vector3.UnitY,
                 CollisionSectorType.Z => Vector3.UnitZ,
-                _ => throw new NotSupportedException($"Unsupported collision sector type: " + split.left.type)
+                _ => throw new NotSupportedException($"Unsupported collision sector type: {split.left.type}")
             };
             SetPlanes(boundsRenderer.Bounds.Box, normal, split.left.value, split.right.value, centerValue: null);
 

@@ -21,11 +21,11 @@ namespace zzio.scn
     [Serializable]
     public class EffectV2 : ISceneSection
     {
-        public UInt32 idx;
+        public uint idx;
         public EffectV2Type type;
-        public UInt32 i1, i2, i3, i4, i5;
+        public uint i1, i2, i3, i4, i5;
         public Vector3 v1, v2, v3;
-        public UInt32 param;
+        public uint param;
         public string s = "";
 
         public void Read(Stream stream)

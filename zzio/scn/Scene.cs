@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using zzio;
@@ -17,27 +17,27 @@ namespace zzio
             public Dataset dataset = new Dataset();
             public Vector3 sceneOrigin;
             public string backdropFile = "";
-            public Light[] lights = new Light[0];
-            public Model[] models = new Model[0];
-            public FOModel[] foModels = new FOModel[0];
-            public DynModel[] dynModels = new DynModel[0];
-            public Trigger[] triggers = new Trigger[0];
-            public Sample2D[] samples2D = new Sample2D[0];
-            public Sample3D[] samples3D = new Sample3D[0];
-            public Effect[] effects = new Effect[0];
-            public EffectV2[] effects2 = new EffectV2[0];
-            public VertexModifier[] vertexModifiers = new VertexModifier[0];
-            public TextureProperty[] textureProperties = new TextureProperty[0];
-            public Behavior[] behaviors = new Behavior[0];
-            public SceneItem[] sceneItems = new SceneItem[0];
-            public UInt32 ambientSound;
-            public UInt32 music;
+            public Light[] lights = Array.Empty<Light>();
+            public Model[] models = Array.Empty<Model>();
+            public FOModel[] foModels = Array.Empty<FOModel>();
+            public DynModel[] dynModels = Array.Empty<DynModel>();
+            public Trigger[] triggers = Array.Empty<Trigger>();
+            public Sample2D[] samples2D = Array.Empty<Sample2D>();
+            public Sample3D[] samples3D = Array.Empty<Sample3D>();
+            public Effect[] effects = Array.Empty<Effect>();
+            public EffectV2[] effects2 = Array.Empty<EffectV2>();
+            public VertexModifier[] vertexModifiers = Array.Empty<VertexModifier>();
+            public TextureProperty[] textureProperties = Array.Empty<TextureProperty>();
+            public Behavior[] behaviors = Array.Empty<Behavior>();
+            public SceneItem[] sceneItems = Array.Empty<SceneItem>();
+            public uint ambientSound;
+            public uint music;
 
             private static T[] readArray<T>(BinaryReader reader, Func<T> ctor) where T : ISceneSection
             {
-                UInt32 count = reader.ReadUInt32();
+                uint count = reader.ReadUInt32();
                 T[] result = new T[count];
-                for (UInt32 i = 0; i < count; i++)
+                for (uint i = 0; i < count; i++)
                     (result[i] = ctor()).Read(new GatekeeperStream(reader.BaseStream));
                 return result;
             }
@@ -101,7 +101,7 @@ namespace zzio
                 if (array.Length == 0)
                     return;
                 writer.WriteZString(sectionName);
-                writer.Write((UInt32)array.Length);
+                writer.Write((uint)array.Length);
                 foreach (T section in array)
                     section.Write(new GatekeeperStream(writer.BaseStream, false));
             }

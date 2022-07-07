@@ -166,7 +166,7 @@ namespace zzre.rendering
 
             public IPipelineBuilder NextVertexLayout()
             {
-                if (vertexElements.Last().Count() == 0)
+                if (!vertexElements.Last().Any())
                     throw new InvalidOperationException("Last vertex layout has no elements");
                 vertexElements.Add(new List<VertexElementDescription>());
                 vertexLayoutInstanceStepRates.Add(0);
@@ -175,7 +175,7 @@ namespace zzre.rendering
 
             public IPipelineBuilder NextResourceLayout()
             {
-                if (resLayoutElements.Last().Count() == 0)
+                if (!resLayoutElements.Last().Any())
                     throw new InvalidOperationException("Last resource layout has no elements");
                 resLayoutElements.Add(new List<ResourceLayoutElementDescription>());
                 return this;
@@ -187,9 +187,9 @@ namespace zzre.rendering
                     throw new InvalidOperationException("No shader set was specified");
                 if (depthTarget == null && colorTargets.Count == 0)
                     throw new InvalidOperationException("Neither a depth target nor a color target was specified");
-                if (vertexElements.Last().Count() == 0)
+                if (!vertexElements.Last().Any())
                     throw new InvalidOperationException("Last vertex layout has no elements");
-                if (resLayoutElements.Last().Count() == 0)
+                if (!resLayoutElements.Last().Any())
                     throw new InvalidOperationException("Last resource layout has no elements");
 
                 lock (Collection)

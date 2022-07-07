@@ -43,7 +43,7 @@ namespace zzre
         private const float RhombusBaseOffset = 0.1f; // ^
         private const byte Alpha = 120;
         private const float LineLength = 0.1f;
-        private static readonly IColor[] Colors = new[] { IColor.Red.WithA(Alpha), IColor.Green.WithA(Alpha), IColor.Blue.WithA(Alpha) };
+        private static readonly IColor[] Colors = { IColor.Red.WithA(Alpha), IColor.Green.WithA(Alpha), IColor.Blue.WithA(Alpha) };
 
         private readonly LocationBuffer locationBuffer;
         private readonly GraphicsDevice device;

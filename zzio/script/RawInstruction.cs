@@ -40,7 +40,7 @@ namespace zzio.script
 
             if (fullMatch.Groups[2].Length == 0)
             {
-                Arguments = new string[0];
+                Arguments = Array.Empty<string>();
                 return;
             }
             var argumentMatchesColl = regexArgument.Matches(fullMatch.Groups[2].Value);

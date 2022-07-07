@@ -13,7 +13,7 @@ namespace zzio.rwbs
         public bool rootIsWorldSector;
         public Vector3 origin;
         public float ambient, specular, diffuse;
-        public UInt32
+        public uint
             numTriangles,
             numVertices,
             numPlaneSectors,
@@ -40,7 +40,7 @@ namespace zzio.rwbs
         protected override void writeStruct(Stream stream)
         {
             using BinaryWriter writer = new BinaryWriter(stream);
-            writer.Write((UInt32)(rootIsWorldSector ? 1 : 0));
+            writer.Write((uint)(rootIsWorldSector ? 1 : 0));
             writer.Write(origin);
             writer.Write(ambient);
             writer.Write(specular);
@@ -50,7 +50,7 @@ namespace zzio.rwbs
             writer.Write(numPlaneSectors);
             writer.Write(numWorldSectors);
             writer.Write(colSectorSize);
-            writer.Write((UInt32)format);
+            writer.Write((uint)format);
         }
     }
 }
