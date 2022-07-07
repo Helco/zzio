@@ -30,14 +30,14 @@ namespace zzio
             public TextureProperty[] textureProperties = Array.Empty<TextureProperty>();
             public Behavior[] behaviors = Array.Empty<Behavior>();
             public SceneItem[] sceneItems = Array.Empty<SceneItem>();
-            public UInt32 ambientSound;
-            public UInt32 music;
+            public uint ambientSound;
+            public uint music;
 
             private static T[] readArray<T>(BinaryReader reader, Func<T> ctor) where T : ISceneSection
             {
-                UInt32 count = reader.ReadUInt32();
+                uint count = reader.ReadUInt32();
                 T[] result = new T[count];
-                for (UInt32 i = 0; i < count; i++)
+                for (uint i = 0; i < count; i++)
                     (result[i] = ctor()).Read(new GatekeeperStream(reader.BaseStream));
                 return result;
             }
@@ -101,7 +101,7 @@ namespace zzio
                 if (array.Length == 0)
                     return;
                 writer.WriteZString(sectionName);
-                writer.Write((UInt32)array.Length);
+                writer.Write((uint)array.Length);
                 foreach (T section in array)
                     section.Write(new GatekeeperStream(writer.BaseStream, false));
             }

@@ -8,7 +8,7 @@ namespace zzio.rwbs
     {
         public override SectionId sectionId => SectionId.Clump;
 
-        public UInt32 atomicCount, lightCount, camCount;
+        public uint atomicCount, lightCount, camCount;
 
         protected override void readStruct(Stream stream)
         {

@@ -7,7 +7,7 @@ namespace zzio.scn
     public class TextureProperty : ISceneSection
     {
         public string fileName = "";
-        public Int32 footstepType;
+        public int footstepType;
 
         public void Read(Stream stream)
         {

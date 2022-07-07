@@ -8,7 +8,7 @@ namespace zzio.rwbs
     {
         public override SectionId sectionId => SectionId.MorphPLG;
 
-        public UInt32 morphTargetIndex;
+        public uint morphTargetIndex;
 
         protected override void readBody(Stream stream)
         {

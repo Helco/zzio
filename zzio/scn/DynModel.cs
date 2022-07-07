@@ -11,18 +11,18 @@ namespace zzio.scn
         public float a1, a2, a3, a4, a5, a6, a7;
         public byte someFlag;
         public IColor someColor;
-        public UInt32 cc;
+        public uint cc;
         public string s1, s2;
     }
 
     [Serializable]
     public class DynModel : ISceneSection
     {
-        public UInt32 idx, c1, c2;
+        public uint idx, c1, c2;
         public Vector3 pos, rot;
         public float f1, f2;
         public Vector3 v1;
-        public UInt32 ii1, ii2;
+        public uint ii1, ii2;
         public DynModelData[] data = Array.Empty<DynModelData>(); //always three
 
         public void Read(Stream stream)
@@ -39,7 +39,7 @@ namespace zzio.scn
             ii1 = reader.ReadUInt32();
             ii2 = reader.ReadUInt32();
             data = new DynModelData[3];
-            for (UInt32 i = 0; i < 3; i++)
+            for (uint i = 0; i < 3; i++)
             {
                 data[i].a1 = reader.ReadSingle();
                 data[i].a2 = reader.ReadSingle();

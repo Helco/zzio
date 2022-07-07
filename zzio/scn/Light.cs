@@ -25,7 +25,7 @@ namespace zzio.scn
     [Serializable]
     public class Light : ISceneSection
     {
-        public UInt32 idx;
+        public uint idx;
         public LightType type;
         public FColor color;
         public LightFlags flags;

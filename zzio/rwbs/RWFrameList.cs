@@ -9,8 +9,8 @@ namespace zzio.rwbs
     {
         public float[] rotMatrix;
         public Vector3 position;
-        public UInt32 frameIndex; //propably previous sibling?
-        public UInt32 creationFlags;
+        public uint frameIndex; //propably previous sibling?
+        public uint creationFlags;
 
         public static Frame ReadNew(BinaryReader reader)
         {

@@ -14,14 +14,14 @@ namespace zzio
 
         public void Write(BinaryWriter writer, string partName)
         {
-            writer.WriteZString(String.Format("[ModelFilename_{0}]", partName));
+            writer.WriteZString(string.Format("[ModelFilename_{0}]", partName));
             writer.WriteZString(model);
-            writer.WriteZString(String.Format("[AnimationPoolID_{0}]", partName));
+            writer.WriteZString(string.Format("[AnimationPoolID_{0}]", partName));
             writer.Write(animationPoolID);
 
             foreach (var (type, filename) in animations)
             {
-                writer.WriteZString(String.Format("[AnimationFilename_{0}]", partName));
+                writer.WriteZString(string.Format("[AnimationFilename_{0}]", partName));
                 writer.WriteZString(filename);
                 writer.Write((int)type);
             }

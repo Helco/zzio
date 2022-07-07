@@ -30,7 +30,7 @@ namespace zzio.rwbs
             using BinaryReader reader = new BinaryReader(stream);
             format = EnumUtils.intToFlags<GeometryFormat>(reader.ReadUInt32());
             triangles = new VertexTriangle[reader.ReadUInt32()];
-            UInt32 vertexCount = reader.ReadUInt32();
+            uint vertexCount = reader.ReadUInt32();
             morphTargets = new MorphTarget[reader.ReadUInt32()];
             ambient = reader.ReadSingle();
             specular = reader.ReadSingle();
@@ -141,8 +141,8 @@ namespace zzio.rwbs
             {
                 writer.Write(mt.bsphereCenter);
                 writer.Write(mt.bsphereRadius);
-                writer.Write((UInt32)(mt.vertices.Length == 0 ? 0 : 1));
-                writer.Write((UInt32)(mt.normals.Length == 0 ? 0 : 1));
+                writer.Write((uint)(mt.vertices.Length == 0 ? 0 : 1));
+                writer.Write((uint)(mt.normals.Length == 0 ? 0 : 1));
                 Array.ForEach(mt.vertices, writer.Write);
                 Array.ForEach(mt.normals, writer.Write);
             }

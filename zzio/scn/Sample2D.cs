@@ -6,9 +6,9 @@ namespace zzio.scn
     [System.Serializable]
     public class Sample2D : ISceneSection
     {
-        public UInt32 idx;
+        public uint idx;
         public string filename = "";
-        public UInt32 volume, // between 0-100
+        public uint volume, // between 0-100
             loopCount;
         public byte c;
 

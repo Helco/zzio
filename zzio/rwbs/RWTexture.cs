@@ -44,7 +44,7 @@ namespace zzio.rwbs
             byte addressing = reader.ReadByte();
             uAddressingMode = EnumUtils.intToEnum<TextureAddressingMode>(addressing & 0xf);
             vAddressingMode = EnumUtils.intToEnum<TextureAddressingMode>(addressing >> 4);
-            UInt16 flags = reader.ReadUInt16();
+            ushort flags = reader.ReadUInt16();
             useMipLevels = (flags & 1) > 0;
             // more flags are not known yet
         }
@@ -58,7 +58,7 @@ namespace zzio.rwbs
                 ((((int)vAddressingMode) & 0xf) << 4)
             );
             writer.Write(addressing);
-            writer.Write((UInt16)(useMipLevels ? 1 : 0));
+            writer.Write((ushort)(useMipLevels ? 1 : 0));
         }
     }
 }

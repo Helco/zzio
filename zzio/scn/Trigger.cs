@@ -18,12 +18,12 @@ namespace zzio.scn
     [Serializable]
     public class Trigger : ISceneSection
     {
-        public UInt32 idx;
+        public uint idx;
         public bool requiresLooking;
         public TriggerColliderType colliderType;
         public Vector3 dir;
         public TriggerType type;
-        public UInt32 ii1, ii2, ii3, ii4;
+        public uint ii1, ii2, ii3, ii4;
         public string s = "";
         public Vector3 // TODO: Move Collider out 
             pos,

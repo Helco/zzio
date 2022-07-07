@@ -35,9 +35,9 @@ namespace zzio.scn
         public string author = "";
         public VersionBuildCountry country;
         public VersionBuildType type;
-        public UInt32 v3, buildVersion;
+        public uint v3, buildVersion;
         public string date = "", time = "";
-        public UInt32 year, vv2;
+        public uint year, vv2;
 
         public void Read(Stream stream)
         {

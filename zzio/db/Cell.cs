@@ -116,7 +116,7 @@ namespace zzio.db
             return hashCode;
         }
 
-        private static void readFixedSize(BinaryReader reader, UInt32 expectedSize)
+        private static void readFixedSize(BinaryReader reader, uint expectedSize)
         {
             uint actualSize = reader.ReadUInt32();
             if (actualSize != expectedSize)

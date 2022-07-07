@@ -7,7 +7,7 @@ namespace zzio.scn
     public class SceneItem : ISceneSection
     {
         public string name = "";
-        public UInt32 index, type;
+        public uint index, type;
 
         public void Read(Stream stream)
         {

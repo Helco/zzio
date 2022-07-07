@@ -9,7 +9,7 @@ namespace zzio.rwbs
     {
         public override SectionId sectionId => SectionId.AtomicSection;
 
-        public UInt32 matIdBase;
+        public uint matIdBase;
         public Vector3 bbox1, bbox2;
         public Vector3[] vertices = Array.Empty<Vector3>();
         public Normal[] normals = Array.Empty<Normal>();

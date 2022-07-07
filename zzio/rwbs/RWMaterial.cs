@@ -8,7 +8,7 @@ namespace zzio.rwbs
     {
         public override SectionId sectionId => SectionId.Material;
 
-        public UInt32 flags; // unkown flags enum
+        public uint flags; // unkown flags enum
         public IColor color;
         public bool isTextured;
         public float ambient, specular, diffuse;
@@ -32,9 +32,9 @@ namespace zzio.rwbs
         {
             using BinaryWriter writer = new BinaryWriter(stream);
             writer.Write(flags);
-            writer.Write((UInt32)0);
+            writer.Write((uint)0);
             color.Write(writer);
-            writer.Write((UInt32)(isTextured ? 1 : 0));
+            writer.Write((uint)(isTextured ? 1 : 0));
             writer.Write(ambient);
             writer.Write(specular);
             writer.Write(diffuse);

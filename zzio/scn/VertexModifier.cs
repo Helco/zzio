@@ -7,11 +7,11 @@ namespace zzio.scn
     [Serializable]
     public class VertexModifier : ISceneSection
     {
-        public UInt32 idx, type;
+        public uint idx, type;
         public Vector3 v;
         public IColor color;
         public Vector3 vv;
-        public UInt32 ii;
+        public uint ii;
         public byte c;
 
         public void Read(Stream stream)

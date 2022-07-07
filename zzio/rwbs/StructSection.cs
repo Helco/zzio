@@ -6,7 +6,7 @@ namespace zzio.rwbs
     [Serializable]
     public abstract class StructSection : ListSection
     {
-        public UInt32 structVersion;
+        public uint structVersion;
 
         protected abstract void readStruct(Stream stream);
         protected abstract void writeStruct(Stream stream);
@@ -14,7 +14,7 @@ namespace zzio.rwbs
         protected override void readBody(Stream stream)
         {
             SectionId structSectionId;
-            UInt32 structSize;
+            uint structSize;
             Section.ReadHead(new GatekeeperStream(stream), out structSectionId, out structSize, out structVersion);
             if (structSectionId != SectionId.Struct)
                 throw new InvalidDataException("Struct list section does not contain struct section");
@@ -30,9 +30,9 @@ namespace zzio.rwbs
         protected override void writeBody(Stream stream)
         {
             using BinaryWriter writer = new BinaryWriter(stream);
-            writer.Write((Int32)SectionId.Struct);
+            writer.Write((int)SectionId.Struct);
             long sectionSizePos = stream.Position;
-            writer.Write((UInt32)0);
+            writer.Write((uint)0);
             writer.Write(version);
 
             writeStruct(new GatekeeperStream(stream));
