@@ -21,7 +21,7 @@ namespace zzio.rwbs
         public GeometryFormat format;
         public float ambient, specular, diffuse;
         public IColor[] colors = Array.Empty<IColor>();
-        public Vector2[][] texCoords = Array.Empty<Vector2>();
+        public Vector2[][] texCoords = Array.Empty<Vector2[]>();
         public VertexTriangle[] triangles = Array.Empty<VertexTriangle>();
         public MorphTarget[] morphTargets = Array.Empty<MorphTarget>();
 

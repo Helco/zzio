@@ -29,8 +29,8 @@ namespace zzio.rwbs
     {
         public override SectionId sectionId => SectionId.SkinPLG;
 
-        public byte[,] vertexIndices = Array.Empty<byte>(); // 4 per vertex
-        public float[,] vertexWeights = Array.Empty<float>(); // 4 per vertex
+        public byte[,] vertexIndices = new byte[0, 0]; // 4 per vertex
+        public float[,] vertexWeights = new float[0, 0]; // 4 per vertex
         public Bone[] bones = Array.Empty<Bone>();
 
         protected override void readBody(Stream stream)

@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using System.IO;
 using NUnit.Framework;
