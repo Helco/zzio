@@ -1,4 +1,4 @@
-﻿using ImGuiNET;
+using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -364,7 +364,7 @@ namespace zzre.tools
                 CollisionSectorType.X => Vector3.UnitX,
                 CollisionSectorType.Y => Vector3.UnitY,
                 CollisionSectorType.Z => Vector3.UnitZ,
-                _ => throw new NotSupportedException($"Unsupported collision sector type: " + split.left.type)
+                _ => throw new NotSupportedException("Unsupported collision sector type: "+ split.left.type)
             };
             SetPlanes(boundsRenderer.Bounds.Box, normal, split.left.value, split.right.value, centerValue: null);
 

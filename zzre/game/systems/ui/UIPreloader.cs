@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using DefaultEcs.Resource;
 using zzio;
@@ -208,7 +208,7 @@ namespace zzre.game.systems.ui
         {
             (int)zzio.db.ModuleType.Text => mappedDb.GetText(textUID).Text,
             (int)zzio.db.ModuleType.Dialog => mappedDb.GetDialog(textUID).Text,
-            _ => throw new ArgumentException($"Invalid UID for UI")
+            _ => throw new ArgumentException("Invalid UID for UI")
         };
 
         public DefaultEcs.Entity CreateLabel(

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -51,7 +51,7 @@ namespace zzre.tools
                     throw new InvalidDataException($"Expected a root clump section, got a {clump.sectionId}");
                 var skin = clump.FindChildById(SectionId.SkinPLG) as RWSkinPLG;
                 if (skin == null)
-                    throw new InvalidDataException($"Attached actor part model does not have a skin");
+                    throw new InvalidDataException("Attached actor part model does not have a skin");
 
                 geometry = new ClumpBuffers(diContainer, (RWClump)clump);
                 AddDisposable(geometry);

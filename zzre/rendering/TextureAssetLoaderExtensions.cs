@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -31,7 +31,7 @@ namespace zzre.rendering
         {
             var texSection = material.FindChildById(SectionId.Texture, true) as RWTexture;
             if (texSection == null)
-                throw new InvalidOperationException($"Given material is not textured");
+                throw new InvalidOperationException("Given material is not textured");
             return loader.LoadTexture(basePaths, texSection);
         }
 
