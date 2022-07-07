@@ -69,7 +69,7 @@ namespace zzre
             device.UpdateBuffer(vertexBuffer, 0, vertices);
 
             // TODO: might have to correlate to the materialIndices member of materialList 
-            var trianglesByMatIdx = geometry.triangles.GroupBy(t => t.m).Where(g => g.Count() > 0);
+            var trianglesByMatIdx = geometry.triangles.GroupBy(t => t.m).Where(g => g.Any());
             var indices = trianglesByMatIdx.SelectMany(
                 g => g.SelectMany(t => new[] { t.v1, t.v2, t.v3 })
             ).ToArray();
