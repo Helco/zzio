@@ -45,8 +45,6 @@ namespace zzio.effect.parts
 
         public float Duration => (phase1 + phase2 + planeLife + extraPhase) / 1000f;
 
-        public RandomPlanes() { }
-
         public void Read(BinaryReader r)
         {
             uint size = r.ReadUInt32();

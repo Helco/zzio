@@ -56,8 +56,6 @@ namespace zzio.effect
 
         public float Duration => parts.Any() ? parts.Max(p => p.Duration) : 0f;
 
-        public EffectCombiner() { }
-
         public void Read(Stream stream)
         {
             List<IEffectPart> partsList = new List<IEffectPart>();

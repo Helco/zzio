@@ -9,8 +9,6 @@ namespace zzio.db
         public UID uid;
         public Cell[] cells = Array.Empty<Cell>();
 
-        public Row() { }
-
         public void Read(BinaryReader reader)
         {
             uid = UID.ReadNew(reader);
