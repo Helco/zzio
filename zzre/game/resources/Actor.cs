@@ -7,7 +7,7 @@ namespace zzre.game.resources
     public class Actor : AResourceManager<string, ActorExDescription>
     {
         private static readonly FilePath BasePath = new FilePath("resources/models/actorsex/");
-        private static readonly string FileExtension = ".aed";
+        private const string FileExtension = ".aed";
         private readonly IResourcePool resourcePool;
 
         public Actor(ITagContainer diContainer)
