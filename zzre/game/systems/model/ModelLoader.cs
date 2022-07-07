@@ -53,11 +53,12 @@ namespace zzre.game.systems
             foreach (var model in scene.models)
             {
                 var entity = ecsWorld.CreateEntity();
-                var location = new Location();
-                location.Parent = ecsWorld.Get<Location>();
-                location.LocalPosition = model.pos;
-                location.LocalRotation = model.rot.ToZZRotation();
-                entity.Set(location);
+                entity.Set(new Location()
+                {
+                    Parent = ecsWorld.Get<Location>(),
+                    LocalPosition = model.pos,
+                    LocalRotation = model.rot.ToZZRotation()
+                });
 
                 entity.Set(ManagedResource<ClumpBuffers>.Create(
                     new resources.ClumpInfo(resources.ClumpType.Model, model.filename + ".dff")));
@@ -78,11 +79,12 @@ namespace zzre.game.systems
                 // TODO: Add FOModel filter by render detail
 
                 var entity = ecsWorld.CreateEntity();
-                var location = new Location();
-                location.Parent = ecsWorld.Get<Location>();
-                location.LocalPosition = foModel.pos;
-                location.LocalRotation = foModel.rot.ToZZRotation();
-                entity.Set(location);
+                entity.Set(new Location()
+                {
+                    Parent = ecsWorld.Get<Location>(),
+                    LocalPosition = foModel.pos,
+                    LocalRotation = foModel.rot.ToZZRotation()
+                });
 
                 entity.Set(ManagedResource<ClumpBuffers>.Create(
                     new resources.ClumpInfo(resources.ClumpType.Model, foModel.filename + ".dff")));

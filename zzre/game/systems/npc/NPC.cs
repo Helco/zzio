@@ -52,10 +52,12 @@ namespace zzre.game.systems
                 var entity = World.CreateEntity();
                 entity.Set(trigger);
 
-                var location = new Location();
-                location.Parent = World.Get<Location>();
-                location.LocalPosition = trigger.pos;
-                location.LocalRotation = trigger.dir.ToZZRotation();
+                var location = new Location()
+                {
+                    Parent = World.Get<Location>(),
+                    LocalPosition = trigger.pos,
+                    LocalRotation = trigger.dir.ToZZRotation()
+                };
                 location.LookIn(location.InnerForward with { Y = 0f });
                 entity.Set(location);
 

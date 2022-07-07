@@ -126,11 +126,12 @@ namespace zzre.game
             ecsWorld.Set(worldLocation);
 
             PlayerEntity = ecsWorld.CreateEntity();
-            var playerLocation = new Location();
-            playerLocation.Parent = worldLocation;
-            playerLocation.LocalPosition = new Vector3(216f, 40.5f, 219f);
             //playerLocation.LocalPosition = scene.triggers.First(t => t.type == TriggerType.Doorway).pos;
-            PlayerEntity.Set(playerLocation);
+            PlayerEntity.Set(new Location()
+            {
+                Parent = worldLocation,
+                LocalPosition = new Vector3(216f, 40.5f, 219f)
+            });
             PlayerEntity.Set(DefaultEcs.Resource.ManagedResource<zzio.ActorExDescription>.Create("chr01"));
             PlayerEntity.Set(components.Visibility.Visible);
             PlayerEntity.Set<components.PlayerControls>();
