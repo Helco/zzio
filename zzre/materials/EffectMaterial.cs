@@ -95,7 +95,7 @@ namespace zzre.materials
             .With(BlendStateDescription.SingleAlphaBlend)
             .Build());
     }
-    
+
 
     public class EffectAdditiveMaterial : EffectMaterial
     {
@@ -110,7 +110,7 @@ namespace zzre.materials
     public class EffectAdditiveAlphaMaterial : EffectMaterial
     {
         public EffectAdditiveAlphaMaterial(ITagContainer diContainer) : base(diContainer, GetPipeline(diContainer))
-        {}
+        { }
 
         private static IBuiltPipeline GetPipeline(ITagContainer diContainer) => PipelineFor<EffectAdditiveAlphaMaterial>.Get(diContainer, builder =>
             BuildBasePipeline(builder)

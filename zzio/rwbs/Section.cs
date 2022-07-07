@@ -58,7 +58,8 @@ namespace zzio.rwbs
             UInt32 readSize, readVersion;
             ReadHead(stream, out readSectionId, out readSize, out readVersion);
 
-            if (readSectionId != sectionId) {
+            if (readSectionId != sectionId)
+            {
                 String msg = String.Format("Trying to read a \"{0}\" from a \"{1}\"", readSectionId, sectionId);
                 throw new InvalidDataException(msg);
             }

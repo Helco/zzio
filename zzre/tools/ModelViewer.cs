@@ -109,7 +109,7 @@ namespace zzre.tools
             Load(resource);
         }
 
-        public void Load(IResource resource) => 
+        public void Load(IResource resource) =>
             Window.GetTag<OnceAction>().Next += () => LoadModelNow(resource);
 
         private void LoadModelNow(IResource resource)
@@ -171,7 +171,7 @@ namespace zzre.tools
             camera.Update(cl);
             gridRenderer.Render(cl);
             if (geometryBuffers == null)
-                return;            
+                return;
 
             geometryBuffers.SetBuffers(cl);
             foreach (var (subMesh, index) in geometryBuffers.SubMeshes.Indexed())

@@ -68,7 +68,7 @@ namespace zzre.tools
                 InputInt("Desc4", ref SceneTrigger.ii4);
                 InputText("S", ref SceneTrigger.s, 256);
                 EnumCombo("Collider", ref SceneTrigger.colliderType);
-                switch(SceneTrigger.colliderType)
+                switch (SceneTrigger.colliderType)
                 {
                     case TriggerColliderType.Sphere:
                         InputFloat("Radius", ref SceneTrigger.radius);

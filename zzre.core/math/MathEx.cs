@@ -22,7 +22,7 @@ namespace zzre
 
         public static Vector3 Floor(Vector3 v) =>
             new Vector3(MathF.Floor(v.X), MathF.Floor(v.Y), MathF.Floor(v.Z));
-        
+
         public static Vector4 Floor(Vector4 v) =>
             new Vector4(MathF.Floor(v.X), MathF.Floor(v.Y), MathF.Floor(v.Z), MathF.Floor(v.W));
 

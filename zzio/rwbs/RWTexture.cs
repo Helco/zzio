@@ -48,7 +48,7 @@ namespace zzio.rwbs
             useMipLevels = (flags & 1) > 0;
             // more flags are not known yet
         }
-        
+
         protected override void writeStruct(Stream stream)
         {
             using BinaryWriter writer = new BinaryWriter(stream);

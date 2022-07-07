@@ -27,7 +27,7 @@ namespace zzre.core.assets
             stream.Read(data, 0, data.Length);
             stream.Close();
 
-            
+
             var fontConfig = ImGuiNative.ImFontConfig_ImFontConfig();
             fontConfig->MergeMode = mergeMode;
             fontConfig->GlyphMinAdvanceX = minAdvanceX;

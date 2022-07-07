@@ -23,7 +23,7 @@ namespace zzre.rendering
                 buffer = Parent.Device.ResourceFactory.CreateBuffer(new BufferDescription(SizeInBytes, BufferUsage.UniformBuffer));
                 range = null;
                 return buffer;
-            } 
+            }
             set
             {
                 buffer?.Dispose();

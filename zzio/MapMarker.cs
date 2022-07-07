@@ -51,7 +51,7 @@ namespace zzio
                 .Select(i => ReadNew(reader))
                 .ToArray();
         }
-        
+
         public static void WriteFile(MapMarker[] markers, Stream stream)
         {
             using BinaryWriter writer = new BinaryWriter(stream);

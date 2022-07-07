@@ -18,7 +18,7 @@ namespace zzre
         }
 
         public bool HasTag<TTag>() where TTag : class => TryGetTag<TTag>(out var _);
-        
+
         public bool TryGetTag<TTag>([NotNullWhen(true)] out TTag tag) where TTag : class
         {
             tag = default!;

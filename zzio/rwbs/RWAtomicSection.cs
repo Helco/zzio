@@ -49,7 +49,7 @@ namespace zzio.rwbs
             {
                 colors = new IColor[vertices.Length];
                 for (int i = 0; i < colors.Length; i++)
-                    colors[i] = IColor.ReadNew(reader);   
+                    colors[i] = IColor.ReadNew(reader);
             }
 
             if ((worldFormat & GeometryFormat.Textured) > 0 ||

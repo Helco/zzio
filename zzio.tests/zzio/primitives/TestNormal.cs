@@ -12,7 +12,8 @@ namespace zzio.tests.primitives
         };
 
         [Test]
-        public void ctor() {
+        public void ctor()
+        {
             Normal norm = new Normal(1, 2, 3, 4);
             Assert.AreEqual(1, norm.x);
             Assert.AreEqual(2, norm.y);
@@ -21,7 +22,8 @@ namespace zzio.tests.primitives
         }
 
         [Test]
-        public void read() {
+        public void read()
+        {
             MemoryStream stream = new MemoryStream(expected, false);
             using BinaryReader reader = new BinaryReader(stream);
             Normal norm = Normal.ReadNew(reader);
@@ -32,7 +34,8 @@ namespace zzio.tests.primitives
         }
 
         [Test]
-        public void write() {
+        public void write()
+        {
             MemoryStream stream = new MemoryStream();
             using BinaryWriter writer = new BinaryWriter(stream);
             Normal norm = new Normal(0x12, 0x34, 0x56, -123);

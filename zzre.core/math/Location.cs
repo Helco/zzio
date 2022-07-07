@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace zzre
 {
-    public class Location 
+    public class Location
     {
         public Location? Parent { get; set; } = null;
 

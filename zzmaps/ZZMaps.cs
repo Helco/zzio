@@ -97,7 +97,7 @@ namespace zzmaps
 
             var runTask = scheduler.Run();
             int printedLines = 0;
-            while(!runTask.IsCompleted)
+            while (!runTask.IsCompleted)
             {
                 PrintProgress();
                 Thread.Sleep(500);
@@ -212,7 +212,7 @@ namespace zzmaps
         public bool ReplaceExisting { get; set; }
         public Regex ScenePattern { get; set; } = new Regex("^sc_");
         public uint CommitEvery { get; set; } = 100;
-        
+
         public float ExtraBorder { get; set; }
         public float BasePPU { get; set; }
         public float MinPPU { get; set; }

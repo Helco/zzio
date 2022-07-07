@@ -9,7 +9,7 @@ namespace zzio.effect.parts
         Particle = 0,
         Spark,
         Model,
-        
+
         Unknown = -1
     }
 

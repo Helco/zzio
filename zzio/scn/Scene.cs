@@ -17,19 +17,19 @@ namespace zzio
             public Dataset dataset = new Dataset();
             public Vector3 sceneOrigin;
             public string backdropFile = "";
-            public Light[] lights                       = new Light[0];
-            public Model[] models                       = new Model[0];
-            public FOModel[] foModels                   = new FOModel[0];
-            public DynModel[] dynModels                 = new DynModel[0];
-            public Trigger[] triggers                   = new Trigger[0];
-            public Sample2D[] samples2D                 = new Sample2D[0];
-            public Sample3D[] samples3D                 = new Sample3D[0];
-            public Effect[] effects                     = new Effect[0];
-            public EffectV2[] effects2                  = new EffectV2[0];
-            public VertexModifier[] vertexModifiers     = new VertexModifier[0];
-            public TextureProperty[] textureProperties  = new TextureProperty[0];
-            public Behavior[] behaviors                 = new Behavior[0];
-            public SceneItem[] sceneItems               = new SceneItem[0];
+            public Light[] lights = new Light[0];
+            public Model[] models = new Model[0];
+            public FOModel[] foModels = new FOModel[0];
+            public DynModel[] dynModels = new DynModel[0];
+            public Trigger[] triggers = new Trigger[0];
+            public Sample2D[] samples2D = new Sample2D[0];
+            public Sample3D[] samples3D = new Sample3D[0];
+            public Effect[] effects = new Effect[0];
+            public EffectV2[] effects2 = new EffectV2[0];
+            public VertexModifier[] vertexModifiers = new VertexModifier[0];
+            public TextureProperty[] textureProperties = new TextureProperty[0];
+            public Behavior[] behaviors = new Behavior[0];
+            public SceneItem[] sceneItems = new SceneItem[0];
             public UInt32 ambientSound;
             public UInt32 music;
 
@@ -96,7 +96,7 @@ namespace zzio
                 value.Write(new GatekeeperStream(writer.BaseStream));
             }
 
-            private static void writeArray<T>(BinaryWriter writer, T[] array, string sectionName) where T : ISceneSection 
+            private static void writeArray<T>(BinaryWriter writer, T[] array, string sectionName) where T : ISceneSection
             {
                 if (array.Length == 0)
                     return;
@@ -113,7 +113,7 @@ namespace zzio
 
                 // write primitives
                 writer.WriteZString("[SceneOrigin]");
-                writer.Write(sceneOrigin);                
+                writer.Write(sceneOrigin);
                 writer.WriteZString("[AmbientSound]");
                 writer.Write(ambientSound);
                 writer.WriteZString("[Music]");

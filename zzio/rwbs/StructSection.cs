@@ -4,7 +4,7 @@ using System.IO;
 namespace zzio.rwbs
 {
     [Serializable]
-    public abstract class StructSection: ListSection
+    public abstract class StructSection : ListSection
     {
         public UInt32 structVersion;
 
@@ -18,7 +18,7 @@ namespace zzio.rwbs
             Section.ReadHead(new GatekeeperStream(stream), out structSectionId, out structSize, out structVersion);
             if (structSectionId != SectionId.Struct)
                 throw new InvalidDataException("Struct list section does not contain struct section");
-            
+
             long oldPosition = stream.Position;
             RangeStream structStream = new RangeStream(stream, structSize, false, false);
             readStruct(structStream);

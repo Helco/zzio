@@ -69,7 +69,7 @@ namespace zzre.game.systems
             }
 
             // for the current scene we still want to execute it
-            switch(message.Mod)
+            switch (message.Mod)
             {
                 case GSModDisableAttackTrigger disableAttackTrigger: world.Publish(disableAttackTrigger); break;
                 case GSModRemoveItem removeItem: world.Publish(removeItem); break;

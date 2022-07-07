@@ -51,7 +51,7 @@ namespace zzio.rwbs
                     int texCount = (((int)format) >> 16) & 0xff;
                     if (texCount == 0)
                         texCount = ((format & GeometryFormat.Textured2) > 0 ? 2 : 1);
-                    
+
                     texCoords = new Vector2[texCount][];
                     for (int i = 0; i < texCount; i++)
                     {
@@ -71,7 +71,8 @@ namespace zzio.rwbs
                 }
             } // no native format
 
-            for (int i = 0; i < morphTargets.Length; i++) {
+            for (int i = 0; i < morphTargets.Length; i++)
+            {
                 morphTargets[i] = new MorphTarget();
                 morphTargets[i].bsphereCenter = reader.ReadVector3();
                 morphTargets[i].bsphereRadius = reader.ReadSingle();

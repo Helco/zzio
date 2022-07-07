@@ -13,7 +13,7 @@ namespace zzmaps
         private readonly Dictionary<FilePath, int> refCounts = new Dictionary<FilePath, int>();
 
         public RefCachedAssetLoader(IAssetLoader<TAsset> parent) : base(parent)
-        {}
+        { }
 
         private int RefCountFor(FilePath path) =>
             refCounts.TryGetValue(path, out var refCount) ? refCount : 0;
@@ -58,7 +58,7 @@ namespace zzmaps
 
         public void Release(IEnumerable<IResource> resources)
         {
-            lock(cache)
+            lock (cache)
             {
                 foreach (var resource in resources)
                     refCounts[resource.Path] = RefCountFor(resource.Path) - 1;

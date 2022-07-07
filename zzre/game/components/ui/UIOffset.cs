@@ -6,38 +6,38 @@ namespace zzre.game.components.ui
     {
         private const float CanonicalRatio = 1024f / 768f;
 
-        public Vector2 GetOffset(Rect logicalScreen)
+    public Vector2 GetOffset(Rect logicalScreen)
+    {
+        if (GameOnly)
         {
-            if (GameOnly)
+            var min = logicalScreen.Min;
+            var size = logicalScreen.Size;
+            if (min.X < 0)
             {
-                var min = logicalScreen.Min;
-                var size = logicalScreen.Size;
-                if (min.X < 0)
-                {
-                    min.X = 0;
-                    size.X = size.Y * CanonicalRatio;
-                }
-                if (min.Y < 0)
-                {
-                    min.Y = 0;
-                    size.Y = size.X / CanonicalRatio;
-                }
+                min.X = 0;
+                size.X = size.Y * CanonicalRatio;
             }
-
-            return MathEx.Floor(logicalScreen.AbsolutePos(Offset));
+            if (min.Y < 0)
+            {
+                min.Y = 0;
+                size.Y = size.X / CanonicalRatio;
+            }
         }
 
-        public Vector2 Calc(Vector2 position, Rect logicalScreen) =>
-            GetOffset(logicalScreen) + position;
-
-        public Vector2 CalcReverse(Vector2 position, Rect logicalScreen) =>
-            position - GetOffset(logicalScreen);
-
-        public static readonly UIOffset ScreenUpperLeft = new UIOffset(Vector2.Zero, GameOnly: false);
-        public static readonly UIOffset GameUpperLeft = new UIOffset(Vector2.Zero, GameOnly: true);
-        public static readonly UIOffset GameUpperRight = new UIOffset(Vector2.UnitX, GameOnly: true);
-        public static readonly UIOffset GameLowerLeft = new UIOffset(Vector2.UnitY, GameOnly: true);
-        public static readonly UIOffset GameLowerRight = new UIOffset(Vector2.One, GameOnly: true);
-        public static readonly UIOffset Center = new UIOffset(Vector2.One / 2f, GameOnly: false);
+        return MathEx.Floor(logicalScreen.AbsolutePos(Offset));
     }
+
+    public Vector2 Calc(Vector2 position, Rect logicalScreen) =>
+        GetOffset(logicalScreen) + position;
+
+    public Vector2 CalcReverse(Vector2 position, Rect logicalScreen) =>
+        position - GetOffset(logicalScreen);
+
+    public static readonly UIOffset ScreenUpperLeft = new UIOffset(Vector2.Zero, GameOnly: false);
+    public static readonly UIOffset GameUpperLeft = new UIOffset(Vector2.Zero, GameOnly: true);
+    public static readonly UIOffset GameUpperRight = new UIOffset(Vector2.UnitX, GameOnly: true);
+    public static readonly UIOffset GameLowerLeft = new UIOffset(Vector2.UnitY, GameOnly: true);
+    public static readonly UIOffset GameLowerRight = new UIOffset(Vector2.One, GameOnly: true);
+    public static readonly UIOffset Center = new UIOffset(Vector2.One / 2f, GameOnly: false);
+}
 }

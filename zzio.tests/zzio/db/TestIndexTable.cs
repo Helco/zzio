@@ -17,7 +17,7 @@ namespace zzio.tests.db
             Assert.AreEqual(3, table.ColumnCount);
             Assert.AreEqual(3, table.columnNames.Length);
             Assert.AreEqual(3, table.columnNumbers.Length);
-            
+
             Assert.AreEqual(new string[] { "Mesh", "Name", "CardId" }, table.columnNames);
             Assert.AreEqual(new uint[] { 1, 2, 3 }, table.columnNumbers);
         }

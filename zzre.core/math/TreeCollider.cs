@@ -18,13 +18,13 @@ namespace zzre
         public Raycast? Cast(Ray ray) => Cast(ray, float.PositiveInfinity);
         public Raycast? Cast(Line line) => Cast(new Ray(line.Start, line.Direction), line.Length);
 
-        public bool Intersects(Box box)           => Intersections(box,      IntersectionQueries.Default).Any();
-        public bool Intersects(OrientedBox box)   => Intersections(box,      IntersectionQueries.Default).Any();
-        public bool Intersects(Sphere sphere)     => Intersections(sphere,   IntersectionQueries.Default).Any();
+        public bool Intersects(Box box) => Intersections(box, IntersectionQueries.Default).Any();
+        public bool Intersects(OrientedBox box) => Intersections(box, IntersectionQueries.Default).Any();
+        public bool Intersects(Sphere sphere) => Intersections(sphere, IntersectionQueries.Default).Any();
         public bool Intersects(Triangle triangle) => Intersections(triangle, IntersectionQueries.Default).Any();
-        public IEnumerable<Intersection> Intersections(Box box)           => Intersections(box,      IntersectionQueries.Default);
-        public IEnumerable<Intersection> Intersections(OrientedBox box)   => Intersections(box,      IntersectionQueries.Default);
-        public IEnumerable<Intersection> Intersections(Sphere sphere)     => Intersections(sphere,   IntersectionQueries.Default);
+        public IEnumerable<Intersection> Intersections(Box box) => Intersections(box, IntersectionQueries.Default);
+        public IEnumerable<Intersection> Intersections(OrientedBox box) => Intersections(box, IntersectionQueries.Default);
+        public IEnumerable<Intersection> Intersections(Sphere sphere) => Intersections(sphere, IntersectionQueries.Default);
         public IEnumerable<Intersection> Intersections(Triangle triangle) => Intersections(triangle, IntersectionQueries.Default);
 
         // only coarse query for planes
@@ -34,7 +34,7 @@ namespace zzre
         {
             var coarse = CoarseCastable.Cast(ray);
             var result = coarse == null
-                ? null 
+                ? null
                 : RaycastNode(splitI: 0, ray, minDist: 0f, maxLength);
             if (result != null && result.Value.Distance > maxLength)
                 return null;
@@ -70,7 +70,7 @@ namespace zzre
                     hit = RaycastSector(split.left, ray, minDist, leftDist ?? maxDist, hit);
                     float hitValue = hit?.Point.Component(compIndex) ?? float.MaxValue;
                     if (hitValue < split.right.value)
-                         return hit;
+                        return hit;
                 }
                 hit = RaycastSector(split.right, ray, rightDist ?? minDist, maxDist, hit);
             }
@@ -119,7 +119,7 @@ namespace zzre
 
             var splitStack = new Stack<CollisionSplit>();
             splitStack.Push(Collision.splits[0]);
-            while(splitStack.Any())
+            while (splitStack.Any())
             {
                 var curSplit = splitStack.Pop();
                 if (queries.SideOf(GetPlane(curSplit.right), primitive) != PlaneIntersections.Outside)

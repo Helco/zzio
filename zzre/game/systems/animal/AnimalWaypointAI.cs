@@ -155,7 +155,7 @@ namespace zzre.game.systems
                             var playerToAnimal = Vector3.Normalize(location.GlobalPosition - playerLocation.GlobalPosition);
                             location.LocalPosition += playerToAnimal * moveDistance;
                             break;
-                        }   
+                        }
                     }
                     ai.MovedDistance += moveDistance;
                     if (ai.MovedDistance > ai.DistanceToWP)

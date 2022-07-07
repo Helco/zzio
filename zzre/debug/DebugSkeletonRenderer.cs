@@ -106,9 +106,9 @@ namespace zzre
                 var normal = MathEx.CmpZero(length)
                     ? Vector3.UnitY
                     : (to - from) / length;
-                var tangent =  Vector3.Normalize(normal.SomeOrthogonal()) * baseSize;
+                var tangent = Vector3.Normalize(normal.SomeOrthogonal()) * baseSize;
                 var bitangent = Vector3.Normalize(Vector3.Cross(normal, tangent)) * baseSize;
-                var baseCenter = from + normal * length * RhombusBaseOffset; 
+                var baseCenter = from + normal * length * RhombusBaseOffset;
 
                 vertices = vertices.Concat(new[]
                 {

@@ -79,7 +79,7 @@ namespace zzre.game.resources
 
             var material = new UIMaterial(diContainer, info.IsFont);
             material.Texture.Texture = texture;
-            material.Sampler.Sampler = info.IsFont? fontSampler : linearSampler;
+            material.Sampler.Sampler = info.IsFont ? fontSampler : linearSampler;
             material.ScreenSize.Buffer = ui.ProjectionBuffer;
             materials.Add(tileSheet, material);
             return tileSheet;

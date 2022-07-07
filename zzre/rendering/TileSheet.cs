@@ -74,7 +74,7 @@ namespace zzre.rendering
             float curLineWidth = 0;
             int nonSpaceI = text.IndexOfAnyNot(SpaceChars);
             int lastSpaceI = 0;
-            while(nonSpaceI >= 0)
+            while (nonSpaceI >= 0)
             {
                 int spaceI = text.IndexOfAny(SpaceChars, nonSpaceI);
                 float wordWidth = GetUnformattedWidth(spaceI < 0

@@ -12,7 +12,7 @@ namespace zzre.game.components
         {
             Speed = speed * 0.001f;
             Angle = 0f;
-            RotateDir = random.NextFloat() <= 0f ? 1f: -1f;
+            RotateDir = random.NextFloat() <= 0f ? 1f : -1f;
             // yes this is intentionally, a butterfly only circles the other way in veeerry rare cases
         }
     }

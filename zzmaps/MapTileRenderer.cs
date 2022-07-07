@@ -102,7 +102,7 @@ namespace zzmaps
             sceneRenderData?.Dispose();
             scene?.Dispose();
         }
-        
+
         public (Texture texture, uint pixelCounter) RenderTile(TileID tile)
         {
             if (sceneRenderData == null || scene == null)

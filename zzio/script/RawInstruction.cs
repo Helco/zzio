@@ -6,7 +6,7 @@ using zzio;
 
 namespace zzio.script
 {
-    public class InvalidInstructionException : Exception {}
+    public class InvalidInstructionException : Exception { }
 
     public class RawInstruction
     {
@@ -69,7 +69,7 @@ namespace zzio.script
                 parsed = new RawInstruction(line);
                 return true;
             }
-            catch(Exception)
+            catch (Exception)
             {
                 parsed = null;
                 return false;

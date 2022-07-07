@@ -32,7 +32,7 @@ namespace zzre.rendering
 
             public MeshSection(RWAtomicSection rwAtomicSection) => RWAtomicSection = rwAtomicSection;
         }
-        
+
         public record PlaneSection : BaseSection
         {
             public override bool IsMesh => false;
@@ -99,7 +99,7 @@ namespace zzre.rendering
                 LoadPlane(rootPlane);
             else
                 LoadAtomic(rootAtomic!);
-            
+
             PlaneSection LoadPlane(RWPlaneSection plane)
             {
                 int index = sectionList.Count;

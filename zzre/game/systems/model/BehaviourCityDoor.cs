@@ -55,11 +55,11 @@ namespace zzre.game.systems
             Location location,
             ref components.behaviour.CityDoor door)
         {
-            bool keepOpen = location.DistanceSquared(playerLocation) < MaxPlayerDistanceSqr ;
+            bool keepOpen = location.DistanceSquared(playerLocation) < MaxPlayerDistanceSqr;
 
             // TODO: Add city door unlock behaviour
 
-            switch(door.State)
+            switch (door.State)
             {
                 case DoorState.Closed when keepOpen && !door.IsLocked:
                     door.State = DoorState.StartToOpen;

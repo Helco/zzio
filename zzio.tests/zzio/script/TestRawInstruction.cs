@@ -38,14 +38,14 @@ namespace zzio.tests.script
         [Test]
         public void command()
         {
-            Assert.AreEqual("a",        new RawInstruction("a").Command);
-            Assert.AreEqual("a",        new RawInstruction("a.bcd").Command);
-            Assert.AreEqual("a",        new RawInstruction("a.bcd.\"def\"").Command);
+            Assert.AreEqual("a", new RawInstruction("a").Command);
+            Assert.AreEqual("a", new RawInstruction("a.bcd").Command);
+            Assert.AreEqual("a", new RawInstruction("a.bcd.\"def\"").Command);
             Assert.AreEqual("setModel", new RawInstruction("setModel.f000w000").Command);
-            Assert.AreEqual(".",        new RawInstruction("  .").Command);
-            Assert.AreEqual(".",        new RawInstruction("  ..def").Command);
-            Assert.AreEqual("\"",       new RawInstruction("\"").Command);
-            Assert.AreEqual("\"",       new RawInstruction("\".ghi").Command);
+            Assert.AreEqual(".", new RawInstruction("  .").Command);
+            Assert.AreEqual(".", new RawInstruction("  ..def").Command);
+            Assert.AreEqual("\"", new RawInstruction("\"").Command);
+            Assert.AreEqual("\"", new RawInstruction("\".ghi").Command);
         }
 
         [Test]

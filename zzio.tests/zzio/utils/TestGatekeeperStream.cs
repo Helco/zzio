@@ -17,7 +17,7 @@ namespace zzio.tests.utils
                 stream.Write(buffer, 0, 1);
                 stream.Read(buffer, 0, 1);
             }
-            catch(Exception)
+            catch (Exception)
             {
                 exceptionWasThrown = true;
             }
@@ -27,7 +27,7 @@ namespace zzio.tests.utils
         [Test]
         public void selftest()
         {
-            MemoryStream stream = new MemoryStream(new byte[] { 1, 2, 3, 4});
+            MemoryStream stream = new MemoryStream(new byte[] { 1, 2, 3, 4 });
             assertStreamClosed(false, stream);
             stream.Close();
             assertStreamClosed(true, stream);

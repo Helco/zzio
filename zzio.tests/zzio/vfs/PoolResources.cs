@@ -24,7 +24,7 @@ namespace zzio.tests.vfs
             PAKArchiveResourcePool,
             PAKResourcePool
         };
-        
+
         public static FileResourcePool FileResourcePool => new FileResourcePool(resourceDir.Combine("vfs"));
 
         public static PAKResourcePool PAKResourcePool = new PAKResourcePool(
@@ -63,7 +63,7 @@ namespace zzio.tests.vfs
                 bSource.CreateFile("b/hello.txt", "also from b");
                 bSource.CreateFile("common/content.txt", "common from b");
                 bSource.CreateFile("common/b.txt", "common extra from b");
-                
+
                 return new CombinedResourcePool(new[] { aSource, bSource });
             }
         }

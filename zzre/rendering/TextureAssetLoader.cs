@@ -45,7 +45,7 @@ namespace zzre
                 return new Veldrid.ImageSharp.ImageSharpTexture(textureStream, true)
                     .CreateDeviceTexture(device, device.ResourceFactory);
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return null;
             }
@@ -59,7 +59,7 @@ namespace zzre
                 {
                     return Pfim.Dds.Create(stream, new Pfim.PfimConfig());
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     return null;
                 }
@@ -85,7 +85,7 @@ namespace zzre
                 TextureUsage.Sampled));
             unsafe
             {
-                fixed(void* dataBytePtr = image.Data)
+                fixed (void* dataBytePtr = image.Data)
                 {
                     IntPtr dataPtr = new IntPtr(dataBytePtr);
                     device.UpdateTexture(texture,

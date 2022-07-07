@@ -53,7 +53,7 @@ namespace zzio.vfs
                 if (curParent == null)
                     curParent = root!;
 
-                while(dirsToCreate.Any())
+                while (dirsToCreate.Any())
                 {
                     var newPath = curParent.Path.Combine(dirsToCreate.Pop());
                     var prevParent = curParent;

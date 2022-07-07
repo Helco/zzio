@@ -40,7 +40,7 @@ namespace zzre.game.systems
                 .Where(t => t.attribute != null)
                 .SelectMany(t => t.attribute!.AllTriggers.Select(trigger => (system: t.system, trigger)))
                 .ToLookup(t => t.trigger, t => t.system);
-                
+
             var ecsWorld = diContainer.GetTag<DefaultEcs.World>();
             openSubscription = ecsWorld.Subscribe((in messages.ui.GameScreenOpened _) => HandleTrigger(PauseTrigger.UIScreen, false));
             closeSubscription = ecsWorld.Subscribe((in messages.ui.GameScreenClosed _) => HandleTrigger(PauseTrigger.UIScreen, true));

@@ -21,8 +21,8 @@ namespace zzio.tests.rwbs
             Assert.AreEqual(0, clump.camCount);
             Assert.AreEqual(0, clump.lightCount);
             Assert.AreEqual(3, clump.children.Count);
-            
-            
+
+
             Assert.IsInstanceOf(typeof(RWFrameList), clump.children[0]);
             RWFrameList frameList = (RWFrameList)clump.children[0];
             Assert.AreSame(clump, frameList.parent);

@@ -40,7 +40,7 @@ namespace zzre
         public Rect(float x, float y, float w, float h)
         {
             Size = new Vector2(w, h);
-            Center = new Vector2(x, y) + Size/2;
+            Center = new Vector2(x, y) + Size / 2;
         }
 
         public Rect(Vector2 center, Vector2 size)

@@ -20,7 +20,7 @@ namespace zzre.imgui
         private readonly List<(string name, Action content, bool defaultOpen, Action?)> infoSections = new List<(string, Action, bool, Action?)>();
 
         public Window Window { get; }
-        
+
 
         public TwoColumnEditorTag(Window window, ITagContainer diContainer)
         {
@@ -29,7 +29,7 @@ namespace zzre.imgui
             Window.AddTag(this);
             Window.OnContent += HandleContent;
             fbArea = new FramebufferArea(Window, device);
-            mouseArea = new MouseEventArea(Window);            
+            mouseArea = new MouseEventArea(Window);
         }
 
         public void AddInfoSection(string name, Action content, bool defaultOpen = true, Action? preContent = null) =>

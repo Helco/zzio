@@ -113,7 +113,7 @@ namespace zzre.rendering.effectparts
 
             texVStart += deltaTime * data.texShiftVStart;
             texShiftVEnd += deltaTime * TexShiftVEndSpeed;
-            
+
             if (data.complexity != BeamStarComplexity.FourPlanes)
             {
                 curScale += deltaTime * data.scaleSpeedXY;
@@ -156,11 +156,11 @@ namespace zzre.rendering.effectparts
 
             vertices[0] = new() { pos = new(-w, -h, curShrink), color = startColor, tex = new(0f, texVStart) };
             vertices[1] = new() { pos = new(+w, +h, curShrink), color = startColor, tex = new(1f, texVStart) };
-            vertices[2] = new() { pos = new(+w, +h, Length),    color = endColor,   tex = new(1f, TexVEnd) };
-            vertices[3] = new() { pos = new(-w, -h, Length),    color = endColor,   tex = new(0f, TexVEnd) };
+            vertices[2] = new() { pos = new(+w, +h, Length), color = endColor, tex = new(1f, TexVEnd) };
+            vertices[3] = new() { pos = new(-w, -h, Length), color = endColor, tex = new(0f, TexVEnd) };
 
-            vertices[4] = new() { pos = new(-w, -h, Length),    color = endColor,   tex = new(0f, TexVEnd) };
-            vertices[5] = new() { pos = new(+w, +h, Length),    color = endColor,   tex = new(1f, TexVEnd) };
+            vertices[4] = new() { pos = new(-w, -h, Length), color = endColor, tex = new(0f, TexVEnd) };
+            vertices[5] = new() { pos = new(+w, +h, Length), color = endColor, tex = new(1f, TexVEnd) };
             vertices[6] = new() { pos = new(+w, +h, curShrink), color = startColor, tex = new(1f, texVStart) };
             vertices[7] = new() { pos = new(-w, -h, curShrink), color = startColor, tex = new(0f, texVStart) };
         }

@@ -31,7 +31,7 @@ namespace zzio.tests.utils
             using BinaryReader reader = new BinaryReader(stream);
             Assert.AreEqual("Hello World!", reader.ReadZString());
         }
-        
+
         [Test]
         public void WriteZString()
         {

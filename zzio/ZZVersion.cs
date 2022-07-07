@@ -54,34 +54,34 @@ namespace zzio
             Unknown2 = r.ReadUInt32()
         };
 
-        public void Write(BinaryWriter w)
-        {
-            w.WriteZString(Author);
-            w.Write((int)BuildCountry);
-            w.Write((int)BuildType);
-            w.Write(Unknown1);
-            w.Write(BuildVersion);
-            w.WriteZString(Date);
-            w.WriteZString(Time);
-            w.Write(Year);
-            w.Write(Unknown2);
-        }
+    public void Write(BinaryWriter w)
+    {
+        w.WriteZString(Author);
+        w.Write((int)BuildCountry);
+        w.Write((int)BuildType);
+        w.Write(Unknown1);
+        w.Write(BuildVersion);
+        w.WriteZString(Date);
+        w.WriteZString(Time);
+        w.Write(Year);
+        w.Write(Unknown2);
+    }
 
-        public static ZZVersion CreateDefault() => new ZZVersion()
-        {
-            Author = "ZZIO " + typeof(ZZVersion).Assembly.GetName().Version,
-            BuildCountry = ZZBuildCountry.ZZIO,
+    public static ZZVersion CreateDefault() => new ZZVersion()
+    {
+        Author = "ZZIO " + typeof(ZZVersion).Assembly.GetName().Version,
+        BuildCountry = ZZBuildCountry.ZZIO,
 #if DEBUG
             BuildType = ZZBuildType.ZZIODebug,
 #else
-            BuildType = ZZBuildType.ZZIO,
+        BuildType = ZZBuildType.ZZIO,
 #endif
-            Unknown1 = 0,
-            BuildVersion = 1,
-            Date = DateTime.Now.ToString("dd.MM.yyyy"),
-            Time = DateTime.Now.ToString("HH:mm"),
-            Year = (uint)DateTime.Now.Year,
-            Unknown2 = 0
-        };
-    }
+        Unknown1 = 0,
+        BuildVersion = 1,
+        Date = DateTime.Now.ToString("dd.MM.yyyy"),
+        Time = DateTime.Now.ToString("HH:mm"),
+        Year = (uint)DateTime.Now.Year,
+        Unknown2 = 0
+    };
+}
 }

@@ -30,7 +30,7 @@ namespace zzio.tests.primitives
             byte[] buffer = new byte[] { 0xef, 0xbe, 0xad, 0xde };
             MemoryStream stream = new MemoryStream(buffer, false);
             using BinaryReader reader = new BinaryReader(stream);
-            
+
             UID uid = UID.ReadNew(reader);
             Assert.AreEqual(0xdeadbeef, uid.raw);
             Assert.AreEqual(0xf, uid.Module);

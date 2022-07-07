@@ -142,29 +142,29 @@ namespace zzio
             EnumUtils.intToEnum<ZZClass>(r.ReadByte()),
             EnumUtils.intToEnum<ZZClass>(r.ReadByte()));
 
-        public void Write(BinaryWriter w)
-        {
-            w.Write((byte)class0);
-            w.Write((byte)class1);
-            w.Write((byte)class2);
-        }
-
-        public IEnumerator<ZZClass> GetEnumerator()
-        {
-            if (class0 != ZZClass.None) yield return class0;
-            if (class1 != ZZClass.None) yield return class1;
-            if (class2 != ZZClass.None) yield return class2;
-        }
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    }
-
-    public enum ZZPermSpellStatus
+    public void Write(BinaryWriter w)
     {
-        None = 0,
-        Poisoned,
-        Cursed,
-        Burned,
-        Frozen,
-        Silenced
+        w.Write((byte)class0);
+        w.Write((byte)class1);
+        w.Write((byte)class2);
     }
+
+    public IEnumerator<ZZClass> GetEnumerator()
+    {
+        if (class0 != ZZClass.None) yield return class0;
+        if (class1 != ZZClass.None) yield return class1;
+        if (class2 != ZZClass.None) yield return class2;
+    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+}
+
+public enum ZZPermSpellStatus
+{
+    None = 0,
+    Poisoned,
+    Cursed,
+    Burned,
+    Frozen,
+    Silenced
+}
 }

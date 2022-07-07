@@ -40,11 +40,11 @@ namespace zzio.db
         public CellDataType Type { get; }
         public int ColumnIndex { get; }
 
-        public string String         { get { checkType(CellDataType.String); return stringValue!; } }
-        public int Integer           { get { checkType(CellDataType.Integer); return integerValue; } }
-        public byte Byte             { get { checkType(CellDataType.Byte); return byteValue; } }
+        public string String { get { checkType(CellDataType.String); return stringValue!; } }
+        public int Integer { get { checkType(CellDataType.Integer); return integerValue; } }
+        public byte Byte { get { checkType(CellDataType.Byte); return byteValue; } }
         public ForeignKey ForeignKey { get { checkType(CellDataType.ForeignKey); return foreignKeyValue; } }
-        public byte[] Buffer         { get { checkType(CellDataType.Buffer); return bufferValue!.ToArray(); } }
+        public byte[] Buffer { get { checkType(CellDataType.Buffer); return bufferValue!.ToArray(); } }
 
         public Cell(string value, int columnIndex = -1) : this()
         {
@@ -87,30 +87,30 @@ namespace zzio.db
         {
             if (Type != cell.Type || ColumnIndex != cell.ColumnIndex)
                 return false;
-            switch(Type)
+            switch (Type)
             {
-                case CellDataType.String:     return stringValue == cell.stringValue;
-                case CellDataType.Integer:    return integerValue == cell.integerValue;
-                case CellDataType.Byte:       return byteValue == cell.byteValue;
+                case CellDataType.String: return stringValue == cell.stringValue;
+                case CellDataType.Integer: return integerValue == cell.integerValue;
+                case CellDataType.Byte: return byteValue == cell.byteValue;
                 case CellDataType.ForeignKey: return foreignKeyValue.Equals(cell.foreignKeyValue);
-                case CellDataType.Buffer:     return bufferValue!.SequenceEqual(cell.bufferValue!);
+                case CellDataType.Buffer: return bufferValue!.SequenceEqual(cell.bufferValue!);
                 default: return false;
             }
         }
 
         public static bool operator ==(Cell a, Cell b) => a.Equals(b);
         public static bool operator !=(Cell a, Cell b) => !a.Equals(b);
-        
+
         public override int GetHashCode()
         {
             int hashCode = HashCode.Combine(Type, ColumnIndex);
-            switch(Type)
+            switch (Type)
             {
-                case CellDataType.String:     hashCode ^= stringValue!.GetHashCode(); break;
-                case CellDataType.Integer:    hashCode ^= integerValue; break;
-                case CellDataType.Byte:       hashCode ^= byteValue; break;
+                case CellDataType.String: hashCode ^= stringValue!.GetHashCode(); break;
+                case CellDataType.Integer: hashCode ^= integerValue; break;
+                case CellDataType.Byte: hashCode ^= byteValue; break;
                 case CellDataType.ForeignKey: hashCode ^= foreignKeyValue.GetHashCode(); break;
-                case CellDataType.Buffer:     hashCode ^= bufferValue!.GetHashCode(); break;
+                case CellDataType.Buffer: hashCode ^= bufferValue!.GetHashCode(); break;
                 default: break;
             }
             return hashCode;
@@ -122,44 +122,44 @@ namespace zzio.db
             if (actualSize != expectedSize)
                 throw new InvalidDataException("Invalid cell size: " + actualSize);
         }
-        
+
         public static Cell ReadNew(BinaryReader reader)
         {
             CellDataType type = EnumUtils.intToEnum<CellDataType>(reader.ReadInt32() + 1);
             int columnIndex = reader.ReadInt32();
 
             // We could do better with dynamic, but Unity can't
-            switch(type)
+            switch (type)
             {
                 case CellDataType.String:
-                {
-                    string value = reader.ReadZString();
-                    return new Cell(value, columnIndex);
-                }
+                    {
+                        string value = reader.ReadZString();
+                        return new Cell(value, columnIndex);
+                    }
                 case CellDataType.Integer:
-                {
-                    readFixedSize(reader, 4);
-                    int value = reader.ReadInt32();
-                    return new Cell(value, columnIndex);
-                }
+                    {
+                        readFixedSize(reader, 4);
+                        int value = reader.ReadInt32();
+                        return new Cell(value, columnIndex);
+                    }
                 case CellDataType.Byte:
-                {
-                    readFixedSize(reader, 1);
-                    byte value = reader.ReadByte();
-                    return new Cell(value, columnIndex);
-                }
+                    {
+                        readFixedSize(reader, 1);
+                        byte value = reader.ReadByte();
+                        return new Cell(value, columnIndex);
+                    }
                 case CellDataType.ForeignKey:
-                {
-                    readFixedSize(reader, 8);
-                    ForeignKey value = ForeignKey.ReadNew(reader);
-                    return new Cell(value, columnIndex);
-                }
+                    {
+                        readFixedSize(reader, 8);
+                        ForeignKey value = ForeignKey.ReadNew(reader);
+                        return new Cell(value, columnIndex);
+                    }
                 case CellDataType.Buffer:
-                {
-                    int length = reader.ReadInt32();
-                    byte[] value = reader.ReadBytes(length);
-                    return new Cell(value, columnIndex);
-                }
+                    {
+                        int length = reader.ReadInt32();
+                        byte[] value = reader.ReadBytes(length);
+                        return new Cell(value, columnIndex);
+                    }
                 default:
                     throw new InvalidDataException("Unknown cell data type");
             }

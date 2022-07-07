@@ -26,7 +26,7 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
     {
         CardId cardId;
         string cardName, cardInfo;
-        switch(message.UID.Module) // TODO: Generalize Fairy/Item/Spell row into a MappedCardRow type
+        switch (message.UID.Module) // TODO: Generalize Fairy/Item/Spell row into a MappedCardRow type
         {
             case (int)ModuleType.Fairy:
                 var fairy = db.GetFairy(message.UID);
@@ -74,7 +74,7 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
         preload.CreateLabel(
             parent: entity,
             pos: new(0, bgRect.Min.Y + 170),
-            text: message.Amount <= 1 
+            text: message.Amount <= 1
                 ? cardName
                 : $"\"{cardName}\" x {message.Amount}",
             preload.Fnt003,

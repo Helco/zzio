@@ -66,7 +66,7 @@ namespace zzio.vfs
                     var fullPath = pool.basePath.Combine(Path).ToString();
                     return new FileStream(fullPath, FileMode.Open, FileAccess.Read);
                 }
-                catch(IOException)
+                catch (IOException)
                 {
                     return null;
                 }

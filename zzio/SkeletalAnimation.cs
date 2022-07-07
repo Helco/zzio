@@ -93,7 +93,7 @@ namespace zzio
                     frameSet.Select((frame, frameI) => new KeyValuePair<int, int>(boneI, frameI))
                 ).OrderBy(pair => boneFrames[pair.Key][pair.Value].time)
                 .ToArray();
-            
+
             var lastParentOffsets = Enumerable.Repeat(-1, BoneCount).ToArray();
             for (int writtenI = 0; writtenI < sortedMapping.Length; writtenI++)
             {

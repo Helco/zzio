@@ -31,7 +31,7 @@ namespace zzre
         {
             Material = new DebugLinesMaterial(diContainer);
             device = diContainer.GetTag<GraphicsDevice>();
-            
+
             vertexBuffer = null!;
             GenerateGrid(cellCount: 5, originSize: 5f, gridColor: new IColor(0xFF888888));
         }
@@ -88,14 +88,14 @@ namespace zzre
                 newVertices = newVertices
                     .Concat(GenerateFor(Vector3.UnitY, zReach, cellCountY, cellSize.Y))
                     .Concat(GenerateFor(Vector3.UnitZ, yReach, cellCountZ, cellSize.Z));
-            }    
+            }
             if (originSize.HasValue)
                 newVertices = newVertices.Concat(new[]
                 {
                     o, o + Vector3.UnitX * originSize.Value.X,
                     o, o + Vector3.UnitY * originSize.Value.Y,
                     o, o + Vector3.UnitZ * originSize.Value.Z
-                }.Select((p, i) => new ColoredVertex(p, OriginColors[i/2])));
+                }.Select((p, i) => new ColoredVertex(p, OriginColors[i / 2])));
             var vertices = newVertices.ToArray();
 
             vertexBuffer?.Dispose();

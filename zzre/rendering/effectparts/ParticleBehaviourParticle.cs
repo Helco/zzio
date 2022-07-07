@@ -35,7 +35,7 @@ namespace zzre.rendering.effectparts
                 basic.SpawnLifeGravityColorDirVel(random, in data, out var dir);
                 basic.SpawnScale(random, in data);
 
-                basic.pos = pos + 
+                basic.pos = pos +
                     Vector3.Multiply(random.InCube(), new Vector3(data.horRadius, data.verRadius, data.horRadius));
                 basic.prevPos = basic.pos;
 
