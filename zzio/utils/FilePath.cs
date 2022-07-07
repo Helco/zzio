@@ -8,7 +8,7 @@ namespace zzio
 {
     /// <summary>Represents a path to a file</summary>
     /// <remarks>This supports windows and POSIX paths and tries to ignore as much inconsistencies as possible</remarks> 
-    public class FilePath : IEquatable<FilePath>, IEquatable<string>
+    public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
     {
         public const bool DefaultsToCaseSensitive = false;
 
