@@ -11,9 +11,9 @@ namespace zzre
             using var contentStream = resource.OpenContent();
             if (contentStream == null)
                 throw new ArgumentException($"Could not open resource {resource.Path.ToPOSIXString()}");
-            var root = Section.ReadNew(contentStream) as T;
-            if (root == null)
-                throw new ArgumentException($"Unexpected {root?.sectionId + " section" ?? "read error"}, trying to open {resource.Path.ToPOSIXString()}");
+            var rootSection = Section.ReadNew(contentStream);
+            if (rootSection is not T root)
+                throw new ArgumentException($"Unexpected {rootSection?.sectionId + " section" ?? "read error"}, trying to open {resource.Path.ToPOSIXString()}");
             return root;
         }
     }

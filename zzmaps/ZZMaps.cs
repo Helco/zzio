@@ -82,7 +82,7 @@ namespace zzmaps
                 // Scheduler
                 new Option<ZZMapsGraphicsBackend>("--backend", () => ZZMapsGraphicsBackend.Vulkan, "The graphics backend to use"),
                 new Option<uint>("--renderers", () => (uint)Environment.ProcessorCount, "The maximum number of parallel render jobs"),
-                new Option<uint>("--cache-clean", () => (uint)(Environment.ProcessorCount * 2), "The number of scenes rendered before cleaning the asset caches")
+                new Option<uint>("--cache-clean", () => (uint)(Environment.ProcessorCount * 2), "The number of scenes rendered before cleaning the asset caches"),
             };
 
             rootCommand.TreatUnmatchedTokensAsErrors = true;
