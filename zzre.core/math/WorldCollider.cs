@@ -59,54 +59,50 @@ namespace zzre
             switch (section)
             {
                 case RWAtomicSection atomic:
-                    {
-                        if (!atomicColliders.TryGetValue(atomic, out var atomicCollider))
-                            return prevHit;
+                    if (!atomicColliders.TryGetValue(atomic, out var atomicCollider))
+                        return prevHit;
 
-                        var myHit = atomicCollider.Cast(ray, maxDist);
-                        var isBetterHit = prevHit == null || (myHit != null && myHit.Value.Distance < prevHit.Value.Distance);
-                        if (isBetterHit && myHit != null)
-                            LastTriangle = atomicCollider.LastTriangle;
-                        return isBetterHit
-                            ? myHit
-                            : prevHit;
-                    }
+                    var myHit = atomicCollider.Cast(ray, maxDist);
+                    var isBetterHit = prevHit == null || (myHit != null && myHit.Value.Distance < prevHit.Value.Distance);
+                    if (isBetterHit && myHit != null)
+                        LastTriangle = atomicCollider.LastTriangle;
+                    return isBetterHit
+                        ? myHit
+                        : prevHit;
 
                 case RWPlaneSection plane:
-                    {
-                        var compIndex = plane.sectorType.ToIndex();
-                        var startValue = ray.Start.Component(compIndex);
-                        var directionDot = ray.Direction.Component(compIndex);
-                        var rightDist = ray.DistanceTo(plane.sectorType, plane.rightValue);
-                        var leftDist = ray.DistanceTo(plane.sectorType, plane.leftValue);
-                        var leftSection = plane.children[0];
-                        var rightSection = plane.children[1];
+                    var compIndex = plane.sectorType.ToIndex();
+                    var startValue = ray.Start.Component(compIndex);
+                    var directionDot = ray.Direction.Component(compIndex);
+                    var rightDist = ray.DistanceTo(plane.sectorType, plane.rightValue);
+                    var leftDist = ray.DistanceTo(plane.sectorType, plane.leftValue);
+                    var leftSection = plane.children[0];
+                    var rightSection = plane.children[1];
 
-                        Raycast? hit = prevHit;
-                        if (directionDot < 0f)
+                    Raycast? hit = prevHit;
+                    if (directionDot < 0f)
+                    {
+                        if (startValue >= plane.rightValue)
                         {
-                            if (startValue >= plane.rightValue)
-                            {
-                                hit = RaycastSection(rightSection, ray, minDist, rightDist ?? maxDist, hit);
-                                float hitValue = hit?.Point.Component(compIndex) ?? float.MinValue;
-                                if (hitValue > plane.leftValue)
-                                    return hit;
-                            }
-                            hit = RaycastSection(leftSection, ray, leftDist ?? minDist, maxDist, hit);
+                            hit = RaycastSection(rightSection, ray, minDist, rightDist ?? maxDist, hit);
+                            float hitValue = hit?.Point.Component(compIndex) ?? float.MinValue;
+                            if (hitValue > plane.leftValue)
+                                return hit;
                         }
-                        else
-                        {
-                            if (startValue <= plane.leftValue)
-                            {
-                                hit = RaycastSection(leftSection, ray, minDist, leftDist ?? maxDist, hit);
-                                float hitValue = hit?.Point.Component(compIndex) ?? float.MaxValue;
-                                if (hitValue < plane.rightValue)
-                                    return hit;
-                            }
-                            hit = RaycastSection(rightSection, ray, rightDist ?? minDist, maxDist, hit);
-                        }
-                        return hit;
+                        hit = RaycastSection(leftSection, ray, leftDist ?? minDist, maxDist, hit);
                     }
+                    else
+                    {
+                        if (startValue <= plane.leftValue)
+                        {
+                            hit = RaycastSection(leftSection, ray, minDist, leftDist ?? maxDist, hit);
+                            float hitValue = hit?.Point.Component(compIndex) ?? float.MaxValue;
+                            if (hitValue < plane.rightValue)
+                                return hit;
+                        }
+                        hit = RaycastSection(rightSection, ray, rightDist ?? minDist, maxDist, hit);
+                    }
+                    return hit;
 
                 default:
                     throw new InvalidDataException("Unexpected non-world section");
