@@ -15,7 +15,3 @@ exclude_patterns = [
 [[analyzers]]
 name = "csharp"
 enabled = true
-
-[[transformers]]
-name = "dotnet-format"
-enabled = true
