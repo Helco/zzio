@@ -243,7 +243,7 @@ namespace zzre.rendering
                     built.Description.PrimitiveTopology == primitiveTopology;
             }
 
-            private static bool Equals<T>(IEnumerable<T[]> aSetSet, List<List<T>> bSetSet)
+            private static bool Equals<T>(IEnumerable<T[]> aSetSet, List<List<T>> bSetSet) where T : struct
             {
                 if (aSetSet.Count() != bSetSet.Count())
                     return false;
