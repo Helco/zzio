@@ -41,54 +41,54 @@ namespace zzio
     {
         public GameStateModType Type => GameStateModType.DisableAttackTrigger;
 
-    public static GSModDisableAttackTrigger ReadNew(BinaryReader r) =>
-        new GSModDisableAttackTrigger(r.ReadUInt32());
+        public static GSModDisableAttackTrigger ReadNew(BinaryReader r) =>
+            new GSModDisableAttackTrigger(r.ReadUInt32());
 
-    public void Write(BinaryWriter w) => w.Write(TriggerId);
-}
+        public void Write(BinaryWriter w) => w.Write(TriggerId);
+    }
 
-public record struct GSModRemoveItem(uint ModelId) : IGameStateMod
-{
+    public record struct GSModRemoveItem(uint ModelId) : IGameStateMod
+    {
         public GameStateModType Type => GameStateModType.RemoveItem;
 
-public static GSModRemoveItem ReadNew(BinaryReader r) =>
-    new GSModRemoveItem(r.ReadUInt32());
+        public static GSModRemoveItem ReadNew(BinaryReader r) =>
+            new GSModRemoveItem(r.ReadUInt32());
 
-public void Write(BinaryWriter w) => w.Write(ModelId);
+        public void Write(BinaryWriter w) => w.Write(ModelId);
     }
 
     public record struct GSModChangeNPCState(uint TriggerId, UID UID) : IGameStateMod
-{
+    {
         public GameStateModType Type => GameStateModType.ChangeNPCState;
 
-public static GSModChangeNPCState ReadNew(BinaryReader r) =>
-    new GSModChangeNPCState(r.ReadUInt32(), UID.ReadNew(r));
+        public static GSModChangeNPCState ReadNew(BinaryReader r) =>
+            new GSModChangeNPCState(r.ReadUInt32(), UID.ReadNew(r));
 
-public void Write(BinaryWriter w)
-{
-    w.Write(TriggerId);
-    UID.Write(w);
-}
+        public void Write(BinaryWriter w)
+        {
+            w.Write(TriggerId);
+            UID.Write(w);
+        }
     }
 
     public record struct GSModDisableTrigger(uint TriggerId) : IGameStateMod
-{
+    {
         public GameStateModType Type => GameStateModType.DisableTrigger;
 
-public static GSModDisableTrigger ReadNew(BinaryReader r) =>
-    new GSModDisableTrigger(r.ReadUInt32());
+        public static GSModDisableTrigger ReadNew(BinaryReader r) =>
+            new GSModDisableTrigger(r.ReadUInt32());
 
-public void Write(BinaryWriter w) => w.Write(TriggerId);
+        public void Write(BinaryWriter w) => w.Write(TriggerId);
     }
 
     public record struct GSModRemoveModel(uint ModelId) : IGameStateMod
-{
+    {
         public GameStateModType Type => GameStateModType.RemoveModel;
 
-public static GSModRemoveModel ReadNew(BinaryReader r) =>
-    new GSModRemoveModel(r.ReadUInt32());
+        public static GSModRemoveModel ReadNew(BinaryReader r) =>
+            new GSModRemoveModel(r.ReadUInt32());
 
-public void Write(BinaryWriter w) => w.Write(ModelId);
+        public void Write(BinaryWriter w) => w.Write(ModelId);
     }
 
     public record struct GSModSetTrigger(
@@ -97,37 +97,37 @@ public void Write(BinaryWriter w) => w.Write(ModelId);
         uint II2,
         uint II3,
         uint II4) : IGameStateMod
-{
+    {
         public GameStateModType Type => GameStateModType.SetTrigger;
 
-public static GSModSetTrigger ReadNew(BinaryReader r) => new GSModSetTrigger(
-    r.ReadUInt32(),
-    r.ReadUInt32(),
-    r.ReadUInt32(),
-    r.ReadUInt32(),
-    r.ReadUInt32());
+        public static GSModSetTrigger ReadNew(BinaryReader r) => new GSModSetTrigger(
+            r.ReadUInt32(),
+            r.ReadUInt32(),
+            r.ReadUInt32(),
+            r.ReadUInt32(),
+            r.ReadUInt32());
 
-public void Write(BinaryWriter w)
-{
-    w.Write(TriggerId);
-    w.Write(II1);
-    w.Write(II2);
-    w.Write(II3);
-    w.Write(II4);
-}
+        public void Write(BinaryWriter w)
+        {
+            w.Write(TriggerId);
+            w.Write(II1);
+            w.Write(II2);
+            w.Write(II3);
+            w.Write(II4);
+        }
     }
 
     public record struct GSModSetNPCModifier(uint TriggerId, int Value) : IGameStateMod
-{
+    {
         public GameStateModType Type => GameStateModType.SetNPCModifier;
 
-public static GSModSetNPCModifier ReadNew(BinaryReader r) =>
-    new GSModSetNPCModifier(r.ReadUInt32(), r.ReadInt32());
+        public static GSModSetNPCModifier ReadNew(BinaryReader r) =>
+            new GSModSetNPCModifier(r.ReadUInt32(), r.ReadInt32());
 
-public void Write(BinaryWriter w)
-{
-    w.Write(TriggerId);
-    w.Write(Value);
-}
+        public void Write(BinaryWriter w)
+        {
+            w.Write(TriggerId);
+            w.Write(Value);
+        }
     }
 }

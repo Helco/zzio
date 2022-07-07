@@ -59,7 +59,7 @@ namespace zzio
                 //then extract the actual args and specify their token
                 var tokens = new List<CommandLineToken>();
                 var numbers = new List<double>();
-                for (int i=0; i<args.Count; i++)
+                for (int i = 0; i < args.Count; i++)
                 {
                     var matchesNumber = Regex.Match(args[i], @"^[-+]?\d+(\.\d+)?$").Success;
                     if (args[i].StartsWith("\""))
@@ -97,7 +97,8 @@ namespace zzio
 
             public CommandLineToken this[int i]
             {
-                get {
+                get
+                {
                     if (i < 0 || i >= argTokens.Length)
                         throw new IndexOutOfRangeException();
                     return argTokens[i];

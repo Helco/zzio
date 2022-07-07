@@ -19,7 +19,7 @@ namespace zzio.cli.converters
 
             StreamWriter writer = new StreamWriter(to,
                 Encoding.UTF8, 1024, true);
-            switch((ModuleType)table.rows.First().Key.Module)
+            switch ((ModuleType)table.rows.First().Key.Module)
             {
                 default:
                 case ModuleType.Unknown: writeUnknownTable(writer, table); break;
@@ -39,7 +39,8 @@ namespace zzio.cli.converters
 
         private void writeCells(StreamWriter writer, params object[] args)
         {
-            writer.WriteLine(String.Join(",", args.Select(arg => {
+            writer.WriteLine(String.Join(",", args.Select(arg =>
+            {
                 if (arg is string)
                     return escapeString((string)arg);
                 return arg.ToString();
@@ -116,7 +117,7 @@ namespace zzio.cli.converters
         private void writeFairyTable(StreamWriter writer, MappedDB mappedDb)
         {
             writer.WriteLine(
-                "# UID, Mesh, Name, Class0, CardId, Unknown, Level0, Level1, "+
+                "# UID, Mesh, Name, Class0, CardId, Unknown, Level0, Level1, " +
                 "Level2, Level3, Level4, Level5, Level6, Level7, Level8, " +
                 "Level9, Info, MHP, EvolCId, EvolVar, MovSpeed, JumpPower, " +
                 "CriticalHit, Sphere, Glow, LevelUp, Voice, Class1");
@@ -165,9 +166,11 @@ namespace zzio.cli.converters
 
         private void writeUnknownTable(StreamWriter writer, Table table)
         {
-            foreach (Row row in table.rows.Values) {
-                var cellStrings = row.cells.Select(cell => {
-                    switch(cell.Type)
+            foreach (Row row in table.rows.Values)
+            {
+                var cellStrings = row.cells.Select(cell =>
+                {
+                    switch (cell.Type)
                     {
                         case CellDataType.Byte: return cell.Byte.ToString();
                         case CellDataType.Integer: return cell.Integer.ToString();

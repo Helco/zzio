@@ -19,10 +19,10 @@ namespace zzre.game.components.ui
             _ => throw new System.NotSupportedException($"Unsupported alignment: {a}")
         };
 
-    public Vector2 AsFactor => new Vector2(GetAsFactor(Horizontal), GetAsFactor(Vertical));
+        public Vector2 AsFactor => new Vector2(GetAsFactor(Horizontal), GetAsFactor(Vertical));
 
-    public static readonly FullAlignment Center = new(Alignment.Center, Alignment.Center);
-    public static readonly FullAlignment TopLeft = default;
-    public static readonly FullAlignment TopCenter = new(Alignment.Center, Alignment.Min);
-}
+        public static readonly FullAlignment Center = new(Alignment.Center, Alignment.Center);
+        public static readonly FullAlignment TopLeft = default;
+        public static readonly FullAlignment TopCenter = new(Alignment.Center, Alignment.Min);
+    }
 }

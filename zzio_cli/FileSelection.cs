@@ -52,7 +52,7 @@ namespace zzio.cli
                     return true;
                 }
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return false;
             }
@@ -95,7 +95,7 @@ namespace zzio.cli
                 string[] files = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
                 Regex regex = new Regex(regexFilter);
                 bool success = false;
-                foreach(string f in files)
+                foreach (string f in files)
                 {
                     if (regex.Match(f).Success && this.files.Add(Path.Combine(fullPath, f)))
                         success = true;
@@ -103,7 +103,7 @@ namespace zzio.cli
                 changedSet = changedSet || success;
                 return success;
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return false;
             }
@@ -116,7 +116,7 @@ namespace zzio.cli
                 string fullDir = Path.GetDirectoryName(Path.GetFullPath(file));
                 string[] lines = File.ReadAllLines(file);
                 bool success = true;
-                foreach(string s in lines)
+                foreach (string s in lines)
                 {
                     var f = s.Trim();
                     if (f.Length == 0 || f[0] == '#')
@@ -127,13 +127,13 @@ namespace zzio.cli
                 }
                 return success;
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return false;
             }
         }
 
-        public void addFromParameters (ParameterParser args)
+        public void addFromParameters(ParameterParser args)
         {
             List<object> entries = args["input", true] as List<object>;
             if (entries != null)
@@ -148,7 +148,7 @@ namespace zzio.cli
             entries = args["finput", true] as List<object>;
             if (entries != null)
             {
-                foreach(object s in entries)
+                foreach (object s in entries)
                 {
                     object[] ss = s as object[];
                     if (!addFilterDir(ss[0] as string, ss[1] as string))

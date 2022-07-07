@@ -21,7 +21,7 @@ namespace zzio.cli
 
         private static IConverter findConverter(FileType from, FileType to)
         {
-            foreach(IConverter conv in converters)
+            foreach (IConverter conv in converters)
             {
                 if (conv.TypeFrom == from && conv.TypeTo == to)
                     return conv;
