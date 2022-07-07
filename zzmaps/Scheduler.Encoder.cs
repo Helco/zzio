@@ -82,7 +82,7 @@ namespace zzmaps
                     .Replace("$output", '\"' + outputPath + '\"')
                 });
                 if (process == null)
-                    throw new Exception($"No image optimizer process was started");
+                    throw new Exception("No image optimizer process was started");
                 await process.WaitForExitAsync();
                 if (process.ExitCode != 0)
                     throw new Exception($"Image optimizer failed with {process.ExitCode}");

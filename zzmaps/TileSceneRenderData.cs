@@ -11,7 +11,7 @@ namespace zzmaps
 {
     internal class TileSceneRenderData : ListDisposable
     {
-        private static readonly FilePath[] TextureBasePaths = new[]
+        private static readonly FilePath[] TextureBasePaths =
         {
             new FilePath("resources/textures/models"),
             new FilePath("resources/textures/worlds")

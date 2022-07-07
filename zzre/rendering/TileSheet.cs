@@ -66,7 +66,7 @@ namespace zzre.rendering
         public float GetTextHeight(string text, float? overrideLineHeight = null) =>
             text.Count(ch => ch == '\n') * (overrideLineHeight ?? LineHeight);
 
-        private static readonly char[] SpaceChars = new[] { ' ', '\n' };
+        private static readonly char[] SpaceChars = { ' ', '\n' };
         public string WrapLines(string text, float maxWidth)
         {
             var newText = text.ToCharArray();

@@ -236,7 +236,7 @@ namespace zzre.tools
                 zzio.rwbs.CollisionSectorType.X => Vector3.UnitX,
                 zzio.rwbs.CollisionSectorType.Y => Vector3.UnitY,
                 zzio.rwbs.CollisionSectorType.Z => Vector3.UnitZ,
-                _ => throw new NotSupportedException($"Unsupported collision sector type: " + split.left.type)
+                _ => throw new NotSupportedException($"Unsupported collision sector type: {split.left.type}")
             };
             SetPlanes(geometryBuffers.Bounds, normal, split.left.value, split.right.value, centerValue: null);
 
