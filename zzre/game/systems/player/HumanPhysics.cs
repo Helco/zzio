@@ -156,9 +156,7 @@ namespace zzre.game.systems
                 .Where(i => Vector3.Dot(velocity, i.normal) < 0f);
             if (!intersections.Any())
                 return newPos - colliderOffset * Vector3.UnitY;
-            collision = intersections
-                .OrderBy(i => Vector3.DistanceSquared(i.point, newPos))
-                .First();
+            collision = intersections.MinBy(i => Vector3.DistanceSquared(i.point, newPos));
 
             collision.dirToPlayer = newPos - collision.point;
             if (colliderOffset > 0f) // only for the upper collider check
