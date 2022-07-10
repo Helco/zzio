@@ -8,6 +8,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RestoreSources>$(RestoreSources);../../zzio-feed;https://api.nuget.org/v3/index.json</RestoreSources>
     <NoWarn>1701;1702;DEA0005,DEA0022</NoWarn>
+
+    <ShaderVariantDef>shaders/ShaderVariants.json</ShaderVariantDef>
+    <EmbedGeneratedShaders>true</EmbedGeneratedShaders>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -24,14 +27,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ShaderSourceDir Include="shaders" />
     <EmbeddedResource Include="shaders\*.frag" />
     <EmbeddedResource Include="shaders\*.vert" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="shaders\Wireframe.frag" />
-    <None Remove="shaders\Wireframe.vert" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DefaultEcs" Version="0.17.2" />
     <PackageReference Include="DefaultEcs.Analyzer" Version="0.17.0">
@@ -41,7 +41,8 @@
     <PackageReference Include="Pfim" Version="0.10.3" />
     <PackageReference Include="Veldrid" Version="4.9.0-beta1" />
     <PackageReference Include="Veldrid.ImageSharp" Version="4.9.0-beta1" />
-    <PackageReference Include="Veldrid.SPIRV" Version="1.0.14" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.15" />
+    <PackageReference Include="Veldrid.SPIRV.BuildTools" Version="1.0.14" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="4.9.0-beta1" />
     <PackageReference Include="ImGui.NET" Version="1.82.0-helco1" />
   </ItemGroup>

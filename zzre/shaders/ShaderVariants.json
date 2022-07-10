@@ -1,0 +1,77 @@
+[
+  {
+    "Name": "zzre.shaders.UI",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "UI.vert"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "UI.frag"
+      }
+    ],
+    "CrossCompileOptions": {},
+    "Targets": [ "HLSL" ]
+  },
+  {
+    "Name": "zzre.shaders.UIFont",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "UIFont.vert"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "UIFont.frag"
+      }
+    ],
+    "CrossCompileOptions": {},
+    "Targets": [ "HLSL" ]
+  },
+  {
+    "Name": "zzre.shaders.ModelStandard",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "ModelStandard.vert"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "ModelStandard.frag"
+      }
+    ],
+    "CrossCompileOptions": {},
+    "Targets": [ "HLSL" ]
+  },
+  {
+    "Name": "zzre.shaders.ModelInstanced",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "ModelInstanced.vert"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "ModelInstanced.frag"
+      }
+    ],
+    "CrossCompileOptions": {},
+    "Targets": [ "HLSL" ]
+  },
+  {
+    "Name": "zzre.shaders.ModelSkinned",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "ModelSkinned.vert"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "ModelSkinned.frag"
+      }
+    ],
+    "CrossCompileOptions": {},
+    "Targets": [ "HLSL" ]
+  }
+]

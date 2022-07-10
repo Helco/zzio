@@ -25,26 +25,58 @@ namespace zzre.rendering
             if (loadedShaders.TryGetValue(shaderSetName, out var set))
                 return set;
 
-            ShaderDescription LoadShader(string shaderName, ShaderStages stage)
+            var backendExt = Device.BackendType switch
             {
-                using var stream = shaderResourceAssemblies
-                    .Select(a => a.GetManifestResourceStream($"{a.GetName().Name}.shaders.{shaderName}"))
-                    .FirstOrDefault(s => s != null);
-                if (stream == null)
-                    throw new FileNotFoundException($"Could not find embedded shader resource: {shaderName}");
-                using var reader = new StreamReader(stream, true);
-                var text = reader.ReadToEnd(); // reencode text because SPIRV does not support Unicode BOMs
+                GraphicsBackend.Vulkan => ".spv",
+                GraphicsBackend.Direct3D11 => ".hlsl",
+                GraphicsBackend.Metal => ".msl",
+                GraphicsBackend.OpenGL => ".glsl",
+                GraphicsBackend.OpenGLES => ".essl",
+                _ => "dummy"
+            };
 
-                return new ShaderDescription
+            var shaderDescr = TryLoadShaderSet(shaderSetName, "_Vertex", "_Fragment", backendExt);
+            if (shaderDescr.HasValue)
+                return new[]
                 {
-                    EntryPoint = "main",
-                    ShaderBytes = System.Text.Encoding.UTF8.GetBytes(text),
-                    Stage = stage
+                    Factory.CreateShader(shaderDescr.Value.vertex),
+                    Factory.CreateShader(shaderDescr.Value.fragment),
                 };
-            }
-            return Factory.CreateFromSpirv(
-                LoadShader(shaderSetName + ".vert", ShaderStages.Vertex),
-                LoadShader(shaderSetName + ".frag", ShaderStages.Fragment));
+
+            if (Device.BackendType != GraphicsBackend.Vulkan) // we would have tried to load SPIRV already
+                shaderDescr = TryLoadShaderSet(shaderSetName, "_Vertex", "_Fragment", ".spv");
+            shaderDescr ??= TryLoadShaderSet(shaderSetName, ".vert", ".frag");
+            if (!shaderDescr.HasValue)
+                throw new FileNotFoundException($"Could not find embedded shader resource: {shaderSetName}");
+
+            return Factory.CreateFromSpirv(shaderDescr.Value.vertex, shaderDescr.Value.fragment);
+        }
+
+        private (ShaderDescription vertex, ShaderDescription fragment)? TryLoadShaderSet(string shaderSetName, string vertexExt, string fragmentExt, string commonExt = "")
+        {
+            var vertexDescr = TryLoadShader($"{shaderSetName}{vertexExt}{commonExt}", ShaderStages.Vertex);
+            var fragmentDescr = TryLoadShader($"{shaderSetName}{fragmentExt}{commonExt}", ShaderStages.Fragment);
+            return vertexDescr.HasValue && fragmentDescr.HasValue
+                ? (vertexDescr.Value, fragmentDescr.Value)
+                : null;
+        }
+
+        private ShaderDescription? TryLoadShader(string shaderName, ShaderStages stage)
+        {
+            using var stream = shaderResourceAssemblies
+                .Select(a => a.GetManifestResourceStream($"{a.GetName().Name}.shaders.{shaderName}"))
+                .FirstOrDefault(s => s != null);
+            if (stream == null)
+                return null;
+            using var reader = new StreamReader(stream, true);
+            var text = reader.ReadToEnd(); // reencode text because SPIRV does not support Unicode BOMs
+
+            return new ShaderDescription
+            {
+                EntryPoint = "main",
+                ShaderBytes = System.Text.Encoding.UTF8.GetBytes(text),
+                Stage = stage
+            };
         }
     }
 }
