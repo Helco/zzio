@@ -30,18 +30,18 @@ namespace zzio
             Drive     // e.g. "c:/asdk/cxv" or "file:/xcvqw" or even "pak://bla"
         }
 
-        private readonly string[] parts;
+        private readonly IReadOnlyList<string> parts;
         private readonly PathType type;
         public bool IsDirectory { get; }
 
-        private FilePath(string[] parts, PathType type, bool isDirectory)
+        private FilePath(IReadOnlyList<string> parts, PathType type, bool isDirectory)
         {
             this.parts = parts;
             this.type = type;
             IsDirectory = isDirectory;
         }
 
-        private static bool hasDrivePart(string[] parts) => parts.Any(p => p.EndsWith(":"));
+        private static bool hasDrivePart(IReadOnlyList<string> parts) => parts.Any(p => p.EndsWith(":"));
 
         private static bool isDirectoryPart(string part)
         {
@@ -68,11 +68,11 @@ namespace zzio
                 type = PathType.Drive;
             IsDirectory =
                 path.LastIndexOfAny(separators) == path.Length - 1 ||
-                parts.Length > 0 && isDirectoryPart(parts.Last());
+                parts.Count > 0 && isDirectoryPart(parts.Last());
         }
 
         /// <summary>Constructs a new path as copy of another one</summary> 
-        public FilePath(FilePath path) : this(path.parts.ToArray(), path.type, path.IsDirectory)
+        public FilePath(FilePath path) : this(path.parts, path.type, path.IsDirectory)
         {
         }
 
@@ -99,12 +99,12 @@ namespace zzio
                 return false;
             FilePath me = Absolute;
             path = path.Absolute;
-            if (me.parts.Length != path.parts.Length || me.type != path.type)
+            if (me.parts.Count != path.parts.Count || me.type != path.type)
                 return false;
             StringComparison comp = caseSensitive
                 ? StringComparison.InvariantCulture
                 : StringComparison.InvariantCultureIgnoreCase;
-            for (int i = 0; i < me.parts.Length; i++)
+            for (int i = 0; i < me.parts.Count; i++)
             {
                 if (!string.Equals(me.parts[i], path.parts[i], comp))
                     return false;
@@ -195,7 +195,9 @@ namespace zzio
         /// <remarks>The combined path is normalized</remarks>
         public FilePath Combine(IEnumerable<FilePath> paths)
         {
-            List<string> newParts = new List<string>(parts);
+            List<string> newParts = new List<string>(parts.Count + paths.Sum(p => p.parts.Count));
+            newParts.AddRange(parts);
+
             bool lastIsDirectory = IsDirectory;
             foreach (FilePath path in paths)
             {
@@ -204,7 +206,7 @@ namespace zzio
                 newParts.AddRange(path.parts);
                 lastIsDirectory = path.IsDirectory;
             }
-            return new FilePath(newParts.ToArray(), type, lastIsDirectory).Normalized;
+            return new FilePath(newParts, type, lastIsDirectory).Normalized;
         }
 
         /// <value>Normalizes this path by removing unnecessary navigation</value>
@@ -229,7 +231,7 @@ namespace zzio
                 }
                 bool newIsDirectory = IsDirectory ||
                     newParts.Count > 0 && isDirectoryPart(newParts.Last());
-                return new FilePath(newParts.ToArray(), type, newIsDirectory);
+                return new FilePath(newParts, type, newIsDirectory);
             }
         }
 
@@ -242,7 +244,7 @@ namespace zzio
         public bool IsAbsolute => type != PathType.Relative;
 
         /// <value>An array of all parts of this path without the separators</value>
-        public string[] Parts => parts.ToArray();
+        public IReadOnlyList<string> Parts => parts;
 
         /// <value>Whether the path stays in the boundary of its base</value>
         public bool StaysInbound
@@ -274,11 +276,11 @@ namespace zzio
                 FilePath norm = Normalized;
                 if (!norm.StaysInbound)
                     return norm.Combine("../");
-                else if (norm.parts.Length > 1)
-                    return new FilePath(norm.parts.Take(norm.parts.Length - 1).ToArray(), type, true);
+                else if (norm.parts.Count > 1)
+                    return new FilePath(norm.parts.Take(norm.parts.Count - 1).ToArray(), type, true);
                 else if (type != PathType.Relative)
                     return null;
-                else if (norm.parts.Length == 1)
+                else if (norm.parts.Count == 1)
                     return new FilePath("./");
                 else
                     return new FilePath("../");
@@ -310,7 +312,7 @@ namespace zzio
             StringComparison comp = caseSensitive
                 ? StringComparison.InvariantCulture
                 : StringComparison.InvariantCultureIgnoreCase;
-            int minPartCount = Math.Min(me.parts.Length, basePath.parts.Length);
+            int minPartCount = Math.Min(me.parts.Count, basePath.parts.Count);
             int partI = 0;
             for (; partI < minPartCount; partI++)
             {
@@ -319,23 +321,23 @@ namespace zzio
             }
 
             // Case 1: "a/b/c" relativeto "a/b/d" should return "../c"
-            if (partI < me.parts.Length && partI < basePath.parts.Length)
+            if (partI < me.parts.Count && partI < basePath.parts.Count)
             {
-                List<string> newParts = new List<string>();
-                for (int i = partI; i < basePath.parts.Length; i++)
+                List<string> newParts = new List<string>(basePath.parts.Count + me.parts.Count - partI);
+                for (int i = partI; i < basePath.parts.Count; i++)
                     newParts.Add("..");
                 newParts.AddRange(me.parts.Skip(partI));
-                return new FilePath(newParts.ToArray(), PathType.Relative, IsDirectory);
+                return new FilePath(newParts, PathType.Relative, IsDirectory);
             }
             // Case 2: "a/b/c/d" relative to "a/b" should return "c/d"
-            else if (partI < me.parts.Length)
+            else if (partI < me.parts.Count)
             {
                 return new FilePath(me.parts.Skip(partI).ToArray(), PathType.Relative, IsDirectory);
             }
             // Case 3: "a/b" relative to "a/b/c/d" should return "../../"
-            else if (partI < basePath.parts.Length)
+            else if (partI < basePath.parts.Count)
             {
-                string[] newParts = new string[basePath.parts.Length - partI];
+                string[] newParts = new string[basePath.parts.Count - partI];
                 for (int i = 0; i < newParts.Length; i++)
                     newParts[i] = "..";
                 return new FilePath(newParts, PathType.Relative, true);
@@ -354,7 +356,7 @@ namespace zzio
         {
             get
             {
-                if (IsDirectory || parts.Length == 0)
+                if (IsDirectory || parts.Count == 0)
                     return null;
                 int extensionMarker = parts.Last().LastIndexOf('.');
                 if (extensionMarker < 0 || extensionMarker + 1 == parts.Last().Length)
@@ -376,7 +378,7 @@ namespace zzio
                     result.Append('\\');
                 result.Append(part);
             }
-            if (IsDirectory && parts.Length > 0)
+            if (IsDirectory && parts.Count > 0)
                 result.Append('\\');
             return result.ToString();
         }
@@ -391,10 +393,10 @@ namespace zzio
                     result.Append('/');
                 result.Append(part);
             }
-            if (IsDirectory && parts.Length > 0)
+            if (IsDirectory && parts.Count > 0)
                 result.Append('/');
 
-            if (type == PathType.Root && parts.Length == 0)
+            if (type == PathType.Root && parts.Count == 0)
                 return "/";
             return result.ToString();
         }

@@ -103,10 +103,10 @@ namespace zzio
 
             var results = set
                 .Select(filePath => filePath.RelativeTo(pathString, false))
-                .Where(filePath => filePath.StaysInbound && filePath.Parts.Length > 0);
+                .Where(filePath => filePath.StaysInbound && filePath.Parts.Count > 0);
 
             if (!recursive)
-                results = results.Where(filePath => filePath.Parts.Length == 1);
+                results = results.Where(filePath => filePath.Parts.Count == 1);
             return results
                 .Select(filePath => filePath.ToPOSIXString())
                 .ToArray();
