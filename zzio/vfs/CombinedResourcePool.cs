@@ -9,28 +9,43 @@ namespace zzio.vfs
     public class CombinedResourcePool : IResourcePool
     {
         private readonly IResourcePool[] pools;
-        public IResource Root => new CombinedDirectory(this, null, "", pools.Reverse().Select(p => p.Root)); // reverse for easier overwrite behaviour
+        private readonly Dictionary<FilePath, CombinedDirectory> knownDirectories = new Dictionary<FilePath, CombinedDirectory>();
+        public IResource Root => GetDirectoryFor(null, new FilePath(""), pools.Reverse().Select(p => p.Root)); // reverse for easier overwrite behaviour
 
         public CombinedResourcePool(IResourcePool[] pools)
         {
             this.pools = pools.ToArray();
         }
 
+        private CombinedDirectory GetDirectoryFor(IResource? parent, FilePath path, IEnumerable<IResource> sources)
+        {
+            lock (knownDirectories)
+            {
+                if (knownDirectories.TryGetValue(path, out var known))
+                    return known;
+
+                var dir = new CombinedDirectory(this, parent, path, sources);
+                knownDirectories.Add(path, dir);
+                return dir;
+            }
+        }
+
         private class CombinedDirectory : IResource
         {
+            private readonly CombinedResourcePool pool;
             private readonly IResource[] sources;
+
             public ResourceType Type => ResourceType.Directory;
             public FilePath Path { get; }
-            public IResourcePool Pool { get; }
+            public IResourcePool Pool => pool;
             public IResource? Parent { get; }
             public Stream? OpenContent() => null;
 
-            public CombinedDirectory(IResourcePool pool, IResource? parent, string pathText, IEnumerable<IResource> sources) : this(pool, parent, new FilePath(pathText), sources) { }
-            public CombinedDirectory(IResourcePool pool, IResource? parent, FilePath path, IEnumerable<IResource> sources)
+            public CombinedDirectory(CombinedResourcePool pool, IResource? parent, FilePath path, IEnumerable<IResource> sources)
             {
+                this.pool = pool;
                 this.sources = sources.ToArray();
                 Path = path;
-                Pool = pool;
                 Parent = parent;
             }
 
@@ -42,7 +57,7 @@ namespace zzio.vfs
             public IEnumerable<IResource> Directories => sources
                 .SelectMany(s => s.Directories)
                 .GroupBy(r => r.Name.ToLowerInvariant())
-                .Select(group => new CombinedDirectory(Pool, this, Path.Combine(group.Key), group));
+                .Select(group => pool.GetDirectoryFor(this, Path.Combine(group.Key), group));
         }
 
         // Combined file is still necessary so the parent reference is correct
