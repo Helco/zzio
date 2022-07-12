@@ -63,8 +63,10 @@ namespace zzre.rendering
             .Where(tileI => tileI >= 0 && tileI < pixelSizes.Length)
             .Sum(tileI => pixelSizes[tileI].X + CharSpacing);
 
-        public float GetTextHeight(string text, float? overrideLineHeight = null) =>
-            text.Count(ch => ch == '\n') * (overrideLineHeight ?? LineHeight);
+        public float GetTextHeight(string text, float? overrideLineHeight = null, bool removeFirstLine = false) =>
+            // the original GetTextHeight is bugged in that it does not count the first line.
+            // we need both behaviours in some places but the objectively correct one should be the default
+            (text.Count(ch => ch == '\n') + (removeFirstLine ? 0 : 1)) * (overrideLineHeight ?? LineHeight);
 
         private static readonly char[] SpaceChars = { ' ', '\n' };
         public string WrapLines(string text, float maxWidth)

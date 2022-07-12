@@ -74,92 +74,89 @@ namespace zzre.game.systems.ui
 
         private void CreateBackgrounds(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
         {
-            preload.CreateImage(
-                entity,
-                -new Vector2(52, 240),
-                "dec000",
-                renderOrder: 1);
+            preload.CreateImage(entity)
+                .With(-new Vector2(52, 240))
+                .WithBitmap("dec000")
+                .WithRenderOrder(1)
+                .Build();
 
-            deck.SpellBackground = preload.CreateImage(
-                entity,
-                -new Vector2(320, 240),
-                "dec001",
-                renderOrder: 1);
+            deck.SpellBackground = preload.CreateImage(entity)
+                .With(-new Vector2(320, 240))
+                .WithBitmap("dec001")
+                .WithRenderOrder(1);
 
-            deck.SummaryBackground = preload.CreateImage(
-                entity,
-                -new Vector2(320, 240),
-                "dec002",
-                renderOrder: 1);
+            deck.SummaryBackground = preload.CreateImage(entity)
+                .With(-new Vector2(320, 240))
+                .WithBitmap("dec002")
+                .WithRenderOrder(1);
 
-            preload.CreateTooltip(entity, new Vector2(-320 + 11, -240 + 11), "{205} - ");
+            preload.CreateTooltipTarget(entity)
+                .With(new Vector2(-320 + 11, -240 + 11))
+                .WithText("{205} - ")
+                .Build();
         }
 
         private void CreateListControls(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
         {
-            preload.CreateImageButton(
-                entity,
-                IDSliderUp,
-                Mid + new Vector2(592, 73),
-                new(16, 17),
-                preload.Btn001);
+            preload.CreateButton(entity)
+                .With(IDSliderUp)
+                .With(Mid + new Vector2(592, 73))
+                .With(new components.ui.ButtonTiles(16, 17))
+                .With(preload.Btn001)
+                .Build();
 
-            preload.CreateImageButton(
-                entity,
-                IDSliderDown,
-                Mid + new Vector2(592, 291),
-                new(18, 19),
-                preload.Btn001);
+            preload.CreateButton(entity)
+                .With(IDSliderDown)
+                .With(Mid + new Vector2(592, 291))
+                .With(new components.ui.ButtonTiles(18, 19))
+                .With(preload.Btn001)
+                .Build();
 
-            deck.ListSlider = preload.CreateImageButton(
-                entity,
-                IDSlider,
-                Rect.FromTopLeftSize(Mid + new Vector2(590, 110), new Vector2(40, 182)),
-                new(14, 15),
-                preload.Btn001);
+            deck.ListSlider = preload.CreateButton(entity)
+                .With(IDSlider)
+                .With(Rect.FromTopLeftSize(Mid + new Vector2(590, 110), new Vector2(40, 182)))
+                .With(new components.ui.ButtonTiles(14, 15))
+                .With(preload.Btn001);
             deck.ListSlider.Set(components.ui.Slider.Vertical);
 
             deck.ListTabs = new DefaultEcs.Entity[4];
             var tabButtonRect = Rect.FromTopLeftSize(Mid + new Vector2(281, 0f), new Vector2(35, 35));
-            deck.ListTabs[(int)Tab.Fairies - 1] = preload.CreateImageButton(
-                entity,
-                IDTabFairies,
-                tabButtonRect.OffsettedBy(0, 79),
-                new(0, 1, 2),
-                preload.Btn002,
-                tooltipUID: new UID(0x7DB4EEB1));
 
-            deck.ListTabs[(int)Tab.Items - 1] = preload.CreateImageButton(
-                entity,
-                IDTabItems,
-                tabButtonRect.OffsettedBy(0, 123),
-                new(3, 4, 5),
-                preload.Btn002,
-                tooltipUID: new UID(0x93530331));
+            deck.ListTabs[(int)Tab.Fairies - 1] = preload.CreateButton(entity)
+                .With(IDTabFairies)
+                .With(tabButtonRect.OffsettedBy(0, 79))
+                .With(new components.ui.ButtonTiles(0, 1, 2))
+                .With(preload.Btn002)
+                .WithTooltip(0x7DB4EEB1);
 
-            deck.ListTabs[(int)Tab.AttackSpells - 1] = preload.CreateImageButton(
-                entity,
-                IDTabAttackSpells,
-                tabButtonRect.OffsettedBy(0, 167),
-                new(6, 7, 8),
-                preload.Btn002,
-                tooltipUID: new UID(0xB5E80331));
+            deck.ListTabs[(int)Tab.Items - 1] = preload.CreateButton(entity)
+                .With(IDTabItems)
+                .With(tabButtonRect.OffsettedBy(0, 123))
+                .With(new components.ui.ButtonTiles(3, 4, 5))
+                .With(preload.Btn002)
+                .WithTooltip(0x93530331);
 
-            deck.ListTabs[(int)Tab.SupportSpells - 1] = preload.CreateImageButton(
-                entity,
-                IDTabSupportSpells,
-                tabButtonRect.OffsettedBy(0, 211),
-                new(9, 10, 11),
-                preload.Btn002,
-                tooltipUID: new UID(0x9D0DAD11));
+            deck.ListTabs[(int)Tab.AttackSpells - 1] = preload.CreateButton(entity)
+                .With(IDTabAttackSpells)
+                .With(tabButtonRect.OffsettedBy(0, 167))
+                .With(new components.ui.ButtonTiles(6, 7, 8))
+                .With(preload.Btn002)
+                .WithTooltip(0xB5E80331);
 
-            preload.CreateImageButton(
-                entity,
-                IDSwitchListMode,
-                tabButtonRect.Min + new Vector2(15, 261),
-                new(28, 29),
-                preload.Btn002,
-                tooltipUID: new UID(0xA086B911));
+            deck.ListTabs[(int)Tab.SupportSpells - 1] = preload.CreateButton(entity)
+                .With(IDTabSupportSpells)
+                .With(tabButtonRect.OffsettedBy(0, 211))
+                .With(new components.ui.ButtonTiles(9, 10, 11))
+                .With(preload.Btn002)
+                .WithTooltip(0x9D0DAD11);
+
+            preload.CreateButton(entity)
+                .With(IDSwitchListMode)
+                .With(tabButtonRect.Min + new Vector2(15, 261))
+                .With(new components.ui.ButtonTiles(28, 29))
+                .With(preload.Btn002)
+                .WithTooltip(0xA086B911)
+                .Build();
 
             // TODO: Add pixie count label
         }
@@ -170,13 +167,13 @@ namespace zzre.game.systems.ui
             {
                 var fairy = deck.Inventory.GetFairyAtSlot(i);
                 var fairyI = fairy?.cardId.EntityId ?? -1;
-                preload.CreateImageButton(
-                    entity,
-                    FirstFairySlot + i,
-                    Mid + new Vector2(31, 60 + 79 * i),
-                    new(fairyI),
-                    preload.Wiz000,
-                    tooltipUID: UIDChooseFairyToSwap);
+                preload.CreateButton(entity)
+                    .With(FirstFairySlot + i)
+                    .With(Mid + new Vector2(31, 60 + 79 * i))
+                    .With(new components.ui.ButtonTiles(fairyI))
+                    .With(preload.Wiz000)
+                    .WithTooltip(UIDChooseFairyToSwap)
+                    .Build();
             }
         }
 
@@ -217,13 +214,13 @@ namespace zzre.game.systems.ui
                 for (int spellI = 0; spellI < InventoryFairy.SpellSlotCount; spellI++)
                 {
                     var spell = fairy == null ? null : deck.Inventory.GetSpellAtSlot(fairy, spellI);
-                    preload.CreateImageButton(
-                        deck.DeckSlotParents[fairyI],
-                        nextElementId,
-                        DeckSlotPos(fairyI, spellI),
-                        new(spell?.cardId.EntityId ?? -1),
-                        preload.Spl000,
-                        tooltipUID: UIDSpellSlotNames[spellI]);
+                    preload.CreateButton(deck.DeckSlotParents[fairyI])
+                        .With(nextElementId)
+                        .With(DeckSlotPos(fairyI, spellI))
+                        .With(new components.ui.ButtonTiles(spell?.cardId.EntityId ?? -1))
+                        .With(preload.Spl000)
+                        .WithTooltip(UIDSpellSlotNames[spellI])
+                        .Build();
                     nextElementId = nextElementId + 1;
 
                     var spellReq = fairy == null ? default : fairy.spellReqs[spellI];
@@ -269,27 +266,28 @@ namespace zzre.game.systems.ui
 
             for (int slotI = 0; slotI < InventoryFairy.SpellSlotCount; slotI++)
             {
-                preload.CreateTooltipArea(
-                    slotParent,
-                    FirstSpellSlot + fairyI * InventoryFairy.SpellSlotCount + slotI,
-                    Rect.FromTopLeftSize(DeckSlotPos(fairyI, slotI), Vector2.One * 40),
-                    UIDFairyInfoDescriptions[slotI]);
+                preload.CreateTooltipArea(slotParent)
+                    .With(FirstSpellSlot + fairyI * InventoryFairy.SpellSlotCount + slotI)
+                    .With(Rect.FromTopLeftSize(DeckSlotPos(fairyI, slotI), Vector2.One * 40))
+                    .WithTooltip(UIDFairyInfoDescriptions[slotI])
+                    .Build();
 
                 var spell = deck.Inventory.GetSpellAtSlot(fairy, slotI);
                 if (spell == null)
                     continue;
-                preload.CreateLabel(
-                    slotParent,
-                    DeckSlotPos(fairyI, slotI) + new Vector2(0, 44),
-                    FormatManaAmount(spell),
-                    preload.Fnt002);
+                preload.CreateLabel(slotParent)
+                    .With(DeckSlotPos(fairyI, slotI) + new Vector2(0, 44))
+                    .With(preload.Fnt002)
+                    .WithText(FormatManaAmount(spell))
+                    .Build();
             }
 
-            preload.CreateLabel(
-                slotParent,
-                DeckSlotPos(fairyI, 0),
-                FormatSummary(deck.Inventory, fairy),
-                preload.Fnt002);
+            preload.CreateLabel(slotParent)
+                .With(DeckSlotPos(fairyI, 0))
+                .With(preload.Fnt002)
+                .WithText(FormatSummary(deck.Inventory, fairy))
+                .Build();
+
         }
 
         private string FormatManaAmount(InventorySpell spell)
@@ -404,20 +402,17 @@ namespace zzre.game.systems.ui
                 for (int x = 0; x < columns; x++)
                 {
                     var i = y * columns + x;
-                    deck.ListButtons[i] = preload.CreateImageButton(
-                        entity,
-                        FirstListCell + i,
-                        ListCellPos(x, y),
-                        new(-1),
-                        buttonTileSheet);
+                    deck.ListButtons[i] = preload.CreateButton(entity)
+                        .With(FirstListCell + i)
+                        .With(ListCellPos(x, y))
+                        .With(new components.ui.ButtonTiles(-1))
+                        .With(buttonTileSheet);
 
-                    deck.ListUsedMarkers[i] = preload.CreateImage(
-                        entity,
-                        ListCellPos(x, y),
-                        preload.Inf000,
-                        tileI: 16,
-                        renderOrder: -1);
-                    deck.ListUsedMarkers[i].Set(components.Visibility.Invisible);
+                    deck.ListUsedMarkers[i] = preload.CreateImage(entity)
+                        .With(ListCellPos(x, y))
+                        .With(preload.Inf000, 16)
+                        .WithRenderOrder(-1)
+                        .Invisible();
                 }
             }
         }
@@ -430,11 +425,9 @@ namespace zzre.game.systems.ui
             deck.ListSummaries = new DefaultEcs.Entity[ListRows];
             for (int i = 0; i < ListRows; i++)
             {
-                deck.ListSummaries[i % ListRows] = preload.CreateLabel(
-                    entity,
-                    ListCellPos(column: 0, row: i) + summaryOffset,
-                    "",
-                    preload.Fnt002);
+                deck.ListSummaries[i % ListRows] = preload.CreateLabel(entity)
+                    .With(ListCellPos(column: 0, row: i) + summaryOffset)
+                    .With(preload.Fnt002);
             }
         }
 

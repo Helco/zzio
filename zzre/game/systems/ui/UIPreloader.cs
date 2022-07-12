@@ -10,7 +10,7 @@ namespace zzre.game.systems.ui
     {
         private const float ButtonTextSpacing = 10f;
 
-        private readonly DefaultEcs.World world;
+        internal readonly DefaultEcs.World UIWorld;
         private readonly zzio.db.MappedDB mappedDb;
 
         public readonly ManagedResource<resources.UITileSheetInfo, TileSheet>
@@ -39,7 +39,7 @@ namespace zzre.game.systems.ui
 
         public UIPreloader(ITagContainer diContainer)
         {
-            world = diContainer.GetTag<DefaultEcs.World>();
+            UIWorld = diContainer.GetTag<DefaultEcs.World>();
             mappedDb = diContainer.GetTag<zzio.db.MappedDB>();
 
             Btn000 = Preload(out var tsBtn000, "btn000", isFont: false);
@@ -106,7 +106,7 @@ namespace zzre.game.systems.ui
             float lineOffset = float.NaN)
         {
             var resource = ManagedResource<TileSheet>.Create(new resources.UITileSheetInfo(name, isFont));
-            var entity = world.CreateEntity();
+            var entity = UIWorld.CreateEntity();
             entity.Set(resource);
             entity.Disable();
             tileSheet = entity.Get<TileSheet>();
@@ -127,261 +127,42 @@ namespace zzre.game.systems.ui
             _ => throw new NotSupportedException($"Unsupported card type {type}")
         };
 
-        // TODO: Refactor UI factory methods to reduce overloads and increase feature parity
-
-        private DefaultEcs.Entity CreateBase(
-            DefaultEcs.Entity parent,
-            Rect rect,
-            int renderOrder,
-            components.ui.UIOffset? offset)
-        {
-            var entity = world.CreateEntity();
-            entity.Set(new components.Parent(parent));
-            entity.Set(new components.ui.RenderOrder(renderOrder));
-            entity.Set(components.Visibility.Visible);
-            entity.Set(zzio.IColor.White);
-            entity.Set(rect);
-            entity.Set(offset ?? components.ui.UIOffset.Center);
-            return entity;
-        }
-
-        public DefaultEcs.Entity CreateTooltipArea(
-            DefaultEcs.Entity parent,
-            components.ui.ElementId elementId,
-            Rect rect,
-            zzio.UID tooltipUID,
-            components.ui.UIOffset? offset = null)
-        {
-            var entity = world.CreateEntity();
-            entity.Set(elementId);
-            entity.Set(new components.Parent(parent));
-            entity.Set(rect);
-            entity.Set(offset ?? components.ui.UIOffset.Center);
-            entity.Set(new components.ui.TooltipUID(tooltipUID));
-            return entity;
-        }
-
-        public DefaultEcs.Entity CreateImageButton(
-            DefaultEcs.Entity parent,
-            components.ui.ElementId elementId,
-            Vector2 pos,
-            components.ui.ButtonTiles buttonTiles,
-            ManagedResource<resources.UITileSheetInfo, TileSheet> tileSheet,
-            zzio.UID? tooltipUID = null,
-            int renderOrder = 0,
-            components.ui.FullAlignment btnAlign = default,
-            components.ui.UIOffset? offset = null) =>
-            CreateImageButton(parent, elementId, Rect.FromMinMax(pos, pos), buttonTiles, tileSheet, tooltipUID, renderOrder, btnAlign, offset);
-
-        public DefaultEcs.Entity CreateImageButton(
-            DefaultEcs.Entity parent,
-            components.ui.ElementId elementId,
-            Rect rect,
-            components.ui.ButtonTiles buttonTiles,
-            ManagedResource<resources.UITileSheetInfo, TileSheet> tileSheet,
-            zzio.UID? tooltipUID = null,
-            int renderOrder = 0,
-            components.ui.FullAlignment btnAlign = default,
-            components.ui.UIOffset? offset = null)
-        {
-            var entity = CreateBase(parent, rect, renderOrder, offset);
-            entity.Set(elementId);
-            entity.Set(tileSheet);
-            entity.Set(btnAlign);
-            entity.Set(buttonTiles);
-            if (tooltipUID.HasValue)
-                entity.Set<components.ui.TooltipUID>(tooltipUID.Value);
-            return entity;
-        }
-
-        public DefaultEcs.Entity CreateLabel(
-            DefaultEcs.Entity parent,
-            Vector2 pos,
-            zzio.UID textUID,
-            ManagedResource<resources.UITileSheetInfo, TileSheet> font,
-            int renderOrder = 0,
-            bool doFormat = true,
-            components.ui.UIOffset? offset = null) =>
-            CreateLabel(parent, pos, GetDBText(textUID), font, renderOrder, doFormat, offset);
-
-        private string GetDBText(zzio.UID textUID) => textUID.Module switch
+        internal string GetDBText(zzio.UID textUID) => textUID.Module switch
         {
             (int)zzio.db.ModuleType.Text => mappedDb.GetText(textUID).Text,
             (int)zzio.db.ModuleType.Dialog => mappedDb.GetDialog(textUID).Text,
             _ => throw new ArgumentException("Invalid UID for UI")
         };
 
-        public DefaultEcs.Entity CreateLabel(
-            DefaultEcs.Entity parent,
-            Vector2 pos,
-            string text,
-            ManagedResource<resources.UITileSheetInfo, TileSheet> font,
-            int renderOrder = 0,
-            bool doFormat = true,
-            components.ui.UIOffset? offset = null,
-            components.ui.FullAlignment? textAlign = null,
-            float? lineHeight = null,
-            float wrapLines = float.NaN)
-        {
-            var entity = CreateBase(parent, Rect.FromMinMax(pos, pos), renderOrder, offset);
-            entity.Set(font);
+        internal uibuilder.Label CreateLabel(DefaultEcs.Entity parent) => new uibuilder.Label(this, parent);
 
-            if (float.IsFinite(wrapLines) && wrapLines > 0f)
-            {
-                var tileSheet = entity.Get<TileSheet>();
-                text = tileSheet.WrapLines(text, wrapLines);
-            }
-            entity.Set(new components.ui.Label(text, doFormat, lineHeight));
+        internal uibuilder.TooltipArea CreateTooltipArea(DefaultEcs.Entity parent) => new uibuilder.TooltipArea(this, parent);
 
-            if (textAlign != null)
-            {
-                var tileSheet = entity.Get<TileSheet>();
-                var size = new Vector2(tileSheet.GetUnformattedWidth(text), tileSheet.GetTextHeight(text, lineHeight));
-                pos -= textAlign.Value.AsFactor * size;
-                entity.Set(Rect.FromMinMax(pos, pos));
-            }
-            return entity;
-        }
+        internal uibuilder.TooltipTarget CreateTooltipTarget(DefaultEcs.Entity parent) => new uibuilder.TooltipTarget(this, parent);
 
-        public DefaultEcs.Entity CreateAnimatedLabel(
-            DefaultEcs.Entity parent,
-            Vector2 pos,
-            string text,
-            ManagedResource<resources.UITileSheetInfo, TileSheet> font,
-            int renderOrder = 0,
-            bool doFormat = true,
-            components.ui.UIOffset? offset = null,
-            int segmentsPerAdd = 4,
-            float? lineHeight = null,
-            float wrapLines = float.NaN,
-            bool isBlinking = false)
-        {
-            var entity = CreateLabel(parent, pos, text, font, renderOrder, doFormat, offset, lineHeight: lineHeight, wrapLines: wrapLines);
-            text = entity.Get<components.ui.Label>().Text; // wrapping could have occured
-            entity.Set(new components.ui.AnimatedLabel(text, segmentsPerAdd, isBlinking));
-            return entity;
-        }
+        internal uibuilder.Button CreateButton(DefaultEcs.Entity parent) => new uibuilder.Button(this, parent);
 
-        public DefaultEcs.Entity CreateTooltip(
-            DefaultEcs.Entity parent,
-            Vector2 pos,
-            string prefix)
-        {
-            var entity = CreateLabel(parent, pos, "", Fnt002, renderOrder: 0);
-            entity.Set(new components.ui.TooltipTarget(prefix));
-            return entity;
-        }
-
-        public DefaultEcs.Entity CreateButton(
-            DefaultEcs.Entity parent,
-            components.ui.ElementId elementId,
-            Vector2 pos,
-            zzio.UID textUID,
-            components.ui.ButtonTiles buttonTiles,
-            ManagedResource<resources.UITileSheetInfo, TileSheet> border,
-            ManagedResource<resources.UITileSheetInfo, TileSheet> font,
-            out DefaultEcs.Entity label,
-            zzio.UID? tooltipUID = null,
-            int renderOrder = 0,
-            bool doFormat = true,
-            components.ui.Alignment textAlign = components.ui.Alignment.Center,
-            components.ui.FullAlignment btnAlign = default,
-            components.ui.UIOffset? offset = null) =>
-            CreateButton(parent, elementId, pos, GetDBText(textUID), buttonTiles, border, font, out label, tooltipUID, renderOrder, doFormat, textAlign, btnAlign, offset);
-
-        public DefaultEcs.Entity CreateButton(
-            DefaultEcs.Entity parent,
-            components.ui.ElementId elementId,
-            Vector2 pos,
-            string text,
-            components.ui.ButtonTiles buttonTiles,
-            ManagedResource<resources.UITileSheetInfo, TileSheet> border,
-            ManagedResource<resources.UITileSheetInfo, TileSheet> font,
-            out DefaultEcs.Entity label,
-            zzio.UID? tooltipUID = null,
-            int renderOrder = 0,
-            bool doFormat = true,
-            components.ui.Alignment textAlign = components.ui.Alignment.Center,
-            components.ui.FullAlignment btnAlign = default,
-            components.ui.UIOffset? offset = null)
-        {
-            var button = CreateImageButton(parent, elementId, pos, buttonTiles, border, tooltipUID, renderOrder, btnAlign, offset);
-
-            label = CreateLabel(button, pos, text, font, renderOrder - 1, doFormat, offset);
-            var fontTileSheet = label.Get<TileSheet>();
-            var buttonRect = button.Get<Rect>();
-            var textWidth = fontTileSheet.GetUnformattedWidth(text);
-            var labelPosX = textAlign switch
-            {
-                components.ui.Alignment.Min => ButtonTextSpacing,
-                components.ui.Alignment.Max => buttonRect.Size.X - textWidth - ButtonTextSpacing,
-                components.ui.Alignment.Center => buttonRect.Size.X / 2 - textWidth / 2,
-                _ => throw new NotSupportedException($"Unsupported text alignment {textAlign}")
-            };
-            var labelPos = buttonRect.Min + new Vector2(labelPosX, buttonRect.Size.Y / 2 - fontTileSheet.TotalSize.Y / 2);
-            label.Set(Rect.FromMinMax(labelPos, labelPos));
-
-            return button;
-        }
-
-        public DefaultEcs.Entity CreateImage(
-            DefaultEcs.Entity parent,
-            Vector2 pos,
-            string bitmap,
-            int renderOrder,
-            components.ui.UIOffset? offset = null)
-        {
-            var entity = CreateBase(parent, Rect.FromMinMax(pos, pos), renderOrder, offset);
-            entity.Set(ManagedResource<materials.UIMaterial>.Create(bitmap));
-            var texture = entity.Get<materials.UIMaterial>().Texture.Texture!;
-            var rect = Rect.FromMinMax(pos, pos + new Vector2(texture.Width, texture.Height));
-            entity.Set(rect);
-            entity.Set(new components.ui.Tile[] { new(-1, rect) });
-            return entity;
-        }
-
-        public DefaultEcs.Entity CreateImage(
-            DefaultEcs.Entity parent,
-            Vector2 pos,
-            ManagedResource<resources.UITileSheetInfo, TileSheet> tileSheet,
-            int tileI,
-            int renderOrder = 0,
-            components.ui.UIOffset? offset = null,
-            components.ui.FullAlignment? alignment = null)
-        {
-            var entity = CreateBase(parent, Rect.FromMinMax(pos, pos), renderOrder, offset);
-            entity.Set(tileSheet);
-            if (tileI >= 0)
-            {
-                var tileSize = entity.Get<TileSheet>().GetPixelSize(tileI);
-                var align = alignment ?? components.ui.FullAlignment.TopLeft;
-                var rect = Rect.FromTopLeftSize(pos - align.AsFactor * tileSize, tileSize);
-                entity.Set(rect);
-                entity.Set(new components.ui.Tile[] { new(tileI, rect) });
-            }
-            return entity;
-        }
+        internal uibuilder.Image CreateImage(DefaultEcs.Entity parent) => new(this, parent);
 
         public void CreateDialogBackground(
             DefaultEcs.Entity parent,
             bool animateOverlay,
             out Rect backgroundRect)
         {
-            var image = CreateImage(parent, Vector2.Zero, "std000", renderOrder: 1);
-            ref var imageRect = ref image.Get<Rect>();
-            imageRect = Rect.FromTopLeftSize(-imageRect.HalfSize, imageRect.Size);
-            image.Get<components.ui.Tile[]>()[0].Rect = imageRect;
-            backgroundRect = imageRect;
+            var image = CreateImage(parent)
+                .WithBitmap("std000")
+                .With(components.ui.FullAlignment.Center)
+                .WithRenderOrder(1)
+                .Build();
+            backgroundRect = image.Get<Rect>();
 
-            var overlay = CreateBase(parent, imageRect, renderOrder: 2, components.ui.UIOffset.Center);
-            overlay.Set<IColor>(new FColor(0.029999999f, 0.050000001f, 0.029999999f, animateOverlay ? 0f : 0.8f));
-            overlay.Set<materials.UIMaterial>(null!);
-            overlay.Set(new components.ui.Tile[]
-            {
-                new(-1, imageRect)
-            });
+            var overlay = CreateImage(parent)
+                .With(new FColor(0.029999999f, 0.050000001f, 0.029999999f, animateOverlay ? 0f : 0.8f))
+                .With(backgroundRect)
+                .WithRenderOrder(2);
             if (animateOverlay)
-                overlay.Set(new components.ui.Fade(0f, 0.8f, 1.5f));
+                overlay.With(new components.ui.Fade(0f, 0.8f, 1.5f));
+            overlay.Build();
         }
     }
 }

@@ -72,16 +72,18 @@ namespace zzre.game.systems
             if (text.Length > 0 && text[0] >= 'A' && text[0] <= 'Z')
                 text = $"{{8*{text[0]}}}{text[1..]}"; // use the ridiculous font for the first letter
 
-            var entity = preload.CreateAnimatedLabel(
-                parent,
-                Vector2.Zero,
-                text,
-                preload.Fnt003,
-                lineHeight: TalkLineHeight,
-                wrapLines: 400f);
+            var entity = preload.CreateLabel(parent)
+                .With(Vector2.Zero)
+                .With(preload.Fnt003)
+                .WithText(text)
+                .WithLineHeight(TalkLineHeight)
+                .WithLineWrap(MaxTextWidth)
+                .WithAnimation()
+                .Build();
+
             var wrappedText = entity.Get<components.ui.AnimatedLabel>().FullText;
             var tileSheet = entity.Get<rendering.TileSheet>();
-            var textHeight = tileSheet.GetTextHeight(wrappedText, TalkLineHeight);
+            var textHeight = tileSheet.GetTextHeight(wrappedText, TalkLineHeight, removeFirstLine: true);
             ref var labelRect = ref entity.Get<Rect>();
             labelRect = new Rect(
                 bgRect.Min.X + TextOffsetX,
@@ -100,11 +102,10 @@ namespace zzre.game.systems
 
             if (!hasFace)
                 return null;
-            var faceEntity = preload.CreateImage(
-                parent,
-                bgRect.Min + Vector2.One * 20f,
-                $"faces/{npcModelName}",
-                renderOrder: 0);
+            var faceEntity = preload.CreateImage(parent)
+                .With(bgRect.Min + Vector2.One * 20f)
+                .WithBitmap($"faces/{npcModelName}")
+                .Build();
             return faceEntity.Get<Rect>().Size.X;
         }
 
@@ -112,11 +113,10 @@ namespace zzre.game.systems
         private void CreateNameLabel(DefaultEcs.Entity parent, DefaultEcs.Entity npcEntity, Rect bgRect, float? faceWidth)
         {
             var npcName = npcEntity.Get<NpcRow>().Name;
-            var entity = preload.CreateLabel(
-                parent,
-                Vector2.Zero,
-                npcName,
-                preload.Fnt001);
+            var entity = preload.CreateLabel(parent)
+                .WithText(npcName)
+                .With(preload.Fnt001)
+                .Build();
             var tileSheet = entity.Get<rendering.TileSheet>();
             ref var rect = ref entity.Get<Rect>();
             rect = new Rect(
@@ -131,42 +131,42 @@ namespace zzre.game.systems
         private const float ButtonOffsetY = -50f;
         private void CreateSingleButton(DefaultEcs.Entity parent, UID textUID, components.ui.ElementId elementId, Rect bgRect)
         {
-            preload.CreateButton(
-                parent,
-                elementId,
-                new(bgRect.Center.X, bgRect.Max.Y + ButtonOffsetY),
-                textUID,
-                new(0, 1),
-                preload.Btn000,
-                preload.Fnt000,
-                out _,
-                btnAlign: new(components.ui.Alignment.Center, components.ui.Alignment.Min));
+            preload.CreateButton(parent)
+                .With(elementId)
+                .With(new Vector2(bgRect.Center.X, bgRect.Max.Y + ButtonOffsetY))
+                .With(new components.ui.ButtonTiles(0, 1))
+                .With(components.ui.FullAlignment.TopCenter)
+                .With(preload.Btn000)
+                .WithLabel()
+                .With(preload.Fnt000)
+                .WithText(textUID)
+                .Build();
 
             // TODO: Set cursor position in dialog talk
         }
 
         private void CreateYesNoButtons(DefaultEcs.Entity parent, Rect bgRect)
         {
-            preload.CreateButton(
-                parent,
-                IDYes,
-                new(bgRect.Center.X + YesNoButtonOffsetX, bgRect.Max.Y + ButtonOffsetY),
-                new UID(0xB2153621),
-                new(0, 1),
-                preload.Btn000,
-                preload.Fnt000,
-                out _,
-                btnAlign: new(components.ui.Alignment.Max, components.ui.Alignment.Min));
+            preload.CreateButton(parent)
+                .With(IDYes)
+                .With(new Vector2(bgRect.Center.X + YesNoButtonOffsetX, bgRect.Max.Y + ButtonOffsetY))
+                .With(new components.ui.ButtonTiles(0, 1))
+                .With(components.ui.FullAlignment.TopRight)
+                .With(preload.Btn000)
+                .WithLabel()
+                .With(preload.Fnt000)
+                .WithText(0xB2153621)
+                .Build();
 
-            preload.CreateButton(
-                parent,
-                IDNo,
-                new(bgRect.Center.X + YesNoButtonOffsetX, bgRect.Max.Y + ButtonOffsetY),
-                new UID(0x2F5B3621),
-                new(0, 1),
-                preload.Btn000,
-                preload.Fnt000,
-                out _);
+            preload.CreateButton(parent)
+                .With(IDNo)
+                .With(new Vector2(bgRect.Center.X + YesNoButtonOffsetX, bgRect.Max.Y + ButtonOffsetY))
+                .With(new components.ui.ButtonTiles(0, 1))
+                .With(preload.Btn000)
+                .WithLabel()
+                .With(preload.Fnt000)
+                .WithText(0x2F5B3621)
+                .Build();
         }
 
         private void HandleElementDown(DefaultEcs.Entity clickedEntity, components.ui.ElementId clickedId)

@@ -27,31 +27,31 @@ namespace zzre.game.systems.ui
 
         public static void CreateTopButtons(UIPreloader preload, in DefaultEcs.Entity parent, components.ui.ElementId curTab)
         {
-            preload.CreateImageButton(
-                parent,
-                IDClose,
-                Mid + new Vector2(606, 3),
-                new(24, 25),
-                preload.Btn002,
-                tooltipUID: new(0xAD3AACA1));
+            preload.CreateButton(parent)
+                .With(IDClose)
+                .With(Mid + new Vector2(606, 3))
+                .With(new components.ui.ButtonTiles(24, 25))
+                .With(preload.Btn002)
+                .WithTooltip(0xAD3AACA1)
+                .Build();
 
-            preload.CreateImageButton(
-                parent,
-                IDSaveGame,
-                Mid + new Vector2(384, 3),
-                new(26, 27),
-                preload.Btn002,
-                tooltipUID: new(0x7113B8A1));
+            preload.CreateButton(parent)
+                .With(IDSaveGame)
+                .With(Mid + new Vector2(384, 3))
+                .With(new components.ui.ButtonTiles(26, 27))
+                .With(preload.Btn002)
+                .WithTooltip(0x7113B8A1)
+                .Build();
 
             foreach (var tab in Tabs)
             {
-                var tabButton = preload.CreateImageButton(
-                    parent,
-                    tab.Id,
-                    Mid + new Vector2(tab.PosX, 3),
-                    new(tab.TileI, tab.TileI + 1, tab.TileI + 2),
-                    preload.Btn002,
-                    tab.TooltipUID);
+                var tabButton = preload.CreateButton(parent)
+                    .With(tab.Id)
+                    .With(Mid + new Vector2(tab.PosX, 3))
+                    .With(new components.ui.ButtonTiles(tab.TileI, tab.TileI + 1, tab.TileI + 2))
+                    .With(preload.Btn002)
+                    .WithTooltip(tab.TooltipUID)
+                    .Build();
 
                 if (tab.Id == curTab)
                 {

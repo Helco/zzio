@@ -51,28 +51,31 @@ namespace zzre.game.systems
 
             var sayLabel = message.DialogEntity.Get<components.DialogCommonUI>().SayLabel;
             var sayLabelPosY = sayLabel.Get<Rect>().Min.Y;
-            var sayLabelHeight = sayLabel.Get<rendering.TileSheet>().GetTextHeight(sayLabel.Get<components.ui.Label>().Text);
+            var sayLabelHeight = sayLabel.Get<rendering.TileSheet>().GetTextHeight(
+                sayLabel.Get<components.ui.Label>().Text,
+                removeFirstLine: true);
             var buttonI = dialogChoices.Labels.Length - 1;
-            var buttonEntity = preload.CreateImageButton(
-                parent: uiEntity,
-                IDFirstChoice + buttonI,
-                new Vector2(40, sayLabelPosY + sayLabelHeight + 23 + 18 * buttonI),
-                new(4, 3),
-                preload.Fsp000,
-                offset: components.ui.UIOffset.ScreenUpperLeft);
+            var buttonEntity = preload.CreateButton(uiEntity)
+                .With(IDFirstChoice + buttonI)
+                .With(new Vector2(40, sayLabelPosY + sayLabelHeight + 23 + 18 * buttonI))
+                .With(new components.ui.ButtonTiles(4, 3))
+                .With(preload.Fsp000)
+                .With(components.ui.UIOffset.ScreenUpperLeft)
+                .Build();
             ref var buttonRect = ref buttonEntity.Get<Rect>();
 
-            var labelEntity = preload.CreateLabel(
-                parent: uiEntity,
-                new(buttonRect.Max.X + 10f, buttonRect.Center.Y),
-                message.UID,
-                preload.Fnt003,
-                offset: components.ui.UIOffset.ScreenUpperLeft);
+            var labelEntity = preload.CreateLabel(uiEntity)
+                .With(new Vector2(buttonRect.Max.X + 10f, buttonRect.Center.Y))
+                .With(preload.Fnt003)
+                .With(components.ui.UIOffset.ScreenUpperLeft)
+                .With(components.ui.FullAlignment.CenterLeft)
+                .WithText(message.UID)
+                .Build();
             ref var labelRect = ref labelEntity.Get<Rect>();
             var labelTileSheet = labelEntity.Get<rendering.TileSheet>();
             var labelWidth = labelTileSheet.GetUnformattedWidth(labelEntity.Get<components.ui.Label>().Text);
 
-            labelRect = new Rect(labelRect.Center - Vector2.UnitY * labelTileSheet.GetPixelSize(0).Y / 2, labelRect.Size);
+            //labelRect = new Rect(labelRect.Center - Vector2.UnitY * labelTileSheet.GetPixelSize(0).Y / 2, labelRect.Size);
             buttonRect = ref buttonEntity.Get<Rect>(); // creating the label could have invalidated the reference
             buttonRect = Rect.FromTopLeftSize(buttonRect.Min, buttonRect.Size with { X = buttonRect.Size.X + labelWidth + 20 });
 

@@ -47,46 +47,47 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
         entity.Set<components.ui.ScrGotCard>();
 
         preload.CreateDialogBackground(entity, animateOverlay: true, out var bgRect);
-        preload.CreateButton(
-            parent: entity,
-            elementId: IDExit,
-            new(bgRect.Center.X, bgRect.Max.Y - 50),
-            text: db.GetText(ExitButtonUID).Text,
-            new(0, 1),
-            preload.Btn000,
-            preload.Fnt000,
-            out var buttonLabel,
-            btnAlign: components.ui.FullAlignment.TopCenter);
 
-        preload.CreateLabel(
-            parent: entity,
-            pos: bgRect.Min + new Vector2(50, 50),
-            YouGotLabelUID,
-            preload.Fnt001);
+        preload.CreateButton(entity)
+            .With(IDExit)
+            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y - 50))
+            .With(new components.ui.ButtonTiles(0, 1))
+            .With(components.ui.FullAlignment.TopCenter)
+            .With(preload.Btn000)
+            .WithLabel()
+            .With(preload.Fnt000)
+            .WithText(db.GetText(ExitButtonUID).Text)
+            .Build();
 
-        preload.CreateImage(
-            parent: entity,
-            pos: new(0, bgRect.Min.Y + 110),
-            preload.GetTileSheetByCardType(cardId.Type),
-            tileI: cardId.EntityId,
-            alignment: components.ui.FullAlignment.TopCenter);
+        preload.CreateLabel(entity)
+            .With(bgRect.Min + new Vector2(50, 50))
+            .With(preload.Fnt001)
+            .WithText(YouGotLabelUID)
+            .Build();
 
-        preload.CreateLabel(
-            parent: entity,
-            pos: new(0, bgRect.Min.Y + 170),
-            text: message.Amount <= 1
+        preload.CreateImage(entity)
+            .With(new Vector2(0, bgRect.Min.Y + 110))
+            .With(cardId)
+            .With(components.ui.FullAlignment.TopCenter)
+            .Build();
+
+        preload.CreateLabel(entity)
+            .With(new Vector2(0, bgRect.Min.Y + 170))
+            .With(preload.Fnt003)
+            .With(components.ui.FullAlignment.TopCenter)
+            .WithText(message.Amount <= 1
                 ? cardName
-                : $"\"{cardName}\" x {message.Amount}",
-            preload.Fnt003,
-            textAlign: components.ui.FullAlignment.TopCenter);
+                : $"\"{cardName}\" x {message.Amount}")
+            .Build();
 
-        preload.CreateAnimatedLabel(
-            parent: entity,
-            pos: bgRect.Min + new Vector2(50, 250),
-            text: cardInfo,
-            preload.Fnt000,
-            lineHeight: 15,
-            wrapLines: bgRect.Size.X - 100);
+        preload.CreateLabel(entity)
+            .With(bgRect.Min + new Vector2(50, 250))
+            .With(preload.Fnt000)
+            .WithText(cardInfo)
+            .WithLineHeight(15)
+            .WithLineWrap(bgRect.Size.X - 100)
+            .WithAnimation()
+            .Build();
 
         // TODO: Fix broken joy animation on collecting item
         var game = ui.GetTag<Game>();
