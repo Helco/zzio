@@ -83,14 +83,9 @@ namespace zzre
             {
                 Animation = null;
                 animators = null;
-                return;
             }
-
-            Animation = nextAnimation;
-            animators = nextAnimation.boneFrames
-                .Select(frameSet => new BoneAnimator(frameSet, nextAnimation.duration, loop))
-                .ToArray();
-            AddTime(0.0f);
+            else
+                BlendToAnimation(nextAnimation, 0.0f, loop);
         }
 
         public void BlendToAnimation(SkeletalAnimation nextAnimation, float blendDuration, bool loop = true)

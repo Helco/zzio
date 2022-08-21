@@ -108,5 +108,8 @@ namespace zzre
         public static T NextOf<T>(this Random random, IReadOnlyList<T> list) => !list.Any()
             ? throw new ArgumentException("List is empty, cannot get random element")
             : list[random.Next(list.Count)];
+
+        public static T NextOf<T>(this Random random) where T : struct, Enum =>
+            random.NextOf(Enum.GetValues<T>());
     }
 }

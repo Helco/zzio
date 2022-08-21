@@ -38,12 +38,13 @@ namespace zzre.game.resources
 
             // attach to the "grandparent" as only animals are controlled directly by the entity
             actorParts.Body.Get<Location>().Parent = entity.Get<Location>().Parent;
+            actorParts.Body.Get<Skeleton>().Location.Parent = actorParts.Body.Get<Location>();
 
             if (actorParts.Wings.HasValue)
             {
                 var skeleton = actorParts.Body.Get<Skeleton>();
                 var wingsParentBone = skeleton.Bones[resource.attachWingsToBone];
-                actorParts.Wings.Value.Set(new Location() { Parent = wingsParentBone });
+                actorParts.Wings.Value.Get<Location>().Parent = wingsParentBone;
             }
 
             entity.Set(actorParts);

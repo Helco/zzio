@@ -192,6 +192,10 @@ namespace zzre.game
         public IEnumerable<InventorySpell> SupportSpells =>
             Spells.Where(s => mappedDB.GetSpell(s.dbUID).Type != 0);
 
+        public InventoryFairy? ActiveOverworldFairy => fairySlots
+            .Where(f => f?.currentMHP > 0)
+            .FirstOrDefault();
+
         public IEnumerator<InventoryCard> GetEnumerator() => cards.NotNull().GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }

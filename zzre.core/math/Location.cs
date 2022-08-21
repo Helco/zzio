@@ -8,6 +8,7 @@ namespace zzre
         public Location? Parent { get; set; } = null;
 
         public Vector3 LocalPosition { get; set; } = Vector3.Zero;
+        public Vector3 LocalScale { get; set; } = Vector3.One;
 
         private Quaternion _localRotation = Quaternion.Identity;
         public Quaternion LocalRotation
@@ -19,6 +20,7 @@ namespace zzre
         public Matrix4x4 ParentToLocal
         {
             get =>
+                Matrix4x4.CreateScale(LocalScale) *
                 Matrix4x4.CreateFromQuaternion(LocalRotation) *
                 Matrix4x4.CreateTranslation(LocalPosition);
             set
