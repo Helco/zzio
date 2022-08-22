@@ -48,12 +48,13 @@ namespace zzre.game.systems
             {
                 var entity = ecsWorld.CreateEntity();
 
-                entity.Set(new Location()
+                var location = new Location()
                 {
                     Parent = ecsWorld.Get<Location>(),
                     LocalPosition = trigger.pos,
                     LocalRotation = trigger.dir.ToZZRotation()
-                });
+                };
+                entity.Set(location);
 
                 var type = (AnimalType)trigger.ii1;
                 var actorFile = ChooseActorFile(type);
@@ -61,12 +62,7 @@ namespace zzre.game.systems
                 {
                     entity.Set(ManagedResource<ActorExDescription>.Create(actorFile));
                     var body = entity.Get<components.ActorParts>().Body;
-                    body.Get<Location>().Parent = new Location()
-                    {
-                        Parent = ecsWorld.Get<Location>(),
-                        LocalPosition = trigger.pos,
-                        LocalRotation = trigger.dir.ToZZRotation()
-                    };
+                    body.Get<Location>().Parent = location;
                     body.Get<Skeleton>().JumpToAnimation(
                         body.Get<components.AnimationPool>()[AnimationType.Idle0]);
                 }

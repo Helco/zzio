@@ -90,16 +90,18 @@ namespace zzre.game.systems
                             ai.CurrentState = State.SearchTarget;
                             ai.CurrentSpeed = NonFleeSpeed;
                             ai.WalkAnimation = AnimationType.Walk0;
-                            break;
                         }
-                        nextAnimation = nextAction > 0.3f
-                            ? AnimationType.Idle1
-                            : AnimationType.Idle0;
-                        break;
+                        else
+                            nextAnimation = nextAction > 0.3f
+                                ? AnimationType.Idle1
+                                : AnimationType.Idle0;
                     }
-                    ai.CurrentState = State.SearchTarget;
-                    ai.CurIdleTime = random.NextFloat() * ai.Config.MaxIdleTime;
-                    ai.WalkAnimation = AnimationType.Walk0;
+                    else
+                    {
+                        ai.CurrentState = State.SearchTarget;
+                        ai.CurIdleTime = random.NextFloat() * ai.Config.MaxIdleTime;
+                        ai.WalkAnimation = AnimationType.Walk0;
+                    }
                     break;
 
                 case State.SearchTarget:
