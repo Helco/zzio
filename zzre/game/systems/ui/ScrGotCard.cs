@@ -16,7 +16,7 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
 
     private readonly MappedDB db;
 
-    public ScrGotCard(ITagContainer diContainer) : base(diContainer, BlockFlags.LockPlayerControl)
+    public ScrGotCard(ITagContainer diContainer) : base(diContainer, BlockFlags.LockPlayerControl | BlockFlags.NotifyGameScreen)
     {
         db = diContainer.GetTag<MappedDB>();
         OnElementDown += HandleElementDown;

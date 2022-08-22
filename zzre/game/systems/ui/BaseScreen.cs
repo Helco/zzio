@@ -13,7 +13,8 @@ namespace zzre.game.systems.ui
             All = DisableGameUpdate | LockPlayerControl,
 
             DisableGameUpdate = (1 << 0),
-            LockPlayerControl = (1 << 1)
+            LockPlayerControl = (1 << 1),
+            NotifyGameScreen = (1 << 2)
         }
 
         private readonly BlockFlags blockFlags;
@@ -63,6 +64,8 @@ namespace zzre.game.systems.ui
                 zanzarah.CurrentGame.IsUpdateEnabled = false;
             if (blockFlags.HasFlag(BlockFlags.LockPlayerControl))
                 zanzarah.CurrentGame?.Publish(messages.LockPlayerControl.Forever);
+            if (blockFlags.HasFlag(BlockFlags.NotifyGameScreen))
+                zanzarah.CurrentGame?.Publish<messages.ui.GameScreenOpened>();
         }
 
         protected virtual void HandleRemoved(in DefaultEcs.Entity entity, in TComponent _)
@@ -75,6 +78,8 @@ namespace zzre.game.systems.ui
                 zanzarah.CurrentGame.IsUpdateEnabled = true;
             if (blockFlags.HasFlag(BlockFlags.LockPlayerControl))
                 zanzarah.CurrentGame?.Publish(messages.LockPlayerControl.Unlock);
+            if (blockFlags.HasFlag(BlockFlags.NotifyGameScreen))
+                zanzarah.CurrentGame?.Publish<messages.ui.GameScreenClosed>();
         }
 
         private void HandleMouseDown(Veldrid.MouseButton button, Vector2 pos) => HandleMouse(button, pos, isDown: true);
