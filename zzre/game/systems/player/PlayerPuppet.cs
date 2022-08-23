@@ -41,7 +41,7 @@ namespace zzre.game.systems
                 Console.WriteLine("Player died of drowning"); // TODO: Add player death caused by drowning
 
             Animation(elapsedTime, ref puppet, physics, ref animation);
-            Falling(elapsedTime, ref puppet, physics, ref animation);
+            Falling(elapsedTime, ref puppet, ref physics, ref animation);
             Idling(ref puppet, ref physics);
             NPCComfortZone(ref physics);
             ActorTargetDirection(physics, ref puppetActorMovement);
@@ -71,7 +71,7 @@ namespace zzre.game.systems
         private void Falling(
             float elapsedTime,
             ref components.PlayerPuppet puppet,
-            in components.HumanPhysics physics,
+            ref components.HumanPhysics physics,
             ref components.NonFairyAnimation animation)
         {
             float prevFallTimer = puppet.FallTimer; // as hitting the floor resets the timer
@@ -116,7 +116,9 @@ namespace zzre.game.systems
             // TODO: Add force footstep sound for falls
             Console.WriteLine($"Player fell, cannot move for {lockControlsFor} and says {voiceSample}");
             World.Publish(new messages.LockPlayerControl(lockControlsFor));
-            puppet.DidResetPlanarVelocity = true; // but why?
+
+            physics.Velocity *= Vector3.UnitY;
+            puppet.DidResetPlanarVelocity = true;
         }
 
         private void Idling(
@@ -124,12 +126,8 @@ namespace zzre.game.systems
             ref components.HumanPhysics physics)
         {
             if (physics.State != AnimationState.Idle)
-            {
                 puppet.DidResetPlanarVelocity = false;
-                return;
-            }
-
-            if (!puppet.DidResetPlanarVelocity)
+            else if (!puppet.DidResetPlanarVelocity)
             {
                 puppet.DidResetPlanarVelocity = true;
                 physics.Velocity *= Vector3.UnitY;
@@ -147,17 +145,16 @@ namespace zzre.game.systems
             in components.HumanPhysics physics,
             ref components.PuppetActorMovement puppetActorMovement)
         {
-            // originally an addition, but that bug is too rare to implement
-            if (MathEx.CmpZero(physics.Velocity.X) && MathEx.CmpZero(physics.Velocity.Z))
+            if (physics.Velocity.X + physics.Velocity.Z == 0f)
                 return;
 
-            var targetDir = physics.Velocity;
-            if (physics.HitFloor)
-                targetDir.Y = 0f;
-            targetDir = Vector3.Normalize(targetDir);
+            var targetDir = physics.Velocity with { Y = 0 };
+            targetDir = MathEx.SafeNormalize(targetDir);
 
             targetDir.Y = camera.Location.InnerForward.Y * CameraForwardYFactor;
-            puppetActorMovement.TargetDirection = Vector3.Normalize(targetDir);
+            puppetActorMovement.TargetDirection = MathEx.SafeNormalize(targetDir);
+
+            Console.WriteLine(targetDir);
         }
     }
 }

@@ -89,7 +89,6 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
             .WithAnimation()
             .Build();
 
-        // TODO: Fix broken joy animation on collecting item
         var game = ui.GetTag<Game>();
         game.Publish(new messages.SwitchAnimation(game.PlayerEntity, AnimationType.Joy));
 
