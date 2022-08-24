@@ -77,6 +77,12 @@ namespace zzre.game
             }
         }
 
+        public void FillMana()
+        {
+            foreach (var fairy in fairySlots.NotNull())
+                FillMana(fairy);
+        }
+
         public void FillMana(InventoryFairy fairy)
         {
             foreach (int spellIndex in fairy.spellIndices.Where(i => i >= 0))

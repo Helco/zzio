@@ -247,10 +247,7 @@ namespace zzre.game.systems
             Console.WriteLine("Warning: unimplemented NPC instruction \"CreateDynamicItems\"");
         }
 
-        private void Revive(DefaultEcs.Entity entity)
-        {
-            Console.WriteLine("Warning: unimplemented NPC instruction \"Revive\"");
-        }
+        private void Revive(DefaultEcs.Entity entity) => entity.Get<Inventory>().FillMana();
 
         private void LookAtTrigger(DefaultEcs.Entity entity, int intDuration, int triggerI)
         {
