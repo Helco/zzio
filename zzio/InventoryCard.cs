@@ -79,7 +79,7 @@ namespace zzio
         public uint xpChangeCount;
         public uint xp;
         public readonly SpellReq[] spellReqs = new SpellReq[SpellSlotCount];
-        public readonly int[] spellIndices = new int[SpellSlotCount];
+        public readonly int[] spellIndices = new int[SpellSlotCount] { -1, -1, -1, -1 };
         public int slotIndex;
         public ZZPermSpellStatus status;
         public readonly byte[] unknown3 = new byte[20];

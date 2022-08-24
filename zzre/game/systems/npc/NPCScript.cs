@@ -83,12 +83,22 @@ namespace zzre.game.systems
 
         private void Wizform(DefaultEcs.Entity entity, int atIndex, int fairyId, int level)
         {
-            Console.WriteLine("Warning: unimplemented NPC instruction \"Wizform\"");
+            var inventory = entity.Get<Inventory>();
+            var invFairy = inventory.AddFairy(fairyId);
+            var xp = inventory.GetXPForLevel(invFairy, (uint)level);
+            inventory.AddXP(invFairy, xp);
+            inventory.SetSlot(invFairy, atIndex);
+
+            // TODO: Handle wizform command for fairy NPCs
         }
 
         private void Spell(DefaultEcs.Entity entity, int fairyI, int slotI, int spellId)
         {
-            Console.WriteLine("Warning: unimplemented NPC instruction \"Spell\"");
+            var inventory = entity.Get<Inventory>();
+            var invFairy = inventory.GetFairyAtSlot(fairyI) ??
+                throw new ArgumentException($"Cannot set NPC spell as there is no wizform in slot {fairyI}");
+            var invSpell = inventory.AddSpell(spellId);
+            inventory.SetSpellSlot(invFairy, invSpell, slotI);
         }
 
         private void ChangeWaypoint(DefaultEcs.Entity entity, int fromWpId, int toWpId)

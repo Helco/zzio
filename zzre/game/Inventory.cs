@@ -18,6 +18,10 @@ namespace zzre.game
         private readonly InventoryFairy?[] fairySlots = new InventoryFairy?[FairySlotCount];
         public int Count { get; private set; }
 
+        public InventoryCard this[int index] => cards[index] ??
+            throw new KeyNotFoundException($"Card index {index} is not used in inventory");
+
+
         public Inventory(ITagContainer diContainer, Savegame? savegame = null)
             : this(diContainer.GetTag<zzio.db.MappedDB>(), savegame) { }
 
@@ -169,6 +173,8 @@ namespace zzre.game
             card = cards.FirstOrDefault(c => c?.cardId == cardId)!;
             return card != null;
         }
+
+        public int IndexOf(InventoryCard card) => cards.IndexOf(card);
 
         public int CountCards(CardId cardId, bool? inUse = null) => cards
             .Where(c => c?.cardId == cardId)

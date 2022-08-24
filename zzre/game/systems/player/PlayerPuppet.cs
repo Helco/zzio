@@ -153,8 +153,6 @@ namespace zzre.game.systems
 
             targetDir.Y = camera.Location.InnerForward.Y * CameraForwardYFactor;
             puppetActorMovement.TargetDirection = MathEx.SafeNormalize(targetDir);
-
-            Console.WriteLine(targetDir);
         }
     }
 }

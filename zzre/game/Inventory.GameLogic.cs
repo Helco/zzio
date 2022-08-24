@@ -97,15 +97,17 @@ namespace zzre.game
             spell.mana = (uint)Math.Clamp((int)spell.mana + delta, 0, dbRow.MaxMana);
         }
 
-        public void AddXP(InventoryFairy fairy, int moreXP)
+        public void AddXP(InventoryFairy fairy, uint moreXP)
         {
-            fairy.xpChangeCount += (uint)moreXP;
-            while (moreXP-- >= 0)
+            fairy.xpChangeCount += moreXP;
+            for (uint i = 0; i < moreXP; i++)
             {
+                // TODO: Refactor original XP increase method
                 fairy.xp = Math.Min(MaxXP, fairy.xp + 1);
                 var newLevel = GetLevelByXP(fairy);
                 if (newLevel <= fairy.level)
                     continue;
+                // TODO: Handle fairy attribute change upon level change
                 fairy.levelChangeCount++;
                 fairy.level = newLevel;
             }
@@ -138,6 +140,15 @@ namespace zzre.game
             }
         }
 
+        public void SetSpellSlot(InventoryFairy fairy, InventorySpell spell, int spellSlotI)
+        {
+            var spellIndex = IndexOf(spell);
+            if (spellIndex < 0)
+                throw new ArgumentException($"Cannot set spell slot as spell {spell} is not present in inventory");
+            fairy.spellIndices[spellSlotI] = spellIndex;
+            spell.isInUse = true;
+        }
+
         public void ClearDeck()
         {
             for (int i = 0; i < fairySlots.Length; i++)
@@ -151,14 +162,16 @@ namespace zzre.game
             }
         }
 
-        public uint? GetLevelupXP(InventoryFairy fairy)
+        public uint GetXPForLevel(InventoryFairy fairy, uint level)
         {
-            if (fairy.level >= MaxLevel - 1)
-                return null;
             var dbFairy = mappedDB.GetFairy(fairy.dbUID);
             var baseXP = Math.Pow(MaxXP, dbFairy.LevelUp * XPExponentFactor);
             var exp = 1 / (dbFairy.LevelUp * XPExponentFactor);
-            return (uint)Math.Pow(baseXP * (fairy.level + 1) / MaxLevel, exp);
+            return (uint)Math.Pow(baseXP * level / MaxLevel, exp);
         }
+
+        public uint? GetLevelupXP(InventoryFairy fairy) => fairy.level >= MaxLevel - 1
+            ? null
+            : GetXPForLevel(fairy, fairy.level + 1);
     }
 }
