@@ -41,10 +41,8 @@ public static class StdSpells
         _ => throw new ArgumentException($"Unknown starter class: {zzClass}")
     };
 
-    public static SpellRow GetFirstAttackSpell(this MappedDB db, zzio.ZZClass zzClass, uint level) => db
-        .Spells
-        .Where(s => s.Type == 0 && IsSpellCompatible(s, zzClass, level))
-        .First();
+    public static SpellRow GetFirstAttackSpell(this MappedDB db, zzio.ZZClass zzClass, uint level) =>
+        db.Spells.First(s => s.Type == 0 && IsSpellCompatible(s, zzClass, level));
 
     public static (SpellRow? attack0, SpellRow? support0, SpellRow? attack1, SpellRow? support1) GetRandomSpellSet(this MappedDB db, Random random, zzio.ZZClass zzClass, uint level)
     {
