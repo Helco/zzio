@@ -26,6 +26,7 @@ namespace zzre.game.systems
         private const string CmdIfNPCModifierHasValue = "U";
         private const string CmdSetNPCModifier = "V";
         private const string CmdDefaultWizform = "W";
+        private const string CmdDefaultDeck = "n";
         private const string CmdIdle = "X";
         private const string CmdIfPlayerIsClose = "Y";
         private const string CmdSetCollision = "]";
@@ -153,6 +154,13 @@ namespace zzre.game.systems
                     var groupOrSlotI = int.Parse(args[1]);
                     level = int.Parse(args[2]);
                     DefaultWizform(entity, fairyId, groupOrSlotI, level);
+                    return OpReturn.Continue;
+
+                case CmdDefaultDeck:
+                    var groupI = int.Parse(args[0]);
+                    level = int.Parse(args[1]);
+                    // unused third parameter
+                    DefaultDeck(entity, groupI, level);
                     return OpReturn.Continue;
 
                 case CmdIdle:

@@ -4,6 +4,7 @@ using DefaultEcs.System;
 using DefaultEcs.Resource;
 using System.Linq;
 using zzio.scn;
+using zzio.db;
 using zzio;
 
 namespace zzre.game.systems
@@ -17,6 +18,7 @@ namespace zzre.game.systems
         private readonly IDisposable executeScriptSubscription;
         private readonly Game game;
         private readonly Scene scene;
+        private readonly MappedDB db;
         private Location playerLocation => playerLocationLazy.Value;
         private readonly Lazy<Location> playerLocationLazy;
 
@@ -24,6 +26,7 @@ namespace zzre.game.systems
         {
             game = diContainer.GetTag<Game>();
             scene = diContainer.GetTag<Scene>();
+            db = diContainer.GetTag<MappedDB>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
             executeScriptSubscription = World.Subscribe<messages.ExecuteNPCScript>(HandleExecuteNPCScript);
         }
@@ -218,7 +221,37 @@ namespace zzre.game.systems
 
         private void DefaultWizform(DefaultEcs.Entity entity, int fairyId, int groupOrSlotI, int level)
         {
-            Console.WriteLine("Warning: unimplemented NPC instruction \"DefaultWizform\"");
+            if (fairyId < 0)
+            {
+                (var stdFairyId, level) = StdFairyGroups.GetFromAttackGroup(Random.Shared, groupOrSlotI);
+                fairyId = (int)stdFairyId;
+                groupOrSlotI = 0;
+            }
+            Wizform(entity, groupOrSlotI, fairyId, level);
+
+            var inventory = entity.Get<Inventory>();
+            var invFairy = inventory.GetFairyAtSlot(groupOrSlotI)!;
+            var dbFairy = db.GetFairy(invFairy.dbUID);
+            var spellSet = StdSpells.GetRandomSpellSet(db, Random.Shared, dbFairy.Class0, invFairy.level);
+            ApplySpell(0, spellSet.attack0);
+            ApplySpell(1, spellSet.support0);
+            ApplySpell(2, spellSet.attack1);
+            ApplySpell(3, spellSet.support1);
+
+            void ApplySpell(int slotI, SpellRow? dbSpell)
+            {
+                if (dbSpell == null)
+                    return;
+                var invSpell = inventory.AddSpell(dbSpell.CardId.EntityId);
+                inventory.SetSpellSlot(invFairy, invSpell, slotI);
+            }
+        }
+
+        private void DefaultDeck(DefaultEcs.Entity entity, int groupI, int levelRange)
+        {
+            var deck = StdFairyGroups.GetFromDeck(Random.Shared, groupI, levelRange);
+            foreach (var ((fairyId, level), slotI) in deck.Indexed())
+                DefaultWizform(entity, (int)fairyId, slotI, level);
         }
 
         private void Idle(DefaultEcs.Entity entity)
