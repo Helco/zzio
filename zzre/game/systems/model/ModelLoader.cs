@@ -13,14 +13,12 @@ namespace zzre.game.systems
     public class ModelLoader : BaseDisposable, ISystem<float>
     {
         private readonly ITagContainer diContainer;
-        private readonly Scene scene;
         private readonly DefaultEcs.World ecsWorld;
         private readonly IDisposable sceneLoadSubscription;
 
         public ModelLoader(ITagContainer diContainer)
         {
             this.diContainer = diContainer;
-            scene = diContainer.GetTag<Scene>();
             ecsWorld = diContainer.GetTag<DefaultEcs.World>();
             sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         }
@@ -42,14 +40,19 @@ namespace zzre.game.systems
             if (!IsEnabled)
                 return;
 
-            if (diContainer.HasTag<ModelInstanceBuffer>())
-                throw new InvalidOperationException("ModelInstanceBuffer is already created");
-            diContainer.AddTag(new ModelInstanceBuffer(diContainer, scene.models.Length + scene.foModels.Length, dynamic: true));
+            var scene = message.Scene;
+            int modelCount = scene.models.Length + scene.foModels.Length;
+            if (!diContainer.TryGetTag<ModelInstanceBuffer>(out var prevBuffer) || prevBuffer.TotalCount < modelCount)
+            {
+                prevBuffer?.Dispose();
+                diContainer.RemoveTag<ModelInstanceBuffer>();
+                diContainer.AddTag(new ModelInstanceBuffer(diContainer, scene.models.Length + scene.foModels.Length, dynamic: true));
+            }
+            else
+                prevBuffer.Clear();
 
             float plantWiggleDelay = 0f;
-
             var behaviors = scene.behaviors.ToDictionary(b => b.modelId, b => b.type);
-
             foreach (var model in scene.models)
             {
                 var entity = ecsWorld.CreateEntity();

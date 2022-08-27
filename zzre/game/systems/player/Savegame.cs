@@ -12,7 +12,6 @@ namespace zzre.game.systems
         public bool IsEnabled { get; set; } = true;
 
         private readonly DefaultEcs.World world;
-        private readonly Scene scene;
         private readonly zzio.Savegame savegame;
         private readonly IDisposable disableAttackTriggerDisposable;
         private readonly IDisposable removeItemDisposable;
@@ -23,10 +22,11 @@ namespace zzre.game.systems
         private readonly IDisposable setNpcModifierDisposable;
         private readonly IDisposable gsmodForSceneDisposable;
 
+        private uint CurSceneID => world.Get<Scene>().dataset.sceneId;
+
         public Savegame(ITagContainer diContainer)
         {
             world = diContainer.GetTag<DefaultEcs.World>();
-            scene = diContainer.GetTag<Scene>();
             savegame = diContainer.GetTag<zzio.Savegame>();
             disableAttackTriggerDisposable = world.Subscribe<GSModDisableAttackTrigger>(HandleDisableAttackTrigger);
             removeItemDisposable = world.Subscribe<GSModRemoveItem>(HandleRemoveItem);
@@ -58,11 +58,11 @@ namespace zzre.game.systems
         private void HandleSetTrigger(in GSModSetTrigger message) => HandleGSModForThisScene(message);
         private void HandleSetNpcModifier(in GSModSetNPCModifier message) => HandleGSModForThisScene(message);
 
-        private void HandleGSModForThisScene(IGameStateMod gsMod) => savegame.Add($"sc_{scene.dataset.sceneId}", gsMod);
+        private void HandleGSModForThisScene(IGameStateMod gsMod) => savegame.Add($"sc_{CurSceneID}", gsMod);
 
         private void HandleGSModForScene(in messages.GSModForScene message)
         {
-            if (message.SceneId != scene.dataset.sceneId)
+            if (message.SceneId != CurSceneID)
             {
                 savegame.Add($"sc_{message.SceneId}", message.Mod);
                 return;

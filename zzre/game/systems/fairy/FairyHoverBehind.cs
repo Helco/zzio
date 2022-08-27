@@ -11,12 +11,11 @@ public partial class FairyHoverBehind : AEntitySetSystem<float>
 {
     private readonly Random random = GlobalRandom.Get;
     private readonly GameTime time;
-    private readonly WorldCollider worldCollider;
+    private WorldCollider? worldCollider;
 
     public FairyHoverBehind(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         time = diContainer.GetTag<GameTime>();
-        worldCollider = diContainer.GetTag<WorldCollider>();
     }
 
     [Update]
@@ -66,6 +65,7 @@ public partial class FairyHoverBehind : AEntitySetSystem<float>
             location.LocalPosition = location.LocalPosition with { Y = minYPos };
         velocity = new(move);
 
+        worldCollider ??= World.Get<WorldCollider>();
         if (worldCollider.Intersects(new Sphere(location.LocalPosition, 0.6f)))
         {
             hoverBehind.TimeLeft = 3f;

@@ -21,26 +21,32 @@ namespace zzre.game.systems
         private const float NearHeightDistance = 0.5f;
         private const float NearHeightFactor = 1f / 5f;
 
+        private readonly IDisposable sceneLoadedSubscription;
         private readonly IDisposable setCameraModeDisposable;
-        private readonly float maxCameraDistance;
+        private float maxCameraDistance;
         private float currentVerAngle;
         private float curCamDistance;
 
         public OverworldCamera(ITagContainer diContainer) : base(diContainer)
         {
-            var scene = diContainer.GetTag<zzio.scn.Scene>();
-            maxCameraDistance = scene.dataset.isInterior
-                ? MaxCamDistInterior
-                : MaxCamDistExterior;
             curCamDistance = maxCameraDistance;
 
+            sceneLoadedSubscription = world.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
             setCameraModeDisposable = world.Subscribe<messages.SetCameraMode>(HandleSetCameraMode);
         }
 
         public override void Dispose()
         {
             base.Dispose();
+            sceneLoadedSubscription.Dispose();
             setCameraModeDisposable.Dispose();
+        }
+
+        private void HandleSceneLoaded(in messages.SceneLoaded message)
+        {
+            maxCameraDistance = message.Scene.dataset.isInterior
+                ? MaxCamDistInterior
+                : MaxCamDistExterior;
         }
 
         private void HandleSetCameraMode(in messages.SetCameraMode mode)

@@ -29,6 +29,8 @@ namespace zzre.rendering
             DeviceBuffer.Dispose();
         }
 
+        public void Clear() => FreeCount = TotalCount;
+
         public uint Reserve(int count)
         {
             if (count > FreeCount)

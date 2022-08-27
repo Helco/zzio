@@ -21,13 +21,12 @@ namespace zzre.game.systems
         private const float MinBonkYSpeed = 0.3f;
 
         private readonly rendering.Camera camera;
-        private readonly WorldCollider worldCollider;
         private readonly IDisposable addedSubscription;
+        private WorldCollider? worldCollider;
 
         public BehaviourCollectablePhysics(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
         {
             camera = diContainer.GetTag<rendering.Camera>();
-            worldCollider = diContainer.GetTag<WorldCollider>();
             addedSubscription = World.SubscribeComponentAdded<components.behaviour.CollectablePhysics>(HandleComponentAdded);
         }
 
@@ -67,6 +66,7 @@ namespace zzre.game.systems
             var newPos = oldPos + elapsedTime * curVelocity - Vector3.UnitY * YOffset;
             physics.YVelocity -= elapsedTime * Gravity;
 
+            worldCollider ??= World.Get<WorldCollider>();
             var intersection = worldCollider.Cast(new Line(oldPos, newPos));
             if (intersection.HasValue)
             {

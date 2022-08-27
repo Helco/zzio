@@ -14,14 +14,12 @@ namespace zzre.game.systems
 
         private readonly IDisposable sceneLoadedSubscription;
         private readonly IDisposable disableTriggerSubscription;
-        private readonly Scene scene;
         private Location playerLocation => playerLocationLazy.Value;
         private readonly Lazy<Location> playerLocationLazy;
 
         public TriggerActivation(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             var game = diContainer.GetTag<Game>();
-            scene = diContainer.GetTag<Scene>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
             sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
             disableTriggerSubscription = World.Subscribe<zzio.GSModDisableTrigger>(HandleDisableTrigger);
@@ -42,7 +40,7 @@ namespace zzre.game.systems
                 .Select(e => e.Get<Trigger>())
                 .ToHashSet();
 
-            foreach (var trigger in scene.triggers.Except(triggersWithEntities))
+            foreach (var trigger in msg.Scene.triggers.Except(triggersWithEntities))
             {
                 var entity = World.CreateEntity();
                 entity.Set(new Location()

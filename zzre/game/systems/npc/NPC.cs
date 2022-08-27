@@ -14,14 +14,10 @@ namespace zzre.game.systems
 
         private readonly IDisposable sceneLoadSubscription;
         private readonly IDisposable setNpcModifierSubscription;
-        private readonly WorldCollider worldCollider;
-        private readonly Scene scene;
         private readonly zzio.db.MappedDB mappedDB;
 
         public NPC(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
-            worldCollider = diContainer.GetTag<WorldCollider>();
-            scene = diContainer.GetTag<Scene>();
             mappedDB = diContainer.GetTag<zzio.db.MappedDB>();
             sceneLoadSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
             setNpcModifierSubscription = World.Subscribe<zzio.GSModSetNPCModifier>(HandleSetNpcModifier);
@@ -47,6 +43,7 @@ namespace zzre.game.systems
             foreach (var trigger in triggers.Where(t => t.Get<Trigger>().ii2 >= MaxEnabledII2))
                 trigger.Disable();
 
+            var scene = message.Scene;
             foreach (var trigger in scene.triggers.Where(t => t.type == TriggerType.NpcStartpoint && t.ii2 < MaxEnabledII2))
             {
                 var entity = World.CreateEntity();
@@ -96,7 +93,7 @@ namespace zzre.game.systems
                     entity.Set(components.NPCType.Biped);
                 var npcType = entity.Get<components.NPCType>();
                 if (npcType != components.NPCType.Flying && entity.Has<Sphere>())
-                    PutOnGround(entity);
+                    World.Publish(new messages.CreaturePlaceToGround(entity));
 
                 // TODO: Add SelectableNPC for Biped, Item, Flying
                 // TODO: Add Pixie behaviour
@@ -108,17 +105,6 @@ namespace zzre.game.systems
         [Update]
         private void Update(float elapsedTime, ref components.NPCState npc)
         {
-        }
-
-        private void PutOnGround(DefaultEcs.Entity entity)
-        {
-            var collider = entity.Get<Sphere>();
-            var location = entity.Get<Location>();
-            var cast = worldCollider.Cast(new Line(
-                location.LocalPosition + Vector3.UnitY * GroundFromOffset,
-                location.LocalPosition + Vector3.UnitY * GroundToOffset));
-            if (cast != null)
-                location.LocalPosition = cast.Value.Point + Vector3.UnitY * collider.Radius / 2f;
         }
 
         private void HandleSetNpcModifier(in zzio.GSModSetNPCModifier gsmod)

@@ -13,7 +13,6 @@ namespace zzre.game.systems
         private const int MajorModeLookAtNpc = 50;
         private const double LerpSpeed = 9.999999960041972e-13;
 
-        private readonly Scene scene;
         private readonly IDisposable setCameraModeDisposable;
 
         private Trigger trigger = new Trigger();
@@ -22,7 +21,6 @@ namespace zzre.game.systems
 
         public TriggerCamera(ITagContainer diContainer) : base(diContainer)
         {
-            scene = diContainer.GetTag<Scene>();
             setCameraModeDisposable = world.Subscribe<messages.SetCameraMode>(HandleSetCameraMode);
         }
 
@@ -39,14 +37,15 @@ namespace zzre.game.systems
                 return;
 
             int triggerI = mode.Mode % 100;
-            var newTrigger = scene.triggers
-                .Where(t => t.type == TriggerType.CameraPosition)
-                .FirstOrDefault(t => t.ii1 == triggerI);
-            if (newTrigger == null)
+            var newTrigger = world.GetEntities()
+                .With((in Trigger t) => t.type == TriggerType.CameraPosition && t.ii1 == triggerI)
+                .AsEnumerable()
+                .FirstOrDefault();
+            if (newTrigger == default)
                 return;
 
             IsEnabled = majorMode != MajorModeTriggerDir; // no update necessary for trigger dir
-            trigger = newTrigger;
+            trigger = newTrigger.Get<Trigger>();
             npcLocation = mode.NPCEntity.Get<Location>();
 
             if (majorMode != MajorModeOriginalDir)

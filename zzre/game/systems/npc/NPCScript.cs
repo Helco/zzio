@@ -17,7 +17,6 @@ namespace zzre.game.systems
 
         private readonly IDisposable executeScriptSubscription;
         private readonly Game game;
-        private readonly Scene scene;
         private readonly MappedDB db;
         private Location playerLocation => playerLocationLazy.Value;
         private readonly Lazy<Location> playerLocationLazy;
@@ -25,7 +24,6 @@ namespace zzre.game.systems
         public NPCScript(ITagContainer diContainer) : base(diContainer, CreateEntityContainer)
         {
             game = diContainer.GetTag<Game>();
-            scene = diContainer.GetTag<Scene>();
             db = diContainer.GetTag<MappedDB>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
             executeScriptSubscription = World.Subscribe<messages.ExecuteNPCScript>(HandleExecuteNPCScript);
