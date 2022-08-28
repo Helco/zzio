@@ -22,6 +22,7 @@ namespace zzre.game.systems
         private const float NearHeightFactor = 1f / 5f;
 
         private readonly IDisposable sceneLoadedSubscription;
+        private readonly IDisposable playerEnteredSubscription;
         private readonly IDisposable setCameraModeDisposable;
         private float maxCameraDistance;
         private float currentVerAngle;
@@ -32,6 +33,7 @@ namespace zzre.game.systems
             curCamDistance = maxCameraDistance;
 
             sceneLoadedSubscription = world.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
+            playerEnteredSubscription = world.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
             setCameraModeDisposable = world.Subscribe<messages.SetCameraMode>(HandleSetCameraMode);
         }
 
@@ -39,6 +41,7 @@ namespace zzre.game.systems
         {
             base.Dispose();
             sceneLoadedSubscription.Dispose();
+            playerEnteredSubscription.Dispose();
             setCameraModeDisposable.Dispose();
         }
 
@@ -47,6 +50,12 @@ namespace zzre.game.systems
             maxCameraDistance = message.Scene.dataset.isInterior
                 ? MaxCamDistInterior
                 : MaxCamDistExterior;
+        }
+
+        private void HandlePlayerEntered(in messages.PlayerEntered _)
+        {
+            currentVerAngle = 0f;
+            curCamDistance = maxCameraDistance;
         }
 
         private void HandleSetCameraMode(in messages.SetCameraMode mode)

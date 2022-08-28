@@ -13,6 +13,7 @@ namespace zzre.game.systems
 
         private readonly DefaultEcs.World world;
         private readonly zzio.Savegame savegame;
+        private readonly IDisposable playerEnteredDisposable;
         private readonly IDisposable disableAttackTriggerDisposable;
         private readonly IDisposable removeItemDisposable;
         private readonly IDisposable changeNpcStateDisposable;
@@ -28,6 +29,7 @@ namespace zzre.game.systems
         {
             world = diContainer.GetTag<DefaultEcs.World>();
             savegame = diContainer.GetTag<zzio.Savegame>();
+            playerEnteredDisposable = world.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
             disableAttackTriggerDisposable = world.Subscribe<GSModDisableAttackTrigger>(HandleDisableAttackTrigger);
             removeItemDisposable = world.Subscribe<GSModRemoveItem>(HandleRemoveItem);
             changeNpcStateDisposable = world.Subscribe<GSModChangeNPCState>(HandleChangeNpcState);
@@ -40,6 +42,7 @@ namespace zzre.game.systems
 
         public void Dispose()
         {
+            playerEnteredDisposable.Dispose();
             disableAttackTriggerDisposable.Dispose();
             removeItemDisposable.Dispose();
             changeNpcStateDisposable.Dispose();
@@ -48,6 +51,12 @@ namespace zzre.game.systems
             setTriggerDisposable.Dispose();
             setNpcModifierDisposable.Dispose();
             gsmodForSceneDisposable.Dispose();
+        }
+
+        private void HandlePlayerEntered(in messages.PlayerEntered message)
+        {
+            savegame.sceneId = (int)CurSceneID;
+            savegame.entryId = (int)message.EntryTrigger.idx;
         }
 
         private void HandleDisableAttackTrigger(in GSModDisableAttackTrigger message) => HandleGSModForThisScene(message);

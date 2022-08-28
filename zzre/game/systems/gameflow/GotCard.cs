@@ -22,7 +22,7 @@ public partial class GotCard : AEntitySetSystem<float>
         base.Dispose();
         gotCardDisposable?.Dispose();
     }
-
+     
     private void HandleGotCard(in messages.GotCard message)
     {
         lastMessage = message;

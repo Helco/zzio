@@ -5,9 +5,8 @@ using DefaultEcs.System;
 using zzio.scn;
 
 [PauseDuring(PauseTrigger.UIScreen)]
-public partial class Doorway : ISystem<float>
+public partial class Doorway : AEntitySetSystem<float>
 {
-    private readonly DefaultEcs.World ecsWorld;
     private readonly Game game;
     private readonly IDisposable doorwayTriggerDisposable;
 
@@ -15,17 +14,15 @@ public partial class Doorway : ISystem<float>
     private int targetEntry;
     private float fadeOffTime; // just a placeholder, will be removed after actual fade off exists
 
-    public bool IsEnabled { get; set; } = true;
-
-    public Doorway(ITagContainer diContainer)
+    public Doorway(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
-        ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         game = diContainer.GetTag<Game>();
-        doorwayTriggerDisposable = ecsWorld.SubscribeComponentAdded<components.ActiveTrigger>(HandleActiveTrigger);
+        doorwayTriggerDisposable = World.SubscribeComponentAdded<components.ActiveTrigger>(HandleActiveTrigger);
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
+        base.Dispose();
         doorwayTriggerDisposable?.Dispose();
     }
 
@@ -38,15 +35,20 @@ public partial class Doorway : ISystem<float>
         if (trigger.type != TriggerType.Doorway)
             return;
 
+        World.Get<components.PlayerEntity>().Entity.Set(components.GameFlow.Doorway);
         targetScene = $"sc_{trigger.ii3}";
         targetEntry = (int)trigger.ii2;
         fadeOffTime = 0.6f;
-        ecsWorld.Publish(messages.LockPlayerControl.Forever);
+        World.Publish(messages.LockPlayerControl.Forever);
         // TODO: Add fade off during scene changes
         // TODO: Fade off music and ambient sounds during scene changes
     }
 
-    public void Update(float elapsedTime)
+    [WithPredicate]
+    private static bool IsInGameFlow(in components.GameFlow flow) => flow == components.GameFlow.Doorway;
+
+    [Update]
+    private new void Update(float elapsedTime, in DefaultEcs.Entity entity)
     {
         if (fadeOffTime <= 0f)
             return;
@@ -54,14 +56,15 @@ public partial class Doorway : ISystem<float>
         if (fadeOffTime > 0f)
             return;
 
-        ecsWorld.Publish(new messages.SceneChanging());
+        World.Publish(new messages.SceneChanging());
         game.LoadScene(targetScene);
-        ecsWorld.Publish(new messages.PlayerEntered(FindEntryTrigger()));
+        World.Publish(new messages.PlayerEntered(FindEntryTrigger()));
+        entity.Set(components.GameFlow.Normal);
     }
 
     private Trigger? TryFindTrigger(TriggerType type, int ii1 = -1)
     {
-        var triggerEntity = ecsWorld
+        var triggerEntity = World
             .GetEntities()
             .With((in Trigger t) => t.type == type && (ii1 < 0 || t.ii1 == ii1))
             .AsEnumerable()
