@@ -40,15 +40,8 @@ namespace zzre
         public static Quaternion LookIn(Vector3 dir) => LookIn(dir, Vector3.UnitY);
         public static Quaternion LookIn(Vector3 dir, Vector3 up)
         {
-            dir = Vector3.Normalize(dir);
-            var right = Vector3.Normalize(Vector3.Cross(up, dir));
-            up = Vector3.Cross(dir, right);
-            var matrix = new Matrix4x4(
-                right.X, right.Y, right.Z, 0f,
-                up.X, up.Y, up.Z, 0f,
-                dir.X, dir.Y, dir.Z, 0f,
-                0f, 0f, 0f, 1f);
-            return Quaternion.CreateFromRotationMatrix(matrix);
+            var matrix = Matrix4x4.CreateLookAt(dir, Vector3.Zero, up);
+            return Quaternion.Inverse(Quaternion.CreateFromRotationMatrix(matrix));
         }
 
         public static (Vector3 right, Vector3 up, Vector3 forward) UnitVectors(this Quaternion q) => (
