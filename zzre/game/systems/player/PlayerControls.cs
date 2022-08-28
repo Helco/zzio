@@ -17,6 +17,7 @@ namespace zzre.game.systems
         private readonly UI ui;
         private readonly IDisposable lockMessageSubscription;
 
+        private bool stuckMovingForward;
         private float lockTimer;
         private float jumpLockTimer;
         private bool jumpChanged;
@@ -45,6 +46,7 @@ namespace zzre.game.systems
 
         private void HandleLockPlayerControl(in messages.LockPlayerControl msg)
         {
+            stuckMovingForward = msg.MovingForward;
             if (msg == messages.LockPlayerControl.Unlock || lockTimer != float.PositiveInfinity)
                 lockTimer = msg.Duration;
         }
@@ -54,7 +56,7 @@ namespace zzre.game.systems
             lockTimer = Math.Max(0f, lockTimer - elapsedTime);
             if (IsLocked)
             {
-                component = default;
+                component = new components.PlayerControls() with { GoesForward = stuckMovingForward };
                 return;
             }
 

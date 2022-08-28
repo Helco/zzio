@@ -71,6 +71,14 @@ public class PlayerSpawner : ISystem<float>
         // here the LookIn was removed because of a physics/animation bug.
         playerEntity.Get<components.PuppetActorMovement>().TargetDirection = trigger.dir;
         ecsWorld.Publish(new messages.CreaturePlaceToGround(playerEntity));
+
+        var isInterior = ecsWorld.Get<Scene>().dataset.isInterior;
+        if (trigger.type == TriggerType.Doorway)
+            ecsWorld.Publish(new messages.LockPlayerControl(
+                isInterior ? ControlsLockedInterior : ControlsLockedExterior,
+                MovingForward: true));
+        else
+            ecsWorld.Publish(new messages.LockPlayerControl(ControlsLockedRune, MovingForward: false));
     }
 
     private static float GetColliderSize(DefaultEcs.Entity playerEntity)
