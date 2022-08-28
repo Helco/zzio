@@ -4,7 +4,8 @@ namespace zzre.game.components
 {
     public struct HumanPhysics
     {
-        public const float DefaultSpeedModifier = 1f;
+        public const float ExteriorSpeedModifier = 1f;
+        public const float InteriorSpeedModifier = 0.6f;
 
         public enum AnimationState
         {
@@ -24,15 +25,15 @@ namespace zzre.game.components
         public bool HitCeiling;
         public bool IsDrowning;
         public bool IsWading;
-        public bool ShouldCollideWithModels;
+        public float DisableModelCollisionTimer;
         public bool DidCollideWithWorld;
 
         public HumanPhysics(float colliderSize)
         {
             ColliderSize = colliderSize;
             GravityModifier = 1f;
-            SpeedModifier = DefaultSpeedModifier;
-            ShouldCollideWithModels = true;
+            SpeedModifier = ExteriorSpeedModifier;
+            DisableModelCollisionTimer = 0f;
 
             Velocity = Vector3.Zero;
             State = AnimationState.Idle;

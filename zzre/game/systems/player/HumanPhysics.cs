@@ -33,6 +33,7 @@ namespace zzre.game.systems
         }
 
         private readonly IDisposable sceneLoadedSubscription;
+        private readonly IDisposable controlsLockedSubscription;
         private readonly DefaultEcs.EntitySet collidableModels;
         private readonly DefaultEcs.EntitySet collidableCreatures;
         private bool isInterior;
@@ -42,6 +43,7 @@ namespace zzre.game.systems
         {
             World.SetMaxCapacity<components.HumanPhysics>(1);
             sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
+            controlsLockedSubscription = World.Subscribe<messages.LockPlayerControl>(HandleControlsLocked);
 
             collidableModels = World
                 .GetEntities()
@@ -60,6 +62,7 @@ namespace zzre.game.systems
         {
             base.Dispose();
             sceneLoadedSubscription.Dispose();
+            controlsLockedSubscription.Dispose();
             collidableModels.Dispose();
             collidableCreatures.Dispose();
         }
@@ -68,6 +71,18 @@ namespace zzre.game.systems
         {
             worldCollider = World.Get<WorldCollider>();
             isInterior = message.Scene.dataset.isInterior;
+        }
+
+        private void HandleControlsLocked(in messages.LockPlayerControl message)
+        {
+            if (!message.MovingForward)
+                return;
+            foreach (var entity in Set.GetEntities())
+            {
+                ref var physics = ref entity.Get<components.HumanPhysics>();
+                physics.DisableModelCollisionTimer = message.Duration;
+                physics.Velocity = Vector3.Zero;
+            }
         }
 
         [Update]
@@ -83,6 +98,8 @@ namespace zzre.game.systems
                 return;
             }
 
+            state.DisableModelCollisionTimer = Math.Max(0f, state.DisableModelCollisionTimer - elapsedTime);
+            
             float oldSpeedModifier = state.SpeedModifier;
             float quarterColliderSize = state.ColliderSize * 0.25f;
             Collision collision = default;
@@ -157,7 +174,7 @@ namespace zzre.game.systems
             var collider = new Sphere(newPos, colliderRadius);
 
             var velocity = state.Velocity;
-            var intersections = FindAllIntersections(collider, state.ShouldCollideWithModels)
+            var intersections = FindAllIntersections(collider, state.DisableModelCollisionTimer <= 0f)
                 .Where(i => Vector3.Dot(velocity, i.normal) < 0f);
             if (!intersections.Any())
                 return newPos - colliderOffset * Vector3.UnitY;

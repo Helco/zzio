@@ -62,12 +62,11 @@ public class PlayerSpawner : ISystem<float>
 
     private void HandlePlayerEntered(in messages.PlayerEntered message)
     {
+        var playerLocation = playerEntity.Get<Location>();
         var trigger = message.EntryTrigger;
         var startPos = trigger.pos;
         if (trigger.type == TriggerType.Doorway && trigger.colliderType == TriggerColliderType.Sphere)
             startPos += trigger.dir * trigger.radius * 1.2f;
-
-        var playerLocation = playerEntity.Get<Location>();
         playerLocation.LocalPosition = startPos;
         playerLocation.LookIn(trigger.dir);
         playerEntity.Get<components.PuppetActorMovement>().TargetDirection = trigger.dir;

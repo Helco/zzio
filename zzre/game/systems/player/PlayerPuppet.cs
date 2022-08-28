@@ -43,7 +43,7 @@ namespace zzre.game.systems
             Animation(elapsedTime, ref puppet, physics, ref animation);
             Falling(elapsedTime, ref puppet, ref physics, ref animation);
             Idling(ref puppet, ref physics);
-            NPCComfortZone(ref physics);
+            SpeedModifier(ref physics);
             ActorTargetDirection(physics, ref puppetActorMovement);
         }
 
@@ -134,11 +134,13 @@ namespace zzre.game.systems
             }
         }
 
-        private void NPCComfortZone(ref components.HumanPhysics physics)
+        private void SpeedModifier(ref components.HumanPhysics physics)
         {
             physics.SpeedModifier = World.Has<components.ActiveNPC>()
                 ? NPCComfortZoneSpeed
-                : components.HumanPhysics.DefaultSpeedModifier;
+                : World.Get<zzio.scn.Scene>().dataset.isInterior
+                ? components.HumanPhysics.InteriorSpeedModifier
+                : components.HumanPhysics.ExteriorSpeedModifier;
         }
 
         private void ActorTargetDirection(
