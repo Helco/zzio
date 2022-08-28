@@ -23,7 +23,8 @@ namespace zzre.game
 
         private WorldRenderer worldRenderer = null!;
 
-        public DefaultEcs.Entity PlayerEntity { get; }
+        public DefaultEcs.Entity PlayerEntity => // Placeholder during transition
+            ecsWorld.GetEntities().With<components.PlayerPuppet>().AsEnumerable().First();
         public IResource SceneResource { get; private set; } = null!;
 
         public bool IsUpdateEnabled
@@ -58,12 +59,9 @@ namespace zzre.game
             var updateSystems = new systems.RecordingSequentialSystem<float>(this);
             this.updateSystems = updateSystems;
             updateSystems.Add(
-                new systems.ModelLoader(this),
+                new systems.PlayerSpawner(this),
                 new systems.PlayerControls(this),
-                new systems.Animal(this),
-                new systems.Butterfly(this),
-                new systems.CirclingBird(this),
-                new systems.AnimalWaypointAI(this),
+                new systems.ModelLoader(this),
                 new systems.PlantWiggle(this),
                 new systems.BehaviourSwing(this),
                 new systems.BehaviourRotate(this),
@@ -74,6 +72,10 @@ namespace zzre.game
                 new systems.BehaviourCollectable(this),
                 new systems.BehaviourMagicBridge(this),
                 new systems.AdvanceAnimation(this),
+                new systems.Animal(this),
+                new systems.Butterfly(this),
+                new systems.CirclingBird(this),
+                new systems.AnimalWaypointAI(this),
                 new systems.HumanPhysics(this),
                 new systems.PlayerPuppet(this),
                 new systems.PuppetActorTarget(this),
@@ -126,29 +128,9 @@ namespace zzre.game
             //camera.Location.LocalPosition = -worldBuffers.Origin;
             ecsWorld.Set(worldLocation);
 
-            PlayerEntity = ecsWorld.CreateEntity();
-            //playerLocation.LocalPosition = scene.triggers.First(t => t.type == TriggerType.Doorway).pos;
-            PlayerEntity.Set(new Location()
-            {
-                Parent = worldLocation,
-                LocalPosition = new Vector3(216f, 40.5f, 219f)
-            });
-            PlayerEntity.Set(DefaultEcs.Resource.ManagedResource<zzio.ActorExDescription>.Create("chr01"));
-            PlayerEntity.Set(components.Visibility.Visible);
-            PlayerEntity.Set<components.PlayerControls>();
-            PlayerEntity.Set<components.PlayerPuppet>();
-            PlayerEntity.Set(components.PhysicParameters.Standard);
-            PlayerEntity.Set(new components.NonFairyAnimation(GlobalRandom.Get));
-            PlayerEntity.Set<components.PuppetActorMovement>();
-            var playerActorParts = PlayerEntity.Get<components.ActorParts>();
-            var playerBodyClump = playerActorParts.Body.Get<ClumpBuffers>();
-            var playerColliderSize = playerBodyClump.Bounds.Size.Y;
-            PlayerEntity.Set(new components.HumanPhysics(playerColliderSize));
-            PlayerEntity.Set(new Sphere(Vector3.Zero, playerColliderSize));
-            PlayerEntity.Set(new Inventory(this, savegame));
-            PlayerEntity.Set(components.GameFlow.Normal);
-
             LoadScene($"sc_{savegame.sceneId}");
+            var scene = ecsWorld.Get<Scene>();
+            ecsWorld.Publish(new messages.PlayerEntered(scene.triggers[savegame.entryId]));
 
             ecsWorld.GetEntities()
                 .With((in Trigger t) => t.idx == 88)
