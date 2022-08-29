@@ -14,12 +14,14 @@ namespace zzre.game.systems
     {
         private readonly ITagContainer diContainer;
         private readonly DefaultEcs.World ecsWorld;
+        private readonly IDisposable sceneChangingSubscription;
         private readonly IDisposable sceneLoadSubscription;
 
         public ModelLoader(ITagContainer diContainer)
         {
             this.diContainer = diContainer;
             ecsWorld = diContainer.GetTag<DefaultEcs.World>();
+            sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
             sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         }
 
@@ -34,6 +36,11 @@ namespace zzre.game.systems
         public void Update(float state)
         {
         }
+
+        private void HandleSceneChanging(in messages.SceneChanging _) => ecsWorld
+            .GetEntities()
+            .With<components.RenderOrder>()
+            .DisposeAll();
 
         private void HandleSceneLoaded(in messages.SceneLoaded message)
         {

@@ -12,6 +12,7 @@ namespace zzre.game.systems
         private const float GroundFromOffset = 1f;
         private const float GroundToOffset = -7f;
 
+        private readonly IDisposable sceneChangingSubscription;
         private readonly IDisposable sceneLoadSubscription;
         private readonly IDisposable setNpcModifierSubscription;
         private readonly zzio.db.MappedDB mappedDB;
@@ -19,6 +20,7 @@ namespace zzre.game.systems
         public NPC(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             mappedDB = diContainer.GetTag<zzio.db.MappedDB>();
+            sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
             sceneLoadSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
             setNpcModifierSubscription = World.Subscribe<zzio.GSModSetNPCModifier>(HandleSetNpcModifier);
         }
@@ -29,6 +31,8 @@ namespace zzre.game.systems
             sceneLoadSubscription.Dispose();
             setNpcModifierSubscription.Dispose();
         }
+
+        private void HandleSceneChanging(in messages.SceneChanging _) => Set.DisposeAll();
 
         private void HandleSceneLoaded(in messages.SceneLoaded message)
         {

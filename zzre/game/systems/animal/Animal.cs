@@ -13,17 +13,20 @@ namespace zzre.game.systems
     {
         private readonly DefaultEcs.World ecsWorld;
         private readonly IDisposable sceneLoadSubscription;
+        private readonly IDisposable sceneChangingSubscription;
 
         public Animal(ITagContainer diContainer)
         {
             ecsWorld = diContainer.GetTag<DefaultEcs.World>();
             sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
+            sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         }
 
         protected override void DisposeManaged()
         {
             base.DisposeManaged();
             sceneLoadSubscription.Dispose();
+            sceneChangingSubscription.Dispose();
         }
 
         public bool IsEnabled { get; set; } = true;
@@ -31,6 +34,13 @@ namespace zzre.game.systems
         public void Update(float state)
         {
         }
+
+        private void HandleSceneChanging(in messages.SceneChanging _) => ecsWorld
+            .GetEntities()
+            .WithEither<components.Butterfly>()
+            .Or<components.CirclingBird>()
+            .Or<components.AnimalWaypointAI>()
+            .DisposeAll();
 
         private void HandleSceneLoaded(in messages.SceneLoaded message)
         {

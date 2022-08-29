@@ -107,6 +107,7 @@ namespace zzre.game
                 new systems.TriggerCamera(this),
                 new systems.CreatureCamera(this),
                 new systems.GotCard(this),
+                new systems.Doorway(this),
                 new systems.Reaper(this),
                 new systems.ParentReaper(this));
             updateSystems.Add(new systems.PauseDuring(this, updateSystems.Systems));

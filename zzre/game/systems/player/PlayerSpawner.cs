@@ -13,6 +13,7 @@ public class PlayerSpawner : ISystem<float>
     private readonly ITagContainer diContainer;
     private readonly zzio.Savegame savegame;
     private readonly DefaultEcs.World ecsWorld;
+    private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadedSubscription;
     private readonly IDisposable playerEnteredSubscription;
 
@@ -25,6 +26,7 @@ public class PlayerSpawner : ISystem<float>
         this.diContainer = diContainer;
         savegame = diContainer.GetTag<zzio.Savegame>();
         ecsWorld = diContainer.GetTag<DefaultEcs.World>();
+        sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadedSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         playerEnteredSubscription = ecsWorld.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
 
@@ -33,9 +35,12 @@ public class PlayerSpawner : ISystem<float>
 
     public void Dispose()
     {
+        sceneChangingSubscription.Dispose();
         sceneLoadedSubscription.Dispose();
         playerEnteredSubscription.Dispose();
     }
+
+    private void HandleSceneChanging(in messages.SceneChanging _) => playerEntity.Dispose();
 
     private void HandleSceneLoaded(in messages.SceneLoaded message)
     {

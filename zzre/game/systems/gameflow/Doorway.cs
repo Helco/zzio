@@ -56,7 +56,9 @@ public partial class Doorway : AEntitySetSystem<float>
         if (fadeOffTime > 0f)
             return;
 
+        var prevCount = World.Count();
         World.Publish(new messages.SceneChanging());
+        Console.WriteLine($"Entity count before: {prevCount} after {World.Count()}");
         game.LoadScene(targetScene);
         World.Publish(new messages.PlayerEntered(FindEntryTrigger()));
         entity.Set(components.GameFlow.Normal);

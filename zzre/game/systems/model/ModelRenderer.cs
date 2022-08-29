@@ -59,8 +59,8 @@ namespace zzre.game.systems
             var totalCount = MultiMap.Keys.Sum(key => MultiMap.Count(key));
             instanceBuffer = modelInstanceBuffer.DeviceBuffer;
             instanceStart = modelInstanceBuffer.Reserve(totalCount);
-            clumpCounts.Capacity = MultiMap.Keys.Count();
-            instances.Capacity = totalCount;
+            clumpCounts.EnsureCapacity(MultiMap.Keys.Count());
+            instances.EnsureCapacity(totalCount);
         }
 
         [WithPredicate]

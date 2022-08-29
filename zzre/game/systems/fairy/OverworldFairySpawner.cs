@@ -10,11 +10,13 @@ namespace zzre.game.systems
     public partial class OverworldFairySpawner : AEntitySetSystem<float>
     {
         private readonly zzio.db.MappedDB db;
+        private readonly IDisposable sceneChangingSubscription;
         private readonly IDisposable inventoryAddedSubscription;
 
         public OverworldFairySpawner(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             db = diContainer.GetTag<zzio.db.MappedDB>();
+            sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
             inventoryAddedSubscription = World.SubscribeComponentAdded<Inventory>(HandleInventoryAdded);
         }
 
@@ -24,9 +26,15 @@ namespace zzre.game.systems
             inventoryAddedSubscription.Dispose();
         }
 
+        private void HandleSceneChanging(in messages.SceneChanging _) => World
+            .GetEntities()
+            .With<components.FairyHoverBehind>()
+            .DisposeAll();
+
         private void HandleInventoryAdded(in DefaultEcs.Entity entity, in Inventory value)
         {
             entity.Set(new components.SpawnedFairy());
+            Update(entity, value, ref entity.Get<components.SpawnedFairy>()); // no need to wait for next frame
         }
 
         [Update]

@@ -12,6 +12,7 @@ namespace zzre.game.systems
     {
         private readonly float MaxLookingDistSqr = 0.81f;
 
+        private readonly IDisposable sceneChangingSubscription;
         private readonly IDisposable sceneLoadedSubscription;
         private readonly IDisposable disableTriggerSubscription;
         private Location playerLocation => playerLocationLazy.Value;
@@ -21,6 +22,7 @@ namespace zzre.game.systems
         {
             var game = diContainer.GetTag<Game>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
+            sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
             sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
             disableTriggerSubscription = World.Subscribe<zzio.GSModDisableTrigger>(HandleDisableTrigger);
         }
@@ -28,9 +30,12 @@ namespace zzre.game.systems
         public override void Dispose()
         {
             base.Dispose();
-            sceneLoadedSubscription?.Dispose();
-            disableTriggerSubscription?.Dispose();
+            sceneChangingSubscription.Dispose();
+            sceneLoadedSubscription.Dispose();
+            disableTriggerSubscription.Dispose();
         }
+
+        private void HandleSceneChanging(in messages.SceneChanging _) => Set.DisposeAll();
 
         private void HandleSceneLoaded(in messages.SceneLoaded msg)
         {
