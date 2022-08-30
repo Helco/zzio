@@ -124,9 +124,9 @@ namespace zzre.game.systems
             entity.Set(new List<materials.BaseModelInstancedMaterial>(clumpBuffers.SubMeshes.Count));
 
             var rwMaterials = clumpBuffers.SubMeshes.Select(sm => sm.Material);
-            foreach (var rwMaterial in rwMaterials)
-                entity.Set(ManagedResource<materials.BaseModelInstancedMaterial>.Create(
-                    new resources.ClumpMaterialInfo(renderType, rwMaterial)));
+            entity.Set(ManagedResource<materials.BaseModelInstancedMaterial>.Create(rwMaterials
+                .Select(rwMaterial => new resources.ClumpMaterialInfo(renderType, rwMaterial))
+                .ToArray()));
         }
 
         private static void SetCollider(DefaultEcs.Entity entity)
