@@ -288,5 +288,10 @@ namespace zzre.game.systems
             entity.Set(new components.NPCLookAtTrigger(triggerI, actualDuration));
             entity.Set(components.NPCState.LookAtTrigger);
         }
+
+        private void PlaySound(DefaultEcs.Entity entity, int soundId)
+        {
+            Console.WriteLine("Warning: unimplemented NPC instruction \"playSound\"");
+        }
     }
 }

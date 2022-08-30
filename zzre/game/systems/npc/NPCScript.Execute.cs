@@ -33,6 +33,7 @@ namespace zzre.game.systems
         private const string CmdCreateDynamicItems = "_";
         private const string CmdRevive = "b";
         private const string CmdLookAtTrigger = "c";
+        private const string CmdPlaySound = "e";
 
         protected override OpReturn Execute(in DefaultEcs.Entity entity, ref components.ScriptExecution script, RawInstruction instruction)
         {
@@ -193,6 +194,11 @@ namespace zzre.game.systems
                     duration = int.Parse(args[0]);
                     triggerI = int.Parse(args[1]);
                     LookAtTrigger(entity, duration, triggerI);
+                    return OpReturn.Continue;
+
+                case CmdPlaySound:
+                    var id = int.Parse(args[0]);
+                    PlaySound(entity, id);
                     return OpReturn.Continue;
 
                 default: return OpReturn.UnknownInstruction;
