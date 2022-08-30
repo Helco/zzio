@@ -35,7 +35,10 @@ namespace zzre.game.systems
             disableTriggerSubscription.Dispose();
         }
 
-        private void HandleSceneChanging(in messages.SceneChanging _) => Set.DisposeAll();
+        private void HandleSceneChanging(in messages.SceneChanging _) => World //  Set is filtered by collider
+            .GetEntities()
+            .With<Trigger>()
+            .DisposeAll();
 
         private void HandleSceneLoaded(in messages.SceneLoaded msg)
         {
