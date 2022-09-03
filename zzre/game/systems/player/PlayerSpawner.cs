@@ -40,10 +40,12 @@ public class PlayerSpawner : ISystem<float>
         playerEnteredSubscription.Dispose();
     }
 
-    private void HandleSceneChanging(in messages.SceneChanging _) => playerEntity.Dispose();
+    private void HandleSceneChanging(in messages.SceneChanging _) { }
 
     private void HandleSceneLoaded(in messages.SceneLoaded message)
     {
+        if (playerEntity != default)
+            return;
         playerEntity = ecsWorld.CreateEntity();
         playerEntity.Set(new Location()
         {
