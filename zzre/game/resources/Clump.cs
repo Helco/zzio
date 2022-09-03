@@ -62,7 +62,7 @@ namespace zzre.game.resources
             entity.Set(info);
             entity.Set(resource);
             if (resource.Skin != null)
-                entity.Set(new Skeleton(resource.Skin));
+                entity.Set(new Skeleton(resource.Skin, info.Name.Replace(".DFF", "", StringComparison.InvariantCultureIgnoreCase)));
         }
     }
 }

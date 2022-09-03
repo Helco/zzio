@@ -16,7 +16,7 @@ namespace zzre.rendering
             if (diContainer.HasTag<PipelineFor<T>>())
                 return diContainer.GetTag<PipelineFor<T>>().Pipeline;
             var holder = new PipelineFor<T>(
-                create(diContainer.GetTag<PipelineCollection>().GetPipeline()));
+                create(diContainer.GetTag<PipelineCollection>().GetPipelineBuilder(typeof(T).Name)));
             diContainer.AddTag(holder);
             return holder.Pipeline;
         }

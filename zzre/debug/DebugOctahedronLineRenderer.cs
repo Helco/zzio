@@ -41,6 +41,7 @@ namespace zzre
             var device = diContainer.GetTag<GraphicsDevice>();
             vertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 12 * 2 * ColoredVertex.Stride, BufferUsage.VertexBuffer));
+            vertexBuffer.Name = $"DebugOctahedron Vertices {GetHashCode()}";
         }
 
         protected override void DisposeManaged()

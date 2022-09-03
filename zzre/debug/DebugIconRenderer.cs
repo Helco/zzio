@@ -37,6 +37,7 @@ namespace zzre.debug
                 iconBuffer?.Dispose();
                 iconBuffer = diContainer.GetTag<GraphicsDevice>().ResourceFactory.CreateBuffer(new BufferDescription(
                     Count * DebugIcon.Stride, BufferUsage.VertexBuffer));
+                iconBuffer.Name = $"DebugIcon Instances {GetHashCode()}";
             }
         }
 

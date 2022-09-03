@@ -25,6 +25,7 @@ namespace zzre.rendering
             uint alignedSize = (uint)Marshal.SizeOf<T>();
             alignedSize = (alignedSize + 15) / 16 * 16;
             Buffer = factory.CreateBuffer(new BufferDescription(alignedSize, BufferUsage.UniformBuffer));
+            Buffer.Name = $"{GetType().Name} {GetHashCode()}";
         }
 
         protected override void DisposeManaged()

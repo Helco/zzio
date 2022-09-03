@@ -11,6 +11,7 @@ namespace zzre
     {
         private BoneAnimator[]? animators;
 
+        public string Name { get; set; }
         public IReadOnlyList<Matrix4x4> BindingBoneToObject { get; }
         public IReadOnlyList<Matrix4x4> BindingObjectToBone { get; }
         public IReadOnlyList<Location> Bones { get; }
@@ -34,8 +35,9 @@ namespace zzre
         }
         public float NormalizedAnimationTime => AnimationTime / (Animation?.duration ?? 1.0f);
 
-        public Skeleton(RWSkinPLG skin)
+        public Skeleton(RWSkinPLG skin, string name = "")
         {
+            Name = name;
             BindingObjectToBone = skin.bones.Select(b => b.objectToBone with { M14 = 0f, M24 = 0f, M34 = 0f, M44 = 1f }).ToArray();
             UserIds = skin.bones.Select(b => (int)b.id).ToArray();
 

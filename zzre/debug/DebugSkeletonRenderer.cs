@@ -136,6 +136,9 @@ namespace zzre
                 (uint)skinVertexArray.Length * SkinVertex.Stride, BufferUsage.VertexBuffer));
             indexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)indexArray.Length * sizeof(ushort), BufferUsage.IndexBuffer));
+            vertexBuffer.Name = $"DebugSkeleton Vertices {GetHashCode()}";
+            skinBuffer.Name = $"DebugSkeleton Skin {GetHashCode()}";
+            indexBuffer.Name = $"DebugSkeleton Indices {GetHashCode()}";
             device.UpdateBuffer(vertexBuffer, 0, vertexArray);
             device.UpdateBuffer(skinBuffer, 0, skinVertexArray);
             device.UpdateBuffer(indexBuffer, 0, indexArray);
@@ -151,6 +154,7 @@ namespace zzre
             };
             lineBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)lineVertices.Length * ColoredVertex.Stride, BufferUsage.VertexBuffer));
+            lineBuffer.Name = $"DebugSkeleton LineVertices {GetHashCode()}";
             device.UpdateBuffer(lineBuffer, 0, lineVertices);
 
             var boneDepthsArr = new int[Skeleton.Bones.Count];

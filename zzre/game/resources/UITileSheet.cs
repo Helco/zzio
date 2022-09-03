@@ -75,6 +75,7 @@ namespace zzre.game.resources
                     PixelFormat.R8_G8_B8_A8_UNorm,
                     TextureUsage.Sampled,
                     TextureType.Texture2D));
+            texture.Name = (info.IsFont ? "UIFont " : "UITileSheet ") + info.Name;
             UploadTileSheet(bitmap, texture, info.IsFont);
 
             var material = new UIMaterial(diContainer, info.IsFont);

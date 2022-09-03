@@ -107,6 +107,7 @@ namespace zzre.rendering
                 return;
             sections ??= visibleMeshSections;
 
+            cl.PushDebugGroup(nameof(WorldRenderer));
             var visibleSubMeshes = sections
                 .SelectMany(m => worldBuffers.SubMeshes.Range(m.SubMeshes))
                 .GroupBy(s => s.MaterialIndex);
@@ -129,6 +130,7 @@ namespace zzre.rendering
                         instanceStart: 0);
                 }
             }
+            cl.PopDebugGroup();
         }
 
         public void RenderForceAll(CommandList cl) =>

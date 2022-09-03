@@ -82,6 +82,7 @@ namespace zzre.debug
 
             vertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)(vertices.Length * ColoredVertex.Stride), BufferUsage.VertexBuffer));
+            vertexBuffer.Name = $"DebugPlane Vertices {GetHashCode()}";
             cl.UpdateBuffer(vertexBuffer, 0, vertices);
             isDirty = false;
         }

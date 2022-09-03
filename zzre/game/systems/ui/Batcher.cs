@@ -69,6 +69,7 @@ namespace zzre.game.systems.ui
                 instanceBuffer?.Dispose();
                 instanceBuffer = resourceFactory.CreateBuffer(
                     new BufferDescription(totalSizeInBytes, BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+                instanceBuffer.Name = "UIBatcher Instances";
             }
 
             mappedInstances = graphicsDevice.Map<UIInstance>(instanceBuffer, MapMode.Write);
@@ -85,7 +86,7 @@ namespace zzre.game.systems.ui
         {
             var newMaterial = material ?? lastMaterial ?? untexturedMaterial;
             if (lastMaterial != newMaterial)
-                FinishBatch(cl);
+                FinishBatch();
             lastMaterial = newMaterial;
 
             foreach (var tile in tiles)
@@ -112,8 +113,9 @@ namespace zzre.game.systems.ui
         protected override void PostUpdate(CommandList cl)
         {
             graphicsDevice.Unmap(instanceBuffer);
-            FinishBatch(cl);
+            FinishBatch();
 
+            cl.PushDebugGroup("UIBatcher");
             // TODO: Update UI batches only if changed
             cl.SetVertexBuffer(0, instanceBuffer);
             uint instanceStart = 0;
@@ -127,9 +129,10 @@ namespace zzre.game.systems.ui
                     instanceCount: batch.Instances);
                 instanceStart += batch.Instances;
             }
+            cl.PopDebugGroup();
         }
 
-        private void FinishBatch(CommandList cl)
+        private void FinishBatch()
         {
             if (lastMaterial == null || nextInstanceCount == 0)
                 return;

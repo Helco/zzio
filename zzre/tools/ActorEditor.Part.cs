@@ -63,7 +63,7 @@ namespace zzre.tools
                     material.World.BufferRange = locationBufferRange;
                 }
 
-                skeleton = new Skeleton(skin);
+                skeleton = new Skeleton(skin, modelName);
                 skeleton.Location.Parent = location;
                 skeletonRenderer = new DebugSkeletonRenderer(diContainer, geometry, skeleton);
                 AddDisposable(skeletonRenderer);

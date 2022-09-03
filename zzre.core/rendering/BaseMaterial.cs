@@ -13,15 +13,17 @@ namespace zzre.rendering
             private readonly ResourceFactory factory;
             private readonly ResourceLayout layout;
             private readonly uint index;
+            private readonly string parentName;
             private ResourceSet? resourceSet;
 
             public List<BaseBinding> Bindings { get; } = new List<BaseBinding>();
 
-            public BindingSet(ResourceFactory factory, ResourceLayout layout, uint index)
+            public BindingSet(ResourceFactory factory, ResourceLayout layout, uint index, string parentName)
             {
                 this.factory = factory;
                 this.layout = layout;
                 this.index = index;
+                this.parentName = parentName;
             }
 
             protected override void DisposeManaged()
@@ -48,6 +50,7 @@ namespace zzre.rendering
                         Layout = layout,
                         BoundResources = Bindings.Select(b => b.Resource).ToArray()
                     });
+                    resourceSet.Name = $"{parentName} Set {index}";
                 }
                 cl.SetGraphicsResourceSet(index, resourceSet);
             }
@@ -60,10 +63,11 @@ namespace zzre.rendering
 
         protected BaseMaterial(GraphicsDevice device, IBuiltPipeline pipeline)
         {
+            var name = GetType().Name;
             Device = device;
             Pipeline = pipeline;
             bindingSets = Enumerable.Range(0, pipeline.ResourceLayouts.Count)
-                .Select(i => new BindingSet(Device.ResourceFactory, pipeline.ResourceLayouts[i], (uint)i))
+                .Select(i => new BindingSet(Device.ResourceFactory, pipeline.ResourceLayouts[i], (uint)i, name))
                 .ToArray();
         }
 

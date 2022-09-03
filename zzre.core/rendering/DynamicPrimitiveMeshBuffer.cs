@@ -30,6 +30,7 @@ namespace zzre.rendering
                     return vertexBuffer;
                 vertexBuffer?.Dispose();
                 vertexBuffer = resourceFactory.CreateBuffer(new BufferDescription(newVertexBufferSize, BufferUsage.VertexBuffer));
+                vertexBuffer.Name = $"{GetType().Name} Vertices {GetHashCode()}";
                 return vertexBuffer;
             }
         }
@@ -43,6 +44,7 @@ namespace zzre.rendering
                     return indexBuffer;
                 indexBuffer?.Dispose();
                 indexBuffer = resourceFactory.CreateBuffer(new BufferDescription(newIndexBufferSize, BufferUsage.IndexBuffer));
+                indexBuffer.Name = $"{GetType().Name} Indices {GetHashCode()}";
                 return indexBuffer;
             }
         }
@@ -133,6 +135,7 @@ namespace zzre.rendering
             {
                 vertexBuffer?.Dispose();
                 vertexBuffer = resourceFactory.CreateBuffer(new BufferDescription(vertexBufferSize, BufferUsage.VertexBuffer));
+                vertexBuffer.Name = $"{GetType().Name} Vertices {GetHashCode()}";
                 dirtyPrims.Clear();
                 dirtyPrims.Add(Range.All);
             }
@@ -149,6 +152,7 @@ namespace zzre.rendering
             {
                 indexBuffer?.Dispose();
                 indexBuffer = resourceFactory.CreateBuffer(new BufferDescription(indexBufferSize, BufferUsage.IndexBuffer));
+                indexBuffer.Name = $"{GetType().Name} Indices {GetHashCode()}";
                 var indices = Enumerable
                     .Range(0, Capacity)
                     .SelectMany(i => indexPattern.Select(p => (ushort)(p + i * verticesPerPrimitive)))

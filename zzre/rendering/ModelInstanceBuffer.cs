@@ -18,6 +18,7 @@ namespace zzre.rendering
                 (dynamic ? BufferUsage.Dynamic : default);
             DeviceBuffer = resourceFactory.CreateBuffer(new BufferDescription(
                 ModelInstance.Stride * (uint)totalCount, usageFlags));
+            DeviceBuffer.Name = nameof(ModelInstanceBuffer);
             TotalCount = totalCount;
             FreeCount = totalCount;
         }

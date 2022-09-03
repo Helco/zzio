@@ -10,6 +10,7 @@ namespace zzre.rendering
     {
         private class PipelineBuilder : IPipelineBuilder
         {
+            private readonly string name;
             private PipelineCollection Collection { get; }
             private string? shaderSetName;
             private PixelFormat? depthTarget;
@@ -32,9 +33,10 @@ namespace zzre.rendering
             private DepthStencilStateDescription depthStencil = DepthStencilStateDescription.DepthOnlyLessEqual;
             private PrimitiveTopology primitiveTopology = PrimitiveTopology.TriangleList;
 
-            public PipelineBuilder(PipelineCollection collection)
+            public PipelineBuilder(PipelineCollection collection, string name)
             {
                 Collection = collection;
+                this.name = name;
             }
 
             public IPipelineBuilder WithShaderSet(string shaderSetName)
@@ -206,7 +208,7 @@ namespace zzre.rendering
                         .Select(set => new ResourceLayoutDescription(set.ToArray()))
                         .ToArray();
                     var resourceLayouts = resLayoutDescrs
-                        .Select(layoutDescr => Collection.Factory.CreateResourceLayout(layoutDescr))
+                        .Select(CreateResourceLayout)
                         .ToArray();
                     var shaders = Collection.LoadShaderSet(shaderSetName);
                     var pipelineDescr = new GraphicsPipelineDescription(
@@ -218,11 +220,19 @@ namespace zzre.rendering
                         resourceLayouts,
                         OutputDescription);
                     var pipeline = Collection.Factory.CreateGraphicsPipeline(pipelineDescr);
+                    pipeline.Name = $"{name} Pipeline";
                     builtPipeline = new BuiltPipeline(pipeline, pipelineDescr, resLayoutDescrs, shaderSetName);
 
                     Collection.pipelines.Add(builtPipeline);
                     return builtPipeline;
                 }
+            }
+
+            private ResourceLayout CreateResourceLayout(ResourceLayoutDescription description, int index)
+            {
+                var layout = Collection.Factory.CreateResourceLayout(ref description);
+                layout.Name = $"{name} Layout {index}";
+                return layout;
             }
 
             private OutputDescription OutputDescription => new OutputDescription(

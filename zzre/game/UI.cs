@@ -39,6 +39,7 @@ namespace zzre.game
             projectionBuffer = resourceFactory.CreateBuffer(
                 // Buffer has to be multiple of 16 bytes big even though we only need 8
                 new BufferDescription(sizeof(float) * 4, BufferUsage.UniformBuffer));
+            projectionBuffer.Name = "UI Projection";
             HandleResize();
 
             AddTag(this);

@@ -37,11 +37,20 @@ namespace zzre.game.systems
             removeSubscription.Dispose();
         }
 
+        protected override void PreUpdate(CommandList cl)
+        {
+            base.PreUpdate(cl);
+            cl.PushDebugGroup(nameof(ActorRenderer));
+        }
+
         [Update]
         private void Update(CommandList cl,
+            in components.Parent parent,
             in ClumpBuffers clumpBuffers,
             in ModelSkinnedMaterial[] materials)
         {
+            var actorExResource = parent.Entity.Get<DefaultEcs.Resource.ManagedResource<string, ActorExDescription>>();
+            cl.PushDebugGroup(actorExResource.Info);
             foreach (var (subMesh, material) in clumpBuffers.SubMeshes.Zip(materials))
             {
                 if (material.Pose.Skeleton?.Animation != null)
@@ -56,6 +65,13 @@ namespace zzre.game.systems
                     instanceStart: 0,
                     instanceCount: 1);
             }
+            cl.PopDebugGroup();
+        }
+
+        protected override void PostUpdate(CommandList cl)
+        {
+            base.PostUpdate(cl);
+            cl.PopDebugGroup();
         }
 
         private void HandleAddedComponent(in DefaultEcs.Entity entity, in components.ActorPart value)

@@ -87,6 +87,7 @@ namespace zzre.rendering.effectparts
             uint instanceBufferSize = (uint)models.Length * ModelInstance.Stride;
             instanceBuffer = diContainer.GetTag<ResourceFactory>()
                 .CreateBuffer(new BufferDescription(instanceBufferSize, BufferUsage.VertexBuffer));
+            instanceBuffer.Name = "ParticleBehaviourModel Instances";
             AddDisposable(instanceBuffer);
         }
 

@@ -34,14 +34,18 @@ namespace zzre
         public Box Bounds { get; }
         public bool IsSolid { get; }
         public RWGeometry RWGeometry { get; }
+        public string Name { get; set; }
 
-        public ClumpBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
+        public ClumpBuffers(ITagContainer diContainer, FilePath path)
+            : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
             throw new FileNotFoundException($"Could not find model at {path.ToPOSIXString()}"))
         { }
-        public ClumpBuffers(ITagContainer diContainer, IResource resource) : this(diContainer, resource.OpenAsRWBS<RWClump>()) { }
+        public ClumpBuffers(ITagContainer diContainer, IResource resource)
+            : this(diContainer, resource.OpenAsRWBS<RWClump>(), resource.Name.Replace(".DFF", "", System.StringComparison.InvariantCultureIgnoreCase)) { }
 
-        public ClumpBuffers(ITagContainer diContainer, RWClump clump)
+        public ClumpBuffers(ITagContainer diContainer, RWClump clump, string name = "")
         {
+            Name = name;
             var device = diContainer.GetTag<GraphicsDevice>();
             var atomic = clump.FindChildById(SectionId.Atomic, recursive: false) as RWAtomic;
             var geometry = clump.FindChildById(SectionId.Geometry, true) as RWGeometry;
@@ -66,6 +70,7 @@ namespace zzre
             }
             Bounds = bounds;
             vertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription((uint)vertices.Length * ModelStandardVertex.Stride, BufferUsage.VertexBuffer));
+            vertexBuffer.Name = $"Clump {name} Vertices";
             device.UpdateBuffer(vertexBuffer, 0, vertices);
 
             // TODO: might have to correlate to the materialIndices member of materialList 
@@ -81,6 +86,7 @@ namespace zzre
                 nextIndexPtr += subMeshes[idx].IndexCount;
             }
             indexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription((uint)indices.Length * 2, BufferUsage.IndexBuffer));
+            indexBuffer.Name = $"Clump {name} Indices";
             device.UpdateBuffer(indexBuffer, 0, indices);
 
             Skin = clump.FindChildById(SectionId.SkinPLG, true) as RWSkinPLG;
@@ -101,6 +107,7 @@ namespace zzre
                     skinVertices[i].weights.W = Skin.vertexWeights[i, 3];
                 }
                 skinBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription((uint)skinVertices.Length * SkinVertex.Stride, BufferUsage.VertexBuffer));
+                skinBuffer.Name = $"Clump {name} Skin";
                 device.UpdateBuffer(skinBuffer, 0, skinVertices);
             }
         }

@@ -101,6 +101,7 @@ namespace zzre
             vertexBuffer?.Dispose();
             vertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)vertices.Length * ColoredVertex.Stride, BufferUsage.VertexBuffer));
+            vertexBuffer.Name = $"DebugGrid Vertices {GetHashCode()}";
             device.UpdateBuffer(vertexBuffer, 0, vertices);
         }
 

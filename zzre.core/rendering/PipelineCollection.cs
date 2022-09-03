@@ -51,6 +51,6 @@ namespace zzre.rendering
 
 
 
-        public IPipelineBuilder GetPipeline() => new PipelineBuilder(this);
+        public IPipelineBuilder GetPipelineBuilder(string name) => new PipelineBuilder(this, name);
     }
 }

@@ -58,6 +58,7 @@ namespace zzre.rendering.effectparts
             uint instanceBufferSize = (uint)sparks.Length * SparkInstance.Stride;
             instanceBuffer = diContainer.GetTag<ResourceFactory>()
                 .CreateBuffer(new(instanceBufferSize, BufferUsage.VertexBuffer));
+            instanceBuffer.Name = "ParticleBehaviourSpark Instances";
             AddDisposable(instanceBuffer);
 
             // scale and uv keep the same, so we set it once for all

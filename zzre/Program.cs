@@ -30,6 +30,15 @@ namespace zzre
         {
             System.Array.ForEach(PreloadAssemblies, n => System.Reflection.Assembly.Load(n));
 
+#if DEBUG
+            RenderDoc? renderDoc = null;
+            if (RenderDoc.Load(out renderDoc))
+            {
+                renderDoc.APIValidation = true;
+                renderDoc.OverlayEnabled = false;
+            }
+#endif
+
             System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
             var window = VeldridStartup.CreateWindow(new WindowCreateInfo
             {
@@ -96,6 +105,10 @@ namespace zzre
                 windowContainer.HandleKeyEvent(ev.Key, ev.Down);
                 if (ev.Key == Key.F5)
                     windowContainer.ImGuiRenderer.ResetContext(graphicsDevice, graphicsDevice.MainSwapchain.Framebuffer.OutputDescription);
+#if DEBUG
+                if (ev.Key == Key.PrintScreen && renderDoc?.IsTargetControlConnected() == false)
+                    renderDoc.LaunchReplayUI();
+#endif
             };
 
             window.KeyUp += (ev) =>

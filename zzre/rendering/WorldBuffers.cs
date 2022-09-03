@@ -72,9 +72,10 @@ namespace zzre.rendering
         public WorldBuffers(ITagContainer diContainer, FilePath path) : this(diContainer, diContainer.GetTag<IResourcePool>().FindFile(path) ??
             throw new FileNotFoundException($"Could not find world at {path.ToPOSIXString()}"))
         { }
-        public WorldBuffers(ITagContainer diContainer, IResource resource) : this(diContainer, resource.OpenAsRWBS<RWWorld>()) { }
+        public WorldBuffers(ITagContainer diContainer, IResource resource)
+            : this(diContainer, resource.OpenAsRWBS<RWWorld>(), resource.Name.Replace(".BSP", "", StringComparison.InvariantCultureIgnoreCase)) { }
 
-        public WorldBuffers(ITagContainer diContainer, RWWorld world)
+        public WorldBuffers(ITagContainer diContainer, RWWorld world, string name = "")
         {
             var device = diContainer.GetTag<GraphicsDevice>();
             var materialList = world.FindChildById(SectionId.MaterialList, false) as RWMaterialList;
@@ -185,10 +186,12 @@ namespace zzre.rendering
             var vertexArray = vertices.ToArray();
             vertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)(vertexArray.Count() * ModelStandardVertex.Stride), BufferUsage.VertexBuffer));
+            vertexBuffer.Name = $"World {name} Vertices";
             device.UpdateBuffer(vertexBuffer, 0, vertexArray);
             var indexArray = indices.ToArray();
             indexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)(indexArray.Count() * sizeof(ushort)), BufferUsage.IndexBuffer));
+            indexBuffer.Name = $"World {name} Indices";
             device.UpdateBuffer(indexBuffer, 0, indexArray);
             sections = sectionList.ToImmutableArray();
             subMeshes = subMeshList.ToImmutableArray();

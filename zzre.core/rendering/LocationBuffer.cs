@@ -34,6 +34,7 @@ namespace zzre.rendering
             matrices = new Matrix4x4[capacity * matrixStrideAsMultiple];
             buffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
                 (uint)capacity * matrixStride, BufferUsage.UniformBuffer));
+            buffer.Name = $"LocationBuffer {GetHashCode()}";
         }
 
         protected override void DisposeManaged()

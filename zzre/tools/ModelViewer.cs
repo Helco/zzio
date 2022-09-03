@@ -147,7 +147,7 @@ namespace zzre.tools
             skeletonRenderer = null;
             if (geometryBuffers.Skin != null)
             {
-                var skeleton = new Skeleton(geometryBuffers.Skin);
+                var skeleton = new Skeleton(geometryBuffers.Skin, resource.Name.Replace(".DFF", "", StringComparison.CurrentCultureIgnoreCase));
                 skeletonRenderer = new DebugSkeletonRenderer(diContainer.ExtendedWith(camera, locationBuffer), geometryBuffers, skeleton);
                 AddDisposable(skeletonRenderer);
             }

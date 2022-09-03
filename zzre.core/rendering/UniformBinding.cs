@@ -21,6 +21,7 @@ namespace zzre.rendering
                 if (buffer != null)
                     return buffer;
                 buffer = Parent.Device.ResourceFactory.CreateBuffer(new BufferDescription(SizeInBytes, BufferUsage.UniformBuffer));
+                buffer.Name = $"Uniforms {GetHashCode()}";
                 range = null;
                 return buffer;
             }

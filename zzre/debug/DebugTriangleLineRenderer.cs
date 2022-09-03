@@ -84,6 +84,7 @@ namespace zzre
             {
                 vertexBuffer?.Dispose();
                 vertexBuffer = resourceFactory.CreateBuffer(new BufferDescription(sizeInBytes, BufferUsage.VertexBuffer));
+                vertexBuffer.Name = $"DebugTriangle Vertices {GetHashCode()}";
             }
             cl.UpdateBuffer(vertexBuffer, 0, vertices);
         }

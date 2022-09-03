@@ -100,6 +100,7 @@ namespace zzre.game.systems
         {
             if (instanceBuffer == null)
                 throw new InvalidOperationException("Model instance buffer was never set");
+            cl.PushDebugGroup($"{nameof(ModelRenderer)} {responsibility}");
 
             var instanceSpan = System.Runtime.InteropServices.CollectionsMarshal.AsSpan(instances);
             cl.UpdateBuffer(instanceBuffer,
@@ -113,6 +114,7 @@ namespace zzre.game.systems
             foreach (var clumpCount in clumpCounts)
             {
                 var (clump, materials, count) = (clumpCount.Clump, clumpCount.Materials, clumpCount.Count);
+                cl.PushDebugGroup(clump.Name);
 
                 isFirstDraw = true;
                 foreach (var (subMesh, material) in clump.SubMeshes.Zip(materials))
@@ -137,7 +139,9 @@ namespace zzre.game.systems
                 }
 
                 curInstanceStart += count;
+                cl.PopDebugGroup();
             }
+            cl.PopDebugGroup();
         }
     }
 }
