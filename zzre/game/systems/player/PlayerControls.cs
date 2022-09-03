@@ -46,9 +46,13 @@ namespace zzre.game.systems
 
         private void HandleLockPlayerControl(in messages.LockPlayerControl msg)
         {
-            stuckMovingForward = msg.MovingForward;
-            if (msg == messages.LockPlayerControl.Unlock || lockTimer != float.PositiveInfinity)
+            if (msg == messages.LockPlayerControl.Unlock)
+                lockTimer = 0f;
+            else if (msg.Duration > lockTimer)
+            {
                 lockTimer = msg.Duration;
+                stuckMovingForward = msg.MovingForward;
+            }
         }
 
         protected override void Update(float elapsedTime, ref components.PlayerControls component)
