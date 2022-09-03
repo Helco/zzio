@@ -56,6 +56,9 @@ namespace zzre.game.systems
         {
             currentVerAngle = 0f;
             curCamDistance = maxCameraDistance;
+
+            camera.Location.LocalPosition = playerLocation.LocalPosition;
+            camera.Location.LocalRotation = playerLocation.LocalRotation;
         }
 
         private void HandleSetCameraMode(in messages.SetCameraMode mode)
