@@ -49,7 +49,8 @@ namespace zzre.game.systems
                 : null;
             if (actualFairy == intendedFairy)
                 return;
-            spawnedFairy.Entity.Dispose();
+            if (spawnedFairy.Entity.IsAlive)
+                spawnedFairy.Entity.Dispose();
             spawnedFairy.Entity = default;
             if (intendedFairy == null)
                 return;

@@ -58,9 +58,10 @@ public partial class Doorway : AEntitySetSystem<float>
 
         var prevCount = World.Count();
         World.Publish(new messages.SceneChanging());
-        Console.WriteLine($"Entity count before: {prevCount} after {World.Count()}");
+        var cleared = World.Count();
         World.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
         game.LoadScene(targetScene);
+        Console.WriteLine($"Entity count before: {prevCount} cleared: {cleared} loaded: {World.Count()}");
         World.Publish(new messages.PlayerEntered(FindEntryTrigger()));
         entity.Set(components.GameFlow.Normal);
     }

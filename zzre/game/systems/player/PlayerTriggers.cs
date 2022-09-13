@@ -48,7 +48,8 @@ namespace zzre.game.systems
 
         private void HandleSceneChanging(in messages.SceneChanging _)
         {
-            npcMarker.Dispose();
+            if (npcMarker.IsAlive)
+                npcMarker.Dispose();
             npcMarker = default;
         }
 
