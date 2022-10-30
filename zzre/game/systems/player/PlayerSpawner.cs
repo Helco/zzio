@@ -75,7 +75,7 @@ public class PlayerSpawner : ISystem<float>
         if (trigger.type == TriggerType.Doorway && trigger.colliderType == TriggerColliderType.Sphere)
             startPos += trigger.dir * trigger.radius * 1.2f;
         playerLocation.LocalPosition = startPos;
-        // here the LookIn was removed because of a physics/animation bug.
+        playerLocation.LookIn(MathEx.SafeNormalize(trigger.dir with { Y = 0f }));
         playerEntity.Get<components.PuppetActorMovement>().TargetDirection = trigger.dir;
         ecsWorld.Publish(new messages.CreaturePlaceToGround(playerEntity));
 
