@@ -15,8 +15,8 @@ namespace zzre.game.systems
 
         private readonly IDisposable setCameraModeDisposable;
 
-        private Trigger trigger = new Trigger();
-        private Location npcLocation = new Location();
+        private Trigger trigger = new();
+        private Location npcLocation = new();
         private int majorMode;
 
         public TriggerCamera(ITagContainer diContainer) : base(diContainer)

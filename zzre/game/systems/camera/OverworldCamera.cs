@@ -5,8 +5,8 @@ namespace zzre.game.systems
 {
     public class OverworldCamera : BaseGameCamera
     {
-        private static readonly Vector2 SpeedFactor = new Vector2(15f, 0.1f);
-        private static readonly Vector3 CameraDirectionFactor = new Vector3(1f, 0.2f, 1f);
+        private static readonly Vector2 SpeedFactor = new(15f, 0.1f);
+        private static readonly Vector3 CameraDirectionFactor = new(1f, 0.2f, 1f);
         private const float HorizontalDeadzone = 0.5f;
         private const float AdditionalHeight = 1f;
         private const float MaxVerAngle = 1.3f;
