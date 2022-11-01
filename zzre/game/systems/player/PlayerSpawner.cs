@@ -57,7 +57,7 @@ public class PlayerSpawner : ISystem<float>
         playerEntity.Set<components.PlayerControls>();
         playerEntity.Set<components.PlayerPuppet>();
         playerEntity.Set(components.PhysicParameters.Standard);
-        playerEntity.Set(new components.NonFairyAnimation(GlobalRandom.Get));
+        playerEntity.Set(new components.NonFairyAnimation(Random.Shared));
         playerEntity.Set<components.PuppetActorMovement>();
         var playerColliderSize = GetColliderSize(playerEntity);
         playerEntity.Set(new components.HumanPhysics(playerColliderSize));

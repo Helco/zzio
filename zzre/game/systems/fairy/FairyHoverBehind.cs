@@ -8,7 +8,6 @@ using Mode = zzre.game.components.FairyHoverBehind.Mode;
 
 public partial class FairyHoverBehind : AEntitySetSystem<float>
 {
-    private readonly Random random = GlobalRandom.Get;
     private readonly GameTime time;
     private readonly IDisposable playerEnteredSubscription;
     private readonly IDisposable addedSubscription;
@@ -52,6 +51,7 @@ public partial class FairyHoverBehind : AEntitySetSystem<float>
         ref components.FairyHoverBehind hoverBehind,
         ref components.Velocity velocity)
     {
+        var random = Random.Shared;
         hoverBehind.TimeLeft -= elapsedTime;
         if (hoverBehind.TimeLeft <= 0f)
         {
@@ -100,6 +100,7 @@ public partial class FairyHoverBehind : AEntitySetSystem<float>
 
     private Vector3 GetHoverOffset(ref components.FairyHoverBehind hoverBehind, float elapsedTime)
     {
+        var random = Random.Shared;
         var offset = hoverBehind.HoverOffset;
         if (offset == Vector3.Zero)
         {
