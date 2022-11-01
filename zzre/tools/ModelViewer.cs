@@ -11,6 +11,7 @@ using zzre.materials;
 using zzre.debug;
 using zzre.imgui;
 using System.Collections.Generic;
+using zzio.rwbs;
 
 namespace zzre.tools
 {
@@ -134,7 +135,7 @@ namespace zzre.tools
             foreach (var (rwMaterial, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
             {
                 var material = materials[index] = new ModelStandardMaterial(diContainer);
-                (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePaths, rwMaterial);
+                (material.MainTexture.Texture, material.Sampler.Sampler) = TryLoadTexture(texturePaths, rwMaterial);
                 material.LinkTransformsTo(camera);
                 material.World.Ref = Matrix4x4.Identity;
                 material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
@@ -161,6 +162,29 @@ namespace zzre.tools
             fbArea.IsDirty = true;
             CurrentResource = resource;
             Window.Title = $"Model Viewer - {resource.Path.ToPOSIXString()}";
+        }
+
+        private (Texture, Sampler) TryLoadTexture(FilePath[] texturePaths, RWMaterial rwMaterial)
+        {
+            try
+            {
+                return textureLoader.LoadTexture(texturePaths, rwMaterial);
+            }
+            catch(InvalidDataException)
+            {
+                var texture = device.ResourceFactory.CreateTexture(new(2, 2, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
+                device.UpdateTexture(texture, new byte[]
+                {
+                    0xff, 0x00, 0xff, 0xff,
+                    0xff, 0xff, 0xff, 0xff,
+                    0x00, 0x00, 0x00, 0xff,
+                    0xff, 0x00, 0xff, 0xff
+                }, 0, 0, 0, 2, 2, 1, 0, 0);
+                texture.Name =
+                    ((rwMaterial.FindChildById(SectionId.String, true) as RWString)?.value
+                    ?? "<unknown>") + " (Missing)";
+                return (texture, device.PointSampler);
+            }
         }
 
         private void HandleResize() => camera.Aspect = fbArea.Ratio;
