@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using DefaultEcs.Resource;
 using DefaultEcs.System;
+using zzre.game.components;
 
 namespace zzre.game.systems
 {
@@ -44,7 +45,7 @@ namespace zzre.game.systems
             ref components.SpawnedFairy spawnedFairy)
         {
             var intendedFairy = inventory.ActiveOverworldFairy;
-            var actualFairy = spawnedFairy.Entity.Has<zzio.InventoryFairy>()
+            var actualFairy = spawnedFairy.Entity.IsAlive && spawnedFairy.Entity.Has<zzio.InventoryFairy>()
                 ? spawnedFairy.Entity.Get<zzio.InventoryFairy>()
                 : null;
             if (actualFairy == intendedFairy)

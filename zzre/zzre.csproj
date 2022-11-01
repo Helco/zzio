@@ -33,7 +33,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DefaultEcs" Version="0.17.2" />
     <PackageReference Include="DefaultEcs.Analyzer" Version="0.17.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -49,6 +48,11 @@
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <PackageReference Include="Veldrid.RenderDoc" Version="1.0.1" />
+    <PackageReference Include="DefaultEcs.Safe" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)'!='Debug'">
+    <PackageReference Include="DefaultEcs" Version="0.17.2" />
   </ItemGroup>
 
   <ItemGroup>
