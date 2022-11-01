@@ -14,10 +14,11 @@ namespace zzre.game.systems
         private const float NpcMarkerDistance = 0.3f;
 
         private readonly DefaultEcs.World world;
-        private readonly DefaultEcs.Entity npcMarker;
         private readonly IZanzarahContainer zzContainer;
         private readonly PlayerControls playerControls;
         private readonly Location cameraLocation;
+        private readonly IDisposable sceneChangingDisposable;
+        private DefaultEcs.Entity npcMarker;
 
         public bool IsEnabled { get; set; } = true;
         public bool IsMarkerActive => npcMarker.Has<components.Visibility>();
@@ -36,23 +37,20 @@ namespace zzre.game.systems
             cameraLocation = diContainer.GetTag<rendering.Camera>().Location;
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
 
-            npcMarker = world.CreateEntity();
-            npcMarker.Set(new Location());
-            npcMarker.Set(new components.behaviour.Rotate(Vector3.UnitY, 90f));
-            npcMarker.Set(ManagedResource<ClumpBuffers>.Create(
-                new resources.ClumpInfo(resources.ClumpType.Model, "marker.dff")));
-            ModelLoader.LoadMaterialsFor(npcMarker,
-                zzio.scn.FOModelRenderType.Solid,
-                zzio.IColor.Green,
-                new zzio.SurfaceProperties(1f, 1f, 1f));
-            var materials = npcMarker.Get<List<materials.BaseModelInstancedMaterial>>();
-            foreach (var material in materials)
-                material.Uniforms.Ref.vertexColorFactor = 1f;
+            sceneChangingDisposable = world.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         }
 
         public void Dispose()
         {
             zzContainer.OnMouseDown -= HandleMouseDown;
+            sceneChangingDisposable.Dispose();
+        }
+
+        private void HandleSceneChanging(in messages.SceneChanging _)
+        {
+            if (npcMarker.IsAlive)
+                npcMarker.Dispose();
+            npcMarker = default;
         }
 
         private void HandleMouseDown(Veldrid.MouseButton button, Vector2 _)
@@ -68,6 +66,7 @@ namespace zzre.game.systems
         {
             // TODO: Add sound effect for looking at triggers
 
+            EnsureNpcMarker();
             if (TryGetTriggerableNPC(out var npc))
             {
                 // TODO: Fix marker distance for flying-type NPCs
@@ -100,6 +99,24 @@ namespace zzre.game.systems
             var cameraDir = cameraLocation.GlobalForward with { Y = 0.001f };
             var dirDistance = Vector3.Distance(Vector3.Normalize(playerToNpc), Vector3.Normalize(cameraDir));
             return dirDistance < MaxNpcDirDistance;
+        }
+
+        private void EnsureNpcMarker()
+        {
+            if (npcMarker.IsAlive)
+                return;
+            npcMarker = world.CreateEntity();
+            npcMarker.Set(new Location());
+            npcMarker.Set(new components.behaviour.Rotate(Vector3.UnitY, 90f));
+            npcMarker.Set(ManagedResource<ClumpBuffers>.Create(
+                new resources.ClumpInfo(resources.ClumpType.Model, "marker.dff")));
+            ModelLoader.LoadMaterialsFor(npcMarker,
+                zzio.scn.FOModelRenderType.Solid,
+                zzio.IColor.Green,
+                new zzio.SurfaceProperties(1f, 1f, 1f));
+            var materials = npcMarker.Get<List<materials.BaseModelInstancedMaterial>>();
+            foreach (var material in materials)
+                material.Uniforms.Ref.vertexColorFactor = 1f;
         }
     }
 }

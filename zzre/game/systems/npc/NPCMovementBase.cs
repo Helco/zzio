@@ -15,7 +15,6 @@ namespace zzre.game.systems
 
         private readonly Lazy<Location> playerLocationLazy;
         private readonly IDisposable sceneLoadedSubscription;
-        protected readonly Scene scene;
         protected IReadOnlyDictionary<int, Trigger> waypointById = new Dictionary<int, Trigger>();
         protected IReadOnlyDictionary<int, Trigger> waypointByIdx = new Dictionary<int, Trigger>();
         protected ILookup<int, Trigger> waypointsByCategory = Enumerable.Empty<Trigger>().ToLookup(t => 0);
@@ -27,7 +26,6 @@ namespace zzre.game.systems
         {
             var game = diContainer.GetTag<Game>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
-            scene = diContainer.GetTag<Scene>();
             sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         }
 
@@ -37,8 +35,9 @@ namespace zzre.game.systems
             sceneLoadedSubscription.Dispose();
         }
 
-        private void HandleSceneLoaded(in messages.SceneLoaded _)
+        private void HandleSceneLoaded(in messages.SceneLoaded message)
         {
+            var scene = message.Scene;
             var waypoints = scene.triggers.Where(t => t.type == TriggerType.Waypoint).ToArray();
             waypointById = waypoints
                 .GroupBy(wp => (int)wp.ii1)

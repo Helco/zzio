@@ -4,19 +4,43 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
-
 using Mode = zzre.game.components.FairyHoverBehind.Mode;
 
 public partial class FairyHoverBehind : AEntitySetSystem<float>
 {
     private readonly Random random = GlobalRandom.Get;
     private readonly GameTime time;
-    private readonly WorldCollider worldCollider;
+    private readonly IDisposable playerEnteredSubscription;
+    private readonly IDisposable addedSubscription;
+    private WorldCollider? worldCollider;
 
     public FairyHoverBehind(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         time = diContainer.GetTag<GameTime>();
-        worldCollider = diContainer.GetTag<WorldCollider>();
+        playerEnteredSubscription = World.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
+        addedSubscription = World.SubscribeComponentAdded<components.FairyHoverBehind>(HandleAddedComponent);
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        playerEnteredSubscription.Dispose();
+        addedSubscription.Dispose();
+    }
+
+    private void HandlePlayerEntered(in messages.PlayerEntered _)
+    {
+        foreach (var entity in Set.GetEntities())
+            ResetPosition(entity);
+    }
+
+    private void HandleAddedComponent(in DefaultEcs.Entity entity, in components.FairyHoverBehind value) =>
+        ResetPosition(entity);
+
+    private void ResetPosition(in DefaultEcs.Entity entity)
+    {
+        var parent = entity.Get<components.Parent>().Entity;
+        entity.Get<Location>().LocalPosition = parent.Get<Location>().LocalPosition;
     }
 
     [Update]
@@ -66,6 +90,7 @@ public partial class FairyHoverBehind : AEntitySetSystem<float>
             location.LocalPosition = location.LocalPosition with { Y = minYPos };
         velocity = new(move);
 
+        worldCollider ??= World.Get<WorldCollider>();
         if (worldCollider.Intersects(new Sphere(location.LocalPosition, 0.6f)))
         {
             hoverBehind.TimeLeft = 3f;

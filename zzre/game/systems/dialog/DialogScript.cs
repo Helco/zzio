@@ -44,7 +44,6 @@ namespace zzre.game.systems
 
         private readonly MappedDB db;
         private readonly UI ui;
-        private readonly Scene scene;
         private readonly Game game;
         private readonly zzio.Savegame savegame;
         private readonly EntityCommandRecorder recorder;
@@ -60,7 +59,6 @@ namespace zzre.game.systems
             World.SetMaxCapacity<components.DialogState>(1);
             db = diContainer.GetTag<MappedDB>();
             ui = diContainer.GetTag<UI>();
-            scene = diContainer.GetTag<Scene>();
             game = diContainer.GetTag<Game>();
             savegame = diContainer.GetTag<zzio.Savegame>();
             recorder = diContainer.GetTag<EntityCommandRecorder>();
@@ -72,6 +70,7 @@ namespace zzre.game.systems
         {
             base.Dispose();
             startDialogDisposable.Dispose();
+            removedDisposable.Dispose();
         }
 
         private void HandleStartDialog(in messages.StartDialog message)

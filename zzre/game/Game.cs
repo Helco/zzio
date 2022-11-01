@@ -17,15 +17,15 @@ namespace zzre.game
         private readonly GameTime time;
         private readonly DefaultEcs.World ecsWorld;
         private readonly Camera camera;
-        private readonly Scene scene;
-        private readonly WorldBuffers worldBuffers;
-        private readonly WorldRenderer worldRenderer;
         private readonly ISystem<float> updateSystems;
         private readonly ISystem<CommandList> renderSystems;
         private readonly systems.SyncedLocation syncedLocation;
 
-        public DefaultEcs.Entity PlayerEntity { get; }
-        public IResource SceneResource { get; }
+        private WorldRenderer worldRenderer = null!;
+
+        public DefaultEcs.Entity PlayerEntity => // Placeholder during transition
+            ecsWorld.GetEntities().With<components.PlayerPuppet>().AsEnumerable().First();
+        public IResource SceneResource { get; private set; } = null!;
 
         public bool IsUpdateEnabled
         {
@@ -45,27 +45,23 @@ namespace zzre.game
             AddTag(ecsWorld = new DefaultEcs.World());
             AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
             AddTag(camera = new Camera(this));
-            AddTag(scene = LoadScene($"sc_{savegame.sceneId}", out var sceneResource));
-            AddTag(worldBuffers = LoadWorldBuffers());
-            AddTag(new WorldCollider(worldBuffers.RWWorld));
-            AddTag(worldRenderer = new WorldRenderer(this));
-            worldRenderer.WorldBuffers = worldBuffers;
-            SceneResource = sceneResource;
 
             AddTag(new resources.Clump(this));
             AddTag(new resources.ClumpMaterial(this));
             AddTag(new resources.Actor(this));
             AddTag(new resources.SkeletalAnimation(this));
 
+            ecsWorld.SetMaxCapacity<Scene>(1);
+            ecsWorld.SetMaxCapacity<WorldBuffers>(1);
+            ecsWorld.SetMaxCapacity<WorldCollider>(1);
+            ecsWorld.SetMaxCapacity<WorldRenderer>(1);
+
             var updateSystems = new systems.RecordingSequentialSystem<float>(this);
             this.updateSystems = updateSystems;
             updateSystems.Add(
-                new systems.ModelLoader(this),
+                new systems.PlayerSpawner(this),
                 new systems.PlayerControls(this),
-                new systems.Animal(this),
-                new systems.Butterfly(this),
-                new systems.CirclingBird(this),
-                new systems.AnimalWaypointAI(this),
+                new systems.ModelLoader(this),
                 new systems.PlantWiggle(this),
                 new systems.BehaviourSwing(this),
                 new systems.BehaviourRotate(this),
@@ -76,6 +72,10 @@ namespace zzre.game
                 new systems.BehaviourCollectable(this),
                 new systems.BehaviourMagicBridge(this),
                 new systems.AdvanceAnimation(this),
+                new systems.Animal(this),
+                new systems.Butterfly(this),
+                new systems.CirclingBird(this),
+                new systems.AnimalWaypointAI(this),
                 new systems.HumanPhysics(this),
                 new systems.PlayerPuppet(this),
                 new systems.PuppetActorTarget(this),
@@ -107,6 +107,7 @@ namespace zzre.game
                 new systems.TriggerCamera(this),
                 new systems.CreatureCamera(this),
                 new systems.GotCard(this),
+                new systems.Doorway(this),
                 new systems.Reaper(this),
                 new systems.ParentReaper(this));
             updateSystems.Add(new systems.PauseDuring(this, updateSystems.Systems));
@@ -125,32 +126,12 @@ namespace zzre.game
 
             var worldLocation = new Location();
             camera.Location.Parent = worldLocation;
-            camera.Location.LocalPosition = -worldBuffers.Origin;
+            //camera.Location.LocalPosition = -worldBuffers.Origin;
             ecsWorld.Set(worldLocation);
 
-            PlayerEntity = ecsWorld.CreateEntity();
-            //playerLocation.LocalPosition = scene.triggers.First(t => t.type == TriggerType.Doorway).pos;
-            PlayerEntity.Set(new Location()
-            {
-                Parent = worldLocation,
-                LocalPosition = new Vector3(216f, 40.5f, 219f)
-            });
-            PlayerEntity.Set(DefaultEcs.Resource.ManagedResource<zzio.ActorExDescription>.Create("chr01"));
-            PlayerEntity.Set(components.Visibility.Visible);
-            PlayerEntity.Set<components.PlayerControls>();
-            PlayerEntity.Set<components.PlayerPuppet>();
-            PlayerEntity.Set(components.PhysicParameters.Standard);
-            PlayerEntity.Set(new components.NonFairyAnimation(GlobalRandom.Get));
-            PlayerEntity.Set<components.PuppetActorMovement>();
-            var playerActorParts = PlayerEntity.Get<components.ActorParts>();
-            var playerBodyClump = playerActorParts.Body.Get<ClumpBuffers>();
-            var playerColliderSize = playerBodyClump.Bounds.Size.Y;
-            PlayerEntity.Set(new components.HumanPhysics(playerColliderSize));
-            PlayerEntity.Set(new Sphere(Vector3.Zero, playerColliderSize));
-            PlayerEntity.Set(new Inventory(this, savegame));
-            PlayerEntity.Set(components.GameFlow.Normal);
-
-            ecsWorld.Publish(new messages.SceneLoaded(savegame.entryId));
+            LoadScene($"sc_{savegame.sceneId}");
+            var scene = ecsWorld.Get<Scene>();
+            ecsWorld.Publish(new messages.PlayerEntered(scene.triggers[savegame.entryId]));
 
             ecsWorld.GetEntities()
                 .With((in Trigger t) => t.idx == 88)
@@ -189,23 +170,31 @@ namespace zzre.game
             renderSystems.Update(cl);
         }
 
-        private Scene LoadScene(string sceneName, out IResource sceneResource)
+        public void LoadScene(string sceneName)
         {
+            if (ecsWorld.Has<WorldBuffers>())
+                ecsWorld.Get<WorldBuffers>().Dispose();
+            worldRenderer?.Dispose();
+
             var resourcePool = GetTag<IResourcePool>();
-            sceneResource = resourcePool.FindFile($"resources/worlds/{sceneName}.scn") ??
+            SceneResource = resourcePool.FindFile($"resources/worlds/{sceneName}.scn") ??
                 throw new System.IO.FileNotFoundException($"Could not find scene: {sceneName}"); ;
-            using var sceneStream = sceneResource.OpenContent();
+            using var sceneStream = SceneResource.OpenContent();
             if (sceneStream == null)
                 throw new System.IO.FileNotFoundException($"Could not open scene: {sceneName}");
             var scene = new Scene();
             scene.Read(sceneStream);
-            return scene;
-        }
 
-        private WorldBuffers LoadWorldBuffers()
-        {
-            var fullPath = new zzio.FilePath("resources").Combine(scene.misc.worldPath, scene.misc.worldFile + ".bsp");
-            return new WorldBuffers(this, fullPath);
+            var worldPath = new zzio.FilePath("resources").Combine(scene.misc.worldPath, scene.misc.worldFile + ".bsp");
+            var worldBuffers = new WorldBuffers(this, worldPath);
+
+            ecsWorld.Set(scene);
+            ecsWorld.Set(worldBuffers);
+            ecsWorld.Set(new WorldCollider(worldBuffers.RWWorld));
+            ecsWorld.Set(worldRenderer = new WorldRenderer(this));
+            worldRenderer.WorldBuffers = worldBuffers;
+
+            ecsWorld.Publish(new messages.SceneLoaded(scene));
         }
 
         public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);

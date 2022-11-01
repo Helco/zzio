@@ -10,15 +10,26 @@ namespace zzre.game.systems
 
         private Location playerLocation => playerLocationLazy.Value;
         private readonly Lazy<Location> playerLocationLazy;
+        private readonly IDisposable playerEnteredSubscription;
 
         public NPCActivator(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             World.SetMaxCapacity<components.ActiveNPC>(1);
+            playerEnteredSubscription = World.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
             var game = diContainer.GetTag<Game>();
             playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
 
             Set.EntityRemoved += HandleEntityRemoved;
         }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            playerEnteredSubscription.Dispose();
+        }
+
+        private void HandlePlayerEntered(in messages.PlayerEntered _) =>
+            World.Remove<components.ActiveNPC>();
 
         private void HandleEntityRemoved(in DefaultEcs.Entity entity)
         {

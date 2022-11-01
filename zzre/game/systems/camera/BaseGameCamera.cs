@@ -8,15 +8,16 @@ namespace zzre.game.systems
         private const float DirectionLerpSpeedFactor = 0.01f;
         private const float MaxMouseMove = 20f;
 
-        protected readonly WorldCollider worldCollider;
+        private readonly IDisposable sceneLoadedSubscription;
         private readonly IDisposable lockPlayerSubscription;
+        protected WorldCollider worldCollider = null!;
         private Vector2 nextMove;
         private float lockTimer;
 
         protected BaseGameCamera(ITagContainer diContainer) : base(diContainer)
         {
+            sceneLoadedSubscription = world.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
             lockPlayerSubscription = world.Subscribe<messages.LockPlayerControl>(HandleLockPlayerControl);
-            worldCollider = diContainer.GetTag<WorldCollider>();
             zzContainer.OnMouseMove += HandleMouseMove;
         }
 
@@ -24,8 +25,12 @@ namespace zzre.game.systems
         {
             base.Dispose();
             zzContainer.OnMouseMove -= HandleMouseMove;
+            sceneLoadedSubscription.Dispose();
             lockPlayerSubscription.Dispose();
         }
+
+        private void HandleSceneLoaded(in messages.SceneLoaded _) =>
+            worldCollider = world.Get<WorldCollider>();
 
         private void HandleLockPlayerControl(in messages.LockPlayerControl msg)
         {

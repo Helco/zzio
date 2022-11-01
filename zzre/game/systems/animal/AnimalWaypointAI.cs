@@ -20,8 +20,6 @@ namespace zzre.game.systems
         private const float GroundDistance = 5f;
 
         private readonly Game game;
-        private readonly Scene scene;
-        private readonly WorldCollider worldCollider;
         private readonly IDisposable sceneLoadedSubscription;
         private readonly IDisposable addSubscription;
         private Trigger[] waypoints = Array.Empty<Trigger>();
@@ -29,8 +27,6 @@ namespace zzre.game.systems
         public AnimalWaypointAI(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             game = diContainer.GetTag<Game>();
-            scene = diContainer.GetTag<Scene>();
-            worldCollider = diContainer.GetTag<WorldCollider>();
             sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
             addSubscription = World.SubscribeComponentAdded<components.AnimalWaypointAI>(HandleAddedComponent);
         }
@@ -44,6 +40,7 @@ namespace zzre.game.systems
 
         private void HandleSceneLoaded(in messages.SceneLoaded message)
         {
+            var scene = message.Scene;
             waypoints = scene.triggers
                 .Where(t => t.type == TriggerType.AnimalWaypoint)
                 .ToArray();
@@ -211,6 +208,7 @@ namespace zzre.game.systems
         private void PutOnGround(DefaultEcs.Entity entity, in components.AnimalWaypointAI ai)
         {
             var location = entity.Get<Location>();
+            var worldCollider = World.Get<WorldCollider>();
             var cast = worldCollider.Cast(new Line(
                 location.GlobalPosition + Vector3.UnitY * GroundDistance,
                 location.GlobalPosition - Vector3.UnitY * GroundDistance));

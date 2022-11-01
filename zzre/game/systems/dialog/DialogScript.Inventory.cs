@@ -66,17 +66,7 @@ namespace zzre.game.systems
             NPCEntity.Get<Inventory>().ClearDeck();
         }
 
-        private void Revive(DefaultEcs.Entity entity)
-        {
-            var playerInv = PlayerInventory;
-            for (int i = 0; i < Inventory.FairySlotCount; i++)
-            {
-                var invFairy = playerInv.GetFairyAtSlot(i);
-                if (invFairy != null)
-                    playerInv.FillMana(invFairy); // yes no actual revival, just mana fill
-            }
-        }
-
+        private void Revive(DefaultEcs.Entity entity) => PlayerInventory.FillMana();
         private const int MaxPresentFairyId = 77;
         private void GivePlayerPresent(DefaultEcs.Entity entity)
         {

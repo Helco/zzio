@@ -79,7 +79,8 @@ namespace zzre.game.resources
 
         protected override void Unload(ClumpMaterialInfo info, BaseModelInstancedMaterial resource)
         {
-            resource.MainTexture.Texture?.Dispose();
+            if (textureLoader is not CachedAssetLoader<Texture>)
+                resource.MainTexture.Texture?.Dispose();
             resource.Dispose();
         }
     }

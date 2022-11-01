@@ -8,11 +8,8 @@ namespace zzre.game.systems
     [PauseDuring(PauseTrigger.UIScreen)]
     public partial class NPCLookAtTrigger : AEntitySetSystem<float>
     {
-        private readonly Scene scene;
-
         public NPCLookAtTrigger(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
-            scene = diContainer.GetTag<Scene>();
         }
 
         [WithPredicate]
@@ -35,9 +32,16 @@ namespace zzre.game.systems
                 return;
             }
 
-            var triggerIdx = lookAt.TriggerIdx;
-            var trigger = scene.triggers.First(t => t.idx == triggerIdx);
-            puppet.TargetDirection = Vector3.Normalize(trigger.pos - location.LocalPosition);
+            if (lookAt.Trigger == null)
+            {
+                var triggerIdx = lookAt.TriggerIdx;
+                lookAt.Trigger = World.GetEntities()
+                    .With((in Trigger t) => t.idx == triggerIdx)
+                    .AsEnumerable()
+                    .First()
+                    .Get<Trigger>();
+            }
+            puppet.TargetDirection = Vector3.Normalize(lookAt.Trigger.pos - location.LocalPosition);
 
             // TODO: Add ActorHeadIK behavior for LookAtTrigger
         }

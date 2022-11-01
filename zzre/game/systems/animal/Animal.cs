@@ -11,21 +11,22 @@ namespace zzre.game.systems
 {
     public class Animal : BaseDisposable, ISystem<float>
     {
-        private readonly Scene scene;
         private readonly DefaultEcs.World ecsWorld;
         private readonly IDisposable sceneLoadSubscription;
+        private readonly IDisposable sceneChangingSubscription;
 
         public Animal(ITagContainer diContainer)
         {
-            scene = diContainer.GetTag<Scene>();
             ecsWorld = diContainer.GetTag<DefaultEcs.World>();
             sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
+            sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         }
 
         protected override void DisposeManaged()
         {
             base.DisposeManaged();
             sceneLoadSubscription.Dispose();
+            sceneChangingSubscription.Dispose();
         }
 
         public bool IsEnabled { get; set; } = true;
@@ -34,11 +35,19 @@ namespace zzre.game.systems
         {
         }
 
+        private void HandleSceneChanging(in messages.SceneChanging _) => ecsWorld
+            .GetEntities()
+            .WithEither<components.Butterfly>()
+            .Or<components.CirclingBird>()
+            .Or<components.AnimalWaypointAI>()
+            .DisposeAll();
+
         private void HandleSceneLoaded(in messages.SceneLoaded message)
         {
             if (!IsEnabled)
                 return;
 
+            var scene = message.Scene;
             foreach (var trigger in scene.triggers
                 .Where(t => t.type == TriggerType.Animal)
                 .Where(t =>

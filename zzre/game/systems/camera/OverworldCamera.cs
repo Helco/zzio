@@ -5,8 +5,8 @@ namespace zzre.game.systems
 {
     public class OverworldCamera : BaseGameCamera
     {
-        private static readonly Vector2 SpeedFactor = new Vector2(15f, 0.1f);
-        private static readonly Vector3 CameraDirectionFactor = new Vector3(1f, 0.2f, 1f);
+        private static readonly Vector2 SpeedFactor = new(15f, 0.1f);
+        private static readonly Vector3 CameraDirectionFactor = new(1f, 0.2f, 1f);
         private const float HorizontalDeadzone = 0.5f;
         private const float AdditionalHeight = 1f;
         private const float MaxVerAngle = 1.3f;
@@ -21,26 +21,44 @@ namespace zzre.game.systems
         private const float NearHeightDistance = 0.5f;
         private const float NearHeightFactor = 1f / 5f;
 
+        private readonly IDisposable sceneLoadedSubscription;
+        private readonly IDisposable playerEnteredSubscription;
         private readonly IDisposable setCameraModeDisposable;
-        private readonly float maxCameraDistance;
+        private float maxCameraDistance;
         private float currentVerAngle;
         private float curCamDistance;
 
         public OverworldCamera(ITagContainer diContainer) : base(diContainer)
         {
-            var scene = diContainer.GetTag<zzio.scn.Scene>();
-            maxCameraDistance = scene.dataset.isInterior
-                ? MaxCamDistInterior
-                : MaxCamDistExterior;
             curCamDistance = maxCameraDistance;
 
+            sceneLoadedSubscription = world.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
+            playerEnteredSubscription = world.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
             setCameraModeDisposable = world.Subscribe<messages.SetCameraMode>(HandleSetCameraMode);
         }
 
         public override void Dispose()
         {
             base.Dispose();
+            sceneLoadedSubscription.Dispose();
+            playerEnteredSubscription.Dispose();
             setCameraModeDisposable.Dispose();
+        }
+
+        private void HandleSceneLoaded(in messages.SceneLoaded message)
+        {
+            maxCameraDistance = message.Scene.dataset.isInterior
+                ? MaxCamDistInterior
+                : MaxCamDistExterior;
+        }
+
+        private void HandlePlayerEntered(in messages.PlayerEntered _)
+        {
+            currentVerAngle = 0f;
+            curCamDistance = maxCameraDistance;
+
+            camera.Location.LocalPosition = playerLocation.LocalPosition;
+            camera.Location.LocalRotation = playerLocation.LocalRotation;
         }
 
         private void HandleSetCameraMode(in messages.SetCameraMode mode)

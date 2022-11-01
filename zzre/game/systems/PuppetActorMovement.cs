@@ -13,16 +13,16 @@ namespace zzre.game.systems
         private const float GroundFromOffset = 1f;
         private const float GroundToOffset = -7f;
 
+        private readonly IDisposable sceneLoadedSubscription;
         private readonly IDisposable addedSubscription;
         private readonly IDisposable placeToGroundSubscription;
         private readonly IDisposable placeToTriggerSubscription;
-        private readonly WorldCollider worldCollider;
-        private readonly Scene scene;
+        private WorldCollider worldCollider = null!;
+        private Scene scene = null!;
 
         public PuppetActorMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
-            worldCollider = diContainer.GetTag<WorldCollider>();
-            scene = diContainer.GetTag<Scene>();
+            sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
             addedSubscription = World.SubscribeComponentAdded<components.PuppetActorMovement>(HandleComponentAdded);
             placeToGroundSubscription = World.Subscribe<messages.CreaturePlaceToGround>(HandlePlaceToGround);
             placeToTriggerSubscription = World.Subscribe<messages.CreaturePlaceToTrigger>(HandlePlaceToTrigger);
@@ -34,6 +34,12 @@ namespace zzre.game.systems
             addedSubscription.Dispose();
             placeToGroundSubscription.Dispose();
             placeToTriggerSubscription.Dispose();
+        }
+
+        private void HandleSceneLoaded(in messages.SceneLoaded message)
+        {
+            scene = message.Scene;
+            worldCollider = World.Get<WorldCollider>();
         }
 
         private void HandleComponentAdded(in DefaultEcs.Entity entity, in components.PuppetActorMovement movement)

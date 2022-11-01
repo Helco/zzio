@@ -13,15 +13,15 @@ namespace zzre.game.systems
     public class ModelLoader : BaseDisposable, ISystem<float>
     {
         private readonly ITagContainer diContainer;
-        private readonly Scene scene;
         private readonly DefaultEcs.World ecsWorld;
+        private readonly IDisposable sceneChangingSubscription;
         private readonly IDisposable sceneLoadSubscription;
 
         public ModelLoader(ITagContainer diContainer)
         {
             this.diContainer = diContainer;
-            scene = diContainer.GetTag<Scene>();
             ecsWorld = diContainer.GetTag<DefaultEcs.World>();
+            sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
             sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         }
 
@@ -37,19 +37,29 @@ namespace zzre.game.systems
         {
         }
 
+        private void HandleSceneChanging(in messages.SceneChanging _) => ecsWorld
+            .GetEntities()
+            .With<components.RenderOrder>()
+            .DisposeAll();
+
         private void HandleSceneLoaded(in messages.SceneLoaded message)
         {
             if (!IsEnabled)
                 return;
 
-            if (diContainer.HasTag<ModelInstanceBuffer>())
-                throw new InvalidOperationException("ModelInstanceBuffer is already created");
-            diContainer.AddTag(new ModelInstanceBuffer(diContainer, scene.models.Length + scene.foModels.Length, dynamic: true));
+            var scene = message.Scene;
+            int modelCount = scene.models.Length + scene.foModels.Length;
+            if (!diContainer.TryGetTag<ModelInstanceBuffer>(out var prevBuffer) || prevBuffer.TotalCount < modelCount)
+            {
+                prevBuffer?.Dispose();
+                diContainer.RemoveTag<ModelInstanceBuffer>();
+                diContainer.AddTag(new ModelInstanceBuffer(diContainer, scene.models.Length + scene.foModels.Length, dynamic: true));
+            }
+            else
+                prevBuffer.Clear();
 
             float plantWiggleDelay = 0f;
-
             var behaviors = scene.behaviors.ToDictionary(b => b.modelId, b => b.type);
-
             foreach (var model in scene.models)
             {
                 var entity = ecsWorld.CreateEntity();
@@ -114,9 +124,9 @@ namespace zzre.game.systems
             entity.Set(new List<materials.BaseModelInstancedMaterial>(clumpBuffers.SubMeshes.Count));
 
             var rwMaterials = clumpBuffers.SubMeshes.Select(sm => sm.Material);
-            foreach (var rwMaterial in rwMaterials)
-                entity.Set(ManagedResource<materials.BaseModelInstancedMaterial>.Create(
-                    new resources.ClumpMaterialInfo(renderType, rwMaterial)));
+            entity.Set(ManagedResource<materials.BaseModelInstancedMaterial>.Create(rwMaterials
+                .Select(rwMaterial => new resources.ClumpMaterialInfo(renderType, rwMaterial))
+                .ToArray()));
         }
 
         private static void SetCollider(DefaultEcs.Entity entity)

@@ -98,8 +98,8 @@ namespace zzre.game.systems
         {
             foreach (var material in materials)
             {
-                material.MainTexture.Dispose();
-                material.Sampler.Dispose();
+                material.MainTexture.Texture?.Dispose();
+                material.Sampler.Sampler.Dispose();
                 material.Dispose();
             }
         }
