@@ -26,15 +26,15 @@ namespace zzre.game.systems
                 Count = count;
             }
 
-            public ClumpCount Increment() => new ClumpCount(Clump, Materials, Count + 1);
+            public ClumpCount Increment() => new(Clump, Materials, Count + 1);
         }
 
         private readonly ITagContainer diContainer;
         private readonly IDisposable sceneLoadedSubscription;
         private readonly components.RenderOrder responsibility;
 
-        private readonly List<ClumpCount> clumpCounts = new List<ClumpCount>();
-        private readonly List<ModelInstance> instances = new List<ModelInstance>();
+        private readonly List<ClumpCount> clumpCounts = new();
+        private readonly List<ModelInstance> instances = new();
         private DeviceBuffer? instanceBuffer; // not owned
         private uint instanceStart;
 
@@ -142,6 +142,10 @@ namespace zzre.game.systems
                 cl.PopDebugGroup();
             }
             cl.PopDebugGroup();
+
+            for (int i = 0; i < clumpCounts.Count; i++)
+                clumpCounts[i] = default;
+            clumpCounts.Clear();
         }
     }
 }

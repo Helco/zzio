@@ -48,21 +48,34 @@ namespace zzre.rendering
         {
             base.DisposeManaged();
             diContainer.GetTag<LocationBuffer>().Remove(locationRange);
+            DisposeMaterials();
+        }
+
+        private void DisposeMaterials()
+        {
+            var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
             foreach (var material in materials)
+            {
+                if (textureLoader is not CachedAssetLoader<Texture>)
+                {
+                    material.MainTexture.Texture?.Dispose();
+                    material.Sampler.Sampler?.Dispose();
+                }
                 material.Dispose();
+            }
+            materials = Array.Empty<ModelStandardMaterial>();
         }
 
         private void LoadMaterials()
         {
-            foreach (var material in materials)
-                material.Dispose();
-            if (worldBuffers == null)
-                return;
-
             var textureBase = new FilePath("resources/textures/worlds");
             var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
             var camera = diContainer.GetTag<Camera>();
 
+            DisposeMaterials();
+
+            if (worldBuffers == null)
+                return;
             materials = new ModelStandardMaterial[worldBuffers.Materials.Count];
             foreach (var (rwMaterial, index) in worldBuffers.Materials.Indexed())
             {

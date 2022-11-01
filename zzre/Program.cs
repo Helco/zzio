@@ -36,6 +36,7 @@ namespace zzre
             {
                 renderDoc.APIValidation = true;
                 renderDoc.OverlayEnabled = false;
+                renderDoc.RefAllResources = true;
             }
 #endif
 
