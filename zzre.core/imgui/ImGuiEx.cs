@@ -121,6 +121,33 @@ namespace zzre.imgui
             return hasChanged;
         }
 
+        public static bool FlagsCombo<T>(string label, ref T value, T[]? flags = null, string[]? labels = null, string noneText = "None") where T : struct, Enum
+        {
+            flags ??= Enum.GetValues<T>();
+            labels ??= flags.Select(f => f.ToString()).ToArray();
+            var flagValues = flags.Select(f => f.GetHashCode()).ToArray();
+            var intValue = value.GetHashCode();
+            var newValue = intValue & ~flagValues.Aggregate((a, b) => a | b);
+
+            var preview = string.Join(',', labels.Where((_, i) => (intValue & flagValues[i]) != 0));
+            if (string.IsNullOrEmpty(preview))
+                preview = noneText;
+            if (!BeginCombo(label, preview))
+                return false;
+
+            foreach (var (flagValue, flagLabel) in flagValues.Zip(labels))
+            {
+                var isSet = (intValue & flagValue) != 0;
+                Checkbox(flagLabel, ref isSet);
+                if (isSet)
+                    newValue |= flagValue;
+            }
+
+            EndCombo();
+            value = Enum.Parse<T>(newValue.ToString());
+            return intValue != newValue;
+        }
+
         public static uint ToUintColor(this ImColor col) => ColorConvertFloat4ToU32(col.Value);
 
         public static void AddUnderLine(ImColor col) => AddUnderLine(col.Value);
