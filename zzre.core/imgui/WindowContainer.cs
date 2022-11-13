@@ -14,17 +14,17 @@ namespace zzre.imgui
     {
         private GraphicsDevice Device { get; }
         private ResourceFactory Factory => Device.ResourceFactory;
-        private readonly List<BaseWindow> windows = new List<BaseWindow>();
-        private readonly List<Fence> onceFences = new List<Fence>();
+        private readonly List<BaseWindow> windows = new();
+        private readonly List<Fence> onceFences = new();
         private readonly CommandList commandList;
         private readonly Fence fence;
 
         public BaseWindow? FocusedWindow { get; private set; } = null;
         public int Count => windows.Count;
         public ImGuiRenderer ImGuiRenderer { get; }
-        public MenuBar MenuBar { get; } = new MenuBar();
+        public MenuBar MenuBar { get; } = new();
         private bool isInUpdateEnumeration = false;
-        private readonly OnceAction onceAfterUpdate = new OnceAction();
+        private readonly OnceAction onceAfterUpdate = new();
         private BaseWindow? nextFocusedWindow = null;
 
         public event Action OnceAfterUpdate
@@ -38,7 +38,7 @@ namespace zzre.imgui
             Device = device;
 
             var fb = device.MainSwapchain.Framebuffer;
-            ImGuiRenderer = new ImGuiRenderer(device, fb.OutputDescription, (int)fb.Width, (int)fb.Height);
+            ImGuiRenderer = new(device, fb.OutputDescription, (int)fb.Width, (int)fb.Height);
             ImGuizmoNET.ImGuizmo.SetImGuiContext(ImGui.GetCurrentContext());
             ImGuizmoNET.ImGuizmo.AllowAxisFlip(false);
             commandList = Factory.CreateCommandList();
@@ -107,9 +107,6 @@ namespace zzre.imgui
             MenuBar.Update();
             End();
 
-#if DEBUG
-            ShowDemoWindow();
-#endif
             if (nextFocusedWindow != null && !IsMouseDown(ImGuiMouseButton.Left))
             {
                 SetWindowFocus(nextFocusedWindow.Title);
