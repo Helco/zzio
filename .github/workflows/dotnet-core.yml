@@ -11,16 +11,13 @@ defaults:
     working-directory: ./zzio
 
 jobs:
-  Release:
+  Build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
         path: zzio
-    - uses: actions/checkout@v2
-      with:
-        repository: Helco/zzio-feed
-        path: zzio-feed
+        submodules: true
     - name: Setup .NET Core 2.2.x
       uses: actions/setup-dotnet@v1
       with:
@@ -29,13 +26,16 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.x
-    - name: Install dependencies
+    - name: Build local dependencies
+      run: bash get-dependencies.sh
+    - name: Install remote dependencies
       run: dotnet restore
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-    - name: Test
-      run: dotnet test --no-restore --verbosity normal
+    - name: Debug
+      run: dotnet test --configuration Debug --no-restore --verbosity normal
+    - name: Release
+      run: dotnet test --configuration Release --no-restore --verbosity normal
   Debug:
+    if: false
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
