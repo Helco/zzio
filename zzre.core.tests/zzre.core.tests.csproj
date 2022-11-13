@@ -5,7 +5,6 @@
     <Nullable>enable</Nullable>
     <WarningsAsErrors>NU1605;nullable</WarningsAsErrors>
     <IsPackable>false</IsPackable>
-    <RestoreSources>$(RestoreSources);../../zzio-feed;https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
 
   <ItemGroup>

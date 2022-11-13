@@ -1,0 +1,5 @@
+<Project>
+    <PropertyGroup>
+        <RestoreSources>$(RestoreSources);../nuget-feed;../../zzio-feed;https://api.nuget.org/v3/index.json</RestoreSources>
+    </PropertyGroup>
+</Project>

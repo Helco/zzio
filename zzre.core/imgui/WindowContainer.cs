@@ -55,6 +55,8 @@ namespace zzre.imgui
                 window.Dispose();
             ImGuiRenderer.Dispose();
             commandList.Dispose();
+            if (!fence.Signaled)
+                Device.WaitForFence(fence);
             fence.Dispose();
         }
 
