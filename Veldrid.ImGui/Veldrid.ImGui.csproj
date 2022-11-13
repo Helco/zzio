@@ -49,7 +49,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ImGui.NET" Version="1.82.0-helco1" />
+    <PackageReference Include="ImGui.NET" Version="1.88" />
     <PackageReference Include="Veldrid" Version="4.9.0-beta2-ga23dc39a1b"/>
     <PackageReference Include="Veldrid.SDL2" Version="4.9.0-beta2-ga23dc39a1b"/>
   </ItemGroup>

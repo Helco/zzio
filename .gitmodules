@@ -6,3 +6,7 @@
 	path = extern/Veldrid
 	url = https://github.com/Helco/Veldrid
 	branch = zzio
+[submodule "extern/ImGui.NET"]
+	path = extern/ImGui.NET
+	url = https://github.com/Helco/ImGui.NET
+	branch = zzio
