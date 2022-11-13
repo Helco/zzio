@@ -1,0 +1,8 @@
+[submodule "extern/DefaultEcs"]
+	path = extern/DefaultEcs
+	url = https://github.com/Helco/DefaultEcs
+	branch = safe-variant
+[submodule "extern/Veldrid"]
+	path = extern/Veldrid
+	url = https://github.com/Helco/Veldrid
+	branch = zzio

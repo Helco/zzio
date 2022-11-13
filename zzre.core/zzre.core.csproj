@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <WarningsAsErrors>NU1605;nullable;CS8618</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RestoreSources>$(RestoreSources);../../zzio-feed;https://api.nuget.org/v3/index.json</RestoreSources>
+    <RestoreSources>$(RestoreSources);../nuget-feed;https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -22,6 +22,7 @@
   
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="Veldrid" Version="4.9.0-beta2-ga23dc39a1b"/>
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.14" />
     <PackageReference Include="ImGui.NET" Version="1.82.0-helco1" />
     <PackageReference Include="ImGuizmo.NET" Version="1.61.0" />

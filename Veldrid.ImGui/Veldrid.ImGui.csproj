@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>Veldrid</RootNamespace>
-    <RestoreSources>$(RestoreSources);../../zzio-feed;https://api.nuget.org/v3/index.json</RestoreSources>
+    <RestoreSources>$(RestoreSources);../nuget-feed;https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
 
   <ItemGroup>
@@ -51,8 +51,8 @@
 
   <ItemGroup>
     <PackageReference Include="ImGui.NET" Version="1.82.0-helco1" />
-    <PackageReference Include="Veldrid" Version="4.8.0" />
-    <PackageReference Include="Veldrid.SDL2" Version="4.8.0" />
+    <PackageReference Include="Veldrid" Version="4.9.0-beta2-ga23dc39a1b"/>
+    <PackageReference Include="Veldrid.SDL2" Version="4.9.0-beta2-ga23dc39a1b"/>
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseStableVersions)' == 'true'">

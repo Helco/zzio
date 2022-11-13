@@ -32,7 +32,7 @@ namespace zzre
 
 #if DEBUG
             RenderDoc? renderDoc = null;
-            if (RenderDoc.Load(out renderDoc))
+            if (false && RenderDoc.Load(out renderDoc))
             {
                 renderDoc.APIValidation = true;
                 renderDoc.OverlayEnabled = false;
@@ -55,7 +55,7 @@ namespace zzre
                 PreferStandardClipSpaceYDirection = true,
                 SyncToVerticalBlank = true,
                 Debug = true
-            }, GraphicsBackend.Direct3D11);
+            }, GraphicsBackend.Vulkan);
 
             var pipelineCollection = new PipelineCollection(graphicsDevice);
             pipelineCollection.AddShaderResourceAssemblyOf<Program>();

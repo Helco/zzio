@@ -135,6 +135,8 @@ namespace zzre.imgui
                 Device.WaitForFences(onceFences.ToArray(), true, TimeSpan.FromSeconds(10000.0)); // timeout is a workaround
             onceFences.Clear();
 
+            if (!fence.Signaled)
+                Device.WaitForFence(fence);
             fence.Reset();
             commandList.Begin();
             commandList.SetFramebuffer(Device.MainSwapchain.Framebuffer);

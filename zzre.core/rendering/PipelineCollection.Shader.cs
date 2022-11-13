@@ -36,15 +36,15 @@ namespace zzre.rendering
             };
 
             var shaderDescr = TryLoadShaderSet(shaderSetName, "_Vertex", "_Fragment", backendExt);
-            if (shaderDescr.HasValue)
+            if (false && shaderDescr.HasValue)
                 return new[]
                 {
                     Factory.CreateShader(shaderDescr.Value.vertex),
                     Factory.CreateShader(shaderDescr.Value.fragment),
                 };
 
-            if (Device.BackendType != GraphicsBackend.Vulkan) // we would have tried to load SPIRV already
-                shaderDescr = TryLoadShaderSet(shaderSetName, "_Vertex", "_Fragment", ".spv");
+            //if (Device.BackendType != GraphicsBackend.Vulkan) // we would have tried to load SPIRV already
+             //   shaderDescr = TryLoadShaderSet(shaderSetName, "_Vertex", "_Fragment", ".spv");
             shaderDescr ??= TryLoadShaderSet(shaderSetName, ".vert", ".frag");
             if (!shaderDescr.HasValue)
                 throw new FileNotFoundException($"Could not find embedded shader resource: {shaderSetName}");

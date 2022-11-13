@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29326.143
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zzio", "zzio\zzio.csproj", "{EBF46C5F-10DF-4520-A60B-DAD8583A4185}"
 EndProject
@@ -27,7 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cli", "cli", "{78DA8A29-9D9
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "zzre", "zzre", "{1A98F664-A66E-44DF-8E3C-0618671E4AFC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zzmaps", "zzmaps\zzmaps.csproj", "{F6C975C8-B0C7-4257-863D-8E2EB385C911}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zzmaps", "zzmaps\zzmaps.csproj", "{F6C975C8-B0C7-4257-863D-8E2EB385C911}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

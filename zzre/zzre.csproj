@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <WarningsAsErrors>NU1605;nullable;CS8618</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RestoreSources>$(RestoreSources);../../zzio-feed;https://api.nuget.org/v3/index.json</RestoreSources>
+    <RestoreSources>$(RestoreSources);../nuget-feed;https://api.nuget.org/v3/index.json</RestoreSources>
     <NoWarn>1701;1702;DEA0005,DEA0022</NoWarn>
 
     <ShaderVariantDef>shaders/ShaderVariants.json</ShaderVariantDef>
@@ -38,16 +38,13 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Pfim" Version="0.11.1" />
-    <PackageReference Include="Veldrid" Version="4.9.0-beta1" />
-    <PackageReference Include="Veldrid.ImageSharp" Version="4.9.0-beta1" />
-    <PackageReference Include="Veldrid.SPIRV" Version="1.0.15" />
-    <PackageReference Include="Veldrid.SPIRV.BuildTools" Version="1.0.14" />
-    <PackageReference Include="Veldrid.StartupUtilities" Version="4.9.0-beta1" />
+    <PackageReference Include="Veldrid.ImageSharp" Version="4.9.0-beta2-ga23dc39a1b" />
+    <PackageReference Include="Veldrid.StartupUtilities" Version="4.9.0-beta2-ga23dc39a1b" />
     <PackageReference Include="ImGui.NET" Version="1.82.0-helco1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
-    <PackageReference Include="Veldrid.RenderDoc" Version="1.0.1" />
+    <PackageReference Include="Veldrid.RenderDoc" Version="1.0.1-ga23dc39a1b" />
     <PackageReference Include="DefaultEcs.Safe" Version="1.0.0" />
   </ItemGroup>
 
