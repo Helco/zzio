@@ -18,7 +18,7 @@
     <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.2" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20574.7" />
     <PackageReference Include="System.Text.Json" Version="7.0.0" />
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="5.0.0" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="7.0.0" />
     <PackageReference Include="Veldrid.RenderDoc" Version="1.0.1" />
     <ProjectReference Include="..\zzre\zzre.csproj" />
   </ItemGroup>
