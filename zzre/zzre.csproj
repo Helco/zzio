@@ -39,7 +39,7 @@
     </PackageReference>
     <PackageReference Include="Pfim" Version="0.11.1" />
     <PackageReference Include="Veldrid" Version="4.9.0-beta1" />
-    <PackageReference Include="Veldrid.ImageSharp" Version="4.9.0-beta1" />
+    <PackageReference Include="Veldrid.ImageSharp" Version="4.9.0-beta2" />
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.15" />
     <PackageReference Include="Veldrid.SPIRV.BuildTools" Version="1.0.14" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="4.9.0-beta1" />
