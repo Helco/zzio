@@ -615,8 +615,8 @@ namespace Veldrid
 
                         cl.SetScissorRect(
                             0,
-                            (uint)pcmd.ClipRect.X,
-                            (uint)pcmd.ClipRect.Y,
+                            (uint)Math.Max(0, pcmd.ClipRect.X),
+                            (uint)Math.Max(0, pcmd.ClipRect.Y),
                             (uint)(pcmd.ClipRect.Z - pcmd.ClipRect.X),
                             (uint)(pcmd.ClipRect.W - pcmd.ClipRect.Y));
 
