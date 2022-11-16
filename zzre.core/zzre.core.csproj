@@ -22,13 +22,13 @@
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <PackageReference Include="Veldrid" Version="4.9.0-beta2-ga23dc39a1b"/>
+    <PackageReference Include="Veldrid.ImGui" Version="5.87.0-ga23dc39a1b"/>
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.14" />
     <PackageReference Include="ImGui.NET" Version="1.88.0-beeb8dd" />
     <PackageReference Include="ImGuizmo.NET" Version="1.61.0-beeb8dd" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Veldrid.ImGui\Veldrid.ImGui.csproj" />
     <ProjectReference Include="..\zzio\zzio.csproj" />
   </ItemGroup>
 

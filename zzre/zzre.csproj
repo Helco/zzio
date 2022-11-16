@@ -51,7 +51,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Veldrid.ImGui\Veldrid.ImGui.csproj" />
     <ProjectReference Include="..\zzio\zzio.csproj" />
     <ProjectReference Include="..\zzre.core\zzre.core.csproj" />
   </ItemGroup>

@@ -54,7 +54,7 @@ namespace zzre
                 PreferDepthRangeZeroToOne = true,
                 PreferStandardClipSpaceYDirection = true,
                 SyncToVerticalBlank = true,
-                Debug = true
+                Debug = false
             }, GraphicsBackend.Vulkan);
 
             var pipelineCollection = new PipelineCollection(graphicsDevice);
@@ -104,8 +104,6 @@ namespace zzre
                 if (ev.Repeat)
                     return;
                 windowContainer.HandleKeyEvent(ev.Key, ev.Down);
-                if (ev.Key == Key.F5)
-                    windowContainer.ImGuiRenderer.ResetContext(graphicsDevice, graphicsDevice.MainSwapchain.Framebuffer.OutputDescription);
 #if DEBUG
                 if (ev.Key == Key.PrintScreen && renderDoc?.IsTargetControlConnected() == false)
                     renderDoc.LaunchReplayUI();

@@ -20,6 +20,7 @@ dotnet pack extern/Veldrid/src/Veldrid.MetalBindings/Veldrid.MetalBindings.cspro
 dotnet pack extern/Veldrid/src/Veldrid.ImageSharp/Veldrid.ImageSharp.csproj -c Release --include-symbols -o nuget-feed --version-suffix $VeldridHash
 dotnet pack extern/Veldrid/src/Veldrid.SDL2/Veldrid.SDL2.csproj -c Release --include-symbols -o nuget-feed --version-suffix $VeldridHash
 dotnet pack extern/Veldrid/src/Veldrid.StartupUtilities/Veldrid.StartupUtilities.csproj -c Release --include-symbols -o nuget-feed --version-suffix $VeldridHash
+dotnet pack extern/Veldrid/src/Veldrid.ImGui/Veldrid.ImGui.csproj -c Release --include-symbols -o nuget-feed --version-suffix $VeldridHash
 dotnet pack extern/Veldrid/src/Veldrid.RenderDoc/Veldrid.RenderDoc.csproj -c Release --include-symbols -o nuget-feed --version-suffix $VeldridHash
 dotnet pack extern/ImGui.NET/src/ImGui.NET/ImGui.NET.csproj -c Release --include-symbols -o nuget-feed -p:PackagePrereleaseIdentifier=-$ImGuiNETHash
 dotnet pack extern/ImGui.NET/src/ImGuizmo.NET/ImGuizmo.NET.csproj -c Release --include-symbols -o nuget-feed -p:PackagePrereleaseIdentifier=-$ImGuiNETHash

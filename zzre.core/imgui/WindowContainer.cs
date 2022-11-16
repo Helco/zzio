@@ -38,14 +38,19 @@ namespace zzre.imgui
             Device = device;
 
             var fb = device.MainSwapchain.Framebuffer;
-            ImGuiRenderer = new(device, fb.OutputDescription, (int)fb.Width, (int)fb.Height);
+            ImGuiRenderer = new(device, fb.OutputDescription, (int)fb.Width, (int)fb.Height, ColorSpaceHandling.Legacy, callNewFrame: false);
             ImGuizmoNET.ImGuizmo.SetImGuiContext(ImGui.GetCurrentContext());
             ImGuizmoNET.ImGuizmo.AllowAxisFlip(false);
             commandList = Factory.CreateCommandList();
             fence = Factory.CreateFence(true);
 
+            var io = GetIO();
+            io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+            io.ConfigWindowsResizeFromEdges = true;
+            io.ConfigWindowsMoveFromTitleBarOnly = true;
+
             LoadForkAwesomeFont();
-            ImGuiRenderer.Start();
+            ImGuiRenderer.ManualNewFrame();
         }
 
         protected override void DisposeManaged()
