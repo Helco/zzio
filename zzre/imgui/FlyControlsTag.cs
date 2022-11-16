@@ -52,8 +52,8 @@ namespace zzre.imgui
 
             var moveDir = Vector3.Zero;
             var speedFactor = 1.0f;
-            if (ImGui.IsKeyDown(ImGuiKey.LeftShift)) speedFactor *= 2.0f;
-            if (ImGui.IsKeyDown(ImGuiKey.LeftCtrl)) speedFactor /= 2.0f;
+            if (ImGui.IsKeyDown(ImGuiKey.ModShift)) speedFactor *= 2.0f;
+            if (ImGui.IsKeyDown(ImGuiKey.ModCtrl)) speedFactor /= 2.0f;
             if (ImGui.IsKeyDown(ImGuiKey.S)) moveDir += target.GlobalForward;
             if (ImGui.IsKeyDown(ImGuiKey.W)) moveDir -= target.GlobalForward;
             if (ImGui.IsKeyDown(ImGuiKey.D)) moveDir += target.GlobalRight;
