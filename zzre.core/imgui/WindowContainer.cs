@@ -171,6 +171,7 @@ namespace zzre.imgui
         private unsafe void LoadForkAwesomeFont()
         {
             zzre.core.assets.ForkAwesomeIconFont.AddToFontAtlas(GetIO().Fonts, 1, 15.0f, 13.0f);
+            Device.WaitForIdle();
             ImGuiRenderer.RecreateFontDeviceTexture();
         }
 
