@@ -37,12 +37,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Pfim" Version="0.11.1" />
-    <PackageReference Include="Veldrid.ImageSharp" Version="4.9.0-beta2-ga23dc39a1b" />
-    <PackageReference Include="Veldrid.StartupUtilities" Version="4.9.0-beta2-ga23dc39a1b" />
+    <PackageReference Include="Veldrid.ImageSharp" Version="$(VeldridVersion)" />
+    <PackageReference Include="Veldrid.StartupUtilities" Version="$(VeldridVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
-    <PackageReference Include="Veldrid.RenderDoc" Version="1.0.1-ga23dc39a1b" />
+    <PackageReference Include="Veldrid.RenderDoc" Version="$(VeldridRenderdocVersion)" />
     <PackageReference Include="DefaultEcs" Version="1.0.0-safe-674a2ca" />
   </ItemGroup>
 

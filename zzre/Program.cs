@@ -54,7 +54,7 @@ namespace zzre
                 PreferDepthRangeZeroToOne = true,
                 PreferStandardClipSpaceYDirection = true,
                 SyncToVerticalBlank = true,
-                Debug = false
+                Debug = true
             }, GraphicsBackend.Vulkan);
 
             var pipelineCollection = new PipelineCollection(graphicsDevice);
