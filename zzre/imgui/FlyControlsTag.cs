@@ -60,14 +60,14 @@ namespace zzre.imgui
             if (ImGui.IsKeyDown(ImGuiKey.A)) moveDir -= target.GlobalRight;
             if (ImGui.IsKeyDown(ImGuiKey.E)) moveDir += target.GlobalUp;
             if (ImGui.IsKeyDown(ImGuiKey.Q)) moveDir -= target.GlobalUp;
-            target.LocalPosition = target.LocalPosition + moveDir * gameTime.Delta * speed * speedFactor;
+            target.LocalPosition += moveDir * gameTime.Delta * speed * speedFactor;
 
             fbArea.IsDirty = true;
         }
 
         private void HandleScroll(float scroll)
         {
-            speed = speed * MathF.Pow(2.0f, scroll * 0.3f);
+            speed *= MathF.Pow(2.0f, scroll * 0.3f);
         }
 
         public void ResetView()
