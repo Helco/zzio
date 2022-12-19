@@ -15,7 +15,7 @@ namespace zzre.game.systems.ui
     {
         private const int ListRows = 6;
 
-        private static readonly UID UIDChooseFairyToSwap = new UID(0x41912581);
+        private static readonly UID UIDChooseFairyToSwap = new(0x41912581);
         private static readonly UID[] UIDSpellSlotNames = new UID[]
         {
             new(0x37697321), // First offensive slot
@@ -221,7 +221,7 @@ namespace zzre.game.systems.ui
                         .With(preload.Spl000)
                         .WithTooltip(UIDSpellSlotNames[spellI])
                         .Build();
-                    nextElementId = nextElementId + 1;
+                    nextElementId += 1;
 
                     var spellReq = fairy == null ? default : fairy.spellReqs[spellI];
                     if (spellReq != default)

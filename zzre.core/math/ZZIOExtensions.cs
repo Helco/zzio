@@ -8,7 +8,7 @@ namespace zzre
 {
     public static class ZZIOExtensions
     {
-        public static Vector4 ToNumerics(this FColor c) => new Vector4(c.r, c.g, c.b, c.a);
+        public static Vector4 ToNumerics(this FColor c) => new(c.r, c.g, c.b, c.a);
         public static void CopyFromNumerics(this ref FColor c, Vector4 v)
         {
             c.r = v.X;
@@ -20,9 +20,9 @@ namespace zzre
         public static Quaternion ToZZRotation(this Vector3 v) =>
             Quaternion.Conjugate(Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateLookAt(Vector3.Zero, v * -1f, Vector3.UnitY)));
 
-        public static RgbaByte ToVeldrid(this IColor c) => new RgbaByte(c.r, c.g, c.b, c.a);
-        public static RgbaFloat ToVeldrid(this FColor c) => new RgbaFloat(c.r, c.g, c.b, c.a);
-        public static FColor ToFColor(this Vector4 v) => new zzio.FColor(v.X, v.Y, v.Z, v.W);
+        public static RgbaByte ToVeldrid(this IColor c) => new(c.r, c.g, c.b, c.a);
+        public static RgbaFloat ToVeldrid(this FColor c) => new(c.r, c.g, c.b, c.a);
+        public static FColor ToFColor(this Vector4 v) => new(v.X, v.Y, v.Z, v.W);
 
         public static Vector3 ToNormal(this CollisionSectorType sectorType) => sectorType switch
         {

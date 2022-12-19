@@ -38,7 +38,7 @@ namespace zzio.rwbs
 
         protected override void readStruct(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             sectorType = EnumUtils.intToEnum<RWPlaneSectionType>(reader.ReadInt32());
             centerValue = reader.ReadSingle();
             leftIsWorldSector = reader.ReadUInt32() > 0;
@@ -49,7 +49,7 @@ namespace zzio.rwbs
 
         protected override void writeStruct(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.Write((int)sectorType);
             writer.Write(centerValue);
             writer.Write((uint)(leftIsWorldSector ? 1 : 0));

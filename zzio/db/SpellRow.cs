@@ -8,7 +8,7 @@ namespace zzio.db
 
         public int Type => row.cells[1].Integer;
 
-        public CardId CardId => new CardId(row.cells[2].Integer);
+        public CardId CardId => new(row.cells[2].Integer);
 
         public byte PriceA => row.cells[3].Byte;
         public byte PriceB => row.cells[4].Byte;

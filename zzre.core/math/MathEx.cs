@@ -18,13 +18,13 @@ namespace zzre
         public static bool CmpZero(float a) => Math.Abs(a) < 0.1E-10;
 
         public static Vector2 Floor(Vector2 v) =>
-            new Vector2(MathF.Floor(v.X), MathF.Floor(v.Y));
+            new(MathF.Floor(v.X), MathF.Floor(v.Y));
 
         public static Vector3 Floor(Vector3 v) =>
-            new Vector3(MathF.Floor(v.X), MathF.Floor(v.Y), MathF.Floor(v.Z));
+            new(MathF.Floor(v.X), MathF.Floor(v.Y), MathF.Floor(v.Z));
 
         public static Vector4 Floor(Vector4 v) =>
-            new Vector4(MathF.Floor(v.X), MathF.Floor(v.Y), MathF.Floor(v.Z), MathF.Floor(v.W));
+            new(MathF.Floor(v.X), MathF.Floor(v.Y), MathF.Floor(v.Z), MathF.Floor(v.W));
 
         public static Vector3 Project(Vector3 length, Vector3 dir)
         {

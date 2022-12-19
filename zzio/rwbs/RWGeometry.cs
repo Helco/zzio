@@ -27,7 +27,7 @@ namespace zzio.rwbs
 
         protected override void readStruct(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             format = EnumUtils.intToFlags<GeometryFormat>(reader.ReadUInt32());
             triangles = new VertexTriangle[reader.ReadUInt32()];
             uint vertexCount = reader.ReadUInt32();
@@ -73,11 +73,13 @@ namespace zzio.rwbs
 
             for (int i = 0; i < morphTargets.Length; i++)
             {
-                morphTargets[i] = new MorphTarget();
-                morphTargets[i].bsphereCenter = reader.ReadVector3();
-                morphTargets[i].bsphereRadius = reader.ReadSingle();
-                morphTargets[i].vertices = Array.Empty<Vector3>();
-                morphTargets[i].normals = Array.Empty<Vector3>();
+                morphTargets[i] = new MorphTarget
+                {
+                    bsphereCenter = reader.ReadVector3(),
+                    bsphereRadius = reader.ReadSingle(),
+                    vertices = Array.Empty<Vector3>(),
+                    normals = Array.Empty<Vector3>()
+                };
                 bool hasVertices = reader.ReadUInt32() > 0;
                 bool hasNormals = reader.ReadUInt32() > 0;
                 if (hasVertices)
@@ -97,7 +99,7 @@ namespace zzio.rwbs
 
         protected override void writeStruct(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.Write(triangles.Length);
             int vertexCount = morphTargets.Length == 0 ? 0 : morphTargets[0].vertices.Length;
             writer.Write(vertexCount);

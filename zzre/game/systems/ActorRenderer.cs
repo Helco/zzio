@@ -12,7 +12,7 @@ namespace zzre.game.systems
     [With(typeof(components.Visibility))]
     public partial class ActorRenderer : AEntitySetSystem<CommandList>
     {
-        private static readonly FilePath BaseTexturePath = new FilePath("resources/textures/actorsex");
+        private static readonly FilePath BaseTexturePath = new("resources/textures/actorsex");
 
         private readonly ITagContainer diContainer;
         private readonly Camera camera;

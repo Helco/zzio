@@ -49,7 +49,7 @@ namespace zzre.game.systems
             if (zzContainer.IsKeyDown(Key.A)) moveDir -= target.GlobalRight;
             if (zzContainer.IsKeyDown(Key.E)) moveDir += target.GlobalUp;
             if (zzContainer.IsKeyDown(Key.Q)) moveDir -= target.GlobalUp;
-            target.LocalPosition = target.LocalPosition + moveDir * elapsedTime * speed * speedFactor;
+            target.LocalPosition += moveDir * elapsedTime * speed * speedFactor;
         }
     }
 }

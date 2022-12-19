@@ -10,23 +10,29 @@ namespace zzre.core.tests
 
         private Location SomeLocation1()
         {
-            var location = new Location();
-            location.LocalPosition = new Vector3(1.0f, 2.0f, 3.0f);
-            location.LocalRotation = Quaternion.CreateFromYawPitchRoll(30.0f, 90.0f, 170.0f);
+            var location = new Location
+            {
+                LocalPosition = new Vector3(1.0f, 2.0f, 3.0f),
+                LocalRotation = Quaternion.CreateFromYawPitchRoll(30.0f, 90.0f, 170.0f)
+            };
             return location;
         }
         private Location SomeLocation2()
         {
-            var location = new Location();
-            location.LocalPosition = new Vector3(-234.0f, 0.0123f, 453.09f);
-            location.LocalRotation = Quaternion.CreateFromYawPitchRoll(-56.0f, 24.0f, 35.0f);
+            var location = new Location
+            {
+                LocalPosition = new Vector3(-234.0f, 0.0123f, 453.09f),
+                LocalRotation = Quaternion.CreateFromYawPitchRoll(-56.0f, 24.0f, 35.0f)
+            };
             return location;
         }
         private Location SomeLocation3()
         {
-            var location = new Location();
-            location.LocalPosition = new Vector3(-0.01f, 23.0f, 5.0f);
-            location.LocalRotation = Quaternion.CreateFromYawPitchRoll(12.0f, 270.0f, -500.0f);
+            var location = new Location
+            {
+                LocalPosition = new Vector3(-0.01f, 23.0f, 5.0f),
+                LocalRotation = Quaternion.CreateFromYawPitchRoll(12.0f, 270.0f, -500.0f)
+            };
             return location;
         }
         private Location SomeLocation()
@@ -76,9 +82,11 @@ namespace zzre.core.tests
             var part2 = SomeLocation2();
             part2.Parent = part1;
 
-            var part3 = new Location();
-            part3.Parent = part2;
-            part3.WorldToLocal = final.WorldToLocal;
+            var part3 = new Location
+            {
+                Parent = part2,
+                WorldToLocal = final.WorldToLocal
+            };
 
             var origPoint = new Vector3(12.0f, -34.0f, 0.023f);
             var expPoint = Vector3.Transform(origPoint, final.LocalToWorld);

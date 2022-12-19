@@ -20,7 +20,7 @@ namespace zzio.rwbs
                 throw new InvalidDataException("Struct list section does not contain struct section");
 
             long oldPosition = stream.Position;
-            RangeStream structStream = new RangeStream(stream, structSize, false, false);
+            RangeStream structStream = new(stream, structSize, false, false);
             readStruct(structStream);
             stream.Position = oldPosition + structSize;
 
@@ -29,7 +29,7 @@ namespace zzio.rwbs
 
         protected override void writeBody(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.Write((int)SectionId.Struct);
             long sectionSizePos = stream.Position;
             writer.Write((uint)0);

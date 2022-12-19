@@ -11,10 +11,10 @@ namespace zzio
         [Serializable]
         public partial class Scene
         {
-            public Version version = new Version();
-            public Misc misc = new Misc();
-            public WaypointSystem waypointSystem = new WaypointSystem();
-            public Dataset dataset = new Dataset();
+            public Version version = new();
+            public Misc misc = new();
+            public WaypointSystem waypointSystem = new();
+            public Dataset dataset = new();
             public Vector3 sceneOrigin;
             public string backdropFile = "";
             public Light[] lights = Array.Empty<Light>();
@@ -45,11 +45,11 @@ namespace zzio
             public void Read(Stream stream)
             {
                 bool shouldReadNext = true;
-                using BinaryReader reader = new BinaryReader(stream);
+                using BinaryReader reader = new(stream);
                 if (reader.ReadZString() != "[Scenefile]")
                     throw new InvalidDataException("Magic section name missing in scene file");
 
-                Dictionary<string, Action> sectionHandlers = new Dictionary<string, Action>()
+                Dictionary<string, Action> sectionHandlers = new()
                 {
                     { "[Version]",           () => (version =          new Version()).Read(new GatekeeperStream(stream)) },
                     { "[Misc]",              () => (misc =             new Misc()).Read(new GatekeeperStream(stream)) },
@@ -108,7 +108,7 @@ namespace zzio
 
             public void Write(Stream stream)
             {
-                using BinaryWriter writer = new BinaryWriter(stream);
+                using BinaryWriter writer = new(stream);
                 writer.WriteZString("[Scenefile]");
 
                 // write primitives

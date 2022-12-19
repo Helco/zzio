@@ -14,7 +14,7 @@ namespace zzre.game.resources
 
     public readonly struct ClumpInfo : IEquatable<ClumpInfo>
     {
-        private static readonly FilePath BasePath = new FilePath("resources/models/");
+        private static readonly FilePath BasePath = new("resources/models/");
 
         public readonly ClumpType Type;
         public readonly string Name;
@@ -25,9 +25,9 @@ namespace zzre.game.resources
             Name = name;
         }
 
-        public static ClumpInfo Model(string name) => new ClumpInfo(ClumpType.Model, name);
-        public static ClumpInfo Actor(string name) => new ClumpInfo(ClumpType.Actor, name);
-        public static ClumpInfo Backdrop(string name) => new ClumpInfo(ClumpType.Backdrop, name);
+        public static ClumpInfo Model(string name) => new(ClumpType.Model, name);
+        public static ClumpInfo Actor(string name) => new(ClumpType.Actor, name);
+        public static ClumpInfo Backdrop(string name) => new(ClumpType.Backdrop, name);
 
         public override bool Equals(object? obj) => obj is ClumpInfo info && Equals(info);
         public bool Equals(ClumpInfo other) => Type == other.Type && Name == other.Name;
@@ -55,7 +55,7 @@ namespace zzre.game.resources
             Manage(diContainer.GetTag<DefaultEcs.World>());
         }
 
-        protected override ClumpBuffers Load(ClumpInfo info) => new ClumpBuffers(diContainer, info.Path);
+        protected override ClumpBuffers Load(ClumpInfo info) => new(diContainer, info.Path);
 
         protected override void OnResourceLoaded(in Entity entity, ClumpInfo info, ClumpBuffers resource)
         {

@@ -68,12 +68,12 @@ namespace zzre
 
         public static float NextFloat(this Random random) => (float)random.NextDouble();
 
-        public static Vector2 InPositiveSquare(this Random random) => new Vector2(random.NextFloat(), random.NextFloat());
-        public static Vector3 InPositiveCube(this Random random) => new Vector3(random.NextFloat(), random.NextFloat(), random.NextFloat());
+        public static Vector2 InPositiveSquare(this Random random) => new(random.NextFloat(), random.NextFloat());
+        public static Vector3 InPositiveCube(this Random random) => new(random.NextFloat(), random.NextFloat(), random.NextFloat());
 
         public static float InLine(this Random random) => random.NextSign() * (float)random.NextDouble();
-        public static Vector2 InSquare(this Random random) => new Vector2(random.InLine(), random.InLine());
-        public static Vector3 InCube(this Random random) => new Vector3(random.InLine(), random.InLine(), random.InLine());
+        public static Vector2 InSquare(this Random random) => new(random.InLine(), random.InLine());
+        public static Vector3 InCube(this Random random) => new(random.InLine(), random.InLine(), random.InLine());
         public static Vector3 InSphere(this Random random) => random.OnSphere() * random.NextFloat();
 
         public static Vector3 OnSphere(this Random random)

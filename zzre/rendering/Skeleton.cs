@@ -63,9 +63,11 @@ namespace zzre
                         !skin.bones[parentStack.Pop()].flags.HasFlag(BoneFlags.HasNextSibling)) ;
                 }
 
-                bones[index] = new Location();
-                bones[index].Parent = parents[index] < 0 ? Location : bones[parents[index]];
-                bones[index].WorldToLocal = BindingObjectToBone[index];
+                bones[index] = new Location
+                {
+                    Parent = parents[index] < 0 ? Location : bones[parents[index]],
+                    WorldToLocal = BindingObjectToBone[index]
+                };
             }
             Bones = bones;
             Parents = parents;

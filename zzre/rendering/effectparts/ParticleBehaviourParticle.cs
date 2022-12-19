@@ -43,7 +43,7 @@ namespace zzre.rendering.effectparts
             }
         }
 
-        private readonly Random random = new Random();
+        private readonly Random random = new();
         private readonly Location location;
         private readonly IQuadMeshBuffer<EffectVertex> quadMeshBuffer;
         private readonly EffectMaterial material;

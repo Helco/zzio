@@ -16,7 +16,7 @@ namespace zzio.tests.primitives
         [Test]
         public void ctor()
         {
-            VertexTriangle tri = new VertexTriangle(1, 2, 3, 4);
+            VertexTriangle tri = new(1, 2, 3, 4);
             Assert.AreEqual(1, tri.v1);
             Assert.AreEqual(2, tri.v2);
             Assert.AreEqual(3, tri.v3);
@@ -26,8 +26,8 @@ namespace zzio.tests.primitives
         [Test]
         public void read()
         {
-            MemoryStream stream = new MemoryStream(expected, false);
-            using BinaryReader reader = new BinaryReader(stream);
+            MemoryStream stream = new(expected, false);
+            using BinaryReader reader = new(stream);
             VertexTriangle tri = VertexTriangle.ReadNew(reader);
             Assert.AreEqual(30806, tri.v1);
             Assert.AreEqual(48282, tri.v2);
@@ -38,9 +38,9 @@ namespace zzio.tests.primitives
         [Test]
         public void write()
         {
-            MemoryStream stream = new MemoryStream();
-            using BinaryWriter writer = new BinaryWriter(stream);
-            VertexTriangle tri = new VertexTriangle(30806, 48282, 61662, 13330);
+            MemoryStream stream = new();
+            using BinaryWriter writer = new(stream);
+            VertexTriangle tri = new(30806, 48282, 61662, 13330);
             tri.Write(writer);
 
             byte[] actual = stream.ToArray();

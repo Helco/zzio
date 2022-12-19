@@ -99,7 +99,7 @@ namespace zzre
             var firstSide = plane.SideOf(corners.First());
             var isIntersecting = corners
                 .Skip(1)
-                .Select(corner => plane.SideOf(corner))
+                .Select(plane.SideOf)
                 .Any(cornerSide => cornerSide != firstSide);
             return
                 isIntersecting ? PlaneIntersections.Intersecting

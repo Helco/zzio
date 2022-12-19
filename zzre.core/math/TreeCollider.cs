@@ -157,7 +157,7 @@ namespace zzre
             }
         }
 
-        private Plane GetPlane(CollisionSector sector) => new Plane(sector.type.ToNormal(), sector.value);
+        private Plane GetPlane(CollisionSector sector) => new(sector.type.ToNormal(), sector.value);
     }
 
     public interface IIntersectionQueries<T> where T : struct, IIntersectable

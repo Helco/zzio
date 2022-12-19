@@ -8,7 +8,7 @@ namespace zzre
 {
     public class TagContainer : BaseDisposable, ITagContainer
     {
-        private readonly Dictionary<Type, object> tags = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, object> tags = new();
 
         protected override void DisposeManaged()
         {
@@ -17,7 +17,7 @@ namespace zzre
                 (disposableTag as IDisposable)?.Dispose();
         }
 
-        public bool HasTag<TTag>() where TTag : class => TryGetTag<TTag>(out var _);
+        public bool HasTag<TTag>() where TTag : class => TryGetTag<TTag>(out _);
 
         public bool TryGetTag<TTag>([NotNullWhen(true)] out TTag tag) where TTag : class
         {

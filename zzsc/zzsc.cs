@@ -140,7 +140,7 @@ namespace zzsc
                 return;
             }
 
-            string command = args[0].ToLower();
+            string command = args[0].ToLowerInvariant();
             string inputPath = args[1];
             string outputPath = args[2];
 
@@ -162,7 +162,7 @@ namespace zzsc
                 ? Console.Out
                 : new StreamWriter(outputPath);
 
-            List<RawInstruction> instructions = new List<RawInstruction>();
+            List<RawInstruction> instructions = new();
             string line;
             while ((line = input.ReadLine()) != null && line != "EOF")
             {

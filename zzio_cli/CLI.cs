@@ -23,7 +23,7 @@ namespace zzio.cli
                 stdoutWriter = stderrWriter = null;
             }
         }
-        private static readonly HandleGuard guard = new HandleGuard();
+        private static readonly HandleGuard guard = new();
         private static FileStream stdoutStream = null;
         private static FileStream stderrStream = null;
         private static StreamWriter stdoutWriter = null;
@@ -41,8 +41,10 @@ namespace zzio.cli
                 try
                 {
                     stdoutStream = new FileStream(args["stdout"] as string, FileMode.OpenOrCreate, FileAccess.Write);
-                    stdoutWriter = new StreamWriter(stdoutStream);
-                    stdoutWriter.AutoFlush = true;
+                    stdoutWriter = new StreamWriter(stdoutStream)
+                    {
+                        AutoFlush = true
+                    };
                     Console.SetOut(stdoutWriter);
                 }
                 catch (Exception)
@@ -60,8 +62,10 @@ namespace zzio.cli
                 try
                 {
                     stderrStream = new FileStream(args["stderr"] as string, FileMode.OpenOrCreate, FileAccess.Write);
-                    stderrWriter = new StreamWriter(stderrStream);
-                    stderrWriter.AutoFlush = true;
+                    stderrWriter = new StreamWriter(stderrStream)
+                    {
+                        AutoFlush = true
+                    };
                     Console.SetError(stderrWriter);
                 }
                 catch (Exception)
@@ -100,7 +104,7 @@ namespace zzio.cli
 
         public static void Main(string[] args)
         {
-            CommandLine cl = new CommandLine();
+            CommandLine cl = new();
             ParameterParser paramParser = null;
             try
             {
@@ -147,7 +151,7 @@ namespace zzio.cli
                 return;
             }
 
-            FileSelection fs = new FileSelection();
+            FileSelection fs = new();
             fs.addFromParameters(paramParser);
             ConversionMgr convMgr = null;
             try

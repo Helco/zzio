@@ -45,9 +45,11 @@ namespace zzre.tools
             AddDisposable(locationBuffer);
             var menuBar = new MenuBarWindowTag(Window);
             menuBar.AddButton("Open", HandleMenuOpen);
-            openFileModal = new OpenFileModal(diContainer);
-            openFileModal.Filter = "*.scn";
-            openFileModal.IsFilterChangeable = false;
+            openFileModal = new OpenFileModal(diContainer)
+            {
+                Filter = "*.scn",
+                IsFilterChangeable = false
+            };
             openFileModal.OnOpenedResource += Load;
 
             camera = new Camera(diContainer.ExtendedWith(locationBuffer));

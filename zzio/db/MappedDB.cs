@@ -9,7 +9,7 @@ namespace zzio.db
     public class MappedDB
     {
         private readonly Dictionary<ModuleType, Dictionary<UID, Row>> modules =
-            new Dictionary<ModuleType, Dictionary<UID, Row>>();
+            new();
 
         private readonly ResettableLazy<IReadOnlyDictionary<int, FairyRow>> fairiesByIndex;
         private readonly ResettableLazy<IReadOnlyDictionary<int, ItemRow>> itemsByIndex;
@@ -29,7 +29,7 @@ namespace zzio.db
 
         public void AddTable(Stream stream)
         {
-            Table table = new Table();
+            Table table = new();
             table.Read(stream);
             AddTable(table);
         }
@@ -61,25 +61,25 @@ namespace zzio.db
         }
 
         public IEnumerable<FairyRow> Fairies => modules[ModuleType.Fairy].Values.Select(row => new FairyRow(this, row));
-        public FairyRow GetFairy(UID uid) => new FairyRow(this, modules[ModuleType.Fairy][uid]);
+        public FairyRow GetFairy(UID uid) => new(this, modules[ModuleType.Fairy][uid]);
         public FairyRow GetFairy(int idx) => fairiesByIndex.Value[idx];
 
         public IEnumerable<TextRow> Texts => modules[ModuleType.Text].Values.Select(row => new TextRow(this, row));
-        public TextRow GetText(UID uid) => new TextRow(this, modules[ModuleType.Text][uid]);
+        public TextRow GetText(UID uid) => new(this, modules[ModuleType.Text][uid]);
 
         public IEnumerable<SpellRow> Spells => modules[ModuleType.Spell].Values
                     .Select(row => new SpellRow(this, row));
-        public SpellRow GetSpell(UID uid) => new SpellRow(this, modules[ModuleType.Spell][uid]);
+        public SpellRow GetSpell(UID uid) => new(this, modules[ModuleType.Spell][uid]);
         public SpellRow GetSpell(int idx) => spellsByIndex.Value[idx];
 
         public IEnumerable<ItemRow> Items => modules[ModuleType.Item].Values
                     .Select(row => new ItemRow(this, row));
-        public ItemRow GetItem(UID uid) => new ItemRow(this, modules[ModuleType.Item][uid]);
+        public ItemRow GetItem(UID uid) => new(this, modules[ModuleType.Item][uid]);
         public ItemRow GetItem(int idx) => itemsByIndex.Value[idx];
 
         public IEnumerable<NpcRow> Npcs => modules[ModuleType.Npc].Values
                     .Select(row => new NpcRow(this, row));
-        public NpcRow GetNpc(UID uid) => new NpcRow(this, modules[ModuleType.Npc][uid]);
+        public NpcRow GetNpc(UID uid) => new(this, modules[ModuleType.Npc][uid]);
         public bool TryGetNpc(UID uid, [NotNullWhen(true)] out NpcRow? npc)
         {
             npc = modules[ModuleType.Npc].TryGetValue(uid, out var row)
@@ -90,6 +90,6 @@ namespace zzio.db
 
         public IEnumerable<DialogRow> Dialogs => modules[ModuleType.Dialog].Values
                     .Select(row => new DialogRow(this, row));
-        public DialogRow GetDialog(UID uid) => new DialogRow(this, modules[ModuleType.Dialog][uid]);
+        public DialogRow GetDialog(UID uid) => new(this, modules[ModuleType.Dialog][uid]);
     }
 }

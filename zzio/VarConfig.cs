@@ -46,17 +46,17 @@ namespace zzio
         public byte[] header = new byte[3]; // 3 bytes, meaning unknown
         public VarConfigValue firstValue; // name is always empty
         public Dictionary<string, VarConfigValue> variables =
-            new Dictionary<string, VarConfigValue>();
+            new();
 
         public static VarConfig ReadNew(Stream stream)
         {
-            VarConfig config = new VarConfig();
+            VarConfig config = new();
 
             // Because of the Hash, two passes are necessary
             byte[] buffer = new byte[stream.Length - stream.Position];
             if (stream.Read(buffer, 0, buffer.Length) != buffer.Length)
                 throw new InvalidDataException("Could not read VarConfig buffer");
-            using BinaryReader reader = new BinaryReader(new MemoryStream(buffer, false));
+            using BinaryReader reader = new(new MemoryStream(buffer, false));
 
             byte[] expectedChecksum = reader.ReadBytes(16);
             config.header = reader.ReadBytes(3);
@@ -93,7 +93,7 @@ namespace zzio
             }
 
             MD5 md5 = MD5.Create();
-            CryptoStream hashStream = new CryptoStream(stream, md5, CryptoStreamMode.Write);
+            CryptoStream hashStream = new(stream, md5, CryptoStreamMode.Write);
             using (var writer = new BinaryWriter(hashStream, Encoding.UTF8, leaveOpen: true))
                 foreach (KeyValuePair<string, VarConfigValue> pair in variables)
                 {

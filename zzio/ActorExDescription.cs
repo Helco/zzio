@@ -48,8 +48,8 @@ namespace zzio
 
         public static ActorExDescription ReadNew(Stream stream)
         {
-            ActorExDescription actor = new ActorExDescription();
-            using BinaryReader reader = new BinaryReader(stream);
+            ActorExDescription actor = new();
+            using BinaryReader reader = new(stream);
             var bodyAnimations = new List<(AnimationType, string)>();
             var wingsAnimations = new List<(AnimationType, string)>();
 
@@ -112,7 +112,7 @@ namespace zzio
 
         public void Write(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.WriteZString("[ActorExDescriptionFile]");
 
             body.Write(writer, "Body");

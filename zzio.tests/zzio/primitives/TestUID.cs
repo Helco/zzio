@@ -9,8 +9,8 @@ namespace zzio.tests.primitives
         [Test]
         public void properties()
         {
-            UID nullUid = new UID();
-            UID uid = new UID(0xabcdef01);
+            UID nullUid = new();
+            UID uid = new(0xabcdef01);
 
             Assert.AreEqual((uint)0, nullUid.raw);
             Assert.AreEqual(0, nullUid.Module);
@@ -28,8 +28,8 @@ namespace zzio.tests.primitives
         public void read()
         {
             byte[] buffer = new byte[] { 0xef, 0xbe, 0xad, 0xde };
-            MemoryStream stream = new MemoryStream(buffer, false);
-            using BinaryReader reader = new BinaryReader(stream);
+            MemoryStream stream = new(buffer, false);
+            using BinaryReader reader = new(stream);
 
             UID uid = UID.ReadNew(reader);
             Assert.AreEqual(0xdeadbeef, uid.raw);
@@ -39,10 +39,10 @@ namespace zzio.tests.primitives
         [Test]
         public void write()
         {
-            MemoryStream stream = new MemoryStream();
-            using BinaryWriter writer = new BinaryWriter(stream);
+            MemoryStream stream = new();
+            using BinaryWriter writer = new(stream);
 
-            UID uid = new UID(0xdeadbeef);
+            UID uid = new(0xdeadbeef);
             uid.Write(writer);
             Assert.AreEqual(new byte[] { 0xef, 0xbe, 0xad, 0xde }, stream.ToArray());
         }

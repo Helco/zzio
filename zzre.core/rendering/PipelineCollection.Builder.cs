@@ -14,17 +14,17 @@ namespace zzre.rendering
             private PipelineCollection Collection { get; }
             private string? shaderSetName;
             private PixelFormat? depthTarget;
-            private List<PixelFormat> colorTargets = new List<PixelFormat>();
+            private List<PixelFormat> colorTargets = new();
             private TextureSampleCount sampleCount = TextureSampleCount.Count1;
-            private readonly List<List<VertexElementDescription>> vertexElements = new List<List<VertexElementDescription>>()
+            private readonly List<List<VertexElementDescription>> vertexElements = new()
             {
                 new List<VertexElementDescription>()
             };
-            private readonly List<uint> vertexLayoutInstanceStepRates = new List<uint>()
+            private readonly List<uint> vertexLayoutInstanceStepRates = new()
             {
                 0
             };
-            private readonly List<List<ResourceLayoutElementDescription>> resLayoutElements = new List<List<ResourceLayoutElementDescription>>()
+            private readonly List<List<ResourceLayoutElementDescription>> resLayoutElements = new()
             {
                 new List<ResourceLayoutElementDescription>()
             };
@@ -235,7 +235,7 @@ namespace zzre.rendering
                 return layout;
             }
 
-            private OutputDescription OutputDescription => new OutputDescription(
+            private OutputDescription OutputDescription => new(
                     depthTarget != null ? new OutputAttachmentDescription(depthTarget.Value) : null,
                     colorTargets.Select(f => new OutputAttachmentDescription(f)).ToArray(),
                     sampleCount);

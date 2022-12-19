@@ -13,7 +13,7 @@ internal class ECSExplorerWindow
 {
     private readonly ITagContainer diContainer;
     private readonly ZanzarahWindow zzWindow;
-    private readonly HashSet<DefaultEcs.Entity> openEntities = new HashSet<DefaultEcs.Entity>();
+    private readonly HashSet<DefaultEcs.Entity> openEntities = new();
 
     public Window Window { get; }
     private Zanzarah Zanzarah => zzWindow.Zanzarah;

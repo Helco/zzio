@@ -34,7 +34,7 @@ namespace zzre.tools
         private ActorExDescription? description;
         private Part? body;
         private Part? wings;
-        private readonly Location actorLocation = new Location();
+        private readonly Location actorLocation = new();
         private readonly LocationBuffer locationBuffer;
         private HeadIKMode headIKMode = HeadIKMode.Disabled;
 
@@ -60,9 +60,11 @@ namespace zzre.tools
             fbArea.OnRender += HandleRender;
             diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
 
-            openFileModal = new OpenFileModal(diContainer);
-            openFileModal.Filter = "*.aed";
-            openFileModal.IsFilterChangeable = false;
+            openFileModal = new OpenFileModal(diContainer)
+            {
+                Filter = "*.aed",
+                IsFilterChangeable = false
+            };
             openFileModal.OnOpenedResource += Load;
 
             locationBuffer = new LocationBuffer(device);

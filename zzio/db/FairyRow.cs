@@ -13,7 +13,7 @@ namespace zzio.db
 
         public ZZClass Class0 => (ZZClass)row.cells[2].Integer;
 
-        public CardId CardId => new CardId(row.cells[3].Integer);
+        public CardId CardId => new(row.cells[3].Integer);
 
         public int Unknown => row.cells[4].Integer;
 
@@ -22,16 +22,16 @@ namespace zzio.db
             .Select(i => new FairyLevelData(unchecked((uint)row.cells[i].Integer)))
             .ToArray();
 
-        public FairyLevelData Level0 => new FairyLevelData(unchecked((uint)row.cells[5].Integer));
-        public FairyLevelData Level1 => new FairyLevelData(unchecked((uint)row.cells[6].Integer));
-        public FairyLevelData Level2 => new FairyLevelData(unchecked((uint)row.cells[7].Integer));
-        public FairyLevelData Level3 => new FairyLevelData(unchecked((uint)row.cells[8].Integer));
-        public FairyLevelData Level4 => new FairyLevelData(unchecked((uint)row.cells[9].Integer));
-        public FairyLevelData Level5 => new FairyLevelData(unchecked((uint)row.cells[10].Integer));
-        public FairyLevelData Level6 => new FairyLevelData(unchecked((uint)row.cells[11].Integer));
-        public FairyLevelData Level7 => new FairyLevelData(unchecked((uint)row.cells[12].Integer));
-        public FairyLevelData Level8 => new FairyLevelData(unchecked((uint)row.cells[13].Integer));
-        public FairyLevelData Level9 => new FairyLevelData(unchecked((uint)row.cells[14].Integer));
+        public FairyLevelData Level0 => new(unchecked((uint)row.cells[5].Integer));
+        public FairyLevelData Level1 => new(unchecked((uint)row.cells[6].Integer));
+        public FairyLevelData Level2 => new(unchecked((uint)row.cells[7].Integer));
+        public FairyLevelData Level3 => new(unchecked((uint)row.cells[8].Integer));
+        public FairyLevelData Level4 => new(unchecked((uint)row.cells[9].Integer));
+        public FairyLevelData Level5 => new(unchecked((uint)row.cells[10].Integer));
+        public FairyLevelData Level6 => new(unchecked((uint)row.cells[11].Integer));
+        public FairyLevelData Level7 => new(unchecked((uint)row.cells[12].Integer));
+        public FairyLevelData Level8 => new(unchecked((uint)row.cells[13].Integer));
+        public FairyLevelData Level9 => new(unchecked((uint)row.cells[14].Integer));
 
         public string Info => foreignText(15);
 

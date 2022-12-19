@@ -41,7 +41,7 @@ namespace zzio.scn
 
         public void Read(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             author = reader.ReadZString();
             country = EnumUtils.intToEnum<VersionBuildCountry>(reader.ReadInt32());
             type = EnumUtils.intToEnum<VersionBuildType>(reader.ReadInt32());
@@ -55,7 +55,7 @@ namespace zzio.scn
 
         public void Write(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.WriteZString(author);
             writer.Write((int)country);
             writer.Write((int)type);

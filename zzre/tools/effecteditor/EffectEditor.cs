@@ -33,7 +33,7 @@ namespace zzre.tools
 
         private EffectCombinerRenderer? effectRenderer;
         private EffectCombiner Effect => effectRenderer?.Effect ?? emptyEffect;
-        private EffectCombiner emptyEffect = new EffectCombiner();
+        private EffectCombiner emptyEffect = new();
         private bool[] isVisible = Array.Empty<bool>();
         private bool isPlaying = false;
         private float timeScale = 1f, progressSpeed = 0f;

@@ -87,7 +87,7 @@ namespace zzre
             {
                 fixed (void* dataBytePtr = image.Data)
                 {
-                    IntPtr dataPtr = new IntPtr(dataBytePtr);
+                    IntPtr dataPtr = new(dataBytePtr);
                     device.UpdateTexture(texture,
                         source: dataPtr,
                         sizeInBytes: (uint)image.DataLen,

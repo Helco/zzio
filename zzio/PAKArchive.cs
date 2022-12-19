@@ -31,8 +31,8 @@ namespace zzio
     public class PAKArchive
     {
         private readonly Stream stream;
-        private readonly Dictionary<string, PAKArchiveEntry> entries = new Dictionary<string, PAKArchiveEntry>();
-        private readonly Dictionary<string, FilePath> directories = new Dictionary<string, FilePath>(); // use Dictionary to preserve case
+        private readonly Dictionary<string, PAKArchiveEntry> entries = new();
+        private readonly Dictionary<string, FilePath> directories = new(); // use Dictionary to preserve case
         private uint baseOffset;
 
         private PAKArchive(Stream str)
@@ -47,8 +47,8 @@ namespace zzio
         {
             if (!baseStream.CanRead || !baseStream.CanSeek)
                 throw new InvalidDataException("PAKArchive stream has to be readable and seekable");
-            PAKArchive archive = new PAKArchive(baseStream);
-            using BinaryReader reader = new BinaryReader(baseStream, Encoding.UTF8, leaveOpen: true);
+            PAKArchive archive = new(baseStream);
+            using BinaryReader reader = new(baseStream, Encoding.UTF8, leaveOpen: true);
             if (reader.ReadUInt32() != 0)
                 throw new InvalidDataException("Invalid PAKArchive magic (has to be 0x00000000)");
 
@@ -97,7 +97,7 @@ namespace zzio
 
         private string[] GetContentIn(IEnumerable<FilePath> set, string pathString, bool recursive)
         {
-            FilePath dirPath = new FilePath(pathString);
+            FilePath dirPath = new(pathString);
             if (!dirPath.StaysInbound)
                 throw new InvalidOperationException("Queried path does not stay inbounds");
 

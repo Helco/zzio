@@ -84,7 +84,7 @@ namespace zzre.rendering
                 set.Dispose();
         }
 
-        protected Configurator Configure() => new Configurator(this);
+        protected Configurator Configure() => new(this);
 
         protected class Configurator
         {

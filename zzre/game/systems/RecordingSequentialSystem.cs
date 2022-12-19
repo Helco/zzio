@@ -10,8 +10,8 @@ namespace zzre.game.systems
     {
         private readonly ITagContainer diContainer;
         private readonly DefaultEcs.World world;
-        private readonly List<ISystem<T>> systems = new List<ISystem<T>>();
-        private readonly EntityCommandRecorder recorder = new EntityCommandRecorder(1024 * 1024); // 1MiB should suffice, right?
+        private readonly List<ISystem<T>> systems = new();
+        private readonly EntityCommandRecorder recorder = new(1024 * 1024); // 1MiB should suffice, right?
 
         public bool IsEnabled { get; set; } = true;
         public IReadOnlyList<ISystem<T>> Systems => systems;

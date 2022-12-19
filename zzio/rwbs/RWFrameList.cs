@@ -43,7 +43,7 @@ namespace zzio.rwbs
 
         protected override void readStruct(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             frames = new Frame[reader.ReadUInt32()];
             for (int i = 0; i < frames.Length; i++)
                 frames[i] = Frame.ReadNew(reader);
@@ -51,7 +51,7 @@ namespace zzio.rwbs
 
         protected override void writeStruct(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.Write(frames.Length);
             foreach (Frame f in frames)
                 f.Write(writer);

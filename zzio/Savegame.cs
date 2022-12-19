@@ -15,8 +15,8 @@ namespace zzio
         public int progress;
         public int sceneId = -1;
         public int entryId = -1;
-        public readonly Dictionary<string, List<IGameStateMod>> gameState = new Dictionary<string, List<IGameStateMod>>();
-        public readonly List<InventoryCard> inventory = new List<InventoryCard>();
+        public readonly Dictionary<string, List<IGameStateMod>> gameState = new();
+        public readonly List<InventoryCard> inventory = new();
         public uint pixiesHolding;
         public uint pixiesCatched;
         public readonly GlobalVar[] globalVars = GlobalVar.CreateSet();
@@ -31,11 +31,13 @@ namespace zzio
 
         public static Savegame ReadNew(BinaryReader r)
         {
-            Savegame sg = new Savegame();
-            sg.version = ZZVersion.ReadNew(r);
-            sg.name = r.ReadZString();
-            sg.secondsPlayed = r.ReadInt32();
-            sg.progress = r.ReadInt32();
+            Savegame sg = new()
+            {
+                version = ZZVersion.ReadNew(r),
+                name = r.ReadZString(),
+                secondsPlayed = r.ReadInt32(),
+                progress = r.ReadInt32()
+            };
             if (r.ReadUInt32() != LocationBlockSize)
                 throw new InvalidDataException("Invalid size of savegame location block");
             sg.sceneId = r.ReadInt32();
@@ -107,7 +109,7 @@ namespace zzio
         public const int Count = 49;
 
         public static GlobalVar ReadNew(BinaryReader r) =>
-            new GlobalVar(r.ReadUInt32(), r.ReadUInt32());
+            new(r.ReadUInt32(), r.ReadUInt32());
 
         public void Write(BinaryWriter w)
         {

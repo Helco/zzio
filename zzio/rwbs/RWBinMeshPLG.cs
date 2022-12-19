@@ -29,7 +29,7 @@ namespace zzio.rwbs
 
         protected override void readBody(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             type = EnumUtils.intToEnum<BinMeshType>(reader.ReadInt32());
             subMeshes = new SubMesh[reader.ReadUInt32()];
             totalIndexCount = reader.ReadUInt32();
@@ -46,7 +46,7 @@ namespace zzio.rwbs
 
         protected override void writeBody(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.Write((int)type);
             writer.Write(subMeshes.Length);
             writer.Write(totalIndexCount);

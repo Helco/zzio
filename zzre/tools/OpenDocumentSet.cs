@@ -11,7 +11,7 @@ namespace zzre.tools
     public class OpenDocumentSet
     {
         private readonly ITagContainer diContainer;
-        private readonly HashSet<IDocumentEditor> editors = new HashSet<IDocumentEditor>();
+        private readonly HashSet<IDocumentEditor> editors = new();
 
         public OpenDocumentSet(ITagContainer diContainer)
         {
@@ -61,7 +61,7 @@ namespace zzre.tools
             return newEditor;
         }
 
-        private static readonly Dictionary<Type, Func<ITagContainer, object>> knownConstructors = new Dictionary<Type, Func<ITagContainer, object>>();
+        private static readonly Dictionary<Type, Func<ITagContainer, object>> knownConstructors = new();
         private static Func<ITagContainer, TEditor> GetConstructorFor<TEditor>() where TEditor : IDocumentEditor
         {
             var type = typeof(TEditor);

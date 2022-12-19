@@ -40,7 +40,7 @@ namespace zzmaps
         private readonly RefCachedAssetLoader<ClumpBuffers> clumpBufferLoader;
         private readonly RefCachedAssetLoader<Texture> textureLoader;
 
-        private readonly HashSet<IResource> textures = new HashSet<IResource>();
+        private readonly HashSet<IResource> textures = new();
 
         public Scene Scene { get; }
         public WorldBuffers WorldBuffers { get; }
@@ -96,7 +96,7 @@ namespace zzmaps
                     var textureRes = TextureBasePaths
                         .SelectMany(basePath => new[] { ".dds", ".bmp" }.Select(
                             ext => basePath.Combine(textureName!.value + ext)))
-                        .Select(basePath => resourcePool.FindFile(basePath))
+                        .Select(resourcePool.FindFile)
                         .FirstOrDefault(res => res != null && textureLoader.TryLoad(res, out var _));
                     if (textureRes != null)
                         textures.Add(textureRes);

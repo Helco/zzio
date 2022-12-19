@@ -31,7 +31,7 @@ namespace zzre.game.systems.ui
                 anim.Timer = 0f;
                 for (int i = 0; i < anim.SegmentsPerAdd && !anim.IsDone; i++)
                     AdvanceSegment(ref anim);
-                entity.Set(label with { Text = anim.FullText[0..anim.NextCharI] });
+                entity.Set(label with { Text = anim.FullText[..anim.NextCharI] });
             }
             else if (anim.IsBlinking && anim.Timer > BlinkDuration)
             {

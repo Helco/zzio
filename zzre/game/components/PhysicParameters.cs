@@ -33,7 +33,7 @@
         public bool UseWorldForces { get; init; }
         public bool PreserveVelocityAtCollision { get; init; }
 
-        public static readonly PhysicParameters Standard = new PhysicParameters()
+        public static readonly PhysicParameters Standard = new()
         {
             SpeedBackward = -20f,
             SpeedForward = 20f,

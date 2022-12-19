@@ -42,7 +42,7 @@ namespace zzio
         public GameStateModType Type => GameStateModType.DisableAttackTrigger;
 
         public static GSModDisableAttackTrigger ReadNew(BinaryReader r) =>
-            new GSModDisableAttackTrigger(r.ReadUInt32());
+            new(r.ReadUInt32());
 
         public void Write(BinaryWriter w) => w.Write(TriggerId);
     }
@@ -52,7 +52,7 @@ namespace zzio
         public GameStateModType Type => GameStateModType.RemoveItem;
 
         public static GSModRemoveItem ReadNew(BinaryReader r) =>
-            new GSModRemoveItem(r.ReadUInt32());
+            new(r.ReadUInt32());
 
         public void Write(BinaryWriter w) => w.Write(ModelId);
     }
@@ -62,7 +62,7 @@ namespace zzio
         public GameStateModType Type => GameStateModType.ChangeNPCState;
 
         public static GSModChangeNPCState ReadNew(BinaryReader r) =>
-            new GSModChangeNPCState(r.ReadUInt32(), UID.ReadNew(r));
+            new(r.ReadUInt32(), UID.ReadNew(r));
 
         public void Write(BinaryWriter w)
         {
@@ -76,7 +76,7 @@ namespace zzio
         public GameStateModType Type => GameStateModType.DisableTrigger;
 
         public static GSModDisableTrigger ReadNew(BinaryReader r) =>
-            new GSModDisableTrigger(r.ReadUInt32());
+            new(r.ReadUInt32());
 
         public void Write(BinaryWriter w) => w.Write(TriggerId);
     }
@@ -86,7 +86,7 @@ namespace zzio
         public GameStateModType Type => GameStateModType.RemoveModel;
 
         public static GSModRemoveModel ReadNew(BinaryReader r) =>
-            new GSModRemoveModel(r.ReadUInt32());
+            new(r.ReadUInt32());
 
         public void Write(BinaryWriter w) => w.Write(ModelId);
     }
@@ -100,7 +100,7 @@ namespace zzio
     {
         public GameStateModType Type => GameStateModType.SetTrigger;
 
-        public static GSModSetTrigger ReadNew(BinaryReader r) => new GSModSetTrigger(
+        public static GSModSetTrigger ReadNew(BinaryReader r) => new(
             r.ReadUInt32(),
             r.ReadUInt32(),
             r.ReadUInt32(),
@@ -122,7 +122,7 @@ namespace zzio
         public GameStateModType Type => GameStateModType.SetNPCModifier;
 
         public static GSModSetNPCModifier ReadNew(BinaryReader r) =>
-            new GSModSetNPCModifier(r.ReadUInt32(), r.ReadInt32());
+            new(r.ReadUInt32(), r.ReadInt32());
 
         public void Write(BinaryWriter w)
         {

@@ -12,7 +12,7 @@ namespace zzio.rwbs
 
         protected override void readStruct(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             uint count = reader.ReadUInt32();
             materialIndices = new int[count];
             for (uint i = 0; i < count; i++)
@@ -21,7 +21,7 @@ namespace zzio.rwbs
 
         protected override void writeStruct(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.Write((uint)materialIndices.Length);
             foreach (int index in materialIndices)
                 writer.Write(index);

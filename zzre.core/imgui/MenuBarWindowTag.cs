@@ -8,7 +8,7 @@
         {
             Window = parent;
             Window.AddTag(this);
-            Window.Flags = Window.Flags | ImGuiNET.ImGuiWindowFlags.MenuBar;
+            Window.Flags |= ImGuiNET.ImGuiWindowFlags.MenuBar;
             Window.OnContent += Update;
         }
     }

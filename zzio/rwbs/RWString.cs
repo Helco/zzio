@@ -12,7 +12,7 @@ namespace zzio.rwbs
 
         protected override void readBody(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             byte[] buffer = reader.ReadBytes((int)stream.Length);
             value = Encoding.UTF8.GetString(buffer);
             int terminator = value.IndexOf('\0');
@@ -22,7 +22,7 @@ namespace zzio.rwbs
 
         protected override void writeBody(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             byte[] buffer = Encoding.UTF8.GetBytes(value);
             writer.Write(buffer);
         }

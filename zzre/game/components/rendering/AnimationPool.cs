@@ -20,7 +20,7 @@ namespace zzre.game.components
             animations = new SkeletalAnimation[AnimationCount];
             Add(type, animation);
         }
-        public static AnimationPool CreateWith(AnimationType type, SkeletalAnimation animation) => new AnimationPool(type, animation);
+        public static AnimationPool CreateWith(AnimationType type, SkeletalAnimation animation) => new(type, animation);
 
         public bool Contains(AnimationType type) => animations?[(int)type] != null;
 

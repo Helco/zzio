@@ -10,7 +10,7 @@ namespace zzre
         public readonly float Radius;
         public float RadiusSq => Radius * Radius;
 
-        public static Sphere Zero = new Sphere();
+        public static Sphere Zero = new();
 
         public Sphere(float x, float y, float z, float r)
         {
@@ -24,7 +24,7 @@ namespace zzre
             Radius = radius;
         }
 
-        public Sphere TransformToWorld(Location location) => new Sphere(
+        public Sphere TransformToWorld(Location location) => new(
             Vector3.Transform(Center, location.LocalToWorld),
             Radius);
 

@@ -19,7 +19,7 @@ namespace zzre.imgui
         private Texture targetDepth;
         private readonly CommandList commandList;
         private readonly Fence fence;
-        private readonly OnceAction onceBeforeContent = new OnceAction();
+        private readonly OnceAction onceBeforeContent = new();
 
         public Framebuffer Framebuffer { get; private set; }
         public RgbaFloat ClearColor { get; set; }

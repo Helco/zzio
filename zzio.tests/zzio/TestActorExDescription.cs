@@ -31,7 +31,7 @@ namespace zzio.tests
         [Test]
         public void read()
         {
-            MemoryStream stream = new MemoryStream(sampleData, false);
+            MemoryStream stream = new(sampleData, false);
             ActorExDescription aed = ActorExDescription.ReadNew(stream);
             testInstance(aed);
         }
@@ -39,13 +39,13 @@ namespace zzio.tests
         [Test]
         public void write()
         {
-            MemoryStream readStream = new MemoryStream(sampleData, false);
+            MemoryStream readStream = new(sampleData, false);
             ActorExDescription aed = ActorExDescription.ReadNew(readStream);
 
-            MemoryStream writeStream = new MemoryStream();
+            MemoryStream writeStream = new();
             aed.Write(writeStream);
 
-            MemoryStream rereadStream = new MemoryStream(writeStream.ToArray(), false);
+            MemoryStream rereadStream = new(writeStream.ToArray(), false);
             ActorExDescription rereadAed = ActorExDescription.ReadNew(rereadStream);
 
             testInstance(rereadAed);

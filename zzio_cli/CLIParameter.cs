@@ -23,7 +23,7 @@ namespace zzio.cli
             shortName = sh;
             longName = l;
             description = desc;
-            values = new ParameterType[0];
+            values = Array.Empty<ParameterType>();
             defaultValue = defVal;
         }
 
@@ -79,7 +79,7 @@ namespace zzio.cli
                 }
 
                 //find out what parameter it is
-                ParameterInfo paramInfo = new ParameterInfo('\0', null, null, null);
+                ParameterInfo paramInfo = new('\0', null, null, null);
                 bool success = false;
                 foreach (ParameterInfo info in classes)
                 {
@@ -175,9 +175,8 @@ namespace zzio.cli
         {
             get
             {
-                if (values.ContainsKey(name))
+                if (values.TryGetValue(name, out var val))
                 {
-                    object val = values[name];
                     if (val is List<object>)
                     {
                         List<object> l = val as List<object>;
@@ -191,17 +190,6 @@ namespace zzio.cli
             }
         }
 
-        public object this[string name, bool asList]
-        {
-            get
-            {
-                if (!asList)
-                    return this[name];
-                else if (values.ContainsKey(name))
-                    return values[name];
-                else
-                    return values[name];
-            }
-        }
+        public object this[string name, bool asList] => asList ? values[name] : this[name];
     }
 }

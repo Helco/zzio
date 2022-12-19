@@ -14,7 +14,7 @@ namespace zzre.game.systems.ui
     public partial class Label : AEntitySetSystem<float>
     {
         // at least a small regex for the special group, the code to do this manually really isn't nice
-        private static readonly Regex GroupRegex = new Regex(
+        private static readonly Regex GroupRegex = new(
             @"\G{(?:" +
             @"(\d\*)|" + // change font
             @"(t\d{1,3})|" + // set cursor position

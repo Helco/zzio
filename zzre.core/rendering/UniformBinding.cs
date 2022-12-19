@@ -60,7 +60,7 @@ namespace zzre.rendering
 
         public override BindableResource? Resource => range as BindableResource ?? Buffer;
 
-        public UniformBinding(IMaterial parent) : base(parent) { }
+        protected UniformBinding(IMaterial parent) : base(parent) { }
 
         protected override void DisposeManaged()
         {

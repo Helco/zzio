@@ -13,7 +13,7 @@ using zzio;
 public partial class Inventory : IReadOnlyCollection<InventoryCard>
 {
     private readonly zzio.db.MappedDB mappedDB;
-    private readonly List<InventoryCard?> cards = new List<InventoryCard?>();
+    private readonly List<InventoryCard?> cards = new();
     private readonly InventoryFairy?[] fairySlots = new InventoryFairy?[FairySlotCount];
     public int Count { get; private set; }
 

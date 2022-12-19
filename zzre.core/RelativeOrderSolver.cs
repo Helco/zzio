@@ -8,7 +8,7 @@ namespace zzre.core
     public class RelativeOrderSolver<T> : IReadOnlyList<T> where T : notnull
     {
         private readonly Func<T, RelativeOrderItem> orderOf;
-        private List<T> ordering = new List<T>();
+        private List<T> ordering = new();
 
         public RelativeOrderSolver(Func<T, RelativeOrderItem> orderOf)
         {
@@ -17,7 +17,7 @@ namespace zzre.core
 
         public bool TrySolveFor(IEnumerable<T> items)
         {
-            var itemByOrder = items.ToDictionary(item => orderOf(item), item => item);
+            var itemByOrder = items.ToDictionary(orderOf, item => item);
             var dependsOn = itemByOrder
                 .SelectMany(pair => Enumerable.Concat(
                     pair.Key.Predecessors.Select(pre => (before: itemByOrder[pre], after: pair.Value)),

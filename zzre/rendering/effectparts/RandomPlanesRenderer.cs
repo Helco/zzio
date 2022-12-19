@@ -24,7 +24,7 @@ namespace zzre.rendering.effectparts
             public Vector2 Size => Vector2.Multiply(startSize, scale);
         }
 
-        private readonly Random random = new Random();
+        private readonly Random random = new();
         private readonly IQuadMeshBuffer<EffectVertex> quadMeshBuffer;
         private readonly EffectMaterial material;
         private readonly RandomPlanes data;

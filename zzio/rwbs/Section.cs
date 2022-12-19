@@ -10,7 +10,7 @@ namespace zzio.rwbs
     public abstract class Section
     {
         private static readonly Dictionary<SectionId, Func<Section>> sectionTypeCtors
-            = new Dictionary<SectionId, Func<Section>>()
+            = new()
             {
                 { SectionId.Atomic,        () => new RWAtomic() },
                 { SectionId.AtomicSection, () => new RWAtomicSection() },
@@ -42,7 +42,7 @@ namespace zzio.rwbs
 
         public static void ReadHead(Stream stream, out SectionId sectionId, out uint size, out uint version)
         {
-            using BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
+            using BinaryReader reader = new(stream, Encoding.UTF8, leaveOpen: true);
             sectionId = EnumUtils.intToEnum<SectionId>(reader.ReadInt32());
             size = reader.ReadUInt32();
             version = reader.ReadUInt32();
@@ -65,13 +65,13 @@ namespace zzio.rwbs
             }
             version = readVersion;
 
-            RangeStream rangeStream = new RangeStream(stream, readSize, false, false);
+            RangeStream rangeStream = new(stream, readSize, false, false);
             readBody(rangeStream);
         }
 
         public void Write(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
+            using BinaryWriter writer = new(stream, Encoding.UTF8, leaveOpen: true);
             writer.Write((int)sectionId);
             long sectionSizePos = stream.Position;
             writer.Write((uint)0);

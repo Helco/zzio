@@ -29,7 +29,7 @@ namespace zzre.materials
         public bool isBillboard;
         public const uint Stride = (4 + 3) * sizeof(float) + sizeof(bool);
 
-        public static readonly EffectMaterialUniforms Default = new EffectMaterialUniforms
+        public static readonly EffectMaterialUniforms Default = new()
         {
             tint = FColor.White,
             vertexColorFactor = 1f,
@@ -56,7 +56,7 @@ namespace zzre.materials
         public UniformBinding<Matrix4x4> World { get; }
         public UniformBinding<EffectMaterialUniforms> Uniforms { get; }
 
-        public EffectMaterial(ITagContainer diContainer, IBuiltPipeline pipeline) : base(diContainer.GetTag<GraphicsDevice>(), pipeline)
+        protected EffectMaterial(ITagContainer diContainer, IBuiltPipeline pipeline) : base(diContainer.GetTag<GraphicsDevice>(), pipeline)
         {
             Configure()
                 .Add(MainTexture = new TextureBinding(this))

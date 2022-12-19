@@ -23,14 +23,14 @@ namespace zzre.imgui
             }
         }
 
-        private readonly MenuBarItem RootItem = new MenuBarItem(null, "", null);
+        private readonly MenuBarItem RootItem = new(null, "", null);
 
         public void AddItem(string path, Action<string> onContent)
         {
             var comp = StringComparison.InvariantCultureIgnoreCase;
             var curParent = RootItem;
             var parts = path.Split("/");
-            foreach (var part in parts[0..^1])
+            foreach (var part in parts[..^1])
             {
                 var nextParent = curParent.Children.FirstOrDefault(i => i.Name.Equals(part, comp));
                 if (nextParent == null)

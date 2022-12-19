@@ -134,13 +134,13 @@ namespace zzre.game.systems.ui
             _ => throw new ArgumentException("Invalid UID for UI")
         };
 
-        internal uibuilder.Label CreateLabel(DefaultEcs.Entity parent) => new uibuilder.Label(this, parent);
+        internal uibuilder.Label CreateLabel(DefaultEcs.Entity parent) => new(this, parent);
 
-        internal uibuilder.TooltipArea CreateTooltipArea(DefaultEcs.Entity parent) => new uibuilder.TooltipArea(this, parent);
+        internal uibuilder.TooltipArea CreateTooltipArea(DefaultEcs.Entity parent) => new(this, parent);
 
-        internal uibuilder.TooltipTarget CreateTooltipTarget(DefaultEcs.Entity parent) => new uibuilder.TooltipTarget(this, parent);
+        internal uibuilder.TooltipTarget CreateTooltipTarget(DefaultEcs.Entity parent) => new(this, parent);
 
-        internal uibuilder.Button CreateButton(DefaultEcs.Entity parent) => new uibuilder.Button(this, parent);
+        internal uibuilder.Button CreateButton(DefaultEcs.Entity parent) => new(this, parent);
 
         internal uibuilder.Image CreateImage(DefaultEcs.Entity parent) => new(this, parent);
 

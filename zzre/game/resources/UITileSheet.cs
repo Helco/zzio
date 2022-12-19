@@ -13,7 +13,7 @@ namespace zzre.game.resources
 
     public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.IDisposable
     {
-        private readonly Dictionary<TileSheet, UIMaterial> materials = new Dictionary<TileSheet, UIMaterial>();
+        private readonly Dictionary<TileSheet, UIMaterial> materials = new();
         private readonly ITagContainer diContainer;
         private readonly UI ui;
         private readonly GraphicsDevice graphicsDevice;

@@ -39,7 +39,7 @@ namespace zzio.rwbs
 
         protected override void readStruct(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             filterMode = EnumUtils.intToEnum<TextureFilterMode>(reader.ReadByte());
             byte addressing = reader.ReadByte();
             uAddressingMode = EnumUtils.intToEnum<TextureAddressingMode>(addressing & 0xf);
@@ -51,7 +51,7 @@ namespace zzio.rwbs
 
         protected override void writeStruct(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.Write((byte)filterMode);
             byte addressing = (byte)(
                 ((((int)uAddressingMode) & 0xf) << 0) |

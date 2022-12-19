@@ -34,7 +34,7 @@ namespace zzio.tests
         [Test]
         public void read()
         {
-            MemoryStream stream = new MemoryStream(sampleData, false);
+            MemoryStream stream = new(sampleData, false);
             MapMarker[] mapMarkers = MapMarker.ReadFile(stream);
             testMarkers(mapMarkers);
         }
@@ -42,13 +42,13 @@ namespace zzio.tests
         [Test]
         public void write()
         {
-            MemoryStream readStream = new MemoryStream(sampleData, false);
+            MemoryStream readStream = new(sampleData, false);
             MapMarker[] mapMarkers = MapMarker.ReadFile(readStream);
 
-            MemoryStream writeStream = new MemoryStream();
+            MemoryStream writeStream = new();
             MapMarker.WriteFile(mapMarkers, writeStream);
 
-            MemoryStream rereadStream = new MemoryStream(writeStream.ToArray(), false);
+            MemoryStream rereadStream = new(writeStream.ToArray(), false);
             MapMarker[] rereadMapMarkers = MapMarker.ReadFile(rereadStream);
             testMarkers(rereadMapMarkers);
         }

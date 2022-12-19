@@ -12,7 +12,7 @@ namespace zzre.game.systems
         private const float NormalSpeed = 3f;
         private const float PlayerSpeed = 10f;
         private const float PlayerAmplitudeFactor = 0.5f;
-        private static readonly Vector3 PlayerDistanceShift = new Vector3(0f, 0.7f, 0f);
+        private static readonly Vector3 PlayerDistanceShift = new(0f, 0.7f, 0f);
 
         private readonly IDisposable addComponentSubscription;
         private Location playerLocation => playerLocationLazy.Value;

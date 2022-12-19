@@ -52,8 +52,10 @@ namespace zzre.imgui
             if (!isOpen && OpenState == WindowOpenState.Open)
                 OpenState = WindowOpenState.Closed;
 
-            Rect newBounds = new Rect();
-            newBounds.Min = GetCursorScreenPos();
+            Rect newBounds = new()
+            {
+                Min = GetCursorScreenPos()
+            };
             newBounds.Max = newBounds.Min + GetWindowSize();
             Bounds = newBounds;
             IsFocused = IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);

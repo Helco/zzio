@@ -8,7 +8,7 @@ namespace zzre
     public class ExtendedTagContainer : BaseDisposable, ITagContainer
     {
         private readonly ITagContainer parent;
-        private readonly TagContainer extension = new TagContainer();
+        private readonly TagContainer extension = new();
 
         public ExtendedTagContainer(ITagContainer parent)
         {

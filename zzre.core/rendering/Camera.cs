@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Veldrid;
 using zzio;
 
@@ -11,13 +12,13 @@ namespace zzre.rendering
         private readonly UniformBuffer<Matrix4x4> projection;
         private readonly ResettableLazyValue<Matrix4x4> invProjection;
         private float aspect = 1.0f;
-        private float vfov = 60.0f * 3.141592653f / 180.0f;
+        private float vfov = 60.0f * MathF.PI / 180.0f;
         private float nearPlane = 0.1f;
         private float farPlane = 500.0f;
 
         public Location Location { get; } = new Location();
         public DeviceBufferRange ViewRange { get; }
-        public DeviceBufferRange ProjectionRange => new DeviceBufferRange(projection.Buffer, 0, projection.Buffer.SizeInBytes);
+        public DeviceBufferRange ProjectionRange => new(projection.Buffer, 0, projection.Buffer.SizeInBytes);
         public Matrix4x4 View => Location.WorldToLocal;
         public Matrix4x4 Projection => projection.Value;
         public Matrix4x4 InvProjection => invProjection.Value;

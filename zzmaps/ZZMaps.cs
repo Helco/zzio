@@ -113,7 +113,7 @@ namespace zzmaps
             void PrintProgress()
             {
                 Console.CursorTop -= printedLines;
-                string emptyLine = new string(' ', Console.BufferWidth - 1);
+                string emptyLine = new(' ', Console.BufferWidth - 1);
                 printedLines = 0;
                 int maxNameLen = scheduler.ProgressSteps.Max(s => s.Name.Length);
                 foreach (var step in scheduler.ProgressSteps.Where(step => step.Current > 0))

@@ -41,7 +41,7 @@ namespace zzio
         uint Year,
         uint Unknown2)
     {
-        public static ZZVersion ReadNew(BinaryReader r) => new ZZVersion
+        public static ZZVersion ReadNew(BinaryReader r) => new()
         {
             Author = r.ReadZString(),
             BuildCountry = EnumUtils.intToEnum<ZZBuildCountry>(r.ReadInt32()),
@@ -67,7 +67,7 @@ namespace zzio
             w.Write(Unknown2);
         }
 
-        public static ZZVersion CreateDefault() => new ZZVersion()
+        public static ZZVersion CreateDefault() => new()
         {
             Author = "ZZIO " + typeof(ZZVersion).Assembly.GetName().Version,
             BuildCountry = ZZBuildCountry.ZZIO,

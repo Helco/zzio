@@ -24,8 +24,8 @@ namespace zzre.game.systems
         private readonly IDisposable setCameraModeSubscription;
 
         private DefaultEcs.Entity source, target;
-        private Location sourceLoc = new Location();
-        private Location targetLoc = new Location();
+        private Location sourceLoc = new();
+        private Location targetLoc = new();
         private SubMode mode;
 
         public CreatureCamera(ITagContainer diContainer) : base(diContainer)
@@ -52,10 +52,12 @@ namespace zzre.game.systems
                 npcLocation = message.NPCEntity.Get<Location>();
             else
             {
-                npcLocation = new Location();
-                npcLocation.LocalPosition =
+                npcLocation = new Location
+                {
+                    LocalPosition =
                     camera.Location.GlobalPosition +
-                    camera.Location.GlobalForward;
+                    camera.Location.GlobalForward
+                };
             }
             (sourceLoc, targetLoc) = majorMode == 10
                 ? (playerLocation, npcLocation)

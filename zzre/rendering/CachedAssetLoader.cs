@@ -9,7 +9,7 @@ namespace zzre.rendering
     public class CachedAssetLoader<TAsset> : BaseDisposable, IAssetLoader<TAsset> where TAsset : class, IDisposable
     {
         private readonly IAssetLoader<TAsset> parent;
-        protected readonly Dictionary<FilePath, TAsset> cache = new Dictionary<FilePath, TAsset>();
+        protected readonly Dictionary<FilePath, TAsset> cache = new();
         public ITagContainer DIContainer => parent.DIContainer;
 
         public CachedAssetLoader(IAssetLoader<TAsset> parent)

@@ -13,7 +13,7 @@ namespace zzio.effect
     public partial class EffectCombiner
     {
         private static readonly Dictionary<string, Func<IEffectPart>> partTypeConstructors =
-            new Dictionary<string, Func<IEffectPart>>()
+            new()
             {
                 { "BeamStar",           () => new BeamStar() },
                 { "ElectricBolt",       () => new ElectricBolt() },
@@ -30,7 +30,7 @@ namespace zzio.effect
 
         // all handlers except the effect parts
         private static readonly Dictionary<string, Action<EffectCombiner, BinaryReader>> sectionHandlers =
-            new Dictionary<string, Action<EffectCombiner, BinaryReader>>()
+            new()
             {
                 { "Effect_Combiner_Description", (eff, r) => {
                     eff.description = r.ReadSizedCString(32);
@@ -58,8 +58,8 @@ namespace zzio.effect
 
         public void Read(Stream stream)
         {
-            List<IEffectPart> partsList = new List<IEffectPart>();
-            using BinaryReader r = new BinaryReader(stream);
+            List<IEffectPart> partsList = new();
+            using BinaryReader r = new(stream);
 
             if (r.ReadZString() != "[Effect Combiner]")
                 throw new InvalidDataException("File does not start with correct tag");

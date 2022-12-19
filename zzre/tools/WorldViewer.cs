@@ -83,12 +83,16 @@ namespace zzre.tools
             var gridRenderer = new DebugGridRenderer(diContainer);
             //gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
             AddDisposable(gridRenderer);
-            modelMaterialEdit = new ModelMaterialEdit(Window, diContainer);
-            modelMaterialEdit.OpenEntriesByDefault = false;
+            modelMaterialEdit = new ModelMaterialEdit(Window, diContainer)
+            {
+                OpenEntriesByDefault = false
+            };
             diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
-            openFileModal = new OpenFileModal(diContainer);
-            openFileModal.Filter = "*.bsp";
-            openFileModal.IsFilterChangeable = false;
+            openFileModal = new OpenFileModal(diContainer)
+            {
+                Filter = "*.bsp",
+                IsFilterChangeable = false
+            };
             openFileModal.OnOpenedResource += Load;
 
             locationBuffer = new LocationBuffer(diContainer.GetTag<GraphicsDevice>());
@@ -96,8 +100,10 @@ namespace zzre.tools
             camera = new Camera(diContainer.ExtendedWith(locationBuffer));
             AddDisposable(camera);
             controls = new FlyControlsTag(Window, camera.Location, diContainer);
-            worldTransform = new UniformBuffer<Matrix4x4>(diContainer.GetTag<GraphicsDevice>().ResourceFactory);
-            worldTransform.Ref = Matrix4x4.Identity;
+            worldTransform = new UniformBuffer<Matrix4x4>(diContainer.GetTag<GraphicsDevice>().ResourceFactory)
+            {
+                Ref = Matrix4x4.Identity
+            };
             AddDisposable(worldTransform);
             fbArea = Window.GetTag<FramebufferArea>();
             fbArea.OnResize += HandleResize;
@@ -114,8 +120,10 @@ namespace zzre.tools
             editor.AddInfoSection("Collision", HandleCollision, false);
             editor.AddInfoSection("Raycast", HandleRaycast, true);
 
-            boundsRenderer = new DebugBoxLineRenderer(diContainer);
-            boundsRenderer.Color = IColor.Red;
+            boundsRenderer = new DebugBoxLineRenderer(diContainer)
+            {
+                Color = IColor.Red
+            };
             boundsRenderer.Material.LinkTransformsTo(camera);
             boundsRenderer.Material.LinkTransformsTo(world: worldTransform);
             AddDisposable(boundsRenderer);

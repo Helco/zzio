@@ -10,7 +10,7 @@ namespace zzmaps
     {
         private readonly ExecutionDataflowBlockOptions options;
         private readonly TransformManyBlock<T, (int, T)> multiplyBlock;
-        private readonly Dictionary<ITargetBlock<T>, ITargetBlock<(int, T)>> targets = new Dictionary<ITargetBlock<T>, ITargetBlock<(int, T)>>();
+        private readonly Dictionary<ITargetBlock<T>, ITargetBlock<(int, T)>> targets = new();
 
         private IPropagatorBlock<T, (int, T)> multiplyBlockInternal => multiplyBlock;
 

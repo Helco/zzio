@@ -33,11 +33,11 @@ namespace zzre.game.components.ui
         public Vector2 CalcReverse(Vector2 position, Rect logicalScreen) =>
             position - GetOffset(logicalScreen);
 
-        public static readonly UIOffset ScreenUpperLeft = new UIOffset(Vector2.Zero, GameOnly: false);
-        public static readonly UIOffset GameUpperLeft = new UIOffset(Vector2.Zero, GameOnly: true);
-        public static readonly UIOffset GameUpperRight = new UIOffset(Vector2.UnitX, GameOnly: true);
-        public static readonly UIOffset GameLowerLeft = new UIOffset(Vector2.UnitY, GameOnly: true);
-        public static readonly UIOffset GameLowerRight = new UIOffset(Vector2.One, GameOnly: true);
-        public static readonly UIOffset Center = new UIOffset(Vector2.One / 2f, GameOnly: false);
+        public static readonly UIOffset ScreenUpperLeft = new(Vector2.Zero, GameOnly: false);
+        public static readonly UIOffset GameUpperLeft = new(Vector2.Zero, GameOnly: true);
+        public static readonly UIOffset GameUpperRight = new(Vector2.UnitX, GameOnly: true);
+        public static readonly UIOffset GameLowerLeft = new(Vector2.UnitY, GameOnly: true);
+        public static readonly UIOffset GameLowerRight = new(Vector2.One, GameOnly: true);
+        public static readonly UIOffset Center = new(Vector2.One / 2f, GameOnly: false);
     }
 }

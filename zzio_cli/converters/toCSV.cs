@@ -8,8 +8,8 @@ namespace zzio.cli.converters
 {
     public class FBStoCSV : IConverter
     {
-        public FileType TypeFrom { get { return FileType.FBS_Data; } }
-        public FileType TypeTo { get { return FileType.CSV; } }
+        public FileType TypeFrom => FileType.FBS_Data;
+        public FileType TypeTo => FileType.CSV;
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var table = new Table();
@@ -17,7 +17,7 @@ namespace zzio.cli.converters
             var mappedDb = new MappedDB();
             mappedDb.AddTable(table);
 
-            StreamWriter writer = new StreamWriter(to,
+            StreamWriter writer = new(to,
                 Encoding.UTF8, 1024, true);
             switch ((ModuleType)table.rows.First().Key.Module)
             {
