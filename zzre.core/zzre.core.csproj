@@ -24,8 +24,8 @@
     <PackageReference Include="Veldrid" Version="$(VeldridVersion)"/>
     <PackageReference Include="Veldrid.ImGui" Version="$(VeldridImguiVersion)"/>
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.14" />
-    <PackageReference Include="ImGui.NET" Version="1.88.0-beeb8dd" />
-    <PackageReference Include="ImGuizmo.NET" Version="1.61.0-beeb8dd" />
+    <PackageReference Include="ImGui.NET" Version="$(ImguiVersion)" />
+    <PackageReference Include="ImGuizmo.NET" Version="$(ImguizmoVersion)" />
   </ItemGroup>
 
   <ItemGroup>

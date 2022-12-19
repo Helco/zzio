@@ -43,11 +43,11 @@
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <PackageReference Include="Veldrid.RenderDoc" Version="$(VeldridRenderdocVersion)" />
-    <PackageReference Include="DefaultEcs" Version="1.0.0-safe-674a2ca" />
+    <PackageReference Include="DefaultEcs" Version="$(DefaultEcsSafeVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
-    <PackageReference Include="DefaultEcs" Version="1.0.0-674a2ca" />
+    <PackageReference Include="DefaultEcs" Version="$(DefaultEcsVersion)" />
   </ItemGroup>
 
   <ItemGroup>
