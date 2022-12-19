@@ -19,14 +19,6 @@ jobs:
         path: zzio
         submodules: true
         fetch-depth: 0
-    - uses: actions/checkout@v2
-      with:
-        repository: Helco/zzio-feed
-        path: zzio-feed
-    - name: Setup .NET Core 2.2.x
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 2.2.x
     - name: Setup .NET Core 6.0.x
       uses: actions/setup-dotnet@v1
       with:
