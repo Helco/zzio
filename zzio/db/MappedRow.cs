@@ -29,20 +29,8 @@ namespace zzio.db
             this.row = row;
         }
 
-        public UID Uid
-        {
-            get
-            {
-                return row.uid;
-            }
-        }
+        public UID Uid => row.uid;
 
-        public ModuleType Module
-        {
-            get
-            {
-                return EnumUtils.intToEnum<ModuleType>(Uid.Module);
-            }
-        }
+        public ModuleType Module => EnumUtils.intToEnum<ModuleType>(Uid.Module);
     }
 }

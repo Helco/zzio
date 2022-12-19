@@ -24,8 +24,8 @@ namespace zzio.cli.converters
 
     public class AEDtoJSON : IConverter
     {
-        public FileType TypeFrom { get { return FileType.AED; } }
-        public FileType TypeTo { get { return FileType.JSON; } }
+        public FileType TypeFrom => FileType.AED;
+        public FileType TypeTo => FileType.JSON;
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var obj = ActorExDescription.ReadNew(from);
@@ -36,8 +36,8 @@ namespace zzio.cli.converters
 
     public class CFG_VarstoJSON : IConverter
     {
-        public FileType TypeFrom { get { return FileType.CFG_Vars; } }
-        public FileType TypeTo { get { return FileType.JSON; } }
+        public FileType TypeFrom => FileType.CFG_Vars;
+        public FileType TypeTo => FileType.JSON;
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var obj = VarConfig.ReadNew(from);
@@ -48,8 +48,8 @@ namespace zzio.cli.converters
 
     public class CFG_MaptoJSON : IConverter
     {
-        public FileType TypeFrom { get { return FileType.CFG_Map; } }
-        public FileType TypeTo { get { return FileType.JSON; } }
+        public FileType TypeFrom => FileType.CFG_Map;
+        public FileType TypeTo => FileType.JSON;
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var obj = MapMarker.ReadFile(from);
@@ -60,8 +60,8 @@ namespace zzio.cli.converters
 
     public class EDtoJSON : IConverter
     {
-        public FileType TypeFrom { get { return FileType.ED; } }
-        public FileType TypeTo { get { return FileType.JSON; } }
+        public FileType TypeFrom => FileType.ED;
+        public FileType TypeTo => FileType.JSON;
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             effect.EffectCombiner obj = new();
@@ -73,8 +73,8 @@ namespace zzio.cli.converters
 
     public class FBS_IndextoJSON : IConverter
     {
-        public FileType TypeFrom { get { return FileType.FBS_Index; } }
-        public FileType TypeTo { get { return FileType.JSON; } }
+        public FileType TypeFrom => FileType.FBS_Index;
+        public FileType TypeTo => FileType.JSON;
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var obj = new zzio.db.IndexTable();
@@ -86,8 +86,8 @@ namespace zzio.cli.converters
 
     public class FBS_DatatoJSON : IConverter
     {
-        public FileType TypeFrom { get { return FileType.FBS_Data; } }
-        public FileType TypeTo { get { return FileType.JSON; } }
+        public FileType TypeFrom => FileType.FBS_Data;
+        public FileType TypeTo => FileType.JSON;
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var obj = new zzio.db.Table();
@@ -110,8 +110,8 @@ namespace zzio.cli.converters
 
     public class RWBS_DFFtoJSON : IConverter
     {
-        public FileType TypeFrom { get { return FileType.RWBS_DFF; } }
-        public FileType TypeTo { get { return FileType.JSON; } }
+        public FileType TypeFrom => FileType.RWBS_DFF;
+        public FileType TypeTo => FileType.JSON;
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var obj = zzio.rwbs.Section.ReadNew(from);
@@ -122,8 +122,8 @@ namespace zzio.cli.converters
 
     public class RWBS_BSPtoJSON : IConverter
     {
-        public FileType TypeFrom { get { return FileType.RWBS_BSP; } }
-        public FileType TypeTo { get { return FileType.JSON; } }
+        public FileType TypeFrom => FileType.RWBS_BSP;
+        public FileType TypeTo => FileType.JSON;
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var obj = zzio.rwbs.Section.ReadNew(from);
@@ -135,8 +135,8 @@ namespace zzio.cli.converters
 
     public class SCNtoJSON : IConverter
     {
-        public FileType TypeFrom { get { return FileType.SCN; } }
-        public FileType TypeTo { get { return FileType.JSON; } }
+        public FileType TypeFrom => FileType.SCN;
+        public FileType TypeTo => FileType.JSON;
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var obj = new scn.Scene();
@@ -148,8 +148,8 @@ namespace zzio.cli.converters
 
     public class SKAtoJSON : IConverter
     {
-        public FileType TypeFrom { get { return FileType.SKA; } }
-        public FileType TypeTo { get { return FileType.JSON; } }
+        public FileType TypeFrom => FileType.SKA;
+        public FileType TypeTo => FileType.JSON;
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
             var obj = SkeletalAnimation.ReadNew(from);

@@ -13,13 +13,7 @@ namespace zzio
         public const bool DefaultsToCaseSensitive = false;
 
         /// <value>The platform-dependant path separator</value>
-        public static string Separator
-        {
-            get
-            {
-                return Environment.OSVersion.Platform == PlatformID.Win32NT ? "\\" : "/";
-            }
-        }
+        public static string Separator => Environment.OSVersion.Platform == PlatformID.Win32NT ? "\\" : "/";
 
         private static readonly char[] separators = new char[] { '/', '\\' };
 

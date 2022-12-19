@@ -93,7 +93,7 @@ namespace zzio
                 argTokens = tokens.ToArray();
             }
 
-            public int Length { get { return argTokens.Length; } }
+            public int Length => argTokens.Length;
 
             public CommandLineToken this[int i]
             {
@@ -105,15 +105,9 @@ namespace zzio
                 }
             }
 
-            public IReadOnlyList<string> Text
-            {
-                get { return argText; }
-            }
+            public IReadOnlyList<string> Text => argText;
 
-            public IReadOnlyList<double> Number
-            {
-                get { return argNumbers; }
-            }
+            public IReadOnlyList<double> Number => argNumbers;
         }
     }
 }

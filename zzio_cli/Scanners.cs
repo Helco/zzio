@@ -7,7 +7,7 @@ namespace zzio.cli
     //first 4B * 36 + 20 = size
     public class ScannerSKA : IFileScanner
     {
-        public FileType ScannerType { get { return FileType.SKA; } }
+        public FileType ScannerType => FileType.SKA;
         public bool mightBe(Stream stream)
         {
             if (stream.Length < 20)
@@ -20,7 +20,7 @@ namespace zzio.cli
     //4B Magic 16 X X 1 4
     public class ScannerDFF : IFileScanner
     {
-        public FileType ScannerType { get { return FileType.RWBS_DFF; } }
+        public FileType ScannerType => FileType.RWBS_DFF;
         public bool mightBe(Stream stream)
         {
             if (stream.Length < 20)
@@ -35,7 +35,7 @@ namespace zzio.cli
     //4B Magic 11 X X 1 52
     public class ScannerBSP : IFileScanner
     {
-        public FileType ScannerType { get { return FileType.RWBS_BSP; } }
+        public FileType ScannerType => FileType.RWBS_BSP;
         public bool mightBe(Stream stream)
         {
             if (stream.Length < 20)
@@ -50,7 +50,7 @@ namespace zzio.cli
     //first 4B 17, first zstring "[Effect Combiner]"
     public class ScannerED : IFileScanner
     {
-        public FileType ScannerType { get { return FileType.ED; } }
+        public FileType ScannerType => FileType.ED;
         public bool mightBe(Stream stream)
         {
             if (stream.Length < 24)
@@ -66,7 +66,7 @@ namespace zzio.cli
     //first 4B 11, first zstring [Scenefile]
     public class ScannerSCN : IFileScanner
     {
-        public FileType ScannerType { get { return FileType.SCN; } }
+        public FileType ScannerType => FileType.SCN;
         public bool mightBe(Stream stream)
         {
             if (stream.Length < 24)
@@ -82,7 +82,7 @@ namespace zzio.cli
     //first 4B 24, first zstring [ActorExDescriptionFile]
     public class ScannerAED : IFileScanner
     {
-        public FileType ScannerType { get { return FileType.AED; } }
+        public FileType ScannerType => FileType.AED;
         public bool mightBe(Stream stream)
         {
             if (stream.Length < 24)
@@ -98,7 +98,7 @@ namespace zzio.cli
     //skip 19B, read byte sized, XORed 0x75 string with regex
     public class ScannerCFG_Vars : IFileScanner
     {
-        public FileType ScannerType { get { return FileType.CFG_Vars; } }
+        public FileType ScannerType => FileType.CFG_Vars;
         public bool mightBe(Stream stream)
         {
             if (stream.Length < 21)
@@ -118,7 +118,7 @@ namespace zzio.cli
     //first 4B * 16 + 4 = size
     public class ScannerCFG_Map : IFileScanner
     {
-        public FileType ScannerType { get { return FileType.CFG_Map; } }
+        public FileType ScannerType => FileType.CFG_Map;
         public bool mightBe(Stream stream)
         {
             if (stream.Length < 4)
@@ -131,7 +131,7 @@ namespace zzio.cli
     //first 4B < 2^31, skip 4B, next 4B < 512, zstring with regex
     public class ScannerFBS_Index : IFileScanner
     {
-        public FileType ScannerType { get { return FileType.FBS_Index; } }
+        public FileType ScannerType => FileType.FBS_Index;
         public bool mightBe(Stream stream)
         {
             if (stream.Length < 24)
@@ -150,7 +150,7 @@ namespace zzio.cli
     //first 4B < 2^31, skip 4B, next 4B < 512, next 4B < 5, not a very good scanner....
     public class ScannerFBS_Data : IFileScanner
     {
-        public FileType ScannerType { get { return FileType.FBS_Data; } }
+        public FileType ScannerType => FileType.FBS_Data;
         public bool mightBe(Stream stream)
         {
             if (stream.Length < 24)
