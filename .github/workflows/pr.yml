@@ -1,7 +1,7 @@
-name: Main branch build
+name: PullRequest
 
 on:
-  push:
+  pull_request:
     branches: [ master ]
 
 jobs:
@@ -13,9 +13,3 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       runs-on: ${{ matrix.os }}
-  todo-to-issue:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: TODO to Issue
-      uses: alstr/todo-to-issue-action@v4.3

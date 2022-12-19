@@ -1,10 +1,11 @@
-name: .NET Core
+name: Build
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  workflow_call:
+    inputs:
+      runs-on:
+        required: true
+        type: string
     
 defaults:
   run:
@@ -12,7 +13,7 @@ defaults:
 
 jobs:
   Build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
     - uses: actions/checkout@v3
       with:
