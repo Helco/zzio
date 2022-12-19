@@ -32,7 +32,7 @@ namespace zzre
 
 #if DEBUG
             RenderDoc? renderDoc = null;
-            if (false && RenderDoc.Load(out renderDoc))
+            if (RenderDoc.Load(out renderDoc))
             {
                 renderDoc.APIValidation = true;
                 renderDoc.OverlayEnabled = false;
