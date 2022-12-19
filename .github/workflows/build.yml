@@ -29,6 +29,10 @@ jobs:
     - name: Install remote dependencies
       run: dotnet restore
     - name: Debug
-      run: dotnet test --configuration Debug --no-restore --verbosity normal
+      run: |
+        dotnet build --configuration Debug --no-restore --verbosity normal
+        dotnet test --configuration Debug --no-restore --verbosity normal
     - name: Release
-      run: dotnet test --configuration Release --no-restore --verbosity normal
+      run: |
+        dotnet build --configuration Release --no-restore --verbosity normal
+        dotnet test --configuration Release --no-restore --verbosity normal
