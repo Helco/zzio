@@ -47,13 +47,13 @@ namespace zzio.effect.parts
             horRadius = 0.0f,
             verRadius = 0.0f;
         public ValueRangeAnimation
-            life = new ValueRangeAnimation(1.0f, 0.0f),
-            scale = new ValueRangeAnimation(0.2f, 0.0f, 2.0f),
-            colorR = new ValueRangeAnimation(1.0f, 0.0f, 1.0f),
-            colorG = new ValueRangeAnimation(1.0f, 0.0f, 1.0f),
-            colorB = new ValueRangeAnimation(1.0f, 0.0f, 1.0f),
-            colorA = new ValueRangeAnimation(1.0f, 0.0f, 1.0f),
-            acc = new ValueRangeAnimation(1.0f, 0.0f);
+            life = new(1.0f, 0.0f),
+            scale = new(0.2f, 0.0f, 2.0f),
+            colorR = new(1.0f, 0.0f, 1.0f),
+            colorG = new(1.0f, 0.0f, 1.0f),
+            colorB = new(1.0f, 0.0f, 1.0f),
+            colorA = new(1.0f, 0.0f, 1.0f),
+            acc = new(1.0f, 0.0f);
         public Vector3
             gravity,
             gravityMod;

@@ -47,8 +47,8 @@ namespace zzio.vfs
 
         private class InMemoryDirectory : IResource
         {
-            public readonly List<InMemoryDirectory> directories = new List<InMemoryDirectory>();
-            public readonly List<InMemoryFile> files = new List<InMemoryFile>();
+            public readonly List<InMemoryDirectory> directories = new();
+            public readonly List<InMemoryFile> files = new();
 
             public ResourceType Type => ResourceType.Directory;
             public FilePath Path { get; }

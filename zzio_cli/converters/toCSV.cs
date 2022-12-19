@@ -17,7 +17,7 @@ namespace zzio.cli.converters
             var mappedDb = new MappedDB();
             mappedDb.AddTable(table);
 
-            StreamWriter writer = new StreamWriter(to,
+            StreamWriter writer = new(to,
                 Encoding.UTF8, 1024, true);
             switch ((ModuleType)table.rows.First().Key.Module)
             {

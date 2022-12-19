@@ -20,7 +20,7 @@ namespace zzre
     {
         public RWGeometry Geometry { get; }
         public Location Location { get; }
-        public Sphere Sphere => new Sphere(
+        public Sphere Sphere => new(
             Location.GlobalPosition + Geometry.morphTargets[0].bsphereCenter,
             Geometry.morphTargets[0].bsphereRadius);
         protected override IRaycastable CoarseCastable => Sphere;
@@ -51,7 +51,7 @@ namespace zzre
     {
         public RWGeometry Geometry { get; }
         public Location Location { get; }
-        public Sphere Sphere => new Sphere(
+        public Sphere Sphere => new(
             Location.GlobalPosition + Geometry.morphTargets[0].bsphereCenter,
             Geometry.morphTargets[0].bsphereRadius);
 

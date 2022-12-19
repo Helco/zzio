@@ -23,7 +23,7 @@ namespace zzre.rendering
                 ShaderSetName = shaderSetName;
             }
         }
-        private readonly List<BuiltPipeline> pipelines = new List<BuiltPipeline>();
+        private readonly List<BuiltPipeline> pipelines = new();
 
         public GraphicsDevice Device { get; }
         public ResourceFactory Factory => Device.ResourceFactory;

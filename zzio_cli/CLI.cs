@@ -23,7 +23,7 @@ namespace zzio.cli
                 stdoutWriter = stderrWriter = null;
             }
         }
-        private static readonly HandleGuard guard = new HandleGuard();
+        private static readonly HandleGuard guard = new();
         private static FileStream stdoutStream = null;
         private static FileStream stderrStream = null;
         private static StreamWriter stdoutWriter = null;
@@ -100,7 +100,7 @@ namespace zzio.cli
 
         public static void Main(string[] args)
         {
-            CommandLine cl = new CommandLine();
+            CommandLine cl = new();
             ParameterParser paramParser = null;
             try
             {
@@ -147,7 +147,7 @@ namespace zzio.cli
                 return;
             }
 
-            FileSelection fs = new FileSelection();
+            FileSelection fs = new();
             fs.addFromParameters(paramParser);
             ConversionMgr convMgr = null;
             try

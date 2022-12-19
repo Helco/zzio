@@ -79,7 +79,7 @@ namespace zzio.cli
                 }
 
                 //find out what parameter it is
-                ParameterInfo paramInfo = new ParameterInfo('\0', null, null, null);
+                ParameterInfo paramInfo = new('\0', null, null, null);
                 bool success = false;
                 foreach (ParameterInfo info in classes)
                 {

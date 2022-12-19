@@ -29,7 +29,7 @@ namespace zzre.materials
         public bool isBillboard;
         public const uint Stride = (4 + 3) * sizeof(float) + sizeof(bool);
 
-        public static readonly EffectMaterialUniforms Default = new EffectMaterialUniforms
+        public static readonly EffectMaterialUniforms Default = new()
         {
             tint = FColor.White,
             vertexColorFactor = 1f,

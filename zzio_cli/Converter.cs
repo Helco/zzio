@@ -152,7 +152,7 @@ namespace zzio.cli
             {
                 try
                 {
-                    FileStream fs = new FileStream(files[i], FileMode.Open, FileAccess.Read);
+                    FileStream fs = new(files[i], FileMode.Open, FileAccess.Read);
                     result[i] = scanFile(fs, FileType.Unknown);
                     fs.Close();
                 }

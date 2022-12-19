@@ -64,7 +64,7 @@ namespace zzio.cli.converters
         public FileType TypeTo { get { return FileType.JSON; } }
         public void convert(string name, ParameterParser args, Stream from, Stream to)
         {
-            effect.EffectCombiner obj = new effect.EffectCombiner();
+            effect.EffectCombiner obj = new();
             obj.Read(from);
             byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
             to.Write(buffer, 0, buffer.Length);

@@ -9,7 +9,7 @@ namespace zzio
     public static class StringUtils
     {
         private static readonly Dictionary<char, char> escapes
-            = new Dictionary<char, char>()
+            = new()
             {
                 { '\a', 'a' },
                 { '\b', 'b' },
@@ -29,8 +29,8 @@ namespace zzio
         /// <summary>Escapes a string using common escape sequences</summary>
         public static string Escape(string unescaped)
         {
-            using StringReader reader = new StringReader(unescaped);
-            StringBuilder writer = new StringBuilder();
+            using StringReader reader = new(unescaped);
+            StringBuilder writer = new();
             int ch;
 
             while ((ch = reader.Read()) >= 0)
@@ -71,8 +71,8 @@ namespace zzio
         /// <summary>Unescapes a string using common escape sequences</summary>
         public static string Unescape(string escaped)
         {
-            using StringReader reader = new StringReader(escaped);
-            StringBuilder writer = new StringBuilder();
+            using StringReader reader = new(escaped);
+            StringBuilder writer = new();
             int ch;
 
             while ((ch = reader.Read()) >= 0)

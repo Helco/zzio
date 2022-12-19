@@ -22,7 +22,7 @@ namespace zzre.tools
             float ViewSize { get; }
         }
 
-        private readonly List<IEnumerable<ISelectable>> selectableContainers = new List<IEnumerable<ISelectable>>();
+        private readonly List<IEnumerable<ISelectable>> selectableContainers = new();
         private IEnumerable<ISelectable> Selectables => selectableContainers.SelectMany(c => c);
 
         private ISelectable? _selected;

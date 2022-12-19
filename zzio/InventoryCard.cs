@@ -137,7 +137,7 @@ namespace zzio
 
     public record struct SpellReq(ZZClass class0, ZZClass class1 = ZZClass.None, ZZClass class2 = ZZClass.None) : IEnumerable<ZZClass>
     {
-        public static SpellReq ReadNew(BinaryReader r) => new SpellReq(
+        public static SpellReq ReadNew(BinaryReader r) => new(
             EnumUtils.intToEnum<ZZClass>(r.ReadByte()),
             EnumUtils.intToEnum<ZZClass>(r.ReadByte()),
             EnumUtils.intToEnum<ZZClass>(r.ReadByte()));

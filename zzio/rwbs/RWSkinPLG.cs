@@ -35,7 +35,7 @@ namespace zzio.rwbs
 
         protected override void readBody(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             bones = new Bone[reader.ReadUInt32()];
             uint vertexCount = reader.ReadUInt32();
             vertexIndices = new byte[vertexCount, 4];
@@ -64,7 +64,7 @@ namespace zzio.rwbs
 
         protected override void writeBody(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.Write(bones.Length);
             int vertexCount = vertexIndices.GetLength(0);
             writer.Write(vertexCount);

@@ -6,7 +6,7 @@ namespace zzre.game.resources
 {
     public class SkeletalAnimation : AResourceManager<(AnimationType type, string fileName), zzio.SkeletalAnimation>
     {
-        private static readonly FilePath BasePath = new FilePath("resources/models/actorsex");
+        private static readonly FilePath BasePath = new("resources/models/actorsex");
 
         private readonly IResourcePool resourcePool;
 

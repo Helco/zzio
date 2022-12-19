@@ -12,7 +12,7 @@ namespace zzio.cli
         {
             if (stream.Length < 20)
                 return false;
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             return reader.ReadUInt32() * 36 + 20 == (uint)stream.Length;
         }
     }
@@ -25,7 +25,7 @@ namespace zzio.cli
         {
             if (stream.Length < 20)
                 return false;
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             uint first = reader.ReadUInt32();
             stream.Seek(8, SeekOrigin.Current);
             return first == 16 && reader.ReadUInt32() == 1 && reader.ReadUInt32() == 4;
@@ -40,7 +40,7 @@ namespace zzio.cli
         {
             if (stream.Length < 20)
                 return false;
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             uint first = reader.ReadUInt32();
             stream.Seek(8, SeekOrigin.Current);
             return first == 11 && reader.ReadUInt32() == 1 && reader.ReadUInt32() == 52;
@@ -55,7 +55,7 @@ namespace zzio.cli
         {
             if (stream.Length < 24)
                 return false;
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             int first = reader.ReadInt32();
             if (first != 17)
                 return false;
@@ -71,7 +71,7 @@ namespace zzio.cli
         {
             if (stream.Length < 24)
                 return false;
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             int first = reader.ReadInt32();
             if (first != 11)
                 return false;
@@ -87,7 +87,7 @@ namespace zzio.cli
         {
             if (stream.Length < 24)
                 return false;
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             int first = reader.ReadInt32();
             if (first != 24)
                 return false;
@@ -103,7 +103,7 @@ namespace zzio.cli
         {
             if (stream.Length < 21)
                 return false;
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             stream.Seek(25, SeekOrigin.Current);
             int size = reader.ReadByte();
             if (stream.Length < 20 + size)
@@ -123,7 +123,7 @@ namespace zzio.cli
         {
             if (stream.Length < 4)
                 return false;
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             return reader.ReadUInt32() * 16 + 4 == (uint)stream.Length;
         }
     }
@@ -136,7 +136,7 @@ namespace zzio.cli
         {
             if (stream.Length < 24)
                 return false;
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             if (reader.ReadUInt32() >= 1 << 30)
                 return false;
             reader.ReadUInt32(); //skip
@@ -155,7 +155,7 @@ namespace zzio.cli
         {
             if (stream.Length < 24)
                 return false;
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             if (reader.ReadUInt32() >= 1 << 30)
                 return false;
             reader.ReadUInt32(); //skip

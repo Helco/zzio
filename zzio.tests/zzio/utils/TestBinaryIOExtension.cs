@@ -27,16 +27,16 @@ namespace zzio.tests.utils
         [Test]
         public void ReadZString()
         {
-            MemoryStream stream = new MemoryStream(expectedZString, false);
-            using BinaryReader reader = new BinaryReader(stream);
+            MemoryStream stream = new(expectedZString, false);
+            using BinaryReader reader = new(stream);
             Assert.AreEqual("Hello World!", reader.ReadZString());
         }
 
         [Test]
         public void WriteZString()
         {
-            MemoryStream stream = new MemoryStream();
-            using BinaryWriter writer = new BinaryWriter(stream);
+            MemoryStream stream = new();
+            using BinaryWriter writer = new(stream);
             writer.WriteZString("Hello World!");
             Assert.AreEqual(expectedZString, stream.ToArray());
         }
@@ -44,16 +44,16 @@ namespace zzio.tests.utils
         [Test]
         public void ReadSizedString()
         {
-            MemoryStream stream = new MemoryStream(testCString, false);
-            using BinaryReader reader = new BinaryReader(stream);
+            MemoryStream stream = new(testCString, false);
+            using BinaryReader reader = new(stream);
             Assert.AreEqual("TestOh no", reader.ReadSizedString((int)stream.Length));
         }
 
         [Test]
         public void ReadSizedCString()
         {
-            MemoryStream stream = new MemoryStream(testCString, false);
-            using BinaryReader reader = new BinaryReader(stream);
+            MemoryStream stream = new(testCString, false);
+            using BinaryReader reader = new(stream);
             Assert.AreEqual("Test", reader.ReadSizedCString((int)stream.Length));
             Assert.AreEqual(stream.Position, stream.Length);
         }
@@ -61,8 +61,8 @@ namespace zzio.tests.utils
         [Test]
         public void WriteSizedString()
         {
-            MemoryStream stream = new MemoryStream();
-            BinaryWriter writer = new BinaryWriter(stream);
+            MemoryStream stream = new();
+            BinaryWriter writer = new(stream);
             writer.WriteSizedCString("cstring", 8);
             Assert.AreEqual(expectedCString, stream.ToArray());
 

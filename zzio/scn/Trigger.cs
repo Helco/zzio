@@ -32,7 +32,7 @@ namespace zzio.scn
 
         public void Read(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             idx = reader.ReadUInt32();
             colliderType = EnumUtils.intToEnum<TriggerColliderType>(reader.ReadInt32());
             requiresLooking = reader.ReadUInt32() != 0;
@@ -61,7 +61,7 @@ namespace zzio.scn
 
         public void Write(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.Write(idx);
             writer.Write((int)colliderType);
             writer.Write(requiresLooking ? 1 : 0);

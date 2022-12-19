@@ -37,8 +37,8 @@ namespace zzio.tests.scn
         [Test]
         public void read()
         {
-            MemoryStream stream = new MemoryStream(sampleData, false);
-            Scene scene = new Scene();
+            MemoryStream stream = new(sampleData, false);
+            Scene scene = new();
             scene.Read(stream);
             testScene(scene);
         }
@@ -46,15 +46,15 @@ namespace zzio.tests.scn
         [Test]
         public void write()
         {
-            MemoryStream readStream = new MemoryStream(sampleData, false);
-            Scene scene = new Scene();
+            MemoryStream readStream = new(sampleData, false);
+            Scene scene = new();
             scene.Read(readStream);
 
-            MemoryStream writeStream = new MemoryStream();
+            MemoryStream writeStream = new();
             scene.Write(writeStream);
 
-            MemoryStream rereadStream = new MemoryStream(writeStream.ToArray(), false);
-            Scene rereadScene = new Scene();
+            MemoryStream rereadStream = new(writeStream.ToArray(), false);
+            Scene rereadScene = new();
             rereadScene.Read(rereadStream);
             testScene(rereadScene);
         }

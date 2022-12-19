@@ -16,7 +16,7 @@ namespace zzre.game.components
         public float DistanceToTarget;
         public float DistanceWalked;
 
-        public static readonly NPCMovement Default = new NPCMovement()
+        public static readonly NPCMovement Default = new()
         {
             Speed = 1.5f,
             LastWaypointId = -1,

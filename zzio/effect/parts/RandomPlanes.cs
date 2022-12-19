@@ -19,7 +19,7 @@ namespace zzio.effect.parts
             tileDuration = 50,
             tileW = 16,
             tileH = 16;
-        public IColor color = new IColor(255, 255, 255, 255);
+        public IColor color = new(255, 255, 255, 255);
         public uint amplColor = 0;
         public float
             minProgress = 1.0f,

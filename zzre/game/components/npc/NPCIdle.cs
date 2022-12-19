@@ -4,7 +4,7 @@
     {
         public float TimeLeft;
 
-        public static readonly NPCIdle Default = new NPCIdle() { TimeLeft = 0.1f };
-        public static readonly NPCIdle Infinite = new NPCIdle() { TimeLeft = float.PositiveInfinity };
+        public static readonly NPCIdle Default = new() { TimeLeft = 0.1f };
+        public static readonly NPCIdle Infinite = new() { TimeLeft = float.PositiveInfinity };
     }
 }

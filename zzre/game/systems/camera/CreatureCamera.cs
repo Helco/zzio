@@ -24,8 +24,8 @@ namespace zzre.game.systems
         private readonly IDisposable setCameraModeSubscription;
 
         private DefaultEcs.Entity source, target;
-        private Location sourceLoc = new Location();
-        private Location targetLoc = new Location();
+        private Location sourceLoc = new();
+        private Location targetLoc = new();
         private SubMode mode;
 
         public CreatureCamera(ITagContainer diContainer) : base(diContainer)

@@ -35,7 +35,7 @@ namespace zzre
             }
         }
 
-        public static Rect Zero => new Rect();
+        public static Rect Zero => new();
 
         public Rect(float x, float y, float w, float h)
         {
@@ -49,18 +49,18 @@ namespace zzre
             Size = size;
         }
 
-        public static Rect FromMinMax(Vector2 min, Vector2 max) => new Rect((min + max) / 2f, max - min);
-        public static Rect FromTopLeftSize(Vector2 min, Vector2 size) => new Rect(min + size / 2, size);
+        public static Rect FromMinMax(Vector2 min, Vector2 max) => new((min + max) / 2f, max - min);
+        public static Rect FromTopLeftSize(Vector2 min, Vector2 size) => new(min + size / 2, size);
 
-        public Rect OffsettedBy(float x, float y) => new Rect(Center + new Vector2(x, y), Size);
-        public Rect OffsettedBy(Vector2 off) => new Rect(Center + off, Size);
-        public Rect GrownBy(float x, float y) => new Rect(Center, Size + new Vector2(x, y));
-        public Rect GrownBy(Vector2 off) => new Rect(Center, Size + off);
-        public Rect ScaledBy(float s) => new Rect(Center, Size * s);
-        public Rect ScaledBy(float x, float y) => new Rect(Center, Vector2.Multiply(Size, new Vector2(x, y)));
-        public Rect ScaledBy(Vector2 s) => new Rect(Center, Vector2.Multiply(Size, s));
-        public Rect At(Vector2 newCenter) => new Rect(newCenter, Size);
-        public Rect WithSizeOf(Vector2 newSize) => new Rect(Center, newSize);
+        public Rect OffsettedBy(float x, float y) => new(Center + new Vector2(x, y), Size);
+        public Rect OffsettedBy(Vector2 off) => new(Center + off, Size);
+        public Rect GrownBy(float x, float y) => new(Center, Size + new Vector2(x, y));
+        public Rect GrownBy(Vector2 off) => new(Center, Size + off);
+        public Rect ScaledBy(float s) => new(Center, Size * s);
+        public Rect ScaledBy(float x, float y) => new(Center, Vector2.Multiply(Size, new Vector2(x, y)));
+        public Rect ScaledBy(Vector2 s) => new(Center, Vector2.Multiply(Size, s));
+        public Rect At(Vector2 newCenter) => new(newCenter, Size);
+        public Rect WithSizeOf(Vector2 newSize) => new(Center, newSize);
 
         public bool IsInside(Vector2 pos) => pos.X >= Min.X && pos.X < Max.X && pos.Y >= Min.Y && pos.Y < Max.Y;
 

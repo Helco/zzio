@@ -46,7 +46,7 @@ namespace zzio.tests.db
             testTable(table);
 
             // write, reread and test again
-            MemoryStream stream = new MemoryStream();
+            MemoryStream stream = new();
             table.Write(stream);
             table = new Table();
             table.Read(new MemoryStream(stream.ToArray(), false));

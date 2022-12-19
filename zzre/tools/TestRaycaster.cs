@@ -162,7 +162,7 @@ namespace zzre.tools
 
         private IColor ShaderSolid(RaycastObject obj, Vector3 _1, Raycast _2) => obj.Color;
 
-        private IColor ShaderNormal(RaycastObject obj, Vector3 _1, Raycast r) => new IColor(
+        private IColor ShaderNormal(RaycastObject obj, Vector3 _1, Raycast r) => new(
             (byte)((r.Normal.X + 1f) * 127f),
             (byte)((r.Normal.Y + 1f) * 127f),
             (byte)((r.Normal.Z + 1f) * 127f),

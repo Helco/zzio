@@ -7,7 +7,7 @@ namespace zzre
 {
     public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
     {
-        private readonly SortedSet<Range> ranges = new SortedSet<Range>(new RangeComparer());
+        private readonly SortedSet<Range> ranges = new(new RangeComparer());
 
         public bool IsReadOnly => false;
         public int Count => ranges.Count;

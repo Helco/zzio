@@ -24,7 +24,7 @@ namespace zzio.effect.parts
             tileDuration = 1,
             tileCount = 1,
             tileId = 0;
-        public IColor color = new IColor(255, 255, 255, 255);
+        public IColor color = new(255, 255, 255, 255);
         public ParticleCollectorMode mode = ParticleCollectorMode.Tornado;
         public float
             speed = 1.0f,

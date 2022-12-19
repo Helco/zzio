@@ -17,7 +17,7 @@ namespace zzre.rendering
 
         public Location Location { get; } = new Location();
         public DeviceBufferRange ViewRange { get; }
-        public DeviceBufferRange ProjectionRange => new DeviceBufferRange(projection.Buffer, 0, projection.Buffer.SizeInBytes);
+        public DeviceBufferRange ProjectionRange => new(projection.Buffer, 0, projection.Buffer.SizeInBytes);
         public Matrix4x4 View => Location.WorldToLocal;
         public Matrix4x4 Projection => projection.Value;
         public Matrix4x4 InvProjection => invProjection.Value;

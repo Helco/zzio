@@ -32,7 +32,7 @@ namespace zzio.tests.db
             testIndexTable(table);
 
             // write, reread and test again
-            MemoryStream stream = new MemoryStream();
+            MemoryStream stream = new();
             table.Write(stream);
             table = new IndexTable();
             table.Read(new MemoryStream(stream.ToArray(), false));

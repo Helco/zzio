@@ -6,7 +6,7 @@ namespace zzio.db
 
         public string Name => foreignText(0);
 
-        public CardId CardId => new CardId(row.cells[1].Integer);
+        public CardId CardId => new(row.cells[1].Integer);
 
         public string Info => foreignText(2);
 

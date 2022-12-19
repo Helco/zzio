@@ -35,7 +35,7 @@ namespace zzio.tests
         [Test]
         public void read()
         {
-            MemoryStream stream = new MemoryStream(sampleData, false);
+            MemoryStream stream = new(sampleData, false);
             VarConfig cfg = VarConfig.ReadNew(stream);
             testConfig(cfg);
         }
@@ -43,13 +43,13 @@ namespace zzio.tests
         [Test]
         public void write()
         {
-            MemoryStream readStream = new MemoryStream(sampleData, false);
+            MemoryStream readStream = new(sampleData, false);
             VarConfig cfg = VarConfig.ReadNew(readStream);
 
-            MemoryStream writeStream = new MemoryStream();
+            MemoryStream writeStream = new();
             cfg.Write(writeStream);
 
-            MemoryStream rereadStream = new MemoryStream(writeStream.ToArray(), false);
+            MemoryStream rereadStream = new(writeStream.ToArray(), false);
             VarConfig rereadCfg = VarConfig.ReadNew(rereadStream);
             testConfig(rereadCfg);
         }

@@ -16,10 +16,10 @@ namespace zzio
 
         public override int GetHashCode() => unchecked((int)raw);
 
-        public static UID ReadNew(BinaryReader reader) => new UID(reader.ReadUInt32());
+        public static UID ReadNew(BinaryReader reader) => new(reader.ReadUInt32());
         public void Write(BinaryWriter writer) => writer.Write(raw);
 
-        public static UID Parse(string text) => new UID(Convert.ToUInt32(text, 16));
+        public static UID Parse(string text) => new(Convert.ToUInt32(text, 16));
 
         public override string ToString() => raw.ToString("X").PadLeft(8, '0');
 

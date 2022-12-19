@@ -18,9 +18,9 @@ namespace zzio.tests.utils
         [Test]
         public void read()
         {
-            MemoryStream memStream = new MemoryStream(testData, false);
+            MemoryStream memStream = new(testData, false);
             memStream.Seek(testDataOffset, SeekOrigin.Current);
-            RangeStream rangeStream = new RangeStream(memStream, testDataLength);
+            RangeStream rangeStream = new(memStream, testDataLength);
 
             byte[] part1 = new byte[3];
             int part1Len = rangeStream.Read(part1, 0, 3);
@@ -39,9 +39,9 @@ namespace zzio.tests.utils
         public void write()
         {
             byte[] actual = testData.ToArray();
-            MemoryStream memStream = new MemoryStream(actual, true);
+            MemoryStream memStream = new(actual, true);
             memStream.Seek(testDataOffset, SeekOrigin.Current);
-            RangeStream rangeStream = new RangeStream(memStream, 4, true);
+            RangeStream rangeStream = new(memStream, 4, true);
 
             byte[] expected = testData.ToArray();
             expected[testDataOffset + 0] = 0x10;
@@ -56,9 +56,9 @@ namespace zzio.tests.utils
         [Test]
         public void seek()
         {
-            MemoryStream memStream = new MemoryStream(testData, false);
+            MemoryStream memStream = new(testData, false);
             memStream.Seek(testDataOffset, SeekOrigin.Current);
-            RangeStream rangeStream = new RangeStream(memStream, testDataLength);
+            RangeStream rangeStream = new(memStream, testDataLength);
 
             Assert.AreEqual(testData[testDataOffset + 0], rangeStream.ReadByte());
             rangeStream.Position += 2;

@@ -57,11 +57,11 @@ namespace zzio
             return array;
         }
 
-        public static Vector2 ReadVector2(this BinaryReader reader) => new Vector2(reader.ReadSingle(), reader.ReadSingle());
-        public static Vector3 ReadVector3(this BinaryReader reader) => new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
-        public static Vector4 ReadVector4(this BinaryReader reader) => new Vector4(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
-        public static Quaternion ReadQuaternion(this BinaryReader reader) => new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
-        public static Matrix4x4 ReadMatrix4x4(this BinaryReader r) => new Matrix4x4(
+        public static Vector2 ReadVector2(this BinaryReader reader) => new(reader.ReadSingle(), reader.ReadSingle());
+        public static Vector3 ReadVector3(this BinaryReader reader) => new(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+        public static Vector4 ReadVector4(this BinaryReader reader) => new(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+        public static Quaternion ReadQuaternion(this BinaryReader reader) => new(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+        public static Matrix4x4 ReadMatrix4x4(this BinaryReader r) => new(
             r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), r.ReadSingle(),
             r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), r.ReadSingle(),
             r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), r.ReadSingle(),

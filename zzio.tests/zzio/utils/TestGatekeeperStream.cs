@@ -27,7 +27,7 @@ namespace zzio.tests.utils
         [Test]
         public void selftest()
         {
-            MemoryStream stream = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+            MemoryStream stream = new(new byte[] { 1, 2, 3, 4 });
             assertStreamClosed(false, stream);
             stream.Close();
             assertStreamClosed(true, stream);
@@ -44,8 +44,8 @@ namespace zzio.tests.utils
         [Test]
         public void keepsopen()
         {
-            MemoryStream memStream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 });
-            GatekeeperStream gateStream = new GatekeeperStream(memStream);
+            MemoryStream memStream = new(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 });
+            GatekeeperStream gateStream = new(memStream);
             testStreamAccess(gateStream, () => Throws.Nothing);
             assertStreamClosed(false, gateStream);
 

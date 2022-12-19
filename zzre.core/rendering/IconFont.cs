@@ -76,6 +76,6 @@ namespace zzre.rendering
         }
 
         public static IconFont CreateForkAwesome(GraphicsDevice device, float size = 64.0f) =>
-            new IconFont(device, atlas => zzre.core.assets.ForkAwesomeIconFont.AddToFontAtlas(atlas, 0, size, size));
+            new(device, atlas => zzre.core.assets.ForkAwesomeIconFont.AddToFontAtlas(atlas, 0, size, size));
     }
 }

@@ -13,7 +13,7 @@ namespace zzre.game.systems.ui
     {
         public record struct Batch(UIMaterial Material, uint Instances);
 
-        private readonly List<Batch> batches = new List<Batch>();
+        private readonly List<Batch> batches = new();
         private readonly UI ui;
         private readonly GraphicsDevice graphicsDevice;
         private readonly ResourceFactory resourceFactory;

@@ -14,7 +14,7 @@ namespace zzre.game.resources
         private const string UnmaskedSuffix = ".bmp";
         private const string ColorSuffix = "T.bmp";
         private const string MaskSuffix = "M.bmp";
-        private static readonly FilePath BasePath = new FilePath("resources/bitmaps");
+        private static readonly FilePath BasePath = new("resources/bitmaps");
 
         private readonly ITagContainer diContainer;
         private readonly UI ui;

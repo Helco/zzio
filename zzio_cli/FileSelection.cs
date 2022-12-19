@@ -93,7 +93,7 @@ namespace zzio.cli
                 if (!fullPath.EndsWith("" + Path.DirectorySeparatorChar))
                     fullPath += Path.DirectorySeparatorChar;
                 string[] files = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
-                Regex regex = new Regex(regexFilter);
+                Regex regex = new(regexFilter);
                 bool success = false;
                 foreach (string f in files)
                 {

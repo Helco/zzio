@@ -36,7 +36,7 @@ namespace zzre.materials
         public float alphaReference;
         public const uint Stride = (4 + 3) * sizeof(float);
 
-        public static readonly SparkUniforms Default = new SparkUniforms
+        public static readonly SparkUniforms Default = new()
         {
             tint = FColor.White,
             tintFactor = 1f,

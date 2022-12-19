@@ -23,7 +23,7 @@ namespace zzio.rwbs
 
         protected override void readStruct(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             rootIsWorldSector = reader.ReadUInt32() > 0;
             origin = reader.ReadVector3();
             ambient = reader.ReadSingle();
@@ -39,7 +39,7 @@ namespace zzio.rwbs
 
         protected override void writeStruct(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.Write((uint)(rootIsWorldSector ? 1 : 0));
             writer.Write(origin);
             writer.Write(ambient);

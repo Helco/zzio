@@ -16,10 +16,10 @@ namespace zzre.imgui
         private const float FileTreeSize = 400.0f;
 
         private readonly IResourcePool pool;
-        private readonly List<(IResource res, string nameWithId, int depth)> content = new List<(IResource, string, int)>();
-        private readonly HashSet<IResource> openDirectories = new HashSet<IResource>();
+        private readonly List<(IResource res, string nameWithId, int depth)> content = new();
+        private readonly HashSet<IResource> openDirectories = new();
         private string filterText = "";
-        private Regex filterRegex = new Regex("");
+        private Regex filterRegex = new("");
         private bool isFirstTreeContent = true;
 
         public Modal Modal { get; }

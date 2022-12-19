@@ -45,7 +45,7 @@ namespace zzmaps
         }
 
         public TransformBlock<LoadedScene, BuiltSceneMetadata> CreateTransform(ExecutionDataflowBlockOptions options, ProgressStep progressStep) =>
-            new TransformBlock<LoadedScene, BuiltSceneMetadata>(loadedScene =>
+            new(loadedScene =>
             {
                 var scene = loadedScene.Scene.Scene;
                 var mapTiler = loadedScene.Scene.MapTiler;
@@ -77,7 +77,7 @@ namespace zzmaps
                 return new BuiltSceneMetadata(loadedScene.SceneName, metadataJson);
             });
 
-        private static readonly Regex SetModelRegex = new Regex(@"\nC\.(\w+)\s*\r?\n", RegexOptions.Compiled);
+        private static readonly Regex SetModelRegex = new(@"\nC\.(\w+)\s*\r?\n", RegexOptions.Compiled);
         private NPCMetadata[] CreateNPCMetadata(zzio.scn.Scene scene) => scene.triggers
             .Where(t => t.type == zzio.scn.TriggerType.NpcStartpoint)
             .Select(t => (t, npc: mappedDb.TryGetNpc(new UID(t.ii1), out var npc) ? npc : null))

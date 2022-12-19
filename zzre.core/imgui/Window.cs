@@ -52,7 +52,7 @@ namespace zzre.imgui
             if (!isOpen && OpenState == WindowOpenState.Open)
                 OpenState = WindowOpenState.Closed;
 
-            Rect newBounds = new Rect();
+            Rect newBounds = new();
             newBounds.Min = GetCursorScreenPos();
             newBounds.Max = newBounds.Min + GetWindowSize();
             Bounds = newBounds;

@@ -12,7 +12,7 @@ namespace zzre.imgui
         private readonly MouseEventArea mouseArea;
         private readonly LocationBuffer locationBuffer;
         private readonly Location target;
-        private readonly Location rotationLoc = new Location();
+        private readonly Location rotationLoc = new();
         private readonly DeviceBufferRange rotationLocRange;
         private float distance = 2.0f;
         private Vector2 cameraAngle = Vector2.Zero;

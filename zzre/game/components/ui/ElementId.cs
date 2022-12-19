@@ -19,6 +19,6 @@
             return true;
         }
 
-        public static ElementId operator +(ElementId left, int right) => new ElementId(left.Value + right);
+        public static ElementId operator +(ElementId left, int right) => new(left.Value + right);
     }
 }

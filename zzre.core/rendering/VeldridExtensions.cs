@@ -4,7 +4,7 @@ namespace zzre.rendering
 {
     public static class VeldridExtensions
     {
-        public static SamplerDescription AsDescription(this SamplerAddressMode addressMode, SamplerFilter filter) => new SamplerDescription()
+        public static SamplerDescription AsDescription(this SamplerAddressMode addressMode, SamplerFilter filter) => new()
         {
             AddressModeU = addressMode,
             AddressModeV = addressMode,

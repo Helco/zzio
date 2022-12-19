@@ -14,7 +14,7 @@ namespace zzre.rendering
 {
     public interface IEffectPartRenderer : IDisposable
     {
-        static readonly FilePath TexturePath = new FilePath("Resources/Textures/Effects");
+        static readonly FilePath TexturePath = new("Resources/Textures/Effects");
         static readonly SamplerDescription SamplerDescription =
             SamplerAddressMode.Clamp.AsDescription(SamplerFilter.MinLinear_MagLinear_MipLinear);
 

@@ -22,7 +22,7 @@ namespace zzre.materials
         public float width;
         public static uint Stride = (4 + 1) * sizeof(float);
 
-        public static readonly DebugWireframeUniforms Default = new DebugWireframeUniforms()
+        public static readonly DebugWireframeUniforms Default = new()
         {
             color = FColor.White,
             width = 4f

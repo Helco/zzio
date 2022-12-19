@@ -9,15 +9,15 @@ namespace zzre
     public readonly struct Triangle : IRaycastable, IIntersectable
     {
         public readonly Vector3 A, B, C;
-        public Line AB => new Line(A, B);
-        public Line AC => new Line(A, C);
-        public Line BA => new Line(B, A);
-        public Line BC => new Line(B, C);
-        public Line CA => new Line(C, A);
-        public Line CB => new Line(C, B);
+        public Line AB => new(A, B);
+        public Line AC => new(A, C);
+        public Line BA => new(B, A);
+        public Line BC => new(B, C);
+        public Line CA => new(C, A);
+        public Line CB => new(C, B);
         public Vector3 NormalUn => Vector3.Cross(AB.Vector, AC.Vector);
         public Vector3 Normal => Vector3.Normalize(NormalUn);
-        public Plane Plane => new Plane(Normal, Vector3.Dot(A, Normal));
+        public Plane Plane => new(Normal, Vector3.Dot(A, Normal));
 
         public Triangle(Vector3 a, Vector3 b, Vector3 c) => (A, B, C) = (a, b, c);
 

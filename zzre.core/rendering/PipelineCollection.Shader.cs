@@ -9,8 +9,8 @@ namespace zzre.rendering
 {
     public partial class PipelineCollection
     {
-        private readonly List<Assembly> shaderResourceAssemblies = new List<Assembly>();
-        private readonly Dictionary<string, Shader[]> loadedShaders = new Dictionary<string, Shader[]>();
+        private readonly List<Assembly> shaderResourceAssemblies = new();
+        private readonly Dictionary<string, Shader[]> loadedShaders = new();
 
         public void AddShaderResourceAssemblyOf<T>() => AddShaderResourceAssembly(typeof(T).Assembly);
 

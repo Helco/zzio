@@ -24,8 +24,8 @@ namespace zzio.script
                     @"\\[\w\\\""]" + // escape sequences
                 ")*)" +
             @"\""";
-        private Regex regexArgument => new Regex(regexArgumentSource);
-        private Regex regexInstruction => new Regex(
+        private Regex regexArgument => new(regexArgumentSource);
+        private Regex regexInstruction => new(
             @"^(.\w*)((" +                   // command
                 regexArgumentSource + ")*" + // arguments
             ")$"

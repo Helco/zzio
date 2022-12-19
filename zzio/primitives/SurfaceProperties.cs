@@ -13,7 +13,7 @@ namespace zzio
         public SurfaceProperties(float ambient, float specular, float diffuse) =>
             (this.ambient, this.specular, this.diffuse) = (ambient, specular, diffuse);
 
-        public static SurfaceProperties ReadNew(BinaryReader reader) => new SurfaceProperties(
+        public static SurfaceProperties ReadNew(BinaryReader reader) => new(
             reader.ReadSingle(),
             reader.ReadSingle(),
             reader.ReadSingle());

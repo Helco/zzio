@@ -8,7 +8,7 @@ namespace zzre.core
     public class RelativeOrderSolver<T> : IReadOnlyList<T> where T : notnull
     {
         private readonly Func<T, RelativeOrderItem> orderOf;
-        private List<T> ordering = new List<T>();
+        private List<T> ordering = new();
 
         public RelativeOrderSolver(Func<T, RelativeOrderItem> orderOf)
         {

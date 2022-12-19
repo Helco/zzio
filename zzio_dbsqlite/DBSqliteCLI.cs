@@ -25,7 +25,7 @@ namespace zzio.dbsqlitecli
             string command = args[0].ToLower();
             string db = args[1];
 
-            SQLiteConnection dbConnection = new SQLiteConnection("URI=file:" + db);
+            SQLiteConnection dbConnection = new("URI=file:" + db);
             dbConnection.Open();
 
             IReadOnlyDictionary<string, CommandHandler> commands = new Dictionary<string, CommandHandler>()

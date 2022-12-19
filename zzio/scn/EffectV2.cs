@@ -30,7 +30,7 @@ namespace zzio.scn
 
         public void Read(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             idx = reader.ReadUInt32();
             type = EnumUtils.intToEnum<EffectV2Type>(reader.ReadInt32());
             i1 = reader.ReadUInt32();
@@ -64,7 +64,7 @@ namespace zzio.scn
 
         public void Write(Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.Write(idx);
             writer.Write((int)type);
             writer.Write(i1);

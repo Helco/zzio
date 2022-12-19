@@ -7,7 +7,7 @@ namespace zzre.core.assets
 {
     public static unsafe class ForkAwesomeIconFont
     {
-        private static readonly Lazy<IntPtr> GlyphRangePtr = new Lazy<IntPtr>(() =>
+        private static readonly Lazy<IntPtr> GlyphRangePtr = new(() =>
         {
             var ptr = Marshal.AllocHGlobal(sizeof(ushort) * 3);
             ushort* glyphRanges = (ushort*)ptr.ToPointer();

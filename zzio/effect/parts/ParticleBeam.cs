@@ -25,7 +25,7 @@ namespace zzio.effect.parts
             tileDuration = 1,
             tileW = 32,
             tileH = 32;
-        public IColor color = new IColor(255, 255, 255, 255);
+        public IColor color = new(255, 255, 255, 255);
         public uint fadeMode = 0; // TODO: Put this in an enum 
         public float
             parWidth = 0.1f,

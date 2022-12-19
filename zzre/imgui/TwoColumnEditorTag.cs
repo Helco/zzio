@@ -17,7 +17,7 @@ namespace zzre.imgui
         private readonly FramebufferArea fbArea;
 
         private int didSetColumnWidth = 0;
-        private readonly List<(string name, Action content, bool defaultOpen, Action?)> infoSections = new List<(string, Action, bool, Action?)>();
+        private readonly List<(string name, Action content, bool defaultOpen, Action?)> infoSections = new();
 
         public Window Window { get; }
 

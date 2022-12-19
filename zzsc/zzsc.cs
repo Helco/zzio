@@ -162,7 +162,7 @@ namespace zzsc
                 ? Console.Out
                 : new StreamWriter(outputPath);
 
-            List<RawInstruction> instructions = new List<RawInstruction>();
+            List<RawInstruction> instructions = new();
             string line;
             while ((line = input.ReadLine()) != null && line != "EOF")
             {

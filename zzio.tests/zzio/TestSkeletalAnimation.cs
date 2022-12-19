@@ -65,7 +65,7 @@ namespace zzio.tests
         [Test]
         public void read()
         {
-            MemoryStream stream = new MemoryStream(sampleData, false);
+            MemoryStream stream = new(sampleData, false);
             SkeletalAnimation ani = SkeletalAnimation.ReadNew(stream);
             testAnimation(ani);
         }
@@ -73,13 +73,13 @@ namespace zzio.tests
         [Test]
         public void write()
         {
-            MemoryStream readStream = new MemoryStream(sampleData, false);
+            MemoryStream readStream = new(sampleData, false);
             SkeletalAnimation ani = SkeletalAnimation.ReadNew(readStream);
 
-            MemoryStream writeStream = new MemoryStream();
+            MemoryStream writeStream = new();
             ani.Write(writeStream);
 
-            MemoryStream rereadStream = new MemoryStream(writeStream.ToArray(), false);
+            MemoryStream rereadStream = new(writeStream.ToArray(), false);
             SkeletalAnimation rereadAni = SkeletalAnimation.ReadNew(rereadStream);
             testAnimation(rereadAni);
         }

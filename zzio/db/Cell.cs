@@ -166,7 +166,7 @@ namespace zzio.db
         }
 
         private static readonly Dictionary<CellDataType, Action<BinaryWriter, Cell>> dataWriters =
-            new Dictionary<CellDataType, Action<BinaryWriter, Cell>>()
+            new()
             {
                 { CellDataType.String,     (w, c) => { w.WriteTZString(c.stringValue!); } },
                 { CellDataType.Integer,    (w, c) => { w.Write(4); w.Write(c.integerValue); } },

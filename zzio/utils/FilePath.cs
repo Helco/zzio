@@ -195,7 +195,7 @@ namespace zzio
         /// <remarks>The combined path is normalized</remarks>
         public FilePath Combine(IEnumerable<FilePath> paths)
         {
-            List<string> newParts = new List<string>(parts.Count + paths.Sum(p => p.parts.Count));
+            List<string> newParts = new(parts.Count + paths.Sum(p => p.parts.Count));
             newParts.AddRange(parts);
 
             bool lastIsDirectory = IsDirectory;
@@ -214,7 +214,7 @@ namespace zzio
         {
             get
             {
-                List<string> newParts = new List<string>();
+                List<string> newParts = new();
                 foreach (string part in parts)
                 {
                     if (part == ".")
@@ -323,7 +323,7 @@ namespace zzio
             // Case 1: "a/b/c" relativeto "a/b/d" should return "../c"
             if (partI < me.parts.Count && partI < basePath.parts.Count)
             {
-                List<string> newParts = new List<string>(basePath.parts.Count + me.parts.Count - partI);
+                List<string> newParts = new(basePath.parts.Count + me.parts.Count - partI);
                 for (int i = partI; i < basePath.parts.Count; i++)
                     newParts.Add("..");
                 newParts.AddRange(me.parts.Skip(partI));
@@ -350,7 +350,7 @@ namespace zzio
             throw new InvalidOperationException("This should never happen");
         }
 
-        public FilePath WithoutDirectoryMarker() => new FilePath(parts, type, false);
+        public FilePath WithoutDirectoryMarker() => new(parts, type, false);
 
         public string? Extension
         {
@@ -371,7 +371,7 @@ namespace zzio
         {
             if (type == PathType.Root)
                 throw new NotSupportedException("Rooted paths are not supported as windows paths");
-            StringBuilder result = new StringBuilder();
+            StringBuilder result = new();
             foreach (string part in parts)
             {
                 if (result.Length > 0)
@@ -386,7 +386,7 @@ namespace zzio
         /// <summary>Returns this path as POSIX path string ('/' as separator)</summary>
         public string ToPOSIXString()
         {
-            StringBuilder result = new StringBuilder();
+            StringBuilder result = new();
             foreach (string part in parts)
             {
                 if (result.Length > 0 || type == PathType.Root)

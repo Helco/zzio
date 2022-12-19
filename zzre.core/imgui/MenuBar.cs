@@ -23,7 +23,7 @@ namespace zzre.imgui
             }
         }
 
-        private readonly MenuBarItem RootItem = new MenuBarItem(null, "", null);
+        private readonly MenuBarItem RootItem = new(null, "", null);
 
         public void AddItem(string path, Action<string> onContent)
         {

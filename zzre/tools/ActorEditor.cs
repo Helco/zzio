@@ -34,7 +34,7 @@ namespace zzre.tools
         private ActorExDescription? description;
         private Part? body;
         private Part? wings;
-        private readonly Location actorLocation = new Location();
+        private readonly Location actorLocation = new();
         private readonly LocationBuffer locationBuffer;
         private HeadIKMode headIKMode = HeadIKMode.Disabled;
 

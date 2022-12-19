@@ -24,7 +24,7 @@ namespace zzre.tools
             private bool isPlaying = false;
             private int currentAnimationI = -1;
 
-            public readonly Location location = new Location();
+            public readonly Location location = new();
             public readonly DeviceBufferRange locationBufferRange;
             public readonly ClumpBuffers geometry;
             public readonly ModelSkinnedMaterial[] materials;

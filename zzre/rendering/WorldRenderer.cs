@@ -30,7 +30,7 @@ namespace zzre.rendering
         private ModelStandardMaterial[] materials = Array.Empty<ModelStandardMaterial>();
         public IReadOnlyList<ModelStandardMaterial> Materials => materials;
 
-        private readonly List<WorldBuffers.MeshSection> visibleMeshSections = new List<WorldBuffers.MeshSection>();
+        private readonly List<WorldBuffers.MeshSection> visibleMeshSections = new();
         public IReadOnlyList<WorldBuffers.MeshSection> VisibleMeshSections => visibleMeshSections;
 
         public Location Location { get; } = new Location();

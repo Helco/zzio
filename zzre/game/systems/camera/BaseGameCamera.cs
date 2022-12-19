@@ -55,7 +55,7 @@ namespace zzre.game.systems
 
         protected float DeadZone(float value, float deadzone) => Math.Abs(value) < deadzone ? 0f : value;
 
-        protected Vector2 ClampMouseMove(Vector2 input) => new Vector2(
+        protected Vector2 ClampMouseMove(Vector2 input) => new(
             Math.Clamp(input.X, -MaxMouseMove, +MaxMouseMove),
             Math.Clamp(input.Y, -MaxMouseMove, +MaxMouseMove));
 

@@ -12,7 +12,7 @@ namespace zzio.vfs
         private readonly long baseOffset;
         public IResource Root { get; }
 
-        private FileStream OpenStream() => new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+        private FileStream OpenStream() => new(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
 
         public PAKParallelResourcePool(string filename)
         {

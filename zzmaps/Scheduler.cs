@@ -22,21 +22,21 @@ namespace zzmaps
         private readonly Options options;
         private readonly IResourcePool resourcePool;
         private readonly GraphicsDevice graphicsDevice;
-        private readonly ConcurrentQueue<MapTileRenderer> rendererQueue = new ConcurrentQueue<MapTileRenderer>();
+        private readonly ConcurrentQueue<MapTileRenderer> rendererQueue = new();
         private readonly IOutput output;
         private readonly SceneMetadataBuilder sceneMetadataBuilder;
         private readonly BackgroundTileRenderer bgTileRenderer;
 
-        private readonly ProgressStep stepScenesFound = new ProgressStep("Scenes found");
-        private readonly ProgressStep stepScenesLoaded = new ProgressStep("Scenes loaded");
-        private readonly ProgressStep stepTilesEmpty = new ProgressStep("Empty tiles");
-        private readonly ProgressStep stepTilesRendered = new ProgressStep("Tiles rendered");
-        private readonly ProgressStep stepTilesEncoded = new ProgressStep("Tiles encoded");
-        private readonly ProgressStep stepTilesOptimized = new ProgressStep("Tiles optimized");
-        private readonly ProgressStep stepTilesOutput = new ProgressStep("Tiles output");
-        private readonly ProgressStep stepScenesMeta = new ProgressStep("Scene Metadata built");
-        private readonly ProgressStep stepMetaOutput = new ProgressStep("Scene Metadata output");
-        private readonly ProgressStep stepBgTilesRendered = new ProgressStep("BG Tiles rendered");
+        private readonly ProgressStep stepScenesFound = new("Scenes found");
+        private readonly ProgressStep stepScenesLoaded = new("Scenes loaded");
+        private readonly ProgressStep stepTilesEmpty = new("Empty tiles");
+        private readonly ProgressStep stepTilesRendered = new("Tiles rendered");
+        private readonly ProgressStep stepTilesEncoded = new("Tiles encoded");
+        private readonly ProgressStep stepTilesOptimized = new("Tiles optimized");
+        private readonly ProgressStep stepTilesOutput = new("Tiles output");
+        private readonly ProgressStep stepScenesMeta = new("Scene Metadata built");
+        private readonly ProgressStep stepMetaOutput = new("Scene Metadata output");
+        private readonly ProgressStep stepBgTilesRendered = new("BG Tiles rendered");
 
         public Scheduler(ITagContainer diContainer)
         {

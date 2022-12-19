@@ -12,8 +12,8 @@ namespace zzre.tools
         private readonly ITagContainer diContainer;
         private readonly FramebufferArea fbArea;
         private readonly MouseEventArea mouseArea;
-        private readonly HashSet<Key> keysDown = new HashSet<Key>();
-        private readonly HashSet<MouseButton> buttonsDown = new HashSet<MouseButton>();
+        private readonly HashSet<Key> keysDown = new();
+        private readonly HashSet<MouseButton> buttonsDown = new();
         private Action<Vector2>? onMouseMove;
         private bool moveCamWithDrag;
         private ECSExplorerWindow? ecsExplorer;

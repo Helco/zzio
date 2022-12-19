@@ -32,9 +32,9 @@ namespace zzio.tests.db
         [Test]
         public void read()
         {
-            MemoryStream stream = new MemoryStream(rowBytes, false);
-            using BinaryReader reader = new BinaryReader(stream);
-            Row row = new Row();
+            MemoryStream stream = new(rowBytes, false);
+            using BinaryReader reader = new(stream);
+            Row row = new();
             row.Read(reader);
             testRow(row);
         }
@@ -42,7 +42,7 @@ namespace zzio.tests.db
         [Test]
         public void write()
         {
-            Row row = new Row();
+            Row row = new();
             row.uid = new UID(0xdeadbeef);
             row.cells = new Cell[]
             {
@@ -50,8 +50,8 @@ namespace zzio.tests.db
                 new Cell((1 << 16) - 1, 2),
                 new Cell(new byte[] { 0xc0, 0xff, 0xee }, 3)
             };
-            MemoryStream stream = new MemoryStream();
-            using BinaryWriter writer = new BinaryWriter(stream);
+            MemoryStream stream = new();
+            using BinaryWriter writer = new(stream);
             row.Write(writer);
             Assert.AreEqual(rowBytes, stream.ToArray());
         }

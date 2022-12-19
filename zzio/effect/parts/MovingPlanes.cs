@@ -14,7 +14,7 @@ namespace zzio.effect.parts
             tileId = 0,
             tileW = 64,
             tileH = 64;
-        public IColor color = new IColor(255, 255, 255, 255);
+        public IColor color = new(255, 255, 255, 255);
         public float
             width = 0.1f,
             height = 0.1f,

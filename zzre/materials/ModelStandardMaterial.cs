@@ -26,7 +26,7 @@ namespace zzre.materials
         public float alphaReference;
         public static uint Stride = (4 + 3) * sizeof(float);
 
-        public static readonly ModelStandardMaterialUniforms Default = new ModelStandardMaterialUniforms
+        public static readonly ModelStandardMaterialUniforms Default = new()
         {
             tint = FColor.White,
             vertexColorFactor = 1f,

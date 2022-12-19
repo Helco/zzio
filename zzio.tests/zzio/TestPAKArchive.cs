@@ -15,7 +15,7 @@ namespace zzio.tests
         [Test]
         public void containsfile()
         {
-            MemoryStream stream = new MemoryStream(sampleData, false);
+            MemoryStream stream = new(sampleData, false);
             PAKArchive archive = PAKArchive.ReadNew(stream);
 
             Assert.True(archive.ContainsFile("A/a.txt"));
@@ -45,7 +45,7 @@ namespace zzio.tests
         [Test]
         public void readfile()
         {
-            MemoryStream stream = new MemoryStream(sampleData, false);
+            MemoryStream stream = new(sampleData, false);
             PAKArchive archive = PAKArchive.ReadNew(stream);
 
             Assert.That(() => archive.ReadFile("../B/C/D.txt"), Throws.Exception);
@@ -60,7 +60,7 @@ namespace zzio.tests
         [Test]
         public void getdirectorycontent()
         {
-            MemoryStream stream = new MemoryStream(sampleData, false);
+            MemoryStream stream = new(sampleData, false);
             PAKArchive archive = PAKArchive.ReadNew(stream);
 
             Assert.AreEqual(Array.Empty<string>(), archive.GetDirectoryContent("G/H/I"));

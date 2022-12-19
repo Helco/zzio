@@ -40,7 +40,7 @@ namespace zzmaps
         private readonly RefCachedAssetLoader<ClumpBuffers> clumpBufferLoader;
         private readonly RefCachedAssetLoader<Texture> textureLoader;
 
-        private readonly HashSet<IResource> textures = new HashSet<IResource>();
+        private readonly HashSet<IResource> textures = new();
 
         public Scene Scene { get; }
         public WorldBuffers WorldBuffers { get; }

@@ -45,7 +45,7 @@ namespace zzio
 
         public static MapMarker[] ReadFile(Stream stream)
         {
-            using BinaryReader reader = new BinaryReader(stream);
+            using BinaryReader reader = new(stream);
             int count = reader.ReadInt32();
             return Enumerable.Repeat(0, count)
                 .Select(i => ReadNew(reader))
@@ -54,7 +54,7 @@ namespace zzio
 
         public static void WriteFile(MapMarker[] markers, Stream stream)
         {
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             writer.Write(markers.Length);
             foreach (MapMarker mapMarker in markers)
                 mapMarker.Write(writer);

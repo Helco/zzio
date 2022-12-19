@@ -42,7 +42,7 @@ namespace zzre
 
         public float MaxSizeComponent => Math.Max(Math.Max(Size.X, Size.Y), Size.Z);
 
-        public static Box Zero => new Box();
+        public static Box Zero => new();
 
         public Box(float x, float y, float z, float w, float h, float d)
         {
@@ -56,18 +56,18 @@ namespace zzre
             Size = size;
         }
 
-        public static Box FromMinMax(Vector3 min, Vector3 max) => new Box((min + max) / 2, (max - min));
+        public static Box FromMinMax(Vector3 min, Vector3 max) => new((min + max) / 2, (max - min));
         public static Box Union(params Box[] bounds) => bounds.Skip(1).Aggregate(bounds.First(), (prev, next) => prev.Union(next));
 
-        public Box OffsettedBy(float x, float y, float z) => new Box(Center + new Vector3(x, y, z), Size);
-        public Box OffsettedBy(Vector3 off) => new Box(Center + off, Size);
-        public Box GrownBy(float x, float y, float z) => new Box(Center, Size + new Vector3(x, y, z));
-        public Box GrownBy(Vector3 off) => new Box(Center, Size + off);
-        public Box ScaledBy(float s) => new Box(Center, Size * s);
-        public Box ScaledBy(float x, float y, float z) => new Box(Center, Vector3.Multiply(Size, new Vector3(x, y, z)));
-        public Box ScaledBy(Vector3 s) => new Box(Center, Vector3.Multiply(Size, s));
-        public Box At(Vector3 newCenter) => new Box(newCenter, Size);
-        public Box WithSizeOf(Vector3 newSize) => new Box(Center, newSize);
+        public Box OffsettedBy(float x, float y, float z) => new(Center + new Vector3(x, y, z), Size);
+        public Box OffsettedBy(Vector3 off) => new(Center + off, Size);
+        public Box GrownBy(float x, float y, float z) => new(Center, Size + new Vector3(x, y, z));
+        public Box GrownBy(Vector3 off) => new(Center, Size + off);
+        public Box ScaledBy(float s) => new(Center, Size * s);
+        public Box ScaledBy(float x, float y, float z) => new(Center, Vector3.Multiply(Size, new Vector3(x, y, z)));
+        public Box ScaledBy(Vector3 s) => new(Center, Vector3.Multiply(Size, s));
+        public Box At(Vector3 newCenter) => new(newCenter, Size);
+        public Box WithSizeOf(Vector3 newSize) => new(Center, newSize);
         public Box Union(Box other) => FromMinMax(Vector3.Min(Min, other.Min), Vector3.Max(Max, other.Max));
         public Box Union(Vector3 v) => Union(new Box(v, Vector3.Zero));
 
@@ -187,10 +187,10 @@ namespace zzre
 
         public bool Intersects(OrientedBox o) => Intersects(o.Box, o.Orientation);
 
-        internal Interval IntervalOn(Vector3 axis) => new Interval(Corners().Select(c => Vector3.Dot(c, axis)));
+        internal Interval IntervalOn(Vector3 axis) => new(Corners().Select(c => Vector3.Dot(c, axis)));
         public bool Intersects(Plane plane) => IntervalOn(plane.Normal).Intersects(plane.Distance);
 
-        internal Interval IntervalOn(Quaternion orientation, Vector3 axis) => new Interval(Corners(orientation).Select(c => Vector3.Dot(c, axis)));
+        internal Interval IntervalOn(Quaternion orientation, Vector3 axis) => new(Corners(orientation).Select(c => Vector3.Dot(c, axis)));
         public bool Intersects(Quaternion orientation, Plane plane) => IntervalOn(orientation, plane.Normal).Intersects(plane.Distance);
 
         public bool Intersects(Sphere sphere) => sphere.Intersects(this);

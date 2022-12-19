@@ -16,7 +16,7 @@ namespace zzio.tests.utils
         public void equals()
         {
 #pragma warning disable CS1718
-            FilePath path = new FilePath("a/b/c/d");
+            FilePath path = new("a/b/c/d");
             Assert.AreEqual(true, path == new FilePath(path));
             Assert.AreEqual(true, path == "a/b/c/d");
             Assert.AreEqual(false, path.Equals("a/c/e/d"));
@@ -103,7 +103,7 @@ namespace zzio.tests.utils
         [Test]
         public void parent()
         {
-            FilePath? path = new FilePath("a/b/c");
+            FilePath? path = new("a/b/c");
             Assert.AreEqual("a/b/", (path = path?.Parent));
             Assert.AreEqual("a/", (path = path?.Parent));
             Assert.AreEqual("./", (path = path?.Parent));

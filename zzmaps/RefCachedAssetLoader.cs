@@ -10,7 +10,7 @@ namespace zzmaps
 {
     internal class RefCachedAssetLoader<TAsset> : CachedAssetLoader<TAsset> where TAsset : class, IDisposable
     {
-        private readonly Dictionary<FilePath, int> refCounts = new Dictionary<FilePath, int>();
+        private readonly Dictionary<FilePath, int> refCounts = new();
 
         public RefCachedAssetLoader(IAssetLoader<TAsset> parent) : base(parent)
         { }

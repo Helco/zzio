@@ -12,7 +12,7 @@ namespace zzio.effect.parts
         public uint
             phase1 = 1000,
             phase2 = 1000;
-        public IColor color = new IColor(255, 255, 255, 255);
+        public IColor color = new(255, 255, 255, 255);
         public float
             rotationSpeed = 0.0f,
             texShift = 0.0f,
