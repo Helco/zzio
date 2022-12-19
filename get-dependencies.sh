@@ -15,7 +15,7 @@ ImGuiNETHash=`git -C extern/ImGui.NET rev-parse --short HEAD`
 Configuration=Release
 ConfigSuffix=
 VeldridHash=notactuallyused
-SymbolFlags="--include-symbols -p:EmbedAllSources=true -p:DebugType=embedded -p:SymbolPackageFormat=snupkg"
+SymbolFlags="--include-symbols -p:EmbedAllSources=true -p:DebugType=embedded -p:SymbolPackageFormat=snupkg -clp:ErrorsOnly"
 
 dotnet pack extern/DefaultEcs/source/DefaultEcs/DefaultEcs.csproj -c SafeDebug $SymbolFlags "-p:TEST=true" -o nuget-feed --version-suffix safe-$DefaultEcsHash
 dotnet pack extern/DefaultEcs/source/DefaultEcs/DefaultEcs.csproj -c $Configuration $SymbolFlags "-p:TEST=true" -o nuget-feed --version-suffix $DefaultEcsHash$ConfigSuffix
