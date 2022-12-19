@@ -14,13 +14,13 @@ jobs:
   Build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         path: zzio
         submodules: true
         fetch-depth: 0
     - name: Setup .NET Core 6.0.x
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
     - name: Build local dependencies
@@ -31,61 +31,3 @@ jobs:
       run: dotnet test --configuration Debug --no-restore --verbosity normal
     - name: Release
       run: dotnet test --configuration Release --no-restore --verbosity normal
-  Debug:
-    if: false
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        path: zzio
-    - uses: actions/checkout@v2
-      with:
-        repository: Helco/zzio-feed
-        path: zzio-feed
-    - name: Setup .NET Core 2.2.x
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 2.2.x
-    - name: Setup .NET Core 6.0.x
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 6.0.x
-    - name: Install dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --configuration Debug --no-restore
-    - name: Test
-      run: dotnet test --no-restore --verbosity normal
-  CodeQL:
-    if: false
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        path: zzio
-    - uses: actions/checkout@v2
-      with:
-        repository: Helco/zzio-feed
-        path: zzio-feed
-    - name: Setup .NET Core 2.2.x
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 2.2.x
-    - name: Setup .NET Core 6.0.x
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 6.0.x
-    - name: Install dependencies
-      run: dotnet restore
-    - name: Build dependencies
-      run: dotnet build Veldrid.ImGui/Veldrid.ImGui.csproj --configuration Release --no-restore
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v1
-      with:
-        languages: csharp
-        source-root: zzio
-    - name: Build projects to scan
-      run: | # Currently zzmaps depends on zzre -> zzre.core -> zzio (all projects to scan)
-        dotnet build zzmaps/zzmaps.csproj --configuration Release --no-restore
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v1
