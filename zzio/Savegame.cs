@@ -31,11 +31,13 @@ namespace zzio
 
         public static Savegame ReadNew(BinaryReader r)
         {
-            Savegame sg = new();
-            sg.version = ZZVersion.ReadNew(r);
-            sg.name = r.ReadZString();
-            sg.secondsPlayed = r.ReadInt32();
-            sg.progress = r.ReadInt32();
+            Savegame sg = new()
+            {
+                version = ZZVersion.ReadNew(r),
+                name = r.ReadZString(),
+                secondsPlayed = r.ReadInt32(),
+                progress = r.ReadInt32()
+            };
             if (r.ReadUInt32() != LocationBlockSize)
                 throw new InvalidDataException("Invalid size of savegame location block");
             sg.sceneId = r.ReadInt32();

@@ -126,9 +126,11 @@ namespace zzio.dbsqlitecli
 
                 while (reader.Read())
                 {
-                    var row = new Row();
-                    row.uid = UID.Parse(reader.GetFieldValue<string>(0));
-                    row.cells = new Cell[reader.FieldCount - 1];
+                    var row = new Row
+                    {
+                        uid = UID.Parse(reader.GetFieldValue<string>(0)),
+                        cells = new Cell[reader.FieldCount - 1]
+                    };
                     for (int i = 1; i < reader.FieldCount; i++)
                     {
                         var columnName = reader.GetName(i);

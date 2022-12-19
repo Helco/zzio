@@ -52,10 +52,12 @@ namespace zzre.game.systems
                 npcLocation = message.NPCEntity.Get<Location>();
             else
             {
-                npcLocation = new Location();
-                npcLocation.LocalPosition =
+                npcLocation = new Location
+                {
+                    LocalPosition =
                     camera.Location.GlobalPosition +
-                    camera.Location.GlobalForward;
+                    camera.Location.GlobalForward
+                };
             }
             (sourceLoc, targetLoc) = majorMode == 10
                 ? (playerLocation, npcLocation)

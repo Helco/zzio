@@ -65,9 +65,11 @@ namespace zzre.tools
             modelMaterialEdit = new ModelMaterialEdit(Window, diContainer);
             diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
 
-            openFileModal = new OpenFileModal(diContainer);
-            openFileModal.Filter = "*.dff";
-            openFileModal.IsFilterChangeable = false;
+            openFileModal = new OpenFileModal(diContainer)
+            {
+                Filter = "*.dff",
+                IsFilterChangeable = false
+            };
             openFileModal.OnOpenedResource += Load;
             imGuiRenderer = Window.Container.ImGuiRenderer;
 

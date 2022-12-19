@@ -73,11 +73,13 @@ namespace zzio.rwbs
 
             for (int i = 0; i < morphTargets.Length; i++)
             {
-                morphTargets[i] = new MorphTarget();
-                morphTargets[i].bsphereCenter = reader.ReadVector3();
-                morphTargets[i].bsphereRadius = reader.ReadSingle();
-                morphTargets[i].vertices = Array.Empty<Vector3>();
-                morphTargets[i].normals = Array.Empty<Vector3>();
+                morphTargets[i] = new MorphTarget
+                {
+                    bsphereCenter = reader.ReadVector3(),
+                    bsphereRadius = reader.ReadSingle(),
+                    vertices = Array.Empty<Vector3>(),
+                    normals = Array.Empty<Vector3>()
+                };
                 bool hasVertices = reader.ReadUInt32() > 0;
                 bool hasNormals = reader.ReadUInt32() > 0;
                 if (hasVertices)

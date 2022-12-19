@@ -164,8 +164,10 @@ namespace zzre.rendering
         public void Render(CommandList cl, Range? primitiveRange = null, uint instanceStart = 1, uint instanceCount = 1)
         {
             Update(cl);
-            var primsToRender = new RangeCollection();
-            primsToRender.Add(primitiveRange ?? Range.All);
+            var primsToRender = new RangeCollection
+            {
+                primitiveRange ?? Range.All
+            };
             foreach (var free in freePrims)
                 primsToRender.Remove(free);
 

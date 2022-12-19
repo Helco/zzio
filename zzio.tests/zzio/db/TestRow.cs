@@ -42,13 +42,15 @@ namespace zzio.tests.db
         [Test]
         public void write()
         {
-            Row row = new();
-            row.uid = new UID(0xdeadbeef);
-            row.cells = new Cell[]
+            Row row = new()
+            {
+                uid = new UID(0xdeadbeef),
+                cells = new Cell[]
             {
                 new Cell("zzio", 1),
                 new Cell((1 << 16) - 1, 2),
                 new Cell(new byte[] { 0xc0, 0xff, 0xee }, 3)
+            }
             };
             MemoryStream stream = new();
             using BinaryWriter writer = new(stream);

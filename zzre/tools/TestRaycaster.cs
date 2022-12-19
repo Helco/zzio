@@ -106,12 +106,14 @@ namespace zzre.tools
             fbArea.Content();
 
             rotation += 3.0f / 180f * MathF.PI;
-            var loc = new Location();
-            loc.LocalPosition =
+            var loc = new Location
+            {
+                LocalPosition =
                 Vector3.UnitX * (3f + MathF.Sin(rotation)) +
                 Vector3.UnitY * MathF.Cos(rotation) * 0.5f +
-                Vector3.UnitZ * MathF.Cos(rotation);
-            loc.LocalRotation = Quaternion.CreateFromYawPitchRoll(rotation, rotation, 0f);
+                Vector3.UnitZ * MathF.Cos(rotation),
+                LocalRotation = Quaternion.CreateFromYawPitchRoll(rotation, rotation, 0f)
+            };
             rotatingBox.Geometry = new Box(Vector3.Zero, new Vector3(0.4f, 0.8f, 1.2f)).TransformToWorld(loc);
         }
 

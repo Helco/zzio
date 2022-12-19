@@ -41,8 +41,10 @@ namespace zzio.cli
                 try
                 {
                     stdoutStream = new FileStream(args["stdout"] as string, FileMode.OpenOrCreate, FileAccess.Write);
-                    stdoutWriter = new StreamWriter(stdoutStream);
-                    stdoutWriter.AutoFlush = true;
+                    stdoutWriter = new StreamWriter(stdoutStream)
+                    {
+                        AutoFlush = true
+                    };
                     Console.SetOut(stdoutWriter);
                 }
                 catch (Exception)
@@ -60,8 +62,10 @@ namespace zzio.cli
                 try
                 {
                     stderrStream = new FileStream(args["stderr"] as string, FileMode.OpenOrCreate, FileAccess.Write);
-                    stderrWriter = new StreamWriter(stderrStream);
-                    stderrWriter.AutoFlush = true;
+                    stderrWriter = new StreamWriter(stderrStream)
+                    {
+                        AutoFlush = true
+                    };
                     Console.SetError(stderrWriter);
                 }
                 catch (Exception)

@@ -14,8 +14,10 @@ namespace zzre.core.tests.math
         {
             var box = new Box(Vector3.Zero, new Vector3(1.0f, 10.0f, 1.0f));
             var point = new Vector3(0.0f, 0.0f, 3.0f);
-            var loc = new Location();
-            loc.LocalRotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, 90f * MathF.PI / 180f);
+            var loc = new Location
+            {
+                LocalRotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, 90f * MathF.PI / 180f)
+            };
 
             Assert.IsFalse(box.Intersects(point));
             Assert.IsFalse(box.Intersects(new Location(), point));
@@ -36,9 +38,11 @@ namespace zzre.core.tests.math
         public void TestOBBClosestPointvsPoint()
         {
             var box = new Box(Vector3.One * 10f, new Vector3(2.0f, 6.0f, 4.0f));
-            var loc = new Location();
-            loc.LocalPosition = Vector3.One * -10f;
-            loc.LocalRotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, 90f * MathF.PI / 180f);
+            var loc = new Location
+            {
+                LocalPosition = Vector3.One * -10f,
+                LocalRotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, 90f * MathF.PI / 180f)
+            };
 
             Assert.AreEqual(0.0f, Vector3.Distance(new Vector3(-1.0f, -22.0f, -3.0f), box.ClosestPoint(loc, Vector3.One * -100)), EPS);
             Assert.AreEqual(0.0f, Vector3.Distance(new Vector3(1.0f, -18.0f, 3.0f), box.ClosestPoint(loc, Vector3.One * 100)), EPS);

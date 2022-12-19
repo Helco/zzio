@@ -60,9 +60,11 @@ namespace zzre.tools
             fbArea.OnRender += HandleRender;
             diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
 
-            openFileModal = new OpenFileModal(diContainer);
-            openFileModal.Filter = "*.aed";
-            openFileModal.IsFilterChangeable = false;
+            openFileModal = new OpenFileModal(diContainer)
+            {
+                Filter = "*.aed",
+                IsFilterChangeable = false
+            };
             openFileModal.OnOpenedResource += Load;
 
             locationBuffer = new LocationBuffer(device);

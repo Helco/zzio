@@ -20,30 +20,36 @@ namespace zzre.tests
         [Test]
         public void AddMerge()
         {
-            var coll = new RangeCollection();
-            coll.Add(0..3);
-            coll.Add(3..7);
+            var coll = new RangeCollection
+            {
+                0..3,
+                3..7
+            };
             Assert.AreEqual(new[] { 0..7 }, coll);
         }
 
         [Test]
         public void AddMergeOverlapping()
         {
-            var coll = new RangeCollection();
-            coll.Add(5..10);
-            coll.Add(3..7);
+            var coll = new RangeCollection
+            {
+                5..10,
+                3..7
+            };
             Assert.AreEqual(new[] { 3..10 }, coll);
         }
 
         [Test]
         public void AddMergeComplex()
         {
-            var coll = new RangeCollection();
-            coll.Add(0..3);
-            coll.Add(5..8);
-            coll.Add(10..15);
+            var coll = new RangeCollection
+            {
+                0..3,
+                5..8,
+                10..15,
 
-            coll.Add(2..17);
+                2..17
+            };
             Assert.AreEqual(new[] { 0..17 }, coll);
         }
 
@@ -59,10 +65,12 @@ namespace zzre.tests
         [Test]
         public void RemoveComplex()
         {
-            var coll = new RangeCollection();
-            coll.Add(0..5);
-            coll.Add(7..9);
-            coll.Add(11..20);
+            var coll = new RangeCollection
+            {
+                0..5,
+                7..9,
+                11..20
+            };
 
             Assert.True(coll.Remove(2..18));
             Assert.AreEqual(new[] { 0..2, 18..20 }, coll);
