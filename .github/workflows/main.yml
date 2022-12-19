@@ -16,6 +16,6 @@ jobs:
   todo-to-issue:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: TODO to Issue
       uses: alstr/todo-to-issue-action@v4.3
