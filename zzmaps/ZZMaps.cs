@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.CommandLine.Completions;
+using System.CommandLine.NamingConventionBinder;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using System.CommandLine.Invocation;
+using Veldrid;
 using zzre;
 using zzre.rendering;
-using Veldrid;
 using zzio.vfs;
-using System.Threading;
 using zzio.db;
 using zzio;
 
@@ -74,8 +76,9 @@ namespace zzmaps
                 new Option<ZZMapsImageFormat>(new[] { "--temp-format" }, () => ZZMapsImageFormat.Png, "Format given to optimizer"),
                 new Option<int>(new[] { "--jpeg-quality" }, () => 75, "JPEG quality level"),
                 new Option<int>(new[] { "--png-compression" }, () => pngDefaultCompression, "PNG compression level"),
-                new Option<string?>(new[] { "--optimizer" }, "Optimizer to process images")
-                .AddSuggestions("brotli.exe --quality 80 $input $output"),
+                new Option<string?>(new[] { "--optimizer" }, "Optimizer to process images"),
+                // for example brotli.exe --quality 80 $input $output
+                // I got sick trying to figure out where the semantically-equal way was of getting System.CommandLine to tell that
                 new Option<DirectoryInfo>("--temp-folder", () => defaultOptions.TempFolder, "Temporary folder for optimization")
                 .LegalFilePathsOnly(),
 
