@@ -52,22 +52,22 @@ namespace zzre.imgui
 
             var moveDir = Vector3.Zero;
             var speedFactor = 1.0f;
-            if (ImGui.IsKeyDown((int)Key.ShiftLeft)) speedFactor *= 2.0f;
-            if (ImGui.IsKeyDown((int)Key.ControlLeft)) speedFactor /= 2.0f;
-            if (ImGui.IsKeyDown((int)Key.S)) moveDir += target.GlobalForward;
-            if (ImGui.IsKeyDown((int)Key.W)) moveDir -= target.GlobalForward;
-            if (ImGui.IsKeyDown((int)Key.D)) moveDir += target.GlobalRight;
-            if (ImGui.IsKeyDown((int)Key.A)) moveDir -= target.GlobalRight;
-            if (ImGui.IsKeyDown((int)Key.E)) moveDir += target.GlobalUp;
-            if (ImGui.IsKeyDown((int)Key.Q)) moveDir -= target.GlobalUp;
-            target.LocalPosition = target.LocalPosition + moveDir * gameTime.Delta * speed * speedFactor;
+            if (ImGui.IsKeyDown(ImGuiKey.ModShift)) speedFactor *= 2.0f;
+            if (ImGui.IsKeyDown(ImGuiKey.ModCtrl)) speedFactor /= 2.0f;
+            if (ImGui.IsKeyDown(ImGuiKey.S)) moveDir += target.GlobalForward;
+            if (ImGui.IsKeyDown(ImGuiKey.W)) moveDir -= target.GlobalForward;
+            if (ImGui.IsKeyDown(ImGuiKey.D)) moveDir += target.GlobalRight;
+            if (ImGui.IsKeyDown(ImGuiKey.A)) moveDir -= target.GlobalRight;
+            if (ImGui.IsKeyDown(ImGuiKey.E)) moveDir += target.GlobalUp;
+            if (ImGui.IsKeyDown(ImGuiKey.Q)) moveDir -= target.GlobalUp;
+            target.LocalPosition += moveDir * gameTime.Delta * speed * speedFactor;
 
             fbArea.IsDirty = true;
         }
 
         private void HandleScroll(float scroll)
         {
-            speed = speed * MathF.Pow(2.0f, scroll * 0.3f);
+            speed *= MathF.Pow(2.0f, scroll * 0.3f);
         }
 
         public void ResetView()

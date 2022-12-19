@@ -1,0 +1,15 @@
+name: PullRequest
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    uses: ./.github/workflows/build.yml
+    with:
+      runs-on: ${{ matrix.os }}

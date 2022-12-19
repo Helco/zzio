@@ -14,17 +14,17 @@ namespace zzre.imgui
     {
         private GraphicsDevice Device { get; }
         private ResourceFactory Factory => Device.ResourceFactory;
-        private readonly List<BaseWindow> windows = new List<BaseWindow>();
-        private readonly List<Fence> onceFences = new List<Fence>();
+        private readonly List<BaseWindow> windows = new();
+        private readonly List<Fence> onceFences = new();
         private readonly CommandList commandList;
         private readonly Fence fence;
 
         public BaseWindow? FocusedWindow { get; private set; } = null;
         public int Count => windows.Count;
         public ImGuiRenderer ImGuiRenderer { get; }
-        public MenuBar MenuBar { get; } = new MenuBar();
+        public MenuBar MenuBar { get; } = new();
         private bool isInUpdateEnumeration = false;
-        private readonly OnceAction onceAfterUpdate = new OnceAction();
+        private readonly OnceAction onceAfterUpdate = new();
         private BaseWindow? nextFocusedWindow = null;
 
         public event Action OnceAfterUpdate
@@ -38,14 +38,19 @@ namespace zzre.imgui
             Device = device;
 
             var fb = device.MainSwapchain.Framebuffer;
-            ImGuiRenderer = new ImGuiRenderer(device, fb.OutputDescription, (int)fb.Width, (int)fb.Height);
+            ImGuiRenderer = new(device, fb.OutputDescription, (int)fb.Width, (int)fb.Height, ColorSpaceHandling.Legacy, callNewFrame: false);
             ImGuizmoNET.ImGuizmo.SetImGuiContext(ImGui.GetCurrentContext());
             ImGuizmoNET.ImGuizmo.AllowAxisFlip(false);
             commandList = Factory.CreateCommandList();
             fence = Factory.CreateFence(true);
 
+            var io = GetIO();
+            io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+            io.ConfigWindowsResizeFromEdges = true;
+            io.ConfigWindowsMoveFromTitleBarOnly = true;
+
             LoadForkAwesomeFont();
-            ImGuiRenderer.Start();
+            ImGuiRenderer.ManualNewFrame();
         }
 
         protected override void DisposeManaged()
@@ -55,6 +60,8 @@ namespace zzre.imgui
                 window.Dispose();
             ImGuiRenderer.Dispose();
             commandList.Dispose();
+            if (!fence.Signaled)
+                Device.WaitForFence(fence);
             fence.Dispose();
         }
 
@@ -105,9 +112,6 @@ namespace zzre.imgui
             MenuBar.Update();
             End();
 
-#if DEBUG
-            ShowDemoWindow();
-#endif
             if (nextFocusedWindow != null && !IsMouseDown(ImGuiMouseButton.Left))
             {
                 SetWindowFocus(nextFocusedWindow.Title);
@@ -135,6 +139,8 @@ namespace zzre.imgui
                 Device.WaitForFences(onceFences.ToArray(), true, TimeSpan.FromSeconds(10000.0)); // timeout is a workaround
             onceFences.Clear();
 
+            if (!fence.Signaled)
+                Device.WaitForFence(fence);
             fence.Reset();
             commandList.Begin();
             commandList.SetFramebuffer(Device.MainSwapchain.Framebuffer);
@@ -165,6 +171,7 @@ namespace zzre.imgui
         private unsafe void LoadForkAwesomeFont()
         {
             zzre.core.assets.ForkAwesomeIconFont.AddToFontAtlas(GetIO().Fonts, 1, 15.0f, 13.0f);
+            Device.WaitForIdle();
             ImGuiRenderer.RecreateFontDeviceTexture();
         }
 

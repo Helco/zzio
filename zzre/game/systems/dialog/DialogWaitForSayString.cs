@@ -15,7 +15,7 @@ namespace zzre.game.systems
         private readonly IDisposable resetUIDisposable;
         private bool didClick = false;
 
-        public DialogWaitForSayString(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
+        public DialogWaitForSayString(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
         {
             zzContainer = diContainer.GetTag<IZanzarahContainer>();
             zzContainer.OnMouseDown += HandleMouseDown;
