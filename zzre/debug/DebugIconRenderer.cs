@@ -12,17 +12,13 @@ namespace zzre.debug
         private readonly ITagContainer diContainer;
         private DeviceBuffer? iconBuffer = null;
         private DebugIcon[] icons = Array.Empty<DebugIcon>();
-        private bool isDirty = true;
+
         private int Capacity => (int)((iconBuffer?.SizeInBytes ?? 0) / DebugIcon.Stride);
         private uint Count => (uint)(icons?.Count() ?? 0);
 
         public DebugIconMaterial Material { get; }
 
-        public bool IsDirty
-        {
-            get => isDirty;
-            set => isDirty = value;
-        }
+        public bool IsDirty { get; set; } = true;
 
         public DebugIcon[] Icons
         {
@@ -60,7 +56,7 @@ namespace zzre.debug
                 return;
             if (IsDirty)
             {
-                isDirty = false;
+                IsDirty = false;
                 cl.UpdateBuffer(iconBuffer, 0, icons);
             }
             if (iconCount < 0)

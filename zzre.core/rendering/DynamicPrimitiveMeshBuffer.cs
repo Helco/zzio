@@ -12,13 +12,12 @@ namespace zzre.rendering
         private readonly RangeCollection dirtyPrims;
         private readonly float growFactor;
         private readonly ushort[] indexPattern;
-        private readonly int verticesPerPrimitive;
         private TVertex[] vertices;
         private DeviceBuffer? vertexBuffer, indexBuffer;
 
-        public int Capacity => vertices.Length / verticesPerPrimitive;
+        public int Capacity => vertices.Length / VerticesPerPrimitive;
         public int PrimitiveCount => Capacity - freePrims.Area;
-        public int VerticesPerPrimitive => verticesPerPrimitive;
+        public int VerticesPerPrimitive { get; }
         public int IndicesPerPrimitive => indexPattern.Length;
 
         public unsafe DeviceBuffer VertexBuffer
@@ -60,7 +59,7 @@ namespace zzre.rendering
 #endif
                 dirtyPrims.Add(range);
                 var (offset, length) = range.GetOffsetAndLength(Capacity);
-                return vertices.AsSpan(offset * verticesPerPrimitive, length * verticesPerPrimitive);
+                return vertices.AsSpan(offset * VerticesPerPrimitive, length * VerticesPerPrimitive);
             }
         }
 
@@ -70,7 +69,7 @@ namespace zzre.rendering
             set
             {
                 var vertexOffset = GetVertexOffset(quadIndex, vertexIndex);
-                var primitiveIndex = vertexOffset / verticesPerPrimitive;
+                var primitiveIndex = vertexOffset / VerticesPerPrimitive;
                 vertices[vertexOffset] = value;
                 dirtyPrims.Add(primitiveIndex..(primitiveIndex + 1));
             }
@@ -85,8 +84,8 @@ namespace zzre.rendering
             this.indexPattern = indexPattern;
             freePrims = new RangeCollection(initialCapacity) { Range.All };
             dirtyPrims = new RangeCollection(initialCapacity);
-            verticesPerPrimitive = indexPattern.Max() + 1;
-            vertices = new TVertex[initialCapacity * verticesPerPrimitive];
+            VerticesPerPrimitive = indexPattern.Max() + 1;
+            vertices = new TVertex[initialCapacity * VerticesPerPrimitive];
         }
 
         protected override void DisposeManaged()
@@ -104,13 +103,13 @@ namespace zzre.rendering
                 .FirstOrDefault();
             if (bestFitPrim.Equals(default))
             {
-                var newMinCapacity = vertices.Length / verticesPerPrimitive + primitiveCount;
+                var newMinCapacity = vertices.Length / VerticesPerPrimitive + primitiveCount;
                 var newCapacity = Capacity;
                 while (newCapacity < newMinCapacity)
                     newCapacity = (int)(newCapacity * growFactor);
 
                 var resultRange = Capacity..(Capacity + primitiveCount);
-                Array.Resize(ref vertices, newCapacity * verticesPerPrimitive);
+                Array.Resize(ref vertices, newCapacity * VerticesPerPrimitive);
                 freePrims.MaxRangeValue = dirtyPrims.MaxRangeValue = newCapacity;
                 return resultRange;
             }
@@ -128,7 +127,7 @@ namespace zzre.rendering
 
         public unsafe void Update(CommandList cl)
         {
-            uint vertexBufferSize = (uint)(Capacity * verticesPerPrimitive * sizeof(TVertex));
+            uint vertexBufferSize = (uint)(Capacity * VerticesPerPrimitive * sizeof(TVertex));
             uint indexBufferSize = (uint)(Capacity * indexPattern.Length * sizeof(ushort));
 
             if ((vertexBuffer?.SizeInBytes ?? 0) < vertexBufferSize)
@@ -142,9 +141,9 @@ namespace zzre.rendering
             foreach (var range in dirtyPrims)
             {
                 var (vertexOffset, byteLength) = range.GetOffsetAndLength(Capacity);
-                vertexOffset *= verticesPerPrimitive;
+                vertexOffset *= VerticesPerPrimitive;
                 var byteOffset = vertexOffset * sizeof(TVertex);
-                byteLength *= verticesPerPrimitive * sizeof(TVertex);
+                byteLength *= VerticesPerPrimitive * sizeof(TVertex);
                 cl.UpdateBuffer(vertexBuffer, (uint)byteOffset, ref vertices[vertexOffset], (uint)byteLength);
             }
 
@@ -155,7 +154,7 @@ namespace zzre.rendering
                 indexBuffer.Name = $"{GetType().Name} Indices {GetHashCode()}";
                 var indices = Enumerable
                     .Range(0, Capacity)
-                    .SelectMany(i => indexPattern.Select(p => (ushort)(p + i * verticesPerPrimitive)))
+                    .SelectMany(i => indexPattern.Select(p => (ushort)(p + i * VerticesPerPrimitive)))
                     .ToArray();
                 cl.UpdateBuffer(indexBuffer, 0, indices);
             }
@@ -187,15 +186,15 @@ namespace zzre.rendering
 
         private int GetVertexOffset(Index primIndex, Index vertexIndex)
         {
-            var vertexOffset = vertexIndex.GetOffset(verticesPerPrimitive);
-            if (vertexOffset < 0 || vertexOffset >= verticesPerPrimitive)
+            var vertexOffset = vertexIndex.GetOffset(VerticesPerPrimitive);
+            if (vertexOffset < 0 || vertexOffset >= VerticesPerPrimitive)
                 throw new ArgumentOutOfRangeException(nameof(vertexIndex));
 
             var primOffset = primIndex.GetOffset(Capacity);
             if (primOffset < 0 || primOffset >= Capacity)
                 throw new ArgumentOutOfRangeException(nameof(primOffset));
 
-            return primOffset * verticesPerPrimitive + vertexOffset;
+            return primOffset * VerticesPerPrimitive + vertexOffset;
         }
     }
 }

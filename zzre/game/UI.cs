@@ -20,9 +20,8 @@ namespace zzre.game
         private readonly systems.RecordingSequentialSystem<float> updateSystems;
         private readonly ISystem<CommandList> renderSystems;
         private readonly GraphicsDevice graphicsDevice;
-        private readonly DeviceBuffer projectionBuffer;
 
-        public DeviceBuffer ProjectionBuffer => projectionBuffer;
+        public DeviceBuffer ProjectionBuffer { get; }
         public Rect LogicalScreen { get; set; }
         public DefaultEcs.Entity CursorEntity { get; }
         public systems.ui.UIPreloader Preload { get; }
@@ -36,10 +35,10 @@ namespace zzre.game
 
             var resourceFactory = GetTag<ResourceFactory>();
             graphicsDevice = GetTag<GraphicsDevice>();
-            projectionBuffer = resourceFactory.CreateBuffer(
+            ProjectionBuffer = resourceFactory.CreateBuffer(
                 // Buffer has to be multiple of 16 bytes big even though we only need 8
                 new BufferDescription(sizeof(float) * 4, BufferUsage.UniformBuffer));
-            projectionBuffer.Name = "UI Projection";
+            ProjectionBuffer.Name = "UI Projection";
             HandleResize();
 
             AddTag(this);
@@ -94,7 +93,7 @@ namespace zzre.game
                 new Vector2(fb.Width, fb.Height));
 
             var size = LogicalScreen.Size;
-            graphicsDevice.UpdateBuffer(projectionBuffer, 0, ref size);
+            graphicsDevice.UpdateBuffer(ProjectionBuffer, 0, ref size);
         }
 
         public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);
