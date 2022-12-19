@@ -67,12 +67,12 @@ namespace zzre
         }
 
         public Raycast? Cast(Ray ray) => Sphere.Cast(ray) == null ? null : Triangles
-            .Select(t => ray.Cast(t))
+            .Select(ray.Cast)
             .OrderBy(c => c?.Distance ?? float.PositiveInfinity)
             .FirstOrDefault();
 
         public Raycast? Cast(Line line) => Sphere.Cast(line) == null ? null : Triangles
-            .Select(t => line.Cast(t))
+            .Select(line.Cast)
             .OrderBy(c => c?.Distance ?? float.PositiveInfinity)
             .FirstOrDefault();
 

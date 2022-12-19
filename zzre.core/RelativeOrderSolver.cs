@@ -17,7 +17,7 @@ namespace zzre.core
 
         public bool TrySolveFor(IEnumerable<T> items)
         {
-            var itemByOrder = items.ToDictionary(item => orderOf(item), item => item);
+            var itemByOrder = items.ToDictionary(orderOf, item => item);
             var dependsOn = itemByOrder
                 .SelectMany(pair => Enumerable.Concat(
                     pair.Key.Predecessors.Select(pre => (before: itemByOrder[pre], after: pair.Value)),

@@ -56,7 +56,7 @@ namespace zzre.game.systems
         {
             // only get the tag now, as it was only just created for us
             var modelInstanceBuffer = diContainer.GetTag<ModelInstanceBuffer>();
-            var totalCount = MultiMap.Keys.Sum(key => MultiMap.Count(key));
+            var totalCount = MultiMap.Keys.Sum(MultiMap.Count);
             instanceBuffer = modelInstanceBuffer.DeviceBuffer;
             instanceStart = modelInstanceBuffer.Reserve(totalCount);
             clumpCounts.EnsureCapacity(MultiMap.Keys.Count());

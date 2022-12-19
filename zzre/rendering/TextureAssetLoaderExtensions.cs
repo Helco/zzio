@@ -69,7 +69,7 @@ namespace zzre.rendering
             var texture = basePaths
                 .Select(basePath => basePath.Combine(texName))
                 .SelectMany(fullPath => new[] { ".dds", ".bmp" }.Select(ext => fullPath.ToPOSIXString() + ext))
-                .Select(fullPath => resourcePool.FindFile(fullPath))
+                .Select(resourcePool.FindFile)
                 .Where(res => res != null)
                 .Select(res => loader.TryLoad(res!, out var texture) ? texture : null)
                 .FirstOrDefault(tex => tex != null);
