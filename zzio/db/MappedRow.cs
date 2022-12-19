@@ -21,7 +21,7 @@ namespace zzio.db
                 .ToArray();
         }
 
-        public MappedRow(ModuleType expectedModule, MappedDB mappedDB, Row row)
+        protected MappedRow(ModuleType expectedModule, MappedDB mappedDB, Row row)
         {
             if (row.uid.Module != (int)expectedModule)
                 throw new InvalidOperationException("Invalid module type for mapped row");

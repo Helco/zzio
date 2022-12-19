@@ -22,7 +22,7 @@ namespace zzio.dbsqlitecli
                 return;
             }
 
-            string command = args[0].ToLower();
+            string command = args[0].ToLowerInvariant();
             string db = args[1];
 
             SQLiteConnection dbConnection = new("URI=file:" + db);

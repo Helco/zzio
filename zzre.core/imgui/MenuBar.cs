@@ -30,7 +30,7 @@ namespace zzre.imgui
             var comp = StringComparison.InvariantCultureIgnoreCase;
             var curParent = RootItem;
             var parts = path.Split("/");
-            foreach (var part in parts[0..^1])
+            foreach (var part in parts[..^1])
             {
                 var nextParent = curParent.Children.FirstOrDefault(i => i.Name.Equals(part, comp));
                 if (nextParent == null)

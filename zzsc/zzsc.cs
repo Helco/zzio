@@ -140,7 +140,7 @@ namespace zzsc
                 return;
             }
 
-            string command = args[0].ToLower();
+            string command = args[0].ToLowerInvariant();
             string inputPath = args[1];
             string outputPath = args[2];
 

@@ -72,7 +72,7 @@ namespace zzre.imgui
 
         private void HandleScroll(float scroll)
         {
-            distance = distance * MathF.Pow(2.0f, -scroll * 0.1f);
+            distance *= MathF.Pow(2.0f, -scroll * 0.1f);
             UpdateCamera();
         }
 

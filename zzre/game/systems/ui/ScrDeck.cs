@@ -221,7 +221,7 @@ namespace zzre.game.systems.ui
                         .With(preload.Spl000)
                         .WithTooltip(UIDSpellSlotNames[spellI])
                         .Build();
-                    nextElementId = nextElementId + 1;
+                    nextElementId += 1;
 
                     var spellReq = fairy == null ? default : fairy.spellReqs[spellI];
                     if (spellReq != default)

@@ -20,7 +20,7 @@ namespace zzmaps
     {
         private readonly int globalMinZoomLevel = int.MinValue;
         private readonly int globalMaxZoomLevel = int.MaxValue;
-        private readonly bool ignorePPU = false;
+        private readonly bool ignorePPU;
 
         public float ExtraBorder { get; } = 0f;
         public float BasePixelsPerUnit { get; } = 1f;

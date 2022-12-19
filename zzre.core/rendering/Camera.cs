@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Veldrid;
 using zzio;
 
@@ -11,7 +12,7 @@ namespace zzre.rendering
         private readonly UniformBuffer<Matrix4x4> projection;
         private readonly ResettableLazyValue<Matrix4x4> invProjection;
         private float aspect = 1.0f;
-        private float vfov = 60.0f * 3.141592653f / 180.0f;
+        private float vfov = 60.0f * MathF.PI / 180.0f;
         private float nearPlane = 0.1f;
         private float farPlane = 500.0f;
 
