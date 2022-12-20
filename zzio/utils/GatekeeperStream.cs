@@ -35,10 +35,7 @@ namespace zzio
 
         public override long Position
         {
-            get
-            {
-                return parent.Position;
-            }
+            get => parent.Position;
             set
             {
                 if (wasClosed)
@@ -49,10 +46,7 @@ namespace zzio
 
         public override int WriteTimeout
         {
-            get
-            {
-                return parent.WriteTimeout;
-            }
+            get => parent.WriteTimeout;
             set
             {
                 if (wasClosed)

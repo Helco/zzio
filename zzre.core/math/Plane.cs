@@ -10,12 +10,9 @@ namespace zzre
         public Vector3 Normal
         {
             get => normal;
-            set
-            {
-                normal = Math.Abs(value.LengthSquared() - 1.0f) > 0.00001f
-                    ? Vector3.Normalize(value)
-                    : value;
-            }
+            set => normal = Math.Abs(value.LengthSquared() - 1.0f) > 0.00001f
+                ? Vector3.Normalize(value)
+                : value;
         }
 
         public float Distance { get; set; }

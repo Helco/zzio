@@ -24,7 +24,8 @@ namespace zzre.core.assets
             if (stream == null)
                 throw new FileNotFoundException("Could not find embedded ForkAwesome font");
             var data = new byte[stream.Length];
-            stream.Read(data, 0, data.Length);
+            if (stream.Read(data, 0, data.Length) != data.Length)
+                throw new EndOfStreamException("Could not read ForkAwesome font from resources");
             stream.Close();
 
 

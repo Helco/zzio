@@ -55,10 +55,7 @@ namespace zzio
 
         public override long Position
         {
-            get
-            {
-                return length - left;
-            }
+            get => length - left;
             set
             {
                 long clamped = Math.Max(0, Math.Min(value, length));
@@ -73,14 +70,8 @@ namespace zzio
 
         public override int WriteTimeout
         {
-            get
-            {
-                return parent.WriteTimeout;
-            }
-            set
-            {
-                parent.WriteTimeout = value;
-            }
+            get => parent.WriteTimeout;
+            set => parent.WriteTimeout = value;
         }
 
         public override void Flush()

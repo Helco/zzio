@@ -15,7 +15,7 @@ namespace zzio.tests.utils
             try
             {
                 stream.Write(buffer, 0, 1);
-                stream.Read(buffer, 0, 1);
+                Assert.AreEqual(1, stream.Read(buffer, 0, 1));
             }
             catch (Exception)
             {
