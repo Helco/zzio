@@ -2,42 +2,41 @@
 using DefaultEcs.System;
 using DefaultEcs.Command;
 
-namespace zzre.game.systems
+namespace zzre.game.systems;
+
+public partial class DialogFadeOut : AEntitySetSystem<float>
 {
-    public partial class DialogFadeOut : AEntitySetSystem<float>
+    private EntityCommandRecorder recorder;
+    private IDisposable setStateDisposable;
+
+    public DialogFadeOut(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
-        private EntityCommandRecorder recorder;
-        private IDisposable setStateDisposable;
+        recorder = diContainer.GetTag<EntityCommandRecorder>();
+        setStateDisposable = World.SubscribeComponentChanged<components.DialogState>(HandleState);
+    }
 
-        public DialogFadeOut(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
+    public override void Dispose()
+    {
+        base.Dispose();
+        setStateDisposable.Dispose();
+    }
+
+    private void HandleState(in DefaultEcs.Entity entity, in components.DialogState oldValue, in components.DialogState newValue)
+    {
+        if (newValue == components.DialogState.FadeOut)
         {
-            recorder = diContainer.GetTag<EntityCommandRecorder>();
-            setStateDisposable = World.SubscribeComponentChanged<components.DialogState>(HandleState);
+            World.Publish(new messages.DialogResetUI(entity));
+            entity.Get<components.DialogCommonUI>().Letterbox.Set(components.ui.Fade.StdOut);
         }
+    }
 
-        public override void Dispose()
-        {
-            base.Dispose();
-            setStateDisposable.Dispose();
-        }
+    [WithPredicate]
+    private bool IsInFadeOut(in components.DialogState state) => state == components.DialogState.FadeOut;
 
-        private void HandleState(in DefaultEcs.Entity entity, in components.DialogState oldValue, in components.DialogState newValue)
-        {
-            if (newValue == components.DialogState.FadeOut)
-            {
-                World.Publish(new messages.DialogResetUI(entity));
-                entity.Get<components.DialogCommonUI>().Letterbox.Set(components.ui.Fade.StdOut);
-            }
-        }
-
-        [WithPredicate]
-        private bool IsInFadeOut(in components.DialogState state) => state == components.DialogState.FadeOut;
-
-        [Update]
-        private void Update(in DefaultEcs.Entity entity, in components.DialogCommonUI commonUI)
-        {
-            if (!commonUI.Letterbox.Has<components.ui.Fade>())
-                recorder.Record(entity).Dispose();
-        }
+    [Update]
+    private void Update(in DefaultEcs.Entity entity, in components.DialogCommonUI commonUI)
+    {
+        if (!commonUI.Letterbox.Has<components.ui.Fade>())
+            recorder.Record(entity).Dispose();
     }
 }

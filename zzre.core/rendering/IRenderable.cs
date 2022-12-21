@@ -1,9 +1,8 @@
 ﻿using Veldrid;
 
-namespace zzre.rendering
+namespace zzre.rendering;
+
+public interface IRenderable
 {
-    public interface IRenderable
-    {
-        void Render(CommandList cl);
-    }
+    void Render(CommandList cl);
 }

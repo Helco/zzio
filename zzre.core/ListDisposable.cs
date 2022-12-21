@@ -2,22 +2,21 @@
 using System.Collections.Generic;
 using zzio;
 
-namespace zzre
+namespace zzre;
+
+public class ListDisposable : BaseDisposable
 {
-    public class ListDisposable : BaseDisposable
+    private readonly List<WeakReference<IDisposable>> disposables = new();
+
+    protected override void DisposeManaged()
     {
-        private readonly List<WeakReference<IDisposable>> disposables = new();
-
-        protected override void DisposeManaged()
+        foreach (var weakDisposable in disposables)
         {
-            foreach (var weakDisposable in disposables)
-            {
-                if (weakDisposable.TryGetTarget(out var disposable))
-                    disposable.Dispose();
-            }
-            disposables.Clear();
+            if (weakDisposable.TryGetTarget(out var disposable))
+                disposable.Dispose();
         }
-
-        protected void AddDisposable(IDisposable disposable) => disposables.Add(new WeakReference<IDisposable>(disposable));
+        disposables.Clear();
     }
+
+    protected void AddDisposable(IDisposable disposable) => disposables.Add(new WeakReference<IDisposable>(disposable));
 }

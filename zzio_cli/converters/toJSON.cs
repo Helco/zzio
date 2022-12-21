@@ -4,157 +4,156 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 
-namespace zzio.cli.converters
+namespace zzio.cli.converters;
+
+internal static class Utils
 {
-    internal static class Utils
+    public static string convertToJSON(object obj, IContractResolver resolver = null)
     {
-        public static string convertToJSON(object obj, IContractResolver resolver = null)
+        return JsonConvert.SerializeObject(obj, new JsonSerializerSettings
         {
-            return JsonConvert.SerializeObject(obj, new JsonSerializerSettings
-            {
-                ObjectCreationHandling = ObjectCreationHandling.Replace,
-                Formatting = Formatting.Indented,
-                Converters = new JsonConverter[] {
-                            new Newtonsoft.Json.Converters.StringEnumConverter()
-                        },
-                ContractResolver = resolver
-            });
-        }
+            ObjectCreationHandling = ObjectCreationHandling.Replace,
+            Formatting = Formatting.Indented,
+            Converters = new JsonConverter[] {
+                        new Newtonsoft.Json.Converters.StringEnumConverter()
+                    },
+            ContractResolver = resolver
+        });
     }
+}
 
-    public class AEDtoJSON : IConverter
+public class AEDtoJSON : IConverter
+{
+    public FileType TypeFrom => FileType.AED;
+    public FileType TypeTo => FileType.JSON;
+    public void convert(string name, ParameterParser args, Stream from, Stream to)
     {
-        public FileType TypeFrom => FileType.AED;
-        public FileType TypeTo => FileType.JSON;
-        public void convert(string name, ParameterParser args, Stream from, Stream to)
-        {
-            var obj = ActorExDescription.ReadNew(from);
-            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
-            to.Write(buffer, 0, buffer.Length);
-        }
+        var obj = ActorExDescription.ReadNew(from);
+        byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+        to.Write(buffer, 0, buffer.Length);
     }
+}
 
-    public class CFG_VarstoJSON : IConverter
+public class CFG_VarstoJSON : IConverter
+{
+    public FileType TypeFrom => FileType.CFG_Vars;
+    public FileType TypeTo => FileType.JSON;
+    public void convert(string name, ParameterParser args, Stream from, Stream to)
     {
-        public FileType TypeFrom => FileType.CFG_Vars;
-        public FileType TypeTo => FileType.JSON;
-        public void convert(string name, ParameterParser args, Stream from, Stream to)
-        {
-            var obj = VarConfig.ReadNew(from);
-            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
-            to.Write(buffer, 0, buffer.Length);
-        }
+        var obj = VarConfig.ReadNew(from);
+        byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+        to.Write(buffer, 0, buffer.Length);
     }
+}
 
-    public class CFG_MaptoJSON : IConverter
+public class CFG_MaptoJSON : IConverter
+{
+    public FileType TypeFrom => FileType.CFG_Map;
+    public FileType TypeTo => FileType.JSON;
+    public void convert(string name, ParameterParser args, Stream from, Stream to)
     {
-        public FileType TypeFrom => FileType.CFG_Map;
-        public FileType TypeTo => FileType.JSON;
-        public void convert(string name, ParameterParser args, Stream from, Stream to)
-        {
-            var obj = MapMarker.ReadFile(from);
-            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
-            to.Write(buffer, 0, buffer.Length);
-        }
+        var obj = MapMarker.ReadFile(from);
+        byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+        to.Write(buffer, 0, buffer.Length);
     }
+}
 
-    public class EDtoJSON : IConverter
+public class EDtoJSON : IConverter
+{
+    public FileType TypeFrom => FileType.ED;
+    public FileType TypeTo => FileType.JSON;
+    public void convert(string name, ParameterParser args, Stream from, Stream to)
     {
-        public FileType TypeFrom => FileType.ED;
-        public FileType TypeTo => FileType.JSON;
-        public void convert(string name, ParameterParser args, Stream from, Stream to)
-        {
-            effect.EffectCombiner obj = new();
-            obj.Read(from);
-            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
-            to.Write(buffer, 0, buffer.Length);
-        }
+        effect.EffectCombiner obj = new();
+        obj.Read(from);
+        byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+        to.Write(buffer, 0, buffer.Length);
     }
+}
 
-    public class FBS_IndextoJSON : IConverter
+public class FBS_IndextoJSON : IConverter
+{
+    public FileType TypeFrom => FileType.FBS_Index;
+    public FileType TypeTo => FileType.JSON;
+    public void convert(string name, ParameterParser args, Stream from, Stream to)
     {
-        public FileType TypeFrom => FileType.FBS_Index;
-        public FileType TypeTo => FileType.JSON;
-        public void convert(string name, ParameterParser args, Stream from, Stream to)
-        {
-            var obj = new zzio.db.IndexTable();
-            obj.Read(from);
-            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
-            to.Write(buffer, 0, buffer.Length);
-        }
+        var obj = new zzio.db.IndexTable();
+        obj.Read(from);
+        byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+        to.Write(buffer, 0, buffer.Length);
     }
+}
 
-    public class FBS_DatatoJSON : IConverter
+public class FBS_DatatoJSON : IConverter
+{
+    public FileType TypeFrom => FileType.FBS_Data;
+    public FileType TypeTo => FileType.JSON;
+    public void convert(string name, ParameterParser args, Stream from, Stream to)
     {
-        public FileType TypeFrom => FileType.FBS_Data;
-        public FileType TypeTo => FileType.JSON;
-        public void convert(string name, ParameterParser args, Stream from, Stream to)
-        {
-            var obj = new zzio.db.Table();
-            obj.Read(from);
-            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
-            to.Write(buffer, 0, buffer.Length);
-        }
+        var obj = new zzio.db.Table();
+        obj.Read(from);
+        byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+        to.Write(buffer, 0, buffer.Length);
     }
+}
 
-    public class RWBSContractResolver : DefaultContractResolver
+public class RWBSContractResolver : DefaultContractResolver
+{
+    protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
     {
-        protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
-        {
-            JsonProperty property = base.CreateProperty(member, memberSerialization);
-            if (property.DeclaringType == typeof(rwbs.Section) && property.PropertyName == "parent")
-                property.ShouldSerialize = (o) => false;
-            return property;
-        }
+        JsonProperty property = base.CreateProperty(member, memberSerialization);
+        if (property.DeclaringType == typeof(rwbs.Section) && property.PropertyName == "parent")
+            property.ShouldSerialize = (o) => false;
+        return property;
     }
+}
 
-    public class RWBS_DFFtoJSON : IConverter
+public class RWBS_DFFtoJSON : IConverter
+{
+    public FileType TypeFrom => FileType.RWBS_DFF;
+    public FileType TypeTo => FileType.JSON;
+    public void convert(string name, ParameterParser args, Stream from, Stream to)
     {
-        public FileType TypeFrom => FileType.RWBS_DFF;
-        public FileType TypeTo => FileType.JSON;
-        public void convert(string name, ParameterParser args, Stream from, Stream to)
-        {
-            var obj = zzio.rwbs.Section.ReadNew(from);
-            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj, new RWBSContractResolver()));
-            to.Write(buffer, 0, buffer.Length);
-        }
+        var obj = zzio.rwbs.Section.ReadNew(from);
+        byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj, new RWBSContractResolver()));
+        to.Write(buffer, 0, buffer.Length);
     }
+}
 
-    public class RWBS_BSPtoJSON : IConverter
+public class RWBS_BSPtoJSON : IConverter
+{
+    public FileType TypeFrom => FileType.RWBS_BSP;
+    public FileType TypeTo => FileType.JSON;
+    public void convert(string name, ParameterParser args, Stream from, Stream to)
     {
-        public FileType TypeFrom => FileType.RWBS_BSP;
-        public FileType TypeTo => FileType.JSON;
-        public void convert(string name, ParameterParser args, Stream from, Stream to)
-        {
-            var obj = zzio.rwbs.Section.ReadNew(from);
-            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj, new RWBSContractResolver()));
-            to.Write(buffer, 0, buffer.Length);
-        }
+        var obj = zzio.rwbs.Section.ReadNew(from);
+        byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj, new RWBSContractResolver()));
+        to.Write(buffer, 0, buffer.Length);
     }
+}
 
 
-    public class SCNtoJSON : IConverter
+public class SCNtoJSON : IConverter
+{
+    public FileType TypeFrom => FileType.SCN;
+    public FileType TypeTo => FileType.JSON;
+    public void convert(string name, ParameterParser args, Stream from, Stream to)
     {
-        public FileType TypeFrom => FileType.SCN;
-        public FileType TypeTo => FileType.JSON;
-        public void convert(string name, ParameterParser args, Stream from, Stream to)
-        {
-            var obj = new scn.Scene();
-            obj.Read(from);
-            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
-            to.Write(buffer, 0, buffer.Length);
-        }
+        var obj = new scn.Scene();
+        obj.Read(from);
+        byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+        to.Write(buffer, 0, buffer.Length);
     }
+}
 
-    public class SKAtoJSON : IConverter
+public class SKAtoJSON : IConverter
+{
+    public FileType TypeFrom => FileType.SKA;
+    public FileType TypeTo => FileType.JSON;
+    public void convert(string name, ParameterParser args, Stream from, Stream to)
     {
-        public FileType TypeFrom => FileType.SKA;
-        public FileType TypeTo => FileType.JSON;
-        public void convert(string name, ParameterParser args, Stream from, Stream to)
-        {
-            var obj = SkeletalAnimation.ReadNew(from);
-            byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
-            to.Write(buffer, 0, buffer.Length);
-        }
+        var obj = SkeletalAnimation.ReadNew(from);
+        byte[] buffer = Encoding.Default.GetBytes(Utils.convertToJSON(obj));
+        to.Write(buffer, 0, buffer.Length);
     }
 }

@@ -10,7 +10,7 @@ Apart from replacing the original engine (at some point), this project contains 
 
 For developers who would like to contribute to this project:
 
-  - Install a recent [.NET 6 SDK](https://dotnet.microsoft.com/en-us/download)
+  - Install a recent [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download)
   - Run `./get-dependencies.sh` in the root repository folder
   - Now you should be able to build `zzio.sln` using the `dotnet` CLI or your favorite IDE
 

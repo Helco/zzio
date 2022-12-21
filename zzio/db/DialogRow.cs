@@ -1,13 +1,12 @@
-namespace zzio.db
+namespace zzio.db;
+
+public class DialogRow : MappedRow
 {
-    public class DialogRow : MappedRow
-    {
-        public DialogRow(MappedDB mappedDB, Row row) : base(ModuleType.Dialog, mappedDB, row) { }
+    public DialogRow(MappedDB mappedDB, Row row) : base(ModuleType.Dialog, mappedDB, row) { }
 
-        public string Text => row.cells[0].String;
+    public string Text => row.cells[0].String;
 
-        public int Npc => row.cells[1].Integer;
+    public int Npc => row.cells[1].Integer;
 
-        public string Voice => row.cells[2].String;
-    }
+    public string Voice => row.cells[2].String;
 }

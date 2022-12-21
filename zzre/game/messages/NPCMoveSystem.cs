@@ -1,25 +1,24 @@
 ﻿using DefaultEcs;
 
-namespace zzre.game.messages
+namespace zzre.game.messages;
+
+public readonly struct NPCMoveSystem
 {
-    public readonly struct NPCMoveSystem
+    public enum Mode
     {
-        public enum Mode
-        {
-            FarthestFromPlayer,
-            LuckyNearest,
-            Random
-        }
+        FarthestFromPlayer,
+        LuckyNearest,
+        Random
+    }
 
-        public readonly DefaultEcs.Entity Entity;
-        public readonly Mode WaypointMode;
-        public readonly int WaypointCategory;
+    public readonly DefaultEcs.Entity Entity;
+    public readonly Mode WaypointMode;
+    public readonly int WaypointCategory;
 
-        public NPCMoveSystem(Entity entity, Mode waypointMode, int waypointCategory)
-        {
-            Entity = entity;
-            WaypointMode = waypointMode;
-            WaypointCategory = waypointCategory;
-        }
+    public NPCMoveSystem(Entity entity, Mode waypointMode, int waypointCategory)
+    {
+        Entity = entity;
+        WaypointMode = waypointMode;
+        WaypointCategory = waypointCategory;
     }
 }

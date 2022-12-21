@@ -1,113 +1,112 @@
 ﻿using System.Runtime.InteropServices;
 using Veldrid;
 
-namespace zzre.rendering
+namespace zzre.rendering;
+
+public abstract class UniformBinding : BaseBinding
 {
-    public abstract class UniformBinding : BaseBinding
+    protected abstract uint SizeInBytes { get; }
+
+    private DeviceBuffer? buffer; // if set, this buffer is owned
+    private DeviceBufferRange? range = null;
+
+    public bool OwnsBuffer => buffer != null || range?.Buffer == null;
+
+    public DeviceBuffer Buffer
     {
-        protected abstract uint SizeInBytes { get; }
-
-        private DeviceBuffer? buffer; // if set, this buffer is owned
-        private DeviceBufferRange? range = null;
-
-        public bool OwnsBuffer => buffer != null || range?.Buffer == null;
-
-        public DeviceBuffer Buffer
+        get
         {
-            get
-            {
-                if (range?.Buffer != null)
-                    return range?.Buffer!;
-                if (buffer != null)
-                    return buffer;
-                buffer = Parent.Device.ResourceFactory.CreateBuffer(new BufferDescription(SizeInBytes, BufferUsage.UniformBuffer));
-                buffer.Name = $"Uniforms {GetHashCode()}";
-                range = null;
+            if (range?.Buffer != null)
+                return range?.Buffer!;
+            if (buffer != null)
                 return buffer;
-            }
-            set
-            {
-                buffer?.Dispose();
-                buffer = null;
-                range = new DeviceBufferRange(value, 0, SizeInBytes);
-                isBindingDirty = true;
-            }
+            buffer = Parent.Device.ResourceFactory.CreateBuffer(new BufferDescription(SizeInBytes, BufferUsage.UniformBuffer));
+            buffer.Name = $"Uniforms {GetHashCode()}";
+            range = null;
+            return buffer;
         }
-
-        public DeviceBufferRange BufferRange
+        set
         {
-            get => range ?? new DeviceBufferRange(Buffer, 0, SizeInBytes);
-            set
-            {
-                if (buffer != value.Buffer)
-                {
-                    buffer?.Dispose();
-                    buffer = null;
-                    isBindingDirty = true;
-                }
-                range = value;
-            }
-        }
-
-        protected void UseOwnBuffer()
-        {
-            if (!OwnsBuffer)
-            {
-                buffer = null;
-                range = null;
-            }
-        }
-
-        public override BindableResource? Resource => range as BindableResource ?? Buffer;
-
-        protected UniformBinding(IMaterial parent) : base(parent) { }
-
-        protected override void DisposeManaged()
-        {
-            base.DisposeManaged();
             buffer?.Dispose();
+            buffer = null;
+            range = new DeviceBufferRange(value, 0, SizeInBytes);
+            isBindingDirty = true;
         }
     }
 
-    public class UniformBinding<T> : UniformBinding where T : unmanaged
+    public DeviceBufferRange BufferRange
     {
-        protected override uint SizeInBytes => (uint)((Marshal.SizeOf<T>() + 15) / 16 * 16); // has to be aligned
-
-        private T value = default;
-        private bool isContentDirty = true;
-
-        public ref T Ref
+        get => range ?? new DeviceBufferRange(Buffer, 0, SizeInBytes);
+        set
         {
-            get
+            if (buffer != value.Buffer)
             {
-                UseOwnBuffer();
-                isContentDirty = true;
-                return ref value;
+                buffer?.Dispose();
+                buffer = null;
+                isBindingDirty = true;
             }
+            range = value;
         }
+    }
 
-        public T Value
+    protected void UseOwnBuffer()
+    {
+        if (!OwnsBuffer)
         {
-            get => value;
-            set => Ref = value;
+            buffer = null;
+            range = null;
         }
+    }
 
-        public UniformBinding(IMaterial material) : base(material) { }
+    public override BindableResource? Resource => range as BindableResource ?? Buffer;
 
-        public void Update()
+    protected UniformBinding(IMaterial parent) : base(parent) { }
+
+    protected override void DisposeManaged()
+    {
+        base.DisposeManaged();
+        buffer?.Dispose();
+    }
+}
+
+public class UniformBinding<T> : UniformBinding where T : unmanaged
+{
+    protected override uint SizeInBytes => (uint)((Marshal.SizeOf<T>() + 15) / 16 * 16); // has to be aligned
+
+    private T value = default;
+    private bool isContentDirty = true;
+
+    public ref T Ref
+    {
+        get
         {
-            if (!isContentDirty || !OwnsBuffer)
-                return;
-            Parent.Device.UpdateBuffer(BufferRange.Buffer, BufferRange.Offset, ref value);
-            isContentDirty = false;
+            UseOwnBuffer();
+            isContentDirty = true;
+            return ref value;
         }
+    }
 
-        public override void Update(CommandList cl)
-        {
-            if (!isContentDirty || !OwnsBuffer)
-                return;
-            cl.UpdateBuffer(BufferRange.Buffer, BufferRange.Offset, ref value);
-            isContentDirty = false;
-        }
+    public T Value
+    {
+        get => value;
+        set => Ref = value;
+    }
+
+    public UniformBinding(IMaterial material) : base(material) { }
+
+    public void Update()
+    {
+        if (!isContentDirty || !OwnsBuffer)
+            return;
+        Parent.Device.UpdateBuffer(BufferRange.Buffer, BufferRange.Offset, ref value);
+        isContentDirty = false;
+    }
+
+    public override void Update(CommandList cl)
+    {
+        if (!isContentDirty || !OwnsBuffer)
+            return;
+        cl.UpdateBuffer(BufferRange.Buffer, BufferRange.Offset, ref value);
+        isContentDirty = false;
     }
 }

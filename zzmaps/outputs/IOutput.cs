@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks.Dataflow;
 
-namespace zzmaps
+namespace zzmaps;
+
+internal interface IOutput
 {
-    internal interface IOutput
-    {
-        ITargetBlock<EncodedSceneTile> CreateTileTarget(ExecutionDataflowBlockOptions options, ProgressStep progressStep);
-        ITargetBlock<BuiltSceneMetadata> CreateMetaTarget(ExecutionDataflowBlockOptions options, ProgressStep progressStep);
-    }
+    ITargetBlock<EncodedSceneTile> CreateTileTarget(ExecutionDataflowBlockOptions options, ProgressStep progressStep);
+    ITargetBlock<BuiltSceneMetadata> CreateMetaTarget(ExecutionDataflowBlockOptions options, ProgressStep progressStep);
 }

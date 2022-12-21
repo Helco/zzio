@@ -3,132 +3,131 @@ using System.Numerics;
 using Veldrid;
 using zzio;
 
-namespace zzre.rendering
+namespace zzre.rendering;
+
+public class LocationBuffer : BaseDisposable
 {
-    public class LocationBuffer : BaseDisposable
+    private const uint MatrixSize = 4 * 4 * sizeof(float);
+    private const uint MinimalMatrixStride = MatrixSize;
+
+    private readonly uint matrixStride;
+    private readonly int matrixStrideAsMultiple;
+    private readonly WeakReference<Location>?[] locations;
+    private readonly bool[] isInverted;
+    private readonly Matrix4x4[] matrices;
+    private int nextFreeIndex = 0;
+    private readonly DeviceBuffer buffer;
+
+    public int Capacity => matrices.Length;
+    public int Count { get; private set; } = 0;
+    public bool IsFull => Capacity == Count;
+
+    public LocationBuffer(GraphicsDevice device, int capacity = 1024)
     {
-        private const uint MatrixSize = 4 * 4 * sizeof(float);
-        private const uint MinimalMatrixStride = MatrixSize;
+        matrixStride = Math.Max(MinimalMatrixStride, device.UniformBufferMinOffsetAlignment);
+        if (matrixStride % MatrixSize != 0)
+            throw new NotSupportedException("UniformBufferMinOffsetAlignment must be a multiple of Matrix4x4 size");
+        matrixStrideAsMultiple = (int)(matrixStride / MatrixSize);
 
-        private readonly uint matrixStride;
-        private readonly int matrixStrideAsMultiple;
-        private readonly WeakReference<Location>?[] locations;
-        private readonly bool[] isInverted;
-        private readonly Matrix4x4[] matrices;
-        private int nextFreeIndex = 0;
-        private readonly DeviceBuffer buffer;
+        locations = new WeakReference<Location>?[capacity];
+        isInverted = new bool[capacity];
+        matrices = new Matrix4x4[capacity * matrixStrideAsMultiple];
+        buffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
+            (uint)capacity * matrixStride, BufferUsage.UniformBuffer));
+        buffer.Name = $"LocationBuffer {GetHashCode()}";
+    }
 
-        public int Capacity => matrices.Length;
-        public int Count { get; private set; } = 0;
-        public bool IsFull => Capacity == Count;
+    protected override void DisposeManaged()
+    {
+        base.DisposeManaged();
+        buffer.Dispose();
+    }
 
-        public LocationBuffer(GraphicsDevice device, int capacity = 1024)
+    public DeviceBufferRange Add(Location location, bool inverted = false)
+    {
+        if (IsFull && !FindSlotToCleanup())
+            throw new InvalidOperationException("LocationBuffer has no available slot free");
+
+        Count++;
+        int usedIndex = nextFreeIndex++;
+        locations[usedIndex] = new WeakReference<Location>(location);
+        isInverted[usedIndex] = inverted;
+        if (!IsFull)
         {
-            matrixStride = Math.Max(MinimalMatrixStride, device.UniformBufferMinOffsetAlignment);
-            if (matrixStride % MatrixSize != 0)
-                throw new NotSupportedException("UniformBufferMinOffsetAlignment must be a multiple of Matrix4x4 size");
-            matrixStrideAsMultiple = (int)(matrixStride / MatrixSize);
-
-            locations = new WeakReference<Location>?[capacity];
-            isInverted = new bool[capacity];
-            matrices = new Matrix4x4[capacity * matrixStrideAsMultiple];
-            buffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
-                (uint)capacity * matrixStride, BufferUsage.UniformBuffer));
-            buffer.Name = $"LocationBuffer {GetHashCode()}";
+            while (locations[nextFreeIndex]?.TryGetTarget(out _) ?? false)
+                nextFreeIndex++;
+            if (locations[nextFreeIndex] != null)
+                Remove(nextFreeIndex);
         }
+        else
+            nextFreeIndex = Capacity;
 
-        protected override void DisposeManaged()
-        {
-            base.DisposeManaged();
-            buffer.Dispose();
-        }
+        return new DeviceBufferRange(buffer, (uint)usedIndex * matrixStride, MatrixSize);
+    }
 
-        public DeviceBufferRange Add(Location location, bool inverted = false)
-        {
-            if (IsFull && !FindSlotToCleanup())
-                throw new InvalidOperationException("LocationBuffer has no available slot free");
+    public void Remove(DeviceBufferRange range) => Remove((int)(range.Offset / matrixStride));
 
-            Count++;
-            int usedIndex = nextFreeIndex++;
-            locations[usedIndex] = new WeakReference<Location>(location);
-            isInverted[usedIndex] = inverted;
-            if (!IsFull)
-            {
-                while (locations[nextFreeIndex]?.TryGetTarget(out _) ?? false)
-                    nextFreeIndex++;
-                if (locations[nextFreeIndex] != null)
-                    Remove(nextFreeIndex);
-            }
-            else
-                nextFreeIndex = Capacity;
-
-            return new DeviceBufferRange(buffer, (uint)usedIndex * matrixStride, MatrixSize);
-        }
-
-        public void Remove(DeviceBufferRange range) => Remove((int)(range.Offset / matrixStride));
-
-        private void Remove(int freeIndex)
-        {
-            if (locations[freeIndex] == null)
-                return;
-            Count--;
-            locations[freeIndex] = null;
-            nextFreeIndex = Math.Min(nextFreeIndex, freeIndex);
+    private void Remove(int freeIndex)
+    {
+        if (locations[freeIndex] == null)
+            return;
+        Count--;
+        locations[freeIndex] = null;
+        nextFreeIndex = Math.Min(nextFreeIndex, freeIndex);
 #if DEBUG
-            matrices[freeIndex * matrixStrideAsMultiple] = new Matrix4x4() * float.NaN; // as canary value
+        matrices[freeIndex * matrixStrideAsMultiple] = new Matrix4x4() * float.NaN; // as canary value
 #endif
-        }
+    }
 
-        private bool FindSlotToCleanup()
+    private bool FindSlotToCleanup()
+    {
+        for (int i = 0; i < Capacity; i++)
         {
-            for (int i = 0; i < Capacity; i++)
+            if (!(locations[i]?.TryGetTarget(out _) ?? false))
             {
-                if (!(locations[i]?.TryGetTarget(out _) ?? false))
-                {
-                    Remove(i);
-                    return true;
-                }
+                Remove(i);
+                return true;
             }
-            return false;
         }
+        return false;
+    }
 
-        private (int min, int max) UpdateMatrixArray()
+    private (int min, int max) UpdateMatrixArray()
+    {
+        int minIndex = -1, maxIndex = -1;
+        int found = 0;
+        for (int i = 0; found < Count && i < Capacity; i++)
         {
-            int minIndex = -1, maxIndex = -1;
-            int found = 0;
-            for (int i = 0; found < Count && i < Capacity; i++)
+            Location? location = null;
+            if (!(locations[i]?.TryGetTarget(out location) ?? false))
             {
-                Location? location = null;
-                if (!(locations[i]?.TryGetTarget(out location) ?? false))
-                {
-                    Remove(i);
-                    continue;
-                }
-                found++;
-                if (minIndex < 0)
-                    minIndex = i;
-                maxIndex = i;
-                matrices[i * matrixStrideAsMultiple] = isInverted[i]
-                    ? location!.WorldToLocal
-                    : location!.LocalToWorld;
+                Remove(i);
+                continue;
             }
-            return (minIndex, maxIndex);
+            found++;
+            if (minIndex < 0)
+                minIndex = i;
+            maxIndex = i;
+            matrices[i * matrixStrideAsMultiple] = isInverted[i]
+                ? location!.WorldToLocal
+                : location!.LocalToWorld;
         }
+        return (minIndex, maxIndex);
+    }
 
-        public void Update(CommandList cl)
-        {
-            var (minI, maxI) = UpdateMatrixArray();
-            if (minI < 0 || maxI < 0)
-                return;
-            cl.UpdateBuffer(buffer, (uint)minI * matrixStride, ref matrices[0], (uint)(maxI - minI + 1) * matrixStride);
-        }
+    public void Update(CommandList cl)
+    {
+        var (minI, maxI) = UpdateMatrixArray();
+        if (minI < 0 || maxI < 0)
+            return;
+        cl.UpdateBuffer(buffer, (uint)minI * matrixStride, ref matrices[0], (uint)(maxI - minI + 1) * matrixStride);
+    }
 
-        public void Update(GraphicsDevice device)
-        {
-            var (minI, maxI) = UpdateMatrixArray();
-            if (minI < 0 || maxI < 0)
-                return;
-            device.UpdateBuffer(buffer, (uint)minI * matrixStride, ref matrices[0], (uint)(maxI - minI + 1) * matrixStride);
-        }
+    public void Update(GraphicsDevice device)
+    {
+        var (minI, maxI) = UpdateMatrixArray();
+        if (minI < 0 || maxI < 0)
+            return;
+        device.UpdateBuffer(buffer, (uint)minI * matrixStride, ref matrices[0], (uint)(maxI - minI + 1) * matrixStride);
     }
 }

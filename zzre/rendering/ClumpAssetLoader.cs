@@ -2,36 +2,35 @@
 using System.Diagnostics.CodeAnalysis;
 using zzio.vfs;
 
-namespace zzre.rendering
+namespace zzre.rendering;
+
+public class ClumpAssetLoader : IAssetLoader<ClumpBuffers>
 {
-    public class ClumpAssetLoader : IAssetLoader<ClumpBuffers>
+    public ITagContainer DIContainer { get; }
+
+    public ClumpAssetLoader(ITagContainer diContainer)
     {
-        public ITagContainer DIContainer { get; }
-
-        public ClumpAssetLoader(ITagContainer diContainer)
-        {
-            DIContainer = diContainer;
-        }
-
-        public void Clear() { }
-
-        public bool TryLoad(IResource resource, [NotNullWhen(true)] out ClumpBuffers? asset)
-        {
-            try
-            {
-                asset = new ClumpBuffers(DIContainer, resource);
-                return true;
-            }
-            catch (Exception)
-            {
-                asset = null;
-                return false;
-            }
-        }
+        DIContainer = diContainer;
     }
 
-    public class CachedClumpAssetLoader : CachedAssetLoader<ClumpBuffers>
+    public void Clear() { }
+
+    public bool TryLoad(IResource resource, [NotNullWhen(true)] out ClumpBuffers? asset)
     {
-        public CachedClumpAssetLoader(ITagContainer diContainer) : base(new ClumpAssetLoader(diContainer)) { }
+        try
+        {
+            asset = new ClumpBuffers(DIContainer, resource);
+            return true;
+        }
+        catch (Exception)
+        {
+            asset = null;
+            return false;
+        }
     }
+}
+
+public class CachedClumpAssetLoader : CachedAssetLoader<ClumpBuffers>
+{
+    public CachedClumpAssetLoader(ITagContainer diContainer) : base(new ClumpAssetLoader(diContainer)) { }
 }

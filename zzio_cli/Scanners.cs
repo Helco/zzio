@@ -2,185 +2,184 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace zzio.cli
+namespace zzio.cli;
+
+//first 4B * 36 + 20 = size
+public class ScannerSKA : IFileScanner
 {
-    //first 4B * 36 + 20 = size
-    public class ScannerSKA : IFileScanner
+    public FileType ScannerType => FileType.SKA;
+    public bool mightBe(Stream stream)
     {
-        public FileType ScannerType => FileType.SKA;
-        public bool mightBe(Stream stream)
-        {
-            if (stream.Length < 20)
-                return false;
-            using BinaryReader reader = new(stream);
-            return reader.ReadUInt32() * 36 + 20 == (uint)stream.Length;
-        }
+        if (stream.Length < 20)
+            return false;
+        using BinaryReader reader = new(stream);
+        return reader.ReadUInt32() * 36 + 20 == (uint)stream.Length;
     }
+}
 
-    //4B Magic 16 X X 1 4
-    public class ScannerDFF : IFileScanner
+//4B Magic 16 X X 1 4
+public class ScannerDFF : IFileScanner
+{
+    public FileType ScannerType => FileType.RWBS_DFF;
+    public bool mightBe(Stream stream)
     {
-        public FileType ScannerType => FileType.RWBS_DFF;
-        public bool mightBe(Stream stream)
-        {
-            if (stream.Length < 20)
-                return false;
-            using BinaryReader reader = new(stream);
-            uint first = reader.ReadUInt32();
-            stream.Seek(8, SeekOrigin.Current);
-            return first == 16 && reader.ReadUInt32() == 1 && reader.ReadUInt32() == 4;
-        }
+        if (stream.Length < 20)
+            return false;
+        using BinaryReader reader = new(stream);
+        uint first = reader.ReadUInt32();
+        stream.Seek(8, SeekOrigin.Current);
+        return first == 16 && reader.ReadUInt32() == 1 && reader.ReadUInt32() == 4;
     }
+}
 
-    //4B Magic 11 X X 1 52
-    public class ScannerBSP : IFileScanner
+//4B Magic 11 X X 1 52
+public class ScannerBSP : IFileScanner
+{
+    public FileType ScannerType => FileType.RWBS_BSP;
+    public bool mightBe(Stream stream)
     {
-        public FileType ScannerType => FileType.RWBS_BSP;
-        public bool mightBe(Stream stream)
-        {
-            if (stream.Length < 20)
-                return false;
-            using BinaryReader reader = new(stream);
-            uint first = reader.ReadUInt32();
-            stream.Seek(8, SeekOrigin.Current);
-            return first == 11 && reader.ReadUInt32() == 1 && reader.ReadUInt32() == 52;
-        }
+        if (stream.Length < 20)
+            return false;
+        using BinaryReader reader = new(stream);
+        uint first = reader.ReadUInt32();
+        stream.Seek(8, SeekOrigin.Current);
+        return first == 11 && reader.ReadUInt32() == 1 && reader.ReadUInt32() == 52;
     }
+}
 
-    //first 4B 17, first zstring "[Effect Combiner]"
-    public class ScannerED : IFileScanner
+//first 4B 17, first zstring "[Effect Combiner]"
+public class ScannerED : IFileScanner
+{
+    public FileType ScannerType => FileType.ED;
+    public bool mightBe(Stream stream)
     {
-        public FileType ScannerType => FileType.ED;
-        public bool mightBe(Stream stream)
-        {
-            if (stream.Length < 24)
-                return false;
-            using BinaryReader reader = new(stream);
-            int first = reader.ReadInt32();
-            if (first != 17)
-                return false;
-            return reader.ReadSizedString(first) == "[Effect Combiner]";
-        }
+        if (stream.Length < 24)
+            return false;
+        using BinaryReader reader = new(stream);
+        int first = reader.ReadInt32();
+        if (first != 17)
+            return false;
+        return reader.ReadSizedString(first) == "[Effect Combiner]";
     }
+}
 
-    //first 4B 11, first zstring [Scenefile]
-    public class ScannerSCN : IFileScanner
+//first 4B 11, first zstring [Scenefile]
+public class ScannerSCN : IFileScanner
+{
+    public FileType ScannerType => FileType.SCN;
+    public bool mightBe(Stream stream)
     {
-        public FileType ScannerType => FileType.SCN;
-        public bool mightBe(Stream stream)
-        {
-            if (stream.Length < 24)
-                return false;
-            using BinaryReader reader = new(stream);
-            int first = reader.ReadInt32();
-            if (first != 11)
-                return false;
-            return reader.ReadSizedString(first) == "[Scenefile]";
-        }
+        if (stream.Length < 24)
+            return false;
+        using BinaryReader reader = new(stream);
+        int first = reader.ReadInt32();
+        if (first != 11)
+            return false;
+        return reader.ReadSizedString(first) == "[Scenefile]";
     }
+}
 
-    //first 4B 24, first zstring [ActorExDescriptionFile]
-    public class ScannerAED : IFileScanner
+//first 4B 24, first zstring [ActorExDescriptionFile]
+public class ScannerAED : IFileScanner
+{
+    public FileType ScannerType => FileType.AED;
+    public bool mightBe(Stream stream)
     {
-        public FileType ScannerType => FileType.AED;
-        public bool mightBe(Stream stream)
-        {
-            if (stream.Length < 24)
-                return false;
-            using BinaryReader reader = new(stream);
-            int first = reader.ReadInt32();
-            if (first != 24)
-                return false;
-            return reader.ReadSizedString(first) == "[ActorExDescriptionFile]";
-        }
+        if (stream.Length < 24)
+            return false;
+        using BinaryReader reader = new(stream);
+        int first = reader.ReadInt32();
+        if (first != 24)
+            return false;
+        return reader.ReadSizedString(first) == "[ActorExDescriptionFile]";
     }
+}
 
-    //skip 19B, read byte sized, XORed 0x75 string with regex
-    public class ScannerCFG_Vars : IFileScanner
+//skip 19B, read byte sized, XORed 0x75 string with regex
+public class ScannerCFG_Vars : IFileScanner
+{
+    public FileType ScannerType => FileType.CFG_Vars;
+    public bool mightBe(Stream stream)
     {
-        public FileType ScannerType => FileType.CFG_Vars;
-        public bool mightBe(Stream stream)
-        {
-            if (stream.Length < 21)
-                return false;
-            using BinaryReader reader = new(stream);
-            stream.Seek(25, SeekOrigin.Current);
-            int size = reader.ReadByte();
-            if (stream.Length < 20 + size)
-                return false;
-            var str = new StringBuilder(reader.ReadSizedString(size));
-            for (int i = 0; i < size; i++)
-                str[i] = (char)(str[i] ^ 0x75);
-            return Regex.Match(str.ToString(), "^[A-Za-z0-9_]+$").Success;
-        }
+        if (stream.Length < 21)
+            return false;
+        using BinaryReader reader = new(stream);
+        stream.Seek(25, SeekOrigin.Current);
+        int size = reader.ReadByte();
+        if (stream.Length < 20 + size)
+            return false;
+        var str = new StringBuilder(reader.ReadSizedString(size));
+        for (int i = 0; i < size; i++)
+            str[i] = (char)(str[i] ^ 0x75);
+        return Regex.Match(str.ToString(), "^[A-Za-z0-9_]+$").Success;
     }
+}
 
-    //first 4B * 16 + 4 = size
-    public class ScannerCFG_Map : IFileScanner
+//first 4B * 16 + 4 = size
+public class ScannerCFG_Map : IFileScanner
+{
+    public FileType ScannerType => FileType.CFG_Map;
+    public bool mightBe(Stream stream)
     {
-        public FileType ScannerType => FileType.CFG_Map;
-        public bool mightBe(Stream stream)
-        {
-            if (stream.Length < 4)
-                return false;
-            using BinaryReader reader = new(stream);
-            return reader.ReadUInt32() * 16 + 4 == (uint)stream.Length;
-        }
+        if (stream.Length < 4)
+            return false;
+        using BinaryReader reader = new(stream);
+        return reader.ReadUInt32() * 16 + 4 == (uint)stream.Length;
     }
+}
 
-    //first 4B < 2^31, skip 4B, next 4B < 512, zstring with regex
-    public class ScannerFBS_Index : IFileScanner
+//first 4B < 2^31, skip 4B, next 4B < 512, zstring with regex
+public class ScannerFBS_Index : IFileScanner
+{
+    public FileType ScannerType => FileType.FBS_Index;
+    public bool mightBe(Stream stream)
     {
-        public FileType ScannerType => FileType.FBS_Index;
-        public bool mightBe(Stream stream)
-        {
-            if (stream.Length < 24)
-                return false;
-            using BinaryReader reader = new(stream);
-            if (reader.ReadUInt32() >= 1 << 30)
-                return false;
-            reader.ReadUInt32(); //skip
-            int size = reader.ReadInt32();
-            if (size > 512 || size == 0) //this is just a guess for the normal FBS index
-                return false;
-            return Regex.Match(reader.ReadSizedString(size), "^[A-Za-z0-9_]+$").Success;
-        }
+        if (stream.Length < 24)
+            return false;
+        using BinaryReader reader = new(stream);
+        if (reader.ReadUInt32() >= 1 << 30)
+            return false;
+        reader.ReadUInt32(); //skip
+        int size = reader.ReadInt32();
+        if (size > 512 || size == 0) //this is just a guess for the normal FBS index
+            return false;
+        return Regex.Match(reader.ReadSizedString(size), "^[A-Za-z0-9_]+$").Success;
     }
+}
 
-    //first 4B < 2^31, skip 4B, next 4B < 512, next 4B < 5, not a very good scanner....
-    public class ScannerFBS_Data : IFileScanner
+//first 4B < 2^31, skip 4B, next 4B < 512, next 4B < 5, not a very good scanner....
+public class ScannerFBS_Data : IFileScanner
+{
+    public FileType ScannerType => FileType.FBS_Data;
+    public bool mightBe(Stream stream)
     {
-        public FileType ScannerType => FileType.FBS_Data;
-        public bool mightBe(Stream stream)
-        {
-            if (stream.Length < 24)
-                return false;
-            using BinaryReader reader = new(stream);
-            if (reader.ReadUInt32() >= 1 << 30)
-                return false;
-            reader.ReadUInt32(); //skip
-            if (reader.ReadUInt32() > 512)
-                return false;
-            if (reader.ReadUInt32() > 4)
-                return false;
-            return true;
-        }
+        if (stream.Length < 24)
+            return false;
+        using BinaryReader reader = new(stream);
+        if (reader.ReadUInt32() >= 1 << 30)
+            return false;
+        reader.ReadUInt32(); //skip
+        if (reader.ReadUInt32() > 512)
+            return false;
+        if (reader.ReadUInt32() > 4)
+            return false;
+        return true;
     }
+}
 
-    public partial class ConversionMgr
+public partial class ConversionMgr
+{
+    private static readonly IFileScanner[] scanners =
     {
-        private static readonly IFileScanner[] scanners =
-        {
-            new ScannerSKA(),
-            new ScannerDFF(),
-            new ScannerBSP(),
-            new ScannerED(),
-            new ScannerSCN(),
-            new ScannerAED(),
-            new ScannerCFG_Vars(),
-            new ScannerCFG_Map(),
-            new ScannerFBS_Index(),
-            new ScannerFBS_Data()
-        };
-    }
+        new ScannerSKA(),
+        new ScannerDFF(),
+        new ScannerBSP(),
+        new ScannerED(),
+        new ScannerSCN(),
+        new ScannerAED(),
+        new ScannerCFG_Vars(),
+        new ScannerCFG_Map(),
+        new ScannerFBS_Index(),
+        new ScannerFBS_Data()
+    };
 }

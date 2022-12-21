@@ -1,17 +1,16 @@
-﻿namespace zzre.game.components
+﻿namespace zzre.game.components;
+
+public struct NPCLookAtPlayer
 {
-    public struct NPCLookAtPlayer
+    public enum Mode
     {
-        public enum Mode
-        {
-            Hard,
-            Smooth,
-            Billboard
-        }
-
-        public readonly Mode RotationMode;
-        public float TimeLeft;
-
-        public NPCLookAtPlayer(Mode rotationMode, float duration) => (RotationMode, TimeLeft) = (rotationMode, duration);
+        Hard,
+        Smooth,
+        Billboard
     }
+
+    public readonly Mode RotationMode;
+    public float TimeLeft;
+
+    public NPCLookAtPlayer(Mode rotationMode, float duration) => (RotationMode, TimeLeft) = (rotationMode, duration);
 }

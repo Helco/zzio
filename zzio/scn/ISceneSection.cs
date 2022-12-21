@@ -1,10 +1,9 @@
 using System.IO;
 
-namespace zzio.scn
+namespace zzio.scn;
+
+public interface ISceneSection
 {
-    public interface ISceneSection
-    {
-        void Read(Stream stream);
-        void Write(Stream stream);
-    }
+    void Read(Stream stream);
+    void Write(Stream stream);
 }

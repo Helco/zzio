@@ -1,9 +1,8 @@
-﻿namespace zzre.game.messages.ui
-{
-    public record struct GameScreenOpened;
-    public record struct GameScreenClosed;
+﻿namespace zzre.game.messages.ui;
 
-    public record struct OpenDeck;
+public record struct GameScreenOpened;
+public record struct GameScreenClosed;
 
-    public record struct OpenGotCard(zzio.UID UID, int Amount);
-}
+public record struct OpenDeck;
+
+public record struct OpenGotCard(zzio.UID UID, int Amount);

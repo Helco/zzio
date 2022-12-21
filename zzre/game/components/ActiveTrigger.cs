@@ -1,4 +1,3 @@
-﻿namespace zzre.game.components
-{
-    public readonly struct ActiveTrigger { }
-}
+﻿namespace zzre.game.components;
+
+public readonly struct ActiveTrigger { }

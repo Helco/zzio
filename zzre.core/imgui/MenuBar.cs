@@ -3,105 +3,104 @@ using System.Collections.Generic;
 using System.Linq;
 using static ImGuiNET.ImGui;
 
-namespace zzre.imgui
+namespace zzre.imgui;
+
+public class MenuBar
 {
-    public class MenuBar
+    private class MenuBarItem
     {
-        private class MenuBarItem
-        {
-            public string Name { get; }
-            public Action<string>? OnContent { get; }
-            public MenuBarItem? Parent { get; }
-            public List<MenuBarItem> Children { get; } = new List<MenuBarItem>();
+        public string Name { get; }
+        public Action<string>? OnContent { get; }
+        public MenuBarItem? Parent { get; }
+        public List<MenuBarItem> Children { get; } = new List<MenuBarItem>();
 
-            public MenuBarItem(MenuBarItem? parent, string name, Action<string>? onClick)
-            {
-                Parent = parent;
-                Name = name;
-                OnContent = onClick;
-                Parent?.Children.Add(this);
-            }
+        public MenuBarItem(MenuBarItem? parent, string name, Action<string>? onClick)
+        {
+            Parent = parent;
+            Name = name;
+            OnContent = onClick;
+            Parent?.Children.Add(this);
+        }
+    }
+
+    private readonly MenuBarItem RootItem = new(null, "", null);
+
+    public void AddItem(string path, Action<string> onContent)
+    {
+        var comp = StringComparison.InvariantCultureIgnoreCase;
+        var curParent = RootItem;
+        var parts = path.Split("/");
+        foreach (var part in parts[..^1])
+        {
+            var nextParent = curParent.Children.FirstOrDefault(i => i.Name.Equals(part, comp));
+            if (nextParent == null)
+                nextParent = new MenuBarItem(curParent, part, null);
+            curParent = nextParent;
         }
 
-        private readonly MenuBarItem RootItem = new(null, "", null);
+        var item = curParent.Children.FirstOrDefault(i => i.Name.Equals(parts.Last(), comp));
+        if (item != null)
+            throw new InvalidOperationException($"Item of path {path} is already defined");
+        new MenuBarItem(curParent, parts.Last(), onContent);
+    }
 
-        public void AddItem(string path, Action<string> onContent)
+    public void AddButton(string path, Action onClick) => AddItem(path, name =>
+    {
+        if (MenuItem(name))
+            onClick();
+    });
+
+    public delegate ref T GetRefValueFunc<T>();
+
+    public void AddCheckbox(string path, GetRefValueFunc<bool> isChecked, Action? onChanged = null) => AddItem(path, name =>
+    {
+        if (MenuItem(name, "", ref isChecked()))
+            onChanged?.Invoke();
+    });
+
+    public void AddRadio(string path, string[] labels, GetRefValueFunc<int> getValue, Action? onChanged = null) => AddItem(path, name =>
+    {
+        if (!BeginMenu(name))
+            return;
+        ref int curValue = ref getValue();
+        for (int i = 0; i < labels.Length; i++)
         {
-            var comp = StringComparison.InvariantCultureIgnoreCase;
-            var curParent = RootItem;
-            var parts = path.Split("/");
-            foreach (var part in parts[..^1])
+            if (MenuItem(labels[i], "", curValue == i))
             {
-                var nextParent = curParent.Children.FirstOrDefault(i => i.Name.Equals(part, comp));
-                if (nextParent == null)
-                    nextParent = new MenuBarItem(curParent, part, null);
-                curParent = nextParent;
-            }
-
-            var item = curParent.Children.FirstOrDefault(i => i.Name.Equals(parts.Last(), comp));
-            if (item != null)
-                throw new InvalidOperationException($"Item of path {path} is already defined");
-            new MenuBarItem(curParent, parts.Last(), onContent);
-        }
-
-        public void AddButton(string path, Action onClick) => AddItem(path, name =>
-        {
-            if (MenuItem(name))
-                onClick();
-        });
-
-        public delegate ref T GetRefValueFunc<T>();
-
-        public void AddCheckbox(string path, GetRefValueFunc<bool> isChecked, Action? onChanged = null) => AddItem(path, name =>
-        {
-            if (MenuItem(name, "", ref isChecked()))
+                curValue = i;
                 onChanged?.Invoke();
-        });
-
-        public void AddRadio(string path, string[] labels, GetRefValueFunc<int> getValue, Action? onChanged = null) => AddItem(path, name =>
-        {
-            if (!BeginMenu(name))
-                return;
-            ref int curValue = ref getValue();
-            for (int i = 0; i < labels.Length; i++)
-            {
-                if (MenuItem(labels[i], "", curValue == i))
-                {
-                    curValue = i;
-                    onChanged?.Invoke();
-                }
             }
-            EndMenu();
-        });
+        }
+        EndMenu();
+    });
 
-        public void AddSlider(string path, float minVal, float maxVal, GetRefValueFunc<float> getValue, Action? onChanged = null) => AddItem(path, name =>
-        {
-            if (SliderFloat(name, ref getValue(), minVal, maxVal))
-                onChanged?.Invoke();
-        });
+    public void AddSlider(string path, float minVal, float maxVal, GetRefValueFunc<float> getValue, Action? onChanged = null) => AddItem(path, name =>
+    {
+        if (SliderFloat(name, ref getValue(), minVal, maxVal))
+            onChanged?.Invoke();
+    });
 
-        public void Update()
+    public void Update()
+    {
+        if (!BeginMenuBar())
+            return;
+        foreach (var child in RootItem.Children)
+            UpdateItem(child);
+        EndMenuBar();
+    }
+
+    private void UpdateItem(MenuBarItem item)
+    {
+        if (item.OnContent != null)
         {
-            if (!BeginMenuBar())
-                return;
-            foreach (var child in RootItem.Children)
-                UpdateItem(child);
-            EndMenuBar();
+            item.OnContent(item.Name);
+            return;
         }
 
-        private void UpdateItem(MenuBarItem item)
-        {
-            if (item.OnContent != null)
-            {
-                item.OnContent(item.Name);
-                return;
-            }
-
-            if (!BeginMenu(item.Name))
-                return;
-            foreach (var child in item.Children)
-                UpdateItem(child);
-            EndMenu();
-        }
+        if (!BeginMenu(item.Name))
+            return;
+        foreach (var child in item.Children)
+            UpdateItem(child);
+        EndMenu();
     }
 }

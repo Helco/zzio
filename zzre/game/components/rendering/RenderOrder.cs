@@ -1,25 +1,24 @@
-﻿namespace zzre.game.components
+﻿namespace zzre.game.components;
+
+public enum RenderOrder
 {
-    public enum RenderOrder
-    {
-        Backdrop,
-        World,
-        Footprints,
-        Actor,
-        EarlySolid,
-        EarlyAdditive,
-        EarlyEffect,
-        Solid,
-        Additive,
-        EnvMap,
-        Effect,
-        EarlyDynamicModel,
-        DynamicModel,
-        LateSolid,
-        LateAdditive,
-        LateEffect,
-        DebugSolid,
-        DebugIcon,
-        DebugText
-    }
+    Backdrop,
+    World,
+    Footprints,
+    Actor,
+    EarlySolid,
+    EarlyAdditive,
+    EarlyEffect,
+    Solid,
+    Additive,
+    EnvMap,
+    Effect,
+    EarlyDynamicModel,
+    DynamicModel,
+    LateSolid,
+    LateAdditive,
+    LateEffect,
+    DebugSolid,
+    DebugIcon,
+    DebugText
 }
