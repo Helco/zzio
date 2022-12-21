@@ -1,4 +1,3 @@
-﻿namespace zzre.game.messages
-{
-    public record struct DialogResetUI(DefaultEcs.Entity DialogEntity);
-}
+﻿namespace zzre.game.messages;
+
+public record struct DialogResetUI(DefaultEcs.Entity DialogEntity);

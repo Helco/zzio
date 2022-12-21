@@ -1,4 +1,3 @@
-﻿namespace zzre.game.components
-{
-    public record struct ActorPart;
-}
+﻿namespace zzre.game.components;
+
+public record struct ActorPart;

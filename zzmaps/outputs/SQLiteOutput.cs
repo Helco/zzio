@@ -4,29 +4,29 @@ using System.Threading.Tasks.Dataflow;
 using SQLitePCL.pretty;
 using zzre;
 
-namespace zzmaps
+namespace zzmaps;
+
+internal class SQLiteOutput : ListDisposable, IOutput
 {
-    internal class SQLiteOutput : ListDisposable, IOutput
+    private readonly SQLiteDatabaseConnection dbConnection;
+    private readonly IStatement insertTileStmt, insertMetaStmt;
+    private readonly string extension;
+    private uint tilesWritten;
+    private readonly uint commitEvery;
+
+    static SQLiteOutput() => SQLitePCL.Batteries_V2.Init();
+
+    public SQLiteOutput(Options options)
     {
-        private readonly SQLiteDatabaseConnection dbConnection;
-        private readonly IStatement insertTileStmt, insertMetaStmt;
-        private readonly string extension;
-        private uint tilesWritten;
-        private readonly uint commitEvery;
+        if (options.OutputDb == null)
+            throw new ArgumentException("SQLite output is disabled by options");
+        extension = options.OutputFormat.AsExtension();
+        commitEvery = options.CommitEvery;
 
-        static SQLiteOutput() => SQLitePCL.Batteries_V2.Init();
-
-        public SQLiteOutput(Options options)
-        {
-            if (options.OutputDb == null)
-                throw new ArgumentException("SQLite output is disabled by options");
-            extension = options.OutputFormat.AsExtension();
-            commitEvery = options.CommitEvery;
-
-            dbConnection = SQLiteDatabaseConnectionBuilder
-                .Create(options.OutputDb.FullName)
-                .Build();
-            dbConnection.ExecuteAll(@"
+        dbConnection = SQLiteDatabaseConnectionBuilder
+            .Create(options.OutputDb.FullName)
+            .Build();
+        dbConnection.ExecuteAll(@"
 CREATE TABLE IF NOT EXISTS Tiles(
   scene TEXT,
   layer INTEGER,
@@ -43,65 +43,64 @@ CREATE TABLE IF NOT EXISTS SceneMeta(
   PRIMARY KEY(scene))
 ");
 
-            insertTileStmt = dbConnection.PrepareStatement(@"
+        insertTileStmt = dbConnection.PrepareStatement(@"
 INSERT OR REPLACE INTO Tiles VALUES (?, ?, ?, ?, ?, ?, ?)");
-            insertMetaStmt = dbConnection.PrepareStatement(@"
+        insertMetaStmt = dbConnection.PrepareStatement(@"
 INSERT OR REPLACE INTO SceneMeta VALUES (?, ?)");
 
-            dbConnection.Execute("BEGIN");
+        dbConnection.Execute("BEGIN");
 
-            AddDisposable(insertTileStmt);
-            AddDisposable(insertMetaStmt);
-            AddDisposable(dbConnection);
-        }
-
-        protected override void DisposeManaged()
-        {
-            dbConnection.Execute("COMMIT");
-            base.DisposeManaged();
-        }
-
-        public ITargetBlock<EncodedSceneTile> CreateTileTarget(ExecutionDataflowBlockOptions options, ProgressStep progressStep) =>
-            new ActionBlock<EncodedSceneTile>(tile =>
-            {
-                byte[] block;
-                if (tile.Stream is MemoryStream)
-                    block = ((MemoryStream)tile.Stream).ToArray();
-                else
-                {
-                    using var memory = new MemoryStream((int)tile.Stream.Length);
-                    tile.Stream.CopyTo(memory);
-                    block = memory.ToArray();
-                }
-
-                insertTileStmt.Reset();
-                insertTileStmt.Bind(tile.SceneName,
-                                tile.Layer,
-                                tile.TileID.ZoomLevel,
-                                tile.TileID.TileX,
-                                tile.TileID.TileZ,
-                                extension,
-                                block);
-                insertTileStmt.MoveNext();
-                if (++tilesWritten >= commitEvery && commitEvery > 0)
-                {
-                    lock (dbConnection)
-                    {
-                        dbConnection.Execute("COMMIT");
-                        dbConnection.Execute("BEGIN");
-                    }
-                    tilesWritten = 0;
-                }
-                progressStep.Increment();
-            });
-
-        public ITargetBlock<BuiltSceneMetadata> CreateMetaTarget(ExecutionDataflowBlockOptions options, ProgressStep progressStep) =>
-            new ActionBlock<BuiltSceneMetadata>(meta =>
-            {
-                insertMetaStmt.Reset();
-                insertMetaStmt.Bind(meta.SceneName, meta.Data);
-                insertMetaStmt.MoveNext();
-                progressStep.Increment();
-            });
+        AddDisposable(insertTileStmt);
+        AddDisposable(insertMetaStmt);
+        AddDisposable(dbConnection);
     }
+
+    protected override void DisposeManaged()
+    {
+        dbConnection.Execute("COMMIT");
+        base.DisposeManaged();
+    }
+
+    public ITargetBlock<EncodedSceneTile> CreateTileTarget(ExecutionDataflowBlockOptions options, ProgressStep progressStep) =>
+        new ActionBlock<EncodedSceneTile>(tile =>
+        {
+            byte[] block;
+            if (tile.Stream is MemoryStream)
+                block = ((MemoryStream)tile.Stream).ToArray();
+            else
+            {
+                using var memory = new MemoryStream((int)tile.Stream.Length);
+                tile.Stream.CopyTo(memory);
+                block = memory.ToArray();
+            }
+
+            insertTileStmt.Reset();
+            insertTileStmt.Bind(tile.SceneName,
+                            tile.Layer,
+                            tile.TileID.ZoomLevel,
+                            tile.TileID.TileX,
+                            tile.TileID.TileZ,
+                            extension,
+                            block);
+            insertTileStmt.MoveNext();
+            if (++tilesWritten >= commitEvery && commitEvery > 0)
+            {
+                lock (dbConnection)
+                {
+                    dbConnection.Execute("COMMIT");
+                    dbConnection.Execute("BEGIN");
+                }
+                tilesWritten = 0;
+            }
+            progressStep.Increment();
+        });
+
+    public ITargetBlock<BuiltSceneMetadata> CreateMetaTarget(ExecutionDataflowBlockOptions options, ProgressStep progressStep) =>
+        new ActionBlock<BuiltSceneMetadata>(meta =>
+        {
+            insertMetaStmt.Reset();
+            insertMetaStmt.Bind(meta.SceneName, meta.Data);
+            insertMetaStmt.MoveNext();
+            progressStep.Increment();
+        });
 }

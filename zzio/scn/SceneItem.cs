@@ -1,28 +1,27 @@
 using System;
 using System.IO;
 
-namespace zzio.scn
+namespace zzio.scn;
+
+[Serializable]
+public class SceneItem : ISceneSection
 {
-    [Serializable]
-    public class SceneItem : ISceneSection
+    public string name = "";
+    public uint index, type;
+
+    public void Read(Stream stream)
     {
-        public string name = "";
-        public uint index, type;
+        using BinaryReader reader = new(stream);
+        name = reader.ReadZString();
+        index = reader.ReadUInt32();
+        type = reader.ReadUInt32();
+    }
 
-        public void Read(Stream stream)
-        {
-            using BinaryReader reader = new(stream);
-            name = reader.ReadZString();
-            index = reader.ReadUInt32();
-            type = reader.ReadUInt32();
-        }
-
-        public void Write(Stream stream)
-        {
-            using BinaryWriter writer = new(stream);
-            writer.WriteZString(name);
-            writer.Write(index);
-            writer.Write(type);
-        }
+    public void Write(Stream stream)
+    {
+        using BinaryWriter writer = new(stream);
+        writer.WriteZString(name);
+        writer.Write(index);
+        writer.Write(type);
     }
 }

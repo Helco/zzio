@@ -1,17 +1,16 @@
 ﻿using System.Threading;
 
-namespace zzmaps
+namespace zzmaps;
+
+internal class ProgressStep
 {
-    internal class ProgressStep
-    {
-        private long current;
+    private long current;
 
-        public string Name { get; }
-        public long Current => current;
-        public long? Total { get; set; }
+    public string Name { get; }
+    public long Current => current;
+    public long? Total { get; set; }
 
-        public ProgressStep(string name) => Name = name;
+    public ProgressStep(string name) => Name = name;
 
-        public void Increment() => Interlocked.Increment(ref current);
-    }
+    public void Increment() => Interlocked.Increment(ref current);
 }

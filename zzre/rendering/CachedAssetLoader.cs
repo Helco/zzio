@@ -4,42 +4,41 @@ using System.Diagnostics.CodeAnalysis;
 using zzio;
 using zzio.vfs;
 
-namespace zzre.rendering
+namespace zzre.rendering;
+
+public class CachedAssetLoader<TAsset> : BaseDisposable, IAssetLoader<TAsset> where TAsset : class, IDisposable
 {
-    public class CachedAssetLoader<TAsset> : BaseDisposable, IAssetLoader<TAsset> where TAsset : class, IDisposable
+    private readonly IAssetLoader<TAsset> parent;
+    protected readonly Dictionary<FilePath, TAsset> cache = new();
+    public ITagContainer DIContainer => parent.DIContainer;
+
+    public CachedAssetLoader(IAssetLoader<TAsset> parent)
     {
-        private readonly IAssetLoader<TAsset> parent;
-        protected readonly Dictionary<FilePath, TAsset> cache = new();
-        public ITagContainer DIContainer => parent.DIContainer;
+        this.parent = parent;
+    }
 
-        public CachedAssetLoader(IAssetLoader<TAsset> parent)
-        {
-            this.parent = parent;
-        }
+    protected override void DisposeManaged()
+    {
+        base.DisposeManaged();
+        Clear();
+    }
 
-        protected override void DisposeManaged()
-        {
-            base.DisposeManaged();
-            Clear();
-        }
+    public virtual void Clear()
+    {
+        foreach (var asset in cache.Values)
+            asset.Dispose();
+        cache.Clear();
+    }
 
-        public virtual void Clear()
+    public virtual bool TryLoad(IResource resource, [NotNullWhen(true)] out TAsset? asset)
+    {
+        if (cache.TryGetValue(resource.Path, out asset))
+            return true;
+        if (parent.TryLoad(resource, out asset))
         {
-            foreach (var asset in cache.Values)
-                asset.Dispose();
-            cache.Clear();
+            cache.Add(resource.Path, asset);
+            return true;
         }
-
-        public virtual bool TryLoad(IResource resource, [NotNullWhen(true)] out TAsset? asset)
-        {
-            if (cache.TryGetValue(resource.Path, out asset))
-                return true;
-            if (parent.TryLoad(resource, out asset))
-            {
-                cache.Add(resource.Path, asset);
-                return true;
-            }
-            return false;
-        }
+        return false;
     }
 }

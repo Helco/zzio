@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace zzre.game.components
+namespace zzre.game.components;
+
+public struct DialogCommonUI
 {
-    public struct DialogCommonUI
-    {
-        public DefaultEcs.Entity Letterbox;
-        public DefaultEcs.Entity SayLabel;
-    }
+    public DefaultEcs.Entity Letterbox;
+    public DefaultEcs.Entity SayLabel;
 }

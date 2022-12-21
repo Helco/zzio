@@ -1,17 +1,16 @@
-﻿namespace zzre.game.components
+﻿namespace zzre.game.components;
+
+public enum DialogState
 {
-    public enum DialogState
-    {
-        NextScriptOp,
-        FadeOut,
-        WaitForSayString,
-        Talk,
-        Choice,
-        PreFightWild,
-        PreFightNpc,
-        NpcWalking,
-        NpcEscapes,
-        CaughtFairy,
-        Delay
-    }
+    NextScriptOp,
+    FadeOut,
+    WaitForSayString,
+    Talk,
+    Choice,
+    PreFightWild,
+    PreFightNpc,
+    NpcWalking,
+    NpcEscapes,
+    CaughtFairy,
+    Delay
 }

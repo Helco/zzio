@@ -1,4 +1,3 @@
-﻿namespace zzre.game.components.behaviour
-{
-    public record struct Lock;
-}
+﻿namespace zzre.game.components.behaviour;
+
+public record struct Lock;

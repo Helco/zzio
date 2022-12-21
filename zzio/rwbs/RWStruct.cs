@@ -1,9 +1,8 @@
-namespace zzio.rwbs
+namespace zzio.rwbs;
+
+public class RWStruct : UnknownSection
 {
-    public class RWStruct : UnknownSection
+    public RWStruct() : base(SectionId.Struct)
     {
-        public RWStruct() : base(SectionId.Struct)
-        {
-        }
     }
 }

@@ -1,4 +1,3 @@
-﻿namespace zzre.game.components
-{
-    public record struct Parent(DefaultEcs.Entity Entity);
-}
+﻿namespace zzre.game.components;
+
+public record struct Parent(DefaultEcs.Entity Entity);

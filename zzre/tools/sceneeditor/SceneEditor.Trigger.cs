@@ -16,247 +16,246 @@ using static ImGuiNET.ImGui;
 using static zzre.imgui.ImGuiEx;
 using Quaternion = System.Numerics.Quaternion;
 
-namespace zzre.tools
+namespace zzre.tools;
+
+public partial class SceneEditor
 {
-    public partial class SceneEditor
+    private class Trigger : BaseDisposable, ISelectable
     {
-        private class Trigger : BaseDisposable, ISelectable
+        private const float PointTriggerSize = 0.1f;
+        private const float SelectableSize = 0.2f;
+
+        private readonly ITagContainer diContainer;
+
+        public Location Location { get; } = new Location();
+        public zzio.scn.Trigger SceneTrigger { get; }
+        public int Index { get; }
+
+        public string Title => $"#{SceneTrigger.idx} - {SceneTrigger.type}";
+        public IRaycastable SelectableBounds => new Sphere(Location.GlobalPosition, SelectableSize);
+
+        public IRaycastable? RenderedBounds => SceneTrigger.colliderType switch
         {
-            private const float PointTriggerSize = 0.1f;
-            private const float SelectableSize = 0.2f;
+            TriggerColliderType.Box => new Box(Vector3.Zero, SceneTrigger.size).TransformToWorld(Location),
+            TriggerColliderType.Sphere => new Sphere(Location.GlobalPosition, SceneTrigger.radius),
+            TriggerColliderType.Point => null,
+            _ => throw new NotImplementedException("Unknown TriggerColliderType")
+        };
+        public float ViewSize => SceneTrigger.colliderType switch
+        {
+            TriggerColliderType.Box => SceneTrigger.size.MaxComponent(),
+            TriggerColliderType.Sphere => SceneTrigger.radius * 2f,
+            TriggerColliderType.Point => PointTriggerSize * 2f,
+            _ => throw new NotImplementedException("Unknown TriggerColliderType")
+        };
 
-            private readonly ITagContainer diContainer;
+        public Trigger(ITagContainer diContainer, zzio.scn.Trigger sceneTrigger, int index)
+        {
+            this.diContainer = diContainer;
+            SceneTrigger = sceneTrigger;
+            Index = index;
 
-            public Location Location { get; } = new Location();
-            public zzio.scn.Trigger SceneTrigger { get; }
-            public int Index { get; }
-
-            public string Title => $"#{SceneTrigger.idx} - {SceneTrigger.type}";
-            public IRaycastable SelectableBounds => new Sphere(Location.GlobalPosition, SelectableSize);
-
-            public IRaycastable? RenderedBounds => SceneTrigger.colliderType switch
-            {
-                TriggerColliderType.Box => new Box(Vector3.Zero, SceneTrigger.size).TransformToWorld(Location),
-                TriggerColliderType.Sphere => new Sphere(Location.GlobalPosition, SceneTrigger.radius),
-                TriggerColliderType.Point => null,
-                _ => throw new NotImplementedException("Unknown TriggerColliderType")
-            };
-            public float ViewSize => SceneTrigger.colliderType switch
-            {
-                TriggerColliderType.Box => SceneTrigger.size.MaxComponent(),
-                TriggerColliderType.Sphere => SceneTrigger.radius * 2f,
-                TriggerColliderType.Point => PointTriggerSize * 2f,
-                _ => throw new NotImplementedException("Unknown TriggerColliderType")
-            };
-
-            public Trigger(ITagContainer diContainer, zzio.scn.Trigger sceneTrigger, int index)
-            {
-                this.diContainer = diContainer;
-                SceneTrigger = sceneTrigger;
-                Index = index;
-
-                Location.LocalPosition = sceneTrigger.pos;
-                Location.LocalRotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateLookAt(Vector3.Zero, sceneTrigger.dir, Vector3.UnitY));
-            }
-
-            public void Content()
-            {
-                Checkbox("Requires looking", ref SceneTrigger.requiresLooking);
-                InputInt("Desc1", ref SceneTrigger.ii1);
-                InputInt("Desc2", ref SceneTrigger.ii2);
-                InputInt("Desc3", ref SceneTrigger.ii3);
-                InputInt("Desc4", ref SceneTrigger.ii4);
-                InputText("S", ref SceneTrigger.s, 256);
-                EnumCombo("Collider", ref SceneTrigger.colliderType);
-                switch (SceneTrigger.colliderType)
-                {
-                    case TriggerColliderType.Sphere:
-                        InputFloat("Radius", ref SceneTrigger.radius);
-                        break;
-
-                    case TriggerColliderType.Box:
-                        InputFloat3("Size", ref SceneTrigger.size);
-                        break;
-                }
-            }
+            Location.LocalPosition = sceneTrigger.pos;
+            Location.LocalRotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateLookAt(Vector3.Zero, sceneTrigger.dir, Vector3.UnitY));
         }
 
-        private class TriggerComponent : BaseDisposable, IEnumerable<ISelectable>
+        public void Content()
         {
-            private static readonly IColor NormalColor = IColor.White;
-            private static readonly IColor SelectedColor = IColor.Red;
-
-            private readonly ITagContainer diContainer;
-            private readonly DebugIconRenderer iconRenderer;
-            private readonly IconFont iconFont;
-            private readonly SceneEditor editor;
-
-            private Trigger[] triggers = Array.Empty<Trigger>();
-            private bool wasSelected = false;
-            private float iconSize = 128f;
-
-            public TriggerComponent(ITagContainer diContainer)
+            Checkbox("Requires looking", ref SceneTrigger.requiresLooking);
+            InputInt("Desc1", ref SceneTrigger.ii1);
+            InputInt("Desc2", ref SceneTrigger.ii2);
+            InputInt("Desc3", ref SceneTrigger.ii3);
+            InputInt("Desc4", ref SceneTrigger.ii4);
+            InputText("S", ref SceneTrigger.s, 256);
+            EnumCombo("Collider", ref SceneTrigger.colliderType);
+            switch (SceneTrigger.colliderType)
             {
-                diContainer.AddTag(this);
-                this.diContainer = diContainer;
-                editor = diContainer.GetTag<SceneEditor>();
-                editor.fbArea.OnRender += HandleRender;
-                editor.fbArea.OnResize += HandleResize;
-                editor.OnLoadScene += HandleLoadScene;
-                editor.OnNewSelection += HandleSelectionEvent;
-                editor.OnSelectionManipulate += HandleSelectionEvent;
-                editor.editor.AddInfoSection("Triggers", HandleInfoSection, false);
-                editor.selectableContainers.Add(this);
-                diContainer.GetTag<MenuBarWindowTag>().AddSlider("View/Triggers/Size", 0.0f, 512f, () => ref iconSize, UpdateIcons);
-                iconFont = diContainer.GetTag<IconFont>();
-                iconRenderer = new DebugIconRenderer(diContainer);
-                iconRenderer.Material.LinkTransformsTo(diContainer.GetTag<Camera>());
-                iconRenderer.Material.World.Ref = Matrix4x4.Identity;
-                iconRenderer.Material.Texture.Texture = iconFont.Texture;
-                iconRenderer.Material.Sampler.Sampler = iconFont.Sampler;
-                HandleResize();
+                case TriggerColliderType.Sphere:
+                    InputFloat("Radius", ref SceneTrigger.radius);
+                    break;
+
+                case TriggerColliderType.Box:
+                    InputFloat3("Size", ref SceneTrigger.size);
+                    break;
             }
+        }
+    }
 
-            protected override void DisposeManaged()
-            {
-                base.DisposeManaged();
-                iconRenderer.Dispose();
-                foreach (var trigger in triggers)
-                    trigger.Dispose();
-            }
+    private class TriggerComponent : BaseDisposable, IEnumerable<ISelectable>
+    {
+        private static readonly IColor NormalColor = IColor.White;
+        private static readonly IColor SelectedColor = IColor.Red;
 
-            private void HandleLoadScene()
-            {
-                foreach (var oldTrigger in triggers)
-                    oldTrigger.Dispose();
-                triggers = Array.Empty<Trigger>();
-                if (editor.scene == null)
-                    return;
+        private readonly ITagContainer diContainer;
+        private readonly DebugIconRenderer iconRenderer;
+        private readonly IconFont iconFont;
+        private readonly SceneEditor editor;
 
-                triggers = editor.scene.triggers.Select((t, i) => new Trigger(diContainer, t, i)).ToArray();
+        private Trigger[] triggers = Array.Empty<Trigger>();
+        private bool wasSelected = false;
+        private float iconSize = 128f;
 
+        public TriggerComponent(ITagContainer diContainer)
+        {
+            diContainer.AddTag(this);
+            this.diContainer = diContainer;
+            editor = diContainer.GetTag<SceneEditor>();
+            editor.fbArea.OnRender += HandleRender;
+            editor.fbArea.OnResize += HandleResize;
+            editor.OnLoadScene += HandleLoadScene;
+            editor.OnNewSelection += HandleSelectionEvent;
+            editor.OnSelectionManipulate += HandleSelectionEvent;
+            editor.editor.AddInfoSection("Triggers", HandleInfoSection, false);
+            editor.selectableContainers.Add(this);
+            diContainer.GetTag<MenuBarWindowTag>().AddSlider("View/Triggers/Size", 0.0f, 512f, () => ref iconSize, UpdateIcons);
+            iconFont = diContainer.GetTag<IconFont>();
+            iconRenderer = new DebugIconRenderer(diContainer);
+            iconRenderer.Material.LinkTransformsTo(diContainer.GetTag<Camera>());
+            iconRenderer.Material.World.Ref = Matrix4x4.Identity;
+            iconRenderer.Material.Texture.Texture = iconFont.Texture;
+            iconRenderer.Material.Sampler.Sampler = iconFont.Sampler;
+            HandleResize();
+        }
+
+        protected override void DisposeManaged()
+        {
+            base.DisposeManaged();
+            iconRenderer.Dispose();
+            foreach (var trigger in triggers)
+                trigger.Dispose();
+        }
+
+        private void HandleLoadScene()
+        {
+            foreach (var oldTrigger in triggers)
+                oldTrigger.Dispose();
+            triggers = Array.Empty<Trigger>();
+            if (editor.scene == null)
+                return;
+
+            triggers = editor.scene.triggers.Select((t, i) => new Trigger(diContainer, t, i)).ToArray();
+
+            UpdateIcons();
+        }
+
+        private void HandleResize()
+        {
+            iconRenderer.Material.Uniforms.Ref.screenSize = new Vector2(
+                editor.fbArea.Framebuffer.Width, editor.fbArea.Framebuffer.Height);
+        }
+
+        private void HandleRender(CommandList cl)
+        {
+            if (iconSize > 0f)
+                iconRenderer.Render(cl);
+        }
+
+        private void HandleSelectionEvent(ISelectable? selectable)
+        {
+            var prevWasSelected = wasSelected;
+            wasSelected = selectable is Trigger;
+            if (prevWasSelected)
                 UpdateIcons();
-            }
+        }
 
-            private void HandleResize()
+        private void UpdateIcons()
+        {
+            iconRenderer.Icons = triggers.Select(GetDebugIconFor).ToArray();
+            editor.fbArea.IsDirty = true;
+        }
+
+        private DebugIcon GetDebugIconFor(Trigger trigger)
+        {
+            var glyph = iconFont.Glyphs[Icons.GetValueOrDefault(trigger.SceneTrigger.type, ForkAwesome.Bell)!];
+            return new DebugIcon
             {
-                iconRenderer.Material.Uniforms.Ref.screenSize = new Vector2(
-                    editor.fbArea.Framebuffer.Width, editor.fbArea.Framebuffer.Height);
-            }
-
-            private void HandleRender(CommandList cl)
-            {
-                if (iconSize > 0f)
-                    iconRenderer.Render(cl);
-            }
-
-            private void HandleSelectionEvent(ISelectable? selectable)
-            {
-                var prevWasSelected = wasSelected;
-                wasSelected = selectable is Trigger;
-                if (prevWasSelected)
-                    UpdateIcons();
-            }
-
-            private void UpdateIcons()
-            {
-                iconRenderer.Icons = triggers.Select(GetDebugIconFor).ToArray();
-                editor.fbArea.IsDirty = true;
-            }
-
-            private DebugIcon GetDebugIconFor(Trigger trigger)
-            {
-                var glyph = iconFont.Glyphs[Icons.GetValueOrDefault(trigger.SceneTrigger.type, ForkAwesome.Bell)!];
-                return new DebugIcon
-                {
-                    pos = trigger.Location.GlobalPosition,
-                    uvCenter = glyph.Center,
-                    uvSize = glyph.Size,
-                    size = iconSize,
-                    color = editor.Selected == trigger ? SelectedColor : NormalColor
-                };
-            }
-
-            private void HandleInfoSection()
-            {
-                foreach (var (trigger, index) in triggers.Indexed())
-                {
-                    var flags =
-                        ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick |
-                        (trigger == editor.Selected ? ImGuiTreeNodeFlags.Selected : 0);
-                    var isOpen = TreeNodeEx(trigger.Title, flags);
-                    if (IsItemClicked())
-                        editor.Selected = trigger;
-                    if (IsItemClicked() && IsMouseDoubleClicked(ImGuiMouseButton.Left))
-                        editor.MoveCameraToSelected();
-                    if (!isOpen)
-                        continue;
-                    PushID(index);
-                    trigger.Content();
-                    PopID();
-                    TreePop();
-                }
-            }
-
-            public IEnumerator<ISelectable> GetEnumerator() => ((IEnumerable<ISelectable>)triggers).GetEnumerator();
-            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-            private static readonly IReadOnlyDictionary<TriggerType, string> Icons = new Dictionary<TriggerType, string>()
-            {
-                { TriggerType.Doorway, ForkAwesome.SignIn },
-                { TriggerType.SingleplayerStartpoint, ForkAwesome.User },
-                { TriggerType.MultiplayerStartpoint, ForkAwesome.Users },
-                { TriggerType.NpcStartpoint, ForkAwesome.UserSecret },
-                { TriggerType.CameraPosition, ForkAwesome.VideoCamera },
-                { TriggerType.Waypoint, ForkAwesome.MapMarker },
-                { TriggerType.StartDuel, ForkAwesome.ExclamationTriangle },
-                { TriggerType.LeaveDuel, ForkAwesome.ExclamationTriangle },
-                { TriggerType.NpcAttackPosition, ForkAwesome.ExclamationTriangle },
-                { TriggerType.FlyArea, ForkAwesome.Plane },
-                { TriggerType.KillPlayer, ForkAwesome.Hackaday },
-                { TriggerType.SetCameraView, ForkAwesome.VideoCamera },
-                { TriggerType.SavePoint, ForkAwesome.FloppyO },
-                { TriggerType.SwampMarker, ForkAwesome.Tint },
-                { TriggerType.RiverMarker, ForkAwesome.Tint },
-                { TriggerType.PlayVideo, ForkAwesome.Film },
-                { TriggerType.Elevator, ForkAwesome.CaretSquareOUp },
-                { TriggerType.GettingACard, ForkAwesome.IdCardO },
-                { TriggerType.Sign, ForkAwesome.MapSigns },
-                { TriggerType.GettingPixie, ForkAwesome.Paw },
-                { TriggerType.UsingPipe, ForkAwesome.Magnet },
-                { TriggerType.LeaveDancePlatform, ForkAwesome.Music },
-                { TriggerType.RemoveStoneBlocker, ForkAwesome.HandPaperO },
-                { TriggerType.RemovePlantBlocker, ForkAwesome.HandPaperO },
-                { TriggerType.EventCamera, ForkAwesome.VideoCamera },
-                { TriggerType.Platform, ForkAwesome.StreetView },
-                { TriggerType.CreatePlatforms, ForkAwesome.Magic },
-                { TriggerType.ShadowLight, ForkAwesome.LightbulbO },
-                { TriggerType.CreateItems, ForkAwesome.Magic },
-                { TriggerType.Item, ForkAwesome.IdCardO },
-                { TriggerType.Shrink, ForkAwesome.Compress },
-                { TriggerType.WizformMarker, ForkAwesome.ExclamationTriangle },
-                { TriggerType.IndoorCamera, ForkAwesome.VideoCamera },
-                { TriggerType.LensFlare, ForkAwesome.SunO },
-                { TriggerType.FogModifier, ForkAwesome.Cloud },
-                { TriggerType.OpenMagicWaypoints, ForkAwesome.Magic },
-                { TriggerType.RuneTarget, ForkAwesome.CaretSquareODown },
-                { TriggerType.Animal, ForkAwesome.Paw },
-                { TriggerType.AnimalWaypoint, ForkAwesome.MapMarker },
-                { TriggerType.SceneOpening, ForkAwesome.SignOut },
-                { TriggerType.CollectionWizform, ForkAwesome.Paw },
-                { TriggerType.ElementalLock, ForkAwesome.Lock },
-                { TriggerType.ItemGenerator, ForkAwesome.Magic },
-                { TriggerType.Escape, ForkAwesome.SignOut },
-                { TriggerType.Jumper, ForkAwesome.Plane },
-                { TriggerType.RefreshMana, ForkAwesome.Heartbeat },
-                { TriggerType.TemporaryNpc, ForkAwesome.UserSecret },
-                { TriggerType.EffectBeam, ForkAwesome.Bolt },
-                { TriggerType.MultiplayerObserverPosition, ForkAwesome.VideoCamera },
-                { TriggerType.MultiplayerHealingPool, ForkAwesome.Heart },
-                { TriggerType.MultiplayerManaPool, ForkAwesome.Heartbeat },
-                { TriggerType.Ceiling, ForkAwesome.ArrowDown },
-                { TriggerType.HealAllWizforms, ForkAwesome.Heart }
+                pos = trigger.Location.GlobalPosition,
+                uvCenter = glyph.Center,
+                uvSize = glyph.Size,
+                size = iconSize,
+                color = editor.Selected == trigger ? SelectedColor : NormalColor
             };
         }
+
+        private void HandleInfoSection()
+        {
+            foreach (var (trigger, index) in triggers.Indexed())
+            {
+                var flags =
+                    ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick |
+                    (trigger == editor.Selected ? ImGuiTreeNodeFlags.Selected : 0);
+                var isOpen = TreeNodeEx(trigger.Title, flags);
+                if (IsItemClicked())
+                    editor.Selected = trigger;
+                if (IsItemClicked() && IsMouseDoubleClicked(ImGuiMouseButton.Left))
+                    editor.MoveCameraToSelected();
+                if (!isOpen)
+                    continue;
+                PushID(index);
+                trigger.Content();
+                PopID();
+                TreePop();
+            }
+        }
+
+        public IEnumerator<ISelectable> GetEnumerator() => ((IEnumerable<ISelectable>)triggers).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        private static readonly IReadOnlyDictionary<TriggerType, string> Icons = new Dictionary<TriggerType, string>()
+        {
+            { TriggerType.Doorway, ForkAwesome.SignIn },
+            { TriggerType.SingleplayerStartpoint, ForkAwesome.User },
+            { TriggerType.MultiplayerStartpoint, ForkAwesome.Users },
+            { TriggerType.NpcStartpoint, ForkAwesome.UserSecret },
+            { TriggerType.CameraPosition, ForkAwesome.VideoCamera },
+            { TriggerType.Waypoint, ForkAwesome.MapMarker },
+            { TriggerType.StartDuel, ForkAwesome.ExclamationTriangle },
+            { TriggerType.LeaveDuel, ForkAwesome.ExclamationTriangle },
+            { TriggerType.NpcAttackPosition, ForkAwesome.ExclamationTriangle },
+            { TriggerType.FlyArea, ForkAwesome.Plane },
+            { TriggerType.KillPlayer, ForkAwesome.Hackaday },
+            { TriggerType.SetCameraView, ForkAwesome.VideoCamera },
+            { TriggerType.SavePoint, ForkAwesome.FloppyO },
+            { TriggerType.SwampMarker, ForkAwesome.Tint },
+            { TriggerType.RiverMarker, ForkAwesome.Tint },
+            { TriggerType.PlayVideo, ForkAwesome.Film },
+            { TriggerType.Elevator, ForkAwesome.CaretSquareOUp },
+            { TriggerType.GettingACard, ForkAwesome.IdCardO },
+            { TriggerType.Sign, ForkAwesome.MapSigns },
+            { TriggerType.GettingPixie, ForkAwesome.Paw },
+            { TriggerType.UsingPipe, ForkAwesome.Magnet },
+            { TriggerType.LeaveDancePlatform, ForkAwesome.Music },
+            { TriggerType.RemoveStoneBlocker, ForkAwesome.HandPaperO },
+            { TriggerType.RemovePlantBlocker, ForkAwesome.HandPaperO },
+            { TriggerType.EventCamera, ForkAwesome.VideoCamera },
+            { TriggerType.Platform, ForkAwesome.StreetView },
+            { TriggerType.CreatePlatforms, ForkAwesome.Magic },
+            { TriggerType.ShadowLight, ForkAwesome.LightbulbO },
+            { TriggerType.CreateItems, ForkAwesome.Magic },
+            { TriggerType.Item, ForkAwesome.IdCardO },
+            { TriggerType.Shrink, ForkAwesome.Compress },
+            { TriggerType.WizformMarker, ForkAwesome.ExclamationTriangle },
+            { TriggerType.IndoorCamera, ForkAwesome.VideoCamera },
+            { TriggerType.LensFlare, ForkAwesome.SunO },
+            { TriggerType.FogModifier, ForkAwesome.Cloud },
+            { TriggerType.OpenMagicWaypoints, ForkAwesome.Magic },
+            { TriggerType.RuneTarget, ForkAwesome.CaretSquareODown },
+            { TriggerType.Animal, ForkAwesome.Paw },
+            { TriggerType.AnimalWaypoint, ForkAwesome.MapMarker },
+            { TriggerType.SceneOpening, ForkAwesome.SignOut },
+            { TriggerType.CollectionWizform, ForkAwesome.Paw },
+            { TriggerType.ElementalLock, ForkAwesome.Lock },
+            { TriggerType.ItemGenerator, ForkAwesome.Magic },
+            { TriggerType.Escape, ForkAwesome.SignOut },
+            { TriggerType.Jumper, ForkAwesome.Plane },
+            { TriggerType.RefreshMana, ForkAwesome.Heartbeat },
+            { TriggerType.TemporaryNpc, ForkAwesome.UserSecret },
+            { TriggerType.EffectBeam, ForkAwesome.Bolt },
+            { TriggerType.MultiplayerObserverPosition, ForkAwesome.VideoCamera },
+            { TriggerType.MultiplayerHealingPool, ForkAwesome.Heart },
+            { TriggerType.MultiplayerManaPool, ForkAwesome.Heartbeat },
+            { TriggerType.Ceiling, ForkAwesome.ArrowDown },
+            { TriggerType.HealAllWizforms, ForkAwesome.Heart }
+        };
     }
 }

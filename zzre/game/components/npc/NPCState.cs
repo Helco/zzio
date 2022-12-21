@@ -1,11 +1,10 @@
-﻿namespace zzre.game.components
+﻿namespace zzre.game.components;
+
+public enum NPCState
 {
-    public enum NPCState
-    {
-        Script,
-        Waypoint,
-        LookAtPlayer,
-        LookAtTrigger,
-        Idle
-    }
+    Script,
+    Waypoint,
+    LookAtPlayer,
+    LookAtTrigger,
+    Idle
 }

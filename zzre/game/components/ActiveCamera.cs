@@ -1,9 +1,8 @@
-﻿namespace zzre.game.components
-{
-    public readonly struct ActiveCamera
-    {
-        public readonly systems.BaseCamera System;
+﻿namespace zzre.game.components;
 
-        public ActiveCamera(systems.BaseCamera system) => System = system;
-    }
+public readonly struct ActiveCamera
+{
+    public readonly systems.BaseCamera System;
+
+    public ActiveCamera(systems.BaseCamera system) => System = system;
 }

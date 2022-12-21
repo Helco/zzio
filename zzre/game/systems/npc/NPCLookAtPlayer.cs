@@ -4,65 +4,64 @@ using DefaultEcs.System;
 
 using RotationMode = zzre.game.components.NPCLookAtPlayer.Mode;
 
-namespace zzre.game.systems
+namespace zzre.game.systems;
+
+[PauseDuring(PauseTrigger.UIScreen)]
+public partial class NPCLookAtPlayer : AEntitySetSystem<float>
 {
-    [PauseDuring(PauseTrigger.UIScreen)]
-    public partial class NPCLookAtPlayer : AEntitySetSystem<float>
+    private const float SlerpCurvature = 150f;
+    private const float SlerpSpeed = 20f;
+    private const float MaxSmoothRotationDistSqr = 3f;
+
+    private Location playerLocation => playerLocationLazy.Value;
+    private readonly Lazy<Location> playerLocationLazy;
+
+    public NPCLookAtPlayer(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
-        private const float SlerpCurvature = 150f;
-        private const float SlerpSpeed = 20f;
-        private const float MaxSmoothRotationDistSqr = 3f;
+        var game = diContainer.GetTag<Game>();
+        playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
+    }
 
-        private Location playerLocation => playerLocationLazy.Value;
-        private readonly Lazy<Location> playerLocationLazy;
+    [WithPredicate]
+    private static bool IsLookAtPlayerNPCState(in components.NPCState value) => value == components.NPCState.LookAtPlayer;
 
-        public NPCLookAtPlayer(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
+    [Update]
+    private void Update(
+        float elapsedTime,
+        in DefaultEcs.Entity entity,
+        components.NPCType npcType,
+        Location location,
+        ref components.NPCLookAtPlayer lookAt,
+        ref components.PuppetActorMovement puppetActorMovement)
+    {
+        lookAt.TimeLeft -= elapsedTime;
+        if (lookAt.TimeLeft < 0f)
         {
-            var game = diContainer.GetTag<Game>();
-            playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
+            entity.Set(components.NPCState.Script);
+            return;
         }
 
-        [WithPredicate]
-        private static bool IsLookAtPlayerNPCState(in components.NPCState value) => value == components.NPCState.LookAtPlayer;
-
-        [Update]
-        private void Update(
-            float elapsedTime,
-            in DefaultEcs.Entity entity,
-            components.NPCType npcType,
-            Location location,
-            ref components.NPCLookAtPlayer lookAt,
-            ref components.PuppetActorMovement puppetActorMovement)
+        var playerPos = playerLocation.LocalPosition;
+        var dirToPlayer = Vector3.Normalize(playerPos - location.LocalPosition);
+        switch (lookAt.RotationMode)
         {
-            lookAt.TimeLeft -= elapsedTime;
-            if (lookAt.TimeLeft < 0f)
-            {
-                entity.Set(components.NPCState.Script);
-                return;
-            }
+            case RotationMode.Billboard:
+                location.LookAt(playerPos);
+                return; // notice: no head IK / target direction
 
-            var playerPos = playerLocation.LocalPosition;
-            var dirToPlayer = Vector3.Normalize(playerPos - location.LocalPosition);
-            switch (lookAt.RotationMode)
-            {
-                case RotationMode.Billboard:
-                    location.LookAt(playerPos);
-                    return; // notice: no head IK / target direction
+            case RotationMode.Smooth when
+                Vector3.DistanceSquared(puppetActorMovement.TargetDirection, dirToPlayer) <= MaxSmoothRotationDistSqr:
+                location.HorizontalSlerpIn(dirToPlayer, SlerpCurvature, SlerpSpeed * elapsedTime);
+                break;
 
-                case RotationMode.Smooth when
-                    Vector3.DistanceSquared(puppetActorMovement.TargetDirection, dirToPlayer) <= MaxSmoothRotationDistSqr:
-                    location.HorizontalSlerpIn(dirToPlayer, SlerpCurvature, SlerpSpeed * elapsedTime);
-                    break;
-
-                case RotationMode.Hard:
-                default:
-                    location.LookIn(dirToPlayer with { Y = 0.01f });
-                    break;
-            }
-
-            puppetActorMovement.TargetDirection = location.InnerForward;
-
-            // TODO: Add ActorHeadIK behavior for LookAtPlayer
+            case RotationMode.Hard:
+            default:
+                location.LookIn(dirToPlayer with { Y = 0.01f });
+                break;
         }
+
+        puppetActorMovement.TargetDirection = location.InnerForward;
+
+        // TODO: Add ActorHeadIK behavior for LookAtPlayer
     }
 }

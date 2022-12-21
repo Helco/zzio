@@ -6,63 +6,62 @@ using zzio;
 using zzio.vfs;
 using zzre.rendering;
 
-namespace zzmaps
+namespace zzmaps;
+
+internal class RefCachedAssetLoader<TAsset> : CachedAssetLoader<TAsset> where TAsset : class, IDisposable
 {
-    internal class RefCachedAssetLoader<TAsset> : CachedAssetLoader<TAsset> where TAsset : class, IDisposable
+    private readonly Dictionary<FilePath, int> refCounts = new();
+
+    public RefCachedAssetLoader(IAssetLoader<TAsset> parent) : base(parent)
+    { }
+
+    private int RefCountFor(FilePath path) =>
+        refCounts.TryGetValue(path, out var refCount) ? refCount : 0;
+
+    public override void Clear()
     {
-        private readonly Dictionary<FilePath, int> refCounts = new();
-
-        public RefCachedAssetLoader(IAssetLoader<TAsset> parent) : base(parent)
-        { }
-
-        private int RefCountFor(FilePath path) =>
-            refCounts.TryGetValue(path, out var refCount) ? refCount : 0;
-
-        public override void Clear()
+        lock (cache)
         {
-            lock (cache)
+            base.Clear();
+        }
+    }
+
+    public void ClearUnused()
+    {
+        lock (cache)
+        {
+            var unusedPaths = refCounts
+                .Where(kv => kv.Value <= 0)
+                .Select(kv => kv.Key)
+                .ToArray();
+            foreach (var path in unusedPaths)
             {
-                base.Clear();
+                cache[path].Dispose();
+                cache.Remove(path);
+                refCounts.Remove(path);
             }
         }
+    }
 
-        public void ClearUnused()
+    public override bool TryLoad(IResource resource, [NotNullWhen(true)] out TAsset? asset)
+    {
+        lock (cache)
         {
-            lock (cache)
-            {
-                var unusedPaths = refCounts
-                    .Where(kv => kv.Value <= 0)
-                    .Select(kv => kv.Key)
-                    .ToArray();
-                foreach (var path in unusedPaths)
-                {
-                    cache[path].Dispose();
-                    cache.Remove(path);
-                    refCounts.Remove(path);
-                }
-            }
+            var result = base.TryLoad(resource, out asset);
+            if (!result || asset == null)
+                return false;
+
+            refCounts[resource.Path] = RefCountFor(resource.Path) + 1;
+            return true;
         }
+    }
 
-        public override bool TryLoad(IResource resource, [NotNullWhen(true)] out TAsset? asset)
+    public void Release(IEnumerable<IResource> resources)
+    {
+        lock (cache)
         {
-            lock (cache)
-            {
-                var result = base.TryLoad(resource, out asset);
-                if (!result || asset == null)
-                    return false;
-
-                refCounts[resource.Path] = RefCountFor(resource.Path) + 1;
-                return true;
-            }
-        }
-
-        public void Release(IEnumerable<IResource> resources)
-        {
-            lock (cache)
-            {
-                foreach (var resource in resources)
-                    refCounts[resource.Path] = RefCountFor(resource.Path) - 1;
-            }
+            foreach (var resource in resources)
+                refCounts[resource.Path] = RefCountFor(resource.Path) - 1;
         }
     }
 }

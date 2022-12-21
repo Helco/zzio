@@ -1,4 +1,3 @@
-﻿namespace zzre.game.messages
-{
-    public readonly struct ExecuteNPCScript { }
-}
+﻿namespace zzre.game.messages;
+
+public readonly struct ExecuteNPCScript { }

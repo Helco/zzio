@@ -1,7 +1,6 @@
-namespace zzio.rwbs
+namespace zzio.rwbs;
+
+public class RWExtension : ListSection
 {
-    public class RWExtension : ListSection
-    {
-        public override SectionId sectionId => SectionId.Extension;
-    }
+    public override SectionId sectionId => SectionId.Extension;
 }

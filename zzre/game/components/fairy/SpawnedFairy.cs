@@ -1,4 +1,3 @@
-﻿namespace zzre.game.components
-{
-    public record struct SpawnedFairy(DefaultEcs.Entity Entity);
-}
+﻿namespace zzre.game.components;
+
+public record struct SpawnedFairy(DefaultEcs.Entity Entity);

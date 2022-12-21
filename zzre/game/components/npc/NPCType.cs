@@ -1,12 +1,11 @@
-﻿namespace zzre.game.components
+﻿namespace zzre.game.components;
+
+public enum NPCType
 {
-    public enum NPCType
-    {
-        Biped,
-        Pixie,
-        PlantBlocker,
-        Flying,
-        Item,
-        Dead
-    }
+    Biped,
+    Pixie,
+    PlantBlocker,
+    Flying,
+    Item,
+    Dead
 }

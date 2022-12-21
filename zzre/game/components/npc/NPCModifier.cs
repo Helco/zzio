@@ -1,7 +1,6 @@
-﻿namespace zzre.game.components
+﻿namespace zzre.game.components;
+
+public record struct NPCModifier(int Value)
 {
-    public record struct NPCModifier(int Value)
-    {
-        public static implicit operator NPCModifier(int value) => new() { Value = value };
-    }
+    public static implicit operator NPCModifier(int value) => new() { Value = value };
 }

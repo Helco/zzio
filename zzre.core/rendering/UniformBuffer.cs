@@ -2,53 +2,52 @@
 using Veldrid;
 using zzio;
 
-namespace zzre.rendering
+namespace zzre.rendering;
+
+public class UniformBuffer<T> : BaseDisposable where T : unmanaged
 {
-    public class UniformBuffer<T> : BaseDisposable where T : unmanaged
+    private T value = default;
+    private bool isDirty = true;
+
+    public ref T Ref
     {
-        private T value = default;
-        private bool isDirty = true;
-
-        public ref T Ref
+        get
         {
-            get
-            {
-                isDirty = true;
-                return ref value;
-            }
+            isDirty = true;
+            return ref value;
         }
-        public T Value => value;
-        public DeviceBuffer Buffer { get; }
+    }
+    public T Value => value;
+    public DeviceBuffer Buffer { get; }
 
-        public UniformBuffer(ResourceFactory factory)
-        {
-            uint alignedSize = (uint)Marshal.SizeOf<T>();
-            alignedSize = (alignedSize + 15) / 16 * 16;
-            Buffer = factory.CreateBuffer(new BufferDescription(alignedSize, BufferUsage.UniformBuffer));
-            Buffer.Name = $"{GetType().Name} {GetHashCode()}";
-        }
+    public UniformBuffer(ResourceFactory factory)
+    {
+        uint alignedSize = (uint)Marshal.SizeOf<T>();
+        alignedSize = (alignedSize + 15) / 16 * 16;
+        Buffer = factory.CreateBuffer(new BufferDescription(alignedSize, BufferUsage.UniformBuffer));
+        Buffer.Name = $"{GetType().Name} {GetHashCode()}";
+    }
 
-        protected override void DisposeManaged()
-        {
-            base.DisposeManaged();
-            Buffer.Dispose();
-        }
+    protected override void DisposeManaged()
+    {
+        base.DisposeManaged();
+        Buffer.Dispose();
+    }
 
-        public void SetIsDirty() => isDirty = true;
+    public void SetIsDirty() => isDirty = true;
 
-        public void Update(GraphicsDevice device)
-        {
-            if (!isDirty)
-                return;
-            device.UpdateBuffer(Buffer, 0, ref value);
-            isDirty = false;
-        }
+    public void Update(GraphicsDevice device)
+    {
+        if (!isDirty)
+            return;
+        device.UpdateBuffer(Buffer, 0, ref value);
+        isDirty = false;
+    }
 
-        public void Update(CommandList cl)
-        {
-            if (!isDirty)
-                return;
-            cl.UpdateBuffer(Buffer, 0, ref value);
-        }
+    public void Update(CommandList cl)
+    {
+        if (!isDirty)
+            return;
+        cl.UpdateBuffer(Buffer, 0, ref value);
     }
 }

@@ -1,21 +1,20 @@
 ﻿using System;
-namespace zzre.game.components
+namespace zzre.game.components;
+
+public struct NonFairyAnimation
 {
-    public struct NonFairyAnimation
+    public zzio.AnimationType Current;
+    public zzio.AnimationType Next;
+    public float Timer;
+    public bool CanUseAlternativeIdles;
+
+    public NonFairyAnimation(Random random)
     {
-        public zzio.AnimationType Current;
-        public zzio.AnimationType Next;
-        public float Timer;
-        public bool CanUseAlternativeIdles;
-
-        public NonFairyAnimation(Random random)
-        {
-            Current = (zzio.AnimationType)(-1); // that is evil...
-            Next = default;
-            Timer = RandomStartTimer(random);
-            CanUseAlternativeIdles = false;
-        }
-
-        public static float RandomStartTimer(Random random) => random.NextFloat() * 5f + 0.0002f;
+        Current = (zzio.AnimationType)(-1); // that is evil...
+        Next = default;
+        Timer = RandomStartTimer(random);
+        CanUseAlternativeIdles = false;
     }
+
+    public static float RandomStartTimer(Random random) => random.NextFloat() * 5f + 0.0002f;
 }
