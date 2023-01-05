@@ -12,7 +12,12 @@ namespace zzre.game.systems;
 [With(typeof(components.Visibility))]
 public partial class ActorRenderer : AEntitySetSystem<CommandList>
 {
-    private static readonly FilePath BaseTexturePath = new("resources/textures/actorsex");
+    private static readonly FilePath[] BaseTexturePaths =
+    {
+        new("resources/textures/actorsex"),
+        new("resources/textures/models"),
+        new("resources/textures/worlds")
+    };
 
     private readonly ITagContainer diContainer;
     private readonly Camera camera;
@@ -82,7 +87,7 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         var zzreMaterials = rwMaterials.Select(rwMaterial =>
         {
             var material = new ModelSkinnedMaterial(diContainer);
-            (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(BaseTexturePath, rwMaterial);
+            (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(BaseTexturePaths, rwMaterial);
             material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
             material.Uniforms.Ref.vertexColorFactor = 0.0f;
             material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
