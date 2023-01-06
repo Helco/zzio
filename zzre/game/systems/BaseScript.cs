@@ -37,7 +37,7 @@ public abstract class BaseScript : AEntitySetSystem<float>
     /// </summary>
     /// <param name="entity">The entity containing the script</param>
     /// <param name="script">The script execution state</param>
-    /// <returns>Whether the script can continue further</returns>
+    /// <returns>Whether the script execution stopped</returns>
     protected bool Continue(in DefaultEcs.Entity entity, ref components.ScriptExecution script)
     {
         while (!script.HasStopped)
@@ -51,7 +51,7 @@ public abstract class BaseScript : AEntitySetSystem<float>
 
                 case OpReturn.Pause:
                     script.CurrentI++;
-                    return !script.HasStopped;
+                    return true;
 
                 case OpReturn.Stop:
                     script.CurrentI = script.Instructions.Count;
