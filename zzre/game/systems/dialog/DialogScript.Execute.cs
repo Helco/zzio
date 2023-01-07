@@ -72,7 +72,7 @@ partial class DialogScript
                 var uid = UID.Parse(args[0]);
                 var silent = int.Parse(args[1]) != 0;
                 Say(entity, uid, silent);
-                return OpReturn.Pause;
+                return OpReturn.Continue;
 
             case CmdChoice:
                 var targetLabel = int.Parse(args[0]);

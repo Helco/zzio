@@ -1,5 +1,6 @@
 ﻿using System;
 using DefaultEcs.System;
+using zzre.game.components;
 
 namespace zzre.game.systems;
 
@@ -37,10 +38,8 @@ public class DialogLookAt : ISystem<float>
 
     private void HandleRemovedComponent(in DefaultEcs.Entity dialogEntity, in components.DialogState value)
     {
-        if (ShouldPlayerLookAt(value))
-            HandlePlayerLookAt(dialogEntity, false);
-        if (ShouldNPCLookAt(value))
-            HandleNPCLookAt(dialogEntity, false);
+        HandlePlayerLookAt(dialogEntity, false);
+        HandleNPCLookAt(dialogEntity, false);
     }
 
     private void HandleChangedComponent(in DefaultEcs.Entity dialogEntity, in components.DialogState oldValue, in components.DialogState newValue)
@@ -75,7 +74,7 @@ public class DialogLookAt : ISystem<float>
     private void HandleNPCLookAt(DefaultEcs.Entity dialogEntity, bool isEnabled)
     {
         var npcEntity = dialogEntity.Get<components.DialogNPC>().Entity;
-        if (isEnabled)
+        if (isEnabled && npcEntity.Get<NPCType>() == NPCType.Biped) // TODO: Fix Fairy NPCs not looking at player during dialogs
             npcEntity.Set(new components.PuppetActorTarget(game.PlayerEntity.Get<Location>()));
         else
             npcEntity.Remove<components.PuppetActorTarget>();
