@@ -34,13 +34,6 @@ public partial class NPCLookAtPlayer : AEntitySetSystem<float>
         ref components.NPCLookAtPlayer lookAt,
         ref components.PuppetActorMovement puppetActorMovement)
     {
-        lookAt.TimeLeft -= elapsedTime;
-        if (lookAt.TimeLeft < 0f)
-        {
-            entity.Set(components.NPCState.Script);
-            return;
-        }
-
         var playerPos = playerLocation.LocalPosition;
         var dirToPlayer = Vector3.Normalize(playerPos - location.LocalPosition);
         switch (lookAt.RotationMode)
@@ -63,5 +56,14 @@ public partial class NPCLookAtPlayer : AEntitySetSystem<float>
         puppetActorMovement.TargetDirection = location.InnerForward;
 
         // TODO: Add ActorHeadIK behavior for LookAtPlayer
+
+        if (lookAt.TimeLeft <= 0f)
+            return;
+        lookAt.TimeLeft -= elapsedTime;
+        if (lookAt.TimeLeft <= 0f)
+        {
+            entity.Set(components.NPCState.Script);
+            return;
+        }
     }
 }

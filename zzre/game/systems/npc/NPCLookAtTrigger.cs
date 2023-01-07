@@ -25,13 +25,6 @@ public partial class NPCLookAtTrigger : AEntitySetSystem<float>
         ref components.NPCLookAtTrigger lookAt,
         ref components.PuppetActorMovement puppet)
     {
-        lookAt.TimeLeft -= elapsedTime;
-        if (lookAt.TimeLeft < 0f)
-        {
-            entity.Set(components.NPCState.Script);
-            return;
-        }
-
         if (lookAt.Trigger == null)
         {
             var triggerIdx = lookAt.TriggerIdx;
@@ -44,5 +37,14 @@ public partial class NPCLookAtTrigger : AEntitySetSystem<float>
         puppet.TargetDirection = Vector3.Normalize(lookAt.Trigger.pos - location.LocalPosition);
 
         // TODO: Add ActorHeadIK behavior for LookAtTrigger
+
+        if (lookAt.TimeLeft <= 0f)
+            return;
+        lookAt.TimeLeft -= elapsedTime;
+        if (lookAt.TimeLeft <= 0f)
+        {
+            entity.Set(components.NPCState.Script);
+            return;
+        }
     }
 }

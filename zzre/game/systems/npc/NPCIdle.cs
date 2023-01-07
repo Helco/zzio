@@ -18,8 +18,11 @@ public partial class NPCIdle : AEntitySetSystem<float>
         in DefaultEcs.Entity entity,
         ref components.NPCIdle idle)
     {
+        if (idle.TimeLeft <= 0f)
+            return;
+
         idle.TimeLeft -= elapsedTime;
-        if (idle.TimeLeft < 0f)
+        if (idle.TimeLeft <= 0f)
             entity.Set(components.NPCState.Script);
     }
 }
