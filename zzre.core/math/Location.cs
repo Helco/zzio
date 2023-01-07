@@ -93,7 +93,7 @@ public class Location
 
     public void HorizontalSlerpIn(Vector3 dir, float curvature, float time)
     {
-        var newForward = MathEx.HorizontalSlerp(Vector3.Normalize(dir), InnerForward, curvature, time);
+        var newForward = MathEx.HorizontalSlerp(InnerForward, Vector3.Normalize(dir), curvature, time);
         LookIn(newForward);
     }
 
