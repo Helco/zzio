@@ -101,17 +101,19 @@ public static class ImGuiEx
         return hasChanged;
     }
 
-    public static bool EnumCombo<T>(string label, ref T value, string[]? labels = null) where T : Enum
+    public static bool EnumCombo<T>(string label, ref T value, string[]? labels = null) where T : Enum => EnumComboUnsafe(label, ref value, labels);
+
+    public static bool EnumComboUnsafe<T>(string label, ref T value, string[]? labels = null)
     {
         var values = Enum.GetValues(typeof(T)).Cast<T>().ToArray();
-        labels = labels ?? Enum.GetNames(typeof(T));
+        labels ??= Enum.GetNames(typeof(T));
 
-        if (!BeginCombo(label, value.ToString()))
+        if (!BeginCombo(label, value!.ToString()))
             return false;
         bool hasChanged = false;
         for (int i = 0; i < labels.Length; i++)
         {
-            if (Selectable(labels[i], value.Equals(values[i])))
+            if (Selectable(labels[i], value!.Equals(values[i])))
             {
                 value = values[i];
                 hasChanged = true;

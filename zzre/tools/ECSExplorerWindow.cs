@@ -2,14 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DefaultEcs.Serialization;
 using ImGuiNET;
 using zzre.game;
 using zzre.imgui;
 
 using static ImGuiNET.ImGui;
 
-internal class ECSExplorerWindow
+internal partial class ECSExplorerWindow
 {
     private readonly ITagContainer diContainer;
     private readonly ZanzarahWindow zzWindow;
@@ -35,26 +34,22 @@ internal class ECSExplorerWindow
         if (Zanzarah.CurrentGame == null)
             return;
 
+        var entityContentRenderer = new EntityContentRenderer();
+
         foreach (var entity in Zanzarah.CurrentGame.PlayerEntity.World)
         {
             if (!TreeNodeEx(entity.ToString(), ImGuiTreeNodeFlags.Framed | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow))
                 continue;
-            RenderEntityContent(entity);
+            if (!BeginTable("components", 2, ImGuiTableFlags.BordersOuter | ImGuiTableFlags.RowBg))
+            {
+                TreePop();
+                continue;
+            }
+            TableSetupColumn("Name");
+            TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
+            entity.ReadAllComponents(entityContentRenderer);
+            EndTable();
             TreePop();
         }
-    }
-
-    private class EntityContentRenderer : IComponentReader
-    {
-        public void OnRead<T>(in T component, in DefaultEcs.Entity componentOwner)
-        {
-            if (TreeNodeEx(typeof(T).Name, ImGuiTreeNodeFlags.Leaf))
-                TreePop();
-        }
-    }
-
-    private void RenderEntityContent(DefaultEcs.Entity entity)
-    {
-        entity.ReadAllComponents(new EntityContentRenderer());
     }
 }
