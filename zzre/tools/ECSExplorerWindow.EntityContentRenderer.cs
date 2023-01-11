@@ -91,46 +91,13 @@ internal partial class ECSExplorerWindow
         }
     }
 
-    private static void GenericComponentRenderer<T>(in T component)
-    {
-        TableNextRow();
-        TableNextColumn();
+    private static void GenericComponentRenderer<T>(in T component) => GenericField(typeof(T).Name, component);
 
-        var type = typeof(T);
-        if (!type.IsValueType)
-        {
-            TreeNodeEx(type.Name, ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.Bullet);
-            TableNextColumn();
-            Text("(reference)");
-            TreePop();
-            return;
-        }
-
-        if (type.IsEnum)
-        {
-            var tmpComponent = component;
-            TreeNodeEx(type.Name, ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.Bullet);
-            TableNextColumn();
-            ImGuiEx.EnumComboUnsafe<T>("", ref tmpComponent);
-            TreePop();
-            return;
-        }
-
-        if (!TreeNodeEx(type.Name, default))
-            return;
-
-        var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public);
-        foreach (var field in fields)
-            GenericField(field.GetValue(component)!, field);
-
-        TreePop();
-    }
-
-    private static void GenericField(object value, FieldInfo field)
+    private static void GenericField(string name, object? value)
     {
         void NameColumn()
         {
-            TreeNodeEx(field.Name, ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.Bullet);
+            TreeNodeEx(name, ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.Bullet);
             TableNextColumn();
         }
 
@@ -183,18 +150,29 @@ internal partial class ECSExplorerWindow
             NameColumn();
             Combo("", ref tmpIndex, tmpEnum.ToString());
         }
-        else if (field.FieldType.IsValueType)
+        else if (value.GetType().IsValueType)
         {
-            if (!TreeNodeEx(field.Name, default))
-                return;
-            var fields = field.FieldType.GetFields(BindingFlags.Instance | BindingFlags.Public);
-            foreach (var subField in fields)
-                GenericField(subField.GetValue(value)!, subField);
+            var properties = value.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            var fields = value.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public);
+            if (properties.Length == 0 && fields.Length == 0)
+            {
+                NameColumn();
+                Text("<marker>");
+            }
+            else
+            {
+                if (!TreeNodeEx(name, default))
+                    return;
+                foreach (var prop in properties)
+                    GenericField(prop.Name, prop.GetValue(value));
+                foreach (var subField in fields)
+                    GenericField(subField.Name, subField.GetValue(value));
+            }
         }
         else
         {
             NameColumn();
-            Text(value.ToString());
+            TextWrapped(value.ToString() + " (reference)");
         }
         TreePop();
     }
