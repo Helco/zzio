@@ -10,6 +10,7 @@ namespace zzre.tools;
 partial class ECSExplorer
 {
     public delegate string? TryGetEntityNameFunc(DefaultEcs.Entity entity);
+    public delegate string? TryGetEntityNameByComponentFunc<T>(in T component);
 
     private class EntityNamer : IComparable<EntityNamer>
     {
@@ -33,6 +34,15 @@ partial class ECSExplorer
             TryGetEntityName = func
         });
     }
+
+    public static void AddEntityNamerByComponent<T>(int prio, TryGetEntityNameFunc func) =>
+        AddEntityNamer(prio, entity => entity.IsAlive && entity.Has<T>() ? func(entity) : null);
+
+    public static void AddEntityNamerByComponent<T>(int prio, TryGetEntityNameByComponentFunc<T> func) =>
+        AddEntityNamer(prio, entity => entity.IsAlive && entity.Has<T>() ? func(entity.Get<T>()) : null);
+
+    public static void AddEntityNamerByComponent<T>(int prio, string name) =>
+        AddEntityNamer(prio, entity => entity.IsAlive && entity.Has<T>() ? name : null);
 
     private static string GetEntityName(DefaultEcs.Entity entity)
     {

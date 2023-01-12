@@ -16,6 +16,11 @@ internal partial class ECSExplorer
     public Window Window { get; }
     private Zanzarah Zanzarah => zzWindow.Zanzarah;
 
+    static ECSExplorer()
+    {
+        AddStandardEntityNaming();
+    }
+
     public ECSExplorer(ITagContainer diContainer, ZanzarahWindow zzWindow)
     {
         this.diContainer = diContainer;
