@@ -12,7 +12,6 @@ internal partial class ECSExplorerWindow
 {
     private readonly ITagContainer diContainer;
     private readonly ZanzarahWindow zzWindow;
-    private readonly HashSet<DefaultEcs.Entity> openEntities = new();
 
     public Window Window { get; }
     private Zanzarah Zanzarah => zzWindow.Zanzarah;
@@ -38,7 +37,7 @@ internal partial class ECSExplorerWindow
 
         foreach (var entity in Zanzarah.CurrentGame.PlayerEntity.World)
         {
-            if (!TreeNodeEx(entity.ToString(), ImGuiTreeNodeFlags.Framed | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow))
+            if (!TreeNodeEx(GetEntityName(entity), ImGuiTreeNodeFlags.Framed | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow))
                 continue;
             if (!BeginTable("components", 2, ImGuiTableFlags.BordersOuter | ImGuiTableFlags.RowBg))
             {
@@ -50,6 +49,25 @@ internal partial class ECSExplorerWindow
             entity.ReadAllComponents(entityContentRenderer);
             EndTable();
             TreePop();
+        }
+    }
+
+    private class LazySortedList<T> : List<T>
+    {
+        private bool isSorted = true;
+
+        public new void Add(T value)
+        {
+            base.Add(value);
+            isSorted = false;
+        }
+
+        public void SortIfNecessary()
+        {
+            if (isSorted)
+                return;
+            isSorted = true;
+            Sort();
         }
     }
 }

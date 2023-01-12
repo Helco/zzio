@@ -31,32 +31,10 @@ internal partial class ECSExplorerWindow
         public RenderComponentFunc<T>? Render { get; init; }
     }
 
-    private class ComponentRendererList : List<ComponentRenderer>
+    private static readonly Dictionary<Type, LazySortedList<ComponentRenderer>> componentRenderers = new();
+
+    public static void AddComponentRenderer<T>(int prio, RenderComponentFunc<T> render)
     {
-        private bool isSorted = true;
-
-        public new void Add(ComponentRenderer renderer)
-        {
-            base.Add(renderer);
-            isSorted = false;
-        }
-
-        public void SortIfNecessary()
-        {
-            if (isSorted)
-                return;
-            isSorted = true;
-            Sort();
-        }
-    }
-
-    private static Dictionary<Type, ComponentRendererList> componentRenderers = new();
-
-    public static void AddComponentRenderer<T>(int prio = 0, RenderComponentFunc<T>? render = null)
-    {
-        if (render == null)
-            throw new ArgumentException("At least one of the functions have to be implemented");
-
         if (!componentRenderers.TryGetValue(typeof(T), out var list))
             componentRenderers.Add(typeof(T), list = new());
         list.Add(new ComponentRenderer<T>()
