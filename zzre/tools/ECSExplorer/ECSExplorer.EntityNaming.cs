@@ -7,7 +7,7 @@ using static ImGuiNET.ImGui;
 
 namespace zzre.tools;
 
-partial class ECSExplorerWindow
+partial class ECSExplorer
 {
     public delegate string? TryGetEntityNameFunc(DefaultEcs.Entity entity);
 

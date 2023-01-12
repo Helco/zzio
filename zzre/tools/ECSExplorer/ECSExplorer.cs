@@ -8,7 +8,7 @@ using zzre.imgui;
 
 using static ImGuiNET.ImGui;
 
-internal partial class ECSExplorerWindow
+internal partial class ECSExplorer
 {
     private readonly ITagContainer diContainer;
     private readonly ZanzarahWindow zzWindow;
@@ -16,7 +16,7 @@ internal partial class ECSExplorerWindow
     public Window Window { get; }
     private Zanzarah Zanzarah => zzWindow.Zanzarah;
 
-    public ECSExplorerWindow(ITagContainer diContainer, ZanzarahWindow zzWindow)
+    public ECSExplorer(ITagContainer diContainer, ZanzarahWindow zzWindow)
     {
         this.diContainer = diContainer;
         this.zzWindow = zzWindow;

@@ -11,7 +11,7 @@ using Vulkan;
 using zzre.imgui;
 using static ImGuiNET.ImGui;
 
-internal partial class ECSExplorerWindow
+internal partial class ECSExplorer
 {
     public delegate void RenderComponentFunc<T>(in T component, in DefaultEcs.Entity entity);
 
