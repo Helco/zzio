@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ImGuiNET;
 using zzre.game;
+using zzre.game.components;
 using zzre.imgui;
 
 using static ImGuiNET.ImGui;
@@ -19,6 +20,7 @@ internal partial class ECSExplorer
     static ECSExplorer()
     {
         AddStandardEntityNaming();
+        AddStandardEntityGrouping();
     }
 
     public ECSExplorer(ITagContainer diContainer, ZanzarahWindow zzWindow)
@@ -40,19 +42,48 @@ internal partial class ECSExplorer
 
         var entityContentRenderer = new EntityContentRenderer();
 
-        foreach (var entity in Zanzarah.CurrentGame.PlayerEntity.World)
+        var children = Zanzarah.CurrentGame.PlayerEntity.World
+            .ToLookup(e => e.Has<Parent>() ? e.Get<Parent>().Entity : default);
+
+        var groups = children[default].ToLookup(GetEntityGroup);
+
+        foreach (var group in groups)
+        {
+            if (group.Key == null)
+                continue;
+
+            if (!TreeNodeEx($"{group.Key} ({group.Count()})", ImGuiTreeNodeFlags.Framed | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow))
+                continue;
+            foreach (var entity in group)
+                HandleEntity(entity);
+            TreePop();
+        }
+        if (groups.Contains(null))
+        {
+            foreach (var entity in groups[null])
+                HandleEntity(entity);
+        }
+
+        void HandleEntity(DefaultEcs.Entity entity)
         {
             if (!TreeNodeEx(GetEntityName(entity), ImGuiTreeNodeFlags.Framed | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow))
-                continue;
+                return;
             if (!BeginTable("components", 2, ImGuiTableFlags.BordersOuter | ImGuiTableFlags.RowBg))
             {
                 TreePop();
-                continue;
+                return;
             }
             TableSetupColumn("Name");
             TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
             entity.ReadAllComponents(entityContentRenderer);
             EndTable();
+
+            if (children.Contains(entity))
+            {
+                foreach (var child in children[entity])
+                    HandleEntity(child);
+            }
+
             TreePop();
         }
     }

@@ -42,4 +42,19 @@ partial class ECSExplorer
 
         AddEntityNamerByComponent(Low, (in Trigger t) => $"Trigger {t.type} {t.idx}");
     }
+
+    private static void AddStandardEntityGrouping()
+    {
+        const string Models = "Models";
+        const string Triggers = "Triggers";
+        const string NPCs = "NPCs";
+        const string Animals = "Animals";
+
+        AddEntityGrouperByComponent<NpcRow>(1000, NPCs);
+        AddEntityGrouperByComponent<Butterfly>(1000, Animals);
+        AddEntityGrouperByComponent<CirclingBird>(1000, Animals);
+        AddEntityGrouperByComponent<AnimalWaypointAI>(1000, Animals);
+        AddEntityGrouperByComponent<ClumpBuffers>(0, Models);
+        AddEntityGrouperByComponent<Trigger>(-1, Triggers);
+    }
 }
