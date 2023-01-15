@@ -39,7 +39,7 @@ public struct AnimalWaypointAI
         public float MaxIdleTime { get; init; } = 0f;
         public float NormalSpeed { get; init; } = 10f;
 
-        public static Configuration Chicken => new()
+        public static readonly Configuration Chicken = new()
         {
             Flees = true,
             Crawls = true,
@@ -47,7 +47,7 @@ public struct AnimalWaypointAI
             NormalSpeed = 2.1f
         };
 
-        public static Configuration Rabbit => new()
+        public static readonly Configuration Rabbit = new()
         {
             Crawls = true,
             FullAnimationCycles = true,
@@ -55,20 +55,20 @@ public struct AnimalWaypointAI
             NormalSpeed = 2.1f
         };
 
-        public static Configuration Bug => new()
+        public static readonly Configuration Bug = new()
         {
             Crawls = true,
             OrientsToGround = true,
             NormalSpeed = 0.2f
         };
 
-        public static Configuration Firefly => new()
+        public static readonly Configuration Firefly = new()
         {
             MaxIdleTime = Random.Shared.NextFloat(),
             NormalSpeed = Random.Shared.NextFloat() * 3f
         };
 
-        public static Configuration Frog => new()
+        public static readonly Configuration Frog = new()
         {
             Crawls = true,
             OrientsToGround = true,
@@ -77,13 +77,13 @@ public struct AnimalWaypointAI
             NormalSpeed = 1.4f
         };
 
-        public static Configuration Dragonfly => new()
+        public static readonly Configuration Dragonfly = new()
         {
             MaxIdleTime = 4f,
             NormalSpeed = 5f
         };
 
-        public static Configuration BlackPixie => new()
+        public static readonly Configuration BlackPixie = new()
         {
             Crawls = true,
             FullAnimationCycles = true,

@@ -63,6 +63,7 @@ public class Animal : BaseDisposable, ISystem<float>
                 LocalRotation = trigger.dir.ToZZRotation()
             };
             entity.Set(location);
+            entity.Set(trigger);
 
             var type = (AnimalType)trigger.ii1;
             var actorFile = ChooseActorFile(type);

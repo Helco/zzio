@@ -16,7 +16,7 @@ public class ZanzarahWindow : IZanzarahContainer
     private readonly HashSet<MouseButton> buttonsDown = new();
     private Action<Vector2>? onMouseMove;
     private bool moveCamWithDrag;
-    private ECSExplorerWindow? ecsExplorer;
+    private ECSExplorer? ecsExplorer;
 
     private bool MoveCamWithDrag
     {
@@ -156,7 +156,7 @@ public class ZanzarahWindow : IZanzarahContainer
     {
         if (ecsExplorer == null)
         {
-            ecsExplorer = new ECSExplorerWindow(diContainer, this);
+            ecsExplorer = new ECSExplorer(diContainer, this);
             ecsExplorer.Window.OnClose += () => ecsExplorer = null;
         }
         else
