@@ -49,7 +49,9 @@ public partial class DialogScript : BaseScript
     private readonly EntityCommandRecorder recorder;
     private readonly IDisposable startDialogDisposable;
     private readonly IDisposable removedDisposable;
+    private readonly IDisposable sceneLoadedDisposable;
 
+    private Scene scene = null!;
     private DefaultEcs.Entity dialogEntity;
     private EntityRecord RecordDialogEntity() => recorder.Record(dialogEntity);
     private DefaultEcs.Entity NPCEntity => dialogEntity.Get<components.DialogNPC>().Entity;
@@ -64,6 +66,7 @@ public partial class DialogScript : BaseScript
         recorder = diContainer.GetTag<EntityCommandRecorder>();
         startDialogDisposable = World.Subscribe<messages.StartDialog>(HandleStartDialog);
         removedDisposable = World.SubscribeComponentRemoved<components.DialogState>(HandleDialogStateRemoved);
+        sceneLoadedDisposable = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
     }
 
     public override void Dispose()
@@ -71,7 +74,10 @@ public partial class DialogScript : BaseScript
         base.Dispose();
         startDialogDisposable.Dispose();
         removedDisposable.Dispose();
+        sceneLoadedDisposable.Dispose();
     }
+
+    private void HandleSceneLoaded(in messages.SceneLoaded msg) => scene = msg.Scene;
 
     private void HandleStartDialog(in messages.StartDialog message)
     {
@@ -368,8 +374,12 @@ public partial class DialogScript : BaseScript
 
     private void CreateDynamicItems(DefaultEcs.Entity entity, int id, int count, int triggerI)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        if (triggerI >= scene.triggers.Length)
+            throw new ArgumentOutOfRangeException(nameof(triggerI), $"Invalid trigger index for CreateDynamicItems");
+        var position = triggerI < 0
+            ? NPCEntity.Get<Location>().LocalPosition
+            : scene.triggers[triggerI].pos;
+        World.Publish(new messages.CreateItem(id, position, count));
     }
 
     private void PlayVideo(DefaultEcs.Entity entity, int id)

@@ -15,6 +15,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     private readonly DefaultEcs.World ecsWorld;
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
+    private readonly IDisposable createItemSubscription;
 
     public ModelLoader(ITagContainer diContainer)
     {
@@ -22,12 +23,15 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
+        createItemSubscription = ecsWorld.Subscribe<messages.CreateItem>(HandleCreateItem);
     }
 
     protected override void DisposeManaged()
     {
         base.DisposeManaged();
         sceneLoadSubscription.Dispose();
+        sceneChangingSubscription.Dispose();
+        createItemSubscription.Dispose();
     }
 
     public bool IsEnabled { get; set; } = true;
@@ -105,6 +109,28 @@ public class ModelLoader : BaseDisposable, ISystem<float>
             // TODO: Add FOModel distance fading
 
             plantWiggleDelay++;
+        }
+    }
+
+    private void HandleCreateItem(in messages.CreateItem msg)
+    {
+        if (msg.Count < 1)
+            return;
+
+        for (int i = 0; i < msg.Count; i++)
+        {
+            var entity = ecsWorld.CreateEntity();
+            entity.Set(new Location()
+            {
+                Parent = ecsWorld.Get<Location>(),
+                LocalPosition = msg.Position,
+                LocalRotation = Vector3.UnitX.ToZZRotation()
+            });
+            entity.Set(ManagedResource<ClumpBuffers>.Create(
+                new resources.ClumpInfo(resources.ClumpType.Model, $"itm{msg.ItemId:D3}.dff")));
+            LoadMaterialsFor(entity, FOModelRenderType.Solid, IColor.White, new(1f, 1f, 1f));
+            SetCollider(entity);
+            SetBehaviour(entity, BehaviourType.Collectable_Physics, uint.MaxValue);
         }
     }
 

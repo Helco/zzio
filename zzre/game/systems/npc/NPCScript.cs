@@ -7,6 +7,7 @@ using System.Linq;
 using zzio.scn;
 using zzio.db;
 using zzio;
+using static System.Formats.Asn1.AsnWriter;
 
 [PauseDuring(PauseTrigger.UIScreen)]
 public partial class NPCScript : BaseScript
@@ -15,10 +16,13 @@ public partial class NPCScript : BaseScript
     private const float ItemColliderSizeOffset = -0.05f;
 
     private readonly IDisposable executeScriptSubscription;
+    private readonly IDisposable sceneLoadedSubscription;
     private readonly Game game;
     private readonly MappedDB db;
     private Location playerLocation => playerLocationLazy.Value;
     private readonly Lazy<Location> playerLocationLazy;
+
+    private Scene scene = null!;
 
     public NPCScript(ITagContainer diContainer) : base(diContainer, CreateEntityContainer)
     {
@@ -26,16 +30,20 @@ public partial class NPCScript : BaseScript
         db = diContainer.GetTag<MappedDB>();
         playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         executeScriptSubscription = World.Subscribe<messages.ExecuteNPCScript>(HandleExecuteNPCScript);
+        sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
     }
 
     public override void Dispose()
     {
         base.Dispose();
         executeScriptSubscription.Dispose();
+        sceneLoadedSubscription.Dispose();
     }
 
     [WithPredicate]
     private static bool IsScriptNPCState(in components.NPCState state) => state == components.NPCState.Script;
+
+    private void HandleSceneLoaded(in messages.SceneLoaded msg) => scene = msg.Scene;
 
     private void HandleExecuteNPCScript(in messages.ExecuteNPCScript message)
     {
@@ -274,7 +282,12 @@ public partial class NPCScript : BaseScript
 
     private void CreateDynamicItems(DefaultEcs.Entity entity, int itemId, int count, int triggerI)
     {
-        Console.WriteLine("Warning: unimplemented NPC instruction \"CreateDynamicItems\"");
+        if (triggerI >= scene.triggers.Length)
+            throw new ArgumentOutOfRangeException(nameof(triggerI), $"Invalid trigger index for CreateDynamicItems");
+        var position = triggerI < 0
+            ? entity.Get<Location>().LocalPosition
+            : scene.triggers[triggerI].pos;
+        World.Publish(new messages.CreateItem(itemId, position, count));
     }
 
     private void Revive(DefaultEcs.Entity entity) => entity.Get<Inventory>().FillMana();
