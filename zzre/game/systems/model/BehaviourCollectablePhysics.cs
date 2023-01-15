@@ -71,10 +71,10 @@ public partial class BehaviourCollectablePhysics : AEntitySetSystem<float>
         {
             physics.Velocity = Vector3.Normalize(intersection.Value.Normal) * BonkSpeed;
             physics.YVelocity *= BonkYSpeed;
-            if (physics.YVelocity < MinBonkYSpeed)
+            if (Math.Abs(physics.YVelocity) < MinBonkYSpeed)
                 physics.YVelocity = 0f; // stopping any jumps
 
-            newPos = intersection.Value.Point * BonkDistance;
+            newPos = intersection.Value.Point + physics.Velocity * BonkDistance;
         }
         location.LocalPosition = newPos + Vector3.UnitY * YOffset;
     }
