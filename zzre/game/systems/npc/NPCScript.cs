@@ -3,11 +3,11 @@ using System;
 using System.Numerics;
 using DefaultEcs.System;
 using DefaultEcs.Resource;
+using DefaultEcs.Command;
 using System.Linq;
 using zzio.scn;
 using zzio.db;
 using zzio;
-using static System.Formats.Asn1.AsnWriter;
 
 [PauseDuring(PauseTrigger.UIScreen)]
 public partial class NPCScript : BaseScript
@@ -19,6 +19,7 @@ public partial class NPCScript : BaseScript
     private readonly IDisposable sceneLoadedSubscription;
     private readonly Game game;
     private readonly MappedDB db;
+    private readonly EntityCommandRecorder recorder;
     private Location playerLocation => playerLocationLazy.Value;
     private readonly Lazy<Location> playerLocationLazy;
 
@@ -28,6 +29,7 @@ public partial class NPCScript : BaseScript
     {
         game = diContainer.GetTag<Game>();
         db = diContainer.GetTag<MappedDB>();
+        recorder = diContainer.GetTag<EntityCommandRecorder>();
         playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         executeScriptSubscription = World.Subscribe<messages.ExecuteNPCScript>(HandleExecuteNPCScript);
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
@@ -133,7 +135,10 @@ public partial class NPCScript : BaseScript
 
     private void RemoveNPC(DefaultEcs.Entity entity)
     {
-        Console.WriteLine("Warning: unimplemented NPC instruction \"RemoveNPC\"");
+        // Unused in the original game
+        World.Publish(new messages.UnreserveNextWaypoint(entity));
+        World.Publish(new GSModDisableTrigger(entity.Get<Trigger>().idx));
+        recorder.Record(entity).Dispose();
     }
 
     private bool IfTriggerIsActive(DefaultEcs.Entity entity, int triggerI)
@@ -158,6 +163,7 @@ public partial class NPCScript : BaseScript
 
     private void LockUserInput(DefaultEcs.Entity entity, bool isLocked)
     {
+        // Unused in the original game
         if (isLocked)
         {
             World.Publish(messages.LockPlayerControl.Forever);

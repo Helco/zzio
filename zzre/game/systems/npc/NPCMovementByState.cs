@@ -19,12 +19,14 @@ public partial class NPCMovementByState : NPCMovementBase
     private readonly EntityCommandRecorder recorder;
     private readonly IDisposable changeWaypointSubscription;
     private readonly IDisposable moveSystemSubscription;
+    private readonly IDisposable unreserveWaypointSubscription;
 
     public NPCMovementByState(ITagContainer diContainer) : base(diContainer, CreateEntityContainer, useBuffer: false)
     {
         recorder = diContainer.GetTag<EntityCommandRecorder>();
         changeWaypointSubscription = World.Subscribe<messages.NPCChangeWaypoint>(HandleChangeWaypoint);
         moveSystemSubscription = World.Subscribe<messages.NPCMoveSystem>(HandleMoveSystem);
+        unreserveWaypointSubscription = World.Subscribe<messages.UnreserveNextWaypoint>(HandleUnreserveNextWaypoint);
     }
 
     public override void Dispose()
@@ -32,10 +34,18 @@ public partial class NPCMovementByState : NPCMovementBase
         base.Dispose();
         changeWaypointSubscription.Dispose();
         moveSystemSubscription.Dispose();
+        unreserveWaypointSubscription.Dispose();
     }
 
     [WithPredicate]
     private static bool IsMovementNPCState(in components.NPCState value) => value == components.NPCState.Waypoint;
+
+    private void HandleUnreserveNextWaypoint(in messages.UnreserveNextWaypoint msg)
+    {
+        ref var move = ref msg.npcEntity.Get<components.NPCMovement>();
+        if (move.NextWaypointId >= 0)
+            waypointByIdx[move.NextWaypointId].ii3 = 0;
+    }
 
     private void HandleChangeWaypoint(in messages.NPCChangeWaypoint msg)
     {
