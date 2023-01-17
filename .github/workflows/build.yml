@@ -22,14 +22,14 @@ jobs:
         fetch-depth: 0
     - name: Build cache key
       run: |
-        cat get-dependencies.sh > .cache-key
-        git submodule status >> .cache-key
+        cat get-dependencies.sh > cache-key
+        git submodule status >> cache-key
     - name: Cache local dependencies
       uses: actions/cache@v3
       id: cache-local
       with:
         path: nuget-feed
-        key: local-${{ hashFiles('.cache-key') }}
+        key: local-${{ hashFiles('cache-key') }}
     - name: Setup .NET Core 7.0.x
       uses: actions/setup-dotnet@v3
       with:
