@@ -29,7 +29,7 @@ jobs:
       id: cache-local
       with:
         path: nuget-feed
-        key: local-${{ hashFiles('cache-key') }}
+        key: local-${{ hashFiles('**/cache-key') }}
     - name: Setup .NET Core 7.0.x
       uses: actions/setup-dotnet@v3
       with:
