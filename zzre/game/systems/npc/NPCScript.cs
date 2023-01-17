@@ -156,9 +156,15 @@ public partial class NPCScript : BaseScript
         entity.Get<components.NPCMovement>().Speed = speed * 0.1f;
     }
 
-    private void LockUserInput(DefaultEcs.Entity entity, int isLocked)
+    private void LockUserInput(DefaultEcs.Entity entity, bool isLocked)
     {
-        Console.WriteLine("Warning: unimplemented NPC instruction \"LockUserInput\"");
+        if (isLocked)
+        {
+            World.Publish(messages.LockPlayerControl.Forever);
+            World.Publish(new messages.ResetPlayerMovement());
+        }
+        else
+            World.Publish(messages.LockPlayerControl.Unlock);
     }
 
     private void PlayAnimation(DefaultEcs.Entity entity, zzio.AnimationType animationType, int intDuration)

@@ -97,7 +97,7 @@ partial class NPCScript
                 return OpReturn.Continue;
 
             case CmdLockUserInput:
-                var isLocked = int.Parse(args.Single());
+                var isLocked = int.Parse(args.Single()) == 1;
                 LockUserInput(entity, isLocked);
                 return OpReturn.Continue;
 

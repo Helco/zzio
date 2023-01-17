@@ -22,10 +22,28 @@ public partial class PlayerPuppet : AEntitySetSystem<float>
     private const string ThudVoiceSample2 = ThudVoiceSampleBase + "B.WAV";
 
     private readonly Camera camera;
+    private readonly IDisposable resetMovementSubscription;
 
     public PlayerPuppet(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         camera = diContainer.GetTag<Camera>();
+        resetMovementSubscription = World.Subscribe<messages.ResetPlayerMovement>(HandleResetMovement);
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        resetMovementSubscription.Dispose();
+    }
+
+    private void HandleResetMovement(in messages.ResetPlayerMovement _)
+    {
+        foreach (var entity in Set.GetEntities())
+        {
+            entity.Get<components.HumanPhysics>().Velocity = Vector3.Zero;
+            entity.Get<components.NonFairyAnimation>().Next = zzio.AnimationType.Idle0;
+            entity.Get<components.PlayerPuppet>().FallTimer = 0f;
+        }
     }
 
     [Update]

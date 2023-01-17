@@ -255,8 +255,14 @@ public partial class DialogScript : BaseScript
 
     private void LockUserInput(DefaultEcs.Entity entity, int mode)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        // TODO: Dialog LockUserInput is missing mode 2 behaviour
+        if (mode is 1 or 2)
+        {
+            World.Publish(messages.LockPlayerControl.Forever);
+            World.Publish(new messages.ResetPlayerMovement());
+        }
+        else
+            World.Publish(messages.LockPlayerControl.Unlock);
     }
 
     private void ModifyTrigger(DefaultEcs.Entity entity, int enableTrigger, int id, int triggerI)
