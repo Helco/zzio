@@ -86,7 +86,7 @@ public partial class NPCScript : BaseScript
 
     private void SetCamera(DefaultEcs.Entity entity, int triggerArg)
     {
-        Console.WriteLine("Warning: unimplemented NPC instruction \"SetCamera\"");
+        World.Publish(new messages.SetCameraMode(3000 + triggerArg, entity));
     }
 
     private void Wizform(DefaultEcs.Entity entity, int atIndex, int fairyId, int level)
