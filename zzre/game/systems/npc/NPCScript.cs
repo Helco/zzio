@@ -60,8 +60,6 @@ public partial class NPCScript : BaseScript
         Continue(entity, ref execution);
     }
 
-    // TODO: Missing NPC script NPC instructions
-
     private void SetModel(DefaultEcs.Entity entity, string name)
     {
         if (entity.Has<components.ActorParts>()) // not required by Zanzarah and a bit too much effort
