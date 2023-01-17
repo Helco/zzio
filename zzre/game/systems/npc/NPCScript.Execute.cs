@@ -124,10 +124,7 @@ partial class NPCScript
                 {
                     case "0": DeployMeAtTrigger(entity, triggerI); break;
                     case "1": DeployPlayerAtTrigger(entity, triggerI); break;
-                    default:
-                        var uid = UID.Parse(args[1]);
-                        DeployNPCAtTrigger(entity, uid);
-                        break;
+                    default: break; // does nothing in the original game
                 }
                 return OpReturn.Continue;
 

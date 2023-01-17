@@ -200,12 +200,6 @@ public partial class NPCScript : BaseScript
         World.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, triggerI));
     }
 
-    private void DeployNPCAtTrigger(DefaultEcs.Entity entity, UID uid)
-    {
-        // In the original game, NPC scripts cannot execute this
-        Console.WriteLine("Warning: unimplemented NPC instruction \"DeployNPCAtTrigger\"");
-    }
-
     private bool IfCloseToWaypoint(DefaultEcs.Entity entity, int waypointI)
     {
         ref readonly var move = ref entity.Get<components.NPCMovement>();
