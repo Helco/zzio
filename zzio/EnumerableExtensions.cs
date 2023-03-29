@@ -70,4 +70,7 @@ public static class EnumerableExtensions
 
     public static IEnumerable<TElement> SelectMany<TElement>(this IEnumerable<IEnumerable<TElement>> set)
         => set.SelectMany(s => s);
+
+    public static TCompare? MaxOrDefault<TElement, TCompare>(this IEnumerable<TElement> set, Func<TElement, TCompare> selector, TCompare? defaultValue = default) =>
+        set.Any() ? set.Max(selector) : defaultValue;
 }

@@ -29,8 +29,8 @@ public partial class Inventory : IReadOnlyCollection<InventoryCard>
         this.mappedDB = mappedDB;
         if (savegame == null)
             return;
-        var maxIndex = savegame.inventory.Max(i => i.atIndex);
-        cards = Enumerable.Repeat<InventoryCard?>(null, (int)maxIndex + 1).ToList();
+        var maxIndex = savegame.inventory.MaxOrDefault(i => (int)i.atIndex, -1);
+        cards = Enumerable.Repeat<InventoryCard?>(null, maxIndex + 1).ToList();
         foreach (var card in savegame.inventory)
         {
             var atIndex = card.atIndex;
