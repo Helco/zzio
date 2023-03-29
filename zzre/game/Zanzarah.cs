@@ -44,10 +44,10 @@ public class Zanzarah : ITagContainer
         this.zanzarahContainer = zanzarahContainer;
 
         var savegame = new zzio.Savegame();
-        using (var fileStream = new System.IO.FileStream(@"C:\dev\zanzarah\Save\_0004.dat", System.IO.FileMode.Open, System.IO.FileAccess.Read))
+        /*using (var fileStream = new System.IO.FileStream(@"C:\dev\zanzarah\Save\_0004.dat", System.IO.FileMode.Open, System.IO.FileAccess.Read))
         using (var reader = new System.IO.BinaryReader(fileStream))
-            savegame = zzio.Savegame.ReadNew(reader);
-        savegame.sceneId = 2411;
+            savegame = zzio.Savegame.ReadNew(reader);*/
+        savegame.sceneId = 3202;
         CurrentGame = new Game(this, savegame);
         tagContainer.AddTag(CurrentGame);
     }

@@ -131,12 +131,12 @@ public class Game : BaseDisposable, ITagContainer
 
         LoadScene($"sc_{savegame.sceneId}");
         var scene = ecsWorld.Get<Scene>();
-        ecsWorld.Publish(new messages.PlayerEntered(scene.triggers[savegame.entryId]));
+        ecsWorld.Publish(new messages.PlayerEntered(FindEntryTrigger(savegame.entryId)));
 
         ecsWorld.GetEntities()
             .With((in Trigger t) => t.idx == 88)
             .AsEnumerable()
-            .First().Dispose();
+            .FirstOrDefault().Dispose();
     }
 
     protected override void DisposeManaged()
@@ -196,6 +196,29 @@ public class Game : BaseDisposable, ITagContainer
 
         ecsWorld.Publish(new messages.SceneLoaded(scene));
     }
+
+    public Trigger? TryFindTrigger(TriggerType type, int ii1 = -1)
+    {
+        var triggerEntity = ecsWorld
+            .GetEntities()
+            .With((in Trigger t) => t.type == type && (ii1 < 0 || t.ii1 == ii1))
+            .AsEnumerable()
+            .FirstOrDefault();
+        return triggerEntity == default
+            ? null
+            : triggerEntity.Get<Trigger>();
+    }
+
+    public Trigger FindEntryTrigger(int targetEntry) => (targetEntry < 0
+        ? (TryFindTrigger(TriggerType.SingleplayerStartpoint)
+        ?? TryFindTrigger(TriggerType.SavePoint)
+        ?? TryFindTrigger(TriggerType.MultiplayerStartpoint))
+
+        : TryFindTrigger(TriggerType.Doorway, targetEntry)
+        ?? TryFindTrigger(TriggerType.Elevator, targetEntry)
+        ?? TryFindTrigger(TriggerType.RuneTarget, targetEntry))
+
+        ?? throw new System.IO.InvalidDataException($"Scene does not have suitable entry trigger for {targetEntry}");
 
     public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);
     public TTag GetTag<TTag>() where TTag : class => tagContainer.GetTag<TTag>();

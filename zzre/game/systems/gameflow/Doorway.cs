@@ -59,30 +59,7 @@ public partial class Doorway : AEntitySetSystem<float>
         World.Publish(new messages.SceneChanging());
         World.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
         game.LoadScene(targetScene);
-        World.Publish(new messages.PlayerEntered(FindEntryTrigger()));
+        World.Publish(new messages.PlayerEntered(game.FindEntryTrigger(targetEntry)));
         entity.Set(components.GameFlow.Normal);
     }
-
-    private Trigger? TryFindTrigger(TriggerType type, int ii1 = -1)
-    {
-        var triggerEntity = World
-            .GetEntities()
-            .With((in Trigger t) => t.type == type && (ii1 < 0 || t.ii1 == ii1))
-            .AsEnumerable()
-            .FirstOrDefault();
-        return triggerEntity == default
-            ? null
-            : triggerEntity.Get<Trigger>();
-    }
-
-    private Trigger FindEntryTrigger() => (targetEntry < 0
-        ? (TryFindTrigger(TriggerType.SingleplayerStartpoint)
-        ?? TryFindTrigger(TriggerType.SavePoint)
-        ?? TryFindTrigger(TriggerType.MultiplayerStartpoint))
-
-        : TryFindTrigger(TriggerType.Doorway, targetEntry)
-        ?? TryFindTrigger(TriggerType.Elevator, targetEntry)
-        ?? TryFindTrigger(TriggerType.RuneTarget, targetEntry))
-
-        ?? throw new System.IO.InvalidDataException($"Scene {targetScene} does not have suitable entry trigger for {targetEntry}");
 }
