@@ -146,6 +146,15 @@ public partial class Inventory
         }
     }
 
+    /// <returns>Index of slot or -1 if no slot was free</returns>
+    public int SetFirstFreeSlot(InventoryFairy fairy)
+    {
+        var slotI = fairySlots.IndexOf(null as InventoryFairy);
+        if (slotI >= 0)
+            SetSlot(fairy, slotI);
+        return slotI;
+    }
+
     public void SetSpellSlot(InventoryFairy fairy, InventorySpell spell, int spellSlotI)
     {
         var spellIndex = IndexOf(spell);

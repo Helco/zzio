@@ -4,7 +4,6 @@ using System.Linq;
 using System.Numerics;
 using DefaultEcs.Resource;
 using DefaultEcs.System;
-using zzre.game.components;
 
 namespace zzre.game.systems;
 

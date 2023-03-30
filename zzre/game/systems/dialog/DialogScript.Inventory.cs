@@ -52,8 +52,24 @@ partial class DialogScript
 
     private void GivePlayerCards(DefaultEcs.Entity entity, int count, CardType type, int id)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        for (int i = 0; i < count; i++)
+        {
+            var invCard = PlayerInventory.Add(new CardId(type, id));
+            World.Publish(new messages.GotCard(invCard.dbUID, count));
+            if (invCard is not InventoryFairy invFairy)
+                continue;
+
+            var dbFairy = db.GetFairy(invFairy.dbUID);
+            var isFirstFairy = PlayerInventory.SetFirstFreeSlot(invFairy) == 0;
+            var spellId = isFirstFairy
+                ? (int)StdSpells.GetStarterSpellFor(dbFairy.Class0)
+                : StdSpells.GetFirstAttackSpell(db, dbFairy.Class0, (uint)Random.Shared.Next(3, 10)).CardId.EntityId;
+            var invSpell = PlayerInventory.AddSpell(spellId);
+            PlayerInventory.SetSpellSlot(invFairy, invSpell, 0);
+
+            PlayerInventory.AddXP(invFairy,
+                PlayerInventory.GetXPForLevel(invFairy, isFirstFairy ? 9u : 3u));
+        }
     }
 
     private void RemovePlayerCards(DefaultEcs.Entity entity, int count, CardType type, int id)
