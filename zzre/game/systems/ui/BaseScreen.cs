@@ -24,7 +24,6 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     protected readonly IZanzarahContainer zzContainer;
     protected readonly Zanzarah zanzarah;
     protected readonly UI ui;
-    protected readonly DefaultEcs.World uiWorld;
     protected readonly UIPreloader preload;
     protected event Action<DefaultEcs.Entity, components.ui.ElementId>? OnElementDown;
     protected event Action<DefaultEcs.Entity, components.ui.ElementId>? OnElementUp;
@@ -38,7 +37,6 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
         zanzarah = diContainer.GetTag<Zanzarah>();
         ui = diContainer.GetTag<UI>();
         preload = ui.GetTag<UIPreloader>();
-        uiWorld = ui.GetTag<DefaultEcs.World>();
         World.SetMaxCapacity<TComponent>(1);
         openSubscription = World.Subscribe<TMessage>(HandleOpen);
         addedSubscription = World.SubscribeComponentAdded<TComponent>(HandleAdded);
@@ -89,9 +87,10 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
         if (button != Veldrid.MouseButton.Left)
             return;
 
-        if (!uiWorld.Has<components.ui.HoveredElement>())
+        if (!World.Has<components.ui.HoveredElement>())
             return;
-        var hovered = uiWorld.Get<components.ui.HoveredElement>();
+        // TODO: Check whether multiple screens could respond to the same element click
+        var hovered = World.Get<components.ui.HoveredElement>();
         if (isDown)
             OnElementDown?.Invoke(hovered.Entity, hovered.Id);
         else
