@@ -2,21 +2,28 @@
 using System;
 using System.Linq;
 using DefaultEcs.System;
+using zzio;
+using zzio.db;
 using zzio.scn;
 
 [PauseDuring(PauseTrigger.UIScreen)]
 public partial class Doorway : AEntitySetSystem<float>
 {
+    private readonly UI ui;
     private readonly Game game;
+    private readonly MappedDB db;
     private readonly IDisposable doorwayTriggerDisposable;
 
+    private UID lastSceneName = UID.Invalid;
     private string targetScene = "";
     private int targetEntry;
     private float fadeOffTime; // just a placeholder, will be removed after actual fade off exists
 
     public Doorway(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
+        ui = diContainer.GetTag<UI>();
         game = diContainer.GetTag<Game>();
+        db = diContainer.GetTag<MappedDB>();
         doorwayTriggerDisposable = World.SubscribeComponentAdded<components.ActiveTrigger>(HandleActiveTrigger);
     }
 
@@ -61,5 +68,14 @@ public partial class Doorway : AEntitySetSystem<float>
         game.LoadScene(targetScene);
         World.Publish(new messages.PlayerEntered(game.FindEntryTrigger(targetEntry)));
         entity.Set(components.GameFlow.Normal);
+
+        var newSceneName = World.Get<Scene>().dataset.nameUID;
+        //if (newSceneName != lastSceneName && newSceneName != UID.Invalid)
+        if (newSceneName != UID.Invalid)
+        {
+            lastSceneName = newSceneName;
+            var nameText = db.GetText(newSceneName).Text;
+            ui.Publish(new messages.ui.Notification(nameText));
+        }
     }
 }

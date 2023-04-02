@@ -6,6 +6,8 @@ namespace zzio;
 [Serializable]
 public struct UID : IEquatable<UID>
 {
+    public static readonly UID Invalid = new(uint.MaxValue);
+
     public readonly uint raw;
     public int Module => (int)(raw % 16);
 
