@@ -9,6 +9,7 @@ namespace zzre.game.systems.ui;
 
 public partial class ScrNotification : BaseScreen<components.ui.ScrNotification, messages.ui.Notification>
 {
+    private const float YOffset = -OverlayHeight / 2;
     private const float OverlayHeight = 100f;
     private const float BorderHeight = 2f;
     private const int RenderOrder = -1000;
@@ -38,7 +39,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
         component.MainOverlay = preload.CreateImage(entity)
             .With(UIPreloader.DefaultOverlayColor)
             .With(components.ui.FullAlignment.Center)
-            .With(Rect.FromTopLeftSize(Vector2.Zero, new(screenSize.X, OverlayHeight)))
+            .With(Rect.FromTopLeftSize(new(0, YOffset), new(screenSize.X, OverlayHeight)))
             .With(components.ui.Fade.In(1f))
             .WithRenderOrder(RenderOrder + 1)
             .Build();
@@ -46,7 +47,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
         component.TopBorder = preload.CreateImage(entity)
             .With(BorderColor)
             .With(components.ui.FullAlignment.BottomCenter)
-            .With(Rect.FromTopLeftSize(new(0f, -OverlayHeight / 2), new(screenSize.X, BorderHeight)))
+            .With(Rect.FromTopLeftSize(new(0f, YOffset - OverlayHeight / 2), new(screenSize.X, BorderHeight)))
             .With(components.ui.Fade.StdIn)
             .WithRenderOrder(RenderOrder)
             .Build();
@@ -54,14 +55,14 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
         component.BottomBorder = preload.CreateImage(entity)
             .With(BorderColor)
             .With(components.ui.FullAlignment.TopCenter)
-            .With(Rect.FromTopLeftSize(new(0f, +OverlayHeight / 2), new(screenSize.X, BorderHeight)))
+            .With(Rect.FromTopLeftSize(new(0f, YOffset + OverlayHeight / 2), new(screenSize.X, BorderHeight)))
             .With(components.ui.Fade.StdIn)
             .WithRenderOrder(RenderOrder)
             .Build();
 
         component.TextLabel = preload.CreateLabel(entity)
             .With(components.ui.FullAlignment.TopCenter)
-            .With(new Vector2(45, -12))
+            .With(new Vector2(45, YOffset - 12))
             .With(message.SmallFont ? preload.Fnt000 : preload.Fnt001)
             .WithText(message.Texts.First())
             .WithAnimation(2)
@@ -72,7 +73,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
         {
             component.IconImage = preload.CreateImage(entity)
                 .With(message.Icon.Value)
-                .With(new Vector2(0, -20))
+                .With(new Vector2(0, YOffset - 20))
                 .WithRenderOrder(RenderOrder)
                 .Build();
         }
@@ -82,6 +83,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
             component.Button = preload.CreateButton(entity)
                 .With(ButtonElementId)
                 .With(components.ui.FullAlignment.Center)
+                .With(new Vector2(0, YOffset))
                 .With(new components.ui.ButtonTiles(17, 18))
                 .With(preload.Btn000)
                 .WithLabel()
