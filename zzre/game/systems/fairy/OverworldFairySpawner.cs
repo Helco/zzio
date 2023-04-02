@@ -17,7 +17,7 @@ public partial class OverworldFairySpawner : AEntitySetSystem<float>
     {
         db = diContainer.GetTag<zzio.db.MappedDB>();
         sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
-        inventoryAddedSubscription = World.SubscribeComponentAdded<Inventory>(HandleInventoryAdded);
+        inventoryAddedSubscription = World.SubscribeEntityComponentAdded<Inventory>(HandleInventoryAdded);
     }
 
     public override void Dispose()

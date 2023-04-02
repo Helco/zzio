@@ -9,7 +9,7 @@ public partial class BehaviourUVShift : AEntitySetSystem<float>
 
     public BehaviourUVShift(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
-        addedSubscription = World.SubscribeComponentAdded<components.behaviour.UVShift>(HandleComponentAdded);
+        addedSubscription = World.SubscribeEntityComponentAdded<components.behaviour.UVShift>(HandleComponentAdded);
     }
 
     public override void Dispose()

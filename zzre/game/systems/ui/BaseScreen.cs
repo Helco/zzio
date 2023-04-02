@@ -39,8 +39,8 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
         preload = ui.GetTag<UIPreloader>();
         World.SetMaxCapacity<TComponent>(1);
         openSubscription = World.Subscribe<TMessage>(HandleOpen);
-        addedSubscription = World.SubscribeComponentAdded<TComponent>(HandleAdded);
-        removedSubscription = World.SubscribeComponentRemoved<TComponent>(HandleRemoved);
+        addedSubscription = World.SubscribeEntityComponentAdded<TComponent>(HandleAdded);
+        removedSubscription = World.SubscribeEntityComponentRemoved<TComponent>(HandleRemoved);
     }
 
     public override void Dispose()

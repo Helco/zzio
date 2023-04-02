@@ -29,8 +29,8 @@ public partial class Label : AEntitySetSystem<float>
     public Label(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         recorder = diContainer.GetTag<EntityCommandRecorder>();
-        addedSubscription = World.SubscribeComponentAdded<components.ui.Label>(SetLabelNeedsTiling);
-        changedSubscription = World.SubscribeComponentChanged<components.ui.Label>(SetLabelNeedsTiling);
+        addedSubscription = World.SubscribeEntityComponentAdded<components.ui.Label>(SetLabelNeedsTiling);
+        changedSubscription = World.SubscribeEntityComponentChanged<components.ui.Label>(SetLabelNeedsTiling);
     }
 
     public override void Dispose()

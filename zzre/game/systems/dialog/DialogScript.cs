@@ -65,7 +65,7 @@ public partial class DialogScript : BaseScript
         savegame = diContainer.GetTag<zzio.Savegame>();
         recorder = diContainer.GetTag<EntityCommandRecorder>();
         startDialogDisposable = World.Subscribe<messages.StartDialog>(HandleStartDialog);
-        removedDisposable = World.SubscribeComponentRemoved<components.DialogState>(HandleDialogStateRemoved);
+        removedDisposable = World.SubscribeEntityComponentRemoved<components.DialogState>(HandleDialogStateRemoved);
         sceneLoadedDisposable = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
     }
 

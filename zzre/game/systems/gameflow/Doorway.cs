@@ -24,7 +24,7 @@ public partial class Doorway : AEntitySetSystem<float>
         ui = diContainer.GetTag<UI>();
         game = diContainer.GetTag<Game>();
         db = diContainer.GetTag<MappedDB>();
-        doorwayTriggerDisposable = World.SubscribeComponentAdded<components.ActiveTrigger>(HandleActiveTrigger);
+        doorwayTriggerDisposable = World.SubscribeEntityComponentAdded<components.ActiveTrigger>(HandleActiveTrigger);
     }
 
     public override void Dispose()

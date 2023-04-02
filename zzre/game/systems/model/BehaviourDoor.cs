@@ -22,7 +22,7 @@ public partial class BehaviourDoor : AEntitySetSystem<float>
     {
         game = diContainer.GetTag<Game>();
         playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
-        addedSubscription = World.SubscribeComponentAdded<components.behaviour.Door>(HandleComponentAdded);
+        addedSubscription = World.SubscribeEntityComponentAdded<components.behaviour.Door>(HandleComponentAdded);
 
         locks = World
             .GetEntities()

@@ -23,8 +23,8 @@ public class SyncedLocation : BaseDisposable, ISystem<CommandList>
         diContainer.AddTag(this);
         locationBuffer = diContainer.GetTag<LocationBuffer>();
         var ecsWorld = diContainer.GetTag<DefaultEcs.World>();
-        addSubscription = ecsWorld.SubscribeComponentAdded<components.SyncedLocation>(HandleAddedComponent);
-        removeSubscription = ecsWorld.SubscribeComponentRemoved<components.SyncedLocation>(HandleRemovedComponent);
+        addSubscription = ecsWorld.SubscribeEntityComponentAdded<components.SyncedLocation>(HandleAddedComponent);
+        removeSubscription = ecsWorld.SubscribeEntityComponentRemoved<components.SyncedLocation>(HandleRemovedComponent);
     }
 
     protected override void DisposeManaged()
