@@ -5,6 +5,7 @@ using DefaultEcs.System;
 
 namespace zzre.game.systems.ui;
 
+[Without(typeof(components.Disabled))]
 public partial class Cursor : AEntitySetSystem<float>
 {
     private readonly IZanzarahContainer zzContainer;

@@ -28,4 +28,8 @@ public record struct FullAlignment(Alignment Horizontal, Alignment Vertical)
 
     public static readonly FullAlignment CenterLeft = new(Alignment.Min, Alignment.Center);
     public static readonly FullAlignment CenterRight = new(Alignment.Max, Alignment.Center);
+
+    public static readonly FullAlignment BottomLeft = new(Alignment.Min, Alignment.Max);
+    public static readonly FullAlignment BottomCenter = new(Alignment.Center, Alignment.Max);
+    public static readonly FullAlignment BottomRight = new(Alignment.Max, Alignment.Max);
 }

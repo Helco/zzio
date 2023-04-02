@@ -180,6 +180,9 @@ public partial class Inventory : IReadOnlyCollection<InventoryCard>
         .Where(c => inUse == null || c!.isInUse == inUse.Value)
         .Sum(c => (int)c!.amount);
 
+    public bool Contains(CardId cardId) => cards.Any(c => c?.cardId == cardId);
+    public bool Contains(StdItemId itemId) => Contains(new CardId(CardType.Item, (int)itemId));
+
     public InventoryFairy? GetFairyAtSlot(int slot) => fairySlots[slot];
 
     public InventorySpell? GetSpellAtSlot(InventoryFairy fairy, int slot)

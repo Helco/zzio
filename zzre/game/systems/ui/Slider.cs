@@ -14,7 +14,7 @@ public partial class Slider : AEntitySetSystem<float>
     {
         zzContainer = diContainer.GetTag<IZanzarahContainer>();
         ui = diContainer.GetTag<UI>();
-        addedSubscription = World.SubscribeComponentAdded<components.ui.Slider>(HandleAdded);
+        addedSubscription = World.SubscribeEntityComponentAdded<components.ui.Slider>(HandleAdded);
     }
 
     public override void Dispose()

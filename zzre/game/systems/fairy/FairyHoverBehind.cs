@@ -17,7 +17,7 @@ public partial class FairyHoverBehind : AEntitySetSystem<float>
     {
         time = diContainer.GetTag<GameTime>();
         playerEnteredSubscription = World.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
-        addedSubscription = World.SubscribeComponentAdded<components.FairyHoverBehind>(HandleAddedComponent);
+        addedSubscription = World.SubscribeEntityComponentAdded<components.FairyHoverBehind>(HandleAddedComponent);
     }
 
     public override void Dispose()

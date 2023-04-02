@@ -23,7 +23,7 @@ public partial class PuppetActorMovement : AEntitySetSystem<float>
     public PuppetActorMovement(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
-        addedSubscription = World.SubscribeComponentAdded<components.PuppetActorMovement>(HandleComponentAdded);
+        addedSubscription = World.SubscribeEntityComponentAdded<components.PuppetActorMovement>(HandleComponentAdded);
         placeToGroundSubscription = World.Subscribe<messages.CreaturePlaceToGround>(HandlePlaceToGround);
         placeToTriggerSubscription = World.Subscribe<messages.CreaturePlaceToTrigger>(HandlePlaceToTrigger);
     }

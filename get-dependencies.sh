@@ -1,7 +1,9 @@
 #!/bin/bash
 set +e
 
-git submodule update --init --recursive --single-branch .
+if [[ "$1" != "no-submodule-update" ]]; then
+    git submodule update --init --recursive --single-branch .
+fi
 
 if [[ "$OSTYPE" == "msys" ]]; then
     powershell -executionpolicy bypass -File "extern/ImGui.NET/download-native-deps.ps1" -tag 1.88 -repository "https://github.com/Helco/ImGui.NET-nativebuild"

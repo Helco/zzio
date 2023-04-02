@@ -27,7 +27,7 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
     {
         game = diContainer.GetTag<Game>();
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
-        addSubscription = World.SubscribeComponentAdded<components.AnimalWaypointAI>(HandleAddedComponent);
+        addSubscription = World.SubscribeEntityComponentAdded<components.AnimalWaypointAI>(HandleAddedComponent);
     }
 
     public override void Dispose()

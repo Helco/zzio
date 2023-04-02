@@ -57,10 +57,15 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     protected override void HandleOpen(in messages.ui.OpenDeck message)
     {
+        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        if (!inventory.Contains(StdItemId.FairyBag))
+            inventory.AddItem((int)StdItemId.FairyBag);
+            //return;
+
         var entity = World.CreateEntity();
         entity.Set<components.ui.ScrDeck>();
         ref var deck = ref entity.Get<components.ui.ScrDeck>();
-        deck.Inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        deck.Inventory = inventory;
         deck.DeckSlotParents = Array.Empty<DefaultEcs.Entity>();
 
         CreateBackgrounds(entity, ref deck);
@@ -450,7 +455,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         var allCardsOfType = AllCardsOfType(deck);
         var count = allCardsOfType.Count();
-        deck.Scroll = Math.Clamp(deck.Scroll, 0, count - 1);
+        deck.Scroll = Math.Clamp(deck.Scroll, 0, Math.Max(0, count - 1));
         var shownCards = allCardsOfType
             .Skip(deck.Scroll)
             .Take(deck.ListButtons.Length)

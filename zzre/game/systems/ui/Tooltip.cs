@@ -16,8 +16,8 @@ public partial class Tooltip : AEntitySetSystem<float>
     public Tooltip(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         mappedDB = diContainer.GetTag<MappedDB>();
-        addedSubscription = World.SubscribeComponentAdded<components.ui.Hovered>(HandleAddedComponent);
-        removedSubscription = World.SubscribeComponentRemoved<components.ui.Hovered>(HandleRemovedComponent);
+        addedSubscription = World.SubscribeEntityComponentAdded<components.ui.Hovered>(HandleAddedComponent);
+        removedSubscription = World.SubscribeEntityComponentRemoved<components.ui.Hovered>(HandleRemovedComponent);
     }
 
     public override void Dispose()

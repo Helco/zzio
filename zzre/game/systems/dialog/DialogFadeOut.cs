@@ -12,7 +12,7 @@ public partial class DialogFadeOut : AEntitySetSystem<float>
     public DialogFadeOut(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         recorder = diContainer.GetTag<EntityCommandRecorder>();
-        setStateDisposable = World.SubscribeComponentChanged<components.DialogState>(HandleState);
+        setStateDisposable = World.SubscribeEntityComponentChanged<components.DialogState>(HandleState);
     }
 
     public override void Dispose()

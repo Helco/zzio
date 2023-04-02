@@ -26,7 +26,7 @@ public partial class PlantWiggle : AEntitySetSystem<float>
         gameTime = diContainer.GetTag<GameTime>();
         playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         cameraLocation = diContainer.GetTag<rendering.Camera>().Location;
-        addComponentSubscription = World.SubscribeComponentAdded<components.PlantWiggle>(HandleComponentAdded);
+        addComponentSubscription = World.SubscribeEntityComponentAdded<components.PlantWiggle>(HandleComponentAdded);
     }
 
     public override void Dispose()

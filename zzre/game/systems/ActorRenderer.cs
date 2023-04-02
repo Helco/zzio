@@ -31,8 +31,8 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         this.diContainer = diContainer;
         camera = diContainer.GetTag<Camera>();
         textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
-        addSubscription = World.SubscribeComponentAdded<components.ActorPart>(HandleAddedComponent);
-        removeSubscription = World.SubscribeComponentRemoved<ModelSkinnedMaterial[]>(HandleRemovedComponent);
+        addSubscription = World.SubscribeEntityComponentAdded<components.ActorPart>(HandleAddedComponent);
+        removeSubscription = World.SubscribeEntityComponentRemoved<ModelSkinnedMaterial[]>(HandleRemovedComponent);
     }
 
     public override void Dispose()

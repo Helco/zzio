@@ -1,6 +1,5 @@
 ﻿using System;
 using DefaultEcs.System;
-using zzre.game.components;
 
 namespace zzre.game.systems;
 
@@ -17,9 +16,9 @@ public class DialogLookAt : ISystem<float>
     {
         game = diContainer.GetTag<Game>();
         var world = diContainer.GetTag<DefaultEcs.World>();
-        addedSubscription = world.SubscribeComponentAdded<components.DialogState>(HandleAddedComponent);
-        removedSubscription = world.SubscribeComponentRemoved<components.DialogState>(HandleRemovedComponent);
-        changedSubscription = world.SubscribeComponentChanged<components.DialogState>(HandleChangedComponent);
+        addedSubscription = world.SubscribeEntityComponentAdded<components.DialogState>(HandleAddedComponent);
+        removedSubscription = world.SubscribeEntityComponentRemoved<components.DialogState>(HandleRemovedComponent);
+        changedSubscription = world.SubscribeEntityComponentChanged<components.DialogState>(HandleChangedComponent);
     }
     public void Dispose()
     {
@@ -74,7 +73,7 @@ public class DialogLookAt : ISystem<float>
     private void HandleNPCLookAt(DefaultEcs.Entity dialogEntity, bool isEnabled)
     {
         var npcEntity = dialogEntity.Get<components.DialogNPC>().Entity;
-        if (isEnabled && npcEntity.Get<NPCType>() == NPCType.Biped) // TODO: Fix Fairy NPCs not looking at player during dialogs
+        if (isEnabled && npcEntity.Get<components.NPCType>() == components.NPCType.Biped) // TODO: Fix Fairy NPCs not looking at player during dialogs
             npcEntity.Set(new components.PuppetActorTarget(game.PlayerEntity.Get<Location>()));
         else
             npcEntity.Remove<components.PuppetActorTarget>();

@@ -54,9 +54,9 @@ internal class SceneMetadataBuilder
             var metadata = new SceneMetadata()
             {
                 ID = scene.dataset.sceneId,
-                Name = scene.dataset.nameUID == 0xFFFFFFFF
+                Name = scene.dataset.nameUID == UID.Invalid
                     ? "<none>"
-                    : mappedDb.GetText(new UID(scene.dataset.nameUID)).Text,
+                    : mappedDb.GetText(scene.dataset.nameUID).Text,
                 MinZoom = mapTiler.MinZoomLevel,
                 MaxZoom = mapTiler.MaxZoomLevel,
                 BasePixelsPerUnit = mapTiler.BasePixelsPerUnit,

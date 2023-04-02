@@ -10,8 +10,8 @@ public partial class ButtonTiles : AEntitySetSystem<float>
 
     public ButtonTiles(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
-        addedSubscription = World.SubscribeComponentAdded<components.ui.ButtonTiles>(HandleComponentAdded);
-        changedSubscription = World.SubscribeComponentChanged<components.ui.ButtonTiles>(HandleComponentChanged);
+        addedSubscription = World.SubscribeEntityComponentAdded<components.ui.ButtonTiles>(HandleComponentAdded);
+        changedSubscription = World.SubscribeEntityComponentChanged<components.ui.ButtonTiles>(HandleComponentChanged);
     }
 
     public override void Dispose()

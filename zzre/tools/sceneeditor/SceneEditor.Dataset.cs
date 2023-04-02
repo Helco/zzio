@@ -34,7 +34,7 @@ public partial class SceneEditor
                 return;
             Text("Dataset");
             int sceneId = (int)dataset.sceneId;
-            var nameUID = dataset.nameUID.ToString("X8");
+            var nameUID = dataset.nameUID.ToString();
             int unk1 = dataset.unk1;
             int unk4 = (int)dataset.unk4;
             int v3 = (int)version.v3;

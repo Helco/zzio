@@ -17,7 +17,7 @@ public partial class BehaviourSwing : AEntitySetSystem<float>
     public BehaviourSwing(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         time = diContainer.GetTag<GameTime>();
-        addedSubscription = World.SubscribeComponentAdded<components.behaviour.Swing>(HandleComponentAdded);
+        addedSubscription = World.SubscribeEntityComponentAdded<components.behaviour.Swing>(HandleComponentAdded);
     }
 
     public override void Dispose()

@@ -26,7 +26,7 @@ public partial class BehaviourCollectablePhysics : AEntitySetSystem<float>
     public BehaviourCollectablePhysics(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         camera = diContainer.GetTag<rendering.Camera>();
-        addedSubscription = World.SubscribeComponentAdded<components.behaviour.CollectablePhysics>(HandleComponentAdded);
+        addedSubscription = World.SubscribeEntityComponentAdded<components.behaviour.CollectablePhysics>(HandleComponentAdded);
     }
 
     public override void Dispose()

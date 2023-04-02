@@ -1,12 +1,11 @@
-﻿namespace zzre.game.systems.ui;
-using System;
+﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
-using DefaultEcs.System;
 using zzio;
 using zzio.db;
-using DefaultEcs;
+
+namespace zzre.game.systems.ui;
 
 public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.ui.OpenGotCard>
 {
@@ -95,14 +94,14 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
         // TODO: Play sound and set cursor in ScrGotCard
     }
 
-    private void HandleElementDown(Entity _, components.ui.ElementId elementId)
+    private void HandleElementDown(DefaultEcs.Entity _, components.ui.ElementId elementId)
     {
         var screenEntity = Set.GetEntities()[0];
         if (elementId == IDExit)
             screenEntity.Dispose();
     }
 
-    protected override void Update(float timeElapsed, in Entity entity, ref components.ui.ScrGotCard component)
+    protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.ui.ScrGotCard component)
     {
     }
 }
