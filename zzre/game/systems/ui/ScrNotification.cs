@@ -11,6 +11,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
 {
     private const float OverlayHeight = 100f;
     private const float BorderHeight = 2f;
+    private const int RenderOrder = -1000;
     private static readonly components.ui.ElementId ButtonElementId = new(-1000); // not original but avoids id conflicts
     private static readonly FColor BorderColor = new IColor(0xff, 0xea, 0xB7, 0);
 
@@ -37,22 +38,25 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
         component.MainOverlay = preload.CreateImage(entity)
             .With(UIPreloader.DefaultOverlayColor)
             .With(components.ui.FullAlignment.Center)
-            .With(new Rect(Vector2.Zero, new(screenSize.X, OverlayHeight)))
+            .With(Rect.FromTopLeftSize(Vector2.Zero, new(screenSize.X, OverlayHeight)))
             .With(components.ui.Fade.In(1f))
+            .WithRenderOrder(RenderOrder + 1)
             .Build();
 
         component.TopBorder = preload.CreateImage(entity)
             .With(BorderColor)
             .With(components.ui.FullAlignment.BottomCenter)
-            .With(new Rect(new(0f, -OverlayHeight / 2), new(screenSize.X, BorderHeight)))
+            .With(Rect.FromTopLeftSize(new(0f, -OverlayHeight / 2), new(screenSize.X, BorderHeight)))
             .With(components.ui.Fade.StdIn)
+            .WithRenderOrder(RenderOrder)
             .Build();
 
         component.BottomBorder = preload.CreateImage(entity)
             .With(BorderColor)
             .With(components.ui.FullAlignment.TopCenter)
-            .With(new Rect(new(0f, +OverlayHeight / 2), new(screenSize.X, BorderHeight)))
+            .With(Rect.FromTopLeftSize(new(0f, +OverlayHeight / 2), new(screenSize.X, BorderHeight)))
             .With(components.ui.Fade.StdIn)
+            .WithRenderOrder(RenderOrder)
             .Build();
 
         component.TextLabel = preload.CreateLabel(entity)
@@ -61,6 +65,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
             .With(message.SmallFont ? preload.Fnt000 : preload.Fnt001)
             .WithText(message.Texts.First())
             .WithAnimation(2)
+            .WithRenderOrder(RenderOrder)
             .Build();
 
         if (message.Icon.HasValue)
@@ -68,6 +73,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
             component.IconImage = preload.CreateImage(entity)
                 .With(message.Icon.Value)
                 .With(new Vector2(0, -20))
+                .WithRenderOrder(RenderOrder)
                 .Build();
         }
 
@@ -81,6 +87,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
                 .WithLabel()
                     .With(preload.Fnt000)
                     .WithText(message.Button)
+                .WithRenderOrder(RenderOrder)
                 .Build();
         }
     }
