@@ -10,6 +10,8 @@ public class UIPreloader
 {
     private const float ButtonTextSpacing = 10f;
 
+    public static readonly FColor DefaultOverlayColor = new FColor(0.029999999f, 0.050000001f, 0.029999999f, 0.8f);
+
     internal readonly DefaultEcs.World UIWorld;
     private readonly zzio.db.MappedDB mappedDb;
 
@@ -157,7 +159,7 @@ public class UIPreloader
         backgroundRect = image.Get<Rect>();
 
         var overlay = CreateImage(parent)
-            .With(new FColor(0.029999999f, 0.050000001f, 0.029999999f, animateOverlay ? 0f : 0.8f))
+            .With(DefaultOverlayColor with { a = animateOverlay ? 0f : 0.8f })
             .With(backgroundRect)
             .WithRenderOrder(2);
         if (animateOverlay)
