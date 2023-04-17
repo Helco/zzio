@@ -55,7 +55,7 @@ public class DialogLookAt : ISystem<float>
 
     private void HandlePlayerLookAt(DefaultEcs.Entity dialogEntity, bool isEnabled)
     {
-        if (isEnabled)
+        if (isEnabled && dialogEntity.IsAlive)
         {
             var npcLocation = dialogEntity.Get<components.DialogNPC>().Entity.Get<Location>();
             game.PlayerEntity.Set(new components.PuppetActorTarget(npcLocation));
@@ -73,6 +73,9 @@ public class DialogLookAt : ISystem<float>
     private void HandleNPCLookAt(DefaultEcs.Entity dialogEntity, bool isEnabled)
     {
         var npcEntity = dialogEntity.Get<components.DialogNPC>().Entity;
+        if (!npcEntity.IsAlive)
+            return;
+
         if (isEnabled && npcEntity.Get<components.NPCType>() == components.NPCType.Biped) // TODO: Fix Fairy NPCs not looking at player during dialogs
             npcEntity.Set(new components.PuppetActorTarget(game.PlayerEntity.Get<Location>()));
         else
