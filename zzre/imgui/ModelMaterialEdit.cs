@@ -20,6 +20,7 @@ public class ModelMaterialEdit : BaseDisposable
     private readonly ImGuiRenderer imGuiRenderer;
     private IReadOnlyList<ModelStandardMaterial> materials = Array.Empty<ModelStandardMaterial>();
     private IntPtr[] textureBindings = Array.Empty<IntPtr>();
+    private OnceAction onceAction;
 
     public bool OpenEntriesByDefault { get; set; } = true;
 
@@ -28,8 +29,12 @@ public class ModelMaterialEdit : BaseDisposable
         get => materials;
         set
         {
-            foreach (var oldMaterial in materials)
-                imGuiRenderer.RemoveImGuiBinding(oldMaterial.MainTexture.Texture);
+            var oldMaterials = materials.ToArray();
+            onceAction.Next += () => // delay removing ImGui bindings so they are still alive for last the last render
+            {
+                foreach (var oldMaterial in materials)
+                    imGuiRenderer.RemoveImGuiBinding(oldMaterial.MainTexture.Texture);
+            };
 
             materials = value;
             textureBindings = materials.Select(
@@ -41,6 +46,7 @@ public class ModelMaterialEdit : BaseDisposable
     public ModelMaterialEdit(Window window, ITagContainer diContainer)
     {
         window.AddTag(this);
+        onceAction = window.GetTag<OnceAction>();
         imGuiRenderer = window.Container.ImGuiRenderer;
         resourceFactory = diContainer.GetTag<GraphicsDevice>().ResourceFactory;
     }

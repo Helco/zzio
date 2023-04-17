@@ -130,9 +130,6 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         geometryBuffers = new ClumpBuffers(diContainer, resource);
         AddDisposable(geometryBuffers);
 
-        foreach (var oldTexture in materials.Select(m => m.MainTexture.Texture))
-            imGuiRenderer.RemoveImGuiBinding(oldTexture);
-
         materials = new ModelStandardMaterial[geometryBuffers.SubMeshes.Count];
         foreach (var (rwMaterial, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
         {
