@@ -220,7 +220,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         ImGui.Text($"Submeshes: {geometryBuffers?.SubMeshes.Count}");
         ImGui.Text($"Bones: {skeletonRenderer?.Skeleton.Bones.Count}");
         ImGui.Text($"Collision splits: {collider?.Collision.splits.Length}");
-        ImGui.Text("Collision test: " + (geometryBuffers?.IsSolid ?? false ? "yes" : "no"));
+        ImGui.Text("Collision test: " + (geometryBuffers?.IsSolid == true ? "yes" : "no"));
     }
 
     private void HandleMaterialsContent()
