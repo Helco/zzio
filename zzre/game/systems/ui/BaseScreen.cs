@@ -24,6 +24,9 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     protected readonly IZanzarahContainer zzContainer;
     protected readonly Zanzarah zanzarah;
     protected readonly UI ui;
+    protected readonly DefaultEcs.World uiWorld;// necessary as Dialog UI is owned by the game and not by the UI.
+                                                // Probably worth some cleanup but this would mean merging 
+                                                // Game and UI world which I did not decided to be a good idea
     protected readonly UIPreloader preload;
     protected event Action<DefaultEcs.Entity, components.ui.ElementId>? OnElementDown;
     protected event Action<DefaultEcs.Entity, components.ui.ElementId>? OnElementUp;
@@ -36,6 +39,7 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
         zzContainer = diContainer.GetTag<IZanzarahContainer>();
         zanzarah = diContainer.GetTag<Zanzarah>();
         ui = diContainer.GetTag<UI>();
+        uiWorld = ui.GetTag<DefaultEcs.World>();
         preload = ui.GetTag<UIPreloader>();
         World.SetMaxCapacity<TComponent>(1);
         openSubscription = World.Subscribe<TMessage>(HandleOpen);
@@ -87,10 +91,10 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
         if (button != Veldrid.MouseButton.Left)
             return;
 
-        if (!World.Has<components.ui.HoveredElement>())
+        if (!uiWorld.Has<components.ui.HoveredElement>())
             return;
         // TODO: Check whether multiple screens could respond to the same element click
-        var hovered = World.Get<components.ui.HoveredElement>();
+        var hovered = uiWorld.Get<components.ui.HoveredElement>();
         if (isDown)
             OnElementDown?.Invoke(hovered.Entity, hovered.Id);
         else
