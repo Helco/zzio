@@ -129,7 +129,7 @@ public class Game : BaseDisposable, ITagContainer
         //camera.Location.LocalPosition = -worldBuffers.Origin;
         ecsWorld.Set(worldLocation);
 
-        LoadScene($"sc_{savegame.sceneId}");
+        LoadScene($"sc_{savegame.sceneId:D4}");
         var scene = ecsWorld.Get<Scene>();
         ecsWorld.Publish(new messages.PlayerEntered(FindEntryTrigger(savegame.entryId)));
 
