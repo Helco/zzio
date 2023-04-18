@@ -43,7 +43,7 @@ public partial class Doorway : AEntitySetSystem<float>
             return;
 
         World.Get<components.PlayerEntity>().Entity.Set(components.GameFlow.Doorway);
-        targetScene = $"sc_{trigger.ii3}";
+        targetScene = $"sc_{trigger.ii3:D4}";
         targetEntry = (int)trigger.ii2;
         fadeOffTime = 0.6f;
         World.Publish(messages.LockPlayerControl.Forever);
