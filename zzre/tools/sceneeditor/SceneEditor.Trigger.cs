@@ -79,6 +79,12 @@ public partial class SceneEditor
                     break;
             }
         }
+
+        public void SyncWithScene()
+        {
+            //Console.WriteLine(Location.LocalPosition.ToString());
+            SceneTrigger.pos = Location.LocalPosition;
+        }
     }
 
     private class TriggerComponent : BaseDisposable, IEnumerable<ISelectable>
@@ -115,6 +121,12 @@ public partial class SceneEditor
             iconRenderer.Material.Texture.Texture = iconFont.Texture;
             iconRenderer.Material.Sampler.Sampler = iconFont.Sampler;
             HandleResize();
+        }
+        public void SyncWithScene()
+        {
+            //Console.WriteLine("bruh");
+            foreach(var trigger in triggers)
+                trigger.SyncWithScene();
         }
 
         protected override void DisposeManaged()

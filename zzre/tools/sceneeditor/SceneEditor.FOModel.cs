@@ -31,6 +31,12 @@ public partial class SceneEditor
         public IRaycastable RenderedBounds => SelectableBounds;
         public float ViewSize => clumpBuffers.Bounds.MaxSizeComponent;
 
+        public void SyncWithScene()
+        {
+            SceneFOModel.pos = Location.LocalPosition;
+            //SceneFOModel.rot = Location.LocalRotation.ToEuler();
+        }
+
         public FOModel(ITagContainer diContainer, zzio.scn.FOModel sceneModel)
         {
             this.diContainer = diContainer;
@@ -121,6 +127,7 @@ public partial class SceneEditor
                 Location.LocalRotation *= Quaternion.CreateFromYawPitchRoll(rotEuler.Y, rotEuler.X, rotEuler.Z);
                 diContainer.GetTag<FramebufferArea>().IsDirty = true;
             }
+
         }
     }
 
@@ -149,6 +156,12 @@ public partial class SceneEditor
                 "Detail Level 3"
             }, () => ref detailLevel, () => editor.fbArea.IsDirty = true);
             editor.editor.AddInfoSection("FOModels", HandleInfoSection, false);
+        }
+
+        public void SyncWithScene()
+        {
+            foreach(var foModel in models)
+                foModel.SyncWithScene();
         }
 
         protected override void DisposeManaged()

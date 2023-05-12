@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Numerics;
 using Veldrid;
@@ -21,6 +21,10 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     private readonly LocationBuffer locationBuffer;
     private readonly DebugGridRenderer gridRenderer;
     private readonly Camera camera;
+
+    private TriggerComponent triggerComponent;
+    
+    private FOModelComponent foModelComponent;
 
     private event Action OnLoadScene = () => { };
 
@@ -74,10 +78,12 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         new DatasetComponent(localDiContainer);
         new WorldComponent(localDiContainer);
         new ModelComponent(localDiContainer);
-        new FOModelComponent(localDiContainer);
-        new TriggerComponent(localDiContainer);
+        foModelComponent = new FOModelComponent(localDiContainer);
+        triggerComponent = new TriggerComponent(localDiContainer);
         new LightComponent(localDiContainer);
         new SelectionComponent(localDiContainer);
+        
+        menuBar.AddButton("Save", SaveScene);
     }
 
     public void Load(string pathText)
@@ -118,5 +124,18 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     {
         openFileModal.InitialSelectedResource = CurrentResource;
         openFileModal.Modal.Open();
+    }
+    private void SaveScene()
+    {
+        if(CurrentResource == null || scene == null)
+            return;
+
+        File.Copy(CurrentResource.Path.Absolute.ToString(), CurrentResource.Path.Absolute.ToString()+"backup", true);
+
+        triggerComponent.SyncWithScene();
+        foModelComponent.SyncWithScene();
+
+        var stream = new FileStream(CurrentResource.Path.Absolute.ToString(), FileMode.Create);
+        scene.Write(stream);
     }
 }
