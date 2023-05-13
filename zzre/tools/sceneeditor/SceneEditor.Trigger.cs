@@ -100,7 +100,7 @@ public partial class SceneEditor
         private bool wasSelected = false;
         private float iconSize = 128f;
 
-        public TriggerComponent(ITagContainer diContainer, MenuBar menuBar)
+        public TriggerComponent(ITagContainer diContainer)
         {
             diContainer.AddTag(this);
             this.diContainer = diContainer;
@@ -120,9 +120,6 @@ public partial class SceneEditor
             iconRenderer.Material.Texture.Texture = iconFont.Texture;
             iconRenderer.Material.Sampler.Sampler = iconFont.Sampler;
             HandleResize();
-
-            menuBar.AddButton("Duplicate Trigger", DuplicateCurrentTrigger);
-            menuBar.AddButton("Delete Trigger", DeleteCurrentTrigger);
         }
         public void SyncWithScene()
         {
@@ -138,7 +135,7 @@ public partial class SceneEditor
                 trigger.Dispose();
         }
 
-        private void DuplicateCurrentTrigger()
+        public void DuplicateCurrentTrigger()
         {
             var currentTrigger = FindCurrentTrigger();
             if (currentTrigger == null || editor.scene == null)
@@ -152,7 +149,7 @@ public partial class SceneEditor
             HandleLoadScene();
             editor.Selected = triggers.Last();
         }
-        private void DeleteCurrentTrigger()
+        public void DeleteCurrentTrigger()
         {
             var currentTrigger = FindCurrentTrigger();
             if (currentTrigger == null || editor.scene == null)

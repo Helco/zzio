@@ -82,10 +82,20 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         new SelectionComponent(localDiContainer);
 
         menuBar.AddButton("Save", SaveScene);
+        menuBar.AddButton("Duplicate Selection", DuplicateCurrentSelection);
+        menuBar.AddButton("Delete Selection", DeleteCurrentSelection);
         foModelComponent = new FOModelComponent(localDiContainer);
-        triggerComponent = new TriggerComponent(localDiContainer, menuBar);
+        triggerComponent = new TriggerComponent(localDiContainer);
     }
 
+    private void DuplicateCurrentSelection()
+    {
+        triggerComponent.DuplicateCurrentTrigger();
+    }
+    private void DeleteCurrentSelection()
+    {
+        triggerComponent.DeleteCurrentTrigger();
+    }
     public void Load(string pathText)
     {
         var resource = resourcePool.FindFile(pathText);
@@ -138,4 +148,5 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         var stream = new FileStream(CurrentResource.Path.Absolute.ToString(), FileMode.Create);
         scene.Write(stream);
     }
+
 }
