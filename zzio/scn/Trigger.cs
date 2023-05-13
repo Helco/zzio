@@ -83,4 +83,8 @@ public class Trigger : ISceneSection
                 break;
         }
     }
+    public Trigger Clone()
+    {
+        return (Trigger)this.MemberwiseClone();
+    }
 }
