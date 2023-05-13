@@ -181,7 +181,7 @@ public partial class SceneEditor
 
         public void SyncWithScene()
         {
-            foreach(var foModel in models)
+            foreach (var foModel in models)
                 foModel.SyncWithScene();
         }
 
@@ -232,7 +232,54 @@ public partial class SceneEditor
                 TreePop();
             }
         }
+        private FOModel? FindCurrentFoModel()
+        {
+            foreach (var foModel in models)
+            {
+                if (foModel == editor.Selected)
+                    return foModel;
+            }
+            return null;
+        }
+        private uint GetNextAvailableFoModelID()
+        {
+            uint result = 1;
+            foreach (var foModel in models)
+            {
+                result = Math.Max(result, foModel.SceneFOModel.idx);
+            }
+            return result + 1;
+        }
+        public void DeleteCurrentFoModel()
+        {
+            var currentFoModel = FindCurrentFoModel();
+            if (currentFoModel == null || editor.scene == null)
+                return;
 
+            SyncWithScene();
+
+
+            editor.scene.foModels = editor.scene.foModels.Where(
+                model => model.idx != currentFoModel.SceneFOModel.idx
+            ).ToArray();
+
+            HandleLoadScene();
+            editor.Selected = null;
+        }
+        public void DuplicateCurrentFoModel()
+        {
+            var currentFoModel = FindCurrentFoModel();
+            if (currentFoModel == null || editor.scene == null)
+                return;
+
+            SyncWithScene();
+
+            var copy = currentFoModel.SceneFOModel.Clone();
+            copy.idx = GetNextAvailableFoModelID();
+            editor.scene.foModels = editor.scene.foModels.Append(copy).ToArray();
+            HandleLoadScene();
+            editor.Selected = models.Last();
+        }
         IEnumerator<ISelectable> IEnumerable<ISelectable>.GetEnumerator() => ((IEnumerable<ISelectable>)models).GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => models.Cast<ISelectable>().GetEnumerator();
     }
