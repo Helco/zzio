@@ -24,7 +24,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     private readonly DefaultEcs.World ecsWorld;
 
     private TriggerComponent triggerComponent;
-    
+
     private FOModelComponent foModelComponent;
 
     private event Action OnLoadScene = () => { };
@@ -86,12 +86,12 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         new DatasetComponent(localDiContainer);
         new WorldComponent(localDiContainer);
         new ModelComponent(localDiContainer);
-        foModelComponent = new FOModelComponent(localDiContainer);
-        triggerComponent = new TriggerComponent(localDiContainer);
         new LightComponent(localDiContainer);
         new EffectComponent(localDiContainer);
         new Sample3DComponent(localDiContainer);
         new SelectionComponent(localDiContainer);
+        foModelComponent = new FOModelComponent(localDiContainer);
+        triggerComponent = new TriggerComponent(localDiContainer, menuBar);
         diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
     }
 
@@ -139,10 +139,10 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     }
     private void SaveScene()
     {
-        if(CurrentResource == null || scene == null)
+        if (CurrentResource == null || scene == null)
             return;
 
-        File.Copy(CurrentResource.Path.Absolute.ToString(), CurrentResource.Path.Absolute.ToString()+"backup", true);
+        File.Copy(CurrentResource.Path.Absolute.ToString(), CurrentResource.Path.Absolute.ToString() + "backup", true);
 
         triggerComponent.SyncWithScene();
         foModelComponent.SyncWithScene();
