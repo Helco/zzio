@@ -37,7 +37,6 @@ public partial class SceneEditor
         public void SyncWithScene()
         {
             SceneFOModel.pos = Location.LocalPosition;
-            //SceneFOModel.rot = Location.LocalRotation.ToEuler();
         }
 
         public FOModel(ITagContainer diContainer, zzio.scn.FOModel sceneModel)
@@ -149,7 +148,6 @@ public partial class SceneEditor
                 Location.LocalRotation *= Quaternion.CreateFromYawPitchRoll(rotEuler.Y, rotEuler.X, rotEuler.Z);
                 diContainer.GetTag<FramebufferArea>().IsDirty = true;
             }
-
         }
     }
 

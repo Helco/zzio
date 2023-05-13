@@ -80,7 +80,6 @@ public partial class SceneEditor
 
         public void SyncWithScene()
         {
-            //Console.WriteLine(Location.LocalPosition.ToString());
             SceneTrigger.pos = Location.LocalPosition;
         }
     }
@@ -98,7 +97,7 @@ public partial class SceneEditor
         private bool wasSelected;
         private float iconSize = 128f;
 
-        public TriggerComponent(ITagContainer diContainer)
+        public TriggerComponent(ITagContainer diContainer, MenuBar menuBar)
         {
             diContainer.AddTag(this);
             editor = diContainer.GetTag<SceneEditor>();
@@ -117,11 +116,12 @@ public partial class SceneEditor
             iconRenderer.Material.MainTexture.Texture = iconFont.Texture;
             iconRenderer.Material.MainSampler.Sampler = iconFont.Sampler;
             HandleResize();
+
+            menuBar.AddButton("Duplicate Trigger", DuplicateCurrentTrigger);
         }
         public void SyncWithScene()
         {
-            //Console.WriteLine("bruh");
-            foreach(var trigger in triggers)
+            foreach (var trigger in triggers)
                 trigger.SyncWithScene();
         }
 
@@ -133,6 +133,37 @@ public partial class SceneEditor
                 trigger.Dispose();
         }
 
+        private void DuplicateCurrentTrigger()
+        {
+            var currentTrigger = FindCurrentTrigger();
+            if (currentTrigger == null || editor.scene == null)
+                return;
+            SyncWithScene();
+
+            var copy = currentTrigger.SceneTrigger.Clone();
+            copy.idx = GetNextAvailableTriggerID();
+            editor.scene.triggers = editor.scene.triggers.Append(copy).ToArray();
+            HandleLoadScene();
+            editor.Selected = triggers.Last();
+        }
+        private uint GetNextAvailableTriggerID()
+        {
+            uint result = 1;
+            foreach (var trigger in triggers)
+            {
+                result = Math.Max(result, trigger.SceneTrigger.idx);
+            }
+            return result + 1;
+        }
+        private Trigger? FindCurrentTrigger()
+        {
+            foreach (var trigger in triggers)
+            {
+                if (trigger == editor.Selected)
+                    return trigger;
+            }
+            return null;
+        }
         private void HandleLoadScene()
         {
             foreach (var oldTrigger in triggers)
