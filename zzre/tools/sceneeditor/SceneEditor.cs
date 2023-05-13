@@ -34,6 +34,8 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     public IResource? CurrentResource { get; private set; }
     public Window Window { get; }
 
+    private bool ControlIsPressed = false;
+
     public SceneEditor(ITagContainer diContainer)
     {
         this.diContainer = diContainer;
@@ -86,8 +88,38 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         menuBar.AddButton("Delete Selection", DeleteCurrentSelection);
         foModelComponent = new FOModelComponent(localDiContainer);
         triggerComponent = new TriggerComponent(localDiContainer);
+
+        Window.OnKeyUp += HandleKeyUp;
+        Window.OnKeyDown += HandleKeyDown;
+        Window.OnContent += HandleOnContent;
     }
 
+    private void HandleKeyDown(Key key)
+    {
+        if (key == Key.ControlLeft)
+            ControlIsPressed = true;
+    }
+    private void HandleKeyUp(Key key)
+    {
+        if (key == Key.ControlLeft)
+            ControlIsPressed = false;
+        else if (ControlIsPressed)
+        {
+            if (key == Key.D)
+                DuplicateCurrentSelection();
+            else if (key == Key.S)
+                SaveScene();
+            else if (key == Key.X)
+                DeleteCurrentSelection();
+        }
+    }
+    private void HandleOnContent()
+    {
+        if (Window.IsFocused == false)
+        {
+            ControlIsPressed = false;
+        }
+    }
     private void DuplicateCurrentSelection()
     {
         triggerComponent.DuplicateCurrentTrigger();
@@ -151,4 +183,5 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         var stream = new FileStream(CurrentResource.Path.Absolute.ToString(), FileMode.Create);
         scene.Write(stream);
     }
+
 }
