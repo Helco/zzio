@@ -118,6 +118,7 @@ public partial class SceneEditor
             HandleResize();
 
             menuBar.AddButton("Duplicate Trigger", DuplicateCurrentTrigger);
+            menuBar.AddButton("Delete Trigger", DeleteCurrentTrigger);
         }
         public void SyncWithScene()
         {
@@ -138,6 +139,7 @@ public partial class SceneEditor
             var currentTrigger = FindCurrentTrigger();
             if (currentTrigger == null || editor.scene == null)
                 return;
+
             SyncWithScene();
 
             var copy = currentTrigger.SceneTrigger.Clone();
@@ -145,6 +147,21 @@ public partial class SceneEditor
             editor.scene.triggers = editor.scene.triggers.Append(copy).ToArray();
             HandleLoadScene();
             editor.Selected = triggers.Last();
+        }
+        private void DeleteCurrentTrigger()
+        {
+            var currentTrigger = FindCurrentTrigger();
+            if (currentTrigger == null || editor.scene == null)
+                return;
+
+            SyncWithScene();
+
+            editor.scene.triggers = editor.scene.triggers.Where(
+                trigger => trigger.idx != currentTrigger.SceneTrigger.idx
+            ).ToArray();
+
+            HandleLoadScene();
+            editor.Selected = null;
         }
         private uint GetNextAvailableTriggerID()
         {
