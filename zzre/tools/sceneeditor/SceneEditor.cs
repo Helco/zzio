@@ -108,10 +108,13 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     private void DuplicateCurrentSelection()
     {
         triggerComponent.DuplicateCurrentTrigger();
+        foModelComponent.DuplicateCurrentFoModel();
+
     }
     private void DeleteCurrentSelection()
     {
         triggerComponent.DeleteCurrentTrigger();
+        foModelComponent.DeleteCurrentFoModel();
     }
     public void Load(string pathText)
     {
@@ -161,5 +164,4 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         var stream = new FileStream(CurrentResource.Path.Absolute.ToString(), FileMode.Create);
         scene.Write(stream);
     }
-
 }
