@@ -73,4 +73,8 @@ public class FOModel : ISceneSection
         writer.Write(useCachedModels);
         writer.Write(wiggleAmpl);
     }
+    public FOModel Clone()
+    {
+        return (FOModel)this.MemberwiseClone();
+    }
 }
