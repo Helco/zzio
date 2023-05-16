@@ -1,6 +1,4 @@
-﻿#if !DEBUG
-using System;
-#endif
+﻿using System;
 using System.IO;
 using Veldrid;
 using Veldrid.StartupUtilities;
@@ -62,13 +60,8 @@ internal class Program
         var windowContainer = new WindowContainer(graphicsDevice);
         var resourcePool = new CombinedResourcePool(new IResourcePool[]
         {
-#if DEBUG
-            new PAKResourcePool(new FileStream(@"C:\dev\zanzarah\Resources\DATA_0.PAK", FileMode.Open, FileAccess.Read)),
-            new FileResourcePool(@"C:\dev\zanzarah\")
-#else
             new PAKResourcePool(new FileStream(Path.Combine(Environment.CurrentDirectory, "..", "Resources", "DATA_0.PAK"), FileMode.Open, FileAccess.Read)),
             new FileResourcePool(Path.Combine(Environment.CurrentDirectory, ".."))
-#endif
         });
         var time = new GameTime();
         var diContainer = new TagContainer();
