@@ -185,13 +185,11 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     {
         if (CurrentResource == null || scene == null)
             return;
-
-        File.Copy(CurrentResource.Path.Absolute.ToString(), CurrentResource.Path.Absolute.ToString() + "backup", true);
-
         triggerComponent.SyncWithScene();
         foModelComponent.SyncWithScene();
+        var path = Path.Combine(Environment.CurrentDirectory, "..", CurrentResource.Path.ToString());
 
-        var stream = new FileStream(CurrentResource.Path.Absolute.ToString(), FileMode.Create);
+        var stream = new FileStream(path, FileMode.Create);
         scene.Write(stream);
     }
 
