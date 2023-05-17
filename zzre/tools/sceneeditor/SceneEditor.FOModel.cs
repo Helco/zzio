@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
@@ -200,7 +201,19 @@ public partial class SceneEditor
             if (editor.scene == null)
                 return;
 
-            models = editor.scene.foModels.Select(m => new FOModel(diContainer, m)).ToArray();
+            var list = new List<FOModel>();
+            foreach (var m in editor.scene.foModels)
+            {
+                try
+                {
+                    list.Add(new FOModel(diContainer, m));
+                }
+                catch (InvalidDataException e)
+                {
+                    Console.Error.WriteLine("Fail to load FOModel with ID {0}, ignoring file {1}", m.idx, m.filename);
+                }
+            }
+            models = list.ToArray();
         }
 
         private void HandleRender(CommandList cl)
