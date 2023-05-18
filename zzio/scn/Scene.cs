@@ -135,7 +135,7 @@ namespace zzio
                 writeArray(writer, dynModels, "[DynamicModels]");
                 writeArray(writer, triggers, "[Triggers]");
                 writeArray(writer, samples2D, "[2DSamples_v2]");
-                writeArray(writer, samples3D, "[3DSamples_v3]");
+                writeArray(writer, samples3D, "[3DSamples_v2]");
                 writeArray(writer, effects, "[Effects]");
                 writeArray(writer, effects2, "[Effects_v2]");
                 writeArray(writer, vertexModifiers, "[VertexModifiers]");
