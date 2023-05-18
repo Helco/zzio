@@ -110,39 +110,35 @@ namespace zzio
             {
                 using BinaryWriter writer = new(stream);
                 writer.WriteZString("[Scenefile]");
-
-                // write primitives
-                writer.WriteZString("[SceneOrigin]");
-                writer.Write(sceneOrigin);
-                writer.WriteZString("[AmbientSound]");
-                writer.Write(ambientSound);
-                writer.WriteZString("[Music]");
-                writer.Write(music);
-                if (backdropFile.Length > 0)
-                {
-                    writer.WriteZString("[Backdrop]");
-                    writer.WriteZString(backdropFile);
-                }
-
-                // Write sections
                 writeSingle(writer, version, "[Version]");
                 writeSingle(writer, misc, "[Misc]");
-                writeSingle(writer, waypointSystem, "[WaypointSystem]");
-                writeSingle(writer, dataset, "[Dataset]");
                 writeArray(writer, lights, "[Lights]");
                 writeArray(writer, foModels, "[FOModels_v4]");
                 writeArray(writer, models, "[Models_v3]");
                 writeArray(writer, dynModels, "[DynamicModels]");
                 writeArray(writer, triggers, "[Triggers]");
-                writeArray(writer, samples2D, "[2DSamples_v2]");
                 writeArray(writer, samples3D, "[3DSamples_v2]");
-                writeArray(writer, effects, "[Effects]");
+                writeArray(writer, samples2D, "[2DSamples_v2]");
+                writer.WriteZString("[AmbientSound]");
+                writer.Write(ambientSound);
+                writer.WriteZString("[Music]");
+                writer.Write(music);
                 writeArray(writer, effects2, "[Effects_v2]");
-                writeArray(writer, vertexModifiers, "[VertexModifiers]");
-                writeArray(writer, textureProperties, "[TextureProperties]");
-                writeArray(writer, behaviors, "[Behaviours]");
                 writeArray(writer, sceneItems, "[Scene]");
+                writeArray(writer, vertexModifiers, "[VertexModifiers]");
+                writeArray(writer, behaviors, "[Behaviours]");
+                writeSingle(writer, dataset, "[Dataset]");
+                writer.WriteZString("[SceneOrigin]");
+                writer.Write(sceneOrigin);
+                writeArray(writer, textureProperties, "[TextureProperties]");
+                writeSingle(writer, waypointSystem, "[WaypointSystem]");
 
+                if (backdropFile.Length > 0)
+                {
+                    writer.WriteZString("[Backdrop]");
+                    writer.WriteZString(backdropFile);
+                }
+                writeArray(writer, effects, "[Effects]");
                 writer.WriteZString("[EOS]");
             }
         }
