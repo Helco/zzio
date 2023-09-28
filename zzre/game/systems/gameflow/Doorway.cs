@@ -70,8 +70,7 @@ public partial class Doorway : AEntitySetSystem<float>
         entity.Set(components.GameFlow.Normal);
 
         var newSceneName = World.Get<Scene>().dataset.nameUID;
-        //if (newSceneName != lastSceneName && newSceneName != UID.Invalid)
-        if (newSceneName != UID.Invalid)
+        if (newSceneName != lastSceneName && newSceneName != UID.Invalid)
         {
             lastSceneName = newSceneName;
             var nameText = db.GetText(newSceneName).Text;
