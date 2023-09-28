@@ -9,6 +9,7 @@ public static class VeldridExtensions
         AddressModeU = addressMode,
         AddressModeV = addressMode,
         AddressModeW = addressMode,
-        Filter = filter
+        Filter = filter,
+        MaximumLod = 1000
     };
 }

@@ -46,7 +46,8 @@ public static class TextureAssetLoaderExtensions
         {
             AddressModeU = addressModeU,
             AddressModeV = ConvertAddressMode(texSection.vAddressingMode, addressModeU),
-            Filter = ConvertFilterMode(texSection.filterMode)
+            Filter = ConvertFilterMode(texSection.filterMode),
+            MaximumLod = 1000
         };
         var sampler = device.ResourceFactory.CreateSampler(samplerDescription);
 
