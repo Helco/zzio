@@ -20,6 +20,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
 
     public ScrNotification(ITagContainer diContainer) : base(diContainer, BlockFlags.None)
     {
+        World.SetMaxCapacity<components.ui.ScrNotification>(int.MaxValue);
         db = diContainer.GetTag<MappedDB>();
         OnElementDown += HandleElementDown;
     }
