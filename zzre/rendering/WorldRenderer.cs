@@ -106,9 +106,10 @@ public class WorldRenderer : BaseDisposable
             }
 
             var plane = (WorldBuffers.PlaneSection)section;
-            var intersection = viewFrustum.Intersects(new Plane(plane.PlaneType.AsNormal(), plane.CenterValue));
+            var intersection = viewFrustum.Intersects(new Plane(plane.PlaneType.AsNormal(), plane.RightValue));
             if (intersection.HasFlag(PlaneIntersections.Inside))
                 sectionQueue.Enqueue(plane.RightChild);
+            intersection = viewFrustum.Intersects(new Plane(plane.PlaneType.AsNormal(), plane.LeftValue));
             if (intersection.HasFlag(PlaneIntersections.Outside))
                 sectionQueue.Enqueue(plane.LeftChild);
         }
