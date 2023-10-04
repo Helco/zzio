@@ -46,7 +46,7 @@ public class TriggerCamera : BaseCamera
 
         IsEnabled = majorMode != MajorModeTriggerDir; // no update necessary for trigger dir
         trigger = newTrigger.Get<Trigger>();
-        npcLocation = mode.NPCEntity.Get<Location>();
+        npcLocation = mode.TargetEntity.Get<Location>();
 
         if (majorMode != MajorModeOriginalDir)
             camera.Location.LocalPosition = trigger.pos;

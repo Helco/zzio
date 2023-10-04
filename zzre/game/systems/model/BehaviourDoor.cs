@@ -8,11 +8,12 @@ namespace zzre.game.systems;
 
 public partial class BehaviourDoor : AEntitySetSystem<float>
 {
+    private const float MaxLockDistanceSqr = 8f;
     private const float MaxPlayerDistanceSqr = 3f * 3f;
     private const float MaxPlayerYDistance = 1.5f;
     private const float MaxAngle = 90f;
 
-    private Location playerLocation => playerLocationLazy.Value;
+    private Location PlayerLocation => playerLocationLazy.Value;
     private readonly Game game;
     private readonly Lazy<Location> playerLocationLazy;
     private readonly DefaultEcs.EntitySet locks;
@@ -46,23 +47,35 @@ public partial class BehaviourDoor : AEntitySetSystem<float>
 
     [Update]
     private void Update(
+        in DefaultEcs.Entity doorEntity,
         float elapsedTime,
         Location location,
         ref components.behaviour.Door door)
     {
-        bool keepOpen =
-            location.DistanceSquared(playerLocation) < MaxPlayerDistanceSqr &&
-            MathF.Abs(location.LocalPosition.Y - playerLocation.LocalPosition.Y) < MaxPlayerYDistance;
+        bool playerIsNear =
+            location.DistanceSquared(PlayerLocation) < MaxPlayerDistanceSqr &&
+            MathF.Abs(location.LocalPosition.Y - PlayerLocation.LocalPosition.Y) < MaxPlayerYDistance;
 
-        // TODO: Add door unlock behaviour
+        if (door.IsLocked && door.KeyItemId is not null && playerIsNear &&
+            game.PlayerEntity.Get<components.GameFlow>() == components.GameFlow.Normal)
+        {
+            var myLock = FindLockNearTo(location);
+            if (myLock is null)
+                door.IsLocked = false;
+            else
+            {
+                World.Publish(new messages.UnlockDoor(doorEntity, myLock.Value, door.KeyItemId.Value));
+                return;
+            }
+        }
 
         switch (door.State)
         {
-            case DoorState.Closed when keepOpen && !door.IsLocked:
+            case DoorState.Closed when playerIsNear && !door.IsLocked:
                 door.State = DoorState.StartToOpen;
                 break;
 
-            case DoorState.Opened when !keepOpen:
+            case DoorState.Opened when !playerIsNear:
                 door.State = DoorState.StartToClose;
                 break;
 
@@ -95,5 +108,21 @@ public partial class BehaviourDoor : AEntitySetSystem<float>
 
         location.LocalRotation = door.StartRotation *
             Quaternion.CreateFromAxisAngle(Vector3.UnitY, door.CurAngle * MathEx.DegToRad);
+    }
+
+    private DefaultEcs.Entity? FindLockNearTo(Location doorLocation)
+    {
+        var minLockEntity = default(DefaultEcs.Entity?);
+        var minLockDistSqr = float.MaxValue;
+        foreach (var lockEntity in locks.GetEntities())
+        {
+            var lockDist = lockEntity.Get<Location>().DistanceSquared(doorLocation);
+            if (lockDist < minLockDistSqr)
+            {
+                minLockDistSqr = lockDist;
+                minLockEntity = lockEntity;
+            }
+        }
+        return minLockEntity;
     }
 }

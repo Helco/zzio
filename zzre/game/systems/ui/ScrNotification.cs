@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using zzio;
 using zzio.db;
+using zzre.rendering;
 
 namespace zzre.game.systems.ui;
 
@@ -72,9 +73,11 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
 
         if (message.Icon.HasValue)
         {
+            var textFont = component.TextLabel.Get<TileSheet>();
+            var textWidth = textFont.GetUnformattedWidth(message.Texts.First());
             component.IconImage = preload.CreateImage(entity)
                 .With(message.Icon.Value)
-                .With(new Vector2(0, YOffset - 20))
+                .With(new Vector2(-textWidth / 2, YOffset - 20))
                 .WithRenderOrder(RenderOrder)
                 .Build();
         }

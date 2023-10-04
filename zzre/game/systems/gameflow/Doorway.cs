@@ -30,7 +30,7 @@ public partial class Doorway : AEntitySetSystem<float>
     public override void Dispose()
     {
         base.Dispose();
-        doorwayTriggerDisposable?.Dispose();
+        doorwayTriggerDisposable.Dispose();
     }
 
     private void HandleActiveTrigger(in DefaultEcs.Entity entity, in components.ActiveTrigger value)

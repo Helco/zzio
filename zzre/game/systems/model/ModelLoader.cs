@@ -16,6 +16,9 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
     private readonly IDisposable createItemSubscription;
+    private readonly IDisposable removeModelSubscription;
+
+    private readonly Dictionary<uint, DefaultEcs.Entity> entitiesById = new();
 
     public ModelLoader(ITagContainer diContainer)
     {
@@ -24,6 +27,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         createItemSubscription = ecsWorld.Subscribe<messages.CreateItem>(HandleCreateItem);
+        removeModelSubscription = ecsWorld.Subscribe<GSModRemoveModel>(HandleRemoveModel);
     }
 
     protected override void DisposeManaged()
@@ -32,6 +36,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         sceneLoadSubscription.Dispose();
         sceneChangingSubscription.Dispose();
         createItemSubscription.Dispose();
+        removeModelSubscription.Dispose();
     }
 
     public bool IsEnabled { get; set; } = true;
@@ -60,12 +65,14 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         }
         else
             prevBuffer.Clear();
+        entitiesById.Clear();
 
         float plantWiggleDelay = 0f;
         var behaviors = scene.behaviors.ToDictionary(b => b.modelId, b => b.type);
         foreach (var model in scene.models)
         {
             var entity = ecsWorld.CreateEntity();
+            entitiesById.Add(model.idx, entity);
             entity.Set(new Location()
             {
                 Parent = ecsWorld.Get<Location>(),
@@ -212,7 +219,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         switch (behaviour)
         {
             case BehaviourType.Swing: entity.Set<components.behaviour.Swing>(); break;
-            case BehaviourType.Lock: entity.Set<components.behaviour.Lock>(); break;
+            case BehaviourType.Lock: entity.Set(new components.behaviour.Lock(modelId)); break;
 
             // TODO: Check rotation direction for Y and Z
             case BehaviourType.XRotate1: entity.Set(new components.behaviour.Rotate(Vector3.UnitX, -5f)); break;
@@ -283,5 +290,11 @@ public class ModelLoader : BaseDisposable, ISystem<float>
 
             default: Console.WriteLine($"Warning: unsupported behaviour type {behaviour}"); break;
         }
+    }
+
+    private void HandleRemoveModel(in GSModRemoveModel model)
+    {
+        var entity = entitiesById[model.ModelId];
+        entity.Set<components.Dead>();
     }
 }

@@ -108,6 +108,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.CreatureCamera(this),
             new systems.GotCard(this),
             new systems.Doorway(this),
+            new systems.UnlockDoor(this),
             new systems.Reaper(this),
             new systems.ParentReaper(this));
         updateSystems.Add(new systems.PauseDuring(this, updateSystems.Systems));
@@ -130,7 +131,6 @@ public class Game : BaseDisposable, ITagContainer
         ecsWorld.Set(worldLocation);
 
         LoadScene($"sc_{savegame.sceneId:D4}");
-        var scene = ecsWorld.Get<Scene>();
         ecsWorld.Publish(new messages.PlayerEntered(FindEntryTrigger(savegame.entryId)));
 
         ecsWorld.GetEntities()
@@ -185,7 +185,7 @@ public class Game : BaseDisposable, ITagContainer
         var scene = new Scene();
         scene.Read(sceneStream);
 
-        var worldPath = new zzio.FilePath("resources").Combine(scene.misc.worldPath, scene.misc.worldFile + ".bsp");
+        var worldPath = new FilePath("resources").Combine(scene.misc.worldPath, scene.misc.worldFile + ".bsp");
         var worldBuffers = new WorldBuffers(this, worldPath);
 
         ecsWorld.Set(scene);

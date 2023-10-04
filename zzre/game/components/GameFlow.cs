@@ -6,5 +6,6 @@ public enum GameFlow
 {
     Normal,
     GotCard,
-    Doorway
+    Doorway,
+    UnlockDoor
 }

@@ -2,24 +2,12 @@
 using System.Numerics;
 using System.Linq;
 using DefaultEcs.System;
+using SubMode = zzre.game.messages.SetCameraMode.SubMode;
 
 namespace zzre.game.systems;
 
 internal class CreatureCamera : BaseCamera
 {
-    private enum SubMode
-    {
-        LeftTop = 0,
-        LeftBottom,
-        LeftCenter,
-        RightTop,
-        RightBottom,
-        RightCenter,
-        Overworld, // ignored by CreatureCamera, Funatics and its special cases -_-
-        Behind,
-        Front
-    }
-
     private readonly Game game;
     private readonly IDisposable setCameraModeSubscription;
 
@@ -48,8 +36,8 @@ internal class CreatureCamera : BaseCamera
             return;
 
         Location npcLocation;
-        if (message.NPCEntity.IsAlive)
-            npcLocation = message.NPCEntity.Get<Location>();
+        if (message.TargetEntity.IsAlive)
+            npcLocation = message.TargetEntity.Get<Location>();
         else
         {
             npcLocation = new Location
@@ -63,8 +51,8 @@ internal class CreatureCamera : BaseCamera
             ? (playerLocation, npcLocation)
             : (npcLocation, playerLocation);
         (source, target) = majorMode == 10
-            ? (game.PlayerEntity, message.NPCEntity)
-            : (message.NPCEntity, game.PlayerEntity);
+            ? (game.PlayerEntity, message.TargetEntity)
+            : (message.TargetEntity, game.PlayerEntity);
 
         IsEnabled = true;
     }
