@@ -105,7 +105,9 @@ public partial class NPCScript : BaseScript
             var fairyEntity = entity.Get<components.SpawnedFairy>().Entity;
             fairyEntity.Set(components.FairyHoverState.KeepLastHover);
 
-            entity.Set<components.PuppetActorMovement>(); // for keeping target direction working
+            // this command acts as SetModel for flying NPC types
+            entity.Set(new Sphere(Vector3.Zero, FlyingColliderSize));
+            entity.Set<components.PuppetActorMovement>();
         }
     }
 
