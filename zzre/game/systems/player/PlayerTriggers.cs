@@ -12,6 +12,7 @@ public class PlayerTriggers : ISystem<float>
     private const Veldrid.MouseButton TriggerButton = Veldrid.MouseButton.Left;
     private const float MaxNpcDirDistance = 0.4f;
     private const float NpcMarkerDistance = 0.3f;
+    private const float FlyingNpcMarkerDistance = 0.2f;
 
     private readonly DefaultEcs.World world;
     private readonly IZanzarahContainer zzContainer;
@@ -69,12 +70,20 @@ public class PlayerTriggers : ISystem<float>
         EnsureNpcMarker();
         if (TryGetTriggerableNPC(out var npc))
         {
-            // TODO: Fix marker distance for flying-type NPCs
             npcMarker.Set(components.Visibility.Visible);
-            var npcMarkerLoc = npcMarker.Get<Location>();
-            npcMarkerLoc.LocalPosition =
-                npc.Get<Location>().LocalPosition +
-                Vector3.UnitY * (npc.Get<Sphere>().Radius * 0.5f + NpcMarkerDistance);
+            Location npcLocation;
+            float markerDistance;
+            if (npc.Get<components.NPCType>() == components.NPCType.Flying)
+            {
+                npcLocation = npc.Get<components.SpawnedFairy>().Entity.Get<Location>();
+                markerDistance = FlyingNpcMarkerDistance;
+            }
+            else
+            {
+                npcLocation = npc.Get<Location>();
+                markerDistance = npc.Get<Sphere>().Radius * 0.5f + NpcMarkerDistance;
+            }
+            npcMarker.Get<Location>().LocalPosition = npcLocation.LocalPosition + Vector3.UnitY * markerDistance;
             return;
         }
         npcMarker.Remove<components.Visibility>();
