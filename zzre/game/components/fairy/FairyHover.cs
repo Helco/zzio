@@ -1,4 +1,16 @@
-﻿namespace zzre.game.components;
+﻿using System.Numerics;
+
+namespace zzre.game.components;
+
+public enum FairyHoverState
+{
+    Behind = 2,
+    KeepLastHover = 10
+}
+
+public readonly record struct FairyHoverOffset(Vector3 Value);
+
+public readonly record struct FairyHoverStart(Vector3 Value);
 
 public struct FairyHoverBehind
 {
@@ -14,7 +26,6 @@ public struct FairyHoverBehind
 
     public Mode CurMode;
     public float TimeLeft;
-    public System.Numerics.Vector3 HoverOffset;
 
     public float MaxDuration { get; init; }
     public float Distance { get; init; }

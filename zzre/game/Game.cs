@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
@@ -91,7 +92,9 @@ public class Game : BaseDisposable, ITagContainer
             new systems.TriggerActivation(this),
             new systems.PlayerTriggers(this),
             new systems.OverworldFairySpawner(this),
+            new systems.FairyHoverOffset(this),
             new systems.FairyHoverBehind(this),
+            new systems.FairyKeepLastHover(this),
             new systems.FairyAnimation(this),
             new systems.DialogScript(this),
             new systems.DialogDelay(this),
@@ -172,6 +175,8 @@ public class Game : BaseDisposable, ITagContainer
 
     public void LoadScene(string sceneName)
     {
+        Console.WriteLine("Load " + sceneName);
+
         if (ecsWorld.Has<WorldBuffers>())
             ecsWorld.Get<WorldBuffers>().Dispose();
         worldRenderer?.Dispose();

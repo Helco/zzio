@@ -1,30 +1,24 @@
 ﻿namespace zzre.game.systems;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
 using Mode = zzre.game.components.FairyHoverBehind.Mode;
 
 public partial class FairyHoverBehind : AEntitySetSystem<float>
 {
-    private readonly GameTime time;
     private readonly IDisposable playerEnteredSubscription;
-    private readonly IDisposable addedSubscription;
     private WorldCollider? worldCollider;
 
     public FairyHoverBehind(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
-        time = diContainer.GetTag<GameTime>();
         playerEnteredSubscription = World.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
-        addedSubscription = World.SubscribeEntityComponentAdded<components.FairyHoverBehind>(HandleAddedComponent);
+        Set.EntityAdded += ResetPosition;
     }
 
     public override void Dispose()
     {
         base.Dispose();
         playerEnteredSubscription.Dispose();
-        addedSubscription.Dispose();
     }
 
     private void HandlePlayerEntered(in messages.PlayerEntered _)
@@ -33,14 +27,14 @@ public partial class FairyHoverBehind : AEntitySetSystem<float>
             ResetPosition(entity);
     }
 
-    private void HandleAddedComponent(in DefaultEcs.Entity entity, in components.FairyHoverBehind value) =>
-        ResetPosition(entity);
-
     private void ResetPosition(in DefaultEcs.Entity entity)
     {
         var parent = entity.Get<components.Parent>().Entity;
         entity.Get<Location>().LocalPosition = parent.Get<Location>().LocalPosition;
     }
+
+    [WithPredicate]
+    private bool IsInHoverState(in components.FairyHoverState state) => state == components.FairyHoverState.Behind;
 
     [Update]
     private void Update(
@@ -49,6 +43,7 @@ public partial class FairyHoverBehind : AEntitySetSystem<float>
         Location location,
         in components.Parent parent,
         ref components.FairyHoverBehind hoverBehind,
+        in components.FairyHoverOffset hoverOffset,
         ref components.Velocity velocity)
     {
         var random = Random.Shared;
@@ -84,7 +79,7 @@ public partial class FairyHoverBehind : AEntitySetSystem<float>
         var targetPosition = parentPos + targetOffset;
         var move = targetPosition - location.LocalPosition;
         move -= move * MathF.Pow(0.1f, elapsedTime);
-        location.LocalPosition += move + GetHoverOffset(ref hoverBehind, elapsedTime);
+        location.LocalPosition += move + hoverOffset.Value;
         var minYPos = parentPos.Y - 0.5f;
         if (location.LocalPosition.Y < minYPos)
             location.LocalPosition = location.LocalPosition with { Y = minYPos };
@@ -96,27 +91,5 @@ public partial class FairyHoverBehind : AEntitySetSystem<float>
             hoverBehind.TimeLeft = 3f;
             hoverBehind.CurMode = Mode.CenterHigh;
         }
-    }
-
-    private Vector3 GetHoverOffset(ref components.FairyHoverBehind hoverBehind, float elapsedTime)
-    {
-        var random = Random.Shared;
-        var offset = hoverBehind.HoverOffset;
-        if (offset == Vector3.Zero)
-        {
-            offset = new(
-                random.InLine() * 10f,
-                0f,
-                random.InLine() * 10f);
-        }
-
-        float sinDelta = MathF.Sin(elapsedTime), cosDelta = MathF.Cos(elapsedTime);
-        offset.X = cosDelta * offset.X - sinDelta * offset.Z;
-        offset.Y = 0.01f;
-        offset.Z = sinDelta * offset.X + cosDelta * offset.Z;
-        offset = Vector3.Normalize(offset) * elapsedTime * 0.4f; // yes, there is basically no non-vertical movement
-        offset.Y = MathF.Cos(time.TotalElapsed / 100f) * (elapsedTime * 0.3f); // TODO: Fix framerate-dependent vertical fairy hovering
-
-        return hoverBehind.HoverOffset = offset;
     }
 }
