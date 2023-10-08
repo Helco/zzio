@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
@@ -174,6 +175,8 @@ public class Game : BaseDisposable, ITagContainer
 
     public void LoadScene(string sceneName)
     {
+        Console.WriteLine("Load " + sceneName);
+
         if (ecsWorld.Has<WorldBuffers>())
             ecsWorld.Get<WorldBuffers>().Dispose();
         worldRenderer?.Dispose();
