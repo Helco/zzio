@@ -23,6 +23,7 @@ public partial class OverworldFairySpawner : AEntitySetSystem<float>
     public override void Dispose()
     {
         base.Dispose();
+        sceneChangingSubscription.Dispose();
         inventoryAddedSubscription.Dispose();
     }
 
@@ -72,7 +73,10 @@ public partial class OverworldFairySpawner : AEntitySetSystem<float>
         fairy.Set(invFairy);
         fairy.Set(dbRow);
         fairy.Set(ManagedResource<zzio.ActorExDescription>.Create(dbRow.Mesh));
+        fairy.Set<components.FairyHoverStart>();
+        fairy.Set<components.FairyHoverOffset>();
         fairy.Set(components.FairyHoverBehind.Normal);
+        fairy.Set(components.FairyHoverState.Behind);
         fairy.Set<components.Velocity>();
         fairy.Set(new components.FairyAnimation()
         {

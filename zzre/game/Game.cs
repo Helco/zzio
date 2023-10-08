@@ -91,6 +91,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.TriggerActivation(this),
             new systems.PlayerTriggers(this),
             new systems.OverworldFairySpawner(this),
+            new systems.FairyHoverOffset(this),
             new systems.FairyHoverBehind(this),
             new systems.FairyAnimation(this),
             new systems.DialogScript(this),
