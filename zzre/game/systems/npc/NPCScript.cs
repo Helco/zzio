@@ -62,7 +62,8 @@ public partial class NPCScript : BaseScript
 
     private void SetModel(DefaultEcs.Entity entity, string name)
     {
-        if (entity.Has<components.ActorParts>()) // not required by Zanzarah and a bit too much effort
+        // not required by Zanzarah and a bit too much effort to clean up old actor parts&resources
+        if (entity.Has<components.ActorParts>())
             throw new InvalidOperationException("NPC already has a model");
         entity.Set(ManagedResource<zzio.ActorExDescription>.Create(name));
 
@@ -97,7 +98,13 @@ public partial class NPCScript : BaseScript
         inventory.AddXP(invFairy, xp);
         inventory.SetSlot(invFairy, atIndex);
 
-        // TODO: Handle wizform command for fairy NPCs
+        if (entity.Get<components.NPCType>() == components.NPCType.Flying)
+        {
+            entity.Remove<Inventory>();
+            entity.Set(inventory); // this forces the added fairy to spawn
+            var fairyEntity = entity.Get<components.SpawnedFairy>().Entity;
+            fairyEntity.Set(components.FairyHoverState.KeepLastHover);
+        }
     }
 
     private void Spell(DefaultEcs.Entity entity, int fairyI, int slotI, int spellId)
@@ -124,11 +131,15 @@ public partial class NPCScript : BaseScript
         entity.Set(new components.NPCLookAtPlayer(mode, actualDuration));
         entity.Set(components.NPCState.LookAtPlayer);
 
-        ref var anim = ref entity.Get<components.NonFairyAnimation>();
-        if (anim.Next != zzio.AnimationType.Idle0 &&
-            anim.Next != zzio.AnimationType.Idle1 &&
-            anim.Next != zzio.AnimationType.Idle2)
-            anim.Next = zzio.AnimationType.Idle0;
+        if (entity.Has<components.NonFairyAnimation>())
+        {
+            ref var anim = ref entity.Get<components.NonFairyAnimation>();
+            if (anim.Next != zzio.AnimationType.Idle0 &&
+                anim.Next != zzio.AnimationType.Idle1 &&
+                anim.Next != zzio.AnimationType.Idle2)
+                anim.Next = zzio.AnimationType.Idle0;
+        }
+        // the alternative (e.g. fairy animation just does not need this Idle0 switch)
     }
 
     private void RemoveNPC(DefaultEcs.Entity entity)

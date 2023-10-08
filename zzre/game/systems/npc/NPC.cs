@@ -9,8 +9,6 @@ namespace zzre.game.systems;
 public partial class NPC : AEntitySetSystem<float>
 {
     private const uint MaxEnabledII2 = 1000;
-    private const float GroundFromOffset = 1f;
-    private const float GroundToOffset = -7f;
 
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
@@ -28,6 +26,7 @@ public partial class NPC : AEntitySetSystem<float>
     public override void Dispose()
     {
         base.Dispose();
+        sceneChangingSubscription.Dispose();
         sceneLoadSubscription.Dispose();
         setNpcModifierSubscription.Dispose();
     }
@@ -69,6 +68,7 @@ public partial class NPC : AEntitySetSystem<float>
 
             if (dbRow.InitScript.Length > 0)
                 entity.Set(new components.ScriptExecution(dbRow.InitScript));
+            entity.Set<components.NPCType>(); // default is Biped
             entity.Set(components.NPCState.Script);
             entity.Set(components.NPCMovement.Default);
             entity.Set<components.NPCIdle>();
@@ -99,7 +99,6 @@ public partial class NPC : AEntitySetSystem<float>
             if (npcType != components.NPCType.Flying && entity.Has<Sphere>())
                 World.Publish(new messages.CreaturePlaceToGround(entity));
 
-            // TODO: Add SelectableNPC for Biped, Item, Flying
             // TODO: Add Pixie behaviour
             // TODO: Add PlantBlocker behaviour
             // TODO: Add Biped behaviour (HeadIK, open doors)
