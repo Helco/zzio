@@ -104,6 +104,8 @@ public partial class NPCScript : BaseScript
             entity.Set(inventory); // this forces the added fairy to spawn
             var fairyEntity = entity.Get<components.SpawnedFairy>().Entity;
             fairyEntity.Set(components.FairyHoverState.KeepLastHover);
+
+            entity.Set<components.PuppetActorMovement>(); // for keeping target direction working
         }
     }
 
