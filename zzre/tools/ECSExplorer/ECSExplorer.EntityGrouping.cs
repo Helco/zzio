@@ -39,7 +39,7 @@ partial class ECSExplorer
         AddEntityGrouper(prio, entity => entity.IsAlive && entity.Has<T>() ? func(entity) : null);
 
     public static void AddEntityGrouperByComponent<T>(int prio, TryGetEntityGroupByComponentFunc<T> func) =>
-        AddEntityGrouper(prio, entity => entity.IsAlive && entity.Has<T>() ? func(entity.Get<T>()) : null);
+        AddEntityGrouper(prio, entity => entity.IsAlive && entity.TryGet<T>(out var comp) ? func(comp) : null);
 
     public static void AddEntityGrouperByComponent<T>(int prio, string name) =>
         AddEntityGrouper(prio, entity => entity.IsAlive && entity.Has<T>() ? name : null);

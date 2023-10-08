@@ -11,9 +11,8 @@ public partial class AdvanceAnimation : AEntitySetSystem<float>
     [Update]
     private void Update(float elapsedTime, DefaultEcs.Entity entity, ref Skeleton component)
     {
-        float factor = entity.Has<components.AnimationSpeed>()
-            ? entity.Get<components.AnimationSpeed>().Factor
-            : 1f;
+        var optSpeed= entity.TryGet<components.AnimationSpeed>();
+        float factor = optSpeed.HasValue ? optSpeed.Value.Factor : 1f;
         component.AddTime(elapsedTime * factor);
     }
 }

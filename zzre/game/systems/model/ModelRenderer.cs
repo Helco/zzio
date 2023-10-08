@@ -90,9 +90,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpBuf
         {
             tint = materialInfo.Color,
             world = location.LocalToWorld,
-            texShift = entity.Has<components.TexShift>()
-                ? entity.Get<components.TexShift>().Matrix
-                : Matrix3x2.Identity
+            texShift = entity.TryGet<components.TexShift>().GetValueOrDefault(components.TexShift.Default).Matrix
         });
     }
 

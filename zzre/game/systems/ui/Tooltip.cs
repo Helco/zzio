@@ -31,12 +31,8 @@ public partial class Tooltip : AEntitySetSystem<float>
     {
         string text = hovered switch
         {
-            _ when hovered.Has<components.ui.TooltipText>() =>
-                hovered.Get<components.ui.TooltipText>().Text,
-
-            _ when hovered.Has<components.ui.TooltipUID>() =>
-                mappedDB.GetText(hovered.Get<components.ui.TooltipUID>().UID).Text,
-
+            _ when hovered.TryGet<components.ui.TooltipText>(out var tooltip) => tooltip.Text,
+            _ when hovered.TryGet<components.ui.TooltipUID>(out var tooltip) => mappedDB.GetText(tooltip.UID).Text,
             _ => ""
         };
 

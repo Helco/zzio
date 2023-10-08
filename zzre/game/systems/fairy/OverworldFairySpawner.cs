@@ -45,9 +45,7 @@ public partial class OverworldFairySpawner : AEntitySetSystem<float>
         ref components.SpawnedFairy spawnedFairy)
     {
         var intendedFairy = inventory.ActiveOverworldFairy;
-        var actualFairy = spawnedFairy.Entity.IsAlive && spawnedFairy.Entity.Has<zzio.InventoryFairy>()
-            ? spawnedFairy.Entity.Get<zzio.InventoryFairy>()
-            : null;
+        var actualFairy = spawnedFairy.Entity.TryGet<zzio.InventoryFairy>().GetValueOrDefault();
         if (actualFairy == intendedFairy)
             return;
         if (spawnedFairy.Entity.IsAlive)

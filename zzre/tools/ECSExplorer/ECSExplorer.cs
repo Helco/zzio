@@ -43,7 +43,7 @@ internal partial class ECSExplorer
         var entityContentRenderer = new EntityContentRenderer();
 
         var children = Zanzarah.CurrentGame.PlayerEntity.World
-            .ToLookup(e => e.Has<Parent>() ? e.Get<Parent>().Entity : default);
+            .ToLookup(e => e.TryGet<Parent>().GetValueOrDefault().Entity);
 
         var groups = children[default].ToLookup(GetEntityGroup);
 

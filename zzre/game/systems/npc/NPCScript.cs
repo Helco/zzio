@@ -67,14 +67,10 @@ public partial class NPCScript : BaseScript
             throw new InvalidOperationException("NPC already has a model");
         entity.Set(ManagedResource<zzio.ActorExDescription>.Create(name));
 
-        // type is already set at this point if it is set at all
-        var npcType = entity.Has<components.NPCType>()
-            ? entity.Get<components.NPCType>()
-            : default;
         var actorParts = entity.Get<components.ActorParts>();
         var bodyClump = actorParts.Body.Get<ClumpBuffers>();
         var bodyHeight = bodyClump.Bounds.Size.Y;
-        var colliderSize = npcType switch
+        var colliderSize = entity.Get<components.NPCType>() switch
         {
             components.NPCType.Flying => FlyingColliderSize,
             components.NPCType.Item => bodyHeight + ItemColliderSizeOffset,
@@ -135,13 +131,11 @@ public partial class NPCScript : BaseScript
         entity.Set(new components.NPCLookAtPlayer(mode, actualDuration));
         entity.Set(components.NPCState.LookAtPlayer);
 
-        if (entity.Has<components.NonFairyAnimation>())
+        var nonFairyAnim = entity.TryGet<components.NonFairyAnimation>();
+        if (nonFairyAnim.HasValue)
         {
-            ref var anim = ref entity.Get<components.NonFairyAnimation>();
-            if (anim.Next != zzio.AnimationType.Idle0 &&
-                anim.Next != zzio.AnimationType.Idle1 &&
-                anim.Next != zzio.AnimationType.Idle2)
-                anim.Next = zzio.AnimationType.Idle0;
+            if (nonFairyAnim.Value.Next is not (AnimationType.Idle0 or AnimationType.Idle1 or AnimationType.Idle2))
+                nonFairyAnim.Value.Next = AnimationType.Idle0;
         }
         // the alternative (e.g. fairy animation just does not need this Idle0 switch)
     }

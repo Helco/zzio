@@ -41,10 +41,7 @@ public class SyncedLocation : BaseDisposable, ISystem<CommandList>
         if (value.BufferRange.Buffer != null)
             return;
 
-        Location location;
-        if (entity.Has<Location>())
-            location = entity.Get<Location>();
-        else
+        if (!entity.TryGet<Location>(out var location))
             entity.Set(location = new Location());
 
         entity.Set(new components.SyncedLocation(locationBuffer.Add(location)));

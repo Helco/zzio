@@ -237,8 +237,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         foreach (var creature in collidableCreatures.GetEntities())
         {
             var comparePos = creature.Get<Location>().LocalPosition;
-            if (creature.Has<components.NPCType>() &&
-                creature.Get<components.NPCType>() == components.NPCType.PlantBlocker)
+            if (creature.TryGet<components.NPCType>() == components.NPCType.PlantBlocker)
                 comparePos += Vector3.Normalize(playerPos - comparePos) * parameters.PlantBlockerAddRadius;
 
             if (Math.Abs(comparePos.Y - playerPos.Y) < parameters.CreatureHalfHeight)

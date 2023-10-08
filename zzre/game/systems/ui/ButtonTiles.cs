@@ -30,9 +30,7 @@ public partial class ButtonTiles : AEntitySetSystem<float>
         ref var rect = ref entity.Get<Rect>();
         if (MathEx.CmpZero(rect.Size.MaxComponent()) && tiles.Normal >= 0)
         {
-            var alignment = entity.Has<components.ui.FullAlignment>()
-                ? entity.Get<components.ui.FullAlignment>()
-                : components.ui.FullAlignment.TopLeft;
+            var alignment = entity.TryGet<components.ui.FullAlignment>().GetValueOrDefault();
             var tileSheet = entity.Get<rendering.TileSheet>();
             var tileSize = tileSheet.GetPixelSize(tiles.Normal);
             rect = Rect.FromTopLeftSize(

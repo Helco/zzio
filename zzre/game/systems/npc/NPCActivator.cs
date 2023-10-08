@@ -51,8 +51,10 @@ public partial class NPCActivator : AEntitySetSystem<float>
     {
         var currentDistanceSqr = playerLocation.DistanceSquared(npcLocation);
         var isInComfortZone = currentDistanceSqr < NPCComfortZoneSqr;
-        if (entity.Has<components.NonFairyAnimation>())
-            entity.Get<components.NonFairyAnimation>().CanUseAlternativeIdles = !isInComfortZone;
+
+        var nonFairyAnim = entity.TryGet<components.NonFairyAnimation>();
+        if (nonFairyAnim.HasValue)
+            nonFairyAnim.Value.CanUseAlternativeIdles = !isInComfortZone;
 
         DefaultEcs.Entity? otherNPC = null;
         float otherDistanceSqr = float.PositiveInfinity;

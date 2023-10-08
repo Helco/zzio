@@ -39,7 +39,7 @@ partial class ECSExplorer
         AddEntityNamer(prio, entity => entity.IsAlive && entity.Has<T>() ? func(entity) : null);
 
     public static void AddEntityNamerByComponent<T>(int prio, TryGetEntityNameByComponentFunc<T> func) =>
-        AddEntityNamer(prio, entity => entity.IsAlive && entity.Has<T>() ? func(entity.Get<T>()) : null);
+        AddEntityNamer(prio, entity => entity.IsAlive && entity.TryGet<T>(out var comp) ? func(comp) : null);
 
     public static void AddEntityNamerByComponent<T>(int prio, string name) =>
         AddEntityNamer(prio, entity => entity.IsAlive && entity.Has<T>() ? name : null);

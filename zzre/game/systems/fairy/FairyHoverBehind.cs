@@ -71,8 +71,8 @@ public partial class FairyHoverBehind : AEntitySetSystem<float>
         };
         // TODO: Add water handling to fairy hover behaviour
 
-        if (entity.Has<components.FairyLookAt>())
-            location.LookAt(entity.Get<components.FairyLookAt>().Target);
+        if (entity.TryGet<components.FairyLookAt>(out var lookAt))
+            location.LookAt(lookAt.Target);
         else
             location.LookIn(parentDir);
 

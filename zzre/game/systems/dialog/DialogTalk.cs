@@ -95,11 +95,10 @@ public partial class DialogTalk : ui.BaseScreen<components.ui.DialogTalk, messag
     private const string BaseFacePath = "resources/bitmaps/faces/";
     private float? TryCreateFace(DefaultEcs.Entity parent, DefaultEcs.Entity npcEntity, Rect bgRect)
     {
-        if (!npcEntity.Has<components.ActorParts>())
+        if (!npcEntity.TryGet<components.ActorParts>(out var actorParts))
             return null;
 
-        var npcBodyEntity = npcEntity.Get<components.ActorParts>().Body;
-        var npcModelName = npcBodyEntity.Get<resources.ClumpInfo>().Name
+        var npcModelName = actorParts.Body.Get<resources.ClumpInfo>().Name
             .Replace(".dff", "", StringComparison.OrdinalIgnoreCase);
         var hasFace = resourcePool.FindFile($"{BaseFacePath}{npcModelName}.bmp") != null;
 

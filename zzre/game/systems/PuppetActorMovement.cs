@@ -47,9 +47,9 @@ public partial class PuppetActorMovement : AEntitySetSystem<float>
         var location = entity.Get<Location>();
         entity.Set(movement with { TargetDirection = location.InnerForward });
 
-        if (!entity.Has<components.ActorParts>())
+        if (!entity.TryGet<components.ActorParts>(out var actorParts))
             return;
-        var bodyLocation = entity.Get<components.ActorParts>().Body.Get<Location>();
+        var bodyLocation = actorParts.Body.Get<Location>();
         bodyLocation.LocalPosition = location.LocalPosition;
         bodyLocation.LocalRotation = location.LocalRotation;
     }
@@ -73,8 +73,10 @@ public partial class PuppetActorMovement : AEntitySetSystem<float>
             PlaceToGround(msg.Entity, location);
         if (msg.OrientByTrigger)
             location.LookIn(trigger.dir with { Y = 0.0001f });
-        if (msg.Entity.Has<components.PuppetActorMovement>())
-            msg.Entity.Get<components.PuppetActorMovement>().TargetDirection = location.InnerForward;
+
+        var actorMove = msg.Entity.TryGet<components.PuppetActorMovement>();
+        if (actorMove.HasValue)
+            actorMove.Value.TargetDirection = location.InnerForward;
     }
 
     private void PlaceToGround(in DefaultEcs.Entity entity, Location location)

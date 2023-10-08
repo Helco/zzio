@@ -118,9 +118,9 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
                 break;
 
             case State.Moving when ai.Config.FullAnimationCycles:
-                var body = entity.Get<components.ActorParts>().Body;
-                var skeleton = body.Get<Skeleton>();
-                if (skeleton.Animation == null)
+                var skeleton = entity.TryGet<components.ActorParts>().GetValueOrDefault()
+                    .Body.TryGet<Skeleton>().GetValueOrDefault();
+                if (skeleton?.Animation == null)
                 {
                     if (ai.MovedDistance <= ai.DistanceToWP)
                     {
@@ -170,9 +170,9 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
         }
         ai.CurIdleTime += elapsedTime;
 
-        if (nextAnimation != null && entity.Has<components.ActorParts>())
+        var body = entity.TryGet<components.ActorParts>().GetValueOrDefault().Body;
+        if (nextAnimation != null && body != default)
         {
-            var body = entity.Get<components.ActorParts>().Body;
             var skeleton = body.Get<Skeleton>();
             var animationPool = body.Get<components.AnimationPool>();
             // TODO: Blend animal animations
