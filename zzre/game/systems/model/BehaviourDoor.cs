@@ -57,6 +57,7 @@ public partial class BehaviourDoor : AEntitySetSystem<float>
             MathF.Abs(location.LocalPosition.Y - PlayerLocation.LocalPosition.Y) < MaxPlayerYDistance;
 
         if (door.IsLocked && door.KeyItemId is not null && playerIsNear &&
+            game.PlayerEntity.Get<Inventory>().Contains(door.KeyItemId.Value) &&
             game.PlayerEntity.Get<components.GameFlow>() == components.GameFlow.Normal)
         {
             var myLock = FindLockNearTo(location);
