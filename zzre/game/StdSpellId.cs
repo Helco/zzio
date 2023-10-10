@@ -26,8 +26,8 @@ public static class StdSpells
     {
         var price =
             (spell.PriceA > 0 ? 1 : 0) +
-            (spell.PriceA > 1 ? 1 : 0) +
-            (spell.PriceA > 1 ? 1 : 0);
+            (spell.PriceB > 1 ? 1 : 0) +
+            (spell.PriceC > 1 ? 1 : 0);
         var maxPrice = GetMaxPriceFor(level);
         var maxRelevantPrice = spell.Type == 0 ? maxPrice.attack : maxPrice.support;
         return spell.PriceA == (byte)zzClass && price <= maxRelevantPrice;
@@ -42,7 +42,7 @@ public static class StdSpells
     };
 
     public static SpellRow GetFirstAttackSpell(this MappedDB db, zzio.ZZClass zzClass, uint level) =>
-        db.Spells.First(s => s.Type == 0 && IsSpellCompatible(s, zzClass, level));
+        db.Spells.OrderBy(s => s.CardId.EntityId).First(s => s.Type == 0 && IsSpellCompatible(s, zzClass, level));
 
     public static (SpellRow? attack0, SpellRow? support0, SpellRow? attack1, SpellRow? support1) GetRandomSpellSet(this MappedDB db, Random random, zzio.ZZClass zzClass, uint level)
     {
