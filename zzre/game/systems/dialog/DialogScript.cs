@@ -165,7 +165,13 @@ public partial class DialogScript : BaseScript
 
     private void WaitForUser(DefaultEcs.Entity entity)
     {
-        entity.Set(components.DialogState.WaitForSayString);
+        if (entity.TryGet<messages.DialogTalk>(out var talkMessage))
+        {
+            entity.Remove<messages.DialogTalk>();
+            World.Publish(talkMessage);
+        }
+        else
+            entity.Set(components.DialogState.WaitForSayString);
     }
 
     private void SetCamera(DefaultEcs.Entity entity, int cameraMode)
@@ -279,7 +285,8 @@ public partial class DialogScript : BaseScript
 
     private void Talk(DefaultEcs.Entity entity, UID uid)
     {
-        World.Publish(new messages.DialogTalk(entity, uid));
+        // do not publish directly to let two sequential Talk commands override each other
+        entity.Set(new messages.DialogTalk(entity, uid));
     }
 
     private void SetTalkLabels(DefaultEcs.Entity entity, int labelYes, int labelNo, TalkMode mode)
