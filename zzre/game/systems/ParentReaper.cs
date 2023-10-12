@@ -1,28 +1,43 @@
 ﻿namespace zzre.game.systems;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using DefaultEcs.System;
 
-public partial class ParentReaper : AEntitySetSystem<float>
+public partial class ParentReaper : ISystem<float>
 {
     private readonly IDisposable sceneChangingSubscription;
+    private readonly DefaultEcs.EntityMultiMap<components.Parent> set;
+    private readonly List<DefaultEcs.Entity> toBeDeleted = new(32);
 
-    public ParentReaper(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
+    public bool IsEnabled { get; set; } = true;
+
+    public ParentReaper(ITagContainer diContainer)
     {
-        sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
+        var world = diContainer.GetTag<DefaultEcs.World>();
+        sceneChangingSubscription = world.Subscribe<messages.SceneChanging>(HandleSceneChanging);
+        set = world.GetEntities().AsMultiMap<components.Parent>(32);
     }
 
-    public override void Dispose()
+    public void Dispose()
     {
-        base.Dispose();
+        set.Dispose();
         sceneChangingSubscription.Dispose();
     }
 
     private void HandleSceneChanging(in messages.SceneChanging _) => Update(0f);
 
-    [Update]
-    private void Update(in DefaultEcs.Entity entity, in components.Parent parent)
+    public void Update(float state)
     {
-        if (!parent.Entity.IsAlive)
-            entity.Dispose();
+        do
+        {
+            toBeDeleted.Clear();
+            foreach (var key in set.Keys.Where(k => !k.Entity.IsAlive))
+                // TODO: Use AddRange(ReadOnlySpan) after .NET 8 release and upgrade
+                toBeDeleted.AddRange(set[key].ToArray());
+
+            foreach (var child in toBeDeleted)
+                child.Dispose();
+        } while (toBeDeleted.Any()) ;
     }
 }
