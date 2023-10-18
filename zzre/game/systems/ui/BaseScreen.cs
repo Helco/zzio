@@ -10,7 +10,7 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     protected enum BlockFlags
     {
         None = 0,
-        All = DisableGameUpdate | LockPlayerControl,
+        All = DisableGameUpdate | LockPlayerControl | NotifyGameScreen,
 
         DisableGameUpdate = (1 << 0),
         LockPlayerControl = (1 << 1),
