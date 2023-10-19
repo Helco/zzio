@@ -26,8 +26,6 @@ internal class Program
 
     private static void Main(string[] args)
     {
-        System.Array.ForEach(PreloadAssemblies, n => System.Reflection.Assembly.Load(n));
-
 #if DEBUG
         RenderDoc? renderDoc = null;
         if (RenderDoc.Load(out renderDoc))
