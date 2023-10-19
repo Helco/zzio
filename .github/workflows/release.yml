@@ -50,7 +50,7 @@ jobs:
           dotnet build zzio/zzio.sln --configuration Release --no-restore
           dotnet build zzio/zzre/zzre.csproj -c Release --no-restore -r ${{ matrix.target }}
       - name: Publish
-        run: dotnet publish zzio/zzre/zzre.csproj -f net6.0 -c Release --no-build --self-contained true -r ${{ matrix.target }} -o ./zzre
+        run: dotnet publish zzio/zzre/zzre.csproj -f net7.0 -c Release --no-build --self-contained true -r ${{ matrix.target }} -o ./zzre
       - name: Create archive
         uses: thedoctor0/zip-release@master
         with:
