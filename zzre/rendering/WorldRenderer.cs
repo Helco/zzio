@@ -11,6 +11,10 @@ namespace zzre.rendering;
 public class WorldRenderer : BaseDisposable
 {
     private readonly ITagContainer diContainer;
+    private readonly GraphicsDevice graphicsDevice;
+    private readonly DeviceBufferRange locationRange;
+    private readonly Camera camera;
+    private readonly Texture whiteTexture;
 
     private WorldBuffers? worldBuffers;
     public WorldBuffers? WorldBuffers
@@ -24,8 +28,6 @@ public class WorldRenderer : BaseDisposable
         }
     }
 
-    private readonly DeviceBufferRange locationRange;
-    private readonly Camera camera;
     private Frustum viewFrustum;
     private ModelStandardMaterial[] materials = Array.Empty<ModelStandardMaterial>();
     public IReadOnlyList<ModelStandardMaterial> Materials => materials;
@@ -42,6 +44,11 @@ public class WorldRenderer : BaseDisposable
         camera = diContainer.GetTag<Camera>();
         var locationBuffer = diContainer.GetTag<LocationBuffer>();
         locationRange = locationBuffer.Add(Location);
+
+        graphicsDevice = diContainer.GetTag<GraphicsDevice>();
+        whiteTexture = graphicsDevice.ResourceFactory.CreateTexture(new(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
+        whiteTexture.Name = "White";
+        graphicsDevice.UpdateTexture(whiteTexture, new byte[] { 255, 255, 255, 255 }, 0, 0, 0, 1, 1, 1, 0, 0);
     }
 
     protected override void DisposeManaged()
@@ -49,6 +56,7 @@ public class WorldRenderer : BaseDisposable
         base.DisposeManaged();
         diContainer.GetTag<LocationBuffer>().Remove(locationRange);
         DisposeMaterials();
+        whiteTexture.Dispose();
     }
 
     private void DisposeMaterials()
@@ -56,7 +64,7 @@ public class WorldRenderer : BaseDisposable
         var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
         foreach (var material in materials)
         {
-            if (textureLoader is not CachedAssetLoader<Texture>)
+            if (textureLoader is not CachedAssetLoader<Texture> && material.MainTexture.Texture != whiteTexture)
             {
                 material.MainTexture.Texture?.Dispose();
                 material.Sampler.Sampler?.Dispose();
@@ -80,7 +88,13 @@ public class WorldRenderer : BaseDisposable
         foreach (var (rwMaterial, index) in worldBuffers.Materials.Indexed())
         {
             var material = materials[index] = new ModelStandardMaterial(diContainer);
-            (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBase, rwMaterial);
+            if (rwMaterial.isTextured)
+                (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBase, rwMaterial);
+            else
+            {
+                material.MainTexture.Texture = whiteTexture;
+                material.Sampler.Sampler = graphicsDevice.PointSampler;
+            }
             material.LinkTransformsTo(camera);
             material.World.BufferRange = locationRange;
             material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
