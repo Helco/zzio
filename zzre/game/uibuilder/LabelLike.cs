@@ -95,9 +95,13 @@ internal abstract record LabelLike<T> : Base<T> where T : LabelLike<T>
             entity.Set(rect = Rect.FromMinMax(rect.Min, rect.Min));
         }
 
-        entity.Set(new components.ui.Label(text, doFormat, lineHeight));
         if (segmentsPerAdd.HasValue)
+        {
+            entity.Set(new components.ui.Label("", doFormat, lineHeight)); // clearing text prevents a blinking first frame
             entity.Set(new components.ui.AnimatedLabel(text, segmentsPerAdd.Value, isBlinking));
+        }
+        else
+            entity.Set(new components.ui.Label(text, doFormat, lineHeight));
 
         return entity;
     }
