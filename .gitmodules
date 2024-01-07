@@ -10,3 +10,6 @@
 	path = extern/ImGui.NET
 	url = https://github.com/Helco/ImGui.NET
 	branch = zzio
+[submodule "extern/Mlang"]
+	path = extern/Mlang
+	url = https://github.com/Helco/Mlang
