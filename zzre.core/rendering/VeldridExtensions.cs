@@ -1,4 +1,5 @@
-﻿using Veldrid;
+﻿using System.Numerics;
+using Veldrid;
 
 namespace zzre.rendering;
 
@@ -12,4 +13,6 @@ public static class VeldridExtensions
         Filter = filter,
         MaximumLod = 1000
     };
+
+    public static RgbaFloat ToRgbaFloat(this Vector4 v) => new(v);
 }

@@ -35,6 +35,44 @@ public struct ModelStandardMaterialUniforms
     };
 }
 
+public class ModelMaterial : MlangMaterial
+{
+    public enum BlendMode : uint
+    {
+        Opaque = 0,
+        Alpha,
+        Additive,
+        AdditiveAlpha
+    }
+
+    public bool IsInstanced { set => SetOption(nameof(IsInstanced), value); }
+    public bool IsSkinned { set => SetOption(nameof(IsSkinned), value); }
+    public bool HasTexShift { set => SetOption(nameof(HasTexShift), value); }
+    public bool HasEnvMap { set => SetOption(nameof(HasEnvMap), value); }
+    public BlendMode Blend { set => SetOption(nameof(Blend), (uint)value); }
+
+    public UniformBinding<Matrix4x4> World { get; }
+    public UniformBinding<Matrix4x4> Projection { get; }
+    public UniformBinding<Matrix4x4> View { get; }
+    public UniformBinding<Matrix3x2> TexShift { get; }
+    public UniformBinding<ModelStandardMaterialUniforms> Colors { get; }
+    public TextureBinding Texture { get; }
+    public SamplerBinding Sampler { get; }
+    public SkeletonPoseBinding Pose { get; }
+
+    public ModelMaterial(ITagContainer diContainer) : base(diContainer, "model")
+    {
+        AddBinding("world", World = new(this));
+        AddBinding("projection", Projection = new(this));
+        AddBinding("view", View = new(this));
+        AddBinding("inTexShift", TexShift = new(this));
+        AddBinding("block_24_0", Colors = new(this));
+        AddBinding("mainTexture", Texture = new(this));
+        AddBinding("mainSampler", Sampler = new(this));
+        AddBinding("pose", Pose = new(this));
+    }
+}
+
 public class ModelStandardMaterial : BaseMaterial, IStandardTransformMaterial
 {
     public TextureBinding MainTexture { get; }
