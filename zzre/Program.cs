@@ -59,6 +59,9 @@ internal class Program
 
         var pipelineCollection = new PipelineCollection(graphicsDevice);
         pipelineCollection.AddShaderResourceAssemblyOf<Program>();
+        var shaderVariantCollection = new ShaderVariantCollection(graphicsDevice,
+            typeof(Program).Assembly.GetManifestResourceStream("shaders.mlss")
+            ?? throw new InvalidDataException("Shader set is not compiled into zzre"));
         var windowContainer = new WindowContainer(graphicsDevice);
         var resourcePool = new CombinedResourcePool(new IResourcePool[]
         {
@@ -79,6 +82,7 @@ internal class Program
             .AddTag(graphicsDevice.ResourceFactory)
             .AddTag<IResourcePool>(resourcePool)
             .AddTag(pipelineCollection)
+            .AddTag(shaderVariantCollection)
             .AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(diContainer))
             .AddTag(new OpenDocumentSet(diContainer))
             .AddTag(IconFont.CreateForkAwesome(graphicsDevice));
@@ -90,7 +94,7 @@ internal class Program
         windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
 #if DEBUG
-        new ZanzarahWindow(diContainer);
+        //new ZanzarahWindow(diContainer);
 #endif
 
         window.Resized += () =>

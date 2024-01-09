@@ -35,9 +35,9 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private readonly ModelMaterialEdit modelMaterialEdit;
     private readonly LocationBuffer locationBuffer;
 
-    private ClumpBuffers? geometryBuffers;
+    private ClumpBuffersDeinterleaved? geometryBuffers;
     private GeometryTreeCollider? collider;
-    private ModelStandardMaterial[] materials = Array.Empty<ModelStandardMaterial>();
+    private ModelMaterial[] materials = Array.Empty<ModelMaterial>();
     private DebugSkeletonRenderer? skeletonRenderer;
     private int highlightedSplitI = -1;
 
@@ -127,30 +127,32 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             new FilePath("resources/textures/worlds"),
         };
 
-        geometryBuffers = new ClumpBuffers(diContainer, resource);
+        geometryBuffers = new ClumpBuffersDeinterleaved(diContainer, resource);
         AddDisposable(geometryBuffers);
 
-        materials = new ModelStandardMaterial[geometryBuffers.SubMeshes.Count];
+        materials = new ModelMaterial[geometryBuffers.SubMeshes.Count];
         foreach (var (rwMaterial, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
         {
-            var material = materials[index] = new ModelStandardMaterial(diContainer);
-            (material.MainTexture.Texture, material.Sampler.Sampler) = TryLoadTexture(texturePaths, rwMaterial);
+            var material = materials[index] = new ModelMaterial(diContainer);
+            (material.Texture.Texture, material.Sampler.Sampler) = TryLoadTexture(texturePaths, rwMaterial);
             material.LinkTransformsTo(camera);
             material.World.Ref = Matrix4x4.Identity;
-            material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
-            material.Uniforms.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
-            material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
+            material.Colors.Ref = ModelStandardMaterialUniforms.Default with
+            {
+                vertexColorFactor = 0f, // they seem to be set to some gray for models?
+                tint = rwMaterial.color.ToFColor()
+            };
             AddDisposable(material);
         }
-        modelMaterialEdit.Materials = materials;
+        //modelMaterialEdit.Materials = materials;
 
         skeletonRenderer = null;
-        if (geometryBuffers.Skin != null)
+        /*if (geometryBuffers.Skin != null)
         {
             var skeleton = new Skeleton(geometryBuffers.Skin, resource.Name.Replace(".DFF", "", StringComparison.CurrentCultureIgnoreCase));
             skeletonRenderer = new DebugSkeletonRenderer(diContainer.ExtendedWith(camera, locationBuffer), geometryBuffers, skeleton);
             AddDisposable(skeletonRenderer);
-        }
+        }*/
 
         collider = geometryBuffers.RWGeometry.FindChildById(zzio.rwbs.SectionId.CollisionPLG, true) == null
             ? null

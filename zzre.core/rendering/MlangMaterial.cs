@@ -53,9 +53,9 @@ public class MlangMaterial : BaseDisposable, IMaterial
 
     protected void AddBinding(string name, BaseBinding binding)
     {
-        if (!bindings.TryGetValue(name, out var oldBinding))
-            throw new ArgumentException($"Binding {binding} does not exist for shader {shaderName}");
-        oldBinding?.Dispose();
+        // TODO: Reenable exception after figuring out proper potential bindings set
+        if (bindings.TryGetValue(name, out var oldBinding))
+            oldBinding?.Dispose();
         bindings[name] = binding;
     }
 

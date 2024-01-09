@@ -35,7 +35,7 @@ public struct ModelStandardMaterialUniforms
     };
 }
 
-public class ModelMaterial : MlangMaterial
+public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
 {
     public enum BlendMode : uint
     {
@@ -62,11 +62,11 @@ public class ModelMaterial : MlangMaterial
 
     public ModelMaterial(ITagContainer diContainer) : base(diContainer, "model")
     {
-        AddBinding("world", World = new(this));
-        AddBinding("projection", Projection = new(this));
-        AddBinding("view", View = new(this));
-        AddBinding("inTexShift", TexShift = new(this));
-        AddBinding("block_24_0", Colors = new(this));
+        AddBinding("block_20_0", World = new(this));
+        AddBinding("block_38_0", Projection = new(this));
+        AddBinding("block_39_0", View = new(this));
+        AddBinding("block_21_0", TexShift = new(this));
+        AddBinding("block_22_0", Colors = new(this));
         AddBinding("mainTexture", Texture = new(this));
         AddBinding("mainSampler", Sampler = new(this));
         AddBinding("pose", Pose = new(this));

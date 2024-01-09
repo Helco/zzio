@@ -4,7 +4,6 @@ option HasTexShift;
 option HasEnvMap;
 option Blend = IsOpaque, IsAlphaBlend, IsAdditiveBlend, IsAdditiveAlphaBlend;
 
-
 attributes
 {
     float3 inPos;
