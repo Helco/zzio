@@ -53,9 +53,9 @@ public class MlangMaterial : BaseDisposable, IMaterial
 
     protected void AddBinding(string name, BaseBinding binding)
     {
-        // TODO: Reenable exception after figuring out proper potential bindings set
-        if (bindings.TryGetValue(name, out var oldBinding))
-            oldBinding?.Dispose();
+        if (!bindings.TryGetValue(name, out var oldBinding))
+            throw new KeyNotFoundException($"Shader binding {name} does not exist");
+        oldBinding?.Dispose();
         bindings[name] = binding;
     }
 
