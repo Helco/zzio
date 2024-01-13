@@ -24,6 +24,7 @@ using VeldridCullMode = Veldrid.FaceCullMode;
 using MlangCullMode = Mlang.Model.FaceCullMode;
 using VeldridFillMode = Veldrid.PolygonFillMode;
 using MlangFillMode = Mlang.Model.FaceFillMode;
+using SharpGen.Runtime.Win32;
 
 namespace zzre.rendering;
 
@@ -34,16 +35,23 @@ public interface IBuiltVariantPipeline : IBuiltPipeline
 
 public class ShaderVariantCollection : zzio.BaseDisposable
 {
+    private class BuiltPrograms
+    {
+        public required Shader Vertex { get; init; }
+        public required Shader Fragment { get; init; }
+        // we might have to add a reference count to dispose shaders more quickly 
+        // but for now we only unload everything at once upon disposal of the collection
+    }
+
     private class BuiltPipeline : IBuiltVariantPipeline
     {
         public required ShaderVariant ShaderVariant { get; init; }
-        public required Shader Vertex { get; init; }
-        public required Shader Fragment { get; init; }
         public required Pipeline Pipeline { get; init; }
         public required IReadOnlyList<ResourceLayout> ResourceLayouts { get; init; }
     }
 
     private readonly IShaderSet shaderSet;
+    private readonly Dictionary<ShaderVariantKey, BuiltPrograms> builtPrograms = new();
     private readonly Dictionary<ShaderVariantKey, BuiltPipeline> builtPipelines = new();
 
     public GraphicsDevice Device { get; }
@@ -63,10 +71,14 @@ public class ShaderVariantCollection : zzio.BaseDisposable
             s.Pipeline.Dispose();
             foreach (var resLayout in s.ResourceLayouts)
                 resLayout.Dispose();
-            s.Vertex.Dispose();
-            s.Fragment.Dispose();
+        }
+        foreach (var p in builtPrograms.Values)
+        {
+            p.Vertex.Dispose();
+            p.Fragment.Dispose();
         }
         builtPipelines.Clear();
+        builtPrograms.Clear();
         shaderSet.Dispose();
     }
 
@@ -78,8 +90,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
             return builtShader;
 
         var variant = shaderSet.GetVariant(variantKey);
-        var vertexShader = Factory.CreateShader(new(ShaderStages.Vertex, variant.VertexShader.ToArray(), "main"));
-        var fragmentShader = Factory.CreateShader(new(ShaderStages.Fragment, variant.FragmentShader.ToArray(), "main"));
+        var programs = GetBuiltPrograms(variant);
         var resourceLayouts = CreateResourceLayouts(variant);
         var pipeline = Factory.CreateGraphicsPipeline(new GraphicsPipelineDescription
         {
@@ -91,7 +102,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
             ResourceLayouts = resourceLayouts,
             ShaderSet = new()
             {
-                Shaders = new Shader[] { vertexShader, fragmentShader },
+                Shaders = new Shader[] { programs.Vertex, programs.Fragment },
                 Specializations = Array.Empty<SpecializationConstant>(),
                 VertexLayouts = CreateVertexLayouts(variant)
             }
@@ -99,13 +110,28 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         var builtPipeline = new BuiltPipeline()
         {
             ShaderVariant = variant,
-            Vertex = vertexShader,
-            Fragment = fragmentShader,
             ResourceLayouts = resourceLayouts,
             Pipeline = pipeline
         };
         builtPipelines.Add(variantKey, builtPipeline);
         return builtPipeline;
+    }
+
+    private BuiltPrograms GetBuiltPrograms(ShaderVariant variant)
+    {
+        var variantKey = variant.VariantKey;
+        var shaderInfo = shaderSet.GetShaderInfo(variantKey.ShaderHash);
+        var invariantKey = shaderInfo.GetProgramInvariantKey(variantKey);
+        if (builtPrograms.TryGetValue(invariantKey, out var prevPrograms))
+            return prevPrograms;
+
+        var newPrograms = new BuiltPrograms()
+        {
+            Vertex = Factory.CreateShader(new(ShaderStages.Vertex, variant.VertexShader.ToArray(), "main")),
+            Fragment = Factory.CreateShader(new(ShaderStages.Fragment, variant.FragmentShader.ToArray(), "main"))
+        };
+        builtPrograms.Add(invariantKey, newPrograms);
+        return newPrograms;
     }
 
     private ResourceLayout[] CreateResourceLayouts(ShaderVariant variant)
