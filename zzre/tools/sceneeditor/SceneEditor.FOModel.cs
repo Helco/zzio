@@ -1,16 +1,16 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
+using zzio;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
 using static zzre.imgui.ImGuiEx;
-using System.Collections;
-using zzio;
 
 namespace zzre.tools;
 
@@ -20,16 +20,16 @@ public partial class SceneEditor
     {
         private readonly ITagContainer diContainer;
         private readonly DeviceBufferRange locationRange;
-        private readonly ClumpBuffers clumpBuffers;
-        private readonly ModelStandardMaterial[] materials;
+        private readonly ClumpMesh mesh;
+        private readonly ModelMaterial[] materials;
 
         public Location Location { get; } = new Location();
         public zzio.scn.FOModel SceneFOModel { get; }
 
         public string Title => $"#{SceneFOModel.idx} - {SceneFOModel.filename}";
-        public IRaycastable SelectableBounds => clumpBuffers.Bounds.TransformToWorld(Location);
+        public IRaycastable SelectableBounds => mesh.BoundingBox.TransformToWorld(Location);
         public IRaycastable RenderedBounds => SelectableBounds;
-        public float ViewSize => clumpBuffers.Bounds.MaxSizeComponent;
+        public float ViewSize => mesh.BoundingBox.MaxSizeComponent;
 
         public FOModel(ITagContainer diContainer, zzio.scn.FOModel sceneModel)
         {
@@ -46,17 +46,17 @@ public partial class SceneEditor
             Location.LocalPosition = sceneModel.pos;
             Location.LocalRotation = sceneModel.rot.ToZZRotation();
 
-            clumpBuffers = new ClumpBuffers(diContainer, new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
-            materials = clumpBuffers.SubMeshes.Select(subMesh =>
+            var clumpLoader = diContainer.GetTag<IAssetLoader<ClumpMesh>>();
+            mesh = clumpLoader.Load(new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
+            materials = mesh.Materials.Select(rwMaterial =>
             {
-                var rwMaterial = subMesh.Material;
-                var material = new ModelStandardMaterial(diContainer);
-                (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBasePaths, rwMaterial);
+                var material = new ModelMaterial(diContainer);
+                (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBasePaths, rwMaterial);
                 material.LinkTransformsTo(camera);
                 material.World.BufferRange = locationRange;
-                material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
-                material.Uniforms.Ref.vertexColorFactor = 0.0f;
-                material.Uniforms.Ref.tint = rwMaterial.color.ToFColor() * sceneModel.color;
+                material.Colors.Ref = ModelStandardMaterialUniforms.Default;
+                material.Colors.Ref.vertexColorFactor = 0.0f;
+                material.Colors.Ref.tint = rwMaterial.color.ToFColor() * sceneModel.color;
                 return material;
             }).ToArray();
         }
@@ -65,15 +65,16 @@ public partial class SceneEditor
         {
             base.DisposeManaged();
             diContainer.GetTag<LocationBuffer>().Remove(locationRange);
-            clumpBuffers.Dispose();
+            mesh.Dispose();
             foreach (var material in materials)
                 material.Dispose();
         }
 
         public void Render(CommandList cl)
         {
-            clumpBuffers.SetBuffers(cl);
-            foreach (var (subMesh, index) in clumpBuffers.SubMeshes.Indexed())
+            materials.First().ApplyAttributes(cl, mesh);
+            cl.SetIndexBuffer(mesh.IndexBuffer, mesh.IndexFormat);
+            foreach (var (subMesh, index) in mesh.SubMeshes.Indexed())
             {
                 (materials[index] as IMaterial).Apply(cl);
                 cl.DrawIndexed(
@@ -88,7 +89,7 @@ public partial class SceneEditor
         public void Content()
         {
             bool hasChanged = false;
-            if (ImGuiEx.Hyperlink("Model", SceneFOModel.filename))
+            if (Hyperlink("Model", SceneFOModel.filename))
             {
                 var fullPath = new FilePath("resources/models/models").Combine(SceneFOModel.filename + ".dff");
                 diContainer.GetTag<OpenDocumentSet>().OpenWith<ModelViewer>(fullPath);

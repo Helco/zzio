@@ -95,7 +95,7 @@ internal class Program
 
 #if DEBUG
         //new ZanzarahWindow(diContainer);
-        diContainer.GetTag<OpenDocumentSet>().OpenWith<WorldViewer>("resources/worlds/SC_2222.BSP");
+        diContainer.GetTag<OpenDocumentSet>().OpenWith<SceneEditor>("resources/worlds/SC_2222.SCN");
 #endif
 
         window.Resized += () =>

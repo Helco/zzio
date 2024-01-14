@@ -81,7 +81,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
         AddDisposable(gridRenderer);
 
         AddDisposable(textureLoader = new CachedAssetLoader<Texture>(new TextureAssetLoader(diContainer)));
-        AddDisposable(clumpLoader = new CachedClumpAssetLoader(diContainer));
+        AddDisposable(clumpLoader = new CachedClumpBuffersLoader(diContainer));
         this.diContainer.AddTag<IAssetLoader<Texture>>(textureLoader);
         this.diContainer.AddTag<IAssetLoader<ClumpBuffers>>(clumpLoader);
 
