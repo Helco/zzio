@@ -1,17 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
 using ImGuiNET;
 using zzio;
+using zzio.rwbs;
 using zzio.vfs;
 using zzre.rendering;
 using zzre.materials;
 using zzre.debug;
 using zzre.imgui;
-using System.Collections.Generic;
-using zzio.rwbs;
 
 namespace zzre.tools;
 
@@ -146,15 +146,15 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             };
             AddDisposable(material);
         }
-        //modelMaterialEdit.Materials = materials;
+        modelMaterialEdit.Materials = materials;
 
         skeletonRenderer = null;
-        /*if (geometryBuffers.Skin != null)
+        if (mesh.Skin != null)
         {
-            var skeleton = new Skeleton(geometryBuffers.Skin, resource.Name.Replace(".DFF", "", StringComparison.CurrentCultureIgnoreCase));
-            skeletonRenderer = new DebugSkeletonRenderer(diContainer.ExtendedWith(camera, locationBuffer), geometryBuffers, skeleton);
+            var skeleton = new Skeleton(mesh.Skin, resource.Name.Replace(".DFF", "", StringComparison.CurrentCultureIgnoreCase));
+            skeletonRenderer = new DebugSkeletonRenderer(diContainer.ExtendedWith(camera, locationBuffer), mesh, skeleton);
             AddDisposable(skeletonRenderer);
-        }*/
+        }
 
         collider = mesh.Geometry.FindChildById(SectionId.CollisionPLG, true) == null
             ? null

@@ -98,7 +98,7 @@ public class MlangMaterial : BaseDisposable, IMaterial
             foreach (var bindingInfo in Pipeline.ShaderVariant.Bindings)
             {
                 var binding = bindings[bindingInfo.Name];
-                if (binding?.Resource is null)
+                if (binding?.Resource is null or DeviceBufferRange { Buffer: null })
                     throw new InvalidOperationException($"Binding {bindingInfo.Name} is not set");
                 setDescriptions[bindingInfo.SetIndex].BoundResources[bindingInfo.BindingIndex] = binding.Resource;
             }
@@ -108,7 +108,7 @@ public class MlangMaterial : BaseDisposable, IMaterial
             cl.SetGraphicsResourceSet((uint)index, resourceSet);
     }
 
-    public void ApplyAttributes(CommandList cl, Mesh mesh, bool requireAll = false)
+    public void ApplyAttributes(CommandList cl, Mesh mesh, bool requireAll = true)
     {
         foreach (var info in Pipeline.ShaderVariant.VertexAttributes)
         {

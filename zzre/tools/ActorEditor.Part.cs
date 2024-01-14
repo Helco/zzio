@@ -29,7 +29,7 @@ public partial class ActorEditor
         public readonly ClumpBuffers geometry;
         public readonly ModelSkinnedMaterial[] materials;
         public readonly Skeleton skeleton;
-        public readonly DebugSkeletonRenderer skeletonRenderer;
+        // public readonly DebugSkeletonRenderer skeletonRenderer;
         public readonly (AnimationType type, string fileName, SkeletalAnimation ani)[] animations;
         public (int BoneIdx, Vector3 TargetPos)? singleIK = null;
 
@@ -65,8 +65,8 @@ public partial class ActorEditor
 
             skeleton = new Skeleton(skin, modelName);
             skeleton.Location.Parent = location;
-            skeletonRenderer = new DebugSkeletonRenderer(diContainer, geometry, skeleton);
-            AddDisposable(skeletonRenderer);
+            //skeletonRenderer = new DebugSkeletonRenderer(diContainer, geometry, skeleton);
+            //AddDisposable(skeletonRenderer);
 
             materials = new ModelSkinnedMaterial[geometry.SubMeshes.Count];
             foreach (var (rwMaterial, index) in geometry.SubMeshes.Select(s => s.Material).Indexed())
@@ -118,7 +118,7 @@ public partial class ActorEditor
             }
         }
 
-        public void RenderDebug(CommandList cl) => skeletonRenderer.Render(cl);
+        public void RenderDebug(CommandList cl) { }//=> skeletonRenderer.Render(cl);
 
         public bool PlaybackContent()
         {
@@ -130,7 +130,7 @@ public partial class ActorEditor
                     skeleton.ApplySingleIK(singleIK.Value.BoneIdx, singleIK.Value.TargetPos);
                 foreach (var mat in materials)
                     mat.Pose.MarkPoseDirty();
-                skeletonRenderer.BoneMaterial.Pose.MarkPoseDirty();
+                //skeletonRenderer.BoneMaterial.Pose.MarkPoseDirty();
             }
 
             PushID(modelName);
@@ -166,7 +166,7 @@ public partial class ActorEditor
                     skeleton.AnimationTime = time;
                     foreach (var mat in materials)
                         mat.Pose.MarkPoseDirty();
-                    skeletonRenderer.BoneMaterial.Pose.MarkPoseDirty();
+                    //skeletonRenderer.BoneMaterial.Pose.MarkPoseDirty();
                     hasChanged = true;
                 }
                 if (SmallButton(IconFonts.ForkAwesome.FastBackward))

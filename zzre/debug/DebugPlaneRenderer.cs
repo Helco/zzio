@@ -23,7 +23,7 @@ public class DebugPlaneRenderer : BaseDisposable
     private bool isDirty = false;
     private DebugPlane[] planes = Array.Empty<DebugPlane>();
 
-    public DebugMaterial Material { get; }
+    public DebugLegacyMaterial Material { get; }
 
     public DebugPlane[] Planes
     {
@@ -38,7 +38,7 @@ public class DebugPlaneRenderer : BaseDisposable
     public DebugPlaneRenderer(ITagContainer diContainer)
     {
         device = diContainer.GetTag<GraphicsDevice>();
-        Material = new DebugMaterial(diContainer);
+        Material = new DebugLegacyMaterial(diContainer);
     }
 
     protected override void DisposeManaged()

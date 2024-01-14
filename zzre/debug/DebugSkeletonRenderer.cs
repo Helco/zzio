@@ -58,16 +58,16 @@ public class DebugSkeletonRenderer : BaseDisposable
     private int highlightedBoneI = -1;
 
     public DebugSkinnedMaterial BoneMaterial { get; }
-    public DebugSkinAllMaterial SkinMaterial { get; }
-    public DebugSkinSingleMaterial SkinHighlightedMaterial { get; }
+    public DebugMaterial SkinMaterial { get; }
+    public DebugMaterial SkinHighlightedMaterial { get; }
     public DebugLinesMaterial LinesMaterial { get; }
-    public ClumpBuffers Geometry { get; }
+    public Mesh Mesh { get; }
     public Skeleton Skeleton { get; }
-    public ref DebugSkeletonRenderMode RenderMode => ref renderMode;
+    public ref DebugSkeletonRenderMode RenderMode => ref renderMode; // reference for using the field with ImGui
 
-    public DebugSkeletonRenderer(ITagContainer diContainer, ClumpBuffers geometryBuffers, Skeleton skeleton)
+    public DebugSkeletonRenderer(ITagContainer diContainer, Mesh mesh, Skeleton skeleton)
     {
-        Geometry = geometryBuffers;
+        Mesh = mesh;
         Skeleton = skeleton;
         var camera = diContainer.GetTag<Camera>();
         locationBuffer = diContainer.GetTag<LocationBuffer>();
@@ -81,12 +81,10 @@ public class DebugSkeletonRenderer : BaseDisposable
         BoneMaterial = new DebugSkinnedMaterial(diContainer);
         LinkTransformsFor(BoneMaterial);
         BoneMaterial.Pose.Skeleton = skeleton;
-        SkinMaterial = new DebugSkinAllMaterial(diContainer);
+        SkinMaterial = new(diContainer) { Color = DebugMaterial.ColorMode.SkinWeights };
         LinkTransformsFor(SkinMaterial);
-        SkinMaterial.Alpha.Ref = 1.0f;
-        SkinHighlightedMaterial = new DebugSkinSingleMaterial(diContainer);
+        SkinHighlightedMaterial = new(diContainer) { Color = DebugMaterial.ColorMode.SingleBoneWeight };
         LinkTransformsFor(SkinHighlightedMaterial);
-        SkinHighlightedMaterial.BoneIndex.Ref = -1;
         LinesMaterial = new DebugLinesMaterial(diContainer);
         LinkTransformsFor(LinesMaterial);
         device = diContainer.GetTag<GraphicsDevice>();
@@ -183,19 +181,9 @@ public class DebugSkeletonRenderer : BaseDisposable
             return;
 
         if (RenderMode == DebugSkeletonRenderMode.Skin)
-        {
-            (SkinMaterial as IMaterial).Apply(cl);
-            Geometry.SetBuffers(cl);
-            Geometry.SetSkinBuffer(cl);
-            cl.DrawIndexed((uint)Geometry.SubMeshes.Sum(sm => sm.IndexCount));
-        }
+            RenderMesh(cl, SkinMaterial);
         if (RenderMode == DebugSkeletonRenderMode.SingleSkinBone)
-        {
-            (SkinHighlightedMaterial as IMaterial).Apply(cl);
-            Geometry.SetBuffers(cl);
-            Geometry.SetSkinBuffer(cl);
-            cl.DrawIndexed((uint)Geometry.SubMeshes.Sum(sm => sm.IndexCount));
-        }
+            RenderMesh(cl, SkinHighlightedMaterial);
 
         // always draw bones when visible
         (BoneMaterial as IMaterial).Apply(cl);
@@ -211,6 +199,21 @@ public class DebugSkeletonRenderer : BaseDisposable
             cl.SetVertexBuffer(0, lineBuffer);
             cl.Draw(lineBuffer.SizeInBytes / ColoredVertex.Stride);
         }
+    }
+
+    private void RenderMesh(CommandList cl, MlangMaterial material)
+    {
+        (material as IMaterial).Apply(cl);
+        material.ApplyAttributes(cl, Mesh);
+        cl.SetIndexBuffer(Mesh.IndexBuffer, Mesh.IndexFormat);
+        cl.DrawIndexed(
+            indexCount: (uint)Mesh.SubMeshes.Sum(sm => sm.IndexCount),
+            instanceCount: 1,
+            indexStart: 0,
+            vertexOffset: 0,
+            instanceStart: (uint)(highlightedBoneI < 0
+                ? Skeleton.Bones.Count
+                : highlightedBoneI));
     }
 
     private void SetBoneAlpha(int boneI, byte alpha)
@@ -233,7 +236,6 @@ public class DebugSkeletonRenderer : BaseDisposable
         if (highlightedBoneI >= 0)
             SetBoneAlpha(highlightedBoneI, 120);
         SetBoneAlpha(highlightedBoneI = boneIdx, 255);
-        SkinHighlightedMaterial.BoneIndex.Ref = highlightedBoneI;
     }
 
     public bool Content()

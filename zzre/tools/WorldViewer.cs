@@ -172,7 +172,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         worldBuffers = new WorldBuffers(diContainer, resource);
         AddDisposable(worldBuffers);
         worldRenderer.WorldBuffers = worldBuffers;
-        modelMaterialEdit.Materials = materials;
+        //modelMaterialEdit.Materials = materials;
 
         CurrentResource = resource;
         UpdateSectionDepths();

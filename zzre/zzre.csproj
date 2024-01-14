@@ -34,6 +34,7 @@
 
   <ItemGroup>
     <MlangShader Include="shaders\model.mlang" />
+    <MlangShader Include="shaders\debug.mlang" />
   </ItemGroup>
 
   <ItemGroup>

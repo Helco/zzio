@@ -79,7 +79,7 @@ vertex
             (pose[inIndices.y] * pos) * inWeights.y +
             (pose[inIndices.z] * pos) * inWeights.z +
             (pose[inIndices.w] * pos) * inWeights.w;
-        pos.w = 1; // TODO: Check if this is necessary
+        pos.w = 1;
     }
 
 	pos = world * pos;

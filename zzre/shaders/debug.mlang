@@ -1,0 +1,80 @@
+option IsSkinned;
+option ColorMode = VertexColor, SkinWeights, SingleBoneWeight;
+
+attributes float3 inPos;
+attributes if (ColorMode == VertexColor) byte4_norm inColor;
+attributes if (IsSkinned || ColorMode != VertexColor)
+{
+	float4 inWeights;
+	byte4 inIndices;
+}
+
+uniform mat4 world;
+uniform mat4 projection;
+uniform mat4 view;
+uniform if (IsSkinned) buffer mat4[] pose;
+
+varying
+{
+	float4 varColor;
+}
+
+pipeline
+{
+	blend SrcAlpha + InvSrcAlpha;
+	DepthTest Off;
+	DepthWrite Off;
+	output r8_g8_b8_a8_unorm outColor;
+	output d24_unorm_s8_uint;
+}
+
+vec4 GetDebugColorOf(uint index)
+{
+	vec4 color = vec4(0, 0, 0, 1);
+	color[(index + 1) % 3] = 1;
+	return color;
+}
+
+vertex
+{
+	vec4 pos = vec4(inPos, 1);
+	if (IsSkinned)
+    {
+        pos =
+            (pose[inIndices.x] * pos) * inWeights.x +
+            (pose[inIndices.y] * pos) * inWeights.y +
+            (pose[inIndices.z] * pos) * inWeights.z +
+            (pose[inIndices.w] * pos) * inWeights.w;
+        pos.w = 1;
+    }
+	pos = world * pos;
+	pos = view * pos;
+	pos = projection * pos;
+	gl_Position = pos;
+
+	if (ColorMode == VertexColor)
+		varColor = inColor;
+	else if (ColorMode == SkinWeights)
+	{
+		varColor =
+			GetDebugColorOf(inIndices.x) * inWeights.x +
+			GetDebugColorOf(inIndices.y) * inWeights.y +
+			GetDebugColorOf(inIndices.z) * inWeights.z +
+			GetDebugColorOf(inIndices.w) * inWeights.w;
+	}
+	else if (ColorMode == SingleBoneWeight)
+	{
+		// yes we just abuse instance ID as an uniform
+		float c =
+			float(inIndices.x == gl_InstanceIndex) * inWeights.x +
+			float(inIndices.y == gl_InstanceIndex) * inWeights.y +
+			float(inIndices.z == gl_InstanceIndex) * inWeights.z +
+			float(inIndices.w == gl_InstanceIndex) * inWeights.w;
+		varColor = vec4(c, 0, 0, c);
+	}
+}
+
+fragment
+{
+	outColor = varColor;
+}
