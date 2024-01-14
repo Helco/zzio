@@ -27,7 +27,8 @@ public class SkeletonPoseBinding : BaseBinding
             poseBuffer?.Dispose();
             poseBuffer = Parent.Device.ResourceFactory.CreateBuffer(new BufferDescription(
                 MaxBoneCount * 4 * 4 * sizeof(float),
-                BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+                BufferUsage.StructuredBufferReadOnly | BufferUsage.Dynamic,
+                4 * 4 * sizeof(float)));
             poseBuffer.Name = $"{skeleton.Name} Pose {GetHashCode()}";
             poseBufferRange = new DeviceBufferRange(PoseBuffer, 0, poseBuffer.SizeInBytes);
             isContentDirty = true;

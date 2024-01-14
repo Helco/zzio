@@ -95,7 +95,7 @@ internal class Program
 
 #if DEBUG
         //new ZanzarahWindow(diContainer);
-        diContainer.GetTag<OpenDocumentSet>().OpenWith<ModelViewer>("resources/models/actorsex/CHR01.DFF");
+        diContainer.GetTag<OpenDocumentSet>().OpenWith<ActorEditor>("resources/models/actorsex/CHR01.AED");
 #endif
 
         window.Resized += () =>
