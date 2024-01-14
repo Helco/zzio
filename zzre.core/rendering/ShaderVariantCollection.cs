@@ -107,6 +107,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
                 VertexLayouts = CreateVertexLayouts(variant)
             }
         });
+        pipeline.Name = $"Pipeline {variantKey}";
         var builtPipeline = new BuiltPipeline()
         {
             ShaderVariant = variant,
@@ -130,6 +131,8 @@ public class ShaderVariantCollection : zzio.BaseDisposable
             Vertex = Factory.CreateShader(new(ShaderStages.Vertex, variant.VertexShader.ToArray(), "main")),
             Fragment = Factory.CreateShader(new(ShaderStages.Fragment, variant.FragmentShader.ToArray(), "main"))
         };
+        newPrograms.Vertex.Name = $"Vertex {invariantKey}";
+        newPrograms.Fragment.Name = $"Fragment {invariantKey}";
         builtPrograms.Add(invariantKey, newPrograms);
         return newPrograms;
     }

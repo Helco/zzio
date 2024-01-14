@@ -46,10 +46,10 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private readonly LocationBuffer locationBuffer;
 
     private Frustum viewFrustum => worldRenderer.ViewFrustum;
-    private IReadOnlyList<ModelStandardMaterial> materials => worldRenderer.Materials;
+    private IReadOnlyList<ModelMaterial> materials => worldRenderer.Materials;
 
     private readonly UniformBuffer<Matrix4x4> worldTransform;
-    private WorldBuffers? worldBuffers;
+    private WorldMesh? worldMesh;
     private WorldCollider? worldCollider;
     private RWAtomicSection? sectionAtomic;
     private RWCollision? sectionCollision;
@@ -169,17 +169,17 @@ public class WorldViewer : ListDisposable, IDocumentEditor
             return;
         CurrentResource = null;
 
-        worldBuffers = new WorldBuffers(diContainer, resource);
-        AddDisposable(worldBuffers);
-        worldRenderer.WorldBuffers = worldBuffers;
-        //modelMaterialEdit.Materials = materials;
+        worldMesh = new WorldMesh(diContainer, resource);
+        AddDisposable(worldMesh);
+        worldRenderer.WorldMesh = worldMesh;
+        modelMaterialEdit.Materials = materials;
 
         CurrentResource = resource;
         UpdateSectionDepths();
-        worldCollider = new WorldCollider(worldBuffers.RWWorld);
+        worldCollider = new WorldCollider(worldMesh.World);
         HighlightSection(-1);
         controls.ResetView();
-        camera.Location.LocalPosition = -worldBuffers.Origin;
+        camera.Location.LocalPosition = -worldMesh.Origin;
         fbArea.IsDirty = true;
         Window.Title = $"World Viewer - {resource.Path.ToPOSIXString()}";
     }
@@ -187,10 +187,10 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private void UpdateSectionDepths()
     {
         // the section depth makes the ImGui tree content much easier
-        if (worldBuffers == null)
+        if (worldMesh == null)
             throw new InvalidOperationException();
-        sectionDepths = new int[worldBuffers.Sections.Count];
-        foreach (var (section, index) in worldBuffers.Sections.Indexed())
+        sectionDepths = new int[worldMesh.Sections.Count];
+        foreach (var (section, index) in worldMesh.Sections.Indexed())
         {
             int depth = 0;
             var curSection = section;
@@ -205,7 +205,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
 
     private void HandleRender(CommandList cl)
     {
-        if (worldBuffers == null)
+        if (worldMesh == null)
             return;
 
         if (updateViewFrustumCulling)
@@ -247,17 +247,17 @@ public class WorldViewer : ListDisposable, IDocumentEditor
 
     private void HandleStatisticsContent()
     {
-        Text($"Vertices: {worldBuffers?.VertexCount ?? 0}");
-        Text($"Triangles: {worldBuffers?.TriangleCount ?? 0}");
-        Text($"Planes: {worldBuffers?.Sections.Count(s => s.IsPlane) ?? 0}");
-        Text($"Atomics: {worldBuffers?.Sections.Count(s => s.IsMesh) ?? 0}");
-        Text($"SubMeshes: {worldBuffers?.SubMeshes.Count ?? 0}");
-        Text($"Materials: {worldBuffers?.Materials.Count ?? 0}");
+        Text($"Vertices: {worldMesh?.VertexCount ?? 0}");
+        Text($"Triangles: {worldMesh?.TriangleCount ?? 0}");
+        Text($"Planes: {worldMesh?.Sections.Count(s => s is WorldMesh.PlaneSection) ?? 0}");
+        Text($"Atomics: {worldMesh?.Sections.Count(s => s is WorldMesh.MeshSection) ?? 0}");
+        Text($"SubMeshes: {worldMesh?.SubMeshes.Count ?? 0}");
+        Text($"Materials: {worldMesh?.Materials.Count ?? 0}");
     }
 
     private void HandleMaterialsContent()
     {
-        if (worldBuffers == null)
+        if (worldMesh == null)
             return;
         else if (modelMaterialEdit.Content())
             fbArea.IsDirty = true;
@@ -265,7 +265,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
 
     private void HandleSectionsContent()
     {
-        if (worldBuffers == null)
+        if (worldMesh == null)
             return;
 
         if (Button("Clear selection"))
@@ -275,7 +275,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         }
 
         int curDepth = 0;
-        foreach (var (section, index) in worldBuffers.Sections.Indexed())
+        foreach (var (section, index) in worldMesh.Sections.Indexed())
         {
             if (curDepth < sectionDepths[index])
                 continue;
@@ -285,10 +285,10 @@ public class WorldViewer : ListDisposable, IDocumentEditor
                 curDepth--;
             }
 
-            if (section.IsMesh)
-                MeshSectionContent((WorldBuffers.MeshSection)section, index);
-            else
-                PlaneSectionContent((WorldBuffers.PlaneSection)section, index);
+            if (section is WorldMesh.MeshSection meshSection)
+                MeshSectionContent(meshSection, index);
+            else if (section is WorldMesh.PlaneSection planeSection)
+                PlaneSectionContent(planeSection, index);
         }
         while (curDepth > 0)
         {
@@ -309,7 +309,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
             return isOpen;
         }
 
-        void MeshSectionContent(WorldBuffers.MeshSection section, int index)
+        void MeshSectionContent(WorldMesh.MeshSection section, int index)
         {
             bool isVisible = worldRenderer.VisibleMeshSections.Contains(section);
             Text(isVisible ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash);
@@ -319,10 +319,10 @@ public class WorldViewer : ListDisposable, IDocumentEditor
                 return;
             Text($"Vertices: {section.VertexCount}");
             Text($"Triangles: {section.TriangleCount}");
-            Text($"SubMeshes: {section.SubMeshes.GetLength(worldBuffers.SubMeshes.Count)}");
+            Text($"SubMeshes: {worldMesh.GetSubMeshes(section.SubMeshSection).Count()}");
         }
 
-        void PlaneSectionContent(WorldBuffers.PlaneSection section, int index)
+        void PlaneSectionContent(WorldMesh.PlaneSection section, int index)
         {
             var icon = section.PlaneType == RWPlaneSectionType.XPlane
                 ? IconFonts.ForkAwesome.ArrowsH
@@ -340,19 +340,18 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         HighlightSplit(-1);
         sectionAtomic = null;
         sectionCollision = null;
-        if (worldBuffers == null || highlightedSectionI < 0)
+        if (worldMesh == null || highlightedSectionI < 0)
             return;
-        boundsRenderer.Bounds = worldBuffers.Sections[index].Bounds;
+        boundsRenderer.Bounds = worldMesh.Sections[index].Bounds;
         planeRenderer.Planes = Array.Empty<DebugPlane>();
 
-        if (worldBuffers.Sections[index].IsPlane)
+        if (worldMesh.Sections[index] is WorldMesh.PlaneSection planeSection)
         {
-            var section = (WorldBuffers.PlaneSection)worldBuffers.Sections[index];
-            SetPlanes(section.Bounds, section.PlaneType.AsNormal(), section.LeftValue, section.RightValue, section.CenterValue);
+            SetPlanes(planeSection.Bounds, planeSection.PlaneType.AsNormal(), planeSection.LeftValue, planeSection.RightValue, planeSection.CenterValue);
         }
-        else
+        else if (worldMesh.Sections[index] is WorldMesh.MeshSection meshSection)
         {
-            sectionAtomic = ((WorldBuffers.MeshSection)worldBuffers.Sections[index]).RWAtomicSection;
+            sectionAtomic = meshSection.AtomicSection;
             sectionCollision = (RWCollision?)sectionAtomic.FindChildById(SectionId.CollisionPLG, recursive: true);
         }
 
@@ -438,9 +437,9 @@ public class WorldViewer : ListDisposable, IDocumentEditor
 
     private void HandleViewFrustumCulling()
     {
-        Text($"Visible meshes: {worldRenderer.VisibleMeshSections.Count}/{worldBuffers?.Sections.OfType<WorldBuffers.MeshSection>().Count() ?? 0}");
+        Text($"Visible meshes: {worldRenderer.VisibleMeshSections.Count}/{worldMesh?.Sections.OfType<WorldMesh.MeshSection>().Count() ?? 0}");
         var visibleTriangleCount = worldRenderer.VisibleMeshSections.Sum(s => s.TriangleCount);
-        Text($"Visible triangles: {visibleTriangleCount}/{worldBuffers?.TriangleCount ?? 0}");
+        Text($"Visible triangles: {visibleTriangleCount}/{worldMesh?.TriangleCount ?? 0}");
         NewLine();
 
         bool didChange = false;
@@ -456,7 +455,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
 
     private void HandleCollision()
     {
-        if (worldBuffers == null)
+        if (worldMesh == null)
         {
             Text("No world loaded");
             return;

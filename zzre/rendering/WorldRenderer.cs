@@ -16,24 +16,32 @@ public class WorldRenderer : BaseDisposable
     private readonly Camera camera;
     private readonly Texture whiteTexture;
 
-    private WorldBuffers? worldBuffers;
     public WorldBuffers? WorldBuffers
     {
-        get => worldBuffers;
+        get => throw new NotImplementedException("Some component still uses the legacy WorldBuffers");
+        set => throw new NotImplementedException("Some component still uses the legacy WorldBuffers");
+    }
+
+    private WorldMesh? worldMesh;
+    public WorldMesh? WorldMesh
+    {
+        get => worldMesh;
         set
         {
-            worldBuffers = value;
+            if (value is null)
+                throw new ArgumentNullException(nameof(value));
+            worldMesh = value;
             LoadMaterials();
             visibleMeshSections.Clear();
         }
     }
 
     private Frustum viewFrustum;
-    private ModelStandardMaterial[] materials = Array.Empty<ModelStandardMaterial>();
-    public IReadOnlyList<ModelStandardMaterial> Materials => materials;
+    private ModelMaterial[] materials = Array.Empty<ModelMaterial>();
+    public IReadOnlyList<ModelMaterial> Materials => materials;
 
-    private readonly List<WorldBuffers.MeshSection> visibleMeshSections = new();
-    public IReadOnlyList<WorldBuffers.MeshSection> VisibleMeshSections => visibleMeshSections;
+    private readonly List<WorldMesh.MeshSection> visibleMeshSections = new();
+    public IReadOnlyList<WorldMesh.MeshSection> VisibleMeshSections => visibleMeshSections;
 
     public Location Location { get; } = new Location();
     public Frustum ViewFrustum => viewFrustum;
@@ -64,14 +72,14 @@ public class WorldRenderer : BaseDisposable
         var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
         foreach (var material in materials)
         {
-            if (textureLoader is not CachedAssetLoader<Texture> && material.MainTexture.Texture != whiteTexture)
+            if (textureLoader is not CachedAssetLoader<Texture> && material.Texture.Texture != whiteTexture)
             {
-                material.MainTexture.Texture?.Dispose();
+                material.Texture.Texture?.Dispose();
                 material.Sampler.Sampler?.Dispose();
             }
             material.Dispose();
         }
-        materials = Array.Empty<ModelStandardMaterial>();
+        materials = Array.Empty<ModelMaterial>();
     }
 
     private void LoadMaterials()
@@ -82,44 +90,44 @@ public class WorldRenderer : BaseDisposable
 
         DisposeMaterials();
 
-        if (worldBuffers == null)
+        if (worldMesh == null)
             return;
-        materials = new ModelStandardMaterial[worldBuffers.Materials.Count];
-        foreach (var (rwMaterial, index) in worldBuffers.Materials.Indexed())
+        materials = new ModelMaterial[worldMesh.Materials.Count];
+        foreach (var (rwMaterial, index) in worldMesh.Materials.Indexed())
         {
-            var material = materials[index] = new ModelStandardMaterial(diContainer);
+            var material = materials[index] = new ModelMaterial(diContainer);
             if (rwMaterial.isTextured)
-                (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBase, rwMaterial);
+                (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBase, rwMaterial);
             else
             {
-                material.MainTexture.Texture = whiteTexture;
+                material.Texture.Texture = whiteTexture;
                 material.Sampler.Sampler = graphicsDevice.PointSampler;
             }
             material.LinkTransformsTo(camera);
             material.World.BufferRange = locationRange;
-            material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
+            material.Colors.Ref = ModelStandardMaterialUniforms.Default;
         }
     }
 
     public void UpdateVisibility()
     {
-        if (worldBuffers == null)
+        if (worldMesh == null)
             return;
 
         viewFrustum.Projection = camera.View * camera.Projection;
         visibleMeshSections.Clear();
-        var sectionQueue = new Queue<WorldBuffers.BaseSection>();
-        sectionQueue.Enqueue(worldBuffers.Sections.First());
+        var sectionQueue = new Queue<WorldMesh.BaseSection>();
+        sectionQueue.Enqueue(worldMesh.Sections.First());
         while (sectionQueue.Any())
         {
             var section = sectionQueue.Dequeue();
-            if (section.IsMesh)
+            if (section is WorldMesh.MeshSection meshSection)
             {
-                visibleMeshSections.Add((WorldBuffers.MeshSection)section);
+                visibleMeshSections.Add(meshSection);
                 continue;
             }
 
-            var plane = (WorldBuffers.PlaneSection)section;
+            var plane = (WorldMesh.PlaneSection)section;
             var intersection = viewFrustum.Intersects(new Plane(plane.PlaneType.AsNormal(), plane.RightValue));
             if (intersection.HasFlag(PlaneIntersections.Inside))
                 sectionQueue.Enqueue(plane.RightChild);
@@ -129,16 +137,19 @@ public class WorldRenderer : BaseDisposable
         }
     }
 
-    public void Render(CommandList cl, IEnumerable<WorldBuffers.MeshSection>? sections = null)
+    public void Render(CommandList cl, IEnumerable<WorldBuffers.MeshSection>? sections) =>
+        throw new NotImplementedException("Some component still uses the legacy WorldBuffers");
+
+    public void Render(CommandList cl, IEnumerable<WorldMesh.MeshSection>? sections = null)
     {
-        if (worldBuffers == null)
+        if (worldMesh == null)
             return;
         sections ??= visibleMeshSections;
 
         cl.PushDebugGroup(nameof(WorldRenderer));
         var visibleSubMeshes = sections
-            .SelectMany(m => worldBuffers.SubMeshes.Range(m.SubMeshes))
-            .GroupBy(s => s.MaterialIndex);
+            .SelectMany(m => worldMesh.GetSubMeshes(m.SubMeshSection))
+            .GroupBy(s => s.Material);
         bool didSetBuffers = false;
         foreach (var group in visibleSubMeshes)
         {
@@ -146,7 +157,8 @@ public class WorldRenderer : BaseDisposable
             if (!didSetBuffers)
             {
                 didSetBuffers = true;
-                worldBuffers.SetBuffers(cl);
+                materials[group.Key].ApplyAttributes(cl, worldMesh);
+                cl.SetIndexBuffer(worldMesh.IndexBuffer, worldMesh.IndexFormat);
             }
             foreach (var subMesh in group)
             {
@@ -162,5 +174,5 @@ public class WorldRenderer : BaseDisposable
     }
 
     public void RenderForceAll(CommandList cl) =>
-        Render(cl, worldBuffers?.Sections.OfType<WorldBuffers.MeshSection>());
+        Render(cl, worldMesh?.Sections.OfType<WorldMesh.MeshSection>());
 }

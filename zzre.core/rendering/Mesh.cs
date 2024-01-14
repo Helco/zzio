@@ -9,13 +9,15 @@ namespace zzre.rendering;
 
 public class Mesh : BaseDisposable
 {
-    public readonly record struct SubMesh(int IndexOffset, int IndexCount, int Material) : IComparable<SubMesh>
+    public readonly record struct SubMesh(int IndexOffset, int IndexCount, int Material, int Section = 0) : IComparable<SubMesh>
     {
         public int CompareTo(SubMesh other)
         {
-            if (other.Material == Material)
-                return IndexOffset - other.IndexOffset;
-            return Material - other.Material;
+            if (other.Section != Section)
+                return Section - other.Section;
+            if (other.Material != Material)
+                return Material - other.Material;
+            return IndexOffset - other.IndexOffset;
         }
     }
 
@@ -170,6 +172,38 @@ public class Mesh : BaseDisposable
         subMeshes.Insert(index, subMesh);
     }
 
-    public void AddSubMesh(int indexOffset, int indexCount, int material = 0) =>
-        AddSubMesh(new(indexOffset, indexCount, material));
+    public void AddSubMesh(int indexOffset, int indexCount, int material = 0, int section = 0) =>
+        AddSubMesh(new(indexOffset, indexCount, material, section));
+
+    public Range GetSubMeshRange(int? section = null, int? material = null)
+    {
+        if (subMeshes.Count == 0)
+            return 0..0;
+        int first = 0, last = subMeshes.Count - 1;
+        if (section.HasValue)
+        {
+            first = subMeshes.FindIndex(m => m.Section == section);
+            last = subMeshes.FindLastIndex(m => m.Section == section);
+            if (first < 0)
+                return 0..0;
+        }
+        if (material.HasValue)
+        {
+            first = subMeshes.FindIndex(first, (last - first + 1), m => m.Material == material);
+            if (first < 0)
+                return 0..0;
+            last = subMeshes.FindLastIndex(first, (last - first + 1), m => m.Material == material);
+
+            if (section is null && first != last)
+            {
+                var expectedSection = subMeshes[first].Section;
+                if (subMeshes.Skip(first).Take(last - first + 1).Any(m => m.Section != expectedSection))
+                    throw new ArgumentException("Cannot get single submesh range for material filter alone");
+            }
+        }
+        return first..(last + 1);
+    }
+
+    public IEnumerable<SubMesh> GetSubMeshes(int? section = null, int? material = null) =>
+        subMeshes.Range(GetSubMeshRange(section, material));
 }
