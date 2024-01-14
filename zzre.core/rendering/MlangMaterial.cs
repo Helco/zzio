@@ -107,4 +107,19 @@ public class MlangMaterial : BaseDisposable, IMaterial
         foreach (var (resourceSet, index) in resourceSets.Indexed())
             cl.SetGraphicsResourceSet((uint)index, resourceSet);
     }
+
+    public void ApplyAttributes(CommandList cl, Mesh mesh, bool requireAll = false)
+    {
+        foreach (var info in Pipeline.ShaderVariant.VertexAttributes)
+        {
+            if (!mesh.TryGetByMaterialName(info.Name, out var meshAttribute))
+            {
+                if (requireAll)
+                    throw new ArgumentException($"Expected attribute {info.Name} in mesh");
+                else
+                    continue;
+            }
+            cl.SetVertexBuffer((uint)info.AttributeIndex, meshAttribute.DeviceBuffer);
+        }
+    }
 }

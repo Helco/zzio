@@ -35,7 +35,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private readonly ModelMaterialEdit modelMaterialEdit;
     private readonly LocationBuffer locationBuffer;
 
-    private ClumpBuffersDeinterleaved? geometryBuffers;
+    private ClumpMesh? mesh;
     private GeometryTreeCollider? collider;
     private ModelMaterial[] materials = Array.Empty<ModelMaterial>();
     private DebugSkeletonRenderer? skeletonRenderer;
@@ -127,11 +127,13 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             new FilePath("resources/textures/worlds"),
         };
 
-        geometryBuffers = new ClumpBuffersDeinterleaved(diContainer, resource);
-        AddDisposable(geometryBuffers);
+        // TODO: ModelViewer should dispose meshes and materials after loading a different model
 
-        materials = new ModelMaterial[geometryBuffers.SubMeshes.Count];
-        foreach (var (rwMaterial, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
+        mesh = new ClumpMesh(diContainer, resource);
+        AddDisposable(mesh);
+
+        materials = new ModelMaterial[mesh.Materials.Count];
+        foreach (var (rwMaterial, index) in mesh.Materials.Indexed())
         {
             var material = materials[index] = new ModelMaterial(diContainer);
             (material.Texture.Texture, material.Sampler.Sampler) = TryLoadTexture(texturePaths, rwMaterial);
@@ -154,9 +156,9 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             AddDisposable(skeletonRenderer);
         }*/
 
-        collider = geometryBuffers.RWGeometry.FindChildById(zzio.rwbs.SectionId.CollisionPLG, true) == null
+        collider = mesh.Geometry.FindChildById(SectionId.CollisionPLG, true) == null
             ? null
-            : new GeometryTreeCollider(geometryBuffers.RWGeometry, location: null);
+            : new GeometryTreeCollider(mesh.Geometry, location: null);
 
         controls.ResetView();
         HighlightSplit(-1);
@@ -195,13 +197,14 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         locationBuffer.Update(cl);
         camera.Update(cl);
         gridRenderer.Render(cl);
-        if (geometryBuffers == null)
+        if (mesh == null)
             return;
 
-        geometryBuffers.SetBuffers(cl);
-        foreach (var (subMesh, index) in geometryBuffers.SubMeshes.Indexed())
+        foreach (var subMesh in mesh.SubMeshes)
         {
-            (materials[index] as IMaterial).Apply(cl);
+            (materials[subMesh.Material] as IMaterial).Apply(cl);
+            materials[subMesh.Material].ApplyAttributes(cl, mesh, requireAll: true);
+            cl.SetIndexBuffer(mesh.IndexBuffer, mesh.IndexFormat);
             cl.DrawIndexed(
                 indexStart: (uint)subMesh.IndexOffset,
                 indexCount: (uint)subMesh.IndexCount,
@@ -217,17 +220,17 @@ public class ModelViewer : ListDisposable, IDocumentEditor
 
     private void HandleStatisticsContent()
     {
-        ImGui.Text($"Vertices: {geometryBuffers?.VertexCount}");
-        ImGui.Text($"Triangles: {geometryBuffers?.TriangleCount}");
-        ImGui.Text($"Submeshes: {geometryBuffers?.SubMeshes.Count}");
-        ImGui.Text($"Bones: {skeletonRenderer?.Skeleton.Bones.Count}");
-        ImGui.Text($"Collision splits: {collider?.Collision.splits.Length}");
-        ImGui.Text("Collision test: " + (geometryBuffers?.IsSolid == true ? "yes" : "no"));
+        ImGui.Text($"Vertices: {mesh?.VertexCount}");
+        ImGui.Text($"Triangles: {mesh?.TriangleCount}");
+        ImGui.Text($"Submeshes: {mesh?.SubMeshes.Count}");
+        ImGui.Text($"Bones: {skeletonRenderer?.Skeleton.Bones.Count.ToString() ?? "none"}");
+        ImGui.Text($"Collision splits: {collider?.Collision.splits.Length.ToString() ?? "none"}");
+        ImGui.Text("Collision test: " + (mesh?.HasCollisionTest is true ? "yes" : "no"));
     }
 
     private void HandleMaterialsContent()
     {
-        if (geometryBuffers == null)
+        if (mesh == null)
             return;
         else if (modelMaterialEdit.Content())
             fbArea.IsDirty = true;
@@ -252,7 +255,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         highlightedSplitI = splitI;
         triangleRenderer.Triangles = Array.Empty<Triangle>();
         planeRenderer.Planes = Array.Empty<DebugPlane>();
-        if (collider == null || geometryBuffers == null || highlightedSplitI < 0)
+        if (collider == null || mesh == null || highlightedSplitI < 0)
             return;
 
         var split = collider.Collision.splits[splitI];
@@ -263,7 +266,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             zzio.rwbs.CollisionSectorType.Z => Vector3.UnitZ,
             _ => throw new NotSupportedException($"Unsupported collision sector type: {split.left.type}")
         };
-        SetPlanes(geometryBuffers.Bounds, normal, split.left.value, split.right.value, centerValue: null);
+        SetPlanes(mesh.BoundingBox, normal, split.left.value, split.right.value, centerValue: null);
 
         triangleRenderer.Triangles = SplitTriangles(split).ToArray();
         triangleRenderer.Colors = Enumerable
@@ -323,7 +326,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
 
     private void HandleCollisionContent()
     {
-        if (geometryBuffers == null)
+        if (mesh == null)
         {
             ImGui.Text("No model loaded");
             return;
