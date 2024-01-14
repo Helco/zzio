@@ -130,7 +130,7 @@ internal static class ZZMaps
 
         // dispose graphics device last, otherwise Vulkan will crash
         scheduler.Dispose();
-        diContainer.RemoveTag<GraphicsDevice>();
+        diContainer.RemoveTag<GraphicsDevice>(dispose: false);
         diContainer.Dispose();
         graphicsDevice.Dispose();
     }

@@ -56,11 +56,16 @@ public class TagContainer : BaseDisposable, ITagContainer
         return this;
     }
 
-    public bool RemoveTag<TTag>() where TTag : class
+    public bool RemoveTag<TTag>(bool dispose = true) where TTag : class
     {
-        if (tags.Remove(typeof(TTag)))
-            return true;
-        var pair = tags.FirstOrDefault(p => typeof(TTag).IsAssignableFrom(p.Key));
-        return pair.Key != null && tags.Remove(pair.Key);
+        var pair = tags.TryGetValue(typeof(TTag), out var direct)
+            ? new KeyValuePair<Type, object>(typeof(TTag), direct)
+            : tags.FirstOrDefault(p => typeof(TTag).IsAssignableFrom(p.Key));
+        if (pair.Key == null)
+            return false;
+        tags.Remove(pair.Key);
+        if (dispose)
+            (pair.Value as IDisposable)?.Dispose();
+        return true;
     }
 }

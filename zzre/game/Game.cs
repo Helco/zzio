@@ -53,7 +53,7 @@ public class Game : BaseDisposable, ITagContainer
         AddTag(new resources.SkeletalAnimation(this));
 
         ecsWorld.SetMaxCapacity<Scene>(1);
-        ecsWorld.SetMaxCapacity<WorldBuffers>(1);
+        ecsWorld.SetMaxCapacity<WorldMesh>(1);
         ecsWorld.SetMaxCapacity<WorldCollider>(1);
         ecsWorld.SetMaxCapacity<WorldRenderer>(1);
 
@@ -177,8 +177,8 @@ public class Game : BaseDisposable, ITagContainer
     {
         Console.WriteLine("Load " + sceneName);
 
-        if (ecsWorld.Has<WorldBuffers>())
-            ecsWorld.Get<WorldBuffers>().Dispose();
+        if (ecsWorld.Has<WorldMesh>())
+            ecsWorld.Get<WorldMesh>().Dispose();
         worldRenderer?.Dispose();
 
         var resourcePool = GetTag<IResourcePool>();
@@ -191,13 +191,13 @@ public class Game : BaseDisposable, ITagContainer
         scene.Read(sceneStream);
 
         var worldPath = new FilePath("resources").Combine(scene.misc.worldPath, scene.misc.worldFile + ".bsp");
-        var worldBuffers = new WorldBuffers(this, worldPath);
+        var worldMesh = new WorldMesh(this, worldPath);
 
         ecsWorld.Set(scene);
-        ecsWorld.Set(worldBuffers);
-        ecsWorld.Set(new WorldCollider(worldBuffers.RWWorld));
+        ecsWorld.Set(worldMesh);
+        ecsWorld.Set(new WorldCollider(worldMesh.World));
         ecsWorld.Set(worldRenderer = new WorldRenderer(this));
-        worldRenderer.WorldBuffers = worldBuffers;
+        worldRenderer.WorldMesh = worldMesh;
 
         ecsWorld.Publish(new messages.SceneLoaded(scene));
     }
@@ -229,6 +229,6 @@ public class Game : BaseDisposable, ITagContainer
     public TTag GetTag<TTag>() where TTag : class => tagContainer.GetTag<TTag>();
     public IEnumerable<TTag> GetTags<TTag>() where TTag : class => tagContainer.GetTags<TTag>();
     public bool HasTag<TTag>() where TTag : class => tagContainer.HasTag<TTag>();
-    public bool RemoveTag<TTag>() where TTag : class => tagContainer.RemoveTag<TTag>();
+    public bool RemoveTag<TTag>(bool dispose = true) where TTag : class => tagContainer.RemoveTag<TTag>(dispose);
     public bool TryGetTag<TTag>(out TTag tag) where TTag : class => tagContainer.TryGetTag(out tag);
 }

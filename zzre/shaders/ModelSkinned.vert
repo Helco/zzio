@@ -12,9 +12,9 @@ layout(location = 1) out vec4 fsin_color;
 layout(set = 0, binding = 2) uniform Projection { mat4 projection; };
 layout(set = 0, binding = 3) uniform View { mat4 view; };
 layout(set = 0, binding = 4) uniform World { mat4 world; };
-layout(set = 0, binding = 6) uniform PoseBuffer
+layout(set = 0, binding = 6) buffer PoseBuffer
 {
-	mat4 pose[128]; // TODO: Verify maximum bone number for skinned materials
+	mat4 pose[]; // TODO: Verify maximum bone number for skinned materials
 };
 
 void main()

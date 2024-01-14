@@ -16,12 +16,6 @@ public class WorldRenderer : BaseDisposable
     private readonly Camera camera;
     private readonly Texture whiteTexture;
 
-    public WorldBuffers? WorldBuffers
-    {
-        get => throw new NotImplementedException("Some component still uses the legacy WorldBuffers");
-        set => throw new NotImplementedException("Some component still uses the legacy WorldBuffers");
-    }
-
     private WorldMesh? worldMesh;
     public WorldMesh? WorldMesh
     {
@@ -136,9 +130,6 @@ public class WorldRenderer : BaseDisposable
                 sectionQueue.Enqueue(plane.LeftChild);
         }
     }
-
-    public void Render(CommandList cl, IEnumerable<WorldBuffers.MeshSection>? sections) =>
-        throw new NotImplementedException("Some component still uses the legacy WorldBuffers");
 
     public void Render(CommandList cl, IEnumerable<WorldMesh.MeshSection>? sections = null)
     {

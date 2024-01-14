@@ -94,8 +94,7 @@ internal class Program
         windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
 #if DEBUG
-        //new ZanzarahWindow(diContainer);
-        diContainer.GetTag<OpenDocumentSet>().OpenWith<SceneEditor>("resources/worlds/SC_2222.SCN");
+        new ZanzarahWindow(diContainer);
 #endif
 
         window.Resized += () =>
@@ -137,7 +136,7 @@ internal class Program
         }
 
         // dispose graphics device last, otherwise Vulkan will crash
-        diContainer.RemoveTag<GraphicsDevice>();
+        diContainer.RemoveTag<GraphicsDevice>(dispose: false);
         diContainer.Dispose();
         graphicsDevice.Dispose();
     }

@@ -43,7 +43,7 @@ public class Zanzarah : ITagContainer
         tagContainer.AddTag(UI = new UI(this));
         this.zanzarahContainer = zanzarahContainer;
 
-        var savegame = new zzio.Savegame() { sceneId = 2800 };
+        var savegame = new zzio.Savegame() { sceneId = 3200 };
         /*using (var fileStream = new System.IO.FileStream(@"C:\dev\zanzarah\Save\_0004.dat", System.IO.FileMode.Open, System.IO.FileAccess.Read))
         using (var reader = new System.IO.BinaryReader(fileStream))
             savegame = zzio.Savegame.ReadNew(reader);
@@ -85,6 +85,6 @@ public class Zanzarah : ITagContainer
     public TTag GetTag<TTag>() where TTag : class => tagContainer.GetTag<TTag>();
     public IEnumerable<TTag> GetTags<TTag>() where TTag : class => tagContainer.GetTags<TTag>();
     public bool HasTag<TTag>() where TTag : class => tagContainer.HasTag<TTag>();
-    public bool RemoveTag<TTag>() where TTag : class => tagContainer.RemoveTag<TTag>();
+    public bool RemoveTag<TTag>(bool dispose = true) where TTag : class => tagContainer.RemoveTag<TTag>(dispose);
     public bool TryGetTag<TTag>(out TTag tag) where TTag : class => tagContainer.TryGetTag(out tag);
 }
