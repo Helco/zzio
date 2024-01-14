@@ -50,7 +50,7 @@ public class ClumpMesh : Mesh
             BoundingBox = BoundingBox.Union(vertex);
 
         Add("Pos", "inPos", morphTarget.vertices);
-        Add("Normal", "inNormal", VertexCount, sizeof(Vector3)); // TODO: Add normal attribute to geometry
+        // TODO: Add normal attribute to geometry
         if (geometry.texCoords.Any())
             Add("UV", "inUV", geometry.texCoords[0]);
         else

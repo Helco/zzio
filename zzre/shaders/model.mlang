@@ -7,10 +7,11 @@ option Blend = IsOpaque, IsAlphaBlend, IsAdditiveBlend, IsAdditiveAlphaBlend;
 attributes
 {
     float3 inPos;
-    float3 inNormal;
-    float2 inUV;
     byte4_norm inColor;
 }
+
+attributes if (HasEnvMap) float3 inNormal;
+attributes if (!HasEnvMap) float2 inUV;
 
 attributes if (IsSkinned)
 {
@@ -86,12 +87,14 @@ vertex
 	pos = projection * pos;
 	gl_Position = pos;
     
-    vec2 uv = inUV;
+    vec2 uv;
     if (HasEnvMap)
     {
         float3 incident = vec3(world[3] + vec4(inPos, 0) + view[3] + view[2]);
         uv = vec2(-reflect(incident, inNormal));
     }
+    else
+        uv = inUV;
     if (HasTexShift)
         uv = inTexShift * vec3(uv, 1);
 	varUV = uv;
