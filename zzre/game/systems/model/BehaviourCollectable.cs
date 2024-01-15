@@ -40,7 +40,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         float elapsedTime,
         in DefaultEcs.Entity entity,
         Location location,
-        in resources.ClumpInfo clumpInfo,
+        in resources.ClumpInfoLEGACY clumpInfo,
         ref components.behaviour.Collectable collectable)
     {
         CheckCollection(location, clumpInfo, ref collectable);
@@ -87,7 +87,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
 
     private void CheckCollection(
         Location location,
-        in resources.ClumpInfo clumpInfo,
+        in resources.ClumpInfoLEGACY clumpInfo,
         ref components.behaviour.Collectable collectable)
     {
         if (collectable.IsDying || location.DistanceSquared(playerLocation) >= MaxPlayerDistanceSqr)
@@ -101,7 +101,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         Collect(clumpInfo);
     }
 
-    private void Collect(in resources.ClumpInfo clumpInfo)
+    private void Collect(in resources.ClumpInfoLEGACY clumpInfo)
     {
         var random = Random.Shared;
         int parsedItemId = -1;

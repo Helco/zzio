@@ -10,24 +10,10 @@ using zzre.rendering;
 
 namespace zzre.game.resources;
 
-public readonly struct ClumpMaterialInfo : IEquatable<ClumpMaterialInfo>
-{
-    public readonly FOModelRenderType RenderType;
-    public readonly RWMaterial RWMaterial;
+public readonly record struct ClumpMaterialInfoLEGACY(FOModelRenderType RenderType, RWMaterial RWMaterial);
+public readonly record struct ClumpMaterialInfo(FOModelRenderType RenderType, RWMaterial RWMaterial);
 
-    public ClumpMaterialInfo(FOModelRenderType renderType, RWMaterial rwMaterial) =>
-        (RenderType, RWMaterial) = (renderType, rwMaterial);
-
-    public bool Equals(ClumpMaterialInfo other) =>
-        RenderType == other.RenderType &&
-        ReferenceEquals(RWMaterial, other.RWMaterial);
-    public override bool Equals(object? obj) => obj is ClumpMaterialInfo info && Equals(info);
-    public override int GetHashCode() => HashCode.Combine(RenderType, RWMaterial);
-    public static bool operator ==(ClumpMaterialInfo left, ClumpMaterialInfo right) => left.Equals(right);
-    public static bool operator !=(ClumpMaterialInfo left, ClumpMaterialInfo right) => !(left == right);
-}
-
-public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, BaseModelInstancedMaterial>
+public class ClumpMaterialLEGACY : AResourceManager<ClumpMaterialInfoLEGACY, BaseModelInstancedMaterial>
 {
     private static readonly FilePath[] TextureBasePaths =
     {
@@ -39,7 +25,7 @@ public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, BaseModelInstan
     private readonly Camera camera;
     private readonly IAssetLoader<Texture> textureLoader;
 
-    public ClumpMaterial(ITagContainer diContainer)
+    public ClumpMaterialLEGACY(ITagContainer diContainer)
     {
         this.diContainer = diContainer;
         camera = diContainer.GetTag<Camera>();
@@ -47,7 +33,7 @@ public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, BaseModelInstan
         Manage(diContainer.GetTag<DefaultEcs.World>());
     }
 
-    protected override BaseModelInstancedMaterial Load(ClumpMaterialInfo info)
+    protected override BaseModelInstancedMaterial Load(ClumpMaterialInfoLEGACY info)
     {
         BaseModelInstancedMaterial material = info.RenderType switch
         {
@@ -71,16 +57,69 @@ public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, BaseModelInstan
         return material;
     }
 
-    protected override void OnResourceLoaded(in DefaultEcs.Entity entity, ClumpMaterialInfo info, BaseModelInstancedMaterial resource)
+    protected override void OnResourceLoaded(in DefaultEcs.Entity entity, ClumpMaterialInfoLEGACY info, BaseModelInstancedMaterial resource)
     {
         var materialList = entity.Get<List<BaseModelInstancedMaterial>>();
         materialList.Add(resource);
     }
 
-    protected override void Unload(ClumpMaterialInfo info, BaseModelInstancedMaterial resource)
+    protected override void Unload(ClumpMaterialInfoLEGACY info, BaseModelInstancedMaterial resource)
     {
         if (textureLoader is not CachedAssetLoader<Texture>)
             resource.MainTexture.Texture?.Dispose();
+        resource.Dispose();
+    }
+}
+
+public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, ModelMaterial>
+{
+    private static readonly FilePath[] TextureBasePaths =
+    {
+        new FilePath("resources/textures/models"),
+        new FilePath("resources/textures/worlds")
+    };
+
+    private readonly ITagContainer diContainer;
+    private readonly Camera camera;
+    private readonly IAssetLoader<Texture> textureLoader;
+
+    public ClumpMaterial(ITagContainer diContainer)
+    {
+        this.diContainer = diContainer;
+        camera = diContainer.GetTag<Camera>();
+        textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
+        Manage(diContainer.GetTag<DefaultEcs.World>());
+    }
+
+    protected override ModelMaterial Load(ClumpMaterialInfo info)
+    {
+        var material = new ModelMaterial(diContainer) { HasTexShift = true, IsInstanced = true };
+        if (info.RenderType is FOModelRenderType.EarlySolid or FOModelRenderType.LateSolid or FOModelRenderType.Solid)
+            material.Blend = ModelMaterial.BlendMode.Alpha;
+        else if (info.RenderType is FOModelRenderType.LateAdditive or FOModelRenderType.EarlyAdditive or FOModelRenderType.Additive)
+        {
+            material.Blend = ModelMaterial.BlendMode.AdditiveAlpha;
+            // TODO: Fix LateAdditive writing to depth buffer
+        }
+        else
+            throw new NotSupportedException($"Unsupported render type for material {info.RenderType}");
+
+        (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(TextureBasePaths, info.RWMaterial);
+        material.Projection.BufferRange = camera.ProjectionRange;
+        material.View.BufferRange = camera.ViewRange;
+        return material;
+    }
+
+    protected override void OnResourceLoaded(in DefaultEcs.Entity entity, ClumpMaterialInfo info, ModelMaterial resource)
+    {
+        var materialList = entity.Get<List<ModelMaterial>>();
+        materialList.Add(resource);
+    }
+
+    protected override void Unload(ClumpMaterialInfo info, ModelMaterial resource)
+    {
+        if (textureLoader is not CachedAssetLoader<Texture>)
+            resource.Texture.Texture?.Dispose();
         resource.Dispose();
     }
 }

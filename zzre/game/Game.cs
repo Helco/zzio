@@ -47,6 +47,8 @@ public class Game : BaseDisposable, ITagContainer
         AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
         AddTag(camera = new Camera(this));
 
+        AddTag(new resources.ClumpLEGACY(this));
+        AddTag(new resources.ClumpMaterialLEGACY(this));
         AddTag(new resources.Clump(this));
         AddTag(new resources.ClumpMaterial(this));
         AddTag(new resources.Actor(this));

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using Mlang.Model;
@@ -7,6 +8,11 @@ using Veldrid;
 using zzio;
 
 namespace zzre.rendering;
+
+public interface IVertexAttributeContainer
+{
+    bool TryGetBufferByMaterialName(string name, [NotNullWhen(true)] out DeviceBuffer? attribute, out uint offset);
+}
 
 public class MlangMaterial : BaseDisposable, IMaterial
 {
@@ -108,18 +114,19 @@ public class MlangMaterial : BaseDisposable, IMaterial
             cl.SetGraphicsResourceSet((uint)index, resourceSet);
     }
 
-    public void ApplyAttributes(CommandList cl, Mesh mesh, bool requireAll = true)
+    public void ApplyAttributes(CommandList cl, IVertexAttributeContainer mesh, IVertexAttributeContainer? mesh2 = null, bool requireAll = true)
     {
         foreach (var info in Pipeline.ShaderVariant.VertexAttributes)
         {
-            if (!mesh.TryGetByMaterialName(info.Name, out var meshAttribute))
+            if (!mesh.TryGetBufferByMaterialName(info.Name, out var meshAttribute, out var offset) &&
+                mesh2?.TryGetBufferByMaterialName(info.Name, out meshAttribute, out offset) is not true)
             {
                 if (requireAll)
                     throw new ArgumentException($"Expected attribute {info.Name} in mesh");
                 else
                     continue;
             }
-            cl.SetVertexBuffer((uint)info.AttributeIndex, meshAttribute.DeviceBuffer);
+            cl.SetVertexBuffer((uint)info.AttributeIndex, meshAttribute, offset);
         }
     }
 }

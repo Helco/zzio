@@ -7,7 +7,7 @@ using zzio;
 
 namespace zzre.rendering;
 
-public class Mesh : BaseDisposable
+public class Mesh : BaseDisposable, IVertexAttributeContainer
 {
     public readonly record struct SubMesh(int IndexOffset, int IndexCount, int Material, int Section = 0) : IComparable<SubMesh>
     {
@@ -126,6 +126,14 @@ public class Mesh : BaseDisposable
     public VertexAttribute GetByMaterialName(string name) =>
         TryGetByMaterialName(name, out var attribute) ? attribute
         : throw new KeyNotFoundException($"Attribute {name} is not present in mesh");
+
+    public bool TryGetBufferByMaterialName(string name, [NotNullWhen(true)] out DeviceBuffer? attributeBuffer, out uint offset)
+    {
+        var result = TryGetByMaterialName(name, out var attribute);
+        attributeBuffer = attribute?.DeviceBuffer;
+        offset = 0u;
+        return result;
+    }
 
     public DeviceBuffer SetIndexCount(int indexCount, IndexFormat format)
     {

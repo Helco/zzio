@@ -376,7 +376,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         {
             Name = $"{attr.Name}_{column}",
             Offset = (uint)(column * SizeOfScalar(attr.Type) * attr.Type.Rows),
-            Format = VertexFormats.TryGetValue(attr.Type, out var format) ? format
+            Format = VertexFormats.TryGetValue(AsColumnVector(attr.Type), out var format) ? format
                 : throw new NotSupportedException($"Unsupported vertex element format {attr.Type} for {attr.Name}")
         }).ToArray()
     }).ToArray();
@@ -388,6 +388,9 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         ScalarWidth.DWord => 4,
         _ => throw new NotImplementedException($"Unimplemented Mlang scalar width: {type.ScalarWidth}")
     };
+
+    private static NumericType AsColumnVector(NumericType t) =>
+        new(t.Scalar, 1, t.Rows, t.ScalarWidth, t.IsNormalized);
 
     private static readonly IReadOnlyDictionary<NumericType, VertexElementFormat> VertexFormats = new Dictionary<NumericType, VertexElementFormat>
     {

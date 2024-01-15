@@ -5,21 +5,19 @@ using DefaultEcs.System;
 using Veldrid;
 using zzre.rendering;
 using zzre.materials;
-using DefaultEcs;
-using System.Numerics;
 
 namespace zzre.game.systems;
 
 [With(typeof(components.Visibility))]
-public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpBuffers>
+public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMesh>
 {
     private struct ClumpCount
     {
-        public readonly ClumpBuffers Clump;
-        public readonly IReadOnlyList<BaseModelInstancedMaterial> Materials;
+        public readonly ClumpMesh Clump;
+        public readonly IReadOnlyList<ModelMaterial> Materials;
         public readonly uint Count;
 
-        public ClumpCount(ClumpBuffers clump, IReadOnlyList<BaseModelInstancedMaterial> materials, uint count = 1)
+        public ClumpCount(ClumpMesh clump, IReadOnlyList<ModelMaterial> materials, uint count = 1)
         {
             Clump = clump;
             Materials = materials;
@@ -33,16 +31,15 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpBuf
     private readonly IDisposable sceneLoadedSubscription;
     private readonly components.RenderOrder responsibility;
 
+    private readonly ModelInstanceBuffer instanceBuffer;
     private readonly List<ClumpCount> clumpCounts = new();
-    private readonly List<ModelInstance> instances = new();
-    private DeviceBuffer? instanceBuffer; // not owned
-    private uint instanceStart;
 
     public ModelRenderer(ITagContainer diContainer, components.RenderOrder responsibility) :
-        base(diContainer.GetTag<World>(), CreateEntityContainer, useBuffer: true)
+        base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         this.diContainer = diContainer;
         this.responsibility = responsibility;
+        instanceBuffer = new(diContainer);
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
     }
 
@@ -50,65 +47,51 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpBuf
     {
         base.Dispose();
         sceneLoadedSubscription.Dispose();
+        instanceBuffer.Dispose();
     }
 
     private void HandleSceneLoaded(in messages.SceneLoaded message)
     {
-        // only get the tag now, as it was only just created for us
-        var modelInstanceBuffer = diContainer.GetTag<ModelInstanceBuffer>();
-        var totalCount = MultiMap.Keys.Sum(MultiMap.Count);
-        instanceBuffer = modelInstanceBuffer.DeviceBuffer;
-        instanceStart = modelInstanceBuffer.Reserve(totalCount);
         clumpCounts.EnsureCapacity(MultiMap.Keys.Count());
-        instances.EnsureCapacity(totalCount);
+        instanceBuffer.Ensure(MultiMap.Keys.Sum(MultiMap.Count) + 1); // remove hack to fix NpcMarker crash
     }
 
     [WithPredicate]
     private bool Filter(in components.RenderOrder order) => order == responsibility;
 
-    protected override void PreUpdate(CommandList state)
-    {
-        clumpCounts.Clear();
-        instances.Clear();
-    }
-
     [Update]
     private void Update(
-        CommandList cl,
+        CommandList _,
         in DefaultEcs.Entity entity,
-        in ClumpBuffers clumpBuffers,
-        List<BaseModelInstancedMaterial> materials,
+        in ClumpMesh clumpMesh,
+        List<ModelMaterial> materials,
         Location location,
         in components.ClumpMaterialInfo materialInfo)
     {
-        if (clumpCounts.LastOrDefault().Clump != clumpBuffers)
-            clumpCounts.Add(new(clumpBuffers, materials));
+        if (clumpCounts.LastOrDefault().Clump != clumpMesh)
+            clumpCounts.Add(new(clumpMesh, materials));
         else
             clumpCounts[^1] = clumpCounts[^1].Increment();
 
-        instances.Add(new()
-        {
-            tint = materialInfo.Color,
-            world = location.LocalToWorld,
-            texShift = entity.TryGet<components.TexShift>().GetValueOrDefault(components.TexShift.Default).Matrix
-        });
+        var instance = instanceBuffer.Add();
+        instance.Tint = materialInfo.Color;
+        instance.World = location.LocalToWorld;
+        instance.TexShift = entity.TryGet<components.TexShift>().GetValueOrDefault(components.TexShift.Default).Matrix;
+        instance.VertexColorFactor = 0f;
+        instance.TintFactor = 1f;
+        instance.AlphaReference = 0.082352944f;
     }
 
     protected override void PostUpdate(CommandList cl)
     {
-        if (instanceBuffer == null)
-            throw new InvalidOperationException("Model instance buffer was never set");
+        if (instanceBuffer.Count == 0)
+            return;
         cl.PushDebugGroup($"{nameof(ModelRenderer)} {responsibility}");
 
-        var instanceSpan = System.Runtime.InteropServices.CollectionsMarshal.AsSpan(instances);
-        cl.UpdateBuffer(instanceBuffer,
-            ModelInstance.Stride * instanceStart,
-            ref instanceSpan[0],
-            ModelInstance.Stride * (uint)instances.Count);
+        instanceBuffer.Update(cl);
 
         bool isFirstDraw;
-        bool isFirstClump = true;
-        var curInstanceStart = instanceStart;
+        var curInstanceStart = 0u;
         foreach (var clumpCount in clumpCounts)
         {
             var (clump, materials, count) = (clumpCount.Clump, clumpCount.Materials, clumpCount.Count);
@@ -121,12 +104,8 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpBuf
                 if (isFirstDraw)
                 {
                     isFirstDraw = false;
-                    clump.SetBuffers(cl);
-                }
-                if (isFirstClump)
-                {
-                    isFirstClump = false;
-                    cl.SetVertexBuffer(1, instanceBuffer);
+                    material.ApplyAttributes(cl, clump, instanceBuffer);
+                    cl.SetIndexBuffer(clump.IndexBuffer, clump.IndexFormat);
                 }
                 cl.DrawIndexed(
                     vertexOffset: 0,
@@ -142,7 +121,8 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpBuf
         cl.PopDebugGroup();
 
         for (int i = 0; i < clumpCounts.Count; i++)
-            clumpCounts[i] = default;
+            clumpCounts[i] = default; // remove reference to ClumpBuffer and materials
         clumpCounts.Clear();
+        instanceBuffer.Clear();
     }
 }

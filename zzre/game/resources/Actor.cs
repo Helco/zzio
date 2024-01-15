@@ -54,7 +54,7 @@ public class Actor : AResourceManager<string, ActorExDescription>
     {
         var part = parent.World.CreateEntity();
         part.Set<components.SyncedLocation>();
-        part.Set(ManagedResource<ClumpBuffers>.Create(ClumpInfo.Actor(partDescr.model)));
+        part.Set(ManagedResource<ClumpBuffers>.Create(ClumpInfoLEGACY.Actor(partDescr.model)));
         part.Set(ManagedResource<zzio.SkeletalAnimation>.Create(partDescr.animations));
         part.Set<components.Visibility>();
         part.Set<components.ActorPart>(); // add *after* resources have been loaded
