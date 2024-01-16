@@ -157,7 +157,7 @@ internal static class ZZMaps
         diContainer.AddTag(graphicsDevice.ResourceFactory);
 
         var pipelineCollection = new PipelineCollection(graphicsDevice);
-        pipelineCollection.AddShaderResourceAssemblyOf<zzre.materials.ModelStandardMaterial>();
+        pipelineCollection.AddShaderResourceAssemblyOf<PipelineCollection>();
         pipelineCollection.AddShaderResourceAssemblyOf<MapStandardMaterial>();
         diContainer.AddTag(pipelineCollection);
 

@@ -9,7 +9,7 @@ using zzre.rendering;
 namespace zzre.materials;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ModelInstance
+public struct ModelInstanceLEGACY
 {
     public Matrix4x4 world;
     public FColor tint;

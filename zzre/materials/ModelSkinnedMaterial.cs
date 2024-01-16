@@ -11,7 +11,7 @@ public class ModelSkinnedMaterial : BaseMaterial, IStandardTransformMaterial
     public UniformBinding<Matrix4x4> Projection { get; }
     public UniformBinding<Matrix4x4> View { get; }
     public UniformBinding<Matrix4x4> World { get; }
-    public UniformBinding<ModelStandardMaterialUniforms> Uniforms { get; }
+    public UniformBinding<ModelColors> Uniforms { get; }
     public SkeletonPoseBinding Pose { get; }
 
     public ModelSkinnedMaterial(ITagContainer diContainer) : base(diContainer.GetTag<GraphicsDevice>(), GetPipeline(diContainer))
@@ -22,7 +22,7 @@ public class ModelSkinnedMaterial : BaseMaterial, IStandardTransformMaterial
             .Add(Projection = new UniformBinding<Matrix4x4>(this))
             .Add(View = new UniformBinding<Matrix4x4>(this))
             .Add(World = new UniformBinding<Matrix4x4>(this))
-            .Add(Uniforms = new UniformBinding<ModelStandardMaterialUniforms>(this))
+            .Add(Uniforms = new UniformBinding<ModelColors>(this))
             .Add(Pose = new SkeletonPoseBinding(this))
             .NextBindingSet();
     }

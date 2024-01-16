@@ -44,7 +44,7 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
     private readonly BaseModelInstancedMaterial[] materials;
     private readonly ParticleEmitter data;
     private readonly Model[] models;
-    private readonly ModelInstance[] modelInstances;
+    private readonly materials.ModelInstanceLEGACY[] modelInstances;
 
     public float SpawnRate { get; set; }
     public int CurrentParticles { get; private set; } = 0;
@@ -83,8 +83,8 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
         }).ToArray();
 
         models = new Model[(int)(data.spawnRate * data.life.value)];
-        modelInstances = new ModelInstance[models.Length];
-        uint instanceBufferSize = (uint)models.Length * ModelInstance.Stride;
+        modelInstances = new materials.ModelInstanceLEGACY[models.Length];
+        uint instanceBufferSize = (uint)models.Length * zzre.materials.ModelInstanceLEGACY.Stride;
         instanceBuffer = diContainer.GetTag<ResourceFactory>()
             .CreateBuffer(new BufferDescription(instanceBufferSize, BufferUsage.VertexBuffer));
         instanceBuffer.Name = "ParticleBehaviourModel Instances";
@@ -136,7 +136,7 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
                 instance.texShift = Matrix3x2.Identity;
             }
 
-            uint updateSize = (uint)CurrentParticles * ModelInstance.Stride;
+            uint updateSize = (uint)CurrentParticles * zzre.materials.ModelInstanceLEGACY.Stride;
             cl.UpdateBuffer(instanceBuffer, 0, ref modelInstances[0], updateSize);
         }
 

@@ -66,7 +66,7 @@ public partial class ActorEditor
             {
                 var material = materials[index] = new ModelMaterial(diContainer) { IsSkinned = true };
                 (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePath, rwMaterial);
-                material.Colors.Ref = ModelStandardMaterialUniforms.Default;
+                material.Colors.Ref = ModelColors.Default;
                 material.Colors.Ref.vertexColorFactor = 0.0f;
                 material.Colors.Ref.tint = rwMaterial.color.ToFColor();
                 material.Pose.Skeleton = skeleton;

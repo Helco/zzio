@@ -88,7 +88,7 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         {
             var material = new ModelSkinnedMaterial(diContainer);
             (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(BaseTexturePaths, rwMaterial);
-            material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
+            material.Uniforms.Ref = ModelColors.Default;
             material.Uniforms.Ref.vertexColorFactor = 0.0f;
             material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
             material.Pose.Skeleton = skeleton;
