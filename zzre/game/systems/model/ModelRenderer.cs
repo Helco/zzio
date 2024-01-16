@@ -73,13 +73,15 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
         else
             clumpCounts[^1] = clumpCounts[^1].Increment();
 
-        var instance = instanceBuffer.Add();
-        instance.Tint = materialInfo.Color;
-        instance.World = location.LocalToWorld;
-        instance.TexShift = entity.TryGet<components.TexShift>().GetValueOrDefault(components.TexShift.Default).Matrix;
-        instance.VertexColorFactor = 0f;
-        instance.TintFactor = 1f;
-        instance.AlphaReference = 0.082352944f;
+        instanceBuffer.Add(new()
+        {
+            tint = materialInfo.Color,
+            world = location.LocalToWorld,
+            texShift = entity.TryGet<components.TexShift>().GetValueOrDefault(components.TexShift.Default).Matrix,
+            vertexColorFactor = 0f,
+            tintFactor = 1f,
+            alphaReference = 0.082352944f
+        });
     }
 
     protected override void PostUpdate(CommandList cl)

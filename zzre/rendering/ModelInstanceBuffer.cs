@@ -6,30 +6,14 @@ using zzre.materials;
 
 namespace zzre.rendering;
 
-public ref struct ModelInstanceRef
+public struct ModelInstance2
 {
-    public readonly ref Matrix4x4 World;
-    public readonly ref Matrix3x2 TexShift;
-    public readonly ref IColor Tint;
-    public readonly ref float VertexColorFactor;
-    public readonly ref float TintFactor;
-    public readonly ref float AlphaReference;
-
-    public ModelInstanceRef(
-        ref Matrix4x4 world,
-        ref Matrix3x2 texShift,
-        ref IColor tint,
-        ref float vertexColorFactor,
-        ref float tintFactor,
-        ref float alphaReference)
-    {
-        World = ref world;
-        TexShift = ref texShift;
-        Tint = ref tint;
-        VertexColorFactor = ref vertexColorFactor;
-        TintFactor = ref tintFactor;
-        AlphaReference = ref alphaReference;
-    }
+    public Matrix4x4 world;
+    public Matrix3x2 texShift;
+    public IColor tint;
+    public float vertexColorFactor;
+    public float tintFactor;
+    public float alphaReference;
 }
 
 public class ModelInstanceBuffer : InstanceBuffer
@@ -52,16 +36,15 @@ public class ModelInstanceBuffer : InstanceBuffer
         attrAlphaReference = AddAttribute<float>("inAlphaReference");
     }
 
-    public ModelInstanceRef Add()
+    public void Add(ModelInstance2 i)
     {
         var index = Add(1);
-        return new(
-            ref GetAttributeData<Matrix4x4>(attrWorld)[index],
-            ref GetAttributeData<Matrix3x2>(attrTexShift)[index],
-            ref GetAttributeData<IColor>(attrTint)[index],
-            ref GetAttributeData<float>(attrVertexColorFactor)[index],
-            ref GetAttributeData<float>(attrTintFactor)[index],
-            ref GetAttributeData<float>(attrAlphaReference)[index]);
+        GetAttributeData<Matrix4x4>(attrWorld)[index] = i.world;
+        GetAttributeData<Matrix3x2>(attrTexShift)[index] = i.texShift;
+        GetAttributeData<IColor>(attrTint)[index] = i.tint;
+        GetAttributeData<float>(attrVertexColorFactor)[index] = i.vertexColorFactor;
+        GetAttributeData<float>(attrTintFactor)[index] = i.tintFactor;
+        GetAttributeData<float>(attrAlphaReference)[index] = i.alphaReference;
     }
 }
 

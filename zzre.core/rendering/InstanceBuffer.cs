@@ -135,6 +135,6 @@ public class InstanceBuffer : BaseDisposable, IVertexAttributeContainer
             return Span<T>.Empty;
         var start = (int)a.Offset;
         var end = start + Count * (int)a.ElementSize;
-        return MemoryMarshal.Cast<byte, T>(bytes[start..end]);
+        return MemoryMarshal.Cast<byte, T>(bytes.AsSpan(start..end));
     }
 }
