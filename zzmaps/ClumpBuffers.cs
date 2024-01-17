@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Veldrid;
 using zzio;
 using zzio.rwbs;
@@ -12,6 +13,17 @@ using zzre.materials;
 using zzre.rendering;
 
 namespace zzre;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct ModelStandardVertex
+{
+    public Vector3 pos;
+    public Vector2 tex;
+    public IColor color;
+    public static uint Stride =
+        (3 + 2) * sizeof(float) +
+        4 * sizeof(byte);
+}
 
 public class ClumpBuffers : BaseDisposable
 {

@@ -7,17 +7,6 @@ using zzre.rendering;
 namespace zzre.materials;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ModelStandardVertex
-{
-    public Vector3 pos;
-    public Vector2 tex;
-    public IColor color;
-    public static uint Stride =
-        (3 + 2) * sizeof(float) +
-        4 * sizeof(byte);
-}
-
-[StructLayout(LayoutKind.Sequential)]
 public struct ModelColors
 {
     public FColor tint;

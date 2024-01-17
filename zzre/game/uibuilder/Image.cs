@@ -60,7 +60,7 @@ internal record Image : Base<Image>
         Vector2 size;
         if (bitmap == null && tileSheet == null)
         {
-            entity.Set<materials.UIMaterial>(null!);
+            entity.Set<materials.UIMaterial>(null!); // untextured
             size = rect.Size;
         }
         else if (bitmap != null)

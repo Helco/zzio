@@ -40,7 +40,7 @@ jobs:
     - name: Install remote dependencies
       run: dotnet restore
     - name: Hacky fix to glibc problem with shaderc
-      run: cp temp-ci-fix/libshaderc_shared.so ~/.nuget/packages/mlang.msbuild/1.0.0-e8cfb6a/tasks/netstandard2.0/runtimes/linux-x64/native/
+      run: cp temp-ci-fix/libshaderc_shared.so ~/.nuget/packages/mlang.msbuild/1.0.0-d417beb/tasks/netstandard2.0/runtimes/linux-x64/native/
     - name: Debug
       run: |
         dotnet build --configuration Debug --no-restore --verbosity normal

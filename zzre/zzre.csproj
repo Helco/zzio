@@ -10,6 +10,7 @@
 
     <ShaderVariantDef>shaders/ShaderVariants.json</ShaderVariantDef>
     <EmbedGeneratedShaders>true</EmbedGeneratedShaders>
+    <MlangOutputGeneratedSourceOnError>true</MlangOutputGeneratedSourceOnError>
     <MlangEmbedShaderSource>true</MlangEmbedShaderSource>
   </PropertyGroup>
 
@@ -35,6 +36,7 @@
   <ItemGroup>
     <MlangShader Include="shaders\model.mlang" />
     <MlangShader Include="shaders\debug.mlang" />
+    <MlangShader Include="shaders\ui.mlang" />
   </ItemGroup>
 
   <ItemGroup>

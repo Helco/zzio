@@ -38,7 +38,7 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
         var texture = new ImageSharpTexture(bitmap, mipmap: false)
             .CreateDeviceTexture(graphicsDevice, resourceFactory);
         texture.Name = "UIBitmap " + name;
-        var material = new materials.UIMaterial(diContainer, isFont: false);
+        var material = new materials.UIMaterial(diContainer);
         material.Texture.Texture = texture;
         material.Sampler.Sampler = graphicsDevice.LinearSampler;
         material.ScreenSize.Buffer = ui.ProjectionBuffer;

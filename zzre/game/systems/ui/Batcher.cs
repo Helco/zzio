@@ -21,9 +21,7 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
     private readonly Texture emptyTexture;
 
     private UIMaterial? lastMaterial;
-    private DeviceBuffer instanceBuffer;
-    private MappedResourceView<UIInstance> mappedInstances;
-    private int nextInstanceI;
+    private UIInstanceBuffer instanceBuffer;
     private uint nextInstanceCount;
 
     public Batcher(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
@@ -31,11 +29,11 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
         ui = diContainer.GetTag<UI>();
         graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         resourceFactory = diContainer.GetTag<ResourceFactory>();
-        instanceBuffer = null!;
+        instanceBuffer = new(diContainer);
 
         emptyTexture = resourceFactory.CreateTexture(
             new TextureDescription(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
-        untexturedMaterial = new UIMaterial(diContainer, isFont: false);
+        untexturedMaterial = new UIMaterial(diContainer);
         untexturedMaterial.Texture.Texture = emptyTexture;
         untexturedMaterial.ScreenSize.Buffer = diContainer.GetTag<UI>().ProjectionBuffer;
     }
@@ -43,7 +41,7 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
     public override void Dispose()
     {
         base.Dispose();
-        instanceBuffer?.Dispose();
+        instanceBuffer.Dispose();
         untexturedMaterial.Dispose();
         emptyTexture.Dispose();
     }
@@ -54,25 +52,15 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
     protected override void PreUpdate(CommandList _)
     {
         lastMaterial = null;
-        batches.Clear();
-        nextInstanceI = 0;
         nextInstanceCount = 0;
+        batches.Clear();
 
         var tiles = World.GetComponents<components.ui.Tile[]>();
         var totalRects = 0;
         foreach (var entity in SortedSet.GetEntities())
             totalRects += tiles[entity].Length;
-
-        uint totalSizeInBytes = UIInstance.Stride * (uint)totalRects;
-        if ((instanceBuffer?.SizeInBytes ?? 0) < totalSizeInBytes)
-        {
-            instanceBuffer?.Dispose();
-            instanceBuffer = resourceFactory.CreateBuffer(
-                new BufferDescription(totalSizeInBytes, BufferUsage.VertexBuffer | BufferUsage.Dynamic));
-            instanceBuffer.Name = "UIBatcher Instances";
-        }
-
-        mappedInstances = graphicsDevice.Map<UIInstance>(instanceBuffer, MapMode.Write);
+        instanceBuffer.Clear();
+        instanceBuffer.Ensure(totalRects);
     }
 
     [Update]
@@ -98,26 +86,27 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
                 uvRectangle = tileSheet[tile.TileId];
             }
 
-            ref var instance = ref mappedInstances[nextInstanceI++];
-            instance.pos = offset.Calc(tile.Rect.Min, ui.LogicalScreen);
-            instance.size = tile.Rect.Size;
-            instance.color = color;
-            instance.textureWeight = material == null ? 0f : 1f;
-            instance.uvPos = uvRectangle.Min;
-            instance.uvSize = uvRectangle.Size;
-
+            instanceBuffer.Add(new()
+            {
+                pos = offset.Calc(tile.Rect.Min, ui.LogicalScreen),
+                size = tile.Rect.Size,
+                color = color,
+                textureWeight = material == null ? 0f : 1f,
+                uvPos = uvRectangle.Min,
+                uvSize = uvRectangle.Size
+            });
             nextInstanceCount++;
         }
     }
 
     protected override void PostUpdate(CommandList cl)
     {
-        graphicsDevice.Unmap(instanceBuffer);
         FinishBatch();
 
         cl.PushDebugGroup("UIBatcher");
         // TODO: Update UI batches only if changed
-        cl.SetVertexBuffer(0, instanceBuffer);
+        instanceBuffer.Update(cl);
+        untexturedMaterial.ApplyAttributes(cl, instanceBuffer);
         uint instanceStart = 0;
         foreach (var batch in batches)
         {

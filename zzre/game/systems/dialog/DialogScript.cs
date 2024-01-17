@@ -110,7 +110,7 @@ public partial class DialogScript : BaseScript
         letterboxEntity.Set(components.Visibility.Visible);
         letterboxEntity.Set(new components.ui.RenderOrder(1));
         letterboxEntity.Set(components.ui.UIOffset.ScreenUpperLeft);
-        letterboxEntity.Set(null as materials.UIMaterial);
+        letterboxEntity.Set(null as materials.UIMaterial); // untextured
         letterboxEntity.Set(IColor.Clear);
         letterboxEntity.Set(components.ui.Fade.StdIn);
         letterboxEntity.Set(new components.ui.Tile[]

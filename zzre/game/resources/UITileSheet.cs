@@ -78,7 +78,7 @@ public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.
         texture.Name = (info.IsFont ? "UIFont " : "UITileSheet ") + info.Name;
         UploadTileSheet(bitmap, texture, info.IsFont);
 
-        var material = new UIMaterial(diContainer, info.IsFont);
+        var material = new UIMaterial(diContainer) { IsFont = info.IsFont };
         material.Texture.Texture = texture;
         material.Sampler.Sampler = info.IsFont ? fontSampler : linearSampler;
         material.ScreenSize.Buffer = ui.ProjectionBuffer;
