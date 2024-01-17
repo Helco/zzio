@@ -8,6 +8,7 @@ using System.Linq;
 using zzio.scn;
 using zzio.db;
 using zzio;
+using zzre.rendering;
 
 [PauseDuring(PauseTrigger.UIScreen)]
 public partial class NPCScript : BaseScript
@@ -68,8 +69,8 @@ public partial class NPCScript : BaseScript
         entity.Set(ManagedResource<zzio.ActorExDescription>.Create(name));
 
         var actorParts = entity.Get<components.ActorParts>();
-        var bodyClump = actorParts.Body.Get<ClumpBuffers>();
-        var bodyHeight = bodyClump.Bounds.Size.Y;
+        var bodyClump = actorParts.Body.Get<ClumpMesh>();
+        var bodyHeight = bodyClump.BoundingBox.Size.Y;
         var colliderSize = entity.Get<components.NPCType>() switch
         {
             components.NPCType.Flying => FlyingColliderSize,

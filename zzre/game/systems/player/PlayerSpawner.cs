@@ -3,6 +3,7 @@ using System;
 using System.Numerics;
 using DefaultEcs.System;
 using zzio.scn;
+using zzre.rendering;
 
 public class PlayerSpawner : ISystem<float>
 {
@@ -91,8 +92,8 @@ public class PlayerSpawner : ISystem<float>
     private static float GetColliderSize(DefaultEcs.Entity playerEntity)
     {
         var playerActorParts = playerEntity.Get<components.ActorParts>();
-        var playerBodyClump = playerActorParts.Body.Get<ClumpBuffers>();
-        return playerBodyClump.Bounds.Size.Y;
+        var playerBodyClump = playerActorParts.Body.Get<ClumpMesh>();
+        return playerBodyClump.BoundingBox.Size.Y;
     }
 
     public void Update(float state) { }
