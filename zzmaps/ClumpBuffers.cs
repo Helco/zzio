@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -7,6 +9,7 @@ using zzio;
 using zzio.rwbs;
 using zzio.vfs;
 using zzre.materials;
+using zzre.rendering;
 
 namespace zzre;
 
@@ -131,4 +134,35 @@ public class ClumpBuffers : BaseDisposable
         if (skinBuffer != null)
             commandList.SetVertexBuffer(1, skinBuffer);
     }
+}
+
+public class ClumpBuffersAssetLoader : IAssetLoader<ClumpBuffers>
+{
+    public ITagContainer DIContainer { get; }
+
+    public ClumpBuffersAssetLoader(ITagContainer diContainer)
+    {
+        DIContainer = diContainer;
+    }
+
+    public void Clear() { }
+
+    public bool TryLoad(IResource resource, [NotNullWhen(true)] out ClumpBuffers? asset)
+    {
+        try
+        {
+            asset = new ClumpBuffers(DIContainer, resource);
+            return true;
+        }
+        catch (Exception)
+        {
+            asset = null;
+            return false;
+        }
+    }
+}
+
+public class CachedClumpBuffersLoader : CachedAssetLoader<ClumpBuffers>
+{
+    public CachedClumpBuffersLoader(ITagContainer diContainer) : base(new ClumpBuffersAssetLoader(diContainer)) { }
 }

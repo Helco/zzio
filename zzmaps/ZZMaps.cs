@@ -171,7 +171,7 @@ internal static class ZZMaps
         diContainer.AddTag<IAssetLoader<Texture>>(new RefCachedAssetLoader<Texture>(
             new TextureAssetLoader(diContainer)));
         diContainer.AddTag<IAssetLoader<ClumpBuffers>>(new RefCachedAssetLoader<ClumpBuffers>(
-            new ClumpAssetLoader(diContainer)));
+            new ClumpBuffersAssetLoader(diContainer)));
 
         var mappedDb = new MappedDB();
         for (int i = 1; i <= 6; i++)

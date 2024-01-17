@@ -39,15 +39,14 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
 
     private readonly Random random = new();
     private readonly Location location;
-    private readonly ClumpBuffers clumpBuffers;
-    private readonly DeviceBuffer instanceBuffer;
-    private readonly BaseModelInstancedMaterial[] materials;
+    private readonly ClumpMesh clumpMesh;
+    private readonly ModelMaterial[] materials;
     private readonly ParticleEmitter data;
     private readonly Model[] models;
-    private readonly materials.ModelInstanceLEGACY[] modelInstances;
+    private readonly ModelInstanceBuffer instanceBuffer;
 
     public float SpawnRate { get; set; }
-    public int CurrentParticles { get; private set; } = 0;
+    public int CurrentParticles => instanceBuffer.Count;
     public IEffectPart Part => data;
 
     private bool areInstancesDirty = true;
@@ -57,37 +56,41 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
     {
         this.data = data;
         this.location = location;
-        var clumpLoader = diContainer.GetTag<IAssetLoader<ClumpBuffers>>();
+        var clumpLoader = diContainer.GetTag<IAssetLoader<ClumpMesh>>();
         var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
         var camera = diContainer.GetTag<Camera>();
 
         var clumpPath = new FilePath("resources/models/models").Combine(data.texName + ".dff");
-        clumpBuffers = clumpLoader.Load(clumpPath);
-        materials = clumpBuffers.SubMeshes.Select(subMesh =>
+        clumpMesh = clumpLoader.Load(clumpPath);
+        materials = clumpMesh.Materials.Select(rwMaterial =>
         {
             var (texture, sampler) = textureLoader.LoadTexture(new[]
             {
                 IEffectPartRenderer.TexturePath,
                 new FilePath("resources/textures/models")
-            }, subMesh.Material);
-            var material = BaseModelInstancedMaterial.CreateFor(data.renderMode, diContainer);
-            material.MainTexture.Texture = texture;
+            }, rwMaterial);
+            var material = new ModelMaterial(diContainer)
+            {
+                IsInstanced = true,
+                Blend = data.renderMode switch
+                {
+                    EffectPartRenderMode.NormalBlend => ModelMaterial.BlendMode.Alpha,
+                    EffectPartRenderMode.Additive => ModelMaterial.BlendMode.Additive,
+                    EffectPartRenderMode.AdditiveAlpha => ModelMaterial.BlendMode.AdditiveAlpha,
+                    _ => throw new NotSupportedException($"Unsupported render mode for {nameof(ParticleBehaviourModel)}: {data.renderMode}")
+                }
+            };
+            material.Texture.Texture = texture;
             material.Sampler.Sampler = sampler;
             material.Projection.BufferRange = camera.ProjectionRange;
             material.View.BufferRange = camera.ViewRange;
-            material.Uniforms.Value = ModelInstancedUniforms.Default;
-            material.Uniforms.Ref.vertexColorFactor = 0f;
-            material.Uniforms.Ref.alphaReference = 0.03f;
             AddDisposable(material);
             return material;
         }).ToArray();
 
         models = new Model[(int)(data.spawnRate * data.life.value)];
-        modelInstances = new materials.ModelInstanceLEGACY[models.Length];
-        uint instanceBufferSize = (uint)models.Length * zzre.materials.ModelInstanceLEGACY.Stride;
-        instanceBuffer = diContainer.GetTag<ResourceFactory>()
-            .CreateBuffer(new BufferDescription(instanceBufferSize, BufferUsage.VertexBuffer));
-        instanceBuffer.Name = "ParticleBehaviourModel Instances";
+        instanceBuffer = new(diContainer);
+        instanceBuffer.Ensure(models.Length);
         AddDisposable(instanceBuffer);
     }
 
@@ -123,28 +126,30 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
         if (areInstancesDirty)
         {
             areInstancesDirty = false;
-            CurrentParticles = 0;
+            instanceBuffer.Clear();
             foreach (ref readonly var model in models.AsSpan())
             {
                 if (model.basic.life < 0f)
                     continue;
-                ref var instance = ref modelInstances[CurrentParticles++];
-                instance.world =
-                    Matrix4x4.CreateFromAxisAngle(model.rotationAxis, model.rotation * MathF.PI / 180f) *
-                    Matrix4x4.CreateTranslation(model.basic.pos);
-                instance.tint = model.basic.color.ToFColor();
-                instance.texShift = Matrix3x2.Identity;
+                instanceBuffer.Add(new()
+                {
+                    world =
+                        Matrix4x4.CreateFromAxisAngle(model.rotationAxis, model.rotation * MathF.PI / 180f) *
+                        Matrix4x4.CreateTranslation(model.basic.pos),
+                    tint = model.basic.color.ToFColor(),
+                    alphaReference = 0.03f,
+                    vertexColorFactor = 0f,
+                    tintFactor = 1f
+                });
             }
-
-            uint updateSize = (uint)CurrentParticles * zzre.materials.ModelInstanceLEGACY.Stride;
-            cl.UpdateBuffer(instanceBuffer, 0, ref modelInstances[0], updateSize);
+            instanceBuffer.Update(cl);
         }
 
-        clumpBuffers.SetBuffers(cl);
-        foreach (var (subMesh, i) in clumpBuffers.SubMeshes.Indexed())
+        materials.First().ApplyAttributes(cl, clumpMesh, instanceBuffer);
+        cl.SetIndexBuffer(clumpMesh.IndexBuffer, clumpMesh.IndexFormat);
+        foreach (var subMesh in clumpMesh.SubMeshes)
         {
-            (materials[i] as IMaterial).Apply(cl);
-            cl.SetVertexBuffer(1, instanceBuffer);
+            (materials[subMesh.Material] as IMaterial).Apply(cl);
             cl.DrawIndexed(
                 indexStart: (uint)subMesh.IndexOffset,
                 indexCount: (uint)subMesh.IndexCount,

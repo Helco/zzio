@@ -29,7 +29,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
     private readonly LocationBuffer locationBuffer;
     private readonly GameTime gameTime;
     private readonly CachedAssetLoader<Texture> textureLoader;
-    private readonly CachedAssetLoader<ClumpBuffers> clumpLoader;
+    private readonly CachedAssetLoader<ClumpMesh> clumpLoader;
 
     private EffectCombinerRenderer? effectRenderer;
     private EffectCombiner Effect => effectRenderer?.Effect ?? emptyEffect;
@@ -81,9 +81,9 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
         AddDisposable(gridRenderer);
 
         AddDisposable(textureLoader = new CachedAssetLoader<Texture>(new TextureAssetLoader(diContainer)));
-        AddDisposable(clumpLoader = new CachedClumpBuffersLoader(diContainer));
+        AddDisposable(clumpLoader = new CachedClumpMeshLoader(diContainer));
         this.diContainer.AddTag<IAssetLoader<Texture>>(textureLoader);
-        this.diContainer.AddTag<IAssetLoader<ClumpBuffers>>(clumpLoader);
+        this.diContainer.AddTag<IAssetLoader<ClumpMesh>>(clumpLoader);
 
         editor.AddInfoSection("Info", HandleInfoContent);
         editor.AddInfoSection("Playback", HandlePlaybackContent);

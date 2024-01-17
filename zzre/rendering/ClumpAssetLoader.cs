@@ -4,7 +4,7 @@ using zzio.vfs;
 
 namespace zzre.rendering;
 
-public class ClumpAssetLoader : IAssetLoader<ClumpBuffers>, IAssetLoader<ClumpMesh>
+public class ClumpAssetLoader : IAssetLoader<ClumpMesh>
 {
     public ITagContainer DIContainer { get; }
 
@@ -14,20 +14,6 @@ public class ClumpAssetLoader : IAssetLoader<ClumpBuffers>, IAssetLoader<ClumpMe
     }
 
     public void Clear() { }
-
-    public bool TryLoad(IResource resource, [NotNullWhen(true)] out ClumpBuffers? asset)
-    {
-        try
-        {
-            asset = new ClumpBuffers(DIContainer, resource);
-            return true;
-        }
-        catch (Exception)
-        {
-            asset = null;
-            return false;
-        }
-    }
 
     public bool TryLoad(IResource resource, [NotNullWhen(true)] out ClumpMesh? asset)
     {
@@ -42,11 +28,6 @@ public class ClumpAssetLoader : IAssetLoader<ClumpBuffers>, IAssetLoader<ClumpMe
             return false;
         }
     }
-}
-
-public class CachedClumpBuffersLoader : CachedAssetLoader<ClumpBuffers>
-{
-    public CachedClumpBuffersLoader(ITagContainer diContainer) : base(new ClumpAssetLoader(diContainer)) { }
 }
 
 public class CachedClumpMeshLoader : CachedAssetLoader<ClumpMesh>
