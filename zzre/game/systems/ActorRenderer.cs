@@ -32,7 +32,7 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         camera = diContainer.GetTag<Camera>();
         textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
         addSubscription = World.SubscribeEntityComponentAdded<components.ActorPart>(HandleAddedComponent);
-        removeSubscription = World.SubscribeEntityComponentRemoved<ModelSkinnedMaterial[]>(HandleRemovedComponent);
+        removeSubscription = World.SubscribeEntityComponentRemoved<ModelMaterial[]>(HandleRemovedComponent);
     }
 
     public override void Dispose()
@@ -102,11 +102,11 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         entity.Set(zzreMaterials);
     }
 
-    private void HandleRemovedComponent(in DefaultEcs.Entity entity, in ModelSkinnedMaterial[] materials)
+    private void HandleRemovedComponent(in DefaultEcs.Entity entity, in ModelMaterial[] materials)
     {
         foreach (var material in materials)
         {
-            material.MainTexture.Texture?.Dispose();
+            material.Texture.Texture?.Dispose();
             material.Sampler.Sampler.Dispose();
             material.Dispose();
         }

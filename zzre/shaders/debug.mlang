@@ -9,7 +9,7 @@ attributes if (IsSkinned || ColorMode != VertexColor)
 	byte4 inIndices;
 }
 
-uniform mat4 world;
+uniform mat4 world; 
 uniform mat4 projection;
 uniform mat4 view;
 uniform if (IsSkinned) buffer mat4[] pose;
