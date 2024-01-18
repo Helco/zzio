@@ -28,7 +28,7 @@ public partial class ActorEditor : ListDisposable, IDocumentEditor
     private readonly GraphicsDevice device;
     private readonly FramebufferArea fbArea;
     private readonly IResourcePool resourcePool;
-    private readonly DebugGridRenderer gridRenderer;
+    private readonly DebugLineRenderer gridRenderer;
     private readonly OpenFileModal openFileModal;
 
     private ActorExDescription? description;
@@ -76,9 +76,10 @@ public partial class ActorEditor : ListDisposable, IDocumentEditor
         AddDisposable(controls);
         localDiContainer.AddTag(camera);
 
-        gridRenderer = new DebugGridRenderer(diContainer);
+        gridRenderer = new DebugLineRenderer(diContainer);
         gridRenderer.Material.LinkTransformsTo(camera);
         gridRenderer.Material.World.Ref = Matrix4x4.Identity;
+        gridRenderer.AddGrid();
         AddDisposable(gridRenderer);
         localDiContainer.AddTag<IStandardTransformMaterial>(gridRenderer.Material);
 

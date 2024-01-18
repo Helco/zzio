@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using Veldrid;
 using zzio;
 using zzio.rwbs;
@@ -36,11 +37,11 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private readonly IResourcePool resourcePool;
     private readonly OpenFileModal openFileModal;
     private readonly ModelMaterialEdit modelMaterialEdit;
-    private readonly DebugBoxLineRenderer boundsRenderer;
+    private readonly DebugLineRenderer boundsRenderer;
     private readonly DebugLineRenderer rayRenderer;
     private readonly DebugPlaneRenderer planeRenderer;
-    private readonly DebugHexahedronLineRenderer frustumRenderer;
-    private readonly DebugTriangleLineRenderer triangleRenderer;
+    private readonly DebugLineRenderer frustumRenderer;
+    private readonly DebugLineRenderer triangleRenderer;
     private readonly WorldRenderer worldRenderer;
     private readonly Camera camera;
     private readonly LocationBuffer locationBuffer;
@@ -80,8 +81,9 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         Window.OnKeyDown += HandleKeyDown;
         var menuBar = new MenuBarWindowTag(Window);
         menuBar.AddButton("Open", HandleMenuOpen);
-        var gridRenderer = new DebugGridRenderer(diContainer);
+        var gridRenderer = new DebugLineRenderer(diContainer);
         //gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
+        gridRenderer.AddGrid();
         AddDisposable(gridRenderer);
         modelMaterialEdit = new ModelMaterialEdit(Window, diContainer)
         {
@@ -120,10 +122,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         editor.AddInfoSection("Collision", HandleCollision, false);
         editor.AddInfoSection("Raycast", HandleRaycast, true);
 
-        boundsRenderer = new DebugBoxLineRenderer(diContainer)
-        {
-            Color = IColor.Red
-        };
+        boundsRenderer = new DebugLineRenderer(diContainer);
         boundsRenderer.Material.LinkTransformsTo(camera);
         boundsRenderer.Material.LinkTransformsTo(world: worldTransform);
         AddDisposable(boundsRenderer);
@@ -133,12 +132,12 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         planeRenderer.Material.LinkTransformsTo(world: worldTransform);
         AddDisposable(planeRenderer);
 
-        frustumRenderer = new DebugHexahedronLineRenderer(diContainer);
+        frustumRenderer = new DebugLineRenderer(diContainer);
         frustumRenderer.Material.LinkTransformsTo(camera);
         frustumRenderer.Material.LinkTransformsTo(world: worldTransform);
         AddDisposable(frustumRenderer);
 
-        triangleRenderer = new DebugTriangleLineRenderer(diContainer);
+        triangleRenderer = new DebugLineRenderer(diContainer);
         triangleRenderer.Material.LinkTransformsTo(camera);
         triangleRenderer.Material.LinkTransformsTo(world: worldTransform);
         AddDisposable(triangleRenderer);
@@ -342,7 +341,8 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         sectionCollision = null;
         if (worldMesh == null || highlightedSectionI < 0)
             return;
-        boundsRenderer.Bounds = worldMesh.Sections[index].Bounds;
+        boundsRenderer.Clear();
+        boundsRenderer.AddBox(worldMesh.Sections[index].Bounds, IColor.Red);
         planeRenderer.Planes = Array.Empty<DebugPlane>();
 
         if (worldMesh.Sections[index] is WorldMesh.PlaneSection planeSection)
@@ -361,8 +361,8 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private void HighlightSplit(int splitI)
     {
         highlightedSplitI = splitI;
-        triangleRenderer.Triangles = Array.Empty<Triangle>();
-        if (sectionCollision == null || sectionAtomic == null || splitI < 0)
+        triangleRenderer.Clear();
+        if (worldMesh == null || sectionCollision == null || sectionAtomic == null || splitI < 0)
             return;
 
         var split = sectionCollision.splits[splitI];
@@ -373,14 +373,14 @@ public class WorldViewer : ListDisposable, IDocumentEditor
             CollisionSectorType.Z => Vector3.UnitZ,
             _ => throw new NotSupportedException($"Unsupported collision sector type: {split.left.type}")
         };
-        SetPlanes(boundsRenderer.Bounds.Box, normal, split.left.value, split.right.value, centerValue: null);
+        SetPlanes(worldMesh.Sections[highlightedSectionI].Bounds, normal, split.left.value, split.right.value, centerValue: null);
 
-        triangleRenderer.Triangles = SplitTriangles(split).ToArray();
-        triangleRenderer.Colors = Enumerable
-            .Repeat(IColor.Red, SectorTriangles(split.left).Count())
+        triangleRenderer.AddTriangles(
+            triangles: SplitTriangles(split).ToArray(),
+            colors: Enumerable.Repeat(IColor.Red, SectorTriangles(split.left).Count())
             .Concat(Enumerable
                 .Repeat(IColor.Blue, SectorTriangles(split.right).Count()))
-            .ToArray();
+            .ToArray());
 
         fbArea.IsDirty = true;
 
@@ -448,7 +448,8 @@ public class WorldViewer : ListDisposable, IDocumentEditor
 
         if (didChange)
         {
-            viewFrustum.Corners.ToArray().CopyTo(frustumRenderer.Corners, 0);
+            frustumRenderer.Clear();
+            frustumRenderer.AddHexahedron(viewFrustum.Corners, IColor.White);
             fbArea.IsDirty = true;
         }
     }

@@ -19,7 +19,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     private readonly IResourcePool resourcePool;
     private readonly OpenFileModal openFileModal;
     private readonly LocationBuffer locationBuffer;
-    private readonly DebugGridRenderer gridRenderer;
+    private readonly DebugLineRenderer gridRenderer;
     private readonly Camera camera;
 
     private event Action OnLoadScene = () => { };
@@ -55,9 +55,10 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         camera = new Camera(diContainer.ExtendedWith(locationBuffer));
         AddDisposable(camera);
         controls = new FlyControlsTag(Window, camera.Location, diContainer);
-        gridRenderer = new DebugGridRenderer(diContainer);
+        gridRenderer = new DebugLineRenderer(diContainer);
         gridRenderer.Material.LinkTransformsTo(camera);
         gridRenderer.Material.World.Ref = Matrix4x4.Identity;
+        gridRenderer.AddGrid();
         AddDisposable(gridRenderer);
         fbArea = Window.GetTag<FramebufferArea>();
         fbArea.OnResize += HandleResize;

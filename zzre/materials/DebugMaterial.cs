@@ -24,6 +24,7 @@ public struct SkinVertex
 {
     public Vector4 weights;
     public byte bone0, bone1, bone2, bone3;
+    public static uint Stride = sizeof(float) * 4 + sizeof(byte) * 4;
 }
 
 

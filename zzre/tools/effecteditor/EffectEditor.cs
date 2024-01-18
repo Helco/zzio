@@ -24,7 +24,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
     private readonly GraphicsDevice device;
     private readonly FramebufferArea fbArea;
     private readonly IResourcePool resourcePool;
-    private readonly DebugGridRenderer gridRenderer;
+    private readonly DebugLineRenderer gridRenderer;
     private readonly OpenFileModal openFileModal;
     private readonly LocationBuffer locationBuffer;
     private readonly GameTime gameTime;
@@ -75,9 +75,10 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
         this.diContainer.AddTag<IQuadMeshBuffer<SparkVertex>>(new DynamicQuadMeshBuffer<SparkVertex>(device.ResourceFactory, 256));
         controls = new OrbitControlsTag(Window, camera.Location, this.diContainer);
         AddDisposable(controls);
-        gridRenderer = new DebugGridRenderer(this.diContainer);
+        gridRenderer = new DebugLineRenderer(this.diContainer);
         gridRenderer.Material.LinkTransformsTo(camera);
         gridRenderer.Material.World.Ref = Matrix4x4.Identity;
+        gridRenderer.AddGrid();
         AddDisposable(gridRenderer);
 
         AddDisposable(textureLoader = new CachedAssetLoader<Texture>(new TextureAssetLoader(diContainer)));

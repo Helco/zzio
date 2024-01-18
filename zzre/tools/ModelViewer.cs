@@ -28,8 +28,8 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private readonly FramebufferArea fbArea;
     private readonly IAssetLoader<Texture> textureLoader;
     private readonly IResourcePool resourcePool;
-    private readonly DebugGridRenderer gridRenderer;
-    private readonly DebugTriangleLineRenderer triangleRenderer;
+    private readonly DebugLineRenderer gridRenderer;
+    private readonly DebugLineRenderer triangleRenderer;
     private readonly DebugPlaneRenderer planeRenderer;
     private readonly OpenFileModal openFileModal;
     private readonly ModelMaterialEdit modelMaterialEdit;
@@ -83,12 +83,13 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         controls = new OrbitControlsTag(Window, camera.Location, localDiContainer);
         AddDisposable(controls);
 
-        gridRenderer = new DebugGridRenderer(diContainer);
+        gridRenderer = new DebugLineRenderer(diContainer);
         gridRenderer.Material.LinkTransformsTo(camera);
         gridRenderer.Material.World.Ref = Matrix4x4.Identity;
+        gridRenderer.AddGrid();
         AddDisposable(gridRenderer);
 
-        triangleRenderer = new DebugTriangleLineRenderer(diContainer);
+        triangleRenderer = new DebugLineRenderer(diContainer);
         triangleRenderer.Material.LinkTransformsTo(camera);
         triangleRenderer.Material.World.Ref = Matrix4x4.Identity;
         AddDisposable(triangleRenderer);
@@ -253,7 +254,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private void HighlightSplit(int splitI)
     {
         highlightedSplitI = splitI;
-        triangleRenderer.Triangles = Array.Empty<Triangle>();
+        triangleRenderer.Clear();
         planeRenderer.Planes = Array.Empty<DebugPlane>();
         if (collider == null || mesh == null || highlightedSplitI < 0)
             return;
@@ -268,12 +269,12 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         };
         SetPlanes(mesh.BoundingBox, normal, split.left.value, split.right.value, centerValue: null);
 
-        triangleRenderer.Triangles = SplitTriangles(split).ToArray();
-        triangleRenderer.Colors = Enumerable
-            .Repeat(IColor.Red, SectorTriangles(split.left).Count())
+        triangleRenderer.AddTriangles(
+            triangles: SplitTriangles(split).ToArray(),
+            colors: Enumerable.Repeat(IColor.Red, SectorTriangles(split.left).Count())
             .Concat(Enumerable
                 .Repeat(IColor.Blue, SectorTriangles(split.right).Count()))
-            .ToArray();
+            .ToArray());
 
         fbArea.IsDirty = true;
 
