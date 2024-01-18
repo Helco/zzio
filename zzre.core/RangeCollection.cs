@@ -86,6 +86,36 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
         inner.Start.GetOffset(MaxRangeValue) >= outer.Start.GetOffset(MaxRangeValue) &&
         inner.End.GetOffset(MaxRangeValue) <= outer.End.GetOffset(MaxRangeValue);
 
+    public void MergeNearbyRanges(int maxDistance)
+    {
+        if (maxDistance < 1 || ranges.Count < 1)
+            return;
+        var rangeArray = ranges.ToArray();
+        int mergeStart = -1;
+        for (int i = 1; i < rangeArray.Length; i++)
+        {
+            int distance = rangeArray[i].Start.GetOffset(MaxRangeValue) - rangeArray[i].End.GetOffset(MaxRangeValue);
+            if (distance > maxDistance)
+            {
+                ApplyMergeUpTo(i);
+                continue;
+            }
+            if (mergeStart < 0)
+                mergeStart = i - 1;
+        }
+        ApplyMergeUpTo(rangeArray.Length);
+
+        void ApplyMergeUpTo(int endI)
+        {
+            if (mergeStart < 0)
+                return;
+            for (int i = mergeStart; i < endI; i++)
+                ranges.Remove(rangeArray[i]);
+            var mergedRange = rangeArray[mergeStart].Start..rangeArray[endI - 1].End;
+            ranges.Add(mergedRange);
+        }
+    }
+
     public void Clear() => ranges.Clear();
     public void CopyTo(Range[] array, int arrayIndex) => ranges.CopyTo(array, arrayIndex);
     public IEnumerator<Range> GetEnumerator() => ranges.GetEnumerator();
