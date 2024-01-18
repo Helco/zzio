@@ -72,15 +72,12 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
     }
 }
 
-public class ModelInstanceBuffer : InstanceBuffer
+public class ModelInstanceBuffer : DynamicMesh
 {
-    private readonly int
-        attrWorld,
-        attrTexShift,
-        attrTint,
-        attrVertexColorFactor,
-        attrTintFactor,
-        attrAlphaReference;
+    private readonly Attribute<Matrix4x4> attrWorld;
+    private readonly Attribute<Matrix3x2> attrTexShift;
+    private readonly Attribute<IColor> attrTint;
+    private readonly Attribute<float> attrVertexColorFactor, attrTintFactor, attrAlphaReference;
 
     public ModelInstanceBuffer(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic)
     {
@@ -95,12 +92,12 @@ public class ModelInstanceBuffer : InstanceBuffer
     public void Add(ModelInstance i)
     {
         var index = Add(1);
-        GetAttributeData<Matrix4x4>(attrWorld)[index] = i.world;
-        GetAttributeData<Matrix3x2>(attrTexShift)[index] = i.texShift;
-        GetAttributeData<IColor>(attrTint)[index] = i.tint;
-        GetAttributeData<float>(attrVertexColorFactor)[index] = i.vertexColorFactor;
-        GetAttributeData<float>(attrTintFactor)[index] = i.tintFactor;
-        GetAttributeData<float>(attrAlphaReference)[index] = i.alphaReference;
+        attrWorld[index] = i.world;
+        attrTexShift[index] = i.texShift;
+        attrTint[index] = i.tint;
+        attrVertexColorFactor[index] = i.vertexColorFactor;
+        attrTintFactor[index] = i.tintFactor;
+        attrAlphaReference[index] = i.alphaReference;
     }
 }
 

@@ -10,6 +10,8 @@ namespace zzre.rendering;
 
 public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
 {
+    private const int MaxUploadDistance = 512;
+
     private interface IAttribute
     {
         string Name { get; }
@@ -52,11 +54,12 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
     protected readonly GraphicsDevice graphicsDevice;
     protected readonly ResourceFactory resourceFactory;
     private readonly bool dynamic;
+    private readonly float minGrowFactor;
     private readonly List<IAttribute> attributes = new();
     private readonly RangeCollection dirtyVertexBytes = new();
-    private DeviceBuffer? vertexBuffer, indexBuffer;
-    private Range dirtyIndices;
-    private ushort[] indexPattern = Array.Empty<ushort>();
+    private DeviceBuffer? vertexBuffer;//, indexBuffer;
+    //private Range dirtyIndices;
+    //private ushort[] indexPattern = Array.Empty<ushort>();
     private int verticesPerPrimitive;
     private byte[]? vertices;
     private int? nextVertexCapacity;
@@ -67,7 +70,7 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
     public int VertexFreeCount => VertexCapacity - VertexCount;
     public int PrimitiveCount => verticesPerPrimitive < 1 ? 0 : VertexCount / verticesPerPrimitive;
 
-    public IReadOnlyList<ushort> IndexPattern
+    /*public IReadOnlyList<ushort> IndexPattern
     {
         get => indexPattern;
         set
@@ -77,128 +80,149 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
             verticesPerPrimitive = indexPattern.Max() + 1;
         }
     }
-    public IndexFormat IndexFormat => IndexFormat.UInt16;
+    public IndexFormat IndexFormat => IndexFormat.UInt16;*/
 
-    public DynamicMesh(ITagContainer diContainer, bool dynamic = true)
+    public DynamicMesh(ITagContainer diContainer, bool dynamic = true, float minGrowFactor = 1.5f)
     {
+        if (minGrowFactor <= 1f)
+            throw new ArgumentOutOfRangeException(nameof(minGrowFactor));
         graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         resourceFactory = graphicsDevice.ResourceFactory;
         this.dynamic = dynamic;
+        this.minGrowFactor = minGrowFactor;
     }
 
     protected override void DisposeManaged()
     {
         base.DisposeManaged();
-        ResetBuffer();
-        attributes.Clear();
-    }
-
-    private void ResetBuffer()
-    {
         vertexBuffer?.Dispose();
-        vertexBuffer = null;
+        //indexBuffer?.Dispose();
         vertices = null;
-        VertexCapacity = VertexCount = 0;
+        attributes.Clear();
     }
 
     public void Clear() => VertexCount = 0;
 
-    public void Reserve(int capacity)
+    public void Reserve(int capacity, bool additive = true)
     {
-        if (VertexCount > 0)
-            throw new InvalidOperationException("Cannot resize dynamic mesh during rendering");
         if (attributes.Count == 0)
             throw new InvalidOperationException("Cannot resize dynamic mesh without attributes");
-        nextVertexCapacity ??= 0;
+        if (capacity < 0)
+            throw new ArgumentOutOfRangeException(nameof(capacity));
+        if (additive)
+            nextVertexCapacity ??= VertexCapacity;
+        else
+            nextVertexCapacity = 0;
         nextVertexCapacity += capacity;
-    }
-
-    private void ApplyNextCapacity()
-    {
-        if (VertexCount > 0)
-            throw new InvalidOperationException("Cannot resize dynamic mesh during rendering");
-        if (attributes.Count == 0)
-            throw new InvalidOperationException("Cannot resize dynamic mesh without attributes");
-        if (nextVertexCapacity is null || VertexCapacity >= nextVertexCapacity.Value)
-            return;
-        VertexCapacity = nextVertexCapacity.Value;
-        nextVertexCapacity = null;
-        vertexBuffer?.Dispose();
-        var totalSize = BytesPerVertex * (uint)VertexCapacity;
-        var bufferUsage = BufferUsage.VertexBuffer | (dynamic ? BufferUsage.Dynamic : default);
-        vertexBuffer = resourceFactory.CreateBuffer(new(totalSize, bufferUsage));
-        vertexBuffer.Name = $"InstanceBuffer {GetHashCode()}";
-        vertices = new byte[totalSize];
-
-        var curOffset = 0u;
-        for (int i = 0; i < attributes.Count; i++)
-        {
-            attributes[i] = attributes[i] with { Offset = curOffset };
-            curOffset += attributes[i].ElementSize * (uint)VertexCapacity;
-        }
     }
 
     public int Add(int count = 1)
     {
-        ApplyNextCapacity();
         if (count < 1)
             throw new ArgumentOutOfRangeException(nameof(count));
         if (count == 0)
             return VertexCount - 1;
         if (count > VertexFreeCount)
-            throw new ArgumentOutOfRangeException($"Dynamic mesh does not have enough capacity for further {count} instances (only {VertexFreeCount})");
+        {
+            if (nextVertexCapacity is not null)
+                nextVertexCapacity = Math.Max(nextVertexCapacity.Value, VertexCapacity);
+            Reserve(count - VertexFreeCount, additive: true);
+        }
+        EnsureArray();
         int result = VertexCount;
         VertexCount += count;
         return result;
     }
 
+    private void EnsureArray()
+    {
+        if (attributes.Count == 0)
+            throw new InvalidOperationException("Cannot resize dynamic mesh without attributes");
+
+        if ((vertices?.LongLength ?? 0) >= BytesPerVertex * VertexCapacity &&
+            VertexCapacity >= nextVertexCapacity)
+        {
+            nextVertexCapacity = null;
+            return;
+        }
+
+        if (nextVertexCapacity is not null)
+        {
+            var minNextVertexCapacity = (int)(VertexCapacity * minGrowFactor + 0.5f);
+            VertexCapacity = Math.Max(minNextVertexCapacity, nextVertexCapacity.Value);
+        }
+        nextVertexCapacity = null;
+
+        var needsCopyFromPrevious = vertices != null && VertexCount > 0;
+        var newVertices = new byte[VertexCapacity * BytesPerVertex];
+        var curOffset = 0u;
+        for (int i = 0; i < attributes.Count; i++)
+        {
+            if (needsCopyFromPrevious && attributes[i].Offset < vertices!.Length)
+                vertices.AsSpan(GetByteRange(attributes[i])).CopyTo(newVertices.AsSpan((int)curOffset));
+            attributes[i].Offset = curOffset;
+            curOffset += attributes[i].ElementSize * (uint)VertexCapacity;
+        }
+        vertices = newVertices;
+
+        if (needsCopyFromPrevious)
+        {
+            dirtyVertexBytes.Clear();
+            dirtyVertexBytes.MaxRangeValue = vertices.Length;
+            dirtyVertexBytes.Add(Range.All);
+        }
+        else
+            dirtyVertexBytes.MaxRangeValue = vertices.Length;
+    }
+
     public void Update(CommandList cl)
     {
-        if (vertexBuffer == null || vertices == null)
+        if (vertices == null)
             return;
-        if (VertexFreeCount == 0)
-            cl.UpdateBuffer(vertexBuffer, 0u, vertices);
-        else
+        if ((vertexBuffer?.SizeInBytes ?? 0) < vertices.Length)
         {
-            foreach (var attribute in attributes)
-                cl.UpdateBuffer(vertexBuffer, attribute.Offset, ref vertices[attribute.Offset], (uint)(VertexCount * attribute.ElementSize));
+            if (vertexBuffer != null)
+            {
+                dirtyVertexBytes.Clear();
+                dirtyVertexBytes.Add(Range.All);
+            }
+            vertexBuffer?.Dispose();
+            var bufferUsage = BufferUsage.VertexBuffer | (dynamic ? BufferUsage.Dynamic : default);
+            vertexBuffer = resourceFactory.CreateBuffer(new((uint)vertices.Length, bufferUsage));
+            vertexBuffer.Name = $"InstanceBuffer {GetHashCode()}";
+        }
+
+        dirtyVertexBytes.MergeNearbyRanges(MaxUploadDistance);
+        foreach (var range in dirtyVertexBytes)
+        {
+            var offset = range.GetOffset((int)vertexBuffer!.SizeInBytes);
+            cl.UpdateBuffer(vertexBuffer, (uint)offset, vertices.AsSpan(range));
         }
     }
 
     public bool TryGetBufferByMaterialName(string name, [NotNullWhen(true)] out DeviceBuffer? buffer, out uint offset)
     {
-        ApplyNextCapacity();
         var attribute = attributes.FirstOrDefault(a => a.Name == name);
-        buffer = this.vertexBuffer;
-        offset = attribute.Offset;
-        return attribute.Name != null;
+        buffer = vertexBuffer;
+        offset = attribute?.Offset ?? 0u;
+        return attribute?.Name != null && buffer != null;
     }
 
-    public unsafe int AddAttribute<T>(string name) where T : unmanaged =>
-        AddAttribute(name, (uint)sizeof(T));
-
-    public int AddAttribute(string name, uint elementSize)
+    public Attribute<T> AddAttribute<T>(string name) where T : unmanaged
     {
-        attributes.Add(new()
-        {
-            Name = name,
-            ElementSize = elementSize,
-            Offset = BytesPerVertex * (uint)VertexCapacity
-        });
-        ResetBuffer();
-        return attributes.Count - 1;
+        var attribute = new Attribute<T>(this, name);
+        attributes.Add(attribute);
+        return attribute;
     }
 
-    public unsafe Span<T> GetAttributeData<T>(int attributeI) where T : unmanaged
+    private Range GetByteRange(IAttribute attribute, int offset = 0, int length = -1)
     {
-        ApplyNextCapacity();
-        var a = attributes[attributeI];
-        if (sizeof(T) != a.ElementSize)
-            throw new ArgumentException("Given type does not match the registered one");
-        if (vertices == null || VertexCount == 0)
-            return Span<T>.Empty;
-        var start = (int)a.Offset;
-        var end = start + VertexCount * (int)a.ElementSize;
-        return MemoryMarshal.Cast<byte, T>(vertices.AsSpan(start..end));
+        if (length < 0)
+            length = VertexCount - offset;
+        if (offset < 0 || offset + length > VertexCount)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        var start = attribute.Offset + offset * attribute.ElementSize;
+        var end = attribute.Offset + (offset + length) * attribute.ElementSize;
+        return (int)start..(int)end;
     }
 }

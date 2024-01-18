@@ -46,7 +46,7 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
     private readonly ModelInstanceBuffer instanceBuffer;
 
     public float SpawnRate { get; set; }
-    public int CurrentParticles => instanceBuffer.Count;
+    public int CurrentParticles => instanceBuffer.VertexCount;
     public IEffectPart Part => data;
 
     private bool areInstancesDirty = true;
@@ -90,7 +90,7 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
 
         models = new Model[(int)(data.spawnRate * data.life.value)];
         instanceBuffer = new(diContainer);
-        instanceBuffer.Ensure(models.Length);
+        instanceBuffer.Reserve(models.Length);
         AddDisposable(instanceBuffer);
     }
 
@@ -144,6 +144,8 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
             }
             instanceBuffer.Update(cl);
         }
+        if (instanceBuffer.VertexCount == 0)
+            return;
 
         materials.First().ApplyAttributes(cl, clumpMesh, instanceBuffer);
         cl.SetIndexBuffer(clumpMesh.IndexBuffer, clumpMesh.IndexFormat);

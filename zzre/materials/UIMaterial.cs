@@ -32,15 +32,15 @@ public class UIMaterial : MlangMaterial
     }
 }
 
-public class UIInstanceBuffer : InstanceBuffer
+public class UIInstanceBuffer : DynamicMesh
 {
-    private readonly int
+    private readonly Attribute<Vector2>
         attrPos,
         attrSize,
         attrUVPos,
-        attrUVSize,
-        attrTexWeight,
-        attrColor;
+        attrUVSize;
+    private readonly Attribute<float> attrTexWeight;
+    private readonly Attribute<IColor> attrColor;
 
     public UIInstanceBuffer(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic)
     {
@@ -55,11 +55,11 @@ public class UIInstanceBuffer : InstanceBuffer
     public void Add(UIInstance i)
     {
         var index = Add(1);
-        GetAttributeData<Vector2>(attrPos)[index] = i.pos;
-        GetAttributeData<Vector2>(attrSize)[index] = i.size;
-        GetAttributeData<Vector2>(attrUVPos)[index] = i.uvPos;
-        GetAttributeData<Vector2>(attrUVSize)[index] = i.uvSize;
-        GetAttributeData<float>(attrTexWeight)[index] = i.textureWeight;
-        GetAttributeData<IColor>(attrColor)[index] = i.color;
+        attrPos[index] = i.pos;
+        attrSize[index] = i.size;
+        attrUVPos[index] = i.uvPos;
+        attrUVSize[index] = i.uvSize;
+        attrTexWeight[index] = i.textureWeight;
+        attrColor[index] = i.color;
     }
 }

@@ -60,7 +60,7 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
         foreach (var entity in SortedSet.GetEntities())
             totalRects += tiles[entity].Length;
         instanceBuffer.Clear();
-        instanceBuffer.Ensure(totalRects);
+        instanceBuffer.Reserve(totalRects, additive: false);
     }
 
     [Update]
@@ -102,6 +102,8 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
     protected override void PostUpdate(CommandList cl)
     {
         FinishBatch();
+        if (batches.Count == 0)
+            return;
 
         cl.PushDebugGroup("UIBatcher");
         // TODO: Update UI batches only if changed

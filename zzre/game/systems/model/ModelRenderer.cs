@@ -53,7 +53,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
     private void HandleSceneLoaded(in messages.SceneLoaded message)
     {
         clumpCounts.EnsureCapacity(MultiMap.Keys.Count());
-        instanceBuffer.Ensure(MultiMap.Keys.Sum(MultiMap.Count) + 1); // remove hack to fix NpcMarker crash
+        instanceBuffer.Reserve(MultiMap.Keys.Sum(MultiMap.Count) + 1, additive: false); // remove hack to fix NpcMarker crash
     }
 
     [WithPredicate]
@@ -86,7 +86,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
 
     protected override void PostUpdate(CommandList cl)
     {
-        if (instanceBuffer.Count == 0)
+        if (instanceBuffer.VertexCount == 0)
             return;
         cl.PushDebugGroup($"{nameof(ModelRenderer)} {responsibility}");
 

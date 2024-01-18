@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,9 +91,11 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
     {
         if (maxDistance < 1 || ranges.Count < 1)
             return;
-        var rangeArray = ranges.ToArray();
+        var rangeCount = ranges.Count;
+        var rangeArray = ArrayPool<Range>.Shared.Rent(rangeCount);
+        ranges.CopyTo(rangeArray, 0);
         int mergeStart = -1;
-        for (int i = 1; i < rangeArray.Length; i++)
+        for (int i = 1; i < rangeCount; i++)
         {
             int distance = rangeArray[i].Start.GetOffset(MaxRangeValue) - rangeArray[i].End.GetOffset(MaxRangeValue);
             if (distance > maxDistance)
@@ -103,7 +106,8 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
             if (mergeStart < 0)
                 mergeStart = i - 1;
         }
-        ApplyMergeUpTo(rangeArray.Length);
+        ApplyMergeUpTo(rangeCount);
+        ArrayPool<Range>.Shared.Return(rangeArray);
 
         void ApplyMergeUpTo(int endI)
         {
