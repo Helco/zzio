@@ -11,46 +11,46 @@ namespace zzre;
 
 public class DebugLineRenderer : BaseDisposable, IRenderable
 {
-    private readonly DynamicLineMeshBuffer<ColoredVertex> meshBuffer;
-    public DebugLinesMaterial Material { get; }
+    private readonly DebugDynamicMesh mesh;
+
+    public DebugMaterial Material { get; }
 
     public DebugLineRenderer(ITagContainer diContainer)
     {
-        Material = new DebugLinesMaterial(diContainer);
-        meshBuffer = new DynamicLineMeshBuffer<ColoredVertex>(diContainer.GetTag<ResourceFactory>());
+        Material = new(diContainer) { Topology = DebugMaterial.TopologyMode.Lines };
+        mesh = new(diContainer, dynamic: false);
     }
 
     protected override void DisposeManaged()
     {
         base.DisposeManaged();
         Material.Dispose();
-        meshBuffer.Dispose();
+        mesh.Dispose();
     }
 
-    public void Clear() => meshBuffer.Release(Range.All);
+    public void Clear() => mesh.Clear();
 
-    public Range Add(IColor color, Vector3 start, Vector3 end) => Add(color, new Line(start, end));
-    public Range Add(IColor color, params Line[] lines) => Add(color, lines as IEnumerable<Line>);
-    public Range Add(IColor color, IEnumerable<Line> lines)
+    public void Reserve(int lineCount, bool additive = true) =>
+        mesh.Reserve(lineCount * 2, additive);
+
+    public void Add(IColor color, Vector3 start, Vector3 end) => Add(color, new Line(start, end));
+    public void Add(IColor color, params Line[] lines) => Add(color, lines as IEnumerable<Line>);
+    public void Add(IColor color, IEnumerable<Line> lines)
     {
-        var range = meshBuffer.Reserve(lines.Count());
-        var vertices = meshBuffer[range];
         foreach (var (line, index) in lines.Indexed())
         {
-            vertices[index * 2 + 0].pos = line.Start;
-            vertices[index * 2 + 1].pos = line.End;
-            vertices[index * 2 + 0].color = vertices[index * 2 + 1].color = color;
+            mesh.Add(new(line.Start, color));
+            mesh.Add(new(line.End, color));
         }
-        return range;
     }
-
-    public void Remove(Range range) => meshBuffer.Release(range);
 
     public void Render(CommandList cl)
     {
-        if (meshBuffer.PrimitiveCount == 0)
+        if (mesh.VertexCount == 0)
             return;
+        mesh.Update(cl);
         (Material as IMaterial).Apply(cl);
-        meshBuffer.Render(cl);
+        Material.ApplyAttributes(cl, mesh);
+        cl.Draw((uint)mesh.VertexCount);
     }
 }

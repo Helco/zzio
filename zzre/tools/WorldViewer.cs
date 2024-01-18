@@ -527,6 +527,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         var ray = new Ray(camera.Location.GlobalPosition, -camera.Location.GlobalForward);
         var cast = worldCollider.Cast(ray);
         rayRenderer.Clear();
+        rayRenderer.Reserve(5, additive: false);
         rayRenderer.Add(IColor.Green, ray.Start, ray.Start + ray.Direction * (cast?.Distance ?? 100f));
         if (cast.HasValue)
         {

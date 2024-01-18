@@ -1,5 +1,6 @@
 option IsSkinned;
 option ColorMode = VertexColor, SkinWeights, SingleBoneWeight;
+option Topology = Triangles, Lines;
 
 attributes float3 inPos;
 attributes if (ColorMode == VertexColor) byte4_norm inColor;
@@ -26,6 +27,11 @@ pipeline
 	DepthWrite Off;
 	output r8_g8_b8_a8_unorm outColor;
 	output d24_unorm_s8_uint;
+}
+
+pipeline if (Topology == Lines)
+{
+	topology LineList;
 }
 
 vec4 GetDebugColorOf(uint index)

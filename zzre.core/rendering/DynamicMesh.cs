@@ -57,9 +57,9 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
     private readonly float minGrowFactor;
     private readonly List<IAttribute> attributes = new();
     private readonly RangeCollection dirtyVertexBytes = new();
-    private DeviceBuffer? vertexBuffer;//, indexBuffer;
-    //private Range dirtyIndices;
-    //private ushort[] indexPattern = Array.Empty<ushort>();
+    private DeviceBuffer? vertexBuffer, indexBuffer;
+    private int uploadedPrimitiveCount;
+    private ushort[] indexPattern = Array.Empty<ushort>();
     private int verticesPerPrimitive;
     private byte[]? vertices;
     private int? nextVertexCapacity;
@@ -70,17 +70,17 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
     public int VertexFreeCount => VertexCapacity - VertexCount;
     public int PrimitiveCount => verticesPerPrimitive < 1 ? 0 : VertexCount / verticesPerPrimitive;
 
-    /*public IReadOnlyList<ushort> IndexPattern
+    public IReadOnlyList<ushort> IndexPattern
     {
         get => indexPattern;
         set
         {
             indexPattern = value.ToArray();
-            dirtyIndices = Range.All;
+            uploadedPrimitiveCount = 0;
             verticesPerPrimitive = indexPattern.Max() + 1;
         }
     }
-    public IndexFormat IndexFormat => IndexFormat.UInt16;*/
+    public IndexFormat IndexFormat => IndexFormat.UInt16;
 
     public DynamicMesh(ITagContainer diContainer, bool dynamic = true, float minGrowFactor = 1.5f)
     {
@@ -96,7 +96,7 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
     {
         base.DisposeManaged();
         vertexBuffer?.Dispose();
-        //indexBuffer?.Dispose();
+        indexBuffer?.Dispose();
         vertices = null;
         attributes.Clear();
     }
@@ -177,6 +177,12 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
 
     public void Update(CommandList cl)
     {
+        UpdateVertexBuffer(cl);
+        UpdateIndexBuffer(cl);
+    }
+
+    private void UpdateVertexBuffer(CommandList cl)
+    {
         if (vertices == null)
             return;
         if ((vertexBuffer?.SizeInBytes ?? 0) < vertices.Length)
@@ -197,6 +203,34 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
         {
             var offset = range.GetOffset((int)vertexBuffer!.SizeInBytes);
             cl.UpdateBuffer(vertexBuffer, (uint)offset, vertices.AsSpan(range));
+        }
+        dirtyVertexBytes.Clear();
+    }
+
+    private void UpdateIndexBuffer(CommandList cl)
+    {
+        if (IndexPattern.Count == 0)
+            return;
+        var expectedIndexBufferSize = PrimitiveCount * IndexPattern.Count * sizeof(ushort);
+        var indexBufferTooSmall = (indexBuffer?.SizeInBytes ?? 0) < expectedIndexBufferSize;
+
+        if (indexBufferTooSmall)
+        {
+            uploadedPrimitiveCount = 0;
+            indexBuffer?.Dispose();
+            indexBuffer = resourceFactory.CreateBuffer(new((uint)expectedIndexBufferSize, BufferUsage.IndexBuffer));
+            indexBuffer.Name = $"InstanceBuffer Indices {GetHashCode()}";
+        }
+
+        if (uploadedPrimitiveCount < PrimitiveCount)
+        {
+            var indices = new ushort[IndexPattern.Count * (PrimitiveCount - uploadedPrimitiveCount)];
+            for (int i = uploadedPrimitiveCount; i < PrimitiveCount; i++)
+            {
+                for (int j = 0; j < IndexPattern.Count; j++)
+                    indices[i * PrimitiveCount + j] = (ushort)(i * verticesPerPrimitive + IndexPattern[j]);
+            }
+            cl.UpdateBuffer(indexBuffer, (uint)(uploadedPrimitiveCount * PrimitiveCount * sizeof(ushort)), indices);
         }
     }
 
