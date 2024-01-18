@@ -7,7 +7,7 @@ using zzio;
 
 namespace zzre.rendering;
 
-public class Mesh : BaseDisposable, IVertexAttributeContainer
+public class StaticMesh : BaseDisposable, IVertexAttributeContainer
 {
     public readonly record struct SubMesh(int IndexOffset, int IndexCount, int Material, int Section = 0) : IComparable<SubMesh>
     {
@@ -43,7 +43,7 @@ public class Mesh : BaseDisposable, IVertexAttributeContainer
         throw new InvalidOperationException("Index buffer was not yet set on mesh");
     public string Name { get; }
 
-    public Mesh(ITagContainer diContainer, string name)
+    public StaticMesh(ITagContainer diContainer, string name)
     {
         graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         resourceFactory = graphicsDevice.ResourceFactory;
@@ -164,6 +164,37 @@ public class Mesh : BaseDisposable, IVertexAttributeContainer
     {
         var buffer = SetIndexCount(indices.Length, IndexFormat.UInt32);
         graphicsDevice.UpdateBuffer(buffer, 0u, indices);
+    }
+
+    public void SetIndicesFromPattern(IReadOnlyList<ushort> pattern)
+    {
+        if (VertexCount <= 0)
+            throw new InvalidOperationException("Cannot generate indices from pattern without vertices");
+        var verticesPerPrimitive = pattern.Max() + 1;
+        var primitiveCount = VertexCount / verticesPerPrimitive;
+        var buffer = SetIndexCount(primitiveCount * pattern.Count, IndexFormat.UInt16);
+        var indices = GeneratePatternIndices(pattern, 0, primitiveCount, verticesPerPrimitive);
+        graphicsDevice.UpdateBuffer(buffer, 0u, indices);
+    }
+
+    internal static ushort[] GeneratePatternIndices(IReadOnlyList<ushort> pattern,
+        int primitiveStart,
+        int primitiveCount,
+        int verticesPerPrimitive)
+    {
+        if (pattern.Count == 0)
+            throw new ArgumentOutOfRangeException(nameof(pattern));
+        if (primitiveStart < 0 || primitiveStart > primitiveCount)
+            throw new ArgumentOutOfRangeException(nameof(primitiveStart));
+        if (primitiveStart == primitiveCount)
+            return Array.Empty<ushort>();
+        var indices = new ushort[pattern.Count * (primitiveCount - primitiveStart)];
+        for (int i = primitiveStart; i < primitiveCount; i++)
+        {
+            for (int j = 0; j < pattern.Count; j++)
+                indices[i * pattern.Count + j] = (ushort)(i * verticesPerPrimitive + pattern[j]);
+        }
+        return indices;
     }
 
     public void AddSubMesh(SubMesh subMesh)

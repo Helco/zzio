@@ -1,9 +1,31 @@
 ﻿using System.Numerics;
+using System.Runtime.InteropServices;
 using Veldrid;
 using zzio;
 using zzre.rendering;
 
 namespace zzre.materials;
+
+public struct ColoredVertex
+{
+    public Vector3 pos;
+    public IColor color;
+
+    public ColoredVertex(Vector3 pos, IColor color)
+    {
+        this.pos = pos;
+        this.color = color;
+    }
+
+    public static uint Stride = sizeof(float) * 3 + sizeof(uint);
+}
+
+public struct SkinVertex
+{
+    public Vector4 weights;
+    public byte bone0, bone1, bone2, bone3;
+}
+
 
 public class DebugMaterial : MlangMaterial, IStandardTransformMaterial
 {

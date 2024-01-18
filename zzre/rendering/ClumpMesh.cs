@@ -10,7 +10,7 @@ using zzre.materials;
 
 namespace zzre.rendering;
 
-public class ClumpMesh : Mesh
+public class ClumpMesh : StaticMesh
 {
     public RWGeometry Geometry { get; }
     public RWSkinPLG? Skin { get; }

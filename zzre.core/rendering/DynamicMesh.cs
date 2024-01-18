@@ -224,12 +224,7 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
 
         if (uploadedPrimitiveCount < PrimitiveCount)
         {
-            var indices = new ushort[IndexPattern.Count * (PrimitiveCount - uploadedPrimitiveCount)];
-            for (int i = uploadedPrimitiveCount; i < PrimitiveCount; i++)
-            {
-                for (int j = 0; j < IndexPattern.Count; j++)
-                    indices[i * PrimitiveCount + j] = (ushort)(i * verticesPerPrimitive + IndexPattern[j]);
-            }
+            var indices = StaticMesh.GeneratePatternIndices(indexPattern, uploadedPrimitiveCount, PrimitiveCount, verticesPerPrimitive);
             cl.UpdateBuffer(indexBuffer, (uint)(uploadedPrimitiveCount * PrimitiveCount * sizeof(ushort)), indices);
         }
     }

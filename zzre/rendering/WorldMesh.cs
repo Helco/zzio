@@ -12,7 +12,7 @@ using zzre.materials;
 
 namespace zzre.rendering;
 
-public class WorldMesh : Mesh
+public class WorldMesh : StaticMesh
 {
     public abstract class BaseSection
     {
