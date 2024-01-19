@@ -405,7 +405,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         var planarCenter = bounds.Center * (Vector3.One - normal);
         var otherSizes = bounds.Size * (Vector3.One - normal);
         var size = Math.Max(Math.Max(otherSizes.X, otherSizes.Y), otherSizes.Z) * 0.5f;
-        planeRenderer.Planes = new[]
+        var planes = new[]
         {
                 new DebugPlane()
                 {
@@ -424,7 +424,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         };
         if (centerValue.HasValue)
         {
-            planeRenderer.Planes = planeRenderer.Planes.Append(
+            planes = planes.Append(
                 new DebugPlane()
                 {
                     center = planarCenter + normal * centerValue.Value,
@@ -433,6 +433,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
                     color = IColor.Green.WithA(DebugPlaneAlpha)
                 }).ToArray();
         }
+        planeRenderer.Planes = planes;
     }
 
     private void HandleViewFrustumCulling()

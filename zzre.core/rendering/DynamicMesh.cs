@@ -80,7 +80,10 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
             verticesPerPrimitive = indexPattern.Max() + 1;
         }
     }
+    public int IndexCount => PrimitiveCount * IndexPattern.Count;
     public IndexFormat IndexFormat => IndexFormat.UInt16;
+    public DeviceBuffer IndexBuffer => indexBuffer ??
+        throw new InvalidOperationException("Index buffer was not yet generated");
 
     public DynamicMesh(ITagContainer diContainer, bool dynamic = true, float minGrowFactor = 1.5f)
     {

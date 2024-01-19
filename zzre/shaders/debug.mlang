@@ -1,6 +1,7 @@
 option IsSkinned;
 option ColorMode = VertexColor, SkinWeights, SingleBoneWeight;
 option Topology = Triangles, Lines;
+option BothSided;
 
 attributes float3 inPos;
 attributes if (ColorMode == VertexColor) byte4_norm inColor;
@@ -32,6 +33,11 @@ pipeline
 pipeline if (Topology == Lines)
 {
 	topology LineList;
+}
+
+pipeline if (BothSided)
+{
+	cull none;
 }
 
 vec4 GetDebugColorOf(uint index)
