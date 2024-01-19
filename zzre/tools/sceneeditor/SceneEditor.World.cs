@@ -12,7 +12,7 @@ public partial class SceneEditor
         private readonly ITagContainer diContainer;
         private readonly SceneEditor editor;
         private readonly WorldRenderer renderer;
-        private WorldBuffers? buffers;
+        private WorldMesh? mesh;
         private bool isVisible = true;
 
         public WorldComponent(ITagContainer diContainer)
@@ -30,21 +30,21 @@ public partial class SceneEditor
         protected override void DisposeManaged()
         {
             base.DisposeManaged();
-            buffers?.Dispose();
+            mesh?.Dispose();
             renderer?.Dispose();
         }
 
         private void HandleLoadScene()
         {
-            buffers?.Dispose();
-            buffers = null;
+            mesh?.Dispose();
+            mesh = null;
             if (editor.scene == null)
                 return;
 
             var fullPath = new zzio.FilePath("resources").Combine(editor.scene.misc.worldPath, editor.scene.misc.worldFile + ".bsp");
-            buffers = new WorldBuffers(diContainer, fullPath);
-            renderer.WorldBuffers = buffers;
-            editor.camera.Location.LocalPosition = -buffers.Origin;
+            mesh = new WorldMesh(diContainer, fullPath);
+            renderer.WorldMesh = mesh;
+            editor.camera.Location.LocalPosition = -mesh.Origin;
         }
 
         private void HandleRender(CommandList cl)

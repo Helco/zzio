@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using DefaultEcs.System;
-
+using zzre.rendering;
 using DoorState = zzre.game.components.behaviour.CityDoor.DoorState;
 
 namespace zzre.game.systems;
@@ -39,8 +39,8 @@ public partial class BehaviourCityDoor : AEntitySetSystem<float>
     private void HandleComponentAdded(in DefaultEcs.Entity entity, in components.behaviour.CityDoor door)
     {
         var location = entity.Get<Location>();
-        var clumpBuffers = entity.Get<ClumpBuffers>();
-        var endYPosition = MathF.Sign(door.Speed) * clumpBuffers.Bounds.Size.Y * MoveHeightFactor;
+        var clumpMesh = entity.Get<ClumpMesh>();
+        var endYPosition = MathF.Sign(door.Speed) * clumpMesh.BoundingBox.Size.Y * MoveHeightFactor;
         entity.Set(door with
         {
             StartPosition = location.LocalPosition,

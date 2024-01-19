@@ -1,5 +1,6 @@
 ﻿using System;
 using zzre.game.components;
+using zzre.rendering;
 using zzio;
 using zzio.db;
 using zzio.scn;
@@ -38,7 +39,7 @@ partial class ECSExplorer
 
         AddEntityNamerByComponent<ManagedResource<string, ActorExDescription>>(Def + 1,
             e => $"Actor {e.Get<ManagedResource<string, ActorExDescription>>().Info} {e}");
-        AddEntityNamerByComponent<ClumpBuffers>(Def, e => $"Model {e.Get<ClumpBuffers>().Name} {e}");
+        AddEntityNamerByComponent<ClumpMesh>(Def, e => $"Model {e.Get<ClumpMesh>().Name} {e}");
 
         AddEntityNamerByComponent(Low, (in Trigger t) => $"Trigger {t.type} {t.idx}");
     }
@@ -54,7 +55,7 @@ partial class ECSExplorer
         AddEntityGrouperByComponent<Butterfly>(1000, Animals);
         AddEntityGrouperByComponent<CirclingBird>(1000, Animals);
         AddEntityGrouperByComponent<AnimalWaypointAI>(1000, Animals);
-        AddEntityGrouperByComponent<ClumpBuffers>(0, Models);
+        AddEntityGrouperByComponent<ClumpMesh>(0, Models);
         AddEntityGrouperByComponent<Trigger>(-1, Triggers);
     }
 }

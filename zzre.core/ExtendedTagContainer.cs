@@ -39,8 +39,8 @@ public class ExtendedTagContainer : BaseDisposable, ITagContainer
     public bool HasTag<TTag>() where TTag : class =>
         extension.HasTag<TTag>() || parent.HasTag<TTag>();
 
-    public bool RemoveTag<TTag>() where TTag : class =>
-        extension.RemoveTag<TTag>();
+    public bool RemoveTag<TTag>(bool dispose = true) where TTag : class =>
+        extension.RemoveTag<TTag>(dispose);
 }
 
 public static class TagContainerExtensions

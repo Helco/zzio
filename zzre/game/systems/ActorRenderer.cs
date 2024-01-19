@@ -32,7 +32,7 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         camera = diContainer.GetTag<Camera>();
         textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
         addSubscription = World.SubscribeEntityComponentAdded<components.ActorPart>(HandleAddedComponent);
-        removeSubscription = World.SubscribeEntityComponentRemoved<ModelSkinnedMaterial[]>(HandleRemovedComponent);
+        removeSubscription = World.SubscribeEntityComponentRemoved<ModelMaterial[]>(HandleRemovedComponent);
     }
 
     public override void Dispose()
@@ -51,18 +51,19 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     [Update]
     private void Update(CommandList cl,
         in components.Parent parent,
-        in ClumpBuffers clumpBuffers,
-        in ModelSkinnedMaterial[] materials)
+        in ClumpMesh clumpMesh,
+        in ModelMaterial[] materials)
     {
         var actorExResource = parent.Entity.Get<DefaultEcs.Resource.ManagedResource<string, ActorExDescription>>();
         cl.PushDebugGroup(actorExResource.Info);
-        foreach (var (subMesh, material) in clumpBuffers.SubMeshes.Zip(materials))
+        materials.First().ApplyAttributes(cl, clumpMesh);
+        cl.SetIndexBuffer(clumpMesh.IndexBuffer, clumpMesh.IndexFormat);
+        foreach (var subMesh in clumpMesh.SubMeshes)
         {
+            var material = materials[subMesh.Material];
             if (material.Pose.Skeleton?.Animation != null)
                 material.Pose.MarkPoseDirty();
             (material as IMaterial).Apply(cl);
-            clumpBuffers.SetBuffers(cl);
-            clumpBuffers.SetSkinBuffer(cl);
             cl.DrawIndexed(
                 indexStart: (uint)subMesh.IndexOffset,
                 indexCount: (uint)subMesh.IndexCount,
@@ -81,16 +82,18 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
 
     private void HandleAddedComponent(in DefaultEcs.Entity entity, in components.ActorPart value)
     {
-        var rwMaterials = entity.Get<ClumpBuffers>().SubMeshes.Select(sm => sm.Material);
+        var rwMaterials = entity.Get<ClumpMesh>().Materials;
         var skeleton = entity.Get<Skeleton>();
         var syncedLocation = entity.Get<components.SyncedLocation>();
         var zzreMaterials = rwMaterials.Select(rwMaterial =>
         {
-            var material = new ModelSkinnedMaterial(diContainer);
-            (material.MainTexture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(BaseTexturePaths, rwMaterial);
-            material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
-            material.Uniforms.Ref.vertexColorFactor = 0.0f;
-            material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
+            var material = new ModelMaterial(diContainer) { IsSkinned = true };
+            (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(BaseTexturePaths, rwMaterial);
+            material.Colors.Ref = ModelColors.Default with
+            {
+                vertexColorFactor = 0f,
+                tint = rwMaterial.color.ToFColor()
+            };
             material.Pose.Skeleton = skeleton;
             material.LinkTransformsTo(camera);
             material.World.BufferRange = syncedLocation.BufferRange;
@@ -99,11 +102,11 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         entity.Set(zzreMaterials);
     }
 
-    private void HandleRemovedComponent(in DefaultEcs.Entity entity, in ModelSkinnedMaterial[] materials)
+    private void HandleRemovedComponent(in DefaultEcs.Entity entity, in ModelMaterial[] materials)
     {
         foreach (var material in materials)
         {
-            material.MainTexture.Texture?.Dispose();
+            material.Texture.Texture?.Dispose();
             material.Sampler.Sampler.Dispose();
             material.Dispose();
         }

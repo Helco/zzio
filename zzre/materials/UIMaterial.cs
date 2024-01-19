@@ -6,57 +6,97 @@ using zzre.rendering;
 
 namespace zzre.materials;
 
-[StructLayout(LayoutKind.Sequential)]
 public struct UIInstance
 {
     public Vector2 pos, size;
     public Vector2 uvPos, uvSize;
     public float textureWeight;
     public IColor color;
-
-    public const uint Stride = sizeof(float) * (4 * 2 + 1) + sizeof(int) + sizeof(byte) * 4;
 }
 
-public class UIMaterial : BaseMaterial
+public struct DebugIcon
 {
+    public Vector3 pos;
+    public Vector2 size;
+    public Vector2 uvPos, uvSize;
+    public float textureWeight;
+    public IColor color;
+}
+
+public class UIMaterial : MlangMaterial, IStandardTransformMaterial
+{
+    public bool IsInstanced { set => SetOption(nameof(IsInstanced), value); }
+    public bool IsFont { set => SetOption(nameof(IsFont), value); }
+    public bool Is3D { set => SetOption(nameof(Is3D), value); }
+
     public TextureBinding Texture { get; }
     public SamplerBinding Sampler { get; }
     public UniformBinding<Vector2> ScreenSize { get; }
+    public UniformBinding<Matrix4x4> Projection { get; }
+    public UniformBinding<Matrix4x4> View { get; }
+    public UniformBinding<Matrix4x4> World { get; }
 
-    public UIMaterial(ITagContainer diContainer, bool isFont) : base(diContainer.GetTag<GraphicsDevice>(), GetPipeline(diContainer, isFont))
+    public UIMaterial(ITagContainer diContainer) : base(diContainer, "ui")
     {
-        Configure()
-            .Add(Texture = new TextureBinding(this))
-            .Add(Sampler = new SamplerBinding(this))
-            .Add(ScreenSize = new UniformBinding<Vector2>(this))
-            .NextBindingSet();
+        IsInstanced = true;
+        AddBinding("mainTexture", Texture = new(this));
+        AddBinding("mainSampler", Sampler = new(this));
+        AddBinding("screenSize", ScreenSize = new(this));
+        AddBinding("projection", Projection = new(this));
+        AddBinding("view", View = new(this));
+        AddBinding("world", World = new(this));
     }
+}
 
-    private static IBuiltPipeline GetPipeline(ITagContainer diContainer, bool isFont)
+public class UIInstanceBufferBase<TPosition> : DynamicMesh where TPosition : unmanaged
+{
+    protected readonly Attribute<TPosition> attrPos;
+    protected readonly Attribute<Vector2>
+        attrSize,
+        attrUVPos,
+        attrUVSize;
+    protected readonly Attribute<float> attrTexWeight;
+    protected readonly Attribute<IColor> attrColor;
+
+    public UIInstanceBufferBase(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic)
     {
-        System.Func<IPipelineBuilder, IBuiltPipeline> bla = builder => builder
-        .WithDepthTarget(PixelFormat.D24_UNorm_S8_UInt)
-        .WithColorTarget(PixelFormat.R8_G8_B8_A8_UNorm)
-        .WithShaderSet(isFont ? "UIFont" : "UI")
-        .WithInstanceStepRate(1)
-        .With("Pos", VertexElementFormat.Float2, VertexElementSemantic.Position)
-        .With("Size", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate)
-        .With("UVPos", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate)
-        .With("UVSize", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate)
-        .With("TextureWeight", VertexElementFormat.Float1, VertexElementSemantic.TextureCoordinate)
-        .With("Color", VertexElementFormat.Byte4_Norm, VertexElementSemantic.Color)
-        .With("Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)
-        .With("Sampler", ResourceKind.Sampler, ShaderStages.Fragment)
-        .With("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex)
-        .With(BlendStateDescription.SingleAlphaBlend)
-        .With(PrimitiveTopology.TriangleStrip)
-        .WithDepthWrite(false)
-        .WithDepthTest(false)
-        .With(FaceCullMode.None)
-        .Build();
+        attrPos = AddAttribute<TPosition>("inPos");
+        attrSize = AddAttribute<Vector2>("inSize");
+        attrUVPos = AddAttribute<Vector2>("inUVPos");
+        attrUVSize = AddAttribute<Vector2>("inUVSize");
+        attrColor = AddAttribute<IColor>("inColor");
+        attrTexWeight = AddAttribute<float>("inTexWeight");
+    }
+}
 
-        return isFont
-            ? PipelineFor<int>.Get(diContainer, bla)
-            : PipelineFor<UIMaterial>.Get(diContainer, bla);
+public class UIInstanceBuffer : UIInstanceBufferBase<Vector2>
+{
+    public UIInstanceBuffer(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic) { }
+
+    public void Add(UIInstance i)
+    {
+        var index = Add(1);
+        attrPos[index] = i.pos;
+        attrSize[index] = i.size;
+        attrUVPos[index] = i.uvPos;
+        attrUVSize[index] = i.uvSize;
+        attrTexWeight[index] = i.textureWeight;
+        attrColor[index] = i.color;
+    }
+}
+
+public class DebugIconInstanceBuffer : UIInstanceBufferBase<Vector3>
+{
+    public DebugIconInstanceBuffer(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic) { }
+
+    public void Add(DebugIcon i)
+    {
+        var index = Add(1);
+        attrPos[index] = i.pos;
+        attrSize[index] = i.size;
+        attrUVPos[index] = i.uvPos;
+        attrUVSize[index] = i.uvSize;
+        attrTexWeight[index] = i.textureWeight;
+        attrColor[index] = i.color;
     }
 }

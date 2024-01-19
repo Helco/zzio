@@ -32,8 +32,8 @@ public class FallbackTagContainer : BaseDisposable, ITagContainer
     public bool HasTag<TTag>() where TTag : class =>
         main.HasTag<TTag>() || fallback.HasTag<TTag>();
 
-    public bool RemoveTag<TTag>() where TTag : class =>
-        main.RemoveTag<TTag>();
+    public bool RemoveTag<TTag>(bool dispose = true) where TTag : class =>
+        main.RemoveTag<TTag>(dispose);
 
     public ITagContainer AddTag<TTag>(TTag tag) where TTag : class =>
         main.AddTag(tag);

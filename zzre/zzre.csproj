@@ -10,6 +10,8 @@
 
     <ShaderVariantDef>shaders/ShaderVariants.json</ShaderVariantDef>
     <EmbedGeneratedShaders>true</EmbedGeneratedShaders>
+    <MlangOutputGeneratedSourceOnError>true</MlangOutputGeneratedSourceOnError>
+    <MlangEmbedShaderSource>true</MlangEmbedShaderSource>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -32,6 +34,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <MlangShader Include="shaders\model.mlang" />
+    <MlangShader Include="shaders\debug.mlang" />
+    <MlangShader Include="shaders\ui.mlang" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DefaultEcs.Analyzer" Version="0.17.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -40,6 +48,7 @@
     <PackageReference Include="Veldrid.ImageSharp" Version="$(VeldridVersion)" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="$(VeldridVersion)" />
     <!--<PackageReference Include="Veldrid.SPIRV.BuildTools" Version="1.0.14" /> Disabled as invalid SPIRV modules are generated? Tracked in #203 -->
+    <PackageReference Include="Mlang.MSBuild" Version="$(MlangVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">

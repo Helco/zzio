@@ -1,17 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
 using ImGuiNET;
 using zzio;
+using zzio.rwbs;
 using zzio.vfs;
 using zzre.rendering;
 using zzre.materials;
 using zzre.debug;
 using zzre.imgui;
-using System.Collections.Generic;
-using zzio.rwbs;
 
 namespace zzre.tools;
 
@@ -28,16 +28,16 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private readonly FramebufferArea fbArea;
     private readonly IAssetLoader<Texture> textureLoader;
     private readonly IResourcePool resourcePool;
-    private readonly DebugGridRenderer gridRenderer;
-    private readonly DebugTriangleLineRenderer triangleRenderer;
+    private readonly DebugLineRenderer gridRenderer;
+    private readonly DebugLineRenderer triangleRenderer;
     private readonly DebugPlaneRenderer planeRenderer;
     private readonly OpenFileModal openFileModal;
     private readonly ModelMaterialEdit modelMaterialEdit;
     private readonly LocationBuffer locationBuffer;
 
-    private ClumpBuffers? geometryBuffers;
+    private ClumpMesh? mesh;
     private GeometryTreeCollider? collider;
-    private ModelStandardMaterial[] materials = Array.Empty<ModelStandardMaterial>();
+    private ModelMaterial[] materials = Array.Empty<ModelMaterial>();
     private DebugSkeletonRenderer? skeletonRenderer;
     private int highlightedSplitI = -1;
 
@@ -83,12 +83,13 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         controls = new OrbitControlsTag(Window, camera.Location, localDiContainer);
         AddDisposable(controls);
 
-        gridRenderer = new DebugGridRenderer(diContainer);
+        gridRenderer = new DebugLineRenderer(diContainer);
         gridRenderer.Material.LinkTransformsTo(camera);
         gridRenderer.Material.World.Ref = Matrix4x4.Identity;
+        gridRenderer.AddGrid();
         AddDisposable(gridRenderer);
 
-        triangleRenderer = new DebugTriangleLineRenderer(diContainer);
+        triangleRenderer = new DebugLineRenderer(diContainer);
         triangleRenderer.Material.LinkTransformsTo(camera);
         triangleRenderer.Material.World.Ref = Matrix4x4.Identity;
         AddDisposable(triangleRenderer);
@@ -127,34 +128,38 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             new FilePath("resources/textures/worlds"),
         };
 
-        geometryBuffers = new ClumpBuffers(diContainer, resource);
-        AddDisposable(geometryBuffers);
+        // TODO: ModelViewer should dispose meshes and materials after loading a different model
 
-        materials = new ModelStandardMaterial[geometryBuffers.SubMeshes.Count];
-        foreach (var (rwMaterial, index) in geometryBuffers.SubMeshes.Select(s => s.Material).Indexed())
+        mesh = new ClumpMesh(diContainer, resource);
+        AddDisposable(mesh);
+
+        materials = new ModelMaterial[mesh.Materials.Count];
+        foreach (var (rwMaterial, index) in mesh.Materials.Indexed())
         {
-            var material = materials[index] = new ModelStandardMaterial(diContainer);
-            (material.MainTexture.Texture, material.Sampler.Sampler) = TryLoadTexture(texturePaths, rwMaterial);
+            var material = materials[index] = new ModelMaterial(diContainer);
+            (material.Texture.Texture, material.Sampler.Sampler) = TryLoadTexture(texturePaths, rwMaterial);
             material.LinkTransformsTo(camera);
             material.World.Ref = Matrix4x4.Identity;
-            material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
-            material.Uniforms.Ref.vertexColorFactor = 0.0f; // they seem to be set to some gray for models?
-            material.Uniforms.Ref.tint = rwMaterial.color.ToFColor();
+            material.Colors.Ref = ModelColors.Default with
+            {
+                vertexColorFactor = 0f, // they seem to be set to some gray for models?
+                tint = rwMaterial.color.ToFColor()
+            };
             AddDisposable(material);
         }
         modelMaterialEdit.Materials = materials;
 
         skeletonRenderer = null;
-        if (geometryBuffers.Skin != null)
+        if (mesh.Skin != null)
         {
-            var skeleton = new Skeleton(geometryBuffers.Skin, resource.Name.Replace(".DFF", "", StringComparison.CurrentCultureIgnoreCase));
-            skeletonRenderer = new DebugSkeletonRenderer(diContainer.ExtendedWith(camera, locationBuffer), geometryBuffers, skeleton);
+            var skeleton = new Skeleton(mesh.Skin, resource.Name.Replace(".DFF", "", StringComparison.CurrentCultureIgnoreCase));
+            skeletonRenderer = new DebugSkeletonRenderer(diContainer.ExtendedWith(camera, locationBuffer), mesh, skeleton);
             AddDisposable(skeletonRenderer);
         }
 
-        collider = geometryBuffers.RWGeometry.FindChildById(zzio.rwbs.SectionId.CollisionPLG, true) == null
+        collider = mesh.Geometry.FindChildById(SectionId.CollisionPLG, true) == null
             ? null
-            : new GeometryTreeCollider(geometryBuffers.RWGeometry, location: null);
+            : new GeometryTreeCollider(mesh.Geometry, location: null);
 
         controls.ResetView();
         HighlightSplit(-1);
@@ -193,13 +198,14 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         locationBuffer.Update(cl);
         camera.Update(cl);
         gridRenderer.Render(cl);
-        if (geometryBuffers == null)
+        if (mesh == null)
             return;
 
-        geometryBuffers.SetBuffers(cl);
-        foreach (var (subMesh, index) in geometryBuffers.SubMeshes.Indexed())
+        foreach (var subMesh in mesh.SubMeshes)
         {
-            (materials[index] as IMaterial).Apply(cl);
+            (materials[subMesh.Material] as IMaterial).Apply(cl);
+            materials[subMesh.Material].ApplyAttributes(cl, mesh, requireAll: true);
+            cl.SetIndexBuffer(mesh.IndexBuffer, mesh.IndexFormat);
             cl.DrawIndexed(
                 indexStart: (uint)subMesh.IndexOffset,
                 indexCount: (uint)subMesh.IndexCount,
@@ -215,17 +221,17 @@ public class ModelViewer : ListDisposable, IDocumentEditor
 
     private void HandleStatisticsContent()
     {
-        ImGui.Text($"Vertices: {geometryBuffers?.VertexCount}");
-        ImGui.Text($"Triangles: {geometryBuffers?.TriangleCount}");
-        ImGui.Text($"Submeshes: {geometryBuffers?.SubMeshes.Count}");
-        ImGui.Text($"Bones: {skeletonRenderer?.Skeleton.Bones.Count}");
-        ImGui.Text($"Collision splits: {collider?.Collision.splits.Length}");
-        ImGui.Text("Collision test: " + (geometryBuffers?.IsSolid == true ? "yes" : "no"));
+        ImGui.Text($"Vertices: {mesh?.VertexCount}");
+        ImGui.Text($"Triangles: {mesh?.TriangleCount}");
+        ImGui.Text($"Submeshes: {mesh?.SubMeshes.Count}");
+        ImGui.Text($"Bones: {skeletonRenderer?.Skeleton.Bones.Count.ToString() ?? "none"}");
+        ImGui.Text($"Collision splits: {collider?.Collision.splits.Length.ToString() ?? "none"}");
+        ImGui.Text("Collision test: " + (mesh?.HasCollisionTest is true ? "yes" : "no"));
     }
 
     private void HandleMaterialsContent()
     {
-        if (geometryBuffers == null)
+        if (mesh == null)
             return;
         else if (modelMaterialEdit.Content())
             fbArea.IsDirty = true;
@@ -248,9 +254,9 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private void HighlightSplit(int splitI)
     {
         highlightedSplitI = splitI;
-        triangleRenderer.Triangles = Array.Empty<Triangle>();
+        triangleRenderer.Clear();
         planeRenderer.Planes = Array.Empty<DebugPlane>();
-        if (collider == null || geometryBuffers == null || highlightedSplitI < 0)
+        if (collider == null || mesh == null || highlightedSplitI < 0)
             return;
 
         var split = collider.Collision.splits[splitI];
@@ -261,14 +267,14 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             zzio.rwbs.CollisionSectorType.Z => Vector3.UnitZ,
             _ => throw new NotSupportedException($"Unsupported collision sector type: {split.left.type}")
         };
-        SetPlanes(geometryBuffers.Bounds, normal, split.left.value, split.right.value, centerValue: null);
+        SetPlanes(mesh.BoundingBox, normal, split.left.value, split.right.value, centerValue: null);
 
-        triangleRenderer.Triangles = SplitTriangles(split).ToArray();
-        triangleRenderer.Colors = Enumerable
-            .Repeat(IColor.Red, SectorTriangles(split.left).Count())
+        triangleRenderer.AddTriangles(
+            triangles: SplitTriangles(split).ToArray(),
+            colors: Enumerable.Repeat(IColor.Red, SectorTriangles(split.left).Count())
             .Concat(Enumerable
                 .Repeat(IColor.Blue, SectorTriangles(split.right).Count()))
-            .ToArray();
+            .ToArray());
 
         fbArea.IsDirty = true;
 
@@ -289,7 +295,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         var planarCenter = bounds.Center * (Vector3.One - normal);
         var otherSizes = bounds.Size * (Vector3.One - normal);
         var size = Math.Max(Math.Max(otherSizes.X, otherSizes.Y), otherSizes.Z) * 0.5f;
-        planeRenderer.Planes = new[]
+        var planes = new[]
         {
                 new DebugPlane()
                 {
@@ -308,7 +314,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         };
         if (centerValue.HasValue)
         {
-            planeRenderer.Planes = planeRenderer.Planes.Append(
+            planes = planes.Append(
                 new DebugPlane()
                 {
                     center = planarCenter + normal * centerValue.Value,
@@ -317,11 +323,12 @@ public class ModelViewer : ListDisposable, IDocumentEditor
                     color = IColor.Green.WithA(DebugPlaneAlpha)
                 }).ToArray();
         }
+        planeRenderer.Planes = planes;
     }
 
     private void HandleCollisionContent()
     {
-        if (geometryBuffers == null)
+        if (mesh == null)
         {
             ImGui.Text("No model loaded");
             return;

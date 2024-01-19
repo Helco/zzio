@@ -54,22 +54,11 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     {
         if (!IsEnabled)
             return;
-
-        var scene = message.Scene;
-        int modelCount = scene.models.Length + scene.foModels.Length;
-        if (!diContainer.TryGetTag<ModelInstanceBuffer>(out var prevBuffer) || prevBuffer.TotalCount < modelCount)
-        {
-            prevBuffer?.Dispose();
-            diContainer.RemoveTag<ModelInstanceBuffer>();
-            diContainer.AddTag(new ModelInstanceBuffer(diContainer, scene.models.Length + scene.foModels.Length, dynamic: true));
-        }
-        else
-            prevBuffer.Clear();
         entitiesById.Clear();
 
         float plantWiggleDelay = 0f;
-        var behaviors = scene.behaviors.ToDictionary(b => b.modelId, b => b.type);
-        foreach (var model in scene.models)
+        var behaviors = message.Scene.behaviors.ToDictionary(b => b.modelId, b => b.type);
+        foreach (var model in message.Scene.models)
         {
             var entity = ecsWorld.CreateEntity();
             entitiesById.Add(model.idx, entity);
@@ -80,8 +69,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 LocalRotation = model.rot.ToZZRotation()
             });
 
-            entity.Set(ManagedResource<ClumpBuffers>.Create(
-                new resources.ClumpInfo(resources.ClumpType.Model, model.filename + ".dff")));
+            entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model(model.filename + ".dff")));
 
             LoadMaterialsFor(entity, FOModelRenderType.Solid, model.color, model.surfaceProps);
             SetCollider(entity);
@@ -94,7 +82,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
             plantWiggleDelay++;
         }
 
-        foreach (var foModel in scene.foModels)
+        foreach (var foModel in message.Scene.foModels)
         {
             // TODO: Add FOModel filter by render detail
 
@@ -106,8 +94,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 LocalRotation = foModel.rot.ToZZRotation()
             });
 
-            entity.Set(ManagedResource<ClumpBuffers>.Create(
-                new resources.ClumpInfo(resources.ClumpType.Model, foModel.filename + ".dff")));
+            entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model(foModel.filename + ".dff")));
 
             LoadMaterialsFor(entity, foModel.renderType, foModel.color, foModel.surfaceProps);
             SetCollider(entity);
@@ -133,8 +120,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 LocalPosition = msg.Position,
                 LocalRotation = Vector3.UnitX.ToZZRotation()
             });
-            entity.Set(ManagedResource<ClumpBuffers>.Create(
-                new resources.ClumpInfo(resources.ClumpType.Model, $"itm{msg.ItemId:D3}.dff")));
+            entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model($"itm{msg.ItemId:D3}.dff")));
             LoadMaterialsFor(entity, FOModelRenderType.Solid, IColor.White, new(1f, 1f, 1f));
             SetCollider(entity);
             SetBehaviour(entity, BehaviourType.Collectable_Physics, uint.MaxValue);
@@ -144,7 +130,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     // Used by e.g. NPCTrigger
     internal static void LoadMaterialsFor(DefaultEcs.Entity entity, FOModelRenderType renderType, IColor color, SurfaceProperties surfaceProps)
     {
-        var clumpBuffers = entity.Get<ClumpBuffers>();
+        var clumpMesh = entity.Get<ClumpMesh>();
         entity.Set(components.Visibility.Visible);
         entity.Set(RenderOrderFromRenderType(renderType));
         entity.Set(renderType);
@@ -153,27 +139,26 @@ public class ModelLoader : BaseDisposable, ISystem<float>
             Color = color,
             SurfaceProperties = surfaceProps
         });
-        entity.Set(new List<materials.BaseModelInstancedMaterial>(clumpBuffers.SubMeshes.Count));
+        entity.Set(new List<materials.ModelMaterial>(clumpMesh.SubMeshes.Count));
 
-        var rwMaterials = clumpBuffers.SubMeshes.Select(sm => sm.Material);
-        entity.Set(ManagedResource<materials.BaseModelInstancedMaterial>.Create(rwMaterials
+        entity.Set(ManagedResource<materials.ModelMaterial>.Create(clumpMesh.Materials
             .Select(rwMaterial => new resources.ClumpMaterialInfo(renderType, rwMaterial))
             .ToArray()));
     }
 
     private static void SetCollider(DefaultEcs.Entity entity)
     {
-        var clumpBuffers = entity.Get<ClumpBuffers>();
-        var halfSize = clumpBuffers.Bounds.HalfSize;
+        var clumpMesh = entity.Get<ClumpMesh>();
+        var halfSize = clumpMesh.BoundingBox.HalfSize;
         var radius = Math.Max(halfSize.Y, halfSize.Z); // yes, only y and z are relevant
         entity.Set(new Sphere(0f, 0f, 0f, radius));
     }
 
     private static void SetIntersectionable(DefaultEcs.Entity entity)
     {
-        var clumpBuffers = entity.Get<ClumpBuffers>();
+        var clumpMesh = entity.Get<ClumpMesh>();
         var location = entity.Get<Location>();
-        entity.Set(GeometryCollider.CreateFor(clumpBuffers.RWGeometry, location));
+        entity.Set(GeometryCollider.CreateFor(clumpMesh.Geometry, location));
     }
 
     private static void SetPlantWiggle(DefaultEcs.Entity entity, int wiggleAmplitude, float delay)

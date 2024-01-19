@@ -24,12 +24,12 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
     private readonly GraphicsDevice device;
     private readonly FramebufferArea fbArea;
     private readonly IResourcePool resourcePool;
-    private readonly DebugGridRenderer gridRenderer;
+    private readonly DebugLineRenderer gridRenderer;
     private readonly OpenFileModal openFileModal;
     private readonly LocationBuffer locationBuffer;
     private readonly GameTime gameTime;
     private readonly CachedAssetLoader<Texture> textureLoader;
-    private readonly CachedAssetLoader<ClumpBuffers> clumpLoader;
+    private readonly CachedAssetLoader<ClumpMesh> clumpLoader;
 
     private EffectCombinerRenderer? effectRenderer;
     private EffectCombiner Effect => effectRenderer?.Effect ?? emptyEffect;
@@ -75,15 +75,16 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
         this.diContainer.AddTag<IQuadMeshBuffer<SparkVertex>>(new DynamicQuadMeshBuffer<SparkVertex>(device.ResourceFactory, 256));
         controls = new OrbitControlsTag(Window, camera.Location, this.diContainer);
         AddDisposable(controls);
-        gridRenderer = new DebugGridRenderer(this.diContainer);
+        gridRenderer = new DebugLineRenderer(this.diContainer);
         gridRenderer.Material.LinkTransformsTo(camera);
         gridRenderer.Material.World.Ref = Matrix4x4.Identity;
+        gridRenderer.AddGrid();
         AddDisposable(gridRenderer);
 
         AddDisposable(textureLoader = new CachedAssetLoader<Texture>(new TextureAssetLoader(diContainer)));
-        AddDisposable(clumpLoader = new CachedClumpAssetLoader(diContainer));
+        AddDisposable(clumpLoader = new CachedClumpMeshLoader(diContainer));
         this.diContainer.AddTag<IAssetLoader<Texture>>(textureLoader);
-        this.diContainer.AddTag<IAssetLoader<ClumpBuffers>>(clumpLoader);
+        this.diContainer.AddTag<IAssetLoader<ClumpMesh>>(clumpLoader);
 
         editor.AddInfoSection("Info", HandleInfoContent);
         editor.AddInfoSection("Playback", HandlePlaybackContent);

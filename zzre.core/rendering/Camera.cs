@@ -94,6 +94,7 @@ public class Camera : BaseDisposable
     private void UpdateProjection()
     {
         projection.Ref = Matrix4x4.CreatePerspectiveFieldOfView(vfov, aspect, nearPlane, farPlane);
+        invProjection.Reset();
     }
 
     private Matrix4x4 CreateInvProjection()

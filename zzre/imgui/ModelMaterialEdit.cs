@@ -18,13 +18,13 @@ public class ModelMaterialEdit : BaseDisposable
 
     private readonly ResourceFactory resourceFactory;
     private readonly ImGuiRenderer imGuiRenderer;
-    private IReadOnlyList<ModelStandardMaterial> materials = Array.Empty<ModelStandardMaterial>();
+    private IReadOnlyList<ModelMaterial> materials = Array.Empty<ModelMaterial>();
     private IntPtr[] textureBindings = Array.Empty<IntPtr>();
     private OnceAction onceAction;
 
     public bool OpenEntriesByDefault { get; set; } = true;
 
-    public IReadOnlyList<ModelStandardMaterial> Materials
+    public IReadOnlyList<ModelMaterial> Materials
     {
         get => materials;
         set
@@ -33,12 +33,12 @@ public class ModelMaterialEdit : BaseDisposable
             onceAction.Next += () => // delay removing ImGui bindings so they are still alive for last the last render
             {
                 foreach (var oldMaterial in materials)
-                    imGuiRenderer.RemoveImGuiBinding(oldMaterial.MainTexture.Texture);
+                    imGuiRenderer.RemoveImGuiBinding(oldMaterial.Texture.Texture);
             };
 
             materials = value;
             textureBindings = materials.Select(
-                material => imGuiRenderer.GetOrCreateImGuiBinding(resourceFactory, material.MainTexture.Texture)
+                material => imGuiRenderer.GetOrCreateImGuiBinding(resourceFactory, material.Texture.Texture)
             ).ToArray();
         }
     }
@@ -54,7 +54,7 @@ public class ModelMaterialEdit : BaseDisposable
     protected override void DisposeManaged()
     {
         base.DisposeManaged();
-        Materials = Array.Empty<ModelStandardMaterial>();
+        Materials = Array.Empty<ModelMaterial>();
     }
 
     public bool Content()
@@ -64,7 +64,7 @@ public class ModelMaterialEdit : BaseDisposable
 
         bool didChange = false;
         Text("Globals");
-        var mat = materials.First().Uniforms.Value;
+        var mat = materials.First().Colors.Value;
         didChange |= SliderFloat("Vertex Color Factor", ref mat.vertexColorFactor, 0.0f, 1.0f);
         didChange |= SliderFloat("Global Tint Factor", ref mat.tintFactor, 0.0f, 1.0f);
         didChange |= SliderFloat("Alpha Reference", ref mat.alphaReference, 0.0f, 1.0f, "%.3f");
@@ -72,9 +72,9 @@ public class ModelMaterialEdit : BaseDisposable
         {
             foreach (var material in materials)
             {
-                material.Uniforms.Ref.vertexColorFactor = mat.vertexColorFactor;
-                material.Uniforms.Ref.tintFactor = mat.tintFactor;
-                material.Uniforms.Ref.alphaReference = mat.alphaReference;
+                material.Colors.Ref.vertexColorFactor = mat.vertexColorFactor;
+                material.Colors.Ref.tintFactor = mat.tintFactor;
+                material.Colors.Ref.alphaReference = mat.alphaReference;
             }
         }
 
@@ -82,12 +82,12 @@ public class ModelMaterialEdit : BaseDisposable
         Text("Materials");
         foreach (var (material, index) in materials.Indexed())
         {
-            bool isVisible = materials[index].Uniforms.Value.alphaReference < 2f;
+            bool isVisible = materials[index].Colors.Value.alphaReference < 2f;
             PushID(index);
             if (SmallButton(isVisible ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash))
             {
                 isVisible = !isVisible;
-                materials[index].Uniforms.Ref.alphaReference = isVisible ? 0.03f : 2.0f;
+                materials[index].Colors.Ref.alphaReference = isVisible ? 0.03f : 2.0f;
                 didChange = true;
             }
             PopID();
@@ -95,9 +95,9 @@ public class ModelMaterialEdit : BaseDisposable
             SameLine();
             if (!TreeNodeEx($"Material #{index}", OpenEntriesByDefault ? ImGuiTreeNodeFlags.DefaultOpen : 0))
                 continue;
-            var color = material.Uniforms.Value.tint;
+            var color = material.Colors.Value.tint;
             ColorEdit4("Color", ref color, ImGuiColorEditFlags.NoPicker | ImGuiColorEditFlags.Float);
-            TexturePreview(materials[index].MainTexture.Texture, textureBindings[index]);
+            TexturePreview(materials[index].Texture.Texture, textureBindings[index]);
 
             TreePop();
         }

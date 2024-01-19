@@ -101,6 +101,6 @@ public class UI : BaseDisposable, ITagContainer
     public TTag GetTag<TTag>() where TTag : class => tagContainer.GetTag<TTag>();
     public IEnumerable<TTag> GetTags<TTag>() where TTag : class => tagContainer.GetTags<TTag>();
     public bool HasTag<TTag>() where TTag : class => tagContainer.HasTag<TTag>();
-    public bool RemoveTag<TTag>() where TTag : class => tagContainer.RemoveTag<TTag>();
+    public bool RemoveTag<TTag>(bool dispose = true) where TTag : class => tagContainer.RemoveTag<TTag>(dispose);
     public bool TryGetTag<TTag>(out TTag tag) where TTag : class => tagContainer.TryGetTag(out tag);
 }

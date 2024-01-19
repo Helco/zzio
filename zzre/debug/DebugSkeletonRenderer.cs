@@ -47,27 +47,26 @@ public class DebugSkeletonRenderer : BaseDisposable
 
     private readonly LocationBuffer locationBuffer;
     private readonly GraphicsDevice device;
-    private readonly DeviceBuffer vertexBuffer;
-    private readonly DeviceBuffer indexBuffer;
-    private readonly DeviceBuffer skinBuffer;
-    private readonly DeviceBuffer lineBuffer;
+    private readonly StaticMesh boneMesh;
+    private readonly StaticMesh.VertexAttribute boneColorAttribute;
+    private readonly DebugLineRenderer lineRenderer;
     private readonly IReadOnlyList<int> boneDepths;
     private readonly DeviceBufferRange worldBufferRange;
 
     private DebugSkeletonRenderMode renderMode = DebugSkeletonRenderMode.Invisible;
     private int highlightedBoneI = -1;
 
-    public DebugSkinnedMaterial BoneMaterial { get; }
-    public DebugSkinAllMaterial SkinMaterial { get; }
-    public DebugSkinSingleMaterial SkinHighlightedMaterial { get; }
-    public DebugLinesMaterial LinesMaterial { get; }
-    public ClumpBuffers Geometry { get; }
+    public DebugMaterial BoneMaterial { get; }
+    public DebugMaterial SkinMaterial { get; }
+    public DebugMaterial SkinHighlightedMaterial { get; }
+    public DebugMaterial LinesMaterial => lineRenderer.Material;
+    public StaticMesh Mesh { get; }
     public Skeleton Skeleton { get; }
-    public ref DebugSkeletonRenderMode RenderMode => ref renderMode;
+    public ref DebugSkeletonRenderMode RenderMode => ref renderMode; // reference for using the field with ImGui
 
-    public DebugSkeletonRenderer(ITagContainer diContainer, ClumpBuffers geometryBuffers, Skeleton skeleton)
+    public DebugSkeletonRenderer(ITagContainer diContainer, StaticMesh mesh, Skeleton skeleton)
     {
-        Geometry = geometryBuffers;
+        Mesh = mesh;
         Skeleton = skeleton;
         var camera = diContainer.GetTag<Camera>();
         locationBuffer = diContainer.GetTag<LocationBuffer>();
@@ -78,22 +77,20 @@ public class DebugSkeletonRenderer : BaseDisposable
             m.LinkTransformsTo(camera);
             m.World.BufferRange = worldBufferRange;
         }
-        BoneMaterial = new DebugSkinnedMaterial(diContainer);
+        BoneMaterial = new DebugMaterial(diContainer) { IsSkinned = true };
         LinkTransformsFor(BoneMaterial);
         BoneMaterial.Pose.Skeleton = skeleton;
-        SkinMaterial = new DebugSkinAllMaterial(diContainer);
+        SkinMaterial = new(diContainer) { Color = DebugMaterial.ColorMode.SkinWeights };
         LinkTransformsFor(SkinMaterial);
-        SkinMaterial.Alpha.Ref = 1.0f;
-        SkinHighlightedMaterial = new DebugSkinSingleMaterial(diContainer);
+        SkinHighlightedMaterial = new(diContainer) { Color = DebugMaterial.ColorMode.SingleBoneWeight };
         LinkTransformsFor(SkinHighlightedMaterial);
-        SkinHighlightedMaterial.BoneIndex.Ref = -1;
-        LinesMaterial = new DebugLinesMaterial(diContainer);
+        lineRenderer = new(diContainer);
         LinkTransformsFor(LinesMaterial);
         device = diContainer.GetTag<GraphicsDevice>();
 
-        var vertices = Enumerable.Empty<ColoredVertex>();
-        var skinVertices = Enumerable.Empty<SkinVertex>();
-        var indices = Enumerable.Empty<ushort>();
+        var vertices = Enumerable.Empty<Vector3>();
+        var colors = Enumerable.Empty<IColor>();
+        var skinIndices = Enumerable.Empty<IColor>(); // color as this is also 4 bytes
         foreach (var (bone, index) in skeleton.Bones.Indexed())
         {
             if (bone.Parent == null)
@@ -118,44 +115,22 @@ public class DebugSkeletonRenderer : BaseDisposable
                 baseCenter + tangent + bitangent,
                 baseCenter - tangent + bitangent,
                 to
-            }.Select(p => new ColoredVertex(p, Colors[index % Colors.Length])));
-            skinVertices = skinVertices.Concat(Enumerable.Repeat(new SkinVertex()
-            {
-                bone0 = unchecked((byte)Skeleton.Parents[index]),
-                weights = Vector4.UnitX
-            }, RhombusVertexCount));
-            indices = indices.Concat(RhombusIndices.Select(i => (ushort)(i + index * RhombusVertexCount)));
+            });
+            colors = colors.Concat(Enumerable.Repeat(Colors[index % Colors.Length], RhombusVertexCount));
+            var indices = new IColor(unchecked((byte)Skeleton.Parents[index]), 0, 0, 0);
+            skinIndices = skinIndices.Concat(Enumerable.Repeat(indices, RhombusVertexCount));
         }
+        boneMesh = new(diContainer, "Debug Skeleton Bones");
+        boneMesh.Add("Pos", "inPos", vertices.ToArray());
+        boneColorAttribute = boneMesh.Add("Color", "inColor", colors.ToArray());
+        boneMesh.Add("Bone Weights", "inWeights", Enumerable.Repeat(Vector4.UnitX, boneMesh.VertexCount).ToArray());
+        boneMesh.Add("Bone Indices", "inIndices", skinIndices.ToArray());
+        boneMesh.SetIndicesFromPattern(RhombusIndices);
 
-        var vertexArray = vertices.ToArray();
-        var skinVertexArray = skinVertices.ToArray();
-        var indexArray = indices.ToArray();
-        vertexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
-            (uint)vertexArray.Length * ColoredVertex.Stride, BufferUsage.VertexBuffer));
-        skinBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
-            (uint)skinVertexArray.Length * SkinVertex.Stride, BufferUsage.VertexBuffer));
-        indexBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
-            (uint)indexArray.Length * sizeof(ushort), BufferUsage.IndexBuffer));
-        vertexBuffer.Name = $"DebugSkeleton Vertices {GetHashCode()}";
-        skinBuffer.Name = $"DebugSkeleton Skin {GetHashCode()}";
-        indexBuffer.Name = $"DebugSkeleton Indices {GetHashCode()}";
-        device.UpdateBuffer(vertexBuffer, 0, vertexArray);
-        device.UpdateBuffer(skinBuffer, 0, skinVertexArray);
-        device.UpdateBuffer(indexBuffer, 0, indexArray);
-
-        var lineVertices = new ColoredVertex[]
-        {
-            new ColoredVertex(Vector3.Zero, Colors[0]),
-            new ColoredVertex(Vector3.UnitX * LineLength, Colors[0]),
-            new ColoredVertex(Vector3.Zero, Colors[1]),
-            new ColoredVertex(Vector3.UnitY * LineLength, Colors[1]),
-            new ColoredVertex(Vector3.Zero, Colors[2]),
-            new ColoredVertex(Vector3.UnitZ * LineLength, Colors[2])
-        };
-        lineBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription(
-            (uint)lineVertices.Length * ColoredVertex.Stride, BufferUsage.VertexBuffer));
-        lineBuffer.Name = $"DebugSkeleton LineVertices {GetHashCode()}";
-        device.UpdateBuffer(lineBuffer, 0, lineVertices);
+        lineRenderer.Reserve(3);
+        lineRenderer.Add(Colors[0], Vector3.Zero, Vector3.UnitX * LineLength);
+        lineRenderer.Add(Colors[1], Vector3.Zero, Vector3.UnitY * LineLength);
+        lineRenderer.Add(Colors[2], Vector3.Zero, Vector3.UnitZ * LineLength);
 
         var boneDepthsArr = new int[Skeleton.Bones.Count];
         for (int i = 0; i < Skeleton.Bones.Count; i++)
@@ -166,10 +141,8 @@ public class DebugSkeletonRenderer : BaseDisposable
     protected override void DisposeManaged()
     {
         base.DisposeManaged();
-        vertexBuffer.Dispose();
-        skinBuffer.Dispose();
-        indexBuffer.Dispose();
-        lineBuffer.Dispose();
+        boneMesh.Dispose();
+        lineRenderer.Dispose();
         BoneMaterial.Dispose();
         SkinMaterial.Dispose();
         SkinHighlightedMaterial.Dispose();
@@ -183,34 +156,36 @@ public class DebugSkeletonRenderer : BaseDisposable
             return;
 
         if (RenderMode == DebugSkeletonRenderMode.Skin)
-        {
-            (SkinMaterial as IMaterial).Apply(cl);
-            Geometry.SetBuffers(cl);
-            Geometry.SetSkinBuffer(cl);
-            cl.DrawIndexed((uint)Geometry.SubMeshes.Sum(sm => sm.IndexCount));
-        }
+            RenderMesh(cl, SkinMaterial);
         if (RenderMode == DebugSkeletonRenderMode.SingleSkinBone)
-        {
-            (SkinHighlightedMaterial as IMaterial).Apply(cl);
-            Geometry.SetBuffers(cl);
-            Geometry.SetSkinBuffer(cl);
-            cl.DrawIndexed((uint)Geometry.SubMeshes.Sum(sm => sm.IndexCount));
-        }
+            RenderMesh(cl, SkinHighlightedMaterial);
 
         // always draw bones when visible
         (BoneMaterial as IMaterial).Apply(cl);
-        cl.SetVertexBuffer(0, vertexBuffer);
-        cl.SetVertexBuffer(1, skinBuffer);
-        cl.SetIndexBuffer(indexBuffer, IndexFormat.UInt16);
-        cl.DrawIndexed(indexBuffer.SizeInBytes / sizeof(ushort));
+        BoneMaterial.ApplyAttributes(cl, boneMesh);
+        cl.SetIndexBuffer(boneMesh.IndexBuffer, boneMesh.IndexFormat);
+        cl.DrawIndexed((uint)boneMesh.IndexCount);
 
         if (highlightedBoneI >= 0)
         {
             LinesMaterial.World.Ref = Skeleton.Bones[highlightedBoneI].LocalToWorld;
-            (LinesMaterial as IMaterial).Apply(cl);
-            cl.SetVertexBuffer(0, lineBuffer);
-            cl.Draw(lineBuffer.SizeInBytes / ColoredVertex.Stride);
+            lineRenderer.Render(cl);
         }
+    }
+
+    private void RenderMesh(CommandList cl, MlangMaterial material)
+    {
+        (material as IMaterial).Apply(cl);
+        material.ApplyAttributes(cl, Mesh);
+        cl.SetIndexBuffer(Mesh.IndexBuffer, Mesh.IndexFormat);
+        cl.DrawIndexed(
+            indexCount: (uint)Mesh.SubMeshes.Sum(sm => sm.IndexCount),
+            instanceCount: 1,
+            indexStart: 0,
+            vertexOffset: 0,
+            instanceStart: (uint)(highlightedBoneI < 0
+                ? Skeleton.Bones.Count
+                : highlightedBoneI));
     }
 
     private void SetBoneAlpha(int boneI, byte alpha)
@@ -221,10 +196,8 @@ public class DebugSkeletonRenderer : BaseDisposable
         // this is probably a terrible but also very lazy way of doing this
         for (int vertexI = 0; vertexI < RhombusVertexCount; vertexI++)
         {
-            var offset =
-                (boneI * RhombusVertexCount + vertexI) * ColoredVertex.Stride +
-                3 * sizeof(float) + 3 * sizeof(byte);
-            device.UpdateBuffer(vertexBuffer, (uint)offset, alpha);
+            var offset = (boneI * RhombusVertexCount + vertexI) * 4 + 3;
+            device.UpdateBuffer(boneColorAttribute.DeviceBuffer, (uint)offset, alpha);
         }
     }
 
@@ -233,7 +206,6 @@ public class DebugSkeletonRenderer : BaseDisposable
         if (highlightedBoneI >= 0)
             SetBoneAlpha(highlightedBoneI, 120);
         SetBoneAlpha(highlightedBoneI = boneIdx, 255);
-        SkinHighlightedMaterial.BoneIndex.Ref = highlightedBoneI;
     }
 
     public bool Content()

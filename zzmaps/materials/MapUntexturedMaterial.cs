@@ -12,7 +12,7 @@ public class MapUntexturedMaterial : BaseMaterial, IMapMaterial
     public UniformBinding<Matrix4x4> Projection { get; }
     public UniformBinding<Matrix4x4> View { get; }
     public UniformBinding<Matrix4x4> World { get; }
-    public UniformBinding<ModelStandardMaterialUniforms> Uniforms { get; }
+    public UniformBinding<ModelColors> Uniforms { get; }
     public UniformBinding<uint> PixelCounter { get; }
 
     public MapUntexturedMaterial(ITagContainer diContainer) : base(diContainer.GetTag<GraphicsDevice>(), GetPipeline(diContainer))
@@ -21,7 +21,7 @@ public class MapUntexturedMaterial : BaseMaterial, IMapMaterial
             .Add(Projection = new UniformBinding<Matrix4x4>(this))
             .Add(View = new UniformBinding<Matrix4x4>(this))
             .Add(World = new UniformBinding<Matrix4x4>(this))
-            .Add(Uniforms = new UniformBinding<ModelStandardMaterialUniforms>(this))
+            .Add(Uniforms = new UniformBinding<ModelColors>(this))
             .Add(PixelCounter = new UniformBinding<uint>(this))
             .NextBindingSet();
     }

@@ -56,8 +56,8 @@ public partial class SceneEditor
         private readonly SceneEditor editor;
         private readonly ITagContainer diContainer;
         private readonly Camera camera;
-        private readonly DebugBoxLineRenderer boxBoundsRenderer;
-        private readonly DebugDiamondSphereLineRenderer sphereBoundsRenderer;
+        private readonly DebugLineRenderer boxBoundsRenderer;
+        private readonly DebugLineRenderer sphereBoundsRenderer;
 
         private IRenderable? activeBoundsRenderer = null;
         private ISelectable[] lastPotentials = Array.Empty<ISelectable>();
@@ -72,14 +72,12 @@ public partial class SceneEditor
             var fbArea = diContainer.GetTag<FramebufferArea>();
             var mouseEventArea = diContainer.GetTag<MouseEventArea>();
 
-            boxBoundsRenderer = new DebugBoxLineRenderer(diContainer);
+            boxBoundsRenderer = new DebugLineRenderer(diContainer);
             boxBoundsRenderer.Material.LinkTransformsTo(camera);
             boxBoundsRenderer.Material.World.Value = Matrix4x4.Identity;
-            boxBoundsRenderer.Color = IColor.Red;
-            sphereBoundsRenderer = new DebugDiamondSphereLineRenderer(diContainer);
+            sphereBoundsRenderer = new DebugLineRenderer(diContainer);
             sphereBoundsRenderer.Material.LinkTransformsTo(camera);
             sphereBoundsRenderer.Material.World.Value = Matrix4x4.Identity;
-            sphereBoundsRenderer.Color = IColor.Red;
 
             editor.Window.OnContent += HandleGizmos;
             editor.OnLoadScene += () => editor.Selected = null;
@@ -116,14 +114,16 @@ public partial class SceneEditor
         private void HandleNewSelection(ISelectable? newSelected)
         {
             var bounds = newSelected?.RenderedBounds;
-            if (bounds is OrientedBox)
+            if (bounds is OrientedBox boxBounds)
             {
-                boxBoundsRenderer.Bounds = (OrientedBox)bounds;
+                boxBoundsRenderer.Clear();
+                boxBoundsRenderer.AddBox(boxBounds, IColor.Red);
                 activeBoundsRenderer = boxBoundsRenderer;
             }
-            else if (bounds is Sphere)
+            else if (bounds is Sphere sphereBounds)
             {
-                sphereBoundsRenderer.Bounds = (Sphere)bounds;
+                sphereBoundsRenderer.Clear();
+                sphereBoundsRenderer.AddDiamondSphere(sphereBounds, IColor.Red);
                 activeBoundsRenderer = sphereBoundsRenderer;
             }
             else

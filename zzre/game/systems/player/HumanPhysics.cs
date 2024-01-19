@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
+using zzre.rendering;
 using AnimationState = zzre.game.components.HumanPhysics.AnimationState;
 
 namespace zzre.game.systems;
@@ -49,7 +50,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
             .GetEntities()
             .With<IIntersectionable>()
             .With<components.Collidable>()
-            .With<ClumpBuffers>() // a model not a creature
+            .With<ClumpMesh>() // a model not a creature
             .AsSet();
         collidableCreatures = World
             .GetEntities()

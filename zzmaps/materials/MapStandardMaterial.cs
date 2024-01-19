@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Veldrid;
+using zzio;
 using zzre;
 using zzre.materials;
 using zzre.rendering;
 
 namespace zzmaps;
-
-
 public interface IMapMaterial : IStandardTransformMaterial, IDisposable
 {
-    public UniformBinding<ModelStandardMaterialUniforms> Uniforms { get; }
+    public UniformBinding<ModelColors> Uniforms { get; }
     public UniformBinding<uint> PixelCounter { get; }
 }
 
@@ -21,7 +21,7 @@ public class MapStandardMaterial : BaseMaterial, IMapMaterial
     public UniformBinding<Matrix4x4> Projection { get; }
     public UniformBinding<Matrix4x4> View { get; }
     public UniformBinding<Matrix4x4> World { get; }
-    public UniformBinding<ModelStandardMaterialUniforms> Uniforms { get; }
+    public UniformBinding<ModelColors> Uniforms { get; }
     public UniformBinding<uint> PixelCounter { get; }
 
     public MapStandardMaterial(ITagContainer diContainer) : base(diContainer.GetTag<GraphicsDevice>(), GetPipeline(diContainer))
@@ -32,7 +32,7 @@ public class MapStandardMaterial : BaseMaterial, IMapMaterial
             .Add(Projection = new UniformBinding<Matrix4x4>(this))
             .Add(View = new UniformBinding<Matrix4x4>(this))
             .Add(World = new UniformBinding<Matrix4x4>(this))
-            .Add(Uniforms = new UniformBinding<ModelStandardMaterialUniforms>(this))
+            .Add(Uniforms = new UniformBinding<ModelColors>(this))
             .Add(PixelCounter = new UniformBinding<uint>(this))
             .NextBindingSet();
     }

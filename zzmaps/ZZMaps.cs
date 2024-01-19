@@ -130,7 +130,7 @@ internal static class ZZMaps
 
         // dispose graphics device last, otherwise Vulkan will crash
         scheduler.Dispose();
-        diContainer.RemoveTag<GraphicsDevice>();
+        diContainer.RemoveTag<GraphicsDevice>(dispose: false);
         diContainer.Dispose();
         graphicsDevice.Dispose();
     }
@@ -157,7 +157,7 @@ internal static class ZZMaps
         diContainer.AddTag(graphicsDevice.ResourceFactory);
 
         var pipelineCollection = new PipelineCollection(graphicsDevice);
-        pipelineCollection.AddShaderResourceAssemblyOf<zzre.materials.ModelStandardMaterial>();
+        pipelineCollection.AddShaderResourceAssemblyOf<PipelineCollection>();
         pipelineCollection.AddShaderResourceAssemblyOf<MapStandardMaterial>();
         diContainer.AddTag(pipelineCollection);
 
@@ -171,7 +171,7 @@ internal static class ZZMaps
         diContainer.AddTag<IAssetLoader<Texture>>(new RefCachedAssetLoader<Texture>(
             new TextureAssetLoader(diContainer)));
         diContainer.AddTag<IAssetLoader<ClumpBuffers>>(new RefCachedAssetLoader<ClumpBuffers>(
-            new ClumpAssetLoader(diContainer)));
+            new ClumpBuffersAssetLoader(diContainer)));
 
         var mappedDb = new MappedDB();
         for (int i = 1; i <= 6; i++)

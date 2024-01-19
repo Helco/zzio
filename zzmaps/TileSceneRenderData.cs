@@ -49,7 +49,7 @@ internal class TileSceneRenderData : ListDisposable
             material.Projection.BufferRange = camera.ProjectionRange;
             material.View.BufferRange = camera.ViewRange;
             material.World.Value = Matrix4x4.Identity;
-            material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
+            material.Uniforms.Ref = ModelColors.Default;
             material.PixelCounter.Buffer = counterBuffer;
             AddDisposable(material);
             return material as IMaterial;
@@ -78,7 +78,7 @@ internal class TileSceneRenderData : ListDisposable
             material.Projection.BufferRange = camera.ProjectionRange;
             material.View.BufferRange = camera.ViewRange;
             material.World.BufferRange = objectLocationRange;
-            material.Uniforms.Ref = ModelStandardMaterialUniforms.Default;
+            material.Uniforms.Ref = ModelColors.Default;
             material.Uniforms.Ref.vertexColorFactor = 0.0f;
             material.Uniforms.Ref.tint = rwMaterial.color.ToFColor() * obj.Tint;
             material.PixelCounter.Buffer = counterBuffer;
