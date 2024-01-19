@@ -14,14 +14,27 @@ public struct UIInstance
     public IColor color;
 }
 
-public class UIMaterial : MlangMaterial
+public struct DebugIcon
+{
+    public Vector3 pos;
+    public Vector2 size;
+    public Vector2 uvPos, uvSize;
+    public float textureWeight;
+    public IColor color;
+}
+
+public class UIMaterial : MlangMaterial, IStandardTransformMaterial
 {
     public bool IsInstanced { set => SetOption(nameof(IsInstanced), value); }
     public bool IsFont { set => SetOption(nameof(IsFont), value); }
+    public bool Is3D { set => SetOption(nameof(Is3D), value); }
 
     public TextureBinding Texture { get; }
     public SamplerBinding Sampler { get; }
     public UniformBinding<Vector2> ScreenSize { get; }
+    public UniformBinding<Matrix4x4> Projection { get; }
+    public UniformBinding<Matrix4x4> View { get; }
+    public UniformBinding<Matrix4x4> World { get; }
 
     public UIMaterial(ITagContainer diContainer) : base(diContainer, "ui")
     {
@@ -29,30 +42,54 @@ public class UIMaterial : MlangMaterial
         AddBinding("mainTexture", Texture = new(this));
         AddBinding("mainSampler", Sampler = new(this));
         AddBinding("screenSize", ScreenSize = new(this));
+        AddBinding("projection", Projection = new(this));
+        AddBinding("view", View = new(this));
+        AddBinding("world", World = new(this));
     }
 }
 
-public class UIInstanceBuffer : DynamicMesh
+public class UIInstanceBufferBase<TPosition> : DynamicMesh where TPosition : unmanaged
 {
-    private readonly Attribute<Vector2>
-        attrPos,
+    protected readonly Attribute<TPosition> attrPos;
+    protected readonly Attribute<Vector2>
         attrSize,
         attrUVPos,
         attrUVSize;
-    private readonly Attribute<float> attrTexWeight;
-    private readonly Attribute<IColor> attrColor;
+    protected readonly Attribute<float> attrTexWeight;
+    protected readonly Attribute<IColor> attrColor;
 
-    public UIInstanceBuffer(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic)
+    public UIInstanceBufferBase(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic)
     {
-        attrPos = AddAttribute<Vector2>("inPos");
+        attrPos = AddAttribute<TPosition>("inPos");
         attrSize = AddAttribute<Vector2>("inSize");
         attrUVPos = AddAttribute<Vector2>("inUVPos");
         attrUVSize = AddAttribute<Vector2>("inUVSize");
         attrColor = AddAttribute<IColor>("inColor");
         attrTexWeight = AddAttribute<float>("inTexWeight");
     }
+}
+
+public class UIInstanceBuffer : UIInstanceBufferBase<Vector2>
+{
+    public UIInstanceBuffer(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic) { }
 
     public void Add(UIInstance i)
+    {
+        var index = Add(1);
+        attrPos[index] = i.pos;
+        attrSize[index] = i.size;
+        attrUVPos[index] = i.uvPos;
+        attrUVSize[index] = i.uvSize;
+        attrTexWeight[index] = i.textureWeight;
+        attrColor[index] = i.color;
+    }
+}
+
+public class DebugIconInstanceBuffer : UIInstanceBufferBase<Vector3>
+{
+    public DebugIconInstanceBuffer(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic) { }
+
+    public void Add(DebugIcon i)
     {
         var index = Add(1);
         attrPos[index] = i.pos;

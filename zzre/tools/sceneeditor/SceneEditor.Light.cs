@@ -122,7 +122,7 @@ partial class SceneEditor
 
         private void HandleResize()
         {
-            iconRenderer.Material.Uniforms.Ref.screenSize = new Vector2(
+            iconRenderer.Material.ScreenSize.Ref = new Vector2(
                 editor.fbArea.Framebuffer.Width, editor.fbArea.Framebuffer.Height);
         }
 
@@ -152,10 +152,11 @@ partial class SceneEditor
             return new DebugIcon
             {
                 pos = light.Location.GlobalPosition,
-                uvCenter = glyph.Center,
+                uvPos = glyph.Min,
                 uvSize = glyph.Size,
-                size = iconSize,
-                color = editor.Selected == light ? SelectedColor : NormalColor
+                size = Vector2.One * iconSize,
+                color = editor.Selected == light ? SelectedColor : NormalColor,
+                textureWeight = 1f
             };
         }
 

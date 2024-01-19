@@ -9,63 +9,44 @@ namespace zzre.debug;
 
 public class DebugIconRenderer : BaseDisposable
 {
-    private readonly ITagContainer diContainer;
-    private DeviceBuffer? iconBuffer = null;
-    private DebugIcon[] icons = Array.Empty<DebugIcon>();
+    private readonly DebugIconInstanceBuffer instanceBuffer;
 
-    private int Capacity => (int)((iconBuffer?.SizeInBytes ?? 0) / DebugIcon.Stride);
-    private uint Count => (uint)(icons?.Count() ?? 0);
-
-    public DebugIconMaterial Material { get; }
-
-    public bool IsDirty { get; set; } = true;
+    public UIMaterial Material { get; }
 
     public DebugIcon[] Icons
     {
-        get => icons;
         set
         {
-            icons = value;
-            IsDirty = true;
-
-            if (Capacity >= Count)
-                return;
-            iconBuffer?.Dispose();
-            iconBuffer = diContainer.GetTag<GraphicsDevice>().ResourceFactory.CreateBuffer(new BufferDescription(
-                Count * DebugIcon.Stride, BufferUsage.VertexBuffer));
-            iconBuffer.Name = $"DebugIcon Instances {GetHashCode()}";
+            instanceBuffer.Clear();
+            instanceBuffer.Reserve(value.Length, additive: false);
+            Array.ForEach(value, instanceBuffer.Add);
         }
     }
 
-    public DebugIconRenderer(ITagContainer diContainer, int capacity = 1024)
+    public DebugIconRenderer(ITagContainer diContainer)
     {
-        this.diContainer = diContainer;
-        Material = new DebugIconMaterial(diContainer);
+        instanceBuffer = new(diContainer, dynamic: false);
+        Material = new UIMaterial(diContainer) { IsInstanced = true, Is3D = true };
     }
 
     protected override void DisposeManaged()
     {
         base.DisposeManaged();
         Material.Dispose();
-        iconBuffer?.Dispose();
+        instanceBuffer.Dispose();
     }
 
-    public void Render(CommandList cl, int iconStart = 0, int iconCount = -1)
+    public void Render(CommandList cl)
     {
-        if (iconBuffer == null)
+        if (instanceBuffer.VertexCount == 0)
             return;
-        if (IsDirty)
-        {
-            IsDirty = false;
-            cl.UpdateBuffer(iconBuffer, 0, icons);
-        }
-        if (iconCount < 0)
-            iconCount = (int)Count;
-        if (iconStart < 0 || iconStart + iconCount > Count)
-            throw new ArgumentOutOfRangeException();
 
+        instanceBuffer.Update(cl);
         (Material as IMaterial).Apply(cl);
-        cl.SetVertexBuffer(0, iconBuffer);
-        cl.Draw(4, (uint)iconCount, 0, (uint)iconStart);
+        Material.ApplyAttributes(cl, instanceBuffer);
+        cl.Draw(
+            vertexCount: 4,
+            instanceCount: (uint)instanceBuffer.VertexCount,
+            0, 0);
     }
 }

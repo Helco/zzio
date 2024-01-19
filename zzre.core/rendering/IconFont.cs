@@ -28,18 +28,18 @@ public class IconFont : BaseDisposable
 
         IntPtr texPixels;
         int texWidth, texHeight;
-        atlas.GetTexDataAsAlpha8(out texPixels, out texWidth, out texHeight);
+        atlas.GetTexDataAsRGBA32(out texPixels, out texWidth, out texHeight);
         Texture = device.ResourceFactory.CreateTexture(new TextureDescription(
             width: (uint)texWidth,
             height: (uint)texHeight,
-            format: PixelFormat.R8_UNorm,
+            format: PixelFormat.R8_G8_B8_A8_UNorm,
             usage: TextureUsage.Sampled,
             type: TextureType.Texture2D,
             depth: 1,
             mipLevels: 1,
             arrayLayers: 1));
         Texture.Name = "IconFontTexture";
-        device.UpdateTexture(Texture, texPixels, (uint)(texWidth * texHeight * 1), 0, 0, 0, (uint)texWidth, (uint)texHeight, 1, 0, 0);
+        device.UpdateTexture(Texture, texPixels, (uint)(texWidth * texHeight * 4), 0, 0, 0, (uint)texWidth, (uint)texHeight, 1, 0, 0);
 
         var glyphsPtr = (ImFontGlyph*)font->Glyphs.Data.ToPointer();
         var glyphs = new Dictionary<string, Rect>();
