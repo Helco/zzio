@@ -15,22 +15,19 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
 
     private readonly List<Batch> batches = new();
     private readonly UI ui;
-    private readonly GraphicsDevice graphicsDevice;
-    private readonly ResourceFactory resourceFactory;
+    private readonly UIInstanceBuffer instanceBuffer;
     private readonly UIMaterial untexturedMaterial;
     private readonly Texture emptyTexture;
 
     private UIMaterial? lastMaterial;
-    private UIInstanceBuffer instanceBuffer;
     private uint nextInstanceCount;
 
     public Batcher(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         ui = diContainer.GetTag<UI>();
-        graphicsDevice = diContainer.GetTag<GraphicsDevice>();
-        resourceFactory = diContainer.GetTag<ResourceFactory>();
         instanceBuffer = new(diContainer);
 
+        var resourceFactory = diContainer.GetTag<ResourceFactory>();
         emptyTexture = resourceFactory.CreateTexture(
             new TextureDescription(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
         untexturedMaterial = new UIMaterial(diContainer);
