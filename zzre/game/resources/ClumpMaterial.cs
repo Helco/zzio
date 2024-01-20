@@ -40,7 +40,8 @@ public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, ModelMaterial>
         else if (info.RenderType is FOModelRenderType.LateAdditive or FOModelRenderType.EarlyAdditive or FOModelRenderType.Additive)
         {
             material.Blend = ModelMaterial.BlendMode.AdditiveAlpha;
-            // TODO: Fix LateAdditive writing to depth buffer
+            if (info.RenderType is FOModelRenderType.LateAdditive)
+                material.DepthWrite = false;
         }
         else
             throw new NotSupportedException($"Unsupported render type for material {info.RenderType}");

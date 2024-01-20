@@ -2,6 +2,7 @@ option IsInstanced;
 option IsSkinned;
 option HasTexShift;
 option HasEnvMap;
+option DepthWrite; // enabled by default in the C# material
 option Blend = IsOpaque, IsAlphaBlend, IsAdditiveBlend, IsAdditiveAlphaBlend;
 
 attributes
@@ -44,6 +45,12 @@ pipeline
     blend One + Zero;
     output r8_g8_b8_a8_unorm outColor;
     output d24_unorm_s8_uint;
+    depthwrite off;
+}
+
+pipeline if (DepthWrite)
+{
+    depthwrite on;
 }
 
 pipeline if (Blend == IsAlphaBlend)

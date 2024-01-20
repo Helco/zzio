@@ -42,6 +42,7 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
     public bool IsSkinned { set => SetOption(nameof(IsSkinned), value); }
     public bool HasTexShift { set => SetOption(nameof(HasTexShift), value); }
     public bool HasEnvMap { set => SetOption(nameof(HasEnvMap), value); }
+    public bool DepthWrite { set => SetOption(nameof(DepthWrite), value); }
     public BlendMode Blend { set => SetOption(nameof(Blend), (uint)value); }
 
     public UniformBinding<Matrix4x4> World { get; }
@@ -65,6 +66,7 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
         AddBinding("mainTexture", Texture = new(this));
         AddBinding("mainSampler", Sampler = new(this));
         AddBinding("pose", Pose = new(this));
+        DepthWrite = true;
     }
 }
 
