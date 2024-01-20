@@ -33,8 +33,7 @@ public partial class ParentReaper : ISystem<float>
         {
             toBeDeleted.Clear();
             foreach (var key in set.Keys.Where(k => !k.Entity.IsAlive))
-                // TODO: Use AddRange(ReadOnlySpan) after .NET 8 release and upgrade
-                toBeDeleted.AddRange(set[key].ToArray());
+                toBeDeleted.AddRange(set[key]);
 
             foreach (var child in toBeDeleted)
                 child.Dispose();
