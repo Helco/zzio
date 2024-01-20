@@ -53,7 +53,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
     private void HandleSceneLoaded(in messages.SceneLoaded message)
     {
         clumpCounts.EnsureCapacity(MultiMap.Keys.Count());
-        instanceBuffer.Reserve(MultiMap.Keys.Sum(MultiMap.Count) + 1, additive: false); // remove hack to fix NpcMarker crash
+        instanceBuffer.Reserve(MultiMap.Keys.Sum(MultiMap.Count), additive: false);
     }
 
     [WithPredicate]
@@ -77,10 +77,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
         {
             tint = materialInfo.Color,
             world = location.LocalToWorld,
-            texShift = entity.TryGet<components.TexShift>().GetValueOrDefault(components.TexShift.Default).Matrix,
-            vertexColorFactor = 0f,
-            tintFactor = 1f,
-            alphaReference = 0.082352944f
+            texShift = entity.TryGet<components.TexShift>().GetValueOrDefault(components.TexShift.Default).Matrix
         });
     }
 

@@ -9,10 +9,8 @@ attributes
     float3 inPos;
     byte4_norm inColor;
 }
-
 attributes if (HasEnvMap) float3 inNormal;
 attributes if (!HasEnvMap) float2 inUV;
-
 attributes if (IsSkinned)
 {
     float4 inWeights;
@@ -21,13 +19,7 @@ attributes if (IsSkinned)
 
 instances mat4 world;
 instances if (HasTexShift) mat3x2 inTexShift;
-instances colors
-{
-    byte4_norm inTint;
-    float inVertexColorFactor;
-    float inTintFactor;
-    float inAlphaReference;
-}
+instances byte4_norm inTint;
 
 varying
 {
@@ -39,6 +31,12 @@ uniform texture2D mainTexture;
 uniform sampler mainSampler;
 uniform mat4 projection;
 uniform mat4 view;
+uniform factors
+{
+    float inVertexColorFactor;
+    float inTintFactor;
+    float inAlphaReference;
+}
 uniform if (IsSkinned) buffer mat4[] pose;
 
 pipeline

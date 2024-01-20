@@ -57,9 +57,9 @@ public partial class SceneEditor
                 (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBasePaths, rwMaterial);
                 material.LinkTransformsTo(camera);
                 material.World.BufferRange = locationRange;
-                material.Colors.Ref = ModelColors.Default;
-                material.Colors.Ref.vertexColorFactor = 0.0f;
-                material.Colors.Ref.tint = rwMaterial.color.ToFColor() * sceneModel.color;
+                material.Factors.Ref = ModelFactors.Default;
+                material.Factors.Ref.vertexColorFactor = 0.0f;
+                material.Tint.Ref = rwMaterial.color.ToFColor() * sceneModel.color;
                 return material;
             }).ToArray();
         }

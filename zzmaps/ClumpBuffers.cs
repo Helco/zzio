@@ -25,6 +25,24 @@ public struct ModelStandardVertex
         4 * sizeof(byte);
 }
 
+[StructLayout(LayoutKind.Sequential)]
+public struct ModelColors
+{
+    public FColor tint;
+    public float vertexColorFactor;
+    public float tintFactor;
+    public float alphaReference;
+    public static uint Stride = (4 + 3) * sizeof(float);
+
+    public static readonly ModelColors Default = new()
+    {
+        tint = FColor.White,
+        vertexColorFactor = 1f,
+        tintFactor = 1f,
+        alphaReference = 0.6f
+    };
+}
+
 public class ClumpBuffers : BaseDisposable
 {
     public readonly struct SubMesh

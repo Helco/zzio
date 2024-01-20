@@ -140,11 +140,11 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             (material.Texture.Texture, material.Sampler.Sampler) = TryLoadTexture(texturePaths, rwMaterial);
             material.LinkTransformsTo(camera);
             material.World.Ref = Matrix4x4.Identity;
-            material.Colors.Ref = ModelColors.Default with
+            material.Factors.Ref = ModelFactors.Default with
             {
                 vertexColorFactor = 0f, // they seem to be set to some gray for models?
-                tint = rwMaterial.color.ToFColor()
             };
+            material.Tint.Ref = rwMaterial.color;
             AddDisposable(material);
         }
         modelMaterialEdit.Materials = materials;

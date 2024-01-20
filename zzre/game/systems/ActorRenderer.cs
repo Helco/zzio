@@ -89,11 +89,11 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         {
             var material = new ModelMaterial(diContainer) { IsSkinned = true };
             (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(BaseTexturePaths, rwMaterial);
-            material.Colors.Ref = ModelColors.Default with
+            material.Factors.Ref = ModelFactors.Default with
             {
-                vertexColorFactor = 0f,
-                tint = rwMaterial.color.ToFColor()
+                vertexColorFactor = 0f
             };
+            material.Tint.Ref = rwMaterial.color;
             material.Pose.Skeleton = skeleton;
             material.LinkTransformsTo(camera);
             material.World.BufferRange = syncedLocation.BufferRange;

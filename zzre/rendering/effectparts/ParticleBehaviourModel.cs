@@ -84,6 +84,12 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
             material.Sampler.Sampler = sampler;
             material.Projection.BufferRange = camera.ProjectionRange;
             material.View.BufferRange = camera.ViewRange;
+            material.Factors.Ref = new()
+            {
+                alphaReference = 0.03f,
+                vertexColorFactor = 0f,
+                tintFactor = 1f
+            };
             AddDisposable(material);
             return material;
         }).ToArray();
@@ -136,10 +142,7 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
                     world =
                         Matrix4x4.CreateFromAxisAngle(model.rotationAxis, model.rotation * MathF.PI / 180f) *
                         Matrix4x4.CreateTranslation(model.basic.pos),
-                    tint = model.basic.color.ToFColor(),
-                    alphaReference = 0.03f,
-                    vertexColorFactor = 0f,
-                    tintFactor = 1f
+                    tint = model.basic.color.ToFColor()
                 });
             }
             instanceBuffer.Update(cl);

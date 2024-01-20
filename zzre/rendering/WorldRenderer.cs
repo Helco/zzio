@@ -99,7 +99,8 @@ public class WorldRenderer : BaseDisposable
             }
             material.LinkTransformsTo(camera);
             material.World.BufferRange = locationRange;
-            material.Colors.Ref = ModelColors.Default;
+            material.Tint.Ref = FColor.White;
+            material.Factors.Ref = ModelFactors.Default;
         }
     }
 

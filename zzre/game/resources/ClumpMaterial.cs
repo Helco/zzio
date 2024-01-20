@@ -48,6 +48,12 @@ public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, ModelMaterial>
         (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(TextureBasePaths, info.RWMaterial);
         material.Projection.BufferRange = camera.ProjectionRange;
         material.View.BufferRange = camera.ViewRange;
+        material.Factors.Ref = new()
+        {
+            vertexColorFactor = 0f,
+            tintFactor = 1f,
+            alphaReference = 0.082352944f
+        };
         return material;
     }
 

@@ -64,7 +64,7 @@ public class ModelMaterialEdit : BaseDisposable
 
         bool didChange = false;
         Text("Globals");
-        var mat = materials.First().Colors.Value;
+        var mat = materials.First().Factors.Value;
         didChange |= SliderFloat("Vertex Color Factor", ref mat.vertexColorFactor, 0.0f, 1.0f);
         didChange |= SliderFloat("Global Tint Factor", ref mat.tintFactor, 0.0f, 1.0f);
         didChange |= SliderFloat("Alpha Reference", ref mat.alphaReference, 0.0f, 1.0f, "%.3f");
@@ -72,9 +72,9 @@ public class ModelMaterialEdit : BaseDisposable
         {
             foreach (var material in materials)
             {
-                material.Colors.Ref.vertexColorFactor = mat.vertexColorFactor;
-                material.Colors.Ref.tintFactor = mat.tintFactor;
-                material.Colors.Ref.alphaReference = mat.alphaReference;
+                material.Factors.Ref.vertexColorFactor = mat.vertexColorFactor;
+                material.Factors.Ref.tintFactor = mat.tintFactor;
+                material.Factors.Ref.alphaReference = mat.alphaReference;
             }
         }
 
@@ -82,12 +82,12 @@ public class ModelMaterialEdit : BaseDisposable
         Text("Materials");
         foreach (var (material, index) in materials.Indexed())
         {
-            bool isVisible = materials[index].Colors.Value.alphaReference < 2f;
+            bool isVisible = materials[index].Factors.Value.alphaReference < 2f;
             PushID(index);
             if (SmallButton(isVisible ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash))
             {
                 isVisible = !isVisible;
-                materials[index].Colors.Ref.alphaReference = isVisible ? 0.03f : 2.0f;
+                materials[index].Factors.Ref.alphaReference = isVisible ? 0.03f : 2.0f;
                 didChange = true;
             }
             PopID();
@@ -95,7 +95,7 @@ public class ModelMaterialEdit : BaseDisposable
             SameLine();
             if (!TreeNodeEx($"Material #{index}", OpenEntriesByDefault ? ImGuiTreeNodeFlags.DefaultOpen : 0))
                 continue;
-            var color = material.Colors.Value.tint;
+            var color = material.Tint.Value;
             ColorEdit4("Color", ref color, ImGuiColorEditFlags.NoPicker | ImGuiColorEditFlags.Float);
             TexturePreview(materials[index].Texture.Texture, textureBindings[index]);
 
