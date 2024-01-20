@@ -22,6 +22,7 @@ public class DebugLineRenderer : BaseDisposable, IRenderable
     private readonly DebugDynamicMesh mesh;
 
     public DebugMaterial Material { get; }
+    public int Count => mesh.VertexCount / 2;
 
     public DebugLineRenderer(ITagContainer diContainer)
     {

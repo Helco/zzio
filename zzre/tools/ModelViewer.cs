@@ -30,6 +30,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private readonly IResourcePool resourcePool;
     private readonly DebugLineRenderer gridRenderer;
     private readonly DebugLineRenderer triangleRenderer;
+    private readonly DebugLineRenderer normalRenderer;
     private readonly DebugPlaneRenderer planeRenderer;
     private readonly OpenFileModal openFileModal;
     private readonly ModelMaterialEdit modelMaterialEdit;
@@ -40,6 +41,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private ModelMaterial[] materials = Array.Empty<ModelMaterial>();
     private DebugSkeletonRenderer? skeletonRenderer;
     private int highlightedSplitI = -1;
+    private bool showNormals;
 
     public Window Window { get; }
     public IResource? CurrentResource { get; private set; }
@@ -59,6 +61,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         Window.OnContent += onceAction.Invoke;
         var menuBar = new MenuBarWindowTag(Window);
         menuBar.AddButton("Open", HandleMenuOpen);
+        menuBar.AddCheckbox("View/Normals", () => ref showNormals, () => fbArea!.IsDirty = true);
         fbArea = Window.GetTag<FramebufferArea>();
         fbArea.OnResize += HandleResize;
         fbArea.OnRender += HandleRender;
@@ -94,6 +97,11 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         triangleRenderer.Material.World.Ref = Matrix4x4.Identity;
         AddDisposable(triangleRenderer);
 
+        normalRenderer = new DebugLineRenderer(diContainer);
+        normalRenderer.Material.LinkTransformsTo(camera);
+        normalRenderer.Material.World.Ref = Matrix4x4.Identity;
+        AddDisposable(normalRenderer);
+
         planeRenderer = new DebugPlaneRenderer(diContainer);
         planeRenderer.Material.LinkTransformsTo(camera);
         planeRenderer.Material.World.Ref = Matrix4x4.Identity;
@@ -128,6 +136,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             new FilePath("resources/textures/worlds"),
         };
 
+        normalRenderer.Clear();
         // TODO: ModelViewer should dispose meshes and materials after loading a different model
 
         mesh = new ClumpMesh(diContainer, resource);
@@ -217,6 +226,23 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         skeletonRenderer?.Render(cl);
         planeRenderer.Render(cl);
         triangleRenderer.Render(cl);
+        if (showNormals)
+        {
+            if (normalRenderer.Count == 0)
+                GenerateNormals();
+            normalRenderer.Render(cl);
+        }
+    }
+
+    private void GenerateNormals()
+    {
+        if (mesh == null)
+            return;
+        var morphTarget = mesh.Geometry.morphTargets.First();
+        normalRenderer.Clear();
+        normalRenderer.Reserve(mesh.VertexCount, additive: false);
+        normalRenderer.Add(IColor.Red, morphTarget.vertices.Zip(morphTarget.normals,
+            (pos, normal) => new Line(pos, pos + Vector3.Normalize(normal) * 0.05f)));
     }
 
     private void HandleStatisticsContent()
