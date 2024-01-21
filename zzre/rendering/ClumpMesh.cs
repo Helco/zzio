@@ -12,6 +12,7 @@ namespace zzre.rendering;
 
 public class ClumpMesh : StaticMesh
 {
+    public bool IsEmpty { get; }
     public RWGeometry Geometry { get; }
     public RWSkinPLG? Skin { get; }
     public IReadOnlyList<RWMaterial> Materials { get; }
@@ -39,7 +40,18 @@ public class ClumpMesh : StaticMesh
         var morphTarget = geometry?.morphTargets[0]; // TODO: morph support for the one model that uses it? 
         Skin = clump.FindChildById(SectionId.SkinPLG, true) as RWSkinPLG;
         if (geometry == null || morphTarget == null || materials == null || atomic == null)
+        {
+            if (geometry == null && morphTarget == null && materials == null && atomic == null)
+            {
+                // there are some DFF files that are essentially empty which unfortunately are used
+                Geometry = null!;
+                Materials = Array.Empty<RWMaterial>();
+                IsEmpty = true;
+                return;
+            }
+            // only *some* parts missing, let's have a look if that happens
             throw new InvalidDataException("Could not find valid section structure in clump");
+        }
         Geometry = geometry;
         Materials = materials;
         BoundingSphere = new(morphTarget.bsphereCenter, morphTarget.bsphereRadius);

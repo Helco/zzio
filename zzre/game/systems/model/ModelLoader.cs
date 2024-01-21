@@ -70,6 +70,8 @@ public class ModelLoader : BaseDisposable, ISystem<float>
             });
 
             entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model(model.filename + ".dff")));
+            if (HasEmptyMesh(entity))
+                throw new InvalidOperationException("Model has an empty model, maybe we can ignore them but let's have a look whether they are used somehow");
 
             LoadMaterialsFor(entity, FOModelRenderType.Solid, model.color, model.surfaceProps);
             SetCollider(entity);
@@ -95,6 +97,11 @@ public class ModelLoader : BaseDisposable, ISystem<float>
             });
 
             entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model(foModel.filename + ".dff")));
+            if (HasEmptyMesh(entity))
+            {
+                entity.Dispose(); // I am fine with ignoring empty FOModels
+                continue;
+            }
 
             LoadMaterialsFor(entity, foModel.renderType, foModel.color, foModel.surfaceProps);
             SetCollider(entity);
@@ -145,6 +152,9 @@ public class ModelLoader : BaseDisposable, ISystem<float>
             .Select(rwMaterial => new resources.ClumpMaterialInfo(renderType, rwMaterial))
             .ToArray()));
     }
+
+    private static bool HasEmptyMesh(DefaultEcs.Entity entity) =>
+         entity.Get<ClumpMesh>().IsEmpty;
 
     private static void SetCollider(DefaultEcs.Entity entity)
     {

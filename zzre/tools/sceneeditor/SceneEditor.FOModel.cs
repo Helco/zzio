@@ -48,6 +48,11 @@ public partial class SceneEditor
 
             var clumpLoader = diContainer.GetTag<IAssetLoader<ClumpMesh>>();
             mesh = clumpLoader.Load(new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
+            if (mesh.IsEmpty)
+            {
+                materials = Array.Empty<ModelMaterial>();
+                return;
+            }
             materials = mesh.Materials.Select(rwMaterial =>
             {
                 var material = new ModelMaterial(diContainer);
@@ -72,6 +77,8 @@ public partial class SceneEditor
 
         public void Render(CommandList cl)
         {
+            if (mesh.IsEmpty)
+                return;
             materials.First().ApplyAttributes(cl, mesh);
             cl.SetIndexBuffer(mesh.IndexBuffer, mesh.IndexFormat);
             foreach (var (subMesh, index) in mesh.SubMeshes.Indexed())
