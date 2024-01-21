@@ -159,6 +159,12 @@ public partial class NPCScript : BaseScript
             .Any();
     }
 
+    private bool IfTriggerIsEnabled(DefaultEcs.Entity entity, int triggerI)
+    {
+        Console.WriteLine("Warning unimplemented NPC instruction \"ifTriggerIsEnabled\"");
+        return false;
+    }
+
     private void MoveSystem(DefaultEcs.Entity entity, messages.NPCMoveSystem.Mode mode, int wpCategory)
     {
         World.Publish(new messages.NPCMoveSystem(entity, mode, wpCategory));

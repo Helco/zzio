@@ -33,6 +33,7 @@ partial class NPCScript
     private const string CmdCreateDynamicItems = "_";
     private const string CmdRevive = "b";
     private const string CmdLookAtTrigger = "c";
+    private const string CmdIfTriggerIsEnabled = "d";
     private const string CmdPlaySound = "e";
     private const string CmdStartActorEffect = "g";
     private const string CmdEndActorEffect = "h";
@@ -84,6 +85,12 @@ partial class NPCScript
             case CmdIfTriggerIsActive:
                 var triggerI = int.Parse(args.Single());
                 return IfTriggerIsActive(entity, triggerI)
+                    ? OpReturn.Continue
+                    : OpReturn.ConditionalSkip;
+
+            case CmdIfTriggerIsEnabled:
+                triggerI = int.Parse(args[0]);
+                return IfTriggerIsEnabled(entity, triggerI)
                     ? OpReturn.Continue
                     : OpReturn.ConditionalSkip;
 
