@@ -15,7 +15,7 @@ public abstract class ListSection : Section
         children.Clear();
         long streamLength = stream.Length;
         // there might be padding bytes, check if a header would fit
-        while (streamLength - stream.Position > 12)
+        while (streamLength - stream.Position >= 12)
         {
             children.Add(ReadNew(new GatekeeperStream(stream), this));
         }

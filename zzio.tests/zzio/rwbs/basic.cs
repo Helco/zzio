@@ -27,7 +27,7 @@ public class TestRWBSBasic
         RWFrameList frameList = (RWFrameList)clump.children[0];
         Assert.AreSame(clump, frameList.parent);
         Assert.AreEqual(SectionId.FrameList, frameList.sectionId);
-        Assert.AreEqual(0, frameList.children.Count);
+        Assert.AreEqual(1, frameList.children.Count);
         Assert.AreEqual(1, frameList.frames.Length);
         Frame frame = frameList.frames[0];
         Assert.AreEqual(0, frame.creationFlags);
@@ -41,17 +41,19 @@ public class TestRWBSBasic
         Assert.AreEqual(0.0f, frame.position.Y);
         Assert.AreEqual(0.0f, frame.position.Z);
 
-        Assert.IsInstanceOf(typeof(RWExtension), clump.children[1]);
-        RWExtension extension = (RWExtension)clump.children[1];
-        Assert.AreSame(clump, extension.parent);
-        Assert.AreEqual(0, extension.children.Count);
+        Assert.IsInstanceOf(typeof(RWExtension), frameList.children[0]);
 
-        Assert.IsInstanceOf(typeof(RWGeometryList), clump.children[2]);
-        RWGeometryList geoList = (RWGeometryList)clump.children[2];
+        Assert.IsInstanceOf(typeof(RWGeometryList), clump.children[1]);
+        RWGeometryList geoList = (RWGeometryList)clump.children[1];
         Assert.AreSame(clump, geoList.parent);
         Assert.AreEqual(SectionId.GeometryList, geoList.sectionId);
         Assert.AreEqual(0, geoList.children.Count);
         Assert.AreEqual(0, geoList.geometryCount);
+
+        Assert.IsInstanceOf(typeof(RWExtension), clump.children[2]);
+        RWExtension extension = (RWExtension)clump.children[2];
+        Assert.AreSame(clump, extension.parent);
+        Assert.AreEqual(0, extension.children.Count);
     }
 
     [Test]
