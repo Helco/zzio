@@ -66,7 +66,7 @@ public partial class NPCMovementByState : NPCMovementBase
 
         move.DistanceToTarget = Vector3.Distance(location.LocalPosition, move.TargetPos);
         move.DistanceWalked = 0f;
-        msg.Entity.Get<components.NonFairyAnimation>().Next = zzio.AnimationType.Walk0;
+        SwitchToWalkingAnimation(msg.Entity);
     }
 
     private void HandleMoveSystem(in messages.NPCMoveSystem msg)
@@ -89,7 +89,7 @@ public partial class NPCMovementByState : NPCMovementBase
         move.TargetPos = nextWaypoint.pos;
         move.DistanceToTarget = Vector3.Distance(location.LocalPosition, move.TargetPos);
         move.DistanceWalked = 0f;
-        msg.Entity.Get<components.NonFairyAnimation>().Next = zzio.AnimationType.Walk0;
+        SwitchToWalkingAnimation(msg.Entity);
         msg.Entity.Set(components.NPCState.Waypoint);
     }
 
@@ -157,8 +157,19 @@ public partial class NPCMovementByState : NPCMovementBase
         }
         else
         {
-            animation.Next = zzio.AnimationType.Walk0;
+            SwitchToWalkingAnimation(entity);
             // TODO: Check whether player slerping to walking NPCs is a thing
         }
+    }
+
+    private void SwitchToWalkingAnimation(DefaultEcs.Entity entity)
+    {
+        // there is one NPC (g008s01m) that only has an idle animation
+        // to keep the safeguard we only fallback for Walk0 to Idle0
+        var body = entity.Get<components.ActorParts>().Body;
+        ref readonly var animationPool = ref body.Get<components.AnimationPool>();
+        entity.Get<components.NonFairyAnimation>().Next = animationPool.Contains(zzio.AnimationType.Walk0)
+            ? zzio.AnimationType.Walk0
+            : zzio.AnimationType.Idle0;
     }
 }

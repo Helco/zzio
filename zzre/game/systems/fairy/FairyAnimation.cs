@@ -99,6 +99,10 @@ public partial class FairyAnimation : AEntitySetSystem<float>
         var skeleton = actorParts.Body.Get<Skeleton>();
         var animationPool = actorParts.Body.Get<components.AnimationPool>();
 
+        // as long as we only know of this one special case, let's keep the exception for safeguard
+        if (nextAnimation is zzio.AnimationType.SpecialIdle0 && !animationPool.Contains(nextAnimation))
+            nextAnimation = zzio.AnimationType.Idle0;
+
         if (nextAnimation != fairy.Current)
         {
             fairy.Current = nextAnimation;
