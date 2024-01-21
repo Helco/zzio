@@ -84,14 +84,14 @@ public abstract class BaseScript : AEntitySetSystem<float>
 
             case CmdGoto:
                 var label = int.Parse(instruction.Arguments.Single());
-                script.CurrentI = script.LabelTargets[label];
+                script.GoToLabel(label);
                 return OpReturn.Continue;
 
             case CmdGotoRandomLabel:
                 var range = int.Parse(instruction.Arguments[0]);
                 var start = int.Parse(instruction.Arguments[1]);
                 label = start + Random.Shared.Next(range);
-                script.CurrentI = script.LabelTargets[label];
+                script.GoToLabel(label);
                 return OpReturn.Continue;
 
             case CmdGotoLabelByRandom:
@@ -99,7 +99,7 @@ public abstract class BaseScript : AEntitySetSystem<float>
                 var percentage = int.Parse(instruction.Arguments[0]);
                 label = int.Parse(instruction.Arguments[1]);
                 if (Random.Shared.Next(100) >= percentage)
-                    script.CurrentI = script.LabelTargets[label];
+                    script.GoToLabel(label);
                 return OpReturn.Continue;
 
             case CmdSetGlobal:

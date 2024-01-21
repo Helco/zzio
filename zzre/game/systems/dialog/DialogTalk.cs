@@ -191,7 +191,7 @@ public partial class DialogTalk : ui.BaseScreen<components.ui.DialogTalk, messag
             var talkLabels = dialogEntity.Get<components.DialogTalkLabels>();
             int targetLabel = clickedId == IDYes ? talkLabels.LabelYes : talkLabels.LabelNo;
             ref var scriptExec = ref dialogEntity.Get<components.ScriptExecution>();
-            scriptExec.CurrentI = scriptExec.LabelTargets[targetLabel];
+            scriptExec.GoToLabel(targetLabel);
             dialogEntity.Set(components.DialogState.NextScriptOp);
             talkEntity.Dispose();
         }

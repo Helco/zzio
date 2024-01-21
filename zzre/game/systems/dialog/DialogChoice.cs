@@ -98,7 +98,7 @@ public partial class DialogChoice : ui.BaseScreen<components.DialogChoice, messa
         var dialogChoice = uiEntity.Get<components.DialogChoice>();
         var dialogEntity = dialogChoice.DialogEntity;
         ref var script = ref dialogEntity.Get<components.ScriptExecution>();
-        script.CurrentI = script.LabelTargets[dialogChoice.Labels[choiceI]];
+        script.GoToLabel(dialogChoice.Labels[choiceI]);
         dialogEntity.Set(components.DialogState.NextScriptOp);
         uiEntity.Dispose();
     }
