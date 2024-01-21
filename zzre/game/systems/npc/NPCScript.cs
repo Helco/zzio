@@ -319,4 +319,14 @@ public partial class NPCScript : BaseScript
     {
         Console.WriteLine("Warning: unimplemented NPC instruction \"playSound\"");
     }
+
+    private void StartActorEffect(DefaultEcs.Entity entity, int effectId)
+    {
+        Console.WriteLine("Warning unimplemented NPC instruction \"startActorEffect\"");
+    }
+
+    private void EndActorEffect(DefaultEcs.Entity entity)
+    {
+        Console.WriteLine("Warning unimplemented NPC instruction \"endActorEffect\"");
+    }
 }

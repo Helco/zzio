@@ -34,6 +34,8 @@ partial class NPCScript
     private const string CmdRevive = "b";
     private const string CmdLookAtTrigger = "c";
     private const string CmdPlaySound = "e";
+    private const string CmdStartActorEffect = "g";
+    private const string CmdEndActorEffect = "h";
 
     protected override OpReturn Execute(in DefaultEcs.Entity entity, ref components.ScriptExecution script, RawInstruction instruction)
     {
@@ -196,6 +198,15 @@ partial class NPCScript
             case CmdPlaySound:
                 var id = int.Parse(args[0]);
                 PlaySound(entity, id);
+                return OpReturn.Continue;
+
+            case CmdStartActorEffect:
+                var effectI = int.Parse(args[0]);
+                StartActorEffect(entity, effectI);
+                return OpReturn.Continue;
+
+            case CmdEndActorEffect:
+                EndActorEffect(entity);
                 return OpReturn.Continue;
 
             default: return OpReturn.UnknownInstruction;
