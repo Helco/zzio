@@ -20,11 +20,12 @@ public class UniformBuffer<T> : BaseDisposable where T : unmanaged
     public T Value => value;
     public DeviceBuffer Buffer { get; }
 
-    public UniformBuffer(ResourceFactory factory)
+    public UniformBuffer(ResourceFactory factory, bool dynamic = false)
     {
         uint alignedSize = (uint)Marshal.SizeOf<T>();
         alignedSize = (alignedSize + 15) / 16 * 16;
-        Buffer = factory.CreateBuffer(new BufferDescription(alignedSize, BufferUsage.UniformBuffer));
+        Buffer = factory.CreateBuffer(new BufferDescription(alignedSize, BufferUsage.UniformBuffer |
+            (dynamic ? BufferUsage.Dynamic : default)));
         Buffer.Name = $"{GetType().Name} {GetHashCode()}";
     }
 

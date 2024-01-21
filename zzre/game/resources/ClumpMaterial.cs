@@ -43,6 +43,13 @@ public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, ModelMaterial>
             if (info.RenderType is FOModelRenderType.LateAdditive)
                 material.DepthWrite = false;
         }
+        else if (info.RenderType is >= FOModelRenderType.EnvMap32 and <= FOModelRenderType.EnvMap255)
+        {
+            // TODO: EnvMap materials do not use ZBias
+            material.Blend = ModelMaterial.BlendMode.Alpha;
+            material.HasEnvMap = true;
+            material.DepthWrite = false;
+        }
         else
             throw new NotSupportedException($"Unsupported render type for material {info.RenderType}");
 

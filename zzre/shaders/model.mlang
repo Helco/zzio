@@ -31,7 +31,12 @@ varying
 uniform texture2D mainTexture;
 uniform sampler mainSampler;
 uniform mat4 projection;
-uniform mat4 view;
+uniform view
+{
+    mat4 viewMatrix;
+    float4 camPos;
+    float4 camDir;
+}
 uniform factors
 {
     float inVertexColorFactor;
@@ -88,15 +93,18 @@ vertex
     }
 
 	pos = world * pos;
-	pos = view * pos;
+	pos = viewMatrix * pos;
 	pos = projection * pos;
 	gl_Position = pos;
     
     vec2 uv;
     if (HasEnvMap)
     {
-        float3 incident = vec3(world[3] + vec4(inPos, 0) + view[3] + view[2]);
-        uv = vec2(-reflect(incident, inNormal));
+        float3 incident = normalize(vec3(world[3] - camPos - camDir + vec4(inPos, 0)));
+        float cosAngle = dot(incident, inNormal);
+        float3 reflected = inNormal * -2 * cosAngle - incident;
+        uv = normalize(reflected).xz;
+        uv = (uv + 1) / 2;
     }
     else
         uv = inUV;

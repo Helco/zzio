@@ -136,7 +136,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         entity.Set(renderType);
         entity.Set(new components.ClumpMaterialInfo()
         {
-            Color = color,
+            Color = color with { a = AlphaFromRenderType(renderType) },
             SurfaceProperties = surfaceProps
         });
         entity.Set(new List<materials.ModelMaterial>(clumpMesh.SubMeshes.Count));
@@ -189,6 +189,17 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         FOModelRenderType.EnvMap255 => components.RenderOrder.EnvMap,
 
         _ => throw new NotSupportedException($"Unsupported FOModelRenderType: {type}")
+    };
+
+    private static byte AlphaFromRenderType(FOModelRenderType type) => type switch
+    {
+        FOModelRenderType.EnvMap32 => 32,
+        FOModelRenderType.EnvMap64 => 64,
+        FOModelRenderType.EnvMap96 => 96,
+        FOModelRenderType.EnvMap128 => 128,
+        FOModelRenderType.EnvMap196 => 196,
+        FOModelRenderType.EnvMap255 => 255,
+        _ => 255
     };
 
     private static readonly IReadOnlyList<Vector2> WiggleAmplitudes = new[]

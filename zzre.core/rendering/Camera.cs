@@ -7,17 +7,22 @@ namespace zzre.rendering;
 
 public class Camera : BaseDisposable
 {
-    private readonly LocationBuffer locationBuffer;
+    private struct CameraView
+    {
+        public Matrix4x4 locationMatrix;
+        public Vector4 position, direction;
+    }
 
     private readonly UniformBuffer<Matrix4x4> projection;
     private readonly ResettableLazyValue<Matrix4x4> invProjection;
+    private readonly UniformBuffer<CameraView> view;
     private float aspect = 1.0f;
     private float vfov = 60.0f * MathF.PI / 180.0f;
     private float nearPlane = 0.1f;
     private float farPlane = 500.0f;
 
     public Location Location { get; } = new Location();
-    public DeviceBufferRange ViewRange { get; }
+    public DeviceBufferRange ViewRange => new(view.Buffer, 0, view.Buffer.SizeInBytes);
     public DeviceBufferRange ProjectionRange => new(projection.Buffer, 0, projection.Buffer.SizeInBytes);
     public Matrix4x4 View => Location.WorldToLocal;
     public Matrix4x4 Projection => projection.Value;
@@ -75,9 +80,9 @@ public class Camera : BaseDisposable
 
     public Camera(ITagContainer diContainer)
     {
-        locationBuffer = diContainer.GetTag<LocationBuffer>();
-        ViewRange = locationBuffer.Add(Location, inverted: true);
-        projection = new UniformBuffer<Matrix4x4>(diContainer.GetTag<GraphicsDevice>().ResourceFactory);
+        var resourceFactory = diContainer.GetTag<ResourceFactory>();
+        projection = new(resourceFactory);
+        view = new(resourceFactory, dynamic: true);
         invProjection = new ResettableLazyValue<Matrix4x4>(CreateInvProjection);
         UpdateProjection();
     }
@@ -86,10 +91,17 @@ public class Camera : BaseDisposable
     {
         base.DisposeManaged();
         projection.Dispose();
-        locationBuffer.Remove(ViewRange);
+        view.Dispose();
     }
 
-    public void Update(CommandList cl) => projection.Update(cl);
+    public void Update(CommandList cl)
+    {
+        view.Ref.locationMatrix = View;
+        view.Ref.position = new Vector4(Location.GlobalPosition, 1f);
+        view.Ref.direction = new Vector4(-Location.InnerForward, 0f);
+        view.Update(cl);
+        projection.Update(cl);
+    }
 
     private void UpdateProjection()
     {
