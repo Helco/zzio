@@ -63,7 +63,11 @@ public partial class NPC : AEntitySetSystem<float>
 
             var dbUID = new zzio.UID(trigger.ii1);
             if (!mappedDB.TryGetNpc(dbUID, out var dbRow))
-                throw new System.IO.InvalidDataException($"Invalid NPC database UID: {dbUID}");
+            {
+                // another crazy special case fallback... this would happen for every non-existant UID
+                if (dbUID != new zzio.UID(0x97182704) || !mappedDB.TryGetNpc(new zzio.UID(0x8219b694), out dbRow))
+                    throw new System.IO.InvalidDataException($"Invalid NPC database UID: {dbUID}");
+            }
             entity.Set(dbRow);
 
             if (dbRow.InitScript.Length > 0)
