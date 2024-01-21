@@ -464,7 +464,11 @@ public partial class DialogScript : BaseScript
 
     private void PlayAnimation(DefaultEcs.Entity entity, AnimationType animation)
     {
-        NPCEntity.Get<components.NonFairyAnimation>().Next = animation;
+        var body = NPCEntity.Get<components.ActorParts>().Body;
+        if (body.Get<components.AnimationPool>().Contains(animation))
+            NPCEntity.Get<components.NonFairyAnimation>().Next = animation;
+        else
+            Console.WriteLine("Warning: Dialog script tried to play missing animation: " + animation);
     }
 
     private void PlayPlayerAnimation(DefaultEcs.Entity entity, AnimationType animation)
