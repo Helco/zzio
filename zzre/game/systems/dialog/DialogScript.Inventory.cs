@@ -14,7 +14,7 @@ partial class DialogScript
     {
         if (type == CardType.Fairy && count >= 0)
         {
-            var firstFairy = PlayerInventory.GetFairyAtSlot(id);
+            var firstFairy = PlayerInventory.GetFairyAtSlot(0);
             return firstFairy != null && firstFairy.cardId.EntityId == id;
         }
 
