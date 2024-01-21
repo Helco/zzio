@@ -189,7 +189,7 @@ public class TestRaycaster : ListDisposable
         var triangle = obj.Geometry switch
         {
             Triangle t => t,
-            AtomicCollider a => a.LastTriangle,
+            AtomicTreeCollider a => a.LastTriangle,
             WorldCollider w => w.LastTriangle,
             _ => throw new InvalidOperationException()
         };

@@ -12,7 +12,7 @@ public class WorldCollider : IRaycastable, IIntersectable
     public Triangle LastTriangle { get; private set; }
 
     private readonly Section rootSection;
-    private readonly IReadOnlyDictionary<RWAtomicSection, AtomicCollider> atomicColliders;
+    private readonly IReadOnlyDictionary<RWAtomicSection, IAtomicCollider> atomicColliders;
 
     public WorldCollider(RWWorld world)
     {
@@ -22,7 +22,7 @@ public class WorldCollider : IRaycastable, IIntersectable
             .FindAllChildrenById(SectionId.AtomicSection, recursive: true)
             .Where(s => s.FindChildById(SectionId.CollisionPLG) != null)
             .Cast<RWAtomicSection>()
-            .Select(atomic => new AtomicCollider(atomic))
+            .Select(AtomicCollider.CreateFor)
             .ToDictionary(c => c.Atomic, c => c);
 
         Box = atomicColliders.Values.Aggregate(
@@ -64,8 +64,8 @@ public class WorldCollider : IRaycastable, IIntersectable
 
                 var myHit = atomicCollider.Cast(ray, maxDist);
                 var isBetterHit = prevHit == null || (myHit != null && myHit.Value.Distance < prevHit.Value.Distance);
-                if (isBetterHit && myHit != null)
-                    LastTriangle = atomicCollider.LastTriangle;
+                if (isBetterHit && myHit != null && atomicCollider is AtomicTreeCollider treeCollider)
+                    LastTriangle = treeCollider.LastTriangle;
                 return isBetterHit
                     ? myHit
                     : prevHit;
@@ -155,7 +155,7 @@ public class WorldCollider : IRaycastable, IIntersectable
     private interface IIntersectionQueries<T> where T : struct, IIntersectable
     {
         PlaneIntersections SideOf(in Plane plane, in T primitive);
-        IEnumerable<Intersection> Intersections(AtomicCollider collider, in T primitive);
+        IEnumerable<Intersection> Intersections(IAtomicCollider collider, in T primitive);
     }
 
     private readonly struct IntersectionQueries :
@@ -168,10 +168,10 @@ public class WorldCollider : IRaycastable, IIntersectable
         public PlaneIntersections SideOf(in Plane plane, in Triangle primitive) => plane.SideOf(primitive);
         public PlaneIntersections SideOf(in Plane plane, in OrientedBox primitive) => plane.SideOf(primitive);
         public PlaneIntersections SideOf(in Plane plane, in Sphere primitive) => plane.SideOf(primitive);
-        public IEnumerable<Intersection> Intersections(AtomicCollider collider, in Box primitive) => collider.Intersections(primitive);
-        public IEnumerable<Intersection> Intersections(AtomicCollider collider, in Triangle primitive) => collider.Intersections(primitive);
-        public IEnumerable<Intersection> Intersections(AtomicCollider collider, in OrientedBox primitive) => collider.Intersections(primitive);
-        public IEnumerable<Intersection> Intersections(AtomicCollider collider, in Sphere primitive) => collider.Intersections(primitive);
+        public IEnumerable<Intersection> Intersections(IAtomicCollider collider, in Box primitive) => collider.Intersections(primitive);
+        public IEnumerable<Intersection> Intersections(IAtomicCollider collider, in Triangle primitive) => collider.Intersections(primitive);
+        public IEnumerable<Intersection> Intersections(IAtomicCollider collider, in OrientedBox primitive) => collider.Intersections(primitive);
+        public IEnumerable<Intersection> Intersections(IAtomicCollider collider, in Sphere primitive) => collider.Intersections(primitive);
     }
 
     private static readonly IntersectionQueries intersectionQueries = default;

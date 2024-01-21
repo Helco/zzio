@@ -61,24 +61,27 @@ public class RWCollision : Section
             split.left.count = ((types >> 8) & 0xff) == 2 ? SplitCount : 0;
         }
 
-        var stack = new Stack<(int splitI, bool isRight)>();
-        stack.Push((0, true));
-        stack.Push((0, false));
-        while (stack.Any())
+        if (splits.Any())
         {
-            var (splitI, isRight) = stack.Pop();
-            ref var cur = ref isRight
-                ? ref splits[splitI].right
-                : ref splits[splitI].left;
-            if (cur.count == SplitCount)
+            var stack = new Stack<(int splitI, bool isRight)>();
+            stack.Push((0, true));
+            stack.Push((0, false));
+            while (stack.Any())
             {
-                stack.Push((cur.index, true));
-                stack.Push((cur.index, false));
-                continue;
-            }
+                var (splitI, isRight) = stack.Pop();
+                ref var cur = ref isRight
+                    ? ref splits[splitI].right
+                    : ref splits[splitI].left;
+                if (cur.count == SplitCount)
+                {
+                    stack.Push((cur.index, true));
+                    stack.Push((cur.index, false));
+                    continue;
+                }
 
-            cur.index = reader.ReadUInt16();
-            cur.count = reader.ReadUInt16();
+                cur.index = reader.ReadUInt16();
+                cur.count = reader.ReadUInt16();
+            }
         }
 
         reader.ReadStructureArray(map);

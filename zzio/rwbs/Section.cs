@@ -65,8 +65,12 @@ public abstract class Section
         }
         version = readVersion;
 
+        var expectedEndPosition = stream.Position + readSize;
         RangeStream rangeStream = new(stream, readSize, false, false);
         readBody(rangeStream);
+        if (stream.Position > expectedEndPosition)
+            throw new InvalidDataException("Did not read section correctly");
+        stream.Position = expectedEndPosition;
     }
 
     public void Write(Stream stream)
