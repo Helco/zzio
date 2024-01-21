@@ -103,6 +103,13 @@ public partial class NPC : AEntitySetSystem<float>
             if (npcType != components.NPCType.Flying && entity.Has<Sphere>())
                 World.Publish(new messages.CreaturePlaceToGround(entity));
 
+            // seems to only happen in sc_1050, this is a NPC hidden under the map
+            // it has Biped type but no model is set, so also no PuppetActorMovement 
+            // but it does have a Fairy which spawns and tries to align itself
+            if (entity.Get<components.NPCType>() == components.NPCType.Biped &&
+                !entity.Has<components.PuppetActorMovement>())
+                entity.Set<components.PuppetActorMovement>();
+
             // TODO: Add Pixie behaviour
             // TODO: Add PlantBlocker behaviour
             // TODO: Add Biped behaviour (HeadIK, open doors)

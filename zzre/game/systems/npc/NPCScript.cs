@@ -95,7 +95,8 @@ public partial class NPCScript : BaseScript
         inventory.AddXP(invFairy, xp);
         inventory.SetSlot(invFairy, atIndex);
 
-        if (entity.Get<components.NPCType>() == components.NPCType.Flying)
+        if (entity.Get<components.NPCType>() == components.NPCType.Flying &&
+            !entity.Has<ActorExDescription>())
         {
             entity.Remove<Inventory>();
             entity.Set(inventory); // this forces the added fairy to spawn
