@@ -50,12 +50,14 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
 
     [Update]
     private void Update(CommandList cl,
-        in components.Parent parent,
+        in DefaultEcs.Entity entity,
         in ClumpMesh clumpMesh,
         in ModelMaterial[] materials)
     {
-        var actorExResource = parent.Entity.Get<DefaultEcs.Resource.ManagedResource<string, ActorExDescription>>();
-        cl.PushDebugGroup(actorExResource.Info);
+        var actorExResource = entity.TryGet<components.Parent>(out var parent) && parent.Entity.IsAlive
+            ? parent.Entity.Get<DefaultEcs.Resource.ManagedResource<string, ActorExDescription>>()
+            : default;
+        cl.PushDebugGroup(actorExResource.Info ?? "Unknown Actor");
         materials.First().ApplyAttributes(cl, clumpMesh);
         cl.SetIndexBuffer(clumpMesh.IndexBuffer, clumpMesh.IndexFormat);
         foreach (var subMesh in clumpMesh.SubMeshes)
