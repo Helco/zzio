@@ -75,9 +75,16 @@ public class ModelLoader : BaseDisposable, ISystem<float>
 
             LoadMaterialsFor(entity, FOModelRenderType.Solid, model.color, model.surfaceProps);
             SetCollider(entity);
-            SetPlantWiggle(entity, model.wiggleAmpl, plantWiggleDelay);
             if (behaviors.TryGetValue(model.idx, out var behaviour))
+            {
                 SetBehaviour(entity, behaviour, model.idx);
+                if (model.wiggleAmpl > 0)
+                {
+                    model.wiggleAmpl = 0;
+                    Console.WriteLine($"Warning: Model {model.idx} with a {behaviour} behaviour also has a plant wiggle set.");
+                }
+            }
+            SetPlantWiggle(entity, model.wiggleAmpl, plantWiggleDelay);
             if (entity.Has<components.Collidable>())
                 SetIntersectionable(entity);
 
