@@ -166,8 +166,10 @@ public partial class NPCMovementByState : NPCMovementBase
     {
         // there is one NPC (g008s01m) that only has an idle animation
         // to keep the safeguard we only fallback for Walk0 to Idle0
-        var body = entity.Get<components.ActorParts>().Body;
-        ref readonly var animationPool = ref body.Get<components.AnimationPool>();
+        // also keep in mind that Fairy NPCs do not have bodies
+        if (!entity.TryGet<components.ActorParts>(out var parts))
+            return;
+        ref readonly var animationPool = ref parts.Body.Get<components.AnimationPool>();
         entity.Get<components.NonFairyAnimation>().Next = animationPool.Contains(zzio.AnimationType.Walk0)
             ? zzio.AnimationType.Walk0
             : zzio.AnimationType.Idle0;
