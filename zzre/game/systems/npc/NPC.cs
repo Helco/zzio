@@ -9,6 +9,7 @@ namespace zzre.game.systems;
 public partial class NPC : AEntitySetSystem<float>
 {
     private const uint MaxEnabledII2 = 1000;
+    private const float DefaultNpcRadius = 0.5f; // the radius of a Pixie
 
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
@@ -109,6 +110,11 @@ public partial class NPC : AEntitySetSystem<float>
             if (entity.Get<components.NPCType>() == components.NPCType.Biped &&
                 !entity.Has<components.PuppetActorMovement>())
                 entity.Set<components.PuppetActorMovement>();
+
+            // Triggerable NPCs do not necessarily have a model set (see sc_2421), 
+            // the default radius seems to be then the Pixie model...
+            if (!entity.Has<Sphere>())
+                entity.Set(new Sphere(Vector3.Zero, DefaultNpcRadius));
 
             // TODO: Add Pixie behaviour
             // TODO: Add PlantBlocker behaviour

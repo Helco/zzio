@@ -247,6 +247,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
 
     private void HandleStatisticsContent()
     {
+        ImGui.Text($"BSphere Radius: {mesh?.BoundingSphere.Radius}");
         ImGui.Text($"Vertices: {mesh?.VertexCount}");
         ImGui.Text($"Triangles: {mesh?.TriangleCount}");
         ImGui.Text($"Submeshes: {mesh?.SubMeshes.Count}");
