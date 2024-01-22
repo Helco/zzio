@@ -8,6 +8,7 @@ namespace zzre.game.components;
 public class ScriptExecution // reference type as we have to have reference members as well
 {
     public IReadOnlyList<RawInstruction> Instructions { get; }
+    public IReadOnlyDictionary<int, int> LabelTargets { get; }
     public int CurrentI;
 
     public bool HasStopped => CurrentI >= Instructions.Count;
@@ -20,26 +21,17 @@ public class ScriptExecution // reference type as we have to have reference memb
             .Select(s => new RawInstruction(s))
             .Select(Compile)
             .ToArray();
+
+        var labelTargets = new Dictionary<int, int>();
+        foreach (var (instruction, index) in Instructions.Indexed().Where(t => t.Value.Command == "$"))
+        {
+            var label = int.Parse(instruction.Arguments.First());
+            labelTargets.TryAdd(label, index);
+        }
+        LabelTargets = labelTargets;
     }
 
     // TODO: Replace ScriptExecution ctor with actual compiler
-
-    public bool GoToLabel(int labelId)
-    {
-        int i;
-        for (i = CurrentI; i < Instructions.Count; i++)
-        {
-            if (Instructions[i].Command == "$" &&
-                int.Parse(Instructions[i].Arguments.First()) == labelId)
-                break;
-        }
-        if (i < Instructions.Count)
-        {
-            CurrentI = i;
-            return true;
-        }
-        return false;
-    }
 
     private static RawInstruction Compile(RawInstruction raw) => LongToShortCommand.TryGetValue(raw.Command, out var shortCommand) ?
         new RawInstruction(shortCommand, raw.Arguments)
