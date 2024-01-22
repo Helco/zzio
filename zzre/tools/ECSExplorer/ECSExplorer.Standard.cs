@@ -32,6 +32,7 @@ partial class ECSExplorer
             var c when c == AnimalWaypointAI.Configuration.Rabbit => "Rabbit ",
             _ => "unknown "
         } + entity.Get<Trigger>().idx);
+        AddEntityNamerByComponent<CollectionFairy>(Highest, e => $"CollectionFairy \"{e.Get<InventoryFairy>().name}\" {e}");
 
         AddEntityNamerByComponent<InventoryFairy>(High + 1, e => $"OwnedFairy \"{e.Get<InventoryFairy>().name}\" {e}");
         AddEntityNamerByComponent<FairyRow>(High, e => $"Fairy \"{e.Get<FairyRow>().Name}\" {e}");
@@ -55,6 +56,7 @@ partial class ECSExplorer
         AddEntityGrouperByComponent<Butterfly>(1000, Animals);
         AddEntityGrouperByComponent<CirclingBird>(1000, Animals);
         AddEntityGrouperByComponent<AnimalWaypointAI>(1000, Animals);
+        AddEntityGrouperByComponent<CollectionFairy>(1000, Animals);
         AddEntityGrouperByComponent<ClumpMesh>(0, Models);
         AddEntityGrouperByComponent<Trigger>(-1, Triggers);
     }

@@ -66,6 +66,10 @@ public static class NumericsExtensions
         ? ((float*)&v)[i]
         : throw new ArgumentOutOfRangeException(nameof(i));
 
+    /// <summary>
+    /// Generates a random number between 0 and 1 (exclusive)
+    /// </summary>
+    /// <returns>A random number between 0 and 1 (exclusive)</returns>
     public static float NextFloat(this Random random) => (float)random.NextDouble();
 
     public static Vector2 InPositiveSquare(this Random random) => new(random.NextFloat(), random.NextFloat());

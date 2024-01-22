@@ -77,6 +77,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.Butterfly(this),
             new systems.CirclingBird(this),
             new systems.AnimalWaypointAI(this),
+            new systems.CollectionFairy(this),
             new systems.HumanPhysics(this),
             new systems.PlayerPuppet(this),
             new systems.PuppetActorTarget(this),

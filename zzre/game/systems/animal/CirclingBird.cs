@@ -6,7 +6,7 @@ namespace zzre.game.systems;
 
 public partial class CirclingBird : AEntitySetSystem<float>
 {
-    public CirclingBird(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
+    public CirclingBird(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
     }
 

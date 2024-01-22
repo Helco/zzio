@@ -20,7 +20,7 @@ public class Dataset : ISceneSection
     public SceneType sceneType;
     public UID nameUID;
     public ushort unk1;
-    public bool isInterior, isLondon;
+    public bool isInterior, canChangeDeck;
     public uint unk4;
     public bool isHotScene, unk6;
     public string s1 = "", s2 = "";
@@ -37,7 +37,7 @@ public class Dataset : ISceneSection
         unk1 = reader.ReadUInt16();
         reader.ReadUInt16(); // padding
         isInterior = reader.ReadUInt32() != 0;
-        isLondon = reader.ReadByte() != 0;
+        canChangeDeck = reader.ReadByte() != 0;
         reader.ReadBytes(3); // padding
         unk4 = reader.ReadUInt32();
         isHotScene = reader.ReadUInt32() != 0;
@@ -58,7 +58,7 @@ public class Dataset : ISceneSection
         writer.Write(unk1);
         writer.Write((ushort)0); // padding
         writer.Write((uint)(isInterior ? 1 : 0));
-        writer.Write(isLondon);
+        writer.Write(canChangeDeck);
         writer.Write((ushort)0); // padding
         writer.Write((byte)0);
         writer.Write(unk4);

@@ -47,7 +47,7 @@ public partial class SceneEditor
             InputText("Name UID", ref nameUID, 8);
             InputInt("Unk1", ref unk1);
             Checkbox("Unk2", ref dataset.isInterior);
-            Checkbox("Is London", ref dataset.isLondon);
+            Checkbox("Is London", ref dataset.canChangeDeck);
             InputInt("Unk4", ref unk4);
             Checkbox("Unk5", ref dataset.isHotScene);
             Checkbox("Unk6", ref dataset.unk6);
