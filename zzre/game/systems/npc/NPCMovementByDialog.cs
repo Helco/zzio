@@ -22,14 +22,14 @@ public partial class NPCMovementByDialog : NPCMovementBase
         components.NPCType npcType,
         Location location,
         ref components.NPCMovement move,
-        ref components.NonFairyAnimation animation,
         in components.NPCIsWalkingByDialog byDialog)
     {
         if (!UpdateWalking(elapsedTime, entity, npcType, location, ref move))
             return;
 
-        if (move.NextWaypointId == -1)
-            animation.Next = zzio.AnimationType.Idle0;
+        var animation = entity.TryGet<components.NonFairyAnimation>();
+        if (move.NextWaypointId == -1 && animation.HasValue)
+            animation.Value.Next = zzio.AnimationType.Idle0;
 
         recorder.Record(entity).Remove<components.NPCIsWalkingByDialog>();
         recorder.Record(byDialog.DialogEntity).Set(components.DialogState.NextScriptOp);
