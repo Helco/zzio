@@ -22,8 +22,6 @@ public class Game : BaseDisposable, ITagContainer
     private readonly ISystem<CommandList> renderSystems;
     private readonly systems.SyncedLocation syncedLocation;
 
-    private WorldRenderer worldRenderer = null!;
-
     public DefaultEcs.Entity PlayerEntity => // Placeholder during transition
         ecsWorld.GetEntities().With<components.PlayerPuppet>().AsEnumerable().First();
     public IResource SceneResource { get; private set; } = null!;
@@ -53,9 +51,9 @@ public class Game : BaseDisposable, ITagContainer
         AddTag(new resources.SkeletalAnimation(this));
 
         ecsWorld.SetMaxCapacity<Scene>(1);
-        ecsWorld.SetMaxCapacity<WorldMesh>(1);
-        ecsWorld.SetMaxCapacity<WorldCollider>(1);
-        ecsWorld.SetMaxCapacity<WorldRenderer>(1);
+
+        // create it now for extra priority in the scene loading events
+        var worldRenderer = new systems.WorldRendererSystem(this);
 
         var updateSystems = new systems.RecordingSequentialSystem<float>(this);
         this.updateSystems = updateSystems;
@@ -120,6 +118,7 @@ public class Game : BaseDisposable, ITagContainer
 
         syncedLocation = new systems.SyncedLocation(this);
         renderSystems = new SequentialSystem<CommandList>(
+            worldRenderer,
             new systems.ActorRenderer(this),
             new systems.ModelRenderer(this, components.RenderOrder.EarlySolid),
             new systems.ModelRenderer(this, components.RenderOrder.EarlyAdditive),
@@ -136,11 +135,6 @@ public class Game : BaseDisposable, ITagContainer
 
         LoadScene($"sc_{savegame.sceneId:D4}");
         ecsWorld.Publish(new messages.PlayerEntered(FindEntryTrigger(savegame.entryId)));
-
-        ecsWorld.GetEntities()
-            .With((in Trigger t) => t.idx == 88)
-            .AsEnumerable()
-            .FirstOrDefault().Dispose();
     }
 
     protected override void DisposeManaged()
@@ -163,24 +157,18 @@ public class Game : BaseDisposable, ITagContainer
     public void Update()
     {
         updateSystems.Update(time.Delta);
-        worldRenderer.UpdateVisibility();
     }
 
     public void Render(CommandList cl)
     {
         camera.Update(cl);
         syncedLocation.Update(cl);
-        worldRenderer.Render(cl);
         renderSystems.Update(cl);
     }
 
     public void LoadScene(string sceneName)
     {
         Console.WriteLine("Load " + sceneName);
-
-        if (ecsWorld.Has<WorldMesh>())
-            ecsWorld.Get<WorldMesh>().Dispose();
-        worldRenderer?.Dispose();
 
         var resourcePool = GetTag<IResourcePool>();
         SceneResource = resourcePool.FindFile($"resources/worlds/{sceneName}.scn") ??
@@ -190,15 +178,7 @@ public class Game : BaseDisposable, ITagContainer
             throw new System.IO.FileNotFoundException($"Could not open scene: {sceneName}");
         var scene = new Scene();
         scene.Read(sceneStream);
-
-        var worldPath = new FilePath("resources").Combine(scene.misc.worldPath, scene.misc.worldFile + ".bsp");
-        var worldMesh = new WorldMesh(this, worldPath);
-
         ecsWorld.Set(scene);
-        ecsWorld.Set(worldMesh);
-        ecsWorld.Set(new WorldCollider(worldMesh.World));
-        ecsWorld.Set(worldRenderer = new WorldRenderer(this));
-        worldRenderer.WorldMesh = worldMesh;
 
         ecsWorld.Publish(new messages.SceneLoaded(scene));
     }
