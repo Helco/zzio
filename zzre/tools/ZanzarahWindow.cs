@@ -17,6 +17,7 @@ public class ZanzarahWindow : IZanzarahContainer
     private Action<Vector2>? onMouseMove;
     private bool moveCamWithDrag;
     private ECSExplorer? ecsExplorer;
+    private bool isFirstFrame = true;
 
     private bool MoveCamWithDrag
     {
@@ -117,7 +118,12 @@ public class ZanzarahWindow : IZanzarahContainer
             keysDown.Clear();
             buttonsDown.Clear();
         }
-        Zanzarah.Update();
+        if (isFirstFrame)
+            // this fixes a rare bug where UI elements are misplaced due to ImGui resizing the window
+            // on the second frame using the config.
+            isFirstFrame = false;
+        else
+            Zanzarah.Update();
         fbArea.IsDirty = true;
         mouseArea.Content();
         fbArea.Content();
