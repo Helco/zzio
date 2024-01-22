@@ -53,7 +53,8 @@ public partial class DialogTalk : ui.BaseScreen<components.ui.DialogTalk, messag
         var faceWidth = TryCreateFace(uiEntity, npcEntity, bgRect);
         CreateNameLabel(uiEntity, npcEntity, bgRect, faceWidth);
 
-        var talkLabels = message.DialogEntity.Get<components.DialogTalkLabels>();
+        var talkLabels = message.DialogEntity.TryGet<components.DialogTalkLabels>()
+            .GetValueOrDefault(components.DialogTalkLabels.Exit);
         if (talkLabels == components.DialogTalkLabels.Exit)
             CreateSingleButton(uiEntity, new UID(0xF7DFDC21), IDExit, bgRect);
         else if (talkLabels == components.DialogTalkLabels.Continue)
