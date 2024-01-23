@@ -61,6 +61,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.PlayerSpawner(this),
             new systems.PlayerControls(this),
             new systems.ModelLoader(this),
+            new systems.BackdropLoader(this),
             new systems.PlantWiggle(this),
             new systems.BehaviourSwing(this),
             new systems.BehaviourRotate(this),
@@ -70,6 +71,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.BehaviourCollectablePhysics(this),
             new systems.BehaviourCollectable(this),
             new systems.BehaviourMagicBridge(this),
+            new systems.MoveToLocation(this),
             new systems.AdvanceAnimation(this),
             new systems.Animal(this),
             new systems.Butterfly(this),
@@ -118,6 +120,7 @@ public class Game : BaseDisposable, ITagContainer
 
         syncedLocation = new systems.SyncedLocation(this);
         renderSystems = new SequentialSystem<CommandList>(
+            new systems.ModelRenderer(this, components.RenderOrder.Backdrop),
             worldRenderer,
             new systems.ActorRenderer(this),
             new systems.ModelRenderer(this, components.RenderOrder.EarlySolid),

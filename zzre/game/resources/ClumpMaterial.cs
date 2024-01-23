@@ -17,7 +17,8 @@ public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, ModelMaterial>
     private static readonly FilePath[] TextureBasePaths =
     {
         new FilePath("resources/textures/models"),
-        new FilePath("resources/textures/worlds")
+        new FilePath("resources/textures/worlds"),
+        new FilePath("resources/textures/backdrops"),
     };
 
     private readonly ITagContainer diContainer;

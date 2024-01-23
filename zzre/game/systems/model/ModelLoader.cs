@@ -153,7 +153,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
             Color = color with { a = AlphaFromRenderType(renderType) },
             SurfaceProperties = surfaceProps
         });
-        entity.Set(new List<materials.ModelMaterial>(clumpMesh.SubMeshes.Count));
+        entity.Set(new List<materials.ModelMaterial>(clumpMesh.Materials.Count));
 
         entity.Set(ManagedResource<materials.ModelMaterial>.Create(clumpMesh.Materials
             .Select(rwMaterial => new resources.ClumpMaterialInfo(renderType, rwMaterial))
