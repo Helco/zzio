@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Veldrid;
+using zzio.vfs;
 using zzre.game;
 using zzre.imgui;
 
@@ -12,6 +13,7 @@ public class ZanzarahWindow : IZanzarahContainer
     private readonly ITagContainer diContainer;
     private readonly FramebufferArea fbArea;
     private readonly MouseEventArea mouseArea;
+    private readonly OpenFileModal selectSceneModal;
     private readonly HashSet<Key> keysDown = new();
     private readonly HashSet<MouseButton> buttonsDown = new();
     private Action<Vector2>? onMouseMove;
@@ -91,13 +93,22 @@ public class ZanzarahWindow : IZanzarahContainer
         mouseArea = new MouseEventArea(Window);
         Zanzarah = new Zanzarah(diContainer, this);
         Window.AddTag(Zanzarah);
+
+        selectSceneModal = new(diContainer)
+        {
+            Filter = "sc_*.scn",
+            IsFilterChangeable = false
+        };
+        selectSceneModal.OnOpenedResource += TeleportToScene;
+
         var menuBar = new MenuBarWindowTag(Window);
         menuBar.AddCheckbox(
             "Controls/Move camera by dragging",
             () => ref moveCamWithDrag,
             () => MoveCamWithDrag = MoveCamWithDrag);
         menuBar.AddButton("Open scene", HandleOpenScene);
-        menuBar.AddButton("ECS Explorer", HandleOpenECSExplorer);
+        menuBar.AddButton("Debug/ECS Explorer", HandleOpenECSExplorer);
+        menuBar.AddButton("Debug/Teleport to scene", selectSceneModal.Modal.Open);
 
         Window.OnContent += HandleContent;
         fbArea.OnRender += Zanzarah.Render;
@@ -167,5 +178,13 @@ public class ZanzarahWindow : IZanzarahContainer
         }
         else
             diContainer.GetTag<WindowContainer>().SetNextFocusedWindow(ecsExplorer.Window);
+    }
+
+    private void TeleportToScene(IResource resource)
+    {
+        // this should probably check if we even are in the Overworld
+        if (Zanzarah.CurrentGame == null)
+            return;
+        Zanzarah.CurrentGame?.LoadScene(resource.Name.Replace(".scn", ""), targetEntry: -1);
     }
 }

@@ -62,11 +62,8 @@ public partial class Doorway : AEntitySetSystem<float>
         fadeOffTime -= elapsedTime;
         if (fadeOffTime > 0f)
             return;
-
-        World.Publish(new messages.SceneChanging());
-        World.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
-        game.LoadScene(targetScene);
-        World.Publish(new messages.PlayerEntered(game.FindEntryTrigger(targetEntry)));
+        
+        game.LoadScene(targetScene, targetEntry);
         entity.Set(components.GameFlow.Normal);
 
         var newSceneName = World.Get<Scene>().dataset.nameUID;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using DefaultEcs;
 using DefaultEcs.System;
 using Veldrid;
 using zzio;
@@ -136,8 +137,7 @@ public class Game : BaseDisposable, ITagContainer
         //camera.Location.LocalPosition = -worldBuffers.Origin;
         ecsWorld.Set(worldLocation);
 
-        LoadScene($"sc_{savegame.sceneId:D4}");
-        ecsWorld.Publish(new messages.PlayerEntered(FindEntryTrigger(savegame.entryId)));
+        LoadScene($"sc_{savegame.sceneId:D4}", savegame.entryId);
     }
 
     protected override void DisposeManaged()
@@ -169,9 +169,11 @@ public class Game : BaseDisposable, ITagContainer
         renderSystems.Update(cl);
     }
 
-    public void LoadScene(string sceneName)
+    public void LoadScene(string sceneName, int targetEntry)
     {
         Console.WriteLine("Load " + sceneName);
+        ecsWorld.Publish(new messages.SceneChanging());
+        ecsWorld.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
 
         var resourcePool = GetTag<IResourcePool>();
         SceneResource = resourcePool.FindFile($"resources/worlds/{sceneName}.scn") ??
@@ -184,6 +186,7 @@ public class Game : BaseDisposable, ITagContainer
         ecsWorld.Set(scene);
 
         ecsWorld.Publish(new messages.SceneLoaded(scene));
+        ecsWorld.Publish(new messages.PlayerEntered(FindEntryTrigger(targetEntry)));
     }
 
     public Trigger? TryFindTrigger(TriggerType type, int ii1 = -1)
