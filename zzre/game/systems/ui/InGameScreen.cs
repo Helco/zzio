@@ -16,16 +16,16 @@ public static class InGameScreen
     public static readonly components.ui.ElementId IDOpenMap = new(1004);
     public static readonly components.ui.ElementId IDSaveGame = new(1005);
 
-    private record struct TabInfo(components.ui.ElementId Id, int PosX, int TileI, UID TooltipUID);
+    private record struct TabInfo(components.ui.ElementId Id, int PosX, int TileI, UID TooltipUID, StdItemId Item);
     private static readonly TabInfo[] Tabs = new TabInfo[]
     {
-        new(IDOpenDeck,      PosX: 553, TileI: 21, TooltipUID: new(0xdeadbeef)),
-        new(IDOpenRunes,     PosX: 427, TileI: 12, TooltipUID: new(0x6636B4A1)),
-        new(IDOpenFairybook, PosX: 469, TileI: 15, TooltipUID: new(0x8D1BBCA1)),
-        new(IDOpenMap,       PosX: 511, TileI: 18, TooltipUID: new(0xC51E6991))
+        new(IDOpenDeck,      PosX: 553, TileI: 21, TooltipUID: new(0xdeadbeef), StdItemId.FairyBag),
+        new(IDOpenRunes,     PosX: 427, TileI: 12, TooltipUID: new(0x6636B4A1), StdItemId.RuneFairyGarden),
+        new(IDOpenFairybook, PosX: 469, TileI: 15, TooltipUID: new(0x8D1BBCA1), StdItemId.FairyBook),
+        new(IDOpenMap,       PosX: 511, TileI: 18, TooltipUID: new(0xC51E6991), StdItemId.MapFairyGarden)
     };
 
-    public static void CreateTopButtons(UIPreloader preload, in DefaultEcs.Entity parent, components.ui.ElementId curTab)
+    public static void CreateTopButtons(UIPreloader preload, in DefaultEcs.Entity parent, Inventory inventory, components.ui.ElementId curTab)
     {
         preload.CreateButton(parent)
             .With(IDClose)
@@ -45,6 +45,8 @@ public static class InGameScreen
 
         foreach (var tab in Tabs)
         {
+            if (!inventory.Contains(tab.Item))
+                continue;
             var tabButton = preload.CreateButton(parent)
                 .With(tab.Id)
                 .With(Mid + new Vector2(tab.PosX, 3))

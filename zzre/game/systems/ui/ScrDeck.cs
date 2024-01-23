@@ -59,8 +59,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
         if (!inventory.Contains(StdItemId.FairyBag))
-            inventory.AddItem((int)StdItemId.FairyBag);
-            //return;
+           return;
 
         var entity = World.CreateEntity();
         entity.Set<components.ui.ScrDeck>();
@@ -70,7 +69,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
         CreateBackgrounds(entity, ref deck);
         CreateListControls(entity, ref deck);
-        CreateTopButtons(preload, entity, IDOpenDeck);
+        CreateTopButtons(preload, entity, inventory, IDOpenDeck);
         CreateFairySlots(entity, ref deck);
 
         if (deck.ActiveTab == Tab.None)
@@ -549,6 +548,8 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             UpdateSliderPosition(deck);
             FillList(ref deck);
         }
+        else if (id == IDClose)
+            deckEntity.Dispose();
     }
 
     private void UpdateSliderPosition(in components.ui.ScrDeck deck)
