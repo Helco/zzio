@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
+using zzio;
 using zzio.vfs;
 using zzre.rendering;
 
@@ -45,10 +46,10 @@ public class Zanzarah : ITagContainer
         this.zanzarahContainer = zanzarahContainer;
 
         var savegame = new zzio.Savegame() { sceneId = 3600 };
-        /*using (var fileStream = new System.IO.FileStream(@"C:\dev\zanzarah\Save\_0004.dat", System.IO.FileMode.Open, System.IO.FileAccess.Read))
+        using (var fileStream = new System.IO.FileStream(@"C:\dev\zanzarah\Save\_0004.dat", System.IO.FileMode.Open, System.IO.FileAccess.Read))
         using (var reader = new System.IO.BinaryReader(fileStream))
             savegame = zzio.Savegame.ReadNew(reader);
-        savegame.sceneId = 3202;*/
+        savegame.entryId = -1;
         CurrentGame = new Game(this, savegame);
         tagContainer.AddTag(CurrentGame);
     }

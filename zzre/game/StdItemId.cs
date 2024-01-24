@@ -33,6 +33,7 @@ public enum StdItemId
     RuneTopOfWorld = 34,
     RuneSkyIsles = 35,
     RuneDarkzone = 36,
+    RuneCottage = 37,
     FairyBook = 58,
     FairyBag = 59,
     ManaPotion = 60,

@@ -19,7 +19,7 @@ public static class InGameScreen
     private record struct TabInfo(components.ui.ElementId Id, int PosX, int TileI, UID TooltipUID, StdItemId Item);
     private static readonly TabInfo[] Tabs = new TabInfo[]
     {
-        new(IDOpenDeck,      PosX: 553, TileI: 21, TooltipUID: new(0xdeadbeef), StdItemId.FairyBag),
+        new(IDOpenDeck,      PosX: 553, TileI: 21, TooltipUID: new(0x6659B4A1), StdItemId.FairyBag),
         new(IDOpenRunes,     PosX: 427, TileI: 12, TooltipUID: new(0x6636B4A1), StdItemId.RuneFairyGarden),
         new(IDOpenFairybook, PosX: 469, TileI: 15, TooltipUID: new(0x8D1BBCA1), StdItemId.FairyBook),
         new(IDOpenMap,       PosX: 511, TileI: 18, TooltipUID: new(0xC51E6991), StdItemId.MapFairyGarden)

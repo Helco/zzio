@@ -18,7 +18,7 @@ public partial class Label : AEntitySetSystem<float>
         @"\G{(?:" +
         @"(\d\*)|" + // change font
         @"(t\d{1,3})|" + // set cursor position
-        @"(\d{2,4})" + // add single icon from another font
+        @"(\d{2,4}\})" + // add single icon from another font
         ")",
         RegexOptions.Compiled);
 
@@ -170,7 +170,7 @@ public partial class Label : AEntitySetSystem<float>
         void AddSpecialTile(string identifier)
         {
             int alternativeI = identifier[0] - '0';
-            int tileI = int.Parse(identifier[1..]);
+            int tileI = int.Parse(identifier[1..^1]);
             if (alternativeI < 0 || alternativeI >= rootTileSheet.Alternatives.Count)
                 return;
             CreateTile(tileI, rootTileSheet.Alternatives[alternativeI]);

@@ -548,6 +548,11 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             UpdateSliderPosition(deck);
             FillList(ref deck);
         }
+        else if (id == IDOpenRunes)
+        {
+            deckEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
+        }
         else if (id == IDClose)
             deckEntity.Dispose();
     }
@@ -579,9 +584,6 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         base.HandleKeyDown(key);
 
         if (key == Key.Enter)
-        {
-            foreach (var entity in Set.GetEntities())
-                entity.Dispose();
-        }
+            Set.DisposeAll();
     }
 }

@@ -108,6 +108,6 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     protected abstract void HandleOpen(in TMessage message);
 
     [Update]
-    protected abstract void Update(float timeElapsed, in DefaultEcs.Entity entity, ref TComponent component);
+    protected virtual void Update(float timeElapsed, in DefaultEcs.Entity entity, ref TComponent component) { }
 
 }
