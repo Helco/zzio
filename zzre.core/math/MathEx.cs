@@ -79,7 +79,7 @@ public static class MathEx
 
         return new Vector3(
             MathF.Sin(newAngle),
-            to.Y,
+            from.Y,
             MathF.Cos(newAngle));
     }
 }
