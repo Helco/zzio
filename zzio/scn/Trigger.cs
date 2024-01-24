@@ -27,7 +27,7 @@ public class Trigger : ISceneSection
     public string s = "";
     public Vector3 // TODO: Move Collider out 
         pos,
-        size; // only if type == Box
+        end; // only if type == Box
     public float radius; // only if type == Sphere
 
     public void Read(Stream stream)
@@ -44,12 +44,12 @@ public class Trigger : ISceneSection
         ii4 = reader.ReadUInt32();
         s = reader.ReadZString();
         pos = reader.ReadVector3();
-        size = new Vector3();
+        end = new Vector3();
         radius = 0.0f;
         switch (colliderType)
         {
             case TriggerColliderType.Box:
-                size = reader.ReadVector3();
+                end = reader.ReadVector3();
                 break;
             case TriggerColliderType.Sphere:
                 radius = reader.ReadSingle();
@@ -76,7 +76,7 @@ public class Trigger : ISceneSection
         switch (colliderType)
         {
             case TriggerColliderType.Box:
-                writer.Write(size);
+                writer.Write(end);
                 break;
             case TriggerColliderType.Sphere:
                 writer.Write(radius);

@@ -101,7 +101,7 @@ public partial class TriggerActivation : AEntitySetSystem<float>
             case TriggerColliderType.Point: return false;
 
             case TriggerColliderType.Box:
-                var box = new Box(Vector3.Zero, trigger.size);
+                var box = Box.FromMinMax(trigger.pos, trigger.end);
                 if (!box.Intersects(location, playerPos))
                     return false;
                 break;

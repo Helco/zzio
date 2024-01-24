@@ -36,14 +36,14 @@ public partial class SceneEditor
 
         public IRaycastable? RenderedBounds => SceneTrigger.colliderType switch
         {
-            TriggerColliderType.Box => new Box(Vector3.Zero, SceneTrigger.size).TransformToWorld(Location),
+            TriggerColliderType.Box => Box.FromMinMax(Location.GlobalPosition, Location.GlobalPosition + SceneTrigger.end - SceneTrigger.pos),
             TriggerColliderType.Sphere => new Sphere(Location.GlobalPosition, SceneTrigger.radius),
             TriggerColliderType.Point => null,
             _ => throw new NotImplementedException("Unknown TriggerColliderType")
         };
         public float ViewSize => SceneTrigger.colliderType switch
         {
-            TriggerColliderType.Box => SceneTrigger.size.MaxComponent(),
+            TriggerColliderType.Box => (SceneTrigger.end - SceneTrigger.pos).MaxComponent(),
             TriggerColliderType.Sphere => SceneTrigger.radius * 2f,
             TriggerColliderType.Point => PointTriggerSize * 2f,
             _ => throw new NotImplementedException("Unknown TriggerColliderType")
@@ -75,7 +75,8 @@ public partial class SceneEditor
                     break;
 
                 case TriggerColliderType.Box:
-                    InputFloat3("Size", ref SceneTrigger.size);
+                    var size = SceneTrigger.end - SceneTrigger.pos;
+                    InputFloat3("Size", ref size);
                     break;
             }
         }

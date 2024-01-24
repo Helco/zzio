@@ -56,10 +56,8 @@ public partial class SceneEditor
         private readonly SceneEditor editor;
         private readonly ITagContainer diContainer;
         private readonly Camera camera;
-        private readonly DebugLineRenderer boxBoundsRenderer;
-        private readonly DebugLineRenderer sphereBoundsRenderer;
+        private readonly DebugLineRenderer boundsRenderer;
 
-        private IRenderable? activeBoundsRenderer = null;
         private ISelectable[] lastPotentials = Array.Empty<ISelectable>();
         private int lastPotentialI;
 
@@ -72,25 +70,21 @@ public partial class SceneEditor
             var fbArea = diContainer.GetTag<FramebufferArea>();
             var mouseEventArea = diContainer.GetTag<MouseEventArea>();
 
-            boxBoundsRenderer = new DebugLineRenderer(diContainer);
-            boxBoundsRenderer.Material.LinkTransformsTo(camera);
-            boxBoundsRenderer.Material.World.Value = Matrix4x4.Identity;
-            sphereBoundsRenderer = new DebugLineRenderer(diContainer);
-            sphereBoundsRenderer.Material.LinkTransformsTo(camera);
-            sphereBoundsRenderer.Material.World.Value = Matrix4x4.Identity;
+            boundsRenderer = new DebugLineRenderer(diContainer);
+            boundsRenderer.Material.LinkTransformsTo(camera);
+            boundsRenderer.Material.World.Value = Matrix4x4.Identity;
 
             editor.Window.OnContent += HandleGizmos;
             editor.OnLoadScene += () => editor.Selected = null;
             editor.OnNewSelection += HandleNewSelection;
-            fbArea.OnRender += HandleRender;
+            fbArea.OnRender += boundsRenderer.Render;
             mouseEventArea.OnButtonUp += HandleClick;
         }
 
         protected override void DisposeManaged()
         {
             base.DisposeManaged();
-            boxBoundsRenderer.Dispose();
-            sphereBoundsRenderer.Dispose();
+            boundsRenderer.Dispose();
         }
 
         private void HandleGizmos()
@@ -114,24 +108,15 @@ public partial class SceneEditor
         private void HandleNewSelection(ISelectable? newSelected)
         {
             var bounds = newSelected?.RenderedBounds;
-            if (bounds is OrientedBox boxBounds)
-            {
-                boxBoundsRenderer.Clear();
-                boxBoundsRenderer.AddBox(boxBounds, IColor.Red);
-                activeBoundsRenderer = boxBoundsRenderer;
-            }
+            boundsRenderer.Clear();
+            if (bounds is OrientedBox orientedBoxBounds)
+                boundsRenderer.AddBox(orientedBoxBounds, IColor.Red);
+            else if (bounds is Box boxBounds)
+                boundsRenderer.AddBox(boxBounds, IColor.Red);
             else if (bounds is Sphere sphereBounds)
-            {
-                sphereBoundsRenderer.Clear();
-                sphereBoundsRenderer.AddDiamondSphere(sphereBounds, IColor.Red);
-                activeBoundsRenderer = sphereBoundsRenderer;
-            }
-            else
-                activeBoundsRenderer = null;
+                boundsRenderer.AddDiamondSphere(sphereBounds, IColor.Red);
             editor.fbArea.IsDirty = true;
         }
-
-        private void HandleRender(CommandList cl) => activeBoundsRenderer?.Render(cl);
 
         private void HandleClick(MouseButton button, Vector2 pos)
         {
