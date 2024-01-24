@@ -37,13 +37,28 @@ internal partial class ECSExplorer
 
     private void HandleContent()
     {
+        BeginTabBar("Worlds", ImGuiTabBarFlags.AutoSelectNewTabs);
+        if (BeginTabItem("UI"))
+        {
+            HandleContentFor(Zanzarah.UI.GetTag<DefaultEcs.World>());
+            EndTabItem();
+        }
+        if (Zanzarah.CurrentGame != null && BeginTabItem("Game"))
+        {
+            HandleContentFor(Zanzarah.CurrentGame.GetTag<DefaultEcs.World>());
+            EndTabItem();
+        }
+        EndTabBar();
+    }
+
+    private void HandleContentFor(DefaultEcs.World world)
+    {
         if (Zanzarah.CurrentGame == null)
             return;
 
         var entityContentRenderer = new EntityContentRenderer();
 
-        var children = Zanzarah.CurrentGame.PlayerEntity.World
-            .ToLookup(e => e.TryGet<Parent>().GetValueOrDefault().Entity);
+        var children = world.ToLookup(e => e.TryGet<Parent>().GetValueOrDefault().Entity);
 
         var groups = children[default].ToLookup(GetEntityGroup);
 
