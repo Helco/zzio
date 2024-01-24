@@ -1,5 +1,8 @@
 ﻿using System;
 using zzre.game.components;
+using zzre.game.components.ui;
+using zzre.game.resources;
+using zzre.materials;
 using zzre.rendering;
 using zzio;
 using zzio.db;
@@ -43,6 +46,24 @@ partial class ECSExplorer
         AddEntityNamerByComponent<ClumpMesh>(Def, e => $"Model {e.Get<ClumpMesh>().Name} {e}");
 
         AddEntityNamerByComponent(Low, (in Trigger t) => $"Trigger {t.type} {t.idx}");
+
+        AddEntityNamer(High, e => e.Has<Rect>() || !e.TryGet<ManagedResource<UITileSheetInfo, TileSheet>>(out var res) ? null
+            : $"Preload {(res.Info.IsFont ? "font" : "tilesheet")} {res.Info.Name}");
+        AddEntityNamer(Def, e => e.Has<Rect>() || !e.TryGet<ManagedResource<string, UIMaterial>>(out var res) ? null : $"Preload bitmap {res.Info}");
+        AddEntityNamerByComponent<ButtonTiles>(High, e => $"Button #{e.TryGet<ElementId>().GetValueOrDefault(default).Value} {e}");
+        AddEntityNamerByComponent<TooltipTarget>(High, e => $"Tooltip Target {e}");
+        AddEntityNamerByComponent<Fade>(High, e => $"Fade {e}");
+        AddEntityNamerByComponent<Slider>(High, e => $"Slider #{e.TryGet<ElementId>().GetValueOrDefault(default).Value} {e}");
+        AddEntityNamerByComponent(High, (in AnimatedLabel label) => $"Anim. Label \"{Sanitize(label.FullText)}\"");
+        AddEntityNamerByComponent(Def, (in Label label) => $"Label \"{Sanitize(label.Text)}\"");
+        AddEntityNamerByComponent<Tile[]>(Low, e => $"Visuals {e}");
+
+        AddEntityNamerByComponent<ScrDeck>(High, nameof(ScrDeck));
+        AddEntityNamerByComponent<ScrGotCard>(High, nameof(ScrGotCard));
+        AddEntityNamerByComponent<ScrRuneMenu>(High, nameof(ScrRuneMenu));
+        AddEntityNamerByComponent<ScrNotification>(High, nameof(ScrNotification));
+
+        static string Sanitize(string t) => t[0..Math.Min(16, t.Length)].Replace("\n", "\\n").Replace("\t", "\\t");
     }
 
     private static void AddStandardEntityGrouping()
@@ -51,6 +72,7 @@ partial class ECSExplorer
         const string Triggers = "Triggers";
         const string NPCs = "NPCs";
         const string Animals = "Animals";
+        const string Preload = "Preload";
 
         AddEntityGrouperByComponent<NpcRow>(1000, NPCs);
         AddEntityGrouperByComponent<Butterfly>(1000, Animals);
@@ -59,5 +81,7 @@ partial class ECSExplorer
         AddEntityGrouperByComponent<CollectionFairy>(1000, Animals);
         AddEntityGrouperByComponent<ClumpMesh>(0, Models);
         AddEntityGrouperByComponent<Trigger>(-1, Triggers);
+
+        AddEntityGrouper(1000, e => e.Has<UIMaterial>() && !e.Has<Rect>() ? Preload : null);
     }
 }
