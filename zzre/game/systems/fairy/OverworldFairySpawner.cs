@@ -86,5 +86,9 @@ public partial class OverworldFairySpawner : AEntitySetSystem<float>
         actorParts.Body.Get<Location>().Parent = fairy.Get<Location>();
         //actorParts.Body.Get<Skeleton>().JumpToAnimation(actorParts.Body.Get<components.AnimationPool>()[zzio.AnimationType.SpecialIdle0]);
         actorParts.Wings!.Value.Get<Skeleton>().JumpToAnimation(actorParts.Wings.Value.Get<components.AnimationPool>()[zzio.AnimationType.Idle0]);
+
+        if (parent.TryGet<components.ActorParts>(out var parentActorParts) &&
+            parentActorParts.Body.Get<components.Visibility>() == components.Visibility.Invisible)
+            World.Publish(new messages.CreatureSetVisibility(fairy, false));
     }
 }
