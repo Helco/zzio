@@ -157,7 +157,7 @@ public class Game : BaseDisposable, ITagContainer
         //camera.Location.LocalPosition = -worldBuffers.Origin;
         ecsWorld.Set(worldLocation);
 
-        LoadOverworldScene(savegame.sceneId, savegame.entryId);
+        LoadOverworldScene(savegame.sceneId, () => FindEntryTrigger(savegame.entryId));
     }
 
     protected override void DisposeManaged()
@@ -189,10 +189,10 @@ public class Game : BaseDisposable, ITagContainer
         renderSystems.Update(cl);
     }
 
-    public void LoadOverworldScene(int sceneId, int targetEntry) =>
-        LoadScene($"sc_{sceneId:D4}", targetEntry);
+    public void LoadOverworldScene(int sceneId, Func<Trigger> entryTrigger) =>
+        LoadScene($"sc_{sceneId:D4}", entryTrigger);
 
-    public void LoadScene(string sceneName, int targetEntry)
+    public void LoadScene(string sceneName, Func<Trigger> findEntryTrigger)
     {
         Console.WriteLine("Load " + sceneName);
         ecsWorld.Publish(new messages.SceneChanging());
@@ -209,7 +209,7 @@ public class Game : BaseDisposable, ITagContainer
         ecsWorld.Set(scene);
 
         ecsWorld.Publish(new messages.SceneLoaded(scene));
-        ecsWorld.Publish(new messages.PlayerEntered(FindEntryTrigger(targetEntry)));
+        ecsWorld.Publish(new messages.PlayerEntered(findEntryTrigger()));
     }
 
     public Trigger? TryFindTrigger(TriggerType type, int ii1 = -1)
@@ -234,6 +234,11 @@ public class Game : BaseDisposable, ITagContainer
         ?? TryFindTrigger(TriggerType.RuneTarget, targetEntry))
 
         ?? throw new System.IO.InvalidDataException($"Scene does not have suitable entry trigger for {targetEntry}");
+
+    public Trigger FindEntryTriggerForRune() =>
+        TryFindTrigger(TriggerType.RuneTarget) ??
+        TryFindTrigger(TriggerType.SingleplayerStartpoint) ??
+        throw new System.IO.InvalidDataException($"Scene does not have suitable entry trigger for rune teleporting");
 
     public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);
     public TTag GetTag<TTag>() where TTag : class => tagContainer.GetTag<TTag>();

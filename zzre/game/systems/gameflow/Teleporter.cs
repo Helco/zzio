@@ -126,7 +126,7 @@ public partial class Teleporter : AEntitySetSystem<float>
                 else
                 {
                     // GROUP: Fade in new music/ambient
-                    game.LoadOverworldScene(targetScene, (int)targetEntry);
+                    game.LoadOverworldScene(targetScene, game.FindEntryTriggerForRune);
                     World.Publish(messages.LockPlayerControl.Forever); // this disables the normal timed entry lock
                 }
                 state = State.Arriving;

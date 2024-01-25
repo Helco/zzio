@@ -65,7 +65,7 @@ public partial class Doorway : AEntitySetSystem<float>
         if (fadeOffTime > 0f)
             return;
         
-        game.LoadScene(targetScene, targetEntry);
+        game.LoadScene(targetScene, () => game.FindEntryTrigger(targetEntry));
         entity.Set(components.GameFlow.Normal);
     }
 
