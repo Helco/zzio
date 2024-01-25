@@ -203,7 +203,8 @@ public partial class NPCScript : BaseScript
 
     private void StartPrelude(DefaultEcs.Entity entity)
     {
-        World.Publish(new messages.StartDialog(entity, DialogCause.Trigger));
+        if (game.PlayerEntity.Get<components.GameFlow>() == components.GameFlow.Normal)
+            World.Publish(new messages.StartDialog(entity, DialogCause.Trigger));
     }
 
     private void SetNPCType(DefaultEcs.Entity entity, components.NPCType type)
