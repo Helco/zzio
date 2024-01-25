@@ -5,7 +5,6 @@ using System.Linq;
 using System.Numerics;
 using Veldrid;
 using zzio;
-using zzio.rwbs;
 using zzio.vfs;
 using zzre.materials;
 using zzre.rendering;
@@ -131,8 +130,10 @@ public partial class ActorEditor
             {
                 foreach (var ((type, _, ani), index) in animations.Indexed())
                 {
-                    PushID((int)type);
-                    if (Selectable(type.ToString(), index == currentAnimationI))
+                    PushID(index);
+                    var isOverwritten = animations.Skip(index + 1).Any(a => a.type == type);
+                    var name = (isOverwritten ? "(!!!) " : "") + type;
+                    if (Selectable(name, index == currentAnimationI))
                     {
                         currentAnimationI = index;
                         skeleton.JumpToAnimation(ani);
@@ -209,8 +210,8 @@ public partial class ActorEditor
                 PopItemWidth();
                 NextColumn();
 
-
-                var nameDummy = filename;
+                var isOverwritten = animations.Skip(index + 1).Any(a => a.type == curType);
+                var nameDummy = (isOverwritten ? "(!!!) " : "") + filename;
                 InputText("##name", ref nameDummy, 256, ImGuiNET.ImGuiInputTextFlags.ReadOnly);
                 SameLine();
                 PushStyleVar(ImGuiNET.ImGuiStyleVar.Alpha, 0.6f);
