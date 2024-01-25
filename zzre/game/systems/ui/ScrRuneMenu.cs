@@ -153,7 +153,21 @@ public partial class ScrRuneMenu : BaseScreen<components.ui.ScrRuneMenu, message
 
     protected override void HandleKeyDown(Key key)
     {
-        if (key == Key.Enter)
+        var runeMenuEntity = Set.GetEntities()[0];
+        base.HandleKeyDown(key);
+        // if (key == Key.F3) {
+        //     runeMenuEntity.Dispose();
+        //     zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
+        // }
+        // if (key == Key.F4) {
+        //     runeMenuEntity.Dispose();
+        //     zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
+        // }
+        if (key == Key.F5) {
+            runeMenuEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenDeck>();
+        }
+        if (key == Key.Enter || key == Key.Escape || key == Key.F2)
             Set.DisposeAll();
     }
 }
