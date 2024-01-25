@@ -581,9 +581,21 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     protected override void HandleKeyDown(Key key)
     {
+        var deckEntity = Set.GetEntities()[0];
         base.HandleKeyDown(key);
-
-        if (key == Key.Enter)
+        if (key == Key.F2) {
+            deckEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
+        }
+        // if (key == Key.F3) {
+        //     deckEntity.Dispose();
+        //     zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
+        // }
+        // if (key == Key.F4) {
+        //     deckEntity.Dispose();
+        //     zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
+        // }
+        if (key == Key.Enter || key == Key.Escape || key == Key.F5)
             Set.DisposeAll();
     }
 }
