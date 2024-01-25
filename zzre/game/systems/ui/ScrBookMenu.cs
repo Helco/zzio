@@ -42,6 +42,30 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
             .Build();
 
         CreateTopButtons(preload, entity, inventory, IDOpenFairybook);
+        CreateFairyButtons(preload, entity, inventory);
+    }
+
+    private void CreateFairyButtons(UIPreloader preload, in DefaultEcs.Entity entity, Inventory inventory)
+    {
+        var fairies = db.Fairies.OrderBy(fairyRow => fairyRow.CardId.EntityId).ToArray();
+        for (int i = 0; i < fairies.Length; i++)
+        {
+            var fairyRow = fairies[i];
+            foreach (var ownedFairy in inventory.Fairies)
+            {
+                if (ownedFairy.cardId == fairyRow.CardId)
+                {
+                    var element = new components.ui.ElementId(1 + i);
+                    preload.CreateButton(entity)
+                        .With(element)
+                        .With(Mid + new Vector2(226 + 45 * (i % 9), 66 + 45 * (i / 9)))
+                        .With(new components.ui.ButtonTiles(ownedFairy.cardId.EntityId))
+                        .With(preload.Wiz000)
+                        .Build();
+                    break;
+                }
+            }
+        }
     }
 
     protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.ui.ScrBookMenu bookMenu)
