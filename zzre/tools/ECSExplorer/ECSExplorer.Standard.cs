@@ -61,6 +61,7 @@ partial class ECSExplorer
         AddEntityNamerByComponent<ScrDeck>(High, nameof(ScrDeck));
         AddEntityNamerByComponent<ScrGotCard>(High, nameof(ScrGotCard));
         AddEntityNamerByComponent<ScrRuneMenu>(High, nameof(ScrRuneMenu));
+        AddEntityNamerByComponent<ScrBookMenu>(High, nameof(ScrBookMenu));
         AddEntityNamerByComponent<ScrNotification>(High, nameof(ScrNotification));
 
         static string Sanitize(string t) => t[0..Math.Min(16, t.Length)].Replace("\n", "\\n").Replace("\t", "\\t");

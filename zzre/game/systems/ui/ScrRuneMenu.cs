@@ -147,6 +147,11 @@ public partial class ScrRuneMenu : BaseScreen<components.ui.ScrRuneMenu, message
             runeMenuEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenDeck>();
         }
+        else if (id == IDOpenFairybook)
+        {
+            runeMenuEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
+        }
         else if (id == IDClose)
             runeMenuEntity.Dispose();
     }
@@ -155,10 +160,10 @@ public partial class ScrRuneMenu : BaseScreen<components.ui.ScrRuneMenu, message
     {
         var runeMenuEntity = Set.GetEntities()[0];
         base.HandleKeyDown(key);
-        // if (key == Key.F3) {
-        //     runeMenuEntity.Dispose();
-        //     zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
-        // }
+        if (key == Key.F3) {
+            runeMenuEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
+        }
         // if (key == Key.F4) {
         //     runeMenuEntity.Dispose();
         //     zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
