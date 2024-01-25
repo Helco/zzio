@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -9,30 +9,30 @@ using static zzre.game.systems.ui.InGameScreen;
 
 namespace zzre.game.systems.ui;
 
-public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, messages.ui.OpenBookMenu>
+public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.ui.OpenMapMenu>
 {
     private readonly MappedDB db;
 
-    public ScrBookMenu(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
+    public ScrMapMenu(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
     {
         db = diContainer.GetTag<MappedDB>();
         OnElementDown += HandleElementDown;
     }
 
-    protected override void HandleOpen(in messages.ui.OpenBookMenu message)
+    protected override void HandleOpen(in messages.ui.OpenMapMenu message)
     {
         var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
-        if (!inventory.Contains(StdItemId.FairyBook))
+        if (!inventory.Contains(StdItemId.MapFairyGarden))
             return;
 
         var entity = World.CreateEntity();
-        entity.Set<components.ui.ScrBookMenu>();
-        ref var bookMenu = ref entity.Get<components.ui.ScrBookMenu>();
-        bookMenu.Inventory = inventory;
+        entity.Set<components.ui.ScrMapMenu>();
+        ref var mapMenu = ref entity.Get<components.ui.ScrMapMenu>();
+        mapMenu.Inventory = inventory;
 
         preload.CreateImage(entity)
             .With(-new Vector2(320, 240))
-            .WithBitmap("col000")
+            .WithBitmap("map001")
             .WithRenderOrder(1)
             .Build();
 
@@ -41,53 +41,53 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
             .WithText("{205} - ")
             .Build();
 
-        CreateTopButtons(preload, entity, inventory, IDOpenFairybook);
+        CreateTopButtons(preload, entity, inventory, IDOpenMap);
     }
 
-    protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.ui.ScrBookMenu bookMenu)
+    protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.ui.ScrMapMenu mapMenu)
     {
-        base.Update(timeElapsed, entity, ref bookMenu);
+        base.Update(timeElapsed, entity, ref mapMenu);
     }
 
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId id)
     {
-        var bookMenuEntity = Set.GetEntities()[0];
+        var mapMenuEntity = Set.GetEntities()[0];
         if (id == IDOpenDeck)
         {
-            bookMenuEntity.Dispose();
+            mapMenuEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenDeck>();
         }
         else if (id == IDOpenRunes)
         {
-            bookMenuEntity.Dispose();
+            mapMenuEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
         }
-        else if (id == IDOpenMap)
+        else if (id == IDOpenFairybook)
         {
-            bookMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
+            mapMenuEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
         }
         else if (id == IDClose)
-            bookMenuEntity.Dispose();
+            mapMenuEntity.Dispose();
     }
 
     protected override void HandleKeyDown(Key key)
     {
-        var bookMenuEntity = Set.GetEntities()[0];
+        var mapMenuEntity = Set.GetEntities()[0];
         base.HandleKeyDown(key);
         if (key == Key.F2) {
-            bookMenuEntity.Dispose();
+            mapMenuEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
         }
-        if (key == Key.F4) {
-            bookMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
+        if (key == Key.F3) {
+            mapMenuEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
         }
         if (key == Key.F5) {
-            bookMenuEntity.Dispose();
+            mapMenuEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenDeck>();
         }
-        if (key == Key.Enter || key == Key.Escape || key == Key.F3)
+        if (key == Key.Enter || key == Key.Escape || key == Key.F4)
             Set.DisposeAll();
     }
 }

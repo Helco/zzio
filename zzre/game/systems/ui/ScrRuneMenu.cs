@@ -152,6 +152,11 @@ public partial class ScrRuneMenu : BaseScreen<components.ui.ScrRuneMenu, message
             runeMenuEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
         }
+        else if (id == IDOpenMap)
+        {
+            runeMenuEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
+        }
         else if (id == IDClose)
             runeMenuEntity.Dispose();
     }
@@ -164,10 +169,10 @@ public partial class ScrRuneMenu : BaseScreen<components.ui.ScrRuneMenu, message
             runeMenuEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
         }
-        // if (key == Key.F4) {
-        //     runeMenuEntity.Dispose();
-        //     zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
-        // }
+        if (key == Key.F4) {
+            runeMenuEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
+        }
         if (key == Key.F5) {
             runeMenuEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenDeck>();
