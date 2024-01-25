@@ -50,20 +50,15 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         var fairies = db.Fairies.OrderBy(fairyRow => fairyRow.CardId.EntityId).ToArray();
         for (int i = 0; i < fairies.Length; i++)
         {
-            var fairyRow = fairies[i];
-            foreach (var ownedFairy in inventory.Fairies)
+            if (inventory.Contains(fairies[i].CardId))
             {
-                if (ownedFairy.cardId == fairyRow.CardId)
-                {
-                    var element = new components.ui.ElementId(1 + i);
-                    preload.CreateButton(entity)
-                        .With(element)
-                        .With(Mid + new Vector2(226 + 45 * (i % 9), 66 + 45 * (i / 9)))
-                        .With(new components.ui.ButtonTiles(ownedFairy.cardId.EntityId))
-                        .With(preload.Wiz000)
-                        .Build();
-                    break;
-                }
+                var element = new components.ui.ElementId(1 + i);
+                preload.CreateButton(entity)
+                    .With(element)
+                    .With(Mid + new Vector2(226 + 45 * (i % 9), 66 + 45 * (i / 9)))
+                    .With(new components.ui.ButtonTiles(fairies[i].CardId.EntityId))
+                    .With(preload.Wiz000)
+                    .Build();
             }
         }
     }
