@@ -15,8 +15,8 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
     private const Key MenuKey = Key.Enter;
     // private const Key PauseKey = Key.F1;
     private const Key RuneMenuKey = Key.F2;
-    // private const Key BookMenuKey = Key.F3;
-    // private const Key MapMenuKey = Key.F4;
+    private const Key BookMenuKey = Key.F3;
+    private const Key MapMenuKey = Key.F4;
     private const Key DeckMenuKey = Key.F5;
     // private const Key EscapeKey = Key.Escape;
     private readonly IZanzarahContainer zzContainer;
@@ -105,8 +105,8 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
             {
                 case MenuKey: ui.Publish<messages.ui.OpenDeck>(); break;
                 case RuneMenuKey: ui.Publish<messages.ui.OpenRuneMenu>(); break;
-                // case BookMenuKey: ui.Publish<messages.ui.OpenBookMenu>(); break;
-                // case MapMenuKey: ui.Publish<messages.ui.OpenMapMenu>(); break;
+                case BookMenuKey: ui.Publish<messages.ui.OpenBookMenu>(); break;
+                case MapMenuKey: ui.Publish<messages.ui.OpenMapMenu>(); break;
                 case DeckMenuKey: ui.Publish<messages.ui.OpenDeck>(); break;
             }
         }

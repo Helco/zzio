@@ -553,6 +553,16 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             deckEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
         }
+        else if (id == IDOpenFairybook)
+        {
+            deckEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
+        }
+        else if (id == IDOpenMap)
+        {
+            deckEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
+        }
         else if (id == IDClose)
             deckEntity.Dispose();
     }
@@ -587,14 +597,14 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             deckEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
         }
-        // if (key == Key.F3) {
-        //     deckEntity.Dispose();
-        //     zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
-        // }
-        // if (key == Key.F4) {
-        //     deckEntity.Dispose();
-        //     zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
-        // }
+        if (key == Key.F3) {
+            deckEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
+        }
+        if (key == Key.F4) {
+            deckEntity.Dispose();
+            zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
+        }
         if (key == Key.Enter || key == Key.Escape || key == Key.F5)
             Set.DisposeAll();
     }
