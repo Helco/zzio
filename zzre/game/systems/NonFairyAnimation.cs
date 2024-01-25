@@ -146,7 +146,7 @@ public partial class NonFairyAnimation : AEntitySetSystem<float>
     private static readonly IReadOnlyDictionary<zzio.AnimationType, SimpleSwitch> SimpleSwitches = new Dictionary<zzio.AnimationType, SimpleSwitch>()
     {
         { zzio.AnimationType.Jump,          new SimpleSwitch(0.2f,  loops: true,  resetsTimer: false) },
-        { zzio.AnimationType.Dance,         new SimpleSwitch(0.2f,  loops: true,  resetsTimer: false) },
+        { zzio.AnimationType.Dance,         new SimpleSwitch(0.2f,  loops: false,  resetsTimer: false) },
         { zzio.AnimationType.Fall,          new SimpleSwitch(0.2f,  loops: true,  resetsTimer: false) },
         { zzio.AnimationType.Idle1,         new SimpleSwitch(0.2f,  loops: false, resetsTimer: false) },
         { zzio.AnimationType.Idle2,         new SimpleSwitch(0.2f,  loops: false, resetsTimer: false) },

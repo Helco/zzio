@@ -54,6 +54,11 @@ public partial class PlayerPuppet : AEntitySetSystem<float>
         ref components.NonFairyAnimation animation,
         ref components.PuppetActorMovement puppetActorMovement)
     {
+        // this predicate is more than the orginal equivalent (physics state timer) does.
+        // I am reasonably convinced that this will work, but corner cases might appear, keep this in mind.
+        if (puppet.IsAnimationLocked)
+            return;
+
         if (physics.IsDrowning)
             Console.WriteLine("Player died of drowning"); // TODO: Add player death caused by drowning
 

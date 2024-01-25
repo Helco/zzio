@@ -7,5 +7,6 @@ public enum GameFlow
     Normal,
     GotCard,
     Doorway,
-    UnlockDoor
+    UnlockDoor,
+    Teleporter
 }

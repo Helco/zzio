@@ -9,7 +9,6 @@ using zzre.rendering;
 namespace zzre.game.systems;
 
 [With(typeof(components.ActorPart))]
-[With(typeof(components.Visibility))]
 public partial class ActorRenderer : AEntitySetSystem<CommandList>
 {
     private static readonly FilePath[] BaseTexturePaths =
@@ -47,6 +46,9 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         base.PreUpdate(cl);
         cl.PushDebugGroup(nameof(ActorRenderer));
     }
+
+    [WithPredicate]
+    private bool IsVisible(in components.Visibility vis) => vis == components.Visibility.Visible;
 
     [Update]
     private void Update(CommandList cl,
