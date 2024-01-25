@@ -63,7 +63,7 @@ public partial class Teleporter : AEntitySetSystem<float>
             // The gameflow handling these events however are split (teleporters being called "SpecialElevator")
             return;
 
-        game.Publish(new messages.Teleport(sceneId: unchecked((int)trigger.ii2), targetEntry: (int)trigger.ii2));
+        game.Publish(new messages.Teleport(sceneId: unchecked((int)trigger.ii3), targetEntry: (int)trigger.ii2));
         game.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, (int)trigger.idx));
     }
 
