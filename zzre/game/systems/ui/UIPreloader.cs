@@ -165,11 +165,11 @@ public class UIPreloader
             .With(backgroundRect)
             .WithRenderOrder(2);
         if (animateOverlay)
-            overlay.With(new components.ui.Fade(0f, 0.8f, 1.5f));
+            overlay.With(components.ui.Fade.SingleIn(1.5f));
         overlay.Build();
     }
 
-    public DefaultEcs.Entity CreateFullFlashFade(DefaultEcs.Entity parent, IColor color, components.ui.FlashFade flashFade) =>
+    public DefaultEcs.Entity CreateFullFlashFade(DefaultEcs.Entity parent, IColor color, components.ui.Fade flashFade) =>
         CreateImage(parent)
         .With(color)
         .With(components.ui.UIOffset.ScreenUpperLeft)
@@ -179,10 +179,10 @@ public class UIPreloader
         .Build();
 
     public DefaultEcs.Entity CreateStdFlashFade(DefaultEcs.Entity parent) =>
-        CreateFullFlashFade(parent, IColor.Black, new components.ui.FlashFade(
+        CreateFullFlashFade(parent, IColor.Black, new components.ui.Fade(
             From: 0f, To: 1f,
             StartDelay: 0f,
-            OutDuration: 0.3f,
+            InDuration: 0.3f,
             SustainDelay: 0f,
-            InDuration: 0.3f));
+            OutDuration: 0.3f));
 }

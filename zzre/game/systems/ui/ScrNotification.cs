@@ -17,12 +17,9 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
     private static readonly components.ui.ElementId ButtonElementId = new(-1000); // not original but avoids id conflicts
     private static readonly FColor BorderColor = new IColor(0xff, 0xea, 0xB7, 0);
 
-    private readonly MappedDB db;
-
     public ScrNotification(ITagContainer diContainer) : base(diContainer, BlockFlags.None)
     {
         World.SetMaxCapacity<components.ui.ScrNotification>(int.MaxValue);
-        db = diContainer.GetTag<MappedDB>();
         OnElementDown += HandleElementDown;
     }
 
@@ -42,7 +39,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
             .With(UIPreloader.DefaultOverlayColor)
             .With(components.ui.FullAlignment.Center)
             .With(Rect.FromTopLeftSize(new(0, YOffset), new(screenSize.X, OverlayHeight)))
-            .With(components.ui.Fade.In(1f))
+            .With(components.ui.Fade.SingleIn(1f))
             .WithRenderOrder(RenderOrder + 1)
             .Build();
 
@@ -113,7 +110,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
     {
         if (component.IsFading)
         {
-            if (!component.MainOverlay.Has<components.ui.Fade>())
+            if (!component.MainOverlay.IsAlive)
             {
                 entity.Set<components.Dead>();
                 component.Message.ResultAction(component.WasButtonClicked);
@@ -136,7 +133,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
                 component.TextLabel.Dispose();
                 component.IconImage?.Dispose();
                 component.Button?.Dispose();
-                component.MainOverlay.Set(components.ui.Fade.Out(1f));
+                component.MainOverlay.Set(components.ui.Fade.SingleOut(1f));
                 component.TopBorder.Set(components.ui.Fade.StdOut);
                 component.BottomBorder.Set(components.ui.Fade.StdOut);
             }

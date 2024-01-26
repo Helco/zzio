@@ -157,15 +157,15 @@ public partial class Teleporter : AEntitySetSystem<float>
     }
 
     private bool IsFadedOff =>
-        !fadeEntity.TryGet<components.ui.FlashFade>(out var flashFade) || flashFade.IsFadedOut;
+        !fadeEntity.TryGet<components.ui.Fade>(out var flashFade) || flashFade.IsFadedIn;
 
     private DefaultEcs.Entity CreateTeleporterFlash(float startDelay) =>
-        ui.Preload.CreateFullFlashFade(parent: default, zzio.IColor.White, new components.ui.FlashFade(
+        ui.Preload.CreateFullFlashFade(parent: default, zzio.IColor.White, new components.ui.Fade(
             From: 0f, To: 1f,
             startDelay,
-            OutDuration: 0.1f,
+            InDuration: 0.1f,
             SustainDelay: 0.05f,
-            InDuration: 0.1f));
+            OutDuration: 0.1f));
 
     // TODO: Implement missing teleport behaviours
 }

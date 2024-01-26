@@ -12,7 +12,6 @@ internal abstract record Base<T> where T : Base<T>
     protected components.ui.UIOffset offset = components.ui.UIOffset.Center;
     protected zzio.UID? tooltipUID = null;
     protected components.ui.Fade? fade = null;
-    protected components.ui.FlashFade? flashFade = null;
     protected components.Visibility visibility = components.Visibility.Visible;
 
     protected bool HasSize => rect.Size.MaxComponent() > 0.00001f;
@@ -65,15 +64,9 @@ internal abstract record Base<T> where T : Base<T>
         return (T)this;
     }
 
-    public T With(components.ui.Fade fade)
+    public T With(components.ui.Fade flashFade)
     {
-        this.fade = fade;
-        return (T)this;
-    }
-
-    public T With(components.ui.FlashFade flashFade)
-    {
-        this.flashFade = flashFade;
+        this.fade = flashFade;
         return (T)this;
     }
 
@@ -96,11 +89,9 @@ internal abstract record Base<T> where T : Base<T>
         if (tooltipUID.HasValue)
             entity.Set(new components.ui.TooltipUID(tooltipUID.Value));
         if (fade.HasValue)
-            entity.Set(fade.Value);
-        if (flashFade.HasValue)
         {
-            entity.Set(flashFade.Value);
-            entity.Set(color with { a = (byte)(flashFade.Value.From * 255) });
+            entity.Set(fade.Value);
+            entity.Set(color with { a = (byte)(fade.Value.From * 255) });
         }
         return entity;
     }
