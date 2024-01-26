@@ -443,8 +443,10 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     private IEnumerable<InventoryCard> AllCardsOfType(in components.ui.ScrDeck deck) => deck.ActiveTab switch
     {
-        Tab.Items => deck.Inventory.Items.OrderBy(c => c.cardId.EntityId),
-        Tab.Fairies => deck.Inventory.Fairies.OrderBy(c => -c.level),
+        Tab.Items => deck.Inventory.Items
+            .OrderBy(c => c.cardId.EntityId)
+            .OrderBy(c => mappedDB.Items.First(row => row.CardId == c.cardId).Unknown switch { 1 => 0, 0 => 1, _ => 2 }),
+        Tab.Fairies => deck.Inventory.Fairies.OrderByDescending(c => c.level),
         Tab.AttackSpells => deck.Inventory.AttackSpells.OrderBy(c => c.cardId.EntityId),
         Tab.SupportSpells => deck.Inventory.SupportSpells.OrderBy(c => c.cardId.EntityId),
         _ => Enumerable.Empty<InventoryCard>()
@@ -581,7 +583,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         var slider = deck.ListSlider.Get<components.ui.Slider>();
         var allCardsCount = AllCardsOfType(deck).Count();
-        var newScrollI = (int)MathF.Round(slider.Current.Y * (allCardsCount - 1));
+        var newScrollI = (int)MathF.Round(slider.Current.Y * (allCardsCount - 1) * (deck.IsGridMode ? ListRows : 1));
         if (newScrollI != deck.Scroll)
         {
             deck.Scroll = newScrollI;

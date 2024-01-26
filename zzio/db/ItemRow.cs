@@ -14,5 +14,6 @@ public class ItemRow : MappedRow
 
     public string Script => row.cells[4].String;
 
-    public int Unknown => row.cells[5].Integer;
+    // Not all itemRows have this value
+    public int Unknown => row.cells.Length >= 6 ? row.cells[5].Integer : 0;
 }
