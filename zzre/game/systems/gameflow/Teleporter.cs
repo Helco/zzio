@@ -28,6 +28,7 @@ public partial class Teleporter : AEntitySetSystem<float>
     private readonly UI ui;
     private readonly IDisposable triggerDisposable;
     private readonly IDisposable teleportDisposable;
+    private readonly IDisposable sceneChangingDisposable;
 
     private int targetScene, targetEntry;
     private State state;
@@ -40,6 +41,7 @@ public partial class Teleporter : AEntitySetSystem<float>
         ui = diContainer.GetTag<UI>();
         triggerDisposable = World.SubscribeEntityComponentAdded<components.ActiveTrigger>(HandleActiveTrigger);
         teleportDisposable = World.Subscribe<messages.Teleport>(HandleTeleport);
+        sceneChangingDisposable = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
     }
 
     public override void Dispose()
@@ -47,10 +49,16 @@ public partial class Teleporter : AEntitySetSystem<float>
         base.Dispose();
         triggerDisposable.Dispose();
         teleportDisposable.Dispose();
+        sceneChangingDisposable.Dispose();
     }
 
     [WithPredicate]
     private static bool IsInGameFlow(in components.GameFlow flow) => flow == components.GameFlow.Teleporter;
+
+    private void HandleSceneChanging(in messages.SceneChanging message)
+    {
+        targetScene = targetEntry = -1;
+    }
 
     private void HandleActiveTrigger(in DefaultEcs.Entity entity, in components.ActiveTrigger value)
     {
@@ -62,6 +70,12 @@ public partial class Teleporter : AEntitySetSystem<float>
             // Teleporters (also runes) are originally called elevators with different types in ii3
             // The gameflow handling these events however are split (teleporters being called "SpecialElevator")
             return;
+        if (trigger.ii1 == targetEntry)
+        {
+            // this was our last target, we do not want to teleport right back and cause a loop
+            targetEntry = -1;
+            return;
+        }
 
         game.Publish(new messages.Teleport(sceneId: unchecked((int)trigger.ii3), targetEntry: (int)trigger.ii2));
         game.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, (int)trigger.idx));
@@ -118,10 +132,13 @@ public partial class Teleporter : AEntitySetSystem<float>
                 if (targetScene < 0)
                 {
                     // Teleport inside same scene
-                    var targetTrigger = World.GetEntities()
+                    var targetTriggerEntity = World.GetEntities()
                         .With((in Trigger t) => t.type == TriggerType.Elevator && t.ii1 == targetEntry)
                         .AsEnumerable().First();
-                    // TODO: Prevent target elevator trigger from triggering
+                    if (!targetTriggerEntity.TryGet<Trigger>(out var targetTrigger))
+                        throw new InvalidOperationException($"Could not find target elevator trigger {targetEntry}");
+                    World.Publish(messages.LockPlayerControl.Unlock); // to enable the normal timed entry lock
+                    World.Publish(new messages.PlayerEntered(targetTrigger));
                 }
                 else
                 {
