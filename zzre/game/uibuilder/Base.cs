@@ -64,9 +64,9 @@ internal abstract record Base<T> where T : Base<T>
         return (T)this;
     }
 
-    public T With(components.ui.Fade fade)
+    public T With(components.ui.Fade flashFade)
     {
-        this.fade = fade;
+        this.fade = flashFade;
         return (T)this;
     }
 
@@ -79,7 +79,8 @@ internal abstract record Base<T> where T : Base<T>
     protected virtual DefaultEcs.Entity BuildBase()
     {
         var entity = preload.UIWorld.CreateEntity();
-        entity.Set(new components.Parent(parent));
+        if (parent != default)
+            entity.Set(new components.Parent(parent));
         entity.Set(new components.ui.RenderOrder(renderOrder));
         entity.Set(visibility);
         entity.Set(color);
@@ -88,7 +89,10 @@ internal abstract record Base<T> where T : Base<T>
         if (tooltipUID.HasValue)
             entity.Set(new components.ui.TooltipUID(tooltipUID.Value));
         if (fade.HasValue)
+        {
             entity.Set(fade.Value);
+            entity.Set(color with { a = (byte)(fade.Value.From * 255) });
+        }
         return entity;
     }
 

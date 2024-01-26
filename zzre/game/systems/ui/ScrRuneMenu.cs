@@ -140,7 +140,8 @@ public partial class ScrRuneMenu : BaseScreen<components.ui.ScrRuneMenu, message
 
         if (id == runeInfo.elementId)
         {
-            Console.WriteLine("Teleport to " + runeInfo.scene);
+            runeMenuEntity.Dispose();
+            zanzarah.CurrentGame!.Publish(new messages.Teleport(runeInfo.scene, targetEntry: -1));
         }
         else if (id == IDOpenDeck)
         {

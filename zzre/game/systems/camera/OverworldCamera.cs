@@ -58,7 +58,7 @@ public class OverworldCamera : BaseGameCamera
         curCamDistance = maxCameraDistance;
 
         camera.Location.LocalPosition = playerLocation.LocalPosition;
-        camera.Location.LocalRotation = playerLocation.LocalRotation;
+        camera.Location.LookNotIn(playerLocation.GlobalForward);
     }
 
     private void HandleSetCameraMode(in messages.SetCameraMode mode)

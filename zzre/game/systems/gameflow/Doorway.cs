@@ -13,6 +13,7 @@ public partial class Doorway : AEntitySetSystem<float>
     private readonly Game game;
     private readonly MappedDB db;
     private readonly IDisposable doorwayTriggerDisposable;
+    private readonly IDisposable enteredDisposable;
 
     private UID lastSceneName = UID.Invalid;
     private string targetScene = "";
@@ -25,6 +26,7 @@ public partial class Doorway : AEntitySetSystem<float>
         game = diContainer.GetTag<Game>();
         db = diContainer.GetTag<MappedDB>();
         doorwayTriggerDisposable = World.SubscribeEntityComponentAdded<components.ActiveTrigger>(HandleActiveTrigger);
+        enteredDisposable = World.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
     }
 
     public override void Dispose()
@@ -63,9 +65,12 @@ public partial class Doorway : AEntitySetSystem<float>
         if (fadeOffTime > 0f)
             return;
         
-        game.LoadScene(targetScene, targetEntry);
+        game.LoadScene(targetScene, () => game.FindEntryTrigger(targetEntry));
         entity.Set(components.GameFlow.Normal);
+    }
 
+    private void HandlePlayerEntered(in messages.PlayerEntered message)
+    {
         var newSceneName = World.Get<Scene>().dataset.nameUID;
         if (newSceneName != lastSceneName && newSceneName != UID.Invalid)
         {

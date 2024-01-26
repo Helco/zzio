@@ -1,11 +1,10 @@
 ﻿using System;
 using DefaultEcs.System;
 using DefaultEcs.Command;
-using zzio;
 
 namespace zzre.game.systems.ui;
 
-public partial class Fade : AEntitySetSystem<float>
+internal partial class Fade : AEntitySetSystem<float>
 {
     private readonly EntityCommandRecorder recorder;
 
@@ -15,11 +14,11 @@ public partial class Fade : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(in DefaultEcs.Entity entity, float elapsedTime, ref IColor color, ref components.ui.Fade fade)
+    private void Update(in DefaultEcs.Entity entity, float elapsedTime, ref zzio.IColor color, ref components.ui.Fade flashFade)
     {
-        color = color with { a = (byte)(fade.Value * 255f) };
-        fade = fade with { Time = Math.Min(fade.Time + elapsedTime, fade.Duration) };
-        if (fade.Time == fade.Duration)
-            recorder.Record(entity).Remove<components.ui.Fade>();
+        flashFade.CurrentTime += elapsedTime;
+        color = color with { a = (byte)(flashFade.Value * 255f) };
+        if (flashFade.IsFinished)
+            recorder.Record(entity).Dispose();
     }
 }

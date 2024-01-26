@@ -36,7 +36,7 @@ public partial class DialogFadeOut : AEntitySetSystem<float>
     [Update]
     private void Update(in DefaultEcs.Entity entity, in components.DialogCommonUI commonUI)
     {
-        if (!commonUI.Letterbox.Has<components.ui.Fade>())
+        if (!commonUI.Letterbox.IsAlive)
             recorder.Record(entity).Dispose();
     }
 }

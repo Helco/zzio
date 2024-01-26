@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using DefaultEcs;
 using DefaultEcs.System;
 using Veldrid;
 using zzio;
@@ -61,6 +60,8 @@ public class Game : BaseDisposable, ITagContainer
         updateSystems.Add(
             new systems.PlayerSpawner(this),
             new systems.PlayerControls(this),
+
+            // Models and actors
             new systems.ModelLoader(this),
             new systems.BackdropLoader(this),
             new systems.PlantWiggle(this),
@@ -74,15 +75,21 @@ public class Game : BaseDisposable, ITagContainer
             new systems.BehaviourMagicBridge(this),
             new systems.MoveToLocation(this),
             new systems.AdvanceAnimation(this),
+
+            // Animals
             new systems.Animal(this),
             new systems.Butterfly(this),
             new systems.CirclingBird(this),
             new systems.AnimalWaypointAI(this),
             new systems.CollectionFairy(this),
+
+            // Player movement
             new systems.HumanPhysics(this),
             new systems.PlayerPuppet(this),
             new systems.PuppetActorTarget(this),
             new systems.PuppetActorMovement(this),
+
+            // NPC
             new systems.NPC(this),
             new systems.NPCActivator(this),
             new systems.NPCScript(this),
@@ -91,13 +98,18 @@ public class Game : BaseDisposable, ITagContainer
             new systems.NPCIdle(this),
             new systems.NPCLookAtPlayer(this),
             new systems.NPCLookAtTrigger(this),
+
             new systems.TriggerActivation(this),
             new systems.PlayerTriggers(this),
+
+            // Fairies
             new systems.OverworldFairySpawner(this),
             new systems.FairyHoverOffset(this),
             new systems.FairyHoverBehind(this),
             new systems.FairyKeepLastHover(this),
             new systems.FairyAnimation(this),
+
+            // Dialogs
             new systems.DialogScript(this),
             new systems.DialogDelay(this),
             new systems.DialogFadeOut(this),
@@ -105,15 +117,23 @@ public class Game : BaseDisposable, ITagContainer
             new systems.DialogTalk(this),
             new systems.DialogLookAt(this),
             new systems.DialogChoice(this),
+
             new systems.NonFairyAnimation(this),
+
             new systems.Savegame(this),
+            
+            // Cameras
             new systems.FlyCamera(this),
             new systems.OverworldCamera(this),
             new systems.TriggerCamera(this),
             new systems.CreatureCamera(this),
+
+            // Gameflows
             new systems.GotCard(this),
             new systems.Doorway(this),
             new systems.UnlockDoor(this),
+            new systems.Teleporter(this),
+
             new systems.Reaper(this),
             new systems.ParentReaper(this));
         updateSystems.Add(new systems.PauseDuring(this, updateSystems.Systems));
@@ -137,7 +157,7 @@ public class Game : BaseDisposable, ITagContainer
         //camera.Location.LocalPosition = -worldBuffers.Origin;
         ecsWorld.Set(worldLocation);
 
-        LoadScene($"sc_{savegame.sceneId:D4}", savegame.entryId);
+        LoadOverworldScene(savegame.sceneId, () => FindEntryTrigger(savegame.entryId));
     }
 
     protected override void DisposeManaged()
@@ -169,7 +189,10 @@ public class Game : BaseDisposable, ITagContainer
         renderSystems.Update(cl);
     }
 
-    public void LoadScene(string sceneName, int targetEntry)
+    public void LoadOverworldScene(int sceneId, Func<Trigger> entryTrigger) =>
+        LoadScene($"sc_{sceneId:D4}", entryTrigger);
+
+    public void LoadScene(string sceneName, Func<Trigger> findEntryTrigger)
     {
         Console.WriteLine("Load " + sceneName);
         ecsWorld.Publish(new messages.SceneChanging());
@@ -186,7 +209,7 @@ public class Game : BaseDisposable, ITagContainer
         ecsWorld.Set(scene);
 
         ecsWorld.Publish(new messages.SceneLoaded(scene));
-        ecsWorld.Publish(new messages.PlayerEntered(FindEntryTrigger(targetEntry)));
+        ecsWorld.Publish(new messages.PlayerEntered(findEntryTrigger()));
     }
 
     public Trigger? TryFindTrigger(TriggerType type, int ii1 = -1)
@@ -211,6 +234,11 @@ public class Game : BaseDisposable, ITagContainer
         ?? TryFindTrigger(TriggerType.RuneTarget, targetEntry))
 
         ?? throw new System.IO.InvalidDataException($"Scene does not have suitable entry trigger for {targetEntry}");
+
+    public Trigger FindEntryTriggerForRune() =>
+        TryFindTrigger(TriggerType.RuneTarget) ??
+        TryFindTrigger(TriggerType.SingleplayerStartpoint) ??
+        throw new System.IO.InvalidDataException($"Scene does not have suitable entry trigger for rune teleporting");
 
     public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);
     public TTag GetTag<TTag>() where TTag : class => tagContainer.GetTag<TTag>();

@@ -10,7 +10,11 @@ public static class MathEx
     public const float DegToRad = MathF.PI / 180f;
     public const float RadToDeg = 180f / MathF.PI;
 
-    public static float Lerp(float from, float to, float t) => from + (to - from) * t;
+    public static float Lerp(float from, float to, float t) =>
+        Math.Clamp(from + (to - from) * t, Math.Min(from, to), Math.Max(from, to));
+
+    public static float Lerp(float from, float to, float t, float startT, float duration) =>
+        Lerp(from, to, (t - startT) / duration);
 
     public static bool Cmp(float a, float b) =>
         Math.Abs(a - b) <= float.Epsilon * Math.Max(1f, Math.Max(Math.Abs(a), Math.Abs(b)));

@@ -183,8 +183,9 @@ public class ZanzarahWindow : IZanzarahContainer
     private void TeleportToScene(IResource resource)
     {
         // this should probably check if we even are in the Overworld
-        if (Zanzarah.CurrentGame == null)
+        var game = Zanzarah.CurrentGame;
+        if (game == null)
             return;
-        Zanzarah.CurrentGame?.LoadScene(resource.Name.Replace(".scn", ""), targetEntry: -1);
+        game.LoadScene(resource.Name.Replace(".scn", ""), () => game.FindEntryTrigger(-1));
     }
 }

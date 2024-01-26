@@ -17,6 +17,7 @@ public partial class PuppetActorMovement : AEntitySetSystem<float>
     private readonly IDisposable addedSubscription;
     private readonly IDisposable placeToGroundSubscription;
     private readonly IDisposable placeToTriggerSubscription;
+    private readonly IDisposable setVisibilitySubscription;
     private WorldCollider worldCollider = null!;
     private Scene scene = null!;
 
@@ -26,6 +27,7 @@ public partial class PuppetActorMovement : AEntitySetSystem<float>
         addedSubscription = World.SubscribeEntityComponentAdded<components.PuppetActorMovement>(HandleComponentAdded);
         placeToGroundSubscription = World.Subscribe<messages.CreaturePlaceToGround>(HandlePlaceToGround);
         placeToTriggerSubscription = World.Subscribe<messages.CreaturePlaceToTrigger>(HandlePlaceToTrigger);
+        setVisibilitySubscription = World.Subscribe<messages.CreatureSetVisibility>(HandleSetVisibility);
     }
 
     public override void Dispose()
@@ -34,6 +36,7 @@ public partial class PuppetActorMovement : AEntitySetSystem<float>
         addedSubscription.Dispose();
         placeToGroundSubscription.Dispose();
         placeToTriggerSubscription.Dispose();
+        setVisibilitySubscription.Dispose();
     }
 
     private void HandleSceneLoaded(in messages.SceneLoaded message)
@@ -102,5 +105,20 @@ public partial class PuppetActorMovement : AEntitySetSystem<float>
         var targetDir = movement.TargetDirection;
         targetDir.Y = parentLocation.InnerForward.Y;
         actorLocation.HorizontalSlerpIn(targetDir, Curvature, elapsedTime * SlerpSpeed);
+    }
+
+    private void HandleSetVisibility(in messages.CreatureSetVisibility message)
+    {
+        var visibility = message.IsVisible ? components.Visibility.Visible : components.Visibility.Invisible;
+        if (message.Entity.TryGet<components.ActorParts>(out var actorParts))
+        {
+            actorParts.Body.Set(visibility);
+            actorParts.Wings?.Set(visibility);
+        }
+        if (message.Entity.TryGet<components.SpawnedFairy>(out var spawnedFairy) &&
+            spawnedFairy.Entity.IsAlive)
+            World.Publish(message with { Entity = spawnedFairy.Entity });
+
+        // visibility of actor effects should be handled here as well, but we don't have those yet
     }
 }
