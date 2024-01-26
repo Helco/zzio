@@ -444,8 +444,8 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     private IEnumerable<InventoryCard> AllCardsOfType(in components.ui.ScrDeck deck) => deck.ActiveTab switch
     {
         Tab.Items => deck.Inventory.Items
-            .OrderBy(c => c.cardId.EntityId)
-            .ThenBy(c => mappedDB.GetItem(c.cardId).Unknown switch { 1 => 0, 0 => 1, _ => 2 }),
+            .OrderBy(c => mappedDB.GetItem(c.dbUID).Unknown switch { 1 => 0, 0 => 1, _ => 2 })
+            .ThenBy(c => c.cardId.EntityId),
         Tab.Fairies => deck.Inventory.Fairies.OrderByDescending(c => c.level),
         Tab.AttackSpells => deck.Inventory.AttackSpells.OrderBy(c => c.cardId.EntityId),
         Tab.SupportSpells => deck.Inventory.SupportSpells.OrderBy(c => c.cardId.EntityId),
