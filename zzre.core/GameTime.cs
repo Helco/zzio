@@ -14,7 +14,9 @@ public class GameTime
 
     public int TargetFramerate { get; set; } = 60;
     public float TotalElapsed => (float)watch.Elapsed.TotalSeconds;
-    public float Delta { get; private set; } = 0.0f;
+    public float MaxDelta { get; set; } = 1 / 30f;
+    public float Delta => Math.Min(MaxDelta, UnclampedDelta);
+    public float UnclampedDelta { get; private set; } = 0.0f;
     public int Framerate { get; private set; } = 0;
     public bool HasFramerateChanged { get; private set; } = false;
 
@@ -28,7 +30,7 @@ public class GameTime
 
     public void BeginFrame()
     {
-        Delta = (float)(watch.Elapsed - frameStart).TotalSeconds;
+        UnclampedDelta = (float)(watch.Elapsed - frameStart).TotalSeconds;
         frameStart = watch.Elapsed;
 
         curFPS++;

@@ -12,6 +12,7 @@ internal abstract record Base<T> where T : Base<T>
     protected components.ui.UIOffset offset = components.ui.UIOffset.Center;
     protected zzio.UID? tooltipUID = null;
     protected components.ui.Fade? fade = null;
+    protected components.ui.FlashFade? flashFade = null;
     protected components.Visibility visibility = components.Visibility.Visible;
 
     protected bool HasSize => rect.Size.MaxComponent() > 0.00001f;
@@ -70,6 +71,12 @@ internal abstract record Base<T> where T : Base<T>
         return (T)this;
     }
 
+    public T With(components.ui.FlashFade flashFade)
+    {
+        this.flashFade = flashFade;
+        return (T)this;
+    }
+
     public T Invisible()
     {
         visibility = components.Visibility.Invisible;
@@ -79,7 +86,8 @@ internal abstract record Base<T> where T : Base<T>
     protected virtual DefaultEcs.Entity BuildBase()
     {
         var entity = preload.UIWorld.CreateEntity();
-        entity.Set(new components.Parent(parent));
+        if (parent != default)
+            entity.Set(new components.Parent(parent));
         entity.Set(new components.ui.RenderOrder(renderOrder));
         entity.Set(visibility);
         entity.Set(color);
@@ -89,6 +97,11 @@ internal abstract record Base<T> where T : Base<T>
             entity.Set(new components.ui.TooltipUID(tooltipUID.Value));
         if (fade.HasValue)
             entity.Set(fade.Value);
+        if (flashFade.HasValue)
+        {
+            entity.Set(flashFade.Value);
+            entity.Set(color with { a = (byte)(flashFade.Value.From * 255) });
+        }
         return entity;
     }
 

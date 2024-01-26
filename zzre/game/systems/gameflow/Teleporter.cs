@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using DefaultEcs.System;
 using zzio.scn;
 
@@ -27,6 +25,7 @@ public partial class Teleporter : AEntitySetSystem<float>
     private const float FinalWaitDuration = 4f;
 
     private readonly Game game;
+    private readonly UI ui;
     private readonly IDisposable triggerDisposable;
     private readonly IDisposable teleportDisposable;
 
@@ -38,6 +37,7 @@ public partial class Teleporter : AEntitySetSystem<float>
     public Teleporter(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         game = diContainer.GetTag<Game>();
+        ui = diContainer.GetTag<UI>();
         triggerDisposable = World.SubscribeEntityComponentAdded<components.ActiveTrigger>(HandleActiveTrigger);
         teleportDisposable = World.Subscribe<messages.Teleport>(HandleTeleport);
     }
@@ -81,14 +81,13 @@ public partial class Teleporter : AEntitySetSystem<float>
     [Update]
     private new void Update(float elapsedTime, in DefaultEcs.Entity player)
     {
-        timeLeft -= elapsedTime;
+        timeLeft -= Math.Min(1 / 30f, elapsedTime);
         switch(state)
         {
             case State.Initialize:
                 World.Publish(messages.LockPlayerControl.Forever);
                 World.Publish(new messages.ResetPlayerMovement());
                 player.Get<components.PlayerPuppet>().IsAnimationLocked = true;
-                player.Get<components.NonFairyAnimation>().Next = zzio.AnimationType.Dance;
 
                 // GROUP: Spawn effect 4000 on teleporting
                 // GROUP: Play sound effects during teleporting
@@ -97,23 +96,24 @@ public partial class Teleporter : AEntitySetSystem<float>
                 break;
             
             case State.Leaving when timeLeft > 0f:
+                player.Get<components.NonFairyAnimation>().Next = zzio.AnimationType.Dance;
                 // GROUP: set effect progress and sound emitter volume
                 break;
             case State.Leaving when timeLeft <= 0f:
                 // GROUP: Fade out music/ambient
                 // GROUP: toggle rootnode HUD
-                // GROUP: Add teleporter flash
                 World.Publish(new messages.CreatureSetVisibility(player, false));
+                CreateTeleporterFlash(startDelay: 0);
                 state = State.AmyIsGone;
                 timeLeft = AmyIsGoneDuration;
                 break;
 
             case State.AmyIsGone when timeLeft <= 0f:
-                fadeEntity = default; // GROUP: Add actual fade off
+                fadeEntity = ui.Preload.CreateStdFlashFade(parent: default);
                 state = State.FadeOff;
                 break;
 
-            case State.FadeOff when !fadeEntity.IsAlive:
+            case State.FadeOff when IsFadedOff:
                 player.Get<components.PlayerPuppet>().IsAnimationLocked = false;
                 if (targetScene < 0)
                 {
@@ -134,10 +134,12 @@ public partial class Teleporter : AEntitySetSystem<float>
                 break;
 
             case State.Arriving when timeLeft <= 0f:
-                // GROUP: Add teleporter flash
+                fadeEntity = CreateTeleporterFlash(startDelay: 0.3f);
                 state = State.ThereSheIs;
                 break;
 
+            // the original fading has a funny behaviour where it is marked as faded out 
+            // for only one frame. The first check catches this frame, the second one does not.
             case State.ThereSheIs when !fadeEntity.IsAlive:
                 // GROUP: Play sound effect on arriving
                 // GROUP: Spawn effect 4001 on arriving
@@ -153,6 +155,17 @@ public partial class Teleporter : AEntitySetSystem<float>
                 break;
         }
     }
+
+    private bool IsFadedOff =>
+        !fadeEntity.TryGet<components.ui.FlashFade>(out var flashFade) || flashFade.IsFadedOut;
+
+    private DefaultEcs.Entity CreateTeleporterFlash(float startDelay) =>
+        ui.Preload.CreateFullFlashFade(parent: default, zzio.IColor.White, new components.ui.FlashFade(
+            From: 0f, To: 1f,
+            startDelay,
+            OutDuration: 0.1f,
+            SustainDelay: 0.05f,
+            InDuration: 0.1f));
 
     // TODO: Implement missing teleport behaviours
 }

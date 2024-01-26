@@ -13,6 +13,7 @@ public class UIPreloader
     public static readonly FColor DefaultOverlayColor = new(0.029999999f, 0.050000001f, 0.029999999f, 0.8f);
 
     internal readonly DefaultEcs.World UIWorld;
+    private readonly UI ui;
     private readonly zzio.db.MappedDB mappedDb;
 
     public readonly ManagedResource<resources.UITileSheetInfo, TileSheet>
@@ -42,6 +43,7 @@ public class UIPreloader
     public UIPreloader(ITagContainer diContainer)
     {
         UIWorld = diContainer.GetTag<DefaultEcs.World>();
+        ui = diContainer.GetTag<UI>();
         mappedDb = diContainer.GetTag<zzio.db.MappedDB>();
 
         Btn000 = Preload(out var tsBtn000, "btn000", isFont: false);
@@ -166,4 +168,21 @@ public class UIPreloader
             overlay.With(new components.ui.Fade(0f, 0.8f, 1.5f));
         overlay.Build();
     }
+
+    public DefaultEcs.Entity CreateFullFlashFade(DefaultEcs.Entity parent, IColor color, components.ui.FlashFade flashFade) =>
+        CreateImage(parent)
+        .With(color)
+        .With(components.ui.UIOffset.ScreenUpperLeft)
+        .With(ui.LogicalScreen)
+        .WithRenderOrder(100)
+        .With(flashFade)
+        .Build();
+
+    public DefaultEcs.Entity CreateStdFlashFade(DefaultEcs.Entity parent) =>
+        CreateFullFlashFade(parent, IColor.Black, new components.ui.FlashFade(
+            From: 0f, To: 1f,
+            StartDelay: 0f,
+            OutDuration: 0.3f,
+            SustainDelay: 0f,
+            InDuration: 0.3f));
 }
