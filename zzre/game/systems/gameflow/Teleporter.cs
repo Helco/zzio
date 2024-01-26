@@ -78,7 +78,9 @@ public partial class Teleporter : AEntitySetSystem<float>
         }
 
         game.Publish(new messages.Teleport(sceneId: unchecked((int)trigger.ii3), targetEntry: (int)trigger.ii2));
-        game.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, (int)trigger.idx));
+        
+        // Apparently having gone through states 2 or 8 can cause this to happen if subsequently using an in-scene elevator...
+        //game.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, (int)trigger.idx));
     }
 
     private void HandleTeleport(in messages.Teleport message)
