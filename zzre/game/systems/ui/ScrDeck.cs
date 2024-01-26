@@ -443,10 +443,10 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     private IEnumerable<InventoryCard> AllCardsOfType(in components.ui.ScrDeck deck) => deck.ActiveTab switch
     {
-        Tab.Items => deck.Inventory.Items,
-        Tab.Fairies => deck.Inventory.Fairies,
-        Tab.AttackSpells => deck.Inventory.AttackSpells,
-        Tab.SupportSpells => deck.Inventory.SupportSpells,
+        Tab.Items => deck.Inventory.Items.OrderBy(c => c.cardId.EntityId),
+        Tab.Fairies => deck.Inventory.Fairies.OrderBy(c => -c.level),
+        Tab.AttackSpells => deck.Inventory.AttackSpells.OrderBy(c => c.cardId.EntityId),
+        Tab.SupportSpells => deck.Inventory.SupportSpells.OrderBy(c => c.cardId.EntityId),
         _ => Enumerable.Empty<InventoryCard>()
     };
 
