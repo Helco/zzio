@@ -125,7 +125,7 @@ public class OpenFileModal : BaseDisposable
 
             if (IsItemClicked())
                 SelectedResource = resource;
-            if (IsItemHovered() && IsMouseDoubleClicked(ImGuiMouseButton.Left))
+            if (IsItemHovered() && IsMouseDoubleClicked(ImGuiMouseButton.Left) && SelectedResource?.Type == ResourceType.File)
             {
                 SelectedResource = resource;
                 OnOpenedResource(resource);
