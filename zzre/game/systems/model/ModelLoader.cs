@@ -17,6 +17,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     private readonly IDisposable sceneLoadSubscription;
     private readonly IDisposable createItemSubscription;
     private readonly IDisposable removeModelSubscription;
+    private readonly IDisposable removeItemSubscription;
 
     private readonly Dictionary<uint, DefaultEcs.Entity> entitiesById = new();
 
@@ -28,6 +29,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         createItemSubscription = ecsWorld.Subscribe<messages.CreateItem>(HandleCreateItem);
         removeModelSubscription = ecsWorld.Subscribe<GSModRemoveModel>(HandleRemoveModel);
+        removeItemSubscription = ecsWorld.Subscribe<GSModRemoveItem>(HandleRemoveItem);
     }
 
     protected override void DisposeManaged()
@@ -37,6 +39,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         sceneChangingSubscription.Dispose();
         createItemSubscription.Dispose();
         removeModelSubscription.Dispose();
+        removeItemSubscription.Dispose();
     }
 
     public bool IsEnabled { get; set; } = true;
@@ -58,8 +61,14 @@ public class ModelLoader : BaseDisposable, ISystem<float>
 
         float plantWiggleDelay = 0f;
         var behaviors = message.Scene.behaviors.ToDictionary(b => b.modelId, b => b.type);
+        var modelsRemoved = message.GetGameState<GSModRemoveModel>();
+        var itemsRemoved = message.GetGameState<GSModRemoveItem>();
         foreach (var model in message.Scene.models)
         {
+            if (modelsRemoved.Any(mod => mod.ModelId == model.idx) ||
+                itemsRemoved.Any(mod => mod.ModelId == model.idx))
+                continue;
+
             var entity = ecsWorld.CreateEntity();
             entitiesById.Add(model.idx, entity);
             entity.Set(new Location()
@@ -305,9 +314,11 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         }
     }
 
-    private void HandleRemoveModel(in GSModRemoveModel model)
+    private void HandleRemoveModel(in GSModRemoveModel model) => HandleRemove(model.ModelId);
+    private void HandleRemoveItem(in GSModRemoveItem model) => HandleRemove(model.ModelId);
+    private void HandleRemove(uint modelId)
     {
-        var entity = entitiesById[model.ModelId];
-        entity.Set<components.Dead>();
+        if (entitiesById.TryGetValue(modelId, out var entity))
+            entity.Set<components.Dead>();
     }
 }

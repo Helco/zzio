@@ -29,6 +29,18 @@ public class Savegame
         sceneMods.Add(mod);
     }
 
+    public IEnumerable<IGameStateMod> GetGameStateFor(uint sceneId) =>
+        GetGameStateFor($"sc_{sceneId:D4}");
+
+    public IEnumerable<IGameStateMod> GetGameStateFor(string scene)=>
+        gameState.TryGetValue(scene, out var list) ? list : Enumerable.Empty<IGameStateMod>();
+
+    public IEnumerable<TMod> GetGameStateFor<TMod>(uint sceneId) where TMod : IGameStateMod =>
+        GetGameStateFor(sceneId).OfType<TMod>();
+
+    public IEnumerable<TMod> GetGameStateFor<TMod>(string scene) where TMod : IGameStateMod =>
+        GetGameStateFor(scene).OfType<TMod>();
+
     public static Savegame ReadNew(BinaryReader r)
     {
         Savegame sg = new()

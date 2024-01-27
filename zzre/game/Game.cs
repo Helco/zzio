@@ -58,6 +58,7 @@ public class Game : BaseDisposable, ITagContainer
         var updateSystems = new systems.RecordingSequentialSystem<float>(this);
         this.updateSystems = updateSystems;
         updateSystems.Add(
+            new systems.Savegame(this),
             new systems.PlayerSpawner(this),
             new systems.PlayerControls(this),
 
@@ -119,8 +120,6 @@ public class Game : BaseDisposable, ITagContainer
             new systems.DialogChoice(this),
 
             new systems.NonFairyAnimation(this),
-
-            new systems.Savegame(this),
             
             // Cameras
             new systems.FlyCamera(this),
@@ -208,7 +207,7 @@ public class Game : BaseDisposable, ITagContainer
         scene.Read(sceneStream);
         ecsWorld.Set(scene);
 
-        ecsWorld.Publish(new messages.SceneLoaded(scene));
+        ecsWorld.Publish(new messages.SceneLoaded(scene, GetTag<Savegame>()));
         ecsWorld.Publish(new messages.PlayerEntered(findEntryTrigger()));
     }
 

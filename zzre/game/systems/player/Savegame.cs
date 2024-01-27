@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using DefaultEcs.System;
 using zzio;
@@ -13,6 +12,8 @@ public class Savegame : ISystem<float>
 
     private readonly DefaultEcs.World world;
     private readonly zzio.Savegame savegame;
+    private readonly IDisposable sceneLoadedDisposable;
+    private readonly IDisposable setTriggerExecuteDisposable;
     private readonly IDisposable playerEnteredDisposable;
     private readonly IDisposable disableAttackTriggerDisposable;
     private readonly IDisposable removeItemDisposable;
@@ -29,6 +30,8 @@ public class Savegame : ISystem<float>
     {
         world = diContainer.GetTag<DefaultEcs.World>();
         savegame = diContainer.GetTag<zzio.Savegame>();
+        sceneLoadedDisposable = world.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
+        setTriggerExecuteDisposable = world.Subscribe<GSModSetTrigger>(HandleSetTriggerExecute);
         playerEnteredDisposable = world.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
         disableAttackTriggerDisposable = world.Subscribe<GSModDisableAttackTrigger>(HandleDisableAttackTrigger);
         removeItemDisposable = world.Subscribe<GSModRemoveItem>(HandleRemoveItem);
@@ -42,6 +45,8 @@ public class Savegame : ISystem<float>
 
     public void Dispose()
     {
+        sceneLoadedDisposable.Dispose();
+        setTriggerExecuteDisposable.Dispose();
         playerEnteredDisposable.Dispose();
         disableAttackTriggerDisposable.Dispose();
         removeItemDisposable.Dispose();
@@ -51,6 +56,27 @@ public class Savegame : ISystem<float>
         setTriggerDisposable.Dispose();
         setNpcModifierDisposable.Dispose();
         gsmodForSceneDisposable.Dispose();
+    }
+
+    private void HandleSceneLoaded(in messages.SceneLoaded message)
+    {
+        var setTriggers = message.GetGameState<GSModSetTrigger>();
+        foreach (var set in setTriggers)
+            HandleSetTriggerExecute(set);
+    }
+
+    private void HandleSetTriggerExecute(in GSModSetTrigger msg)
+    {
+        // this might have to be done before anything else loads in the scene
+        // so this is sadly the best place for it right now
+        var triggerId = msg.TriggerId;
+        var trigger = world.Get<Scene>().triggers.FirstOrDefault(t => t.idx == triggerId);
+        if (trigger == null)
+            return;
+        if (msg.II1 != uint.MaxValue) trigger.ii1 = msg.II1;
+        if (msg.II2 != uint.MaxValue) trigger.ii2 = msg.II2;
+        if (msg.II3 != uint.MaxValue) trigger.ii3 = msg.II3;
+        if (msg.II4 != uint.MaxValue) trigger.ii4 = msg.II4;
     }
 
     private void HandlePlayerEntered(in messages.PlayerEntered message)
@@ -70,14 +96,14 @@ public class Savegame : ISystem<float>
     private void HandleGSModForThisScene(IGameStateMod gsMod)
     {
         if (IsEnabled)
-            savegame.Add($"sc_{CurSceneID}", gsMod);
+            savegame.Add($"sc_{CurSceneID:D4}", gsMod);
     }
 
     private void HandleGSModForScene(in messages.GSModForScene message)
     {
         if (message.SceneId != CurSceneID)
         {
-            savegame.Add($"sc_{message.SceneId}", message.Mod);
+            savegame.Add($"sc_{message.SceneId:D4}", message.Mod);
             return;
         }
 

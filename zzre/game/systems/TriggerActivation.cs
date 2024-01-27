@@ -15,6 +15,7 @@ public partial class TriggerActivation : AEntitySetSystem<float>
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadedSubscription;
     private readonly IDisposable disableTriggerSubscription;
+    private readonly IDisposable disableAttackTriggerSubscription;
     private Location playerLocation => playerLocationLazy.Value;
     private readonly Lazy<Location> playerLocationLazy;
 
@@ -24,7 +25,8 @@ public partial class TriggerActivation : AEntitySetSystem<float>
         playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
-        disableTriggerSubscription = World.Subscribe<zzio.GSModDisableTrigger>(HandleDisableTrigger);
+        disableTriggerSubscription = World.Subscribe<GSModDisableTrigger>(HandleDisableTrigger);
+        disableAttackTriggerSubscription = World.Subscribe<GSModDisableAttackTrigger>(HandleDisableTrigger);
     }
 
     public override void Dispose()
@@ -33,6 +35,7 @@ public partial class TriggerActivation : AEntitySetSystem<float>
         sceneChangingSubscription.Dispose();
         sceneLoadedSubscription.Dispose();
         disableTriggerSubscription.Dispose();
+        disableAttackTriggerSubscription.Dispose();
     }
 
     private void HandleSceneChanging(in messages.SceneChanging _) => World //  Set is filtered by collider
@@ -47,6 +50,8 @@ public partial class TriggerActivation : AEntitySetSystem<float>
             .AsEnumerable()
             .Select(e => e.Get<Trigger>())
             .ToHashSet();
+        var disabledTriggers = msg.GetGameState<GSModDisableTrigger>();
+        var disabledAttackTriggers = msg.GetGameState<GSModDisableAttackTrigger>();
 
         foreach (var trigger in msg.Scene.triggers.Except(triggersWithEntities))
         {
@@ -58,10 +63,15 @@ public partial class TriggerActivation : AEntitySetSystem<float>
                 LocalRotation = trigger.dir.ToZZRotation()
             });
             entity.Set(trigger);
+            if (disabledTriggers.Any(t => t.TriggerId == trigger.idx) ||
+                disabledAttackTriggers.Any(t => t.TriggerId == trigger.idx))
+                entity.Set<components.Disabled>();
         }
     }
 
-    private void HandleDisableTrigger(in GSModDisableTrigger message)
+    private void HandleDisableTrigger(in GSModDisableTrigger message) => HandleDisableTrigger(message.TriggerId);
+    private void HandleDisableTrigger(in GSModDisableAttackTrigger message) => HandleDisableTrigger(message.TriggerId);
+    private void HandleDisableTrigger(uint triggerId)
     {
         var triggers = World.GetComponents<Trigger>();
         var triggerEntities = World.GetEntities()
@@ -69,7 +79,7 @@ public partial class TriggerActivation : AEntitySetSystem<float>
             .AsEnumerable();
         foreach (var entity in triggerEntities)
         {
-            if (triggers[entity].idx == message.TriggerId)
+            if (triggers[entity].idx == triggerId)
             {
                 entity.Set<components.Disabled>();
                 break;

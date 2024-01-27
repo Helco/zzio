@@ -40,17 +40,30 @@ public partial class NPC : AEntitySetSystem<float>
         if (!IsEnabled)
             return;
 
-        var triggers = World
-            .GetEntities()
-            .With((in Trigger t) => t.type == TriggerType.NpcStartpoint)
-            .AsEnumerable()
-            .ToArray();
-        foreach (var trigger in triggers.Where(t => t.Get<Trigger>().ii2 >= MaxEnabledII2))
-            trigger.Disable();
-
+        // because a SetNpcModifier might overwrite a DisableTrigger we have to
+        // go through them in order
+        var gameState = message.GetGameState(); 
         var scene = message.Scene;
-        foreach (var trigger in scene.triggers.Where(t => t.type == TriggerType.NpcStartpoint && t.ii2 < MaxEnabledII2))
+        foreach (var trigger in scene.triggers.Where(t => t.type == TriggerType.NpcStartpoint))
         {
+            foreach (var gsMod in gameState)
+            {
+                switch(gsMod)
+                {
+                    case GSModDisableTrigger disable when disable.TriggerId == trigger.idx:
+                        trigger.ii2 = MaxEnabledII2;
+                        break;
+                    case GSModSetNPCModifier setModifier when setModifier.TriggerId == trigger.idx:
+                        trigger.ii2 = unchecked((uint)setModifier.Value);
+                        break;
+                    case GSModChangeNPCState changeState when changeState.TriggerId == trigger.idx:
+                        trigger.ii1 = changeState.UID.raw;
+                        break;
+                }
+            }
+            if (trigger.ii2 >= MaxEnabledII2)
+                continue;
+
             var entity = World.CreateEntity();
             entity.Set(trigger);
 
@@ -78,7 +91,7 @@ public partial class NPC : AEntitySetSystem<float>
             entity.Set(components.NPCState.Script);
             entity.Set(components.NPCMovement.Default);
             entity.Set<components.NPCIdle>();
-            entity.Set<components.NPCModifier>();
+            entity.Set(new components.NPCModifier(unchecked((int)trigger.ii2)));
             entity.Set<components.NPCLookAtPlayer>();
             entity.Set<components.NPCLookAtTrigger>();
             entity.Set<components.Collidable>();
