@@ -183,7 +183,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         {
             return textureLoader.LoadTexture(texturePaths, rwMaterial);
         }
-        catch(InvalidDataException)
+        catch(Exception e) when (e is InvalidOperationException or InvalidDataException)
         {
             var texture = device.ResourceFactory.CreateTexture(new(2, 2, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
             device.UpdateTexture(texture, new byte[]
