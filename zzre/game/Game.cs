@@ -18,6 +18,7 @@ public class Game : BaseDisposable, ITagContainer
     private readonly GameTime time;
     private readonly DefaultEcs.World ecsWorld;
     private readonly Camera camera;
+    private readonly OnceAction onceUpdate = new();
     private readonly ISystem<float> updateSystems;
     private readonly ISystem<CommandList> renderSystems;
     private readonly systems.SyncedLocation syncedLocation;
@@ -156,7 +157,7 @@ public class Game : BaseDisposable, ITagContainer
         //camera.Location.LocalPosition = -worldBuffers.Origin;
         ecsWorld.Set(worldLocation);
 
-        LoadOverworldScene(savegame.sceneId, () => FindEntryTrigger(savegame.entryId));
+        onceUpdate.Next += () => LoadOverworldScene(savegame.sceneId, () => FindEntryTrigger(savegame.entryId));
     }
 
     protected override void DisposeManaged()
@@ -178,6 +179,7 @@ public class Game : BaseDisposable, ITagContainer
 
     public void Update()
     {
+        onceUpdate.Invoke();
         updateSystems.Update(time.Delta);
     }
 
