@@ -1,5 +1,6 @@
 option IsInstanced; // TODO: I probably need a way for instanced-only shaders?
 option IsFont;
+option HasMask;
 option Is3D;
 
 instances if (!Is3D) float2 inPos;
@@ -12,6 +13,7 @@ instances
 	byte4_norm inColor;
 	float inTexWeight;
 }
+instances if (HasMask) uint inMaskBits;
 
 uniform texture2D mainTexture;
 uniform sampler mainSampler;
@@ -19,6 +21,12 @@ uniform float2 screenSize;
 uniform if (Is3D) mat4 projection;
 uniform if (Is3D) mat4 view;
 uniform if (Is3D) mat4 world;
+uniform if (HasMask)
+{
+	utexture2D maskTexture;
+	sampler maskSampler;
+}
+uniform if (HasMask) uint maskBits;
 
 varying float2 varUV;
 
@@ -75,6 +83,12 @@ fragment
 	}
 	vec4 color = texture(sampler2D(mainTexture, mainSampler), uv) * inTexWeight;
 	color += (1 - inTexWeight) * inColor;
+	if (HasMask)
+	{
+		uint section = texture(usampler2D(maskTexture, maskSampler), uv).r;
+		if ((maskBits & (uint(1) << section)) == 0)
+			color = vec4(0, 0, 0, 1);
+	}
 	if (color.a < 0.1)
 		discard;
 	outColor = color;

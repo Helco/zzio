@@ -28,23 +28,30 @@ public class UIMaterial : MlangMaterial, IStandardTransformMaterial
     public bool IsInstanced { set => SetOption(nameof(IsInstanced), value); }
     public bool IsFont { set => SetOption(nameof(IsFont), value); }
     public bool Is3D { set => SetOption(nameof(Is3D), value); }
+    public bool HasMask { set => SetOption(nameof(HasMask), value); }
 
-    public TextureBinding Texture { get; }
-    public SamplerBinding Sampler { get; }
+    public TextureBinding MainTexture { get; }
+    public SamplerBinding MainSampler { get; }
     public UniformBinding<Vector2> ScreenSize { get; }
     public UniformBinding<Matrix4x4> Projection { get; }
     public UniformBinding<Matrix4x4> View { get; }
     public UniformBinding<Matrix4x4> World { get; }
+    public TextureBinding MaskTexture { get; }
+    public SamplerBinding MaskSampler { get; }
+    public UniformBinding<uint> MaskBits { get; }
 
     public UIMaterial(ITagContainer diContainer) : base(diContainer, "ui")
     {
         IsInstanced = true;
-        AddBinding("mainTexture", Texture = new(this));
-        AddBinding("mainSampler", Sampler = new(this));
+        AddBinding("mainTexture", MainTexture = new(this));
+        AddBinding("mainSampler", MainSampler = new(this));
         AddBinding("screenSize", ScreenSize = new(this));
         AddBinding("projection", Projection = new(this));
         AddBinding("view", View = new(this));
         AddBinding("world", World = new(this));
+        AddBinding("maskTexture", MaskTexture = new(this));
+        AddBinding("maskSampler", MaskSampler = new(this));
+        AddBinding("maskBits", MaskBits = new(this));
     }
 }
 

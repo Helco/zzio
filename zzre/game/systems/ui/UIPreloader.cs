@@ -160,6 +160,14 @@ public class UIPreloader
             .Build();
         backgroundRect = image.Get<Rect>();
 
+        CreateBackOverlay(parent, animateOverlay, backgroundRect);
+    }
+
+    public void CreateBackOverlay(
+        DefaultEcs.Entity parent,
+        bool animateOverlay,
+        Rect backgroundRect)
+    {
         var overlay = CreateImage(parent)
             .With(DefaultOverlayColor with { a = animateOverlay ? 0f : 0.8f })
             .With(backgroundRect)

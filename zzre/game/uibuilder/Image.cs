@@ -66,7 +66,7 @@ internal record Image : Base<Image>
         else if (bitmap != null)
         {
             entity.Set(ManagedResource<materials.UIMaterial>.Create(bitmap));
-            var texture = entity.Get<materials.UIMaterial>().Texture.Texture!;
+            var texture = entity.Get<materials.UIMaterial>().MainTexture.Texture!;
             size = new(texture.Width, texture.Height);
         }
         else // if (tileSheet != null)

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using DefaultEcs.Resource;
+﻿using DefaultEcs.Resource;
 using Veldrid;
 using Veldrid.ImageSharp;
 using SixLabors.ImageSharp;
@@ -39,8 +38,8 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
             .CreateDeviceTexture(graphicsDevice, resourceFactory);
         texture.Name = "UIBitmap " + name;
         var material = new materials.UIMaterial(diContainer);
-        material.Texture.Texture = texture;
-        material.Sampler.Sampler = graphicsDevice.LinearSampler;
+        material.MainTexture.Texture = texture;
+        material.MainSampler.Sampler = graphicsDevice.LinearSampler;
         material.ScreenSize.Buffer = ui.ProjectionBuffer;
         return material;
     }
@@ -52,7 +51,7 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
 
     protected override void Unload(string info, materials.UIMaterial resource)
     {
-        resource.Texture.Texture?.Dispose();
+        resource.MainTexture.Texture?.Dispose();
         resource.Dispose();
     }
 
@@ -77,7 +76,7 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
         return bitmap;
     }
 
-    private static Image<TPixel>? LoadBitmap<TPixel>(IResourcePool resourcePool, string name, string suffix)
+    internal static Image<TPixel>? LoadBitmap<TPixel>(IResourcePool resourcePool, string name, string suffix)
         where TPixel : unmanaged, IPixel<TPixel>
     {
         var path = BasePath.Combine(name + suffix);

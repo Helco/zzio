@@ -55,7 +55,7 @@ public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.
         fontSampler.Dispose();
         foreach (var material in materials.Values)
         {
-            material.Texture?.Dispose();
+            material.MainTexture?.Dispose();
             material.Dispose();
         }
     }
@@ -79,8 +79,8 @@ public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.
         UploadTileSheet(bitmap, texture, info.IsFont);
 
         var material = new UIMaterial(diContainer) { IsFont = info.IsFont };
-        material.Texture.Texture = texture;
-        material.Sampler.Sampler = info.IsFont ? fontSampler : linearSampler;
+        material.MainTexture.Texture = texture;
+        material.MainSampler.Sampler = info.IsFont ? fontSampler : linearSampler;
         material.ScreenSize.Buffer = ui.ProjectionBuffer;
         materials.Add(tileSheet, material);
         return tileSheet;
@@ -95,7 +95,7 @@ public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.
     protected override void Unload(UITileSheetInfo info, TileSheet resource)
     {
         var material = materials[resource];
-        material.Texture.Texture?.Dispose();
+        material.MainTexture.Texture?.Dispose();
         material.Dispose();
         materials.Remove(resource);
     }

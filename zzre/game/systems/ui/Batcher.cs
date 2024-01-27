@@ -31,7 +31,7 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
         emptyTexture = resourceFactory.CreateTexture(
             new TextureDescription(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
         untexturedMaterial = new UIMaterial(diContainer);
-        untexturedMaterial.Texture.Texture = emptyTexture;
+        untexturedMaterial.MainTexture.Texture = emptyTexture;
         untexturedMaterial.ScreenSize.Buffer = diContainer.GetTag<UI>().ProjectionBuffer;
     }
 

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
+using DefaultEcs.Resource;
 using zzio;
 using zzio.db;
+using zzre.game.resources;
 using static zzre.game.systems.ui.InGameScreen;
 
 namespace zzre.game.systems.ui;
@@ -30,11 +32,14 @@ public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.
         ref var mapMenu = ref entity.Get<components.ui.ScrMapMenu>();
         mapMenu.Inventory = inventory;
 
-        preload.CreateImage(entity)
-            .With(-new Vector2(320, 240))
-            .WithBitmap("map001")
+        var mapEntity = preload.CreateImage(entity)
+            .With(new Rect(-320, -240, 640, 480))
             .WithRenderOrder(1)
             .Build();
+        mapEntity.Set(ManagedResource<materials.UIMaterial>.Create(
+            new RawMaskedBitmapInfo(colorFile: "map001t.bmp", maskFile: "map001m.raw")));
+        var mapMaterial = mapEntity.Get<materials.UIMaterial>();
+        mapMaterial.MaskBits.Value = CollectMaskBits(inventory);
 
         preload.CreateTooltipTarget(entity)
             .With(new Vector2(-320 + 11, -240 + 11))
@@ -43,6 +48,21 @@ public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.
 
         CreateTopButtons(preload, entity, inventory, IDOpenMap);
     }
+
+    private static readonly IReadOnlyList<StdItemId> MapSectionItems = new[]
+    {
+        (StdItemId)(ushort.MaxValue),
+        StdItemId.MapShadowRealm,
+        StdItemId.MapFairyGarden,
+        (StdItemId)(ushort.MaxValue),
+        StdItemId.MapSkyRealm,
+        StdItemId.MapDarkSwamp,
+        StdItemId.MapForest,
+        StdItemId.MapMountain
+    };
+    private uint CollectMaskBits(Inventory inventory) => MapSectionItems
+        .Select((item, i) => inventory.Contains(item) ? 1u << i : 0u)
+        .Aggregate((a, b) => a | b);
 
     protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.ui.ScrMapMenu mapMenu)
     {

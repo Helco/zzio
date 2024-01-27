@@ -45,6 +45,7 @@ public class UI : BaseDisposable, ITagContainer
         AddTag(ecsWorld = new DefaultEcs.World());
         AddTag(new resources.UIBitmap(this));
         AddTag(new resources.UITileSheet(this));
+        AddTag(new resources.UIRawMaskedBitmap(this));
         AddTag(Preload = new systems.ui.UIPreloader(this));
 
         CursorEntity = ecsWorld.CreateEntity();

@@ -113,8 +113,8 @@ public partial class SceneEditor
             iconRenderer = new DebugIconRenderer(diContainer);
             iconRenderer.Material.LinkTransformsTo(diContainer.GetTag<Camera>());
             iconRenderer.Material.World.Ref = Matrix4x4.Identity;
-            iconRenderer.Material.Texture.Texture = iconFont.Texture;
-            iconRenderer.Material.Sampler.Sampler = iconFont.Sampler;
+            iconRenderer.Material.MainTexture.Texture = iconFont.Texture;
+            iconRenderer.Material.MainSampler.Sampler = iconFont.Sampler;
             HandleResize();
         }
 
