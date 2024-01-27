@@ -5,6 +5,9 @@ using System.Data.SQLite;
 using CommandHandler = System.Action<System.Data.SQLite.SQLiteConnection, string[]>;
 using System.IO;
 using zzio.db;
+using System.Data.Common;
+using System.Data;
+using zzio.script;
 
 namespace zzio.dbsqlitecli;
 
@@ -31,7 +34,8 @@ public static class DBSqliteCLI
         IReadOnlyDictionary<string, CommandHandler> commands = new Dictionary<string, CommandHandler>()
         {
             { "importraw", importRaw },
-            { "exportraw", exportRaw }
+            { "exportraw", exportRaw },
+            { "importpretty", importPretty }
         };
         if (!commands.ContainsKey(command))
         {
@@ -61,6 +65,7 @@ public static class DBSqliteCLI
                 table.Read(stream);
 
             var tableName = Path.GetFileNameWithoutExtension(tableFile);
+            Console.WriteLine("Importing raw table " + tableName);
             var createTableCommand = new SQLiteCommand(
                 $"CREATE TABLE IF NOT EXISTS {tableName} (" +
                 "UID TEXT, " +
@@ -69,6 +74,7 @@ public static class DBSqliteCLI
                 ", PRIMARY KEY (UID))", dbConnection);
             createTableCommand.ExecuteNonQuery();
 
+            execute(dbConnection, "BEGIN TRANSACTION");
             int columnCount = table.rows.Values.First().cells.Length;
             foreach (var row in table.rows.Values)
             {
@@ -107,6 +113,7 @@ public static class DBSqliteCLI
                     insertRowCommand.Parameters.AddWithValue($"@col_{i}", null);
                 insertRowCommand.ExecuteNonQuery();
             }
+            execute(dbConnection, "COMMIT TRANSACTION");
         }
     }
 
@@ -166,5 +173,115 @@ public static class DBSqliteCLI
             using (var stream = new FileStream(tableName + ".fbs", FileMode.Create, FileAccess.Write))
                 table.Write(stream);
         }
+    }
+
+    private static void importPretty(SQLiteConnection sqliteDb, string[] tableFiles)
+    {
+        importRaw(sqliteDb, tableFiles);
+
+        var mappedDb = new MappedDB();
+        foreach (var tableFile in tableFiles)
+        {
+            try
+            {
+                var table = new Table();
+                using (var stream = new FileStream(tableFile, FileMode.Open, FileAccess.Read))
+                    table.Read(stream);
+                mappedDb.AddTable(table);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine($"Ignoring {tableFile} for pretty tables: {e.Message}");
+            }
+        }
+
+        decompileAllScripts(sqliteDb, mappedDb);
+
+        execute(sqliteDb, @"DROP VIEW IF EXISTS NPCs");
+        execute(sqliteDb, @"
+CREATE VIEW NPCs AS SELECT
+    _fb0x05.UID AS UID,
+    _fb0x02.col_0_String AS Name,
+    scr1.script AS OnTrigger,
+    scr2.script AS OnInit,
+    scr3.script AS OnUpdate,
+    scr4.script AS OnDefeated,
+    scr5.script AS OnVictorious,
+    _fb0x05.col_6_String AS InternalName
+FROM _fb0x05
+LEFT JOIN _fb0x02 ON _fb0x02.UID = substr(_fb0x05.col_0_ForeignKey, 1, 8)
+LEFT JOIN scripts AS scr1 ON scr1.uid = _fb0x05.UID AND scr1.column = 1
+LEFT JOIN scripts AS scr2 ON scr2.uid = _fb0x05.UID AND scr2.column = 2
+LEFT JOIN scripts AS scr3 ON scr3.uid = _fb0x05.UID AND scr3.column = 3
+LEFT JOIN scripts AS scr4 ON scr4.uid = _fb0x05.UID AND scr4.column = 4
+LEFT JOIN scripts AS scr5 ON scr5.uid = _fb0x05.UID AND scr5.column = 5
+");
+    }
+
+    private static void execute(SQLiteConnection sqliteDb, string commandText)
+    {
+        using var command = new SQLiteCommand(commandText, sqliteDb);
+        command.ExecuteNonQuery();
+    }
+
+    private static void decompileAllScripts(SQLiteConnection sqliteDb, MappedDB mappedDb)
+    {
+        Console.WriteLine("Decompiling scripts");
+
+        execute(sqliteDb, @"
+CREATE TABLE IF NOT EXISTS scripts (
+    uid TEXT,
+    column INTEGER,
+    script TEXT,
+    PRIMARY KEY (uid, column))");
+
+        using var insertRowCommand = new SQLiteCommand(
+            "REPLACE INTO scripts VALUES (@uid, @column, @script)",
+            sqliteDb);
+        insertRowCommand.Prepare();
+
+        execute(sqliteDb, "BEGIN TRANSACTION");
+        foreach (var item in mappedDb.Items)
+            decompileScript(insertRowCommand, item.Uid, 4, item.Script);
+        foreach (var npc in mappedDb.Npcs)
+        {
+            decompileScript(insertRowCommand, npc.Uid, 1, npc.TriggerScript);
+            decompileScript(insertRowCommand, npc.Uid, 2, npc.InitScript);
+            decompileScript(insertRowCommand, npc.Uid, 3, npc.UpdateScript);
+            decompileScript(insertRowCommand, npc.Uid, 4, npc.DefeatedScript);
+            decompileScript(insertRowCommand, npc.Uid, 5, npc.VictoriousScript);
+        }
+        execute(sqliteDb, "COMMIT TRANSACTION");
+    }
+
+    private static void decompileScript(SQLiteCommand command, UID uid, int column, string scriptCompiled)
+    {
+        string scriptDecompiled = "";
+        if (!string.IsNullOrWhiteSpace(scriptCompiled))
+        {
+            try
+            {
+                var instructions = scriptCompiled
+                    .Split('\n')
+                    .Where(l => !string.IsNullOrWhiteSpace(l))
+                    .Select(l => new RawInstruction(l))
+                    .ToArray();
+                using var stringWriter = new StringWriter();
+                zzsc.CLI.decompile(stringWriter, instructions, null);
+                scriptDecompiled = stringWriter.ToString();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error decompiling script {uid}@{column}: {e.Message}");
+                return;
+            }
+        }
+
+        command.Reset();
+        command.Parameters.Clear();
+        command.Parameters.AddWithValue("@uid", uid.ToString());
+        command.Parameters.AddWithValue("@column", column);
+        command.Parameters.AddWithValue("@script", scriptDecompiled);
+        command.ExecuteNonQuery();
     }
 }

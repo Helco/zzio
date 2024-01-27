@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\zzio\zzio.csproj" />
+    <ProjectReference Include="..\zzsc\zzsc.csproj" />
   </ItemGroup>
 
   <ItemGroup>

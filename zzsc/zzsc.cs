@@ -177,7 +177,7 @@ public class CLI
         output.Close();
     }
 
-    private static void decompile(TextWriter output, RawInstruction[] instructions, string[] _)
+    public static void decompile(TextWriter output, RawInstruction[] instructions, string[] _)
     {
         int prefixLength = 4;
         int prefixTabs = 0;
