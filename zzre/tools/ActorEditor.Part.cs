@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using Veldrid;
 using zzio;
+using zzio.rwbs;
 using zzio.vfs;
 using zzre.materials;
 using zzre.rendering;
@@ -27,8 +28,8 @@ public partial class ActorEditor
         public readonly DeviceBufferRange locationBufferRange;
         public readonly ClumpMesh mesh;
         public readonly ModelMaterial[] materials;
-        public readonly Skeleton skeleton;
-        public readonly DebugSkeletonRenderer skeletonRenderer;
+        public readonly Skeleton? skeleton;
+        public readonly DebugSkeletonRenderer? skeletonRenderer;
         public readonly (AnimationType type, string fileName, SkeletalAnimation ani)[] animations;
         public (int BoneIdx, Vector3 TargetPos)? singleIK = null;
 
@@ -43,8 +44,6 @@ public partial class ActorEditor
             var texturePath = textureLoader.GetTexturePathFromModel(modelPath);
 
             mesh = new ClumpMesh(diContainer, modelPath);
-            if (mesh.Skin is null)
-                throw new InvalidDataException("Attached actor part model does not have a skin");
             AddDisposable(mesh);
 
             locationBufferRange = diContainer.GetTag<LocationBuffer>().Add(location);
@@ -55,20 +54,24 @@ public partial class ActorEditor
                 material.World.BufferRange = locationBufferRange;
             }
 
-            skeleton = new Skeleton(mesh.Skin, modelName);
-            skeleton.Location.Parent = location;
-            skeletonRenderer = new DebugSkeletonRenderer(diContainer, mesh, skeleton);
-            AddDisposable(skeletonRenderer);
+            if (mesh.Skin != null)
+            {
+                skeleton = new Skeleton(mesh.Skin, modelName);
+                skeleton.Location.Parent = location;
+                skeletonRenderer = new DebugSkeletonRenderer(diContainer, mesh, skeleton);
+                AddDisposable(skeletonRenderer);
+            }
 
             materials = new ModelMaterial[mesh.Materials.Count];
             foreach (var (rwMaterial, index) in mesh.Materials.Indexed())
             {
-                var material = materials[index] = new ModelMaterial(diContainer) { IsSkinned = true };
-                (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(texturePath, rwMaterial);
+                var material = materials[index] = new ModelMaterial(diContainer) { IsSkinned = skeleton != null };
+                (material.Texture.Texture, material.Sampler.Sampler) = TryLoadTexture(texturePath, rwMaterial);
                 material.Factors.Ref = ModelFactors.Default;
                 material.Factors.Ref.vertexColorFactor = 0.0f;
                 material.Tint.Ref = rwMaterial.color;
-                material.Pose.Skeleton = skeleton;
+                if (skeleton != null)
+                    material.Pose.Skeleton = skeleton;
                 LinkTransformsFor(material);
                 AddDisposable(material);
             }
@@ -80,13 +83,38 @@ public partial class ActorEditor
                 if (contentStream == null)
                     throw new IOException($"Could not open animation at {animationPath.ToPOSIXString()}");
                 var animation = SkeletalAnimation.ReadNew(contentStream);
-                if (animation.BoneCount != skeleton.Bones.Count)
+                if (skeleton != null && animation.BoneCount != skeleton.Bones.Count)
                     throw new InvalidDataException($"Animation {filename} is incompatible with actor skeleton {modelName}");
                 return animation;
             }
             animations = animationNames.Select(t => (t.type, t.filename, LoadAnimation(t.filename))).ToArray();
-            skeleton.ResetToBinding();
+            skeleton?.ResetToBinding();
         }
+
+        private (Texture, Sampler) TryLoadTexture(FilePath texturePath, RWMaterial rwMaterial)
+        {
+            try
+            {
+                return textureLoader.LoadTexture(texturePath, rwMaterial);
+            }
+            catch (Exception e) when (e is InvalidOperationException or InvalidDataException)
+            {
+                var device = diContainer.GetTag<GraphicsDevice>();
+                var texture = device.ResourceFactory.CreateTexture(new(2, 2, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
+                device.UpdateTexture(texture, new byte[]
+                {
+                0xff, 0x00, 0xff, 0xff,
+                0xff, 0xff, 0xff, 0xff,
+                0x00, 0x00, 0x00, 0xff,
+                0xff, 0x00, 0xff, 0xff
+                }, 0, 0, 0, 2, 2, 1, 0, 0);
+                texture.Name =
+                    ((rwMaterial.FindChildById(SectionId.String, true) as RWString)?.value
+                    ?? "<unknown>") + " (Missing)";
+                return (texture, device.PointSampler);
+            }
+        }
+
 
         protected override void DisposeManaged()
         {
@@ -110,10 +138,16 @@ public partial class ActorEditor
             }
         }
 
-        public void RenderDebug(CommandList cl) => skeletonRenderer.Render(cl);
+        public void RenderDebug(CommandList cl) => skeletonRenderer?.Render(cl);
 
         public bool PlaybackContent()
         {
+            if (skeleton == null || skeletonRenderer == null)
+            {
+                TextWrapped("Despite being part of an actor, there is no skeleton and thus no animation");
+                return false;
+            }
+
             bool hasChanged = isPlaying || singleIK.HasValue;
             if (hasChanged)
             {

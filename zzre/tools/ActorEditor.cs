@@ -87,8 +87,8 @@ public partial class ActorEditor : ListDisposable, IDocumentEditor
         editor.AddInfoSection("Animation Playback", HandlePlaybackContent);
         editor.AddInfoSection("Body animations", () => HandlePartContent(false, () => body?.AnimationsContent() ?? false), false);
         editor.AddInfoSection("Wings animations", () => HandlePartContent(true, () => wings?.AnimationsContent() ?? false), false);
-        editor.AddInfoSection("Body skeleton", () => HandlePartContent(false, () => body?.skeletonRenderer.Content() ?? false), false);
-        editor.AddInfoSection("Wings skeleton", () => HandlePartContent(true, () => wings?.skeletonRenderer.Content() ?? false), false);
+        editor.AddInfoSection("Body skeleton", () => HandlePartContent(false, () => body?.skeletonRenderer?.Content() ?? false), false);
+        editor.AddInfoSection("Wings skeleton", () => HandlePartContent(true, () => wings?.skeletonRenderer?.Content() ?? false), false);
         editor.AddInfoSection("Head IK", HandleHeadIKContent, false);
     }
 
@@ -120,7 +120,7 @@ public partial class ActorEditor : ListDisposable, IDocumentEditor
         if (description.HasWings)
         {
             wings = new Part(localDiContainer, description.wings.model, description.wings.animations);
-            wings.location.Parent = body.skeleton.Bones[description.attachWingsToBone];
+            wings.location.Parent = body.skeleton!.Bones[description.attachWingsToBone];
         }
 
         controls.ResetView();
@@ -159,21 +159,21 @@ public partial class ActorEditor : ListDisposable, IDocumentEditor
 
         ModelLink("Body: ", description?.body.model);
         Text($"Body animations: {description?.body.animations.Length ?? 0}");
-        Text($"Body bones: {body?.skeleton.Bones.Count ?? 0}");
+        Text($"Body bones: {body?.skeleton!.Bones.Count ?? 0}");
 
         NewLine();
         ModelLink("Wings: ", description?.wings.model);
         Text($"Wings animations: {description?.wings.animations.Length ?? 0}");
-        Text($"Wings bones: {wings?.skeleton.Bones.Count ?? 0}");
+        Text($"Wings bones: {wings?.skeleton?.Bones.Count ?? 0}");
 
         NewLine();
         void BoneLink(string label, int? boneIdx)
         {
             if (ImGuiEx.Hyperlink(label, boneIdx?.ToString() ?? "<none>", false, boneIdx != null))
             {
-                body?.skeletonRenderer.HighlightBone(boneIdx!.Value);
+                body?.skeletonRenderer!.HighlightBone(boneIdx!.Value);
                 fbArea.IsDirty = true;
-                if (body != null && body.skeletonRenderer.RenderMode == DebugSkeletonRenderMode.Invisible)
+                if (body != null && body.skeletonRenderer!.RenderMode == DebugSkeletonRenderMode.Invisible)
                     body.skeletonRenderer.RenderMode = DebugSkeletonRenderMode.Bones;
             }
         }
