@@ -35,6 +35,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         new(0xC659DCA1), // Chaos
         new(0x3CE1DCA1)  // Metal
     };
+    private static readonly UID UIDEvol = new (0x69226721); // Evolution at level
 
     public ScrBookMenu(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
     {
@@ -57,8 +58,8 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
 
         book.Fairies = db.Fairies.OrderBy(fairyRow => fairyRow.CardId.EntityId).ToArray();
         book.FairyButtons = new Dictionary<components.ui.ElementId, FairyRow>();
-        book.Sidebar = World.CreateEntity();
-        book.Crosshair = World.CreateEntity();
+        book.Sidebar = default;
+        book.Crosshair = default;
 
         preload.CreateImage(entity)
             .With(-new Vector2(320, 240))
@@ -91,8 +92,9 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
                     .Build();
                 book.FairyButtons.Add(element, fairies[i]);
 
-                // If player has multiple fairies of the same card id, only the first caught counts
-                if (inventory.Fairies.First(c => fairies[i].CardId == c.cardId).isInUse) {
+                // In the original engine, only the first fairy is checked for isInUse
+                // This is an intentional bug fix
+                if (inventory.Fairies.Any(c => fairies[i].CardId == c.cardId && c.isInUse)) {
                     preload.CreateImage(entity)
                         .With(Mid + FairyButtonPos(i))
                         .With(preload.Inf000, 16)
@@ -138,7 +140,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         if (fairyRow.EvolVar != -1)
             preload.CreateLabel(entity)
                 .With(Mid + new Vector2(22, 246))
-                .WithText($"Evolution at level {fairyRow.EvolVar}")
+                .WithText($"{db.GetText(UIDEvol).Text} {fairyRow.EvolVar}")
                 .With(preload.Fnt002)
                 .Build();
 
@@ -147,9 +149,9 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         CreateStat(preload, entity, 2, fairyRow.JumpPower + 1);
         CreateStat(preload, entity, 3, fairyRow.CriticalHit + 1);
 
-        var MaxTextWidth = 190f;
+        const float MaxTextWidth = 190f;
         preload.CreateLabel(entity)
-            .With(Mid + new Vector2(21, 271+17*3+24))
+            .With(Mid + new Vector2(21, 346))
             .WithText(fairyRow.Info)
             .With(preload.Fnt002)
             .WithLineWrap(MaxTextWidth)
