@@ -14,7 +14,6 @@ public partial class NPC : AEntitySetSystem<float>
 
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
-    private readonly IDisposable changeNpcStateSubscription;
     private readonly IDisposable setNpcModifierSubscription;
     private readonly zzio.db.MappedDB mappedDB;
 
@@ -31,7 +30,6 @@ public partial class NPC : AEntitySetSystem<float>
         base.Dispose();
         sceneChangingSubscription.Dispose();
         sceneLoadSubscription.Dispose();
-        changeNpcStateSubscription.Dispose();
         setNpcModifierSubscription.Dispose();
     }
 
