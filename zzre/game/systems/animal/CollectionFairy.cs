@@ -104,8 +104,8 @@ public partial class CollectionFairy : AEntitySetSystem<float>
             actorParts.Body.Get<Skeleton>().JumpToAnimation(bodyAniPool.Contains(AnimationType.SpecialIdle0)
                 ? bodyAniPool[AnimationType.SpecialIdle0]
                 : bodyAniPool[AnimationType.Idle0]);
-            actorParts.Wings!.Value.Get<Skeleton>().JumpToAnimation(
-                actorParts.Wings.Value.Get<components.AnimationPool>()[AnimationType.Idle0]);
+            if (actorParts.Wings!.Value.TryGet<Skeleton>(out var wingsSkeleton))
+                wingsSkeleton.JumpToAnimation(actorParts.Wings.Value.Get<components.AnimationPool>()[AnimationType.Idle0]);
         }
     }
 }

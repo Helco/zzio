@@ -19,7 +19,9 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     };
 
     private readonly ITagContainer diContainer;
+    private readonly GraphicsDevice graphicsDevice;
     private readonly Camera camera;
+    private readonly Texture whiteTexture;
     private readonly IAssetLoader<Texture> textureLoader;
     private readonly IDisposable addSubscription;
     private readonly IDisposable removeSubscription;
@@ -32,11 +34,17 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
         addSubscription = World.SubscribeEntityComponentAdded<components.ActorPart>(HandleAddedComponent);
         removeSubscription = World.SubscribeEntityComponentRemoved<ModelMaterial[]>(HandleRemovedComponent);
+
+        graphicsDevice = diContainer.GetTag<GraphicsDevice>();
+        whiteTexture = graphicsDevice.ResourceFactory.CreateTexture(new(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
+        whiteTexture.Name = "White";
+        graphicsDevice.UpdateTexture(whiteTexture, new byte[] { 255, 255, 255, 255 }, 0, 0, 0, 1, 1, 1, 0, 0);
     }
 
     public override void Dispose()
     {
         base.Dispose();
+        whiteTexture.Dispose();
         addSubscription.Dispose();
         removeSubscription.Dispose();
     }
@@ -87,18 +95,22 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     private void HandleAddedComponent(in DefaultEcs.Entity entity, in components.ActorPart value)
     {
         var rwMaterials = entity.Get<ClumpMesh>().Materials;
-        var skeleton = entity.Get<Skeleton>();
+        var skeleton = entity.TryGet<Skeleton?>().GetValueOrDefault(null);
         var syncedLocation = entity.Get<components.SyncedLocation>();
         var zzreMaterials = rwMaterials.Select(rwMaterial =>
         {
-            var material = new ModelMaterial(diContainer) { IsSkinned = true };
-            (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(BaseTexturePaths, rwMaterial);
+            var material = new ModelMaterial(diContainer) { IsSkinned = skeleton != null };
+            if (rwMaterial.FindChildById(zzio.rwbs.SectionId.Texture, recursive: true) == null)
+                (material.Texture.Texture, material.Sampler.Sampler) = (whiteTexture, graphicsDevice.PointSampler);
+            else
+                (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(BaseTexturePaths, rwMaterial);
             material.Factors.Ref = ModelFactors.Default with
             {
                 vertexColorFactor = 0f
             };
             material.Tint.Ref = rwMaterial.color;
-            material.Pose.Skeleton = skeleton;
+            if (skeleton != null)
+                material.Pose.Skeleton = skeleton;
             material.LinkTransformsTo(camera);
             material.World.BufferRange = syncedLocation.BufferRange;
             return material;
@@ -110,8 +122,10 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     {
         foreach (var material in materials)
         {
-            material.Texture.Texture?.Dispose();
-            material.Sampler.Sampler.Dispose();
+            if (material.Texture.Texture != whiteTexture)
+                material.Texture.Texture?.Dispose();
+            if (material.Sampler.Sampler != graphicsDevice.PointSampler)
+                material.Sampler.Sampler.Dispose();
             material.Dispose();
         }
     }
