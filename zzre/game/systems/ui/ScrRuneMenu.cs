@@ -63,6 +63,8 @@ public partial class ScrRuneMenu : BaseScreen<components.ui.ScrRuneMenu, message
         ref var runeMenu = ref entity.Get<components.ui.ScrRuneMenu>();
         runeMenu.Inventory = inventory;
 
+        preload.CreateFullBackOverlay(entity);
+
         preload.CreateImage(entity)
             .With(-new Vector2(320, 240))
             .WithBitmap("mnu000")

@@ -78,6 +78,8 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     private void CreateBackgrounds(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
+        preload.CreateFullBackOverlay(entity);
+
         preload.CreateImage(entity)
             .With(-new Vector2(52, 240))
             .WithBitmap("dec000")

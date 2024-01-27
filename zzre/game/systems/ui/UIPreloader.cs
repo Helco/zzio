@@ -173,7 +173,18 @@ public class UIPreloader
             .With(backgroundRect)
             .WithRenderOrder(2);
         if (animateOverlay)
-            overlay.With(components.ui.Fade.SingleIn(1.5f));
+            overlay.With(components.ui.Fade.SingleIn(0.8f));
+        overlay.Build();
+    }
+
+    public void CreateFullBackOverlay(DefaultEcs.Entity parent)
+    {
+        var overlay = CreateImage(parent)
+            .With(DefaultOverlayColor with { a = 0f })
+            .With(ui.LogicalScreen)
+            .With(components.ui.UIOffset.ScreenUpperLeft)
+            .WithRenderOrder(2)
+            .With(components.ui.Fade.SingleIn(1.5f));
         overlay.Build();
     }
 

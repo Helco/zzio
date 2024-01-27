@@ -32,6 +32,8 @@ public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.
         ref var mapMenu = ref entity.Get<components.ui.ScrMapMenu>();
         mapMenu.Inventory = inventory;
 
+        preload.CreateFullBackOverlay(entity);
+
         var mapEntity = preload.CreateImage(entity)
             .With(new Rect(-320, -240, 640, 480))
             .WithRenderOrder(1)
