@@ -61,13 +61,17 @@ public record struct GSModChangeNPCState(uint TriggerId, UID UID) : IGameStateMo
 {
     public GameStateModType Type => GameStateModType.ChangeNPCState;
 
-    public static GSModChangeNPCState ReadNew(BinaryReader r) =>
-        new(r.ReadUInt32(), UID.ReadNew(r));
+    public static GSModChangeNPCState ReadNew(BinaryReader r)
+    {
+        var uid = UID.ReadNew(r);
+        var triggerId = r.ReadUInt32();
+        return new(triggerId, uid);
+    }
 
     public void Write(BinaryWriter w)
     {
-        w.Write(TriggerId);
         UID.Write(w);
+        w.Write(TriggerId);
     }
 }
 
