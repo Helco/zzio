@@ -52,6 +52,9 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         entity.Set<components.ui.ScrBookMenu>();
         ref var book = ref entity.Get<components.ui.ScrBookMenu>();
         book.Inventory = inventory;
+
+        preload.CreateFullBackOverlay(entity);
+
         book.Fairies = db.Fairies.OrderBy(fairyRow => fairyRow.CardId.EntityId).ToArray();
         book.FairyButtons = new Dictionary<components.ui.ElementId, FairyRow>();
         book.Sidebar = World.CreateEntity();
