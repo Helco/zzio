@@ -67,7 +67,11 @@ public class Savegame : ISystem<float>
     private void HandleSetTrigger(in GSModSetTrigger message) => HandleGSModForThisScene(message);
     private void HandleSetNpcModifier(in GSModSetNPCModifier message) => HandleGSModForThisScene(message);
 
-    private void HandleGSModForThisScene(IGameStateMod gsMod) => savegame.Add($"sc_{CurSceneID}", gsMod);
+    private void HandleGSModForThisScene(IGameStateMod gsMod)
+    {
+        if (IsEnabled)
+            savegame.Add($"sc_{CurSceneID}", gsMod);
+    }
 
     private void HandleGSModForScene(in messages.GSModForScene message)
     {

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
+using zzio;
 using zzio.scn;
 
 namespace zzre.game.systems;
@@ -13,6 +14,7 @@ public partial class NPC : AEntitySetSystem<float>
 
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
+    private readonly IDisposable changeNpcStateSubscription;
     private readonly IDisposable setNpcModifierSubscription;
     private readonly zzio.db.MappedDB mappedDB;
 
@@ -21,7 +23,7 @@ public partial class NPC : AEntitySetSystem<float>
         mappedDB = diContainer.GetTag<zzio.db.MappedDB>();
         sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
-        setNpcModifierSubscription = World.Subscribe<zzio.GSModSetNPCModifier>(HandleSetNpcModifier);
+        setNpcModifierSubscription = World.Subscribe<GSModSetNPCModifier>(HandleSetNpcModifier);
     }
 
     public override void Dispose()
@@ -29,6 +31,7 @@ public partial class NPC : AEntitySetSystem<float>
         base.Dispose();
         sceneChangingSubscription.Dispose();
         sceneLoadSubscription.Dispose();
+        changeNpcStateSubscription.Dispose();
         setNpcModifierSubscription.Dispose();
     }
 

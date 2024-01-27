@@ -82,8 +82,8 @@ public partial class NPCMovementByState : NPCMovementBase
         if (nextWaypoint == null)
             return;
 
-        if (move.CurWaypointId >= 0)
-            waypointByIdx[move.CurWaypointId].ii3 = 0;
+        if (waypointByIdx.TryGetValue(move.CurWaypointId, out var curWaypointTrigger))
+            curWaypointTrigger.ii3 = 0;
         nextWaypoint.ii3 = 1; // reserving this waypoint
         move.NextWaypointId = (int)nextWaypoint.idx;
         move.TargetPos = nextWaypoint.pos;

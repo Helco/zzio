@@ -50,9 +50,14 @@ public partial class NPCScript : BaseScript
 
     private void HandleExecuteNPCScript(in messages.ExecuteNPCScript message)
     {
-        var executionPool = World.GetComponents<components.ScriptExecution>();
-        foreach (var entity in Set.GetEntities())
-            Update(entity, ref executionPool[entity]);
+        if (message.OnlyFor == null)
+        {
+            var executionPool = World.GetComponents<components.ScriptExecution>();
+            foreach (var entity in Set.GetEntities())
+                Update(entity, ref executionPool[entity]);
+        }
+        else
+            Update(message.OnlyFor.Value, ref message.OnlyFor.Value.Get<components.ScriptExecution>());
     }
 
     [Update]
@@ -63,10 +68,13 @@ public partial class NPCScript : BaseScript
 
     private void SetModel(DefaultEcs.Entity entity, string name)
     {
-        // not required by Zanzarah and a bit too much effort to clean up old actor parts&resources
-        if (entity.Has<components.ActorParts>())
-            throw new InvalidOperationException("NPC already has a model");
-        entity.Set(ManagedResource<zzio.ActorExDescription>.Create(name));
+        if (entity.TryGet<components.ActorParts>(out var oldActorParts))
+        {
+            oldActorParts.Body.Dispose();
+            oldActorParts.Wings?.Dispose();
+        }
+
+        entity.Set(ManagedResource<ActorExDescription>.Create(name));
 
         var actorParts = entity.Get<components.ActorParts>();
         var bodyClump = actorParts.Body.Get<ClumpMesh>();

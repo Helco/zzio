@@ -195,8 +195,19 @@ public partial class DialogScript : BaseScript
 
     private void ChangeDatabase(DefaultEcs.Entity entity, UID uid)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        var npcEntity = NPCEntity;
+        var dbRow = db.GetNpc(uid);
+        World.Publish(new GSModChangeNPCState(npcEntity.Get<Trigger>().idx, uid));
+        npcEntity.Set(dbRow);
+        if (dbRow.InitScript.Length > 0)
+        {
+            npcEntity.Set(new components.ScriptExecution(dbRow.InitScript));
+            World.Publish(new messages.ExecuteNPCScript(OnlyFor: npcEntity));
+        }
+        if (dbRow.UpdateScript.Length > 0)
+            npcEntity.Set(new components.ScriptExecution(dbRow.UpdateScript));
+        else
+            npcEntity.Remove<components.ScriptExecution>();
     }
 
     private void RemoveNpc(DefaultEcs.Entity entity)
