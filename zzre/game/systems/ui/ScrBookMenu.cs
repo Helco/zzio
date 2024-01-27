@@ -110,7 +110,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
-        var fairyI = Array.FindIndex(book.Fairies, row => row.Name == fairyRow.Name) + 1;
+        var fairyI = Array.IndexOf(book.Fairies, fairyRow) + 1;
 
         var element = new components.ui.ElementId(0);
         preload.CreateButton(entity)
