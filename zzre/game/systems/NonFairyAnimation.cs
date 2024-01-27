@@ -130,6 +130,8 @@ public partial class NonFairyAnimation : AEntitySetSystem<float>
             default: throw new NotSupportedException($"Unsupported animation {animation.Next}");
         }
 
+        if (animation.Current == (zzio.AnimationType)(-1))
+            blendDuration = 0f;
         bodySkeleton.BlendToAnimation(pool[next], blendDuration, loops);
         animation.Current = animation.Next;
     }

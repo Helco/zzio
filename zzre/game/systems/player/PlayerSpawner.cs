@@ -77,6 +77,7 @@ public class PlayerSpawner : ISystem<float>
             startPos += trigger.dir with { Y = 0f } * trigger.radius * 1.2f;
         playerLocation.LocalPosition = startPos;
         playerLocation.LookIn(MathEx.SafeNormalize(trigger.dir with { Y = 0f }));
+        playerEntity.Get<components.ActorParts>().Body.Get<Location>().LocalRotation = playerLocation.LocalRotation;
         playerEntity.Get<components.PuppetActorMovement>().TargetDirection = playerLocation.GlobalForward;
         ecsWorld.Publish(new messages.CreaturePlaceToGround(playerEntity));
 
