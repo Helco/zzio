@@ -202,6 +202,6 @@ public class UIPreloader
             From: 0f, To: 1f,
             StartDelay: 0f,
             InDuration: 0.3f,
-            SustainDelay: 0f,
+            SustainDelay: 0.03f, // this ensures we have at least one frame of pure black to switch scenes/locations
             OutDuration: 0.3f));
 }

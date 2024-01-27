@@ -57,8 +57,10 @@ public class OverworldCamera : BaseGameCamera
         currentVerAngle = 0f;
         curCamDistance = maxCameraDistance;
 
-        camera.Location.LocalPosition = playerLocation.LocalPosition;
         camera.Location.LookNotIn(playerLocation.GlobalForward);
+        camera.Location.LocalPosition = playerLocation.GlobalPosition +
+            camera.Location.InnerForward * maxCameraDistance / 3f;
+        // this mimicks the original game loading freeze good enough
     }
 
     private void HandleSetCameraMode(in messages.SetCameraMode mode)

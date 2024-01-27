@@ -18,7 +18,7 @@ public partial class Doorway : AEntitySetSystem<float>
     private UID lastSceneName = UID.Invalid;
     private string targetScene = "";
     private int targetEntry;
-    private float fadeOffTime; // just a placeholder, will be removed after actual fade off exists
+    private DefaultEcs.Entity fadeEntity;
 
     public Doorway(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
@@ -47,7 +47,7 @@ public partial class Doorway : AEntitySetSystem<float>
         World.Get<components.PlayerEntity>().Entity.Set(components.GameFlow.Doorway);
         targetScene = $"sc_{trigger.ii3:D4}";
         targetEntry = (int)trigger.ii2;
-        fadeOffTime = 0.6f;
+        fadeEntity = ui.Preload.CreateStdFlashFade(parent: default);
         World.Publish(messages.LockPlayerControl.Forever);
         // TODO: Add fade off during scene changes
         // TODO: Fade off music and ambient sounds during scene changes
@@ -59,14 +59,17 @@ public partial class Doorway : AEntitySetSystem<float>
     [Update]
     private new void Update(float elapsedTime, in DefaultEcs.Entity entity)
     {
-        if (fadeOffTime <= 0f)
-            return;
-        fadeOffTime -= elapsedTime;
-        if (fadeOffTime > 0f)
-            return;
-        
-        game.LoadScene(targetScene, () => game.FindEntryTrigger(targetEntry));
-        entity.Set(components.GameFlow.Normal);
+        if (fadeEntity == default)
+        {
+            game.LoadScene(targetScene, () => game.FindEntryTrigger(targetEntry));
+            entity.Set(components.GameFlow.Normal);
+        }
+        else if (fadeEntity.TryGet<components.ui.Fade>(out var fade) && fade.IsFadedIn)
+        {
+            // by using `default` as a marker we delay loading the scene by one frame
+            // this ensures a black screen during the loading freeze
+            fadeEntity = default;
+        }
     }
 
     private void HandlePlayerEntered(in messages.PlayerEntered message)
