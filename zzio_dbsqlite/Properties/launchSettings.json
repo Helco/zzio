@@ -3,7 +3,7 @@
     "zzio_dbsqlite": {
       "commandName": "Project",
       "commandLineArgs": "importPretty ../zz_new.db _fb0x01.fbs _fb0x02.fbs _fb0x03.fbs _fb0x04.fbs _fb0x05.fbs _fb0x06.fbs",
-      "workingDirectory": "C:\\dev\\zanzarah\\Data"
+      "workingDirectory": "E:\\SteamLibrary\\steamapps\\common\\ZanZarah2\\Data"
     }
   }
 }

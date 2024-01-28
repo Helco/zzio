@@ -66,8 +66,8 @@ internal class Program
         var resourcePool = new CombinedResourcePool(new IResourcePool[]
         {
 #if DEBUG
-            new PAKResourcePool(new FileStream(@"C:\dev\zanzarah\Resources\DATA_0.PAK", FileMode.Open, FileAccess.Read)),
-            new FileResourcePool(@"C:\dev\zanzarah\")
+            new PAKResourcePool(new FileStream(@"E:\SteamLibrary\steamapps\common\ZanZarah\Resources\DATA_0.PAK", FileMode.Open, FileAccess.Read)),
+            new FileResourcePool(@"E:\SteamLibrary\steamapps\common\ZanZarah\")
 #else
             new PAKResourcePool(new FileStream(Path.Combine(Environment.CurrentDirectory, "..", "Resources", "DATA_0.PAK"), FileMode.Open, FileAccess.Read)),
             new FileResourcePool(Path.Combine(Environment.CurrentDirectory, ".."))

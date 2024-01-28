@@ -1,6 +1,6 @@
 option DepthTest;
 option BillboardMode = None, View, Spark, CrossForward;
-option BlendMode = Additive, AdditiveAlpha, Alpha;
+option Blend = IsAdditive, IsAdditiveAlpha, IsAlpha;
 
 attributes
 {
@@ -37,17 +37,25 @@ pipeline if (DepthTest)
     depthtest on;
 }
 
-pipeline if (Blend == IsAlphaBlend)
+pipeline if (Blend == IsAlpha)
 {
     blend SrcAlpha + InvSrcAlpha;
 }
 
-pipeline if (Blend == IsAdditiveBlend)
+pipeline if (Blend == IsAdditive)
 {
     blend One + One;
 }
 
-pipeline if (Blend == IsAdditiveAlphaBlend)
+pipeline if (Blend == IsAdditiveAlpha)
 {
     blend SrcAlpha + One;
+}
+
+vertex
+{
+}
+
+fragment
+{
 }

@@ -195,13 +195,13 @@ public class CLI
         }
     }
 
-    private static void compile(TextWriter output, RawInstruction[] instructions, string[] _)
+    public static void compile(TextWriter output, RawInstruction[] instructions, string[] _)
     {
         foreach (var _i in instructions)
         {
             var i = _i;
-            if (i.Command.Length == 1)
-                i = new RawInstruction(CommandByShort[i.Command[0]], i.Arguments);
+            if (i.Command.Length != 1)
+                i = new RawInstruction(CommandByLong[i.Command].ToString(), i.Arguments);
             output.WriteLine(i);
         }
     }
