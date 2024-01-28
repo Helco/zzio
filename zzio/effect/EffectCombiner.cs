@@ -12,8 +12,8 @@ namespace zzio.effect;
 [System.Serializable]
 public partial class EffectCombiner
 {
-    private static readonly Dictionary<string, Func<IEffectPart>> partTypeConstructors =
-        new()
+    private static readonly IReadOnlyDictionary<string, Func<IEffectPart>> partTypeConstructors =
+        new Dictionary<string, Func<IEffectPart>>()
         {
             { "BeamStar",           () => new BeamStar() },
             { "ElectricBolt",       () => new ElectricBolt() },
@@ -26,27 +26,6 @@ public partial class EffectCombiner
             { "RandomPlanes",       () => new RandomPlanes() },
             { "Sound",              () => new Sound() },
             { "Sparks",             () => new Sparks() }
-        };
-
-    // all handlers except the effect parts
-    private static readonly Dictionary<string, Action<EffectCombiner, BinaryReader>> sectionHandlers =
-        new()
-        {
-            { "Effect_Combiner_Description", (eff, r) => {
-                eff.description = r.ReadSizedCString(32);
-            } },
-            { "Effect_Combiner_Parameter", (eff, r) => {
-                r.BaseStream.Seek(4, SeekOrigin.Current);
-                eff.isLooping = r.ReadBoolean();
-            } },
-            { "Effect_Combiner_Position", (eff, r) => {
-                r.BaseStream.Seek(2 * 12, SeekOrigin.Current);
-            } },
-            { "Effect_Combiner_Form", (eff, r) => {
-                eff.upwards = r.ReadVector3();
-                eff.forwards = r.ReadVector3();
-                eff.position = r.ReadVector3();
-            } }
         };
 
     public string description = "";
@@ -72,23 +51,34 @@ public partial class EffectCombiner
                 throw new InvalidDataException("Invalid section name format: \"" + sectionName + "\"");
             sectionName = sectionName[1..^1];
 
-            if (sectionName == "EOF")
+            switch(sectionName)
             {
-                shouldReadNext = false;
-            }
-            else if (sectionHandlers.TryGetValue(sectionName, out var sectionHandler))
-            {
-                sectionHandler(this, r);
-            }
-            else if (partTypeConstructors.TryGetValue(sectionName, out var partTypeCtor))
-            {
-                var newPart = partTypeCtor();
-                newPart.Read(r);
-                partsList.Add(newPart);
-            }
-            else
-            {
-                throw new InvalidDataException("Invalid section name: \"" + sectionName + "\"");
+                case "EOF":
+                    shouldReadNext = false;
+                    break;
+                case "Effect_Combiner_Description":
+                    description = r.ReadSizedCString(32);
+                    break;
+                case "Effect_Combiner_Parameter":
+                    r.BaseStream.Seek(4, SeekOrigin.Current); // unused
+                    isLooping = r.ReadBoolean();
+                    break;
+                case "Effect_Combiner_Position":
+                    r.BaseStream.Seek(2 * 12, SeekOrigin.Current); // ignored data
+                    break;
+                case "Effect_Combiner_Form":
+                    // in most cases also ignored
+                    upwards = r.ReadVector3();
+                    forwards = r.ReadVector3();
+                    position = r.ReadVector3();
+                    break;
+                case var _ when partTypeConstructors.TryGetValue(sectionName, out var partTypeCtor):
+                    var newPart = partTypeCtor();
+                    newPart.Read(r);
+                    partsList.Add(newPart);
+                    break;
+                default:
+                    throw new InvalidDataException("Invalid section name: \"" + sectionName + "\"");
             }
         }
 
