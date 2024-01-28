@@ -50,6 +50,7 @@ public class Game : BaseDisposable, ITagContainer
         AddTag(new resources.ClumpMaterial(this));
         AddTag(new resources.Actor(this));
         AddTag(new resources.SkeletalAnimation(this));
+        AddTag(new resources.EffectCombiner(this));
 
         ecsWorld.SetMaxCapacity<Scene>(1);
 
