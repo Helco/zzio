@@ -9,6 +9,74 @@ using zzre.rendering;
 namespace zzre.materials;
 
 [StructLayout(LayoutKind.Sequential)]
+public struct EffectFactors
+{
+    public float alphaReference;
+
+    public static readonly EffectFactors Default = new()
+    {
+        alphaReference = 0.03f
+    };
+}
+
+public class EffectMaterial : MlangMaterial, IStandardTransformMaterial
+{
+    public enum BillboardMode : uint
+    {
+        None,
+        View,
+        Spark
+    }
+
+    public enum BlendMode : uint
+    {
+        Additive,
+        AdditiveAlpha,
+        Alpha
+    }
+
+    public bool DepthTest { set => SetOption(nameof(DepthTest), value); }
+    public BillboardMode Billboard { set => SetOption(nameof(Billboard), (uint)value); }
+    public BlendMode Blend { set => SetOption(nameof(Blend), (uint)value); }
+
+    public TextureBinding Texture { get; }
+    public SamplerBinding Sampler { get; }
+    public UniformBinding<Matrix4x4> Projection { get; }
+    public UniformBinding<Matrix4x4> View { get; }
+    public UniformBinding<Matrix4x4> World { get; }
+    public UniformBinding<EffectFactors> Factors { get; }
+
+    public EffectMaterial(ITagContainer diContainer) : base(diContainer, "effect")
+    {
+        DepthTest = true;
+        AddBinding("mainTexture", Texture = new(this));
+        AddBinding("mainSampler", Sampler = new(this));
+        AddBinding("projection", Projection = new(this));
+        AddBinding("view", View = new(this));
+        AddBinding("world", World = new(this));
+        AddBinding("factors", Factors = new(this));
+    }
+}
+
+public class EffectMesh : DynamicMesh
+{
+    public Attribute<Vector3> Pos { get; }
+    public Attribute<Vector2> UV { get; }
+    public Attribute<IColor> Color { get; }
+    public Attribute<Vector3> Center { get; }
+    public Attribute<Vector3> Direction { get; }
+
+    public EffectMesh(ITagContainer diContainer) : base(diContainer, dynamic: true)
+    {
+        Pos = AddAttribute<Vector3>("inVertexPos");
+        UV = AddAttribute<Vector2>("inUV");
+        Color = AddAttribute<IColor>("inColor");
+        Center = AddAttribute<Vector3>("inCenterPos");
+        Direction = AddAttribute<Vector3>("inDirection");
+    }
+}
+
+[StructLayout(LayoutKind.Sequential)]
 public struct EffectVertex
 {
     public Vector3 pos;
@@ -39,9 +107,10 @@ public struct EffectMaterialUniforms
     };
 }
 
-public abstract class EffectMaterial : BaseMaterial, IStandardTransformMaterial
+
+public abstract class EffectMaterialLEGACY : BaseMaterial, IStandardTransformMaterial
 {
-    public static EffectMaterial CreateFor(EffectPartRenderMode mode, ITagContainer diContainer) => mode switch
+    public static EffectMaterialLEGACY CreateFor(EffectPartRenderMode mode, ITagContainer diContainer) => mode switch
     {
         EffectPartRenderMode.NormalBlend => new EffectBlendMaterial(diContainer),
         EffectPartRenderMode.Additive => new EffectAdditiveMaterial(diContainer),
@@ -56,7 +125,7 @@ public abstract class EffectMaterial : BaseMaterial, IStandardTransformMaterial
     public UniformBinding<Matrix4x4> World { get; }
     public UniformBinding<EffectMaterialUniforms> Uniforms { get; }
 
-    protected EffectMaterial(ITagContainer diContainer, IBuiltPipeline pipeline) : base(diContainer.GetTag<GraphicsDevice>(), pipeline)
+    protected EffectMaterialLEGACY(ITagContainer diContainer, IBuiltPipeline pipeline) : base(diContainer.GetTag<GraphicsDevice>(), pipeline)
     {
         Configure()
             .Add(MainTexture = new TextureBinding(this))
@@ -86,7 +155,7 @@ public abstract class EffectMaterial : BaseMaterial, IStandardTransformMaterial
         .With(FrontFace.CounterClockwise);
 }
 
-public class EffectBlendMaterial : EffectMaterial
+public class EffectBlendMaterial : EffectMaterialLEGACY
 {
     public EffectBlendMaterial(ITagContainer diContainer) : base(diContainer, GetPipeline(diContainer)) { }
 
@@ -97,7 +166,7 @@ public class EffectBlendMaterial : EffectMaterial
 }
 
 
-public class EffectAdditiveMaterial : EffectMaterial
+public class EffectAdditiveMaterial : EffectMaterialLEGACY
 {
     public EffectAdditiveMaterial(ITagContainer diContainer) : base(diContainer, GetPipeline(diContainer)) { }
 
@@ -107,7 +176,7 @@ public class EffectAdditiveMaterial : EffectMaterial
         .Build());
 }
 
-public class EffectAdditiveAlphaMaterial : EffectMaterial
+public class EffectAdditiveAlphaMaterial : EffectMaterialLEGACY
 {
     public EffectAdditiveAlphaMaterial(ITagContainer diContainer) : base(diContainer, GetPipeline(diContainer))
     { }

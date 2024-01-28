@@ -10,7 +10,7 @@ namespace zzre.rendering.effectparts;
 public class BeamStarRenderer : ListDisposable, IEffectPartBeamRenderer
 {
     private readonly IQuadMeshBuffer<EffectVertex> quadMeshBuffer;
-    private readonly EffectMaterial material;
+    private readonly EffectMaterialLEGACY material;
     private readonly BeamStar data;
     private readonly Range quadRange;
 
@@ -35,7 +35,7 @@ public class BeamStarRenderer : ListDisposable, IEffectPartBeamRenderer
         var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
         var camera = diContainer.GetTag<Camera>();
         quadMeshBuffer = diContainer.GetTag<IQuadMeshBuffer<EffectVertex>>();
-        material = EffectMaterial.CreateFor(data.renderMode, diContainer);
+        material = EffectMaterialLEGACY.CreateFor(data.renderMode, diContainer);
         material.LinkTransformsTo(camera);
         material.World.BufferRange = locationRange;
         material.Uniforms.Value = EffectMaterialUniforms.Default;
