@@ -79,11 +79,29 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         var element = new components.ui.ElementId(trading.TradingCards);
         var button = preload.CreateButton(uiEntity)
             .With(element)
-            .With(new Vector2(5-200-10, 5+20-200 + 55*trading.TradingCards))
+            .With(new Vector2(-205, -175 + 55*trading.TradingCards))
             .With(new components.ui.ButtonTiles(card.CardId.EntityId))
             .With(preload.Itm000)
             .Build();
 
+        preload.CreateLabel(uiEntity)
+            .With(new Vector2(-155, -159 + 55*trading.TradingCards))
+            .WithText(card.Name)
+            .With(preload.Fnt002)
+            .Build();
+
+        preload.CreateLabel(uiEntity)
+            .With(new Vector2(120, -4+16-175 + 55*trading.TradingCards))
+            .WithText($"{{0*x}}{message.Price}")
+            .With(preload.Fnt000)
+            .Build();
+
+        preload.CreateButton(uiEntity)
+            .With(new components.ui.ElementId(10 + trading.TradingCards))
+            .With(new Vector2(160, -175 + 55*trading.TradingCards))
+            .With(new components.ui.ButtonTiles(20, 21))
+            .With(preload.Btn001)
+            .Build();
     }
 
     private const float ButtonOffsetY = -50f;
