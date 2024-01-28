@@ -1,0 +1,53 @@
+option DepthTest;
+option BillboardMode = None, View, Spark, CrossForward;
+option BlendMode = Additive, AdditiveAlpha, Alpha;
+
+attributes
+{
+    float3 inVertexPos;
+    float2 inUV;
+    byte4_norm inColor;
+}
+
+uniform texture2D mainTexture;
+uniform sampler mainSampler;
+uniform mat4 projection;
+uniform view
+{
+    mat4 viewMatrix;
+    float4 camPos;
+    float4 camDir;
+}
+uniform mat4 world;
+uniform factors
+{
+    float inAlphaReference;
+}
+
+pipeline
+{
+    output r8_g8_b8_a8_unorm outColor;
+    output d24_unorm_s8_uint;
+    depthwrite off;
+    depthtest off;
+}
+
+pipeline if (DepthTest)
+{
+    depthtest on;
+}
+
+pipeline if (Blend == IsAlphaBlend)
+{
+    blend SrcAlpha + InvSrcAlpha;
+}
+
+pipeline if (Blend == IsAdditiveBlend)
+{
+    blend One + One;
+}
+
+pipeline if (Blend == IsAdditiveAlphaBlend)
+{
+    blend SrcAlpha + One;
+}

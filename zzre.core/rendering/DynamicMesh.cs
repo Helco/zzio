@@ -137,7 +137,7 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
         return result;
     }
 
-    private void EnsureArray()
+    public void EnsureArray()
     {
         if (attributes.Count == 0)
             throw new InvalidOperationException("Cannot resize dynamic mesh without attributes");
