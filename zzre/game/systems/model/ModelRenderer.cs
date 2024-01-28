@@ -28,11 +28,13 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
     }
 
     private readonly ITagContainer diContainer;
+    private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadedSubscription;
     private readonly components.RenderOrder responsibility;
 
     private readonly ModelInstanceBuffer instanceBuffer;
     private readonly List<ClumpCount> clumpCounts = new();
+    private ModelInstanceBuffer.InstanceRange instanceRange = null!;
 
     public ModelRenderer(ITagContainer diContainer, components.RenderOrder responsibility) :
         base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
@@ -40,24 +42,38 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
         this.diContainer = diContainer;
         this.responsibility = responsibility;
         instanceBuffer = new(diContainer);
+        sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
     }
 
     public override void Dispose()
     {
         base.Dispose();
+        sceneChangingSubscription.Dispose();
         sceneLoadedSubscription.Dispose();
         instanceBuffer.Dispose();
+    }
+
+    private void HandleSceneChanging(in messages.SceneChanging message)
+    {
+        instanceRange?.Dispose();
     }
 
     private void HandleSceneLoaded(in messages.SceneLoaded message)
     {
         clumpCounts.EnsureCapacity(MultiMap.Keys.Count());
-        instanceBuffer.Reserve(MultiMap.Keys.Sum(MultiMap.Count), additive: false);
+        instanceBuffer.Clear();
+        instanceRange = instanceBuffer.RentVertices(MultiMap.Keys.Sum(MultiMap.Count));
     }
 
     [WithPredicate]
     private bool Filter(in components.RenderOrder order) => order == responsibility;
+
+    protected override void PreUpdate(CommandList state)
+    {
+        base.PreUpdate(state);
+        instanceRange.Reset();
+    }
 
     [Update]
     private void Update(
@@ -73,7 +89,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
         else
             clumpCounts[^1] = clumpCounts[^1].Increment();
 
-        instanceBuffer.Add(new()
+        instanceRange.Add(new()
         {
             tint = materialInfo.Color,
             world = location.LocalToWorld,

@@ -375,12 +375,8 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         };
         SetPlanes(worldMesh.Sections[highlightedSectionI].Bounds, normal, split.left.value, split.right.value, centerValue: null);
 
-        triangleRenderer.AddTriangles(
-            triangles: SplitTriangles(split).ToArray(),
-            colors: Enumerable.Repeat(IColor.Red, SectorTriangles(split.left).Count())
-            .Concat(Enumerable
-                .Repeat(IColor.Blue, SectorTriangles(split.right).Count()))
-            .ToArray());
+        triangleRenderer.AddTriangles(IColor.Red, SectorTriangles(split.left).ToArray());
+        triangleRenderer.AddTriangles(IColor.Blue, SectorTriangles(split.right).ToArray());
 
         fbArea.IsDirty = true;
 
@@ -388,13 +384,13 @@ public class WorldViewer : ListDisposable, IDocumentEditor
             SectorTriangles(split.left).Concat(SectorTriangles(split.right));
 
         IEnumerable<Triangle> SectorTriangles(CollisionSector sector) => sector.count == RWCollision.SplitCount
-            ? SplitTriangles(sectionCollision.splits[sector.index])
-            : sectionCollision.map
+            ? SplitTriangles(sectionCollision!.splits[sector.index])
+            : sectionCollision!.map
                 .Skip(sector.index)
                 .Take(sector.count)
-                .Select(i => sectionAtomic.triangles[i])
+                .Select(i => sectionAtomic!.triangles[i])
                 .Select(t => new Triangle(
-                    sectionAtomic.vertices[t.v1],
+                    sectionAtomic!.vertices[t.v1],
                     sectionAtomic.vertices[t.v2],
                     sectionAtomic.vertices[t.v3]))
                 .ToArray();
@@ -529,7 +525,6 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         var ray = new Ray(camera.Location.GlobalPosition, -camera.Location.GlobalForward);
         var cast = worldCollider.Cast(ray);
         rayRenderer.Clear();
-        rayRenderer.Reserve(5, additive: false);
         rayRenderer.Add(IColor.Green, ray.Start, ray.Start + ray.Direction * (cast?.Distance ?? 100f));
         if (cast.HasValue)
         {

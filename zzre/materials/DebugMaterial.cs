@@ -1,6 +1,6 @@
-﻿using System.Numerics;
-using System.Runtime.InteropServices;
-using Veldrid;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using zzio;
 using zzre.rendering;
 
@@ -63,19 +63,12 @@ public class DebugMaterial : MlangMaterial, IStandardTransformMaterial
 
 public class DebugDynamicMesh : DynamicMesh
 {
-    private readonly Attribute<Vector3> attrPos;
-    private readonly Attribute<IColor> attrColor;
+    public Attribute<Vector3> AttrPos { get; }
+    public Attribute<IColor> AttrColor { get; }
 
     public DebugDynamicMesh(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic)
     {
-        attrPos = AddAttribute<Vector3>("inPos");
-        attrColor = AddAttribute<IColor>("inColor");
-    }
-
-    public void Add(ColoredVertex v)
-    {
-        var index = Add(1);
-        attrPos[index] = v.pos;
-        attrColor[index] = v.color;
+        AttrPos = AddAttribute<Vector3>("inPos");
+        AttrColor = AddAttribute<IColor>("inColor");
     }
 }

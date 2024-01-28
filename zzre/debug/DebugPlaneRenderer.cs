@@ -26,17 +26,18 @@ public class DebugPlaneRenderer : BaseDisposable
         set
         {
             mesh.Clear();
-            mesh.Reserve(value.Length * 4, additive: false);
+            var index = mesh.RentVertices(4 * value.Length).Start.Value;
             foreach (var plane in value)
             {
                 var cameraUp = Vector3.Cross(plane.normal, Vector3.UnitY).LengthSquared() < 0.01f ? Vector3.UnitZ : Vector3.UnitY;
                 var rotation = Matrix4x4.CreateLookAt(Vector3.Zero, plane.normal, cameraUp);
                 var right = Vector3.Transform(Vector3.UnitX, rotation) * plane.size;
                 var up = Vector3.Transform(Vector3.UnitY, rotation) * plane.size;
-                mesh.Add(new(plane.center - right - up, plane.color));
-                mesh.Add(new(plane.center + right - up, plane.color));
-                mesh.Add(new(plane.center - right + up, plane.color));
-                mesh.Add(new(plane.center + right + up, plane.color));
+                mesh.AttrColor.Write(index..(index + 4)).Fill(plane.color);
+                mesh.AttrPos[index++] = plane.center - right - up;
+                mesh.AttrPos[index++] = plane.center + right - up;
+                mesh.AttrPos[index++] = plane.center - right + up;
+                mesh.AttrPos[index++] = plane.center + right + up;
             }
         }
     }

@@ -240,7 +240,6 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             return;
         var morphTarget = mesh.Geometry.morphTargets.First();
         normalRenderer.Clear();
-        normalRenderer.Reserve(mesh.VertexCount, additive: false);
         normalRenderer.Add(IColor.Red, morphTarget.vertices.Zip(morphTarget.normals,
             (pos, normal) => new Line(pos, pos + Vector3.Normalize(normal) * 0.05f)));
     }
@@ -296,21 +295,17 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         };
         SetPlanes(mesh.BoundingBox, normal, split.left.value, split.right.value, centerValue: null);
 
-        triangleRenderer.AddTriangles(
-            triangles: SplitTriangles(split).ToArray(),
-            colors: Enumerable.Repeat(IColor.Red, SectorTriangles(split.left).Count())
-            .Concat(Enumerable
-                .Repeat(IColor.Blue, SectorTriangles(split.right).Count()))
-            .ToArray());
+        triangleRenderer.AddTriangles(IColor.Red, SectorTriangles(split.left).ToArray());
+        triangleRenderer.AddTriangles(IColor.Blue, SectorTriangles(split.right).ToArray());
 
         fbArea.IsDirty = true;
 
-        IEnumerable<Triangle> SplitTriangles(zzio.rwbs.CollisionSplit split) =>
+        IEnumerable<Triangle> SplitTriangles(CollisionSplit split) =>
             SectorTriangles(split.left).Concat(SectorTriangles(split.right));
 
-        IEnumerable<Triangle> SectorTriangles(zzio.rwbs.CollisionSector sector) => sector.count == zzio.rwbs.RWCollision.SplitCount
-            ? SplitTriangles(collider.Collision.splits[sector.index])
-            : collider.Collision.map
+        IEnumerable<Triangle> SectorTriangles(CollisionSector sector) => sector.count == RWCollision.SplitCount
+            ? SplitTriangles(collider!.Collision.splits[sector.index])
+            : collider!.Collision.map
                 .Skip(sector.index)
                 .Take(sector.count)
                 .Select(collider.GetTriangle)

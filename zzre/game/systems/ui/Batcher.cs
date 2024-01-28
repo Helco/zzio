@@ -20,7 +20,8 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
     private readonly Texture emptyTexture;
 
     private UIMaterial? lastMaterial;
-    private uint nextInstanceCount;
+    private uint nextBatchSize;
+    private int nextInstanceIndex, maxInstanceCount;
 
     public Batcher(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
@@ -49,7 +50,7 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
     protected override void PreUpdate(CommandList _)
     {
         lastMaterial = null;
-        nextInstanceCount = 0;
+        nextBatchSize = 0;
         batches.Clear();
 
         var tiles = World.GetComponents<components.ui.Tile[]>();
@@ -57,7 +58,8 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
         foreach (var entity in SortedSet.GetEntities())
             totalRects += tiles[entity].Length;
         instanceBuffer.Clear();
-        instanceBuffer.Reserve(totalRects, additive: false);
+        maxInstanceCount = instanceBuffer.RentVertices(totalRects).GetLength(instanceBuffer.VertexCapacity);
+        nextInstanceIndex = 0;
     }
 
     [Update]
@@ -83,7 +85,7 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
                 uvRectangle = tileSheet[tile.TileId];
             }
 
-            instanceBuffer.Add(new()
+            AddInstance(new()
             {
                 pos = offset.Calc(tile.Rect.Min, ui.LogicalScreen),
                 size = tile.Rect.Size,
@@ -92,8 +94,21 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
                 uvPos = uvRectangle.Min,
                 uvSize = uvRectangle.Size
             });
-            nextInstanceCount++;
+            nextBatchSize++;
         }
+    }
+
+    private void AddInstance(UIInstance i)
+    {
+        if (nextInstanceIndex >= maxInstanceCount)
+            throw new IndexOutOfRangeException("Batcher tried to add too many instances");
+        instanceBuffer.AttrPos[nextInstanceIndex] = i.pos;
+        instanceBuffer.AttrSize[nextInstanceIndex] = i.size;
+        instanceBuffer.AttrColor[nextInstanceIndex] = i.color;
+        instanceBuffer.AttrTexWeight[nextInstanceIndex] = i.textureWeight;
+        instanceBuffer.AttrUVPos[nextInstanceIndex] = i.uvPos;
+        instanceBuffer.AttrUVSize[nextInstanceIndex] = i.uvSize;
+        nextInstanceIndex++;
     }
 
     protected override void PostUpdate(CommandList cl)
@@ -122,10 +137,10 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
 
     private void FinishBatch()
     {
-        if (lastMaterial == null || nextInstanceCount == 0)
+        if (lastMaterial == null || nextBatchSize == 0)
             return;
-        batches.Add(new(lastMaterial, nextInstanceCount));
+        batches.Add(new(lastMaterial, nextBatchSize));
         lastMaterial = null;
-        nextInstanceCount = 0;
+        nextBatchSize = 0;
     }
 }

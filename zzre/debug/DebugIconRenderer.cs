@@ -18,8 +18,7 @@ public class DebugIconRenderer : BaseDisposable
         set
         {
             instanceBuffer.Clear();
-            instanceBuffer.Reserve(value.Length, additive: false);
-            Array.ForEach(value, instanceBuffer.Add);
+            instanceBuffer.AddRange(value);
         }
     }
 
