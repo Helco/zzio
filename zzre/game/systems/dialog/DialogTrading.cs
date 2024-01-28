@@ -8,23 +8,26 @@ namespace zzre.game.systems;
 
 public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, messages.DialogTrading>
 {
-    private static readonly components.ui.ElementId IDExit = new(1);
+    private static readonly components.ui.ElementId IDExit = new(1000);
 
     private readonly MappedDB db;
-    private readonly IDisposable resetUIDisposable;
+    private readonly IDisposable resetUISubscription;
+    private readonly IDisposable addTradingCardSubscription;
 
     public DialogTrading(ITagContainer diContainer) : base(diContainer, BlockFlags.None)
     {
         db = diContainer.GetTag<MappedDB>();
 
-        resetUIDisposable = World.Subscribe<messages.DialogResetUI>(HandleResetUI);
+        resetUISubscription = World.Subscribe<messages.DialogResetUI>(HandleResetUI);
+        addTradingCardSubscription = World.Subscribe<messages.DialogAddTradingCard>(HandleAddTradingCard);
         OnElementDown += HandleElementDown;
     }
 
     public override void Dispose()
     {
         base.Dispose();
-        resetUIDisposable.Dispose();
+        resetUISubscription.Dispose();
+        addTradingCardSubscription.Dispose();
     }
 
     private void HandleResetUI(in messages.DialogResetUI message)
@@ -41,9 +44,45 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         var uiEntity = World.CreateEntity();
         uiEntity.Set(new components.Parent(message.DialogEntity));
         uiEntity.Set(new components.ui.DialogTrading(message.DialogEntity));
+        ref var trading = ref uiEntity.Get<components.ui.DialogTrading>();
 
         preload.CreateDialogBackground(uiEntity, animateOverlay: false, out var bgRect);
         CreateSingleButton(uiEntity, new UID(0xF7DFDC21), IDExit, bgRect);
+        trading.Topbar = CreateTopbar(uiEntity, message.DialogUID, bgRect);
+    }
+
+    private DefaultEcs.Entity CreateTopbar(DefaultEcs.Entity parent, UID cardUID, Rect bgRect)
+    {
+        ItemRow card = db.GetItem(cardUID);
+        var cards = db.Items.OrderBy(itemRow => itemRow.CardId.EntityId).ToArray();
+        var cardI = Array.FindIndex(cards, c => c.Name == card.Name);
+
+        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        var amountOwned = inventory.CountCards(card.CardId);
+
+        var entity = preload.CreateLabel(parent)
+            .With(new Vector2(-60, -170))
+            .With(preload.Fnt000)
+            .WithText($"You have {{{3000 + cardI}}}x{amountOwned}")
+            .Build();
+        return entity;
+    }
+
+    private void HandleAddTradingCard(in messages.DialogAddTradingCard message)
+    {
+        var uiEntity = Set.GetEntities()[0];
+        ref var trading = ref uiEntity.Get<components.ui.DialogTrading>();
+        trading.TradingCards += 1;
+        var cards = db.Items.OrderBy(itemRow => itemRow.CardId.EntityId).ToArray();
+        var card = db.GetItem(message.UID);
+
+        var element = new components.ui.ElementId(trading.TradingCards);
+        var button = preload.CreateButton(uiEntity)
+            .With(element)
+            .With(new Vector2(5-200-10, 5+20-200 + 55*trading.TradingCards))
+            .With(new components.ui.ButtonTiles(card.CardId.EntityId))
+            .With(preload.Itm000)
+            .Build();
 
     }
 
@@ -63,7 +102,6 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
 
         // TODO: Set cursor position in dialog trading
     }
-
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId clickedId)
     {
         if (clickedId == IDExit) {

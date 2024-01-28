@@ -252,8 +252,7 @@ public partial class DialogScript : BaseScript
 
     private void TradingCard(DefaultEcs.Entity entity, int price, UID uid)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        World.Publish(new messages.DialogAddTradingCard(entity, price, uid));
     }
 
     private void SetupGambling(DefaultEcs.Entity entity, int count, int type, int id)
