@@ -17,7 +17,7 @@ public enum AxisPlanes
     YZ = (1 << 2)
 }
 
-public class DebugLineRenderer : BaseDisposable, IRenderable
+public class DebugLineRenderer : BaseDisposable
 {
     private readonly DebugDynamicMesh mesh;
 
