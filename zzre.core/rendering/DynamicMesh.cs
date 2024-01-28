@@ -57,29 +57,14 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
     private readonly string meshName;
     private readonly float minGrowFactor;
     private readonly List<IAttribute> attributes = new();
-    private DeviceBuffer? indexBuffer;
-    private int uploadedPrimitiveCount;
-    private ushort[] indexPattern = Array.Empty<ushort>();
-    private int verticesPerPrimitive;
-    
+    private readonly DynamicGraphicsBuffer indexBuffer;
+
     public int VertexCapacity => attributes.FirstOrDefault()?.Buffer.ReservedCapacity ?? 0;
     public int VertexCount => attributes.FirstOrDefault()?.Buffer.Count ?? 0;
-    public int PrimitiveCount => verticesPerPrimitive < 1 ? 0 : VertexCount / verticesPerPrimitive;
-
-    public IReadOnlyList<ushort> IndexPattern
-    {
-        get => indexPattern;
-        set
-        {
-            indexPattern = value.ToArray();
-            uploadedPrimitiveCount = 0;
-            verticesPerPrimitive = indexPattern.Max() + 1;
-        }
-    }
-    public int IndexCount => PrimitiveCount * IndexPattern.Count;
+    public int IndexCapacity => indexBuffer.ReservedCapacity;
+    public int IndexCount => indexBuffer.Count;
     public IndexFormat IndexFormat => IndexFormat.UInt16;
-    public DeviceBuffer IndexBuffer => indexBuffer ??
-        throw new InvalidOperationException("Index buffer was not yet generated");
+    public DeviceBuffer IndexBuffer => indexBuffer.Buffer;
 
     public DynamicMesh(ITagContainer diContainer,
         bool dynamic = true,
@@ -93,6 +78,14 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
         this.dynamic = dynamic;
         this.meshName = name;
         this.minGrowFactor = minGrowFactor;
+
+        indexBuffer = new(graphicsDevice,
+            BufferUsage.IndexBuffer | (dynamic ? BufferUsage.Dynamic : default),
+            name + " Indices",
+            minGrowFactor)
+        {
+            SizePerElement = sizeof(ushort)
+        };
     }
 
     protected override void DisposeManaged()
@@ -101,14 +94,22 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
         foreach (var attribute in attributes)
             attribute.Dispose();
         attributes.Clear();
-        indexBuffer?.Dispose();
+        indexBuffer.Dispose();
     }
 
     public void Clear()
     {
+        ClearVertices();
+        ClearIndices();
+    }
+
+    public void ClearVertices()
+    {
         foreach (var attribute in attributes)
             attribute.Buffer.Clear();
     }
+
+    public void ClearIndices() => indexBuffer.Clear();
 
     public Range RentVertices(int request, bool fast = false)
     {
@@ -130,32 +131,34 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
             attribute.Buffer.Return(range);
     }
 
+    public Range RentIndices(int request, bool fast = false) =>
+        indexBuffer.Rent(request, fast);
+
+    public void ReturnIndices(Range range) =>
+        indexBuffer.Return(range);
+
+    public ReadOnlySpan<ushort> ReadIndices(Range range) =>
+        MemoryMarshal.Cast<byte, ushort>(indexBuffer.Read(range));
+
+    public Span<ushort> WriteIndices(Range range) =>
+        MemoryMarshal.Cast<byte, ushort>(indexBuffer.Write(range));
+
+    public void SetIndicesFromPattern(IReadOnlyList<ushort> pattern)
+    {
+        ClearIndices();
+        var verticesPerPrimitive = pattern.Max() + 1;
+        var primitiveCount = VertexCount / verticesPerPrimitive;
+        if (primitiveCount <= 0)
+            return;
+        var indexRange = RentIndices(primitiveCount * pattern.Count);
+        StaticMesh.GeneratePatternIndices(WriteIndices(indexRange), pattern, primitiveCount, verticesPerPrimitive);
+    }
+
     public void Update(CommandList cl)
     {
         foreach (var attribute in attributes)
             attribute.Buffer.Update(cl);
-        UpdateIndexBuffer(cl);
-    }
-    private void UpdateIndexBuffer(CommandList cl)
-    {
-        if (IndexPattern.Count == 0)
-            return;
-        var expectedIndexBufferSize = PrimitiveCount * IndexPattern.Count * sizeof(ushort);
-        var indexBufferTooSmall = (indexBuffer?.SizeInBytes ?? 0) < expectedIndexBufferSize;
-
-        if (indexBufferTooSmall)
-        {
-            uploadedPrimitiveCount = 0;
-            indexBuffer?.Dispose();
-            indexBuffer = resourceFactory.CreateBuffer(new((uint)expectedIndexBufferSize, BufferUsage.IndexBuffer));
-            indexBuffer.Name = $"InstanceBuffer Indices {GetHashCode()}";
-        }
-
-        if (uploadedPrimitiveCount < PrimitiveCount)
-        {
-            var indices = StaticMesh.GeneratePatternIndices(indexPattern, uploadedPrimitiveCount, PrimitiveCount, verticesPerPrimitive);
-            cl.UpdateBuffer(indexBuffer, (uint)(uploadedPrimitiveCount * PrimitiveCount * sizeof(ushort)), indices);
-        }
+        indexBuffer.Update(cl);
     }
 
     public bool TryGetBufferByMaterialName(string name, [NotNullWhen(true)] out DeviceBuffer? buffer, out uint offset)

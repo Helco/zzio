@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
@@ -18,6 +19,8 @@ public struct DebugPlane
 
 public class DebugPlaneRenderer : BaseDisposable
 {
+    private static readonly IReadOnlyList<ushort> IndexPattern = new ushort[] { 0, 1, 2, 3, 2, 1 };
+
     private readonly DebugDynamicMesh mesh;
     public DebugMaterial Material { get; }
 
@@ -39,13 +42,13 @@ public class DebugPlaneRenderer : BaseDisposable
                 mesh.AttrPos[index++] = plane.center - right + up;
                 mesh.AttrPos[index++] = plane.center + right + up;
             }
+            mesh.SetIndicesFromPattern(IndexPattern);
         }
     }
 
     public DebugPlaneRenderer(ITagContainer diContainer)
     {
         mesh = new(diContainer, dynamic: false);
-        mesh.IndexPattern = new ushort[] { 0, 1, 2, 3, 2, 1 };
         Material = new DebugMaterial(diContainer) { BothSided = true };
     }
 
@@ -58,7 +61,7 @@ public class DebugPlaneRenderer : BaseDisposable
 
     public void Render(CommandList cl)
     {
-        if (mesh.PrimitiveCount == 0)
+        if (mesh.IndexCount == 0)
             return;
         mesh.Update(cl);
         (Material as IMaterial).Apply(cl);
