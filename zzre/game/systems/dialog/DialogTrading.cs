@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Numerics;
+using System.Collections.Generic;
 using zzio;
 using zzio.db;
 
@@ -12,14 +13,12 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
 
     private readonly MappedDB db;
     private readonly IDisposable resetUISubscription;
-    private readonly IDisposable addTradingCardSubscription;
 
     public DialogTrading(ITagContainer diContainer) : base(diContainer, BlockFlags.None)
     {
         db = diContainer.GetTag<MappedDB>();
 
         resetUISubscription = World.Subscribe<messages.DialogResetUI>(HandleResetUI);
-        addTradingCardSubscription = World.Subscribe<messages.DialogAddTradingCard>(HandleAddTradingCard);
         OnElementDown += HandleElementDown;
     }
 
@@ -27,7 +26,6 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
     {
         base.Dispose();
         resetUISubscription.Dispose();
-        addTradingCardSubscription.Dispose();
     }
 
     private void HandleResetUI(in messages.DialogResetUI message)
@@ -49,6 +47,23 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         preload.CreateDialogBackground(uiEntity, animateOverlay: false, out var bgRect);
         CreateSingleButton(uiEntity, new UID(0xF7DFDC21), IDExit, bgRect);
         trading.Topbar = CreateTopbar(uiEntity, message.DialogUID, bgRect);
+        trading.CardPurchaseButtons = new Dictionary<components.ui.ElementId, ItemRow>();
+        var trades = message.DialogEntity.Get<components.ui.DialogTradingCards>().cardTrades.ToArray();
+        for (int i = 0; i < trades.Length; i++)
+            AddTrade(i, trades[i].Item1, trades[i].Item2, bgRect);
+    }
+
+    private DefaultEcs.Entity CreateItemProfile(DefaultEcs.Entity parent, ItemRow card)
+    {
+        var entity = World.CreateEntity();
+
+        preload.CreateLabel(parent)
+            .With(new Vector2(0, 0))
+            .With(preload.Fnt003)
+            .WithText($"Item Profile")
+            .Build();
+
+        return entity;
     }
 
     private DefaultEcs.Entity CreateTopbar(DefaultEcs.Entity parent, UID cardUID, Rect bgRect)
@@ -68,40 +83,45 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         return entity;
     }
 
-    private void HandleAddTradingCard(in messages.DialogAddTradingCard message)
+    private void AddTrade(int index, int price, UID uid, Rect bgRect)
     {
         var uiEntity = Set.GetEntities()[0];
         ref var trading = ref uiEntity.Get<components.ui.DialogTrading>();
-        trading.TradingCards += 1;
         var cards = db.Items.OrderBy(itemRow => itemRow.CardId.EntityId).ToArray();
-        var card = db.GetItem(message.UID);
+        var card = db.GetItem(uid);
 
-        var element = new components.ui.ElementId(trading.TradingCards);
+        var cardImage = new components.ui.ElementId(index);
+        var purchase = new components.ui.ElementId(10 + index);
+
+        var offset = bgRect.Center + new Vector2(-205, -120 + 55 * index);
+
         var button = preload.CreateButton(uiEntity)
-            .With(element)
-            .With(new Vector2(-205, -175 + 55*trading.TradingCards))
+            .With(cardImage)
+            .With(offset)
             .With(new components.ui.ButtonTiles(card.CardId.EntityId))
             .With(preload.Itm000)
             .Build();
 
         preload.CreateLabel(uiEntity)
-            .With(new Vector2(-155, -159 + 55*trading.TradingCards))
+            .With(offset + new Vector2(50, 16))
             .WithText(card.Name)
             .With(preload.Fnt002)
             .Build();
 
         preload.CreateLabel(uiEntity)
-            .With(new Vector2(120, -4+16-175 + 55*trading.TradingCards))
-            .WithText($"{{0*x}}{message.Price}")
+            .With(offset + new Vector2(325, 12))
+            .WithText($"{{0*x}}{price}")
             .With(preload.Fnt000)
             .Build();
 
         preload.CreateButton(uiEntity)
-            .With(new components.ui.ElementId(10 + trading.TradingCards))
-            .With(new Vector2(160, -175 + 55*trading.TradingCards))
+            .With(purchase)
+            .With(offset + new Vector2(365, 0))
             .With(new components.ui.ButtonTiles(20, 21))
             .With(preload.Btn001)
             .Build();
+
+        trading.CardPurchaseButtons[purchase] = card;
     }
 
     private const float ButtonOffsetY = -50f;
@@ -122,8 +142,17 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
     }
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId clickedId)
     {
+        var tradingEntity = Set.GetEntities()[0];
+        var dialogEntity = tradingEntity.Get<components.ui.DialogTrading>().DialogEntity;
+
+        ref var trading = ref tradingEntity.Get<components.ui.DialogTrading>();
+
+        if (trading.CardPurchaseButtons.TryGetValue(clickedId, out var card)) {
+            CreateItemProfile(tradingEntity, card);
+        }
         if (clickedId == IDExit) {
             var uiEntity = Set.GetEntities()[0];
+            dialogEntity.Set(components.DialogState.NextScriptOp);
             uiEntity.Dispose();
         }
     }

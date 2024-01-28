@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Numerics;
+using System.Collections.Generic;
 using DefaultEcs.Command;
 using DefaultEcs.System;
 using zzio;
@@ -170,6 +171,11 @@ public partial class DialogScript : BaseScript
             entity.Remove<messages.DialogTalk>();
             World.Publish(talkMessage);
         }
+        else if (entity.TryGet<messages.DialogTrading>(out var tradingMessage))
+        {
+            entity.Remove<messages.DialogTrading>();
+            World.Publish(tradingMessage);
+        }
         else
             entity.Set(components.DialogState.WaitForSayString);
     }
@@ -247,12 +253,17 @@ public partial class DialogScript : BaseScript
 
     private void TradingCurrency(DefaultEcs.Entity entity, UID uid)
     {
-        World.Publish(new messages.DialogTrading(entity, uid));
+        entity.Set(new messages.DialogTrading(entity, uid));
+        var trading = new components.ui.DialogTradingCards();
+        trading.cardTrades = new List<(int, UID)>();
+        entity.Set(trading);
     }
 
     private void TradingCard(DefaultEcs.Entity entity, int price, UID uid)
     {
-        World.Publish(new messages.DialogAddTradingCard(entity, price, uid));
+        var trading = entity.Get<components.ui.DialogTradingCards>();
+        var trades = trading.cardTrades;
+        trades.Add((price, uid));
     }
 
     private void SetupGambling(DefaultEcs.Entity entity, int count, int type, int id)
