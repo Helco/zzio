@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Numerics;
-using System.Collections.Generic;
 using DefaultEcs.Command;
 using DefaultEcs.System;
 using zzio;
@@ -254,8 +253,7 @@ public partial class DialogScript : BaseScript
     private void TradingCurrency(DefaultEcs.Entity entity, UID uid)
     {
         entity.Set(new messages.DialogTrading(entity, uid));
-        var trading = new components.ui.DialogTradingCards();
-        trading.cardTrades = new List<(int, UID)>();
+        var trading = new components.ui.DialogTradingCards{ cardTrades = new() };
         entity.Set(trading);
     }
 

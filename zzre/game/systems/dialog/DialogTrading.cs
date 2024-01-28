@@ -58,8 +58,8 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         var entity = World.CreateEntity();
 
         preload.CreateLabel(parent)
-            .With(new Vector2(0, 0))
-            .With(preload.Fnt003)
+            .With(new Vector2(-220, -188))
+            .With(preload.Fnt001)
             .WithText($"Item Profile")
             .Build();
 
