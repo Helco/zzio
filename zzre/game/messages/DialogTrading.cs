@@ -6,5 +6,5 @@ namespace zzre.game.messages;
 public record struct DialogTrading(
     DefaultEcs.Entity DialogEntity,
     UID CardUID,
-    List<(int price, UID uid)> cardTrades
+    List<(int price, UID uid)> CardTrades
 );

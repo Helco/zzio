@@ -257,7 +257,7 @@ public partial class DialogScript : BaseScript
 
     private void TradingCard(DefaultEcs.Entity entity, int price, UID uid)
     {
-        entity.Get<messages.DialogTrading>().cardTrades.Add((price, uid));
+        entity.Get<messages.DialogTrading>().CardTrades.Add((price, uid));
     }
 
     private void SetupGambling(DefaultEcs.Entity entity, int count, int type, int id)
