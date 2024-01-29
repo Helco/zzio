@@ -34,7 +34,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
 
     private readonly ModelInstanceBuffer instanceBuffer;
     private readonly List<ClumpCount> clumpCounts = new();
-    private ModelInstanceBuffer.InstanceRange instanceRange = null!;
+    private ModelInstanceBuffer.InstanceArena instanceArena = null!;
 
     public ModelRenderer(ITagContainer diContainer, components.RenderOrder responsibility) :
         base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
@@ -56,14 +56,14 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
 
     private void HandleSceneChanging(in messages.SceneChanging message)
     {
-        instanceRange?.Dispose();
+        instanceArena?.Dispose();
     }
 
     private void HandleSceneLoaded(in messages.SceneLoaded message)
     {
         clumpCounts.EnsureCapacity(MultiMap.Keys.Count());
         instanceBuffer.Clear();
-        instanceRange = instanceBuffer.RentVertices(MultiMap.Keys.Sum(MultiMap.Count) + 1);
+        instanceArena = instanceBuffer.RentVertices(MultiMap.Keys.Sum(MultiMap.Count) + 1);
     }
 
     [WithPredicate]
@@ -83,7 +83,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
         else
             clumpCounts[^1] = clumpCounts[^1].Increment();
 
-        instanceRange.Add(new()
+        instanceArena.Add(new()
         {
             tint = materialInfo.Color,
             world = location.LocalToWorld,
@@ -93,7 +93,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
 
     protected override void PostUpdate(CommandList cl)
     {
-        if (instanceRange.InstanceCount == 0)
+        if (instanceArena.InstanceCount == 0)
             return;
         cl.PushDebugGroup($"{nameof(ModelRenderer)} {responsibility}");
 
@@ -132,6 +132,6 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
         for (int i = 0; i < clumpCounts.Count; i++)
             clumpCounts[i] = default; // remove reference to ClumpBuffer and materials
         clumpCounts.Clear();
-        instanceRange.Reset();
+        instanceArena.Reset();
     }
 }

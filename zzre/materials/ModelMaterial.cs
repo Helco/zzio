@@ -87,7 +87,7 @@ public sealed class ModelInstanceBuffer : DynamicMesh
         attrTint = AddAttribute<IColor>("inTint");
     }
 
-    public class InstanceRange : IDisposable
+    public class InstanceArena : IDisposable
     {
         private readonly ModelInstanceBuffer buffer;
         private readonly int startIndex, endIndex;
@@ -96,7 +96,7 @@ public sealed class ModelInstanceBuffer : DynamicMesh
         public uint InstanceStart => (uint)startIndex;
         public uint InstanceCount => (uint)(nextIndex - startIndex);
 
-        public InstanceRange(ModelInstanceBuffer buffer, Range range)
+        public InstanceArena(ModelInstanceBuffer buffer, Range range)
         {
             this.buffer = buffer;
             (startIndex, endIndex) = range.GetOffsetAndLength(buffer.VertexCapacity);
@@ -108,7 +108,7 @@ public sealed class ModelInstanceBuffer : DynamicMesh
         public void Add(ModelInstance i)
         {
             if (nextIndex < 0)
-                throw new ObjectDisposedException(nameof(InstanceRange));
+                throw new ObjectDisposedException(nameof(InstanceArena));
             if (nextIndex >= endIndex)
                 throw new InvalidOperationException("Instance range is full");
             buffer.attrWorld[nextIndex] = i.world;
@@ -127,7 +127,7 @@ public sealed class ModelInstanceBuffer : DynamicMesh
         }
     }
 
-    public new InstanceRange RentVertices(int request, bool fast = false) =>
-        new InstanceRange(this, base.RentVertices(request, fast));
+    public new InstanceArena RentVertices(int request, bool fast = false) =>
+        new InstanceArena(this, base.RentVertices(request, fast));
 }
 
