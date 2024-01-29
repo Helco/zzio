@@ -10,6 +10,8 @@ namespace zzre.game.systems;
 public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, messages.DialogTrading>
 {
     private static readonly components.ui.ElementId IDExit = new(1000);
+    private static readonly components.ui.ElementId IDYes = new(1001);
+    private static readonly components.ui.ElementId IDNo = new(1002);
 
     private readonly MappedDB db;
     private readonly IDisposable resetUISubscription;
@@ -45,16 +47,15 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         uiEntity.Set(new components.ui.DialogTrading(message.DialogEntity, db.GetItem(message.CardUID), message.CardTrades, new()));
         ref var trading = ref uiEntity.Get<components.ui.DialogTrading>();
 
-        preload.CreateDialogBackground(uiEntity, animateOverlay: false, out var bgRect);
-
-        trading.Profile = CreatePrimary(uiEntity, trading, bgRect);
+        trading.Profile = CreatePrimary(uiEntity, trading);
     }
 
-    private DefaultEcs.Entity CreatePrimary(DefaultEcs.Entity parent, components.ui.DialogTrading trading, Rect bgRect)
+    private DefaultEcs.Entity CreatePrimary(DefaultEcs.Entity parent, components.ui.DialogTrading trading)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
+        preload.CreateDialogBackground(entity, animateOverlay: false, out var bgRect);
         CreateTopbar(entity, trading.Currency);
         var trades = trading.CardTrades.ToArray();
         for (int i = 0; i < trades.Length; i++)
@@ -64,16 +65,18 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         return entity;
     }
 
-    private DefaultEcs.Entity CreateItemProfile(DefaultEcs.Entity parent, ItemRow card)
+    private DefaultEcs.Entity CreateItemProfile(DefaultEcs.Entity parent, components.ui.DialogTrading trading, ItemRow card)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
+        preload.CreateDialogBackground(entity, animateOverlay: false, out var bgRect);
         preload.CreateLabel(entity)
             .With(new Vector2(-220, -188))
             .With(preload.Fnt001)
             .WithText($"Item Profile")
             .Build();
+        CreateSingleButton(entity, new UID(0xF7DFDC21), IDNo, bgRect);
 
         return entity;
     }
@@ -155,9 +158,15 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
 
         if (trading.CardPurchaseButtons.TryGetValue(clickedId, out var card)) {
             trading.Profile.Dispose();
-            trading.Profile = CreateItemProfile(uiEntity, card);
+            trading.Profile = CreateItemProfile(uiEntity, trading, card);
         }
-        if (clickedId == IDExit) {
+        else if (clickedId == IDYes) {
+        }
+        else if (clickedId == IDNo) {
+            trading.Profile.Dispose();
+            trading.Profile = CreatePrimary(uiEntity, trading);
+        }
+        else if (clickedId == IDExit) {
             trading.DialogEntity.Set(components.DialogState.NextScriptOp);
             uiEntity.Dispose();
         }
