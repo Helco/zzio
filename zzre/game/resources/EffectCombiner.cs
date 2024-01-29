@@ -5,7 +5,7 @@ using zzio.vfs;
 
 namespace zzre.game.resources;
 
-public class EffectCombiner : AResourceManager<string, zzio.effect.EffectCombiner>
+public class EffectCombiner : AResourceManager<int, zzio.effect.EffectCombiner>
 {
     private static readonly FilePath BasePath = new("resources/effects/");
     private const string FileExtension = ".ed";
@@ -17,9 +17,9 @@ public class EffectCombiner : AResourceManager<string, zzio.effect.EffectCombine
         Manage(diContainer.GetTag<DefaultEcs.World>());
     }
 
-    protected override zzio.effect.EffectCombiner Load(string info)
+    protected override zzio.effect.EffectCombiner Load(int info)
     {
-        var path = BasePath.Combine(info + FileExtension);
+        var path = BasePath.Combine($"e{info}{FileExtension}");
         using var stream = resourcePool.FindAndOpen(path) ??
             throw new System.IO.FileNotFoundException($"Could not find effect combiner: {path}");
         var eff = new zzio.effect.EffectCombiner();
@@ -27,7 +27,7 @@ public class EffectCombiner : AResourceManager<string, zzio.effect.EffectCombine
         return eff;
     }
 
-    protected override void OnResourceLoaded(in DefaultEcs.Entity entity, string info, zzio.effect.EffectCombiner resource)
+    protected override void OnResourceLoaded(in DefaultEcs.Entity entity, int info, zzio.effect.EffectCombiner resource)
     {
         entity.Set(resource);
     }
