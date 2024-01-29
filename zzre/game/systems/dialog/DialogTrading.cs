@@ -180,6 +180,11 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
                 .With(new components.ui.ButtonTiles(20, 21))
                 .With(preload.Btn001)
                 .Build();
+        } else {
+            preload.CreateImage(entity)
+                .With(offset + new Vector2(365, 0))
+                .With(preload.Btn001, 22)
+                .Build();
         }
 
         trading.CardPurchaseButtons[purchase] = card;
@@ -217,7 +222,7 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
 
             var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
             inventory.Add(purchase.CardId);
-            inventory.RemoveCards(trading.Currency.CardId, (uint)price*1000);
+            inventory.RemoveCards(trading.Currency.CardId, (uint)price);
 
             trading.Profile.Dispose();
             trading.Profile = CreatePrimary(uiEntity, trading);
