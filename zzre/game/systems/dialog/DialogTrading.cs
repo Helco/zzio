@@ -13,9 +13,9 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
     private static readonly components.ui.ElementId IDYes = new(1001);
     private static readonly components.ui.ElementId IDNo = new(1002);
 
-    private static readonly UID UIDPurchaseItem = new UID(0x7B973CA1);
-    private static readonly UID UIDItemProfile = new UID(0x2C2084B1);
-    private static readonly UID UIDYouHave = new UID(0x070EE421);
+    private static readonly UID UIDPurchaseItem = new(0x7B973CA1);
+    private static readonly UID UIDItemProfile = new(0x2C2084B1);
+    private static readonly UID UIDYouHave = new(0x070EE421);
 
     private readonly MappedDB db;
     private readonly IDisposable resetUISubscription;
