@@ -64,7 +64,7 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         CreateTopbar(entity, trading.Currency);
         var trades = trading.CardTrades.ToArray();
         for (int i = 0; i < trades.Length; i++)
-            AddTrade(entity, trading, i, trades[i].Item1, trades[i].Item2, bgRect);
+            AddTrade(entity, trading, i, trading.Currency, trades[i].Item1, trades[i].Item2, bgRect);
         CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
 
         return entity;
@@ -140,7 +140,14 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
             .Build();
     }
 
-    private void AddTrade(DefaultEcs.Entity entity, components.ui.DialogTrading trading, int index, int price, UID uid, Rect bgRect)
+    private void AddTrade(
+        DefaultEcs.Entity entity,
+        components.ui.DialogTrading trading,
+        int index,
+        ItemRow currency,
+        int price,
+        UID uid,
+        Rect bgRect)
     {
         var cards = db.Items.OrderBy(itemRow => itemRow.CardId.EntityId).ToArray();
         var card = db.GetItem(uid);
@@ -165,12 +172,15 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
             .With(preload.Fnt000)
             .Build();
 
-        preload.CreateButton(entity)
-            .With(purchase)
-            .With(offset + new Vector2(365, 0))
-            .With(new components.ui.ButtonTiles(20, 21))
-            .With(preload.Btn001)
-            .Build();
+        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        if (inventory.CountCards(currency.CardId) >= price) {
+            preload.CreateButton(entity)
+                .With(purchase)
+                .With(offset + new Vector2(365, 0))
+                .With(new components.ui.ButtonTiles(20, 21))
+                .With(preload.Btn001)
+                .Build();
+        }
 
         trading.CardPurchaseButtons[purchase] = card;
     }
@@ -207,9 +217,8 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
 
             var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
             inventory.Add(purchase.CardId);
-            inventory.RemoveCards(trading.Currency.CardId, (uint)price);
+            inventory.RemoveCards(trading.Currency.CardId, (uint)price*1000);
 
-            Console.WriteLine($"Subtracting {price} {trading.Currency.Name} for 1 {purchase.Name}");
             trading.Profile.Dispose();
             trading.Profile = CreatePrimary(uiEntity, trading);
         }
