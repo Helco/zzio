@@ -46,9 +46,9 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
 
         preload.CreateDialogBackground(uiEntity, animateOverlay: false, out var bgRect);
         CreateSingleButton(uiEntity, new UID(0xF7DFDC21), IDExit, bgRect);
-        trading.Topbar = CreateTopbar(uiEntity, message.DialogUID, bgRect);
+        trading.Topbar = CreateTopbar(uiEntity, message.CardUID, bgRect);
         trading.CardPurchaseButtons = new Dictionary<components.ui.ElementId, ItemRow>();
-        var trades = message.DialogEntity.Get<components.ui.DialogTradingCards>().cardTrades.ToArray();
+        var trades = message.cardTrades.ToArray();
         for (int i = 0; i < trades.Length; i++)
             AddTrade(i, trades[i].Item1, trades[i].Item2, bgRect);
     }

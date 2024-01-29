@@ -252,16 +252,12 @@ public partial class DialogScript : BaseScript
 
     private void TradingCurrency(DefaultEcs.Entity entity, UID uid)
     {
-        entity.Set(new messages.DialogTrading(entity, uid));
-        var trading = new components.ui.DialogTradingCards{ cardTrades = new() };
-        entity.Set(trading);
+        entity.Set(new messages.DialogTrading(entity, uid, new()));
     }
 
     private void TradingCard(DefaultEcs.Entity entity, int price, UID uid)
     {
-        var trading = entity.Get<components.ui.DialogTradingCards>();
-        var trades = trading.cardTrades;
-        trades.Add((price, uid));
+        entity.Get<messages.DialogTrading>().cardTrades.Add((price, uid));
     }
 
     private void SetupGambling(DefaultEcs.Entity entity, int count, int type, int id)
