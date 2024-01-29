@@ -62,7 +62,7 @@ public class PlayerTriggers : ISystem<float>
             return;
 
         var activeNpc = world.Get<components.ActiveNPC>().Entity;
-        world.Publish(new messages.StartDialog(activeNpc, DialogCause.Trigger));
+        world.Publish(new messages.StartDialog(activeNpc, components.DialogCause.Trigger));
     }
 
     public void Update(float deltaTime)

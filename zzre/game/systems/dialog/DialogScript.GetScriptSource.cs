@@ -1,4 +1,5 @@
 ﻿using System;
+using zzre.game.components;
 
 namespace zzre.game.systems;
 
