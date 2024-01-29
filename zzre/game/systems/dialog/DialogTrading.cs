@@ -42,15 +42,12 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         var uiEntity = World.CreateEntity();
         uiEntity.Set(new components.Parent(message.DialogEntity));
 
-        var trading = new components.ui.DialogTrading(message.DialogEntity, db.GetItem(message.CardUID), message.CardTrades, new());
-        uiEntity.Set(trading);
+        uiEntity.Set(new components.ui.DialogTrading(message.DialogEntity, db.GetItem(message.CardUID), message.CardTrades, new()));
+        ref var trading = ref uiEntity.Get<components.ui.DialogTrading>();
 
         preload.CreateDialogBackground(uiEntity, animateOverlay: false, out var bgRect);
 
         trading.Profile = CreatePrimary(uiEntity, trading, bgRect);
-
-        Console.WriteLine(trading.Profile);
-        Console.WriteLine(Set.GetEntities()[0].Get<components.ui.DialogTrading>().Profile);
     }
 
     private DefaultEcs.Entity CreatePrimary(DefaultEcs.Entity parent, components.ui.DialogTrading trading, Rect bgRect)
