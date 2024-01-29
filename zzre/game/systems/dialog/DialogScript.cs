@@ -170,6 +170,11 @@ public partial class DialogScript : BaseScript
             entity.Remove<messages.DialogTalk>();
             World.Publish(talkMessage);
         }
+        else if (entity.TryGet<messages.DialogTrading>(out var tradingMessage))
+        {
+            entity.Remove<messages.DialogTrading>();
+            World.Publish(tradingMessage);
+        }
         else
             entity.Set(components.DialogState.WaitForSayString);
     }
@@ -247,14 +252,12 @@ public partial class DialogScript : BaseScript
 
     private void TradingCurrency(DefaultEcs.Entity entity, UID uid)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        entity.Set(new messages.DialogTrading(entity, uid, new()));
     }
 
     private void TradingCard(DefaultEcs.Entity entity, int price, UID uid)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        entity.Get<messages.DialogTrading>().CardTrades.Add((price, uid));
     }
 
     private void SetupGambling(DefaultEcs.Entity entity, int count, int type, int id)
