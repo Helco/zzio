@@ -101,16 +101,13 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         var cards = db.Items.OrderBy(itemRow => itemRow.CardId.EntityId).ToArray();
         var card = db.GetItem(uid);
 
-        var cardImage = new components.ui.ElementId(index);
-        var purchase = new components.ui.ElementId(10 + index);
+        var purchase = new components.ui.ElementId(index);
 
         var offset = bgRect.Center + new Vector2(-205, -120 + 55 * index);
 
-        var button = preload.CreateButton(entity)
-            .With(cardImage)
+        var button = preload.CreateImage(entity)
             .With(offset)
-            .With(new components.ui.ButtonTiles(card.CardId.EntityId))
-            .With(preload.Itm000)
+            .With(preload.Itm000, card.CardId.EntityId)
             .Build();
 
         preload.CreateLabel(entity)
