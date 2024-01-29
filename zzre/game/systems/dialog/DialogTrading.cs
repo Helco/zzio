@@ -44,7 +44,12 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         var uiEntity = World.CreateEntity();
         uiEntity.Set(new components.Parent(message.DialogEntity));
 
-        uiEntity.Set(new components.ui.DialogTrading(message.DialogEntity, db.GetItem(message.CardUID), message.CardTrades, new()));
+        uiEntity.Set(new components.ui.DialogTrading(
+            message.DialogEntity,
+            db.GetItem(message.CardUID),
+            message.CardTrades,
+            new()
+        ));
         ref var trading = ref uiEntity.Get<components.ui.DialogTrading>();
 
         trading.Profile = CreatePrimary(uiEntity, trading);
@@ -76,7 +81,46 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
             .With(preload.Fnt001)
             .WithText($"Item Profile")
             .Build();
-        CreateSingleButton(entity, new UID(0xF7DFDC21), IDNo, bgRect);
+
+        preload.CreateImage(entity)
+            .With(new Vector2(-20, -100))
+            .With(preload.Itm000, card.CardId.EntityId)
+            .Build();
+
+        preload.CreateLabel(entity)
+            .With(new Vector2(-20-52, -40))
+            .With(preload.Fnt001)
+            .WithText(card.Name)
+            .Build();
+
+        preload.CreateLabel(entity)
+            .With(bgRect.Min + new Vector2(50, 250))
+            .With(preload.Fnt000)
+            .WithText(card.Info)
+            .WithLineHeight(15)
+            .WithLineWrap(bgRect.Size.X - 100)
+            .WithAnimation()
+            .Build();
+
+        preload.CreateLabel(entity)
+            .With(new Vector2(120-196, 200-36))
+            .With(preload.Fnt002)
+            .WithText("Purchase item?")
+            .Build();
+
+        preload.CreateButton(entity)
+            .With(IDYes)
+            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y - 60))
+            .With(new components.ui.ButtonTiles(5, 6))
+            .With(preload.Btn000)
+            .Build();
+
+        preload.CreateButton(entity)
+            .With(IDNo)
+            .With(new Vector2(bgRect.Center.X + 30, bgRect.Max.Y - 60))
+            .With(new components.ui.ButtonTiles(7, 8))
+            .With(preload.Btn000)
+            .Build();
 
         return entity;
     }
@@ -102,10 +146,9 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         var card = db.GetItem(uid);
 
         var purchase = new components.ui.ElementId(index);
-
         var offset = bgRect.Center + new Vector2(-205, -120 + 55 * index);
 
-        var button = preload.CreateImage(entity)
+        preload.CreateImage(entity)
             .With(offset)
             .With(preload.Itm000, card.CardId.EntityId)
             .Build();
@@ -155,12 +198,24 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
 
         if (trading.CardPurchaseButtons.TryGetValue(clickedId, out var card)) {
             trading.Profile.Dispose();
+            trading.Purchase = card;
             trading.Profile = CreateItemProfile(uiEntity, trading, card);
         }
         else if (clickedId == IDYes) {
+            var purchase = trading.Purchase!;
+            var price = trading.CardTrades.First(((int price, UID uid) trade) => db.GetItem(trade.uid).Name == purchase.Name).Item1;
+
+            var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+            inventory.Add(purchase.CardId);
+            inventory.RemoveCards(trading.Currency.CardId, (uint)price);
+
+            Console.WriteLine($"Subtracting {price} {trading.Currency.Name} for 1 {purchase.Name}");
+            trading.Profile.Dispose();
+            trading.Profile = CreatePrimary(uiEntity, trading);
         }
         else if (clickedId == IDNo) {
             trading.Profile.Dispose();
+            trading.Purchase = default;
             trading.Profile = CreatePrimary(uiEntity, trading);
         }
         else if (clickedId == IDExit) {

@@ -13,4 +13,5 @@ public record struct DialogTrading(
 )
 {
     public DefaultEcs.Entity Profile;
+    public ItemRow? Purchase;
 }
