@@ -97,27 +97,27 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
             .With(bgRect.Min + new Vector2(50, 250))
             .With(preload.Fnt000)
             .WithText(card.Info)
-            .WithLineHeight(15)
+            .WithLineHeight(14)
             .WithLineWrap(bgRect.Size.X - 100)
             .WithAnimation()
             .Build();
 
         preload.CreateLabel(entity)
-            .With(new Vector2(120-196, 200-36))
+            .With(new Vector2(-76, 164))
             .With(preload.Fnt002)
             .WithText("Purchase item?")
             .Build();
 
         preload.CreateButton(entity)
             .With(IDYes)
-            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y - 60))
+            .With(new Vector2(bgRect.Center.X + 20, bgRect.Max.Y - 65))
             .With(new components.ui.ButtonTiles(5, 6))
             .With(preload.Btn000)
             .Build();
 
         preload.CreateButton(entity)
             .With(IDNo)
-            .With(new Vector2(bgRect.Center.X + 30, bgRect.Max.Y - 60))
+            .With(new Vector2(bgRect.Center.X + 56, bgRect.Max.Y - 65))
             .With(new components.ui.ButtonTiles(7, 8))
             .With(preload.Btn000)
             .Build();
