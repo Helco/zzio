@@ -76,19 +76,20 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         entity.Set(new components.Parent(parent));
 
         preload.CreateDialogBackground(entity, animateOverlay: false, out var bgRect);
+
         preload.CreateLabel(entity)
-            .With(new Vector2(-220, -188))
+            .With(bgRect.Min + new Vector2(30, 22))
             .With(preload.Fnt001)
             .WithText($"Item Profile")
             .Build();
 
         preload.CreateImage(entity)
-            .With(new Vector2(-20, -100))
+            .With(bgRect.Center + new Vector2(-20, -100))
             .With(preload.Itm000, card.CardId.EntityId)
             .Build();
 
         preload.CreateLabel(entity)
-            .With(new Vector2(-20-52, -40))
+            .With(bgRect.Center + new Vector2(-72, -40))
             .With(preload.Fnt001)
             .WithText(card.Name)
             .Build();
@@ -103,7 +104,7 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
             .Build();
 
         preload.CreateLabel(entity)
-            .With(new Vector2(-76, 164))
+            .With(new Vector2(bgRect.Center.X - 76, bgRect.Max.Y - 46))
             .With(preload.Fnt002)
             .WithText("Purchase item?")
             .Build();
