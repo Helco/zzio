@@ -63,17 +63,11 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
     {
         clumpCounts.EnsureCapacity(MultiMap.Keys.Count());
         instanceBuffer.Clear();
-        instanceRange = instanceBuffer.RentVertices(MultiMap.Keys.Sum(MultiMap.Count));
+        instanceRange = instanceBuffer.RentVertices(MultiMap.Keys.Sum(MultiMap.Count) + 1);
     }
 
     [WithPredicate]
     private bool Filter(in components.RenderOrder order) => order == responsibility;
-
-    protected override void PreUpdate(CommandList state)
-    {
-        base.PreUpdate(state);
-        instanceRange.Reset();
-    }
 
     [Update]
     private void Update(
@@ -99,7 +93,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
 
     protected override void PostUpdate(CommandList cl)
     {
-        if (instanceBuffer.VertexCount == 0)
+        if (instanceRange.InstanceCount == 0)
             return;
         cl.PushDebugGroup($"{nameof(ModelRenderer)} {responsibility}");
 
@@ -138,6 +132,6 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
         for (int i = 0; i < clumpCounts.Count; i++)
             clumpCounts[i] = default; // remove reference to ClumpBuffer and materials
         clumpCounts.Clear();
-        instanceBuffer.Clear();
+        instanceRange.Reset();
     }
 }
