@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using zzio;
 using zzio.db;
 
-namespace zzre.game.components.ui;
+namespace zzre.game.components;
 
 public struct DialogTrading
 {

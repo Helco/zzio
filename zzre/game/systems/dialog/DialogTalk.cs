@@ -6,7 +6,7 @@ using zzio.vfs;
 
 namespace zzre.game.systems;
 
-public partial class DialogTalk : ui.BaseScreen<components.ui.DialogTalk, messages.DialogTalk>
+public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.DialogTalk>
 {
     private static readonly components.ui.ElementId IDExit = new(1);
     private static readonly components.ui.ElementId IDContinue = new(2);
@@ -45,7 +45,7 @@ public partial class DialogTalk : ui.BaseScreen<components.ui.DialogTalk, messag
         World.Publish(new messages.DialogResetUI(message.DialogEntity));
         var uiEntity = World.CreateEntity();
         uiEntity.Set(new components.Parent(message.DialogEntity));
-        uiEntity.Set(new components.ui.DialogTalk(message.DialogEntity));
+        uiEntity.Set(new components.DialogTalk(message.DialogEntity));
 
         preload.CreateDialogBackground(uiEntity, animateOverlay: !wasAlreadyOpen, out var bgRect);
         CreateTalkLabel(uiEntity, message.DialogUID, bgRect);
@@ -178,7 +178,7 @@ public partial class DialogTalk : ui.BaseScreen<components.ui.DialogTalk, messag
     private void HandleElementDown(DefaultEcs.Entity clickedEntity, components.ui.ElementId clickedId)
     {
         var talkEntity = Set.GetEntities()[0];
-        var dialogEntity = talkEntity.Get<components.ui.DialogTalk>().DialogEntity;
+        var dialogEntity = talkEntity.Get<components.DialogTalk>().DialogEntity;
         if (clickedId == IDContinue || clickedId == IDExit)
         {
             // TODO: Play sound sample on dialog talk button clicked
@@ -198,7 +198,7 @@ public partial class DialogTalk : ui.BaseScreen<components.ui.DialogTalk, messag
         }
     }
 
-    protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.ui.DialogTalk component)
+    protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.DialogTalk component)
     {
     }
 }

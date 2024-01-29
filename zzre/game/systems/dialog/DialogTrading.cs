@@ -7,7 +7,7 @@ using zzio.db;
 
 namespace zzre.game.systems;
 
-public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, messages.DialogTrading>
+public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, messages.DialogTrading>
 {
     private static readonly components.ui.ElementId IDExit = new(1000);
     private static readonly components.ui.ElementId IDYes = new(1001);
@@ -48,18 +48,18 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         var uiEntity = World.CreateEntity();
         uiEntity.Set(new components.Parent(message.DialogEntity));
 
-        uiEntity.Set(new components.ui.DialogTrading{
+        uiEntity.Set(new components.DialogTrading{
             DialogEntity = message.DialogEntity,
             Currency = db.GetItem(message.CurrencyUID),
             CardTrades = message.CardTrades,
             CardPurchaseButtons = new()
         });
-        ref var trading = ref uiEntity.Get<components.ui.DialogTrading>();
+        ref var trading = ref uiEntity.Get<components.DialogTrading>();
 
         trading.Profile = CreatePrimary(uiEntity, trading);
     }
 
-    private DefaultEcs.Entity CreatePrimary(DefaultEcs.Entity parent, components.ui.DialogTrading trading)
+    private DefaultEcs.Entity CreatePrimary(DefaultEcs.Entity parent, components.DialogTrading trading)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
@@ -73,7 +73,7 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         return entity;
     }
 
-    private DefaultEcs.Entity CreateItemProfile(DefaultEcs.Entity parent, components.ui.DialogTrading trading, ItemRow card)
+    private DefaultEcs.Entity CreateItemProfile(DefaultEcs.Entity parent, components.DialogTrading trading, ItemRow card)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
@@ -140,7 +140,7 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
             .Build();
     }
 
-    private void AddTrade(DefaultEcs.Entity entity, components.ui.DialogTrading trading, int index, Rect bgRect)
+    private void AddTrade(DefaultEcs.Entity entity, components.DialogTrading trading, int index, Rect bgRect)
     {
         var price = trading.CardTrades[index].price;
         var card = db.GetItem(trading.CardTrades[index].uid);
@@ -202,7 +202,7 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId clickedId)
     {
         var uiEntity = Set.GetEntities()[0];
-        ref var trading = ref uiEntity.Get<components.ui.DialogTrading>();
+        ref var trading = ref uiEntity.Get<components.DialogTrading>();
 
         if (trading.CardPurchaseButtons.TryGetValue(clickedId, out var card)) {
             trading.Profile.Dispose();
@@ -231,7 +231,7 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
         }
     }
 
-    protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.ui.DialogTrading component)
+    protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.DialogTrading component)
     {
     }
 }
