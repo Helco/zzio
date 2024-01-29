@@ -42,7 +42,7 @@ public partial class DialogTrading : ui.BaseScreen<components.ui.DialogTrading, 
 
     protected override void HandleOpen(in messages.DialogTrading message)
     {
-        message.DialogEntity.Set(components.DialogState.Talk);
+        message.DialogEntity.Set(components.DialogState.Trading);
 
         World.Publish(new messages.DialogResetUI(message.DialogEntity));
         var uiEntity = World.CreateEntity();
