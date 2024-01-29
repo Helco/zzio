@@ -7,6 +7,7 @@ public enum DialogState
     WaitForSayString,
     Talk,
     Choice,
+    Trading,
     PreFightWild,
     PreFightNpc,
     NpcWalking,
