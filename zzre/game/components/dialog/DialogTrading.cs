@@ -12,5 +12,5 @@ public record struct DialogTrading(
     Dictionary<components.ui.ElementId, ItemRow> CardPurchaseButtons
 )
 {
-    public DefaultEcs.Entity Primary;
+    public DefaultEcs.Entity Profile;
 }
