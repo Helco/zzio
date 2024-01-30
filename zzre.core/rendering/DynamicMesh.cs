@@ -167,7 +167,7 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
     public bool TryGetBufferByMaterialName(string name, [NotNullWhen(true)] out DeviceBuffer? buffer, out uint offset)
     {
         var attribute = attributes.FirstOrDefault(a => a.Name == name);
-        buffer = attribute?.Buffer.Buffer;
+        buffer = attribute?.Buffer.OptionalBuffer;
         offset = 0u;
         return buffer != null;
     }

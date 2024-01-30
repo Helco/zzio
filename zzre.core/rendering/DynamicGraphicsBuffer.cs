@@ -20,6 +20,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
     private byte[]? bytes;
     private int sizePerElement;
 
+    public DeviceBuffer? OptionalBuffer => buffer;
     public DeviceBuffer Buffer => buffer ??
         throw new InvalidOperationException("Buffer was not created yet");
 

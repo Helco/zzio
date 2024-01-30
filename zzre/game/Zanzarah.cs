@@ -64,8 +64,10 @@ public class Zanzarah : ITagContainer
 
     public void Render(CommandList finalCommandList)
     {
+        finalCommandList.PushDebugGroup("Zanzarah");
         CurrentGame?.Render(finalCommandList);
         UI.Render(finalCommandList);
+        finalCommandList.PopDebugGroup();
     }
 
     private zzio.db.MappedDB LoadDatabase()

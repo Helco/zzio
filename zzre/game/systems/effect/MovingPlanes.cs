@@ -4,6 +4,7 @@ using DefaultEcs.System;
 using zzre.materials;
 using zzre.rendering.effectparts;
 using zzio;
+using DefaultEcs.Resource;
 
 namespace zzre.game.systems.effect;
 
@@ -46,14 +47,14 @@ public partial class MovingPlanes : AEntityMultiMapSystem<float, components.Pare
             PrevProgress = playback.CurProgress
         });
         Reset(ref entity.Get<components.effect.MovingPlanesState>(), data);
-        var billboardMode = data.circlesAround || data.useDirection
+        var billboardMode = !data.circlesAround && !data.useDirection
             ? EffectMaterial.BillboardMode.None
             : EffectMaterial.BillboardMode.View;
-        entity.Set(new resources.EffectMaterialInfo(
+        entity.Set(ManagedResource<EffectMaterial>.Create(new resources.EffectMaterialInfo(
             playback.DepthTest,
             billboardMode,
             data.renderMode,
-            data.texName));
+            data.texName)));
         entity.Set(new components.effect.RenderIndices(indexRange));
     }
 

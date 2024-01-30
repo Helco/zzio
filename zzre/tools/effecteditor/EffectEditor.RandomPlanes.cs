@@ -7,7 +7,7 @@ namespace zzre.tools;
 
 public partial class EffectEditor
 {
-    private void HandlePart(RandomPlanes data, RandomPlanesRenderer ren)
+    private void HandlePart(RandomPlanes data)
     {
         InputText("Name", ref data.name, 128);
         NewLine();
