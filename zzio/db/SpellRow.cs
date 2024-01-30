@@ -14,7 +14,7 @@ public class SpellRow : MappedRow
     public byte PriceB => row.cells[4].Byte;
     public byte PriceC => row.cells[5].Byte;
 
-    public string Info => row.cells[6].String;
+    public string Info => foreignText(6);
 
     public int Mana => row.cells[7].Integer;
 
