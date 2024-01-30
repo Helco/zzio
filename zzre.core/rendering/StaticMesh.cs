@@ -178,11 +178,12 @@ public class StaticMesh : BaseDisposable, IVertexAttributeContainer
         graphicsDevice.UpdateBuffer(buffer, 0u, indices);
     }
 
-    internal static void GeneratePatternIndices(
+    public static void GeneratePatternIndices(
         Span<ushort> indices,
         IReadOnlyList<ushort> pattern,
         int primitiveCount,
-        int verticesPerPrimitive)
+        int verticesPerPrimitive,
+        int vertexOffset = 0)
     {
         if (pattern.Count == 0)
             throw new ArgumentOutOfRangeException(nameof(pattern));
@@ -191,7 +192,7 @@ public class StaticMesh : BaseDisposable, IVertexAttributeContainer
         for (int i = 0; i < primitiveCount; i++)
         {
             for (int j = 0; j < pattern.Count; j++)
-                indices[i * pattern.Count + j] = (ushort)(i * verticesPerPrimitive + pattern[j]);
+                indices[i * pattern.Count + j] = (ushort)(i * verticesPerPrimitive + pattern[j] + vertexOffset);
         }
     }
 

@@ -1,19 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.Resource;
 using DefaultEcs.System;
-using zzio.effect;
-using zzio.effect.parts;
 
-namespace zzre.game.systems;
+namespace zzre.game.systems.effect;
 
-public partial class AdvanceEffectPlayback : AEntitySetSystem<float>
+public partial class EffectCombiner : AEntitySetSystem<float>
 {
     private readonly IDisposable spawnEffectDisposable;
 
-    public AdvanceEffectPlayback(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
+    public EffectCombiner(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         spawnEffectDisposable = World.Subscribe<messages.SpawnEffectCombiner>(HandleSpawnEffect);
     }
@@ -27,9 +24,11 @@ public partial class AdvanceEffectPlayback : AEntitySetSystem<float>
     private void HandleSpawnEffect(in messages.SpawnEffectCombiner msg)
     {
         var entity = msg.AsEntity ?? World.CreateEntity();
-        entity.Set(ManagedResource<EffectCombiner>.Create(msg.EffectId));
-        var effect = entity.Get<EffectCombiner>();
-        entity.Set(new components.effect.CombinerPlayback(effect.parts.Sum(p => p.Duration) + 1f));
+        entity.Set(ManagedResource<zzio.effect.EffectCombiner>.Create(msg.EffectId));
+        var effect = entity.Get<zzio.effect.EffectCombiner>();
+        entity.Set(new components.effect.CombinerPlayback(
+            duration: effect.parts.Sum(p => p.Duration) + 1f,
+            depthTest: msg.DepthTest));
         entity.Set(new Location()
         {
             LocalPosition = msg.Position ?? effect.position,
@@ -40,10 +39,12 @@ public partial class AdvanceEffectPlayback : AEntitySetSystem<float>
         foreach (var part in effect.parts)
         {
             var partEntity = World.CreateEntity();
+            partEntity.Set(components.RenderOrder.LateEffect);
+            partEntity.Set(components.Visibility.Visible);
             partEntity.Set(new components.Parent(entity));
             switch(part)
             {
-                case MovingPlanes movingPlanes: partEntity.Set(movingPlanes); break;
+                case zzio.effect.parts.MovingPlanes movingPlanes: partEntity.Set(movingPlanes); break;
                 default:
                     Console.WriteLine($"Warning: unsupported effect combiner part {part.Name}");
                     break;

@@ -3,13 +3,16 @@ using System.Numerics;
 
 namespace zzre.game.components.effect;
 
-public struct CombinerPlayback(float duration, float curProgress = 100f, float length = 1f)
+public struct CombinerPlayback(
+    float duration,
+    bool depthTest = true)
 {
     public float
         CurTime = 0f,
-        CurProgress = curProgress,
-        Length = length,
-        Duration = duration; // set to infinite to loop
+        CurProgress = 100f,
+        Length = 1f;
+    public readonly float Duration = duration; // set to infinite to loop
+    public readonly bool DepthTest = depthTest;
     public bool IsFinished => CurTime >= Duration;
     public bool IsRunning => !IsFinished && !MathEx.CmpZero(CurProgress);
     public bool IsLooping => Duration == float.PositiveInfinity;

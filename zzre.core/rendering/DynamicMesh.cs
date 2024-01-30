@@ -44,6 +44,9 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
         public Span<T> Write(Range range) =>
             MemoryMarshal.Cast<byte, T>(buffer.Write(range));
 
+        public Span<T> Write(int offset, int count) =>
+            Write(offset..(offset + count));
+
         public T this[int index]
         {
             get => Read(index..(index + 1))[0];
@@ -174,5 +177,28 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
         var attribute = new Attribute<T>(graphicsDevice, dynamic, meshName, attributeName, minGrowFactor);
         attributes.Add(attribute);
         return attribute;
+    }
+
+    public void Preallocate(int vertices, int indices)
+    {
+        if (vertices < 0 || indices < 0)
+            throw new ArgumentOutOfRangeException();
+        if (vertices > 0)
+        {
+            if (VertexCount > 0)
+                throw new InvalidOperationException("Cannot preallocate vertices while buffer is in use");
+            var vertexRange = RentVertices(vertices);
+            foreach (var attribute in attributes)
+                attribute.Buffer.Write(vertexRange);
+            ClearVertices();
+        }
+        if (indices > 0)
+        {
+            if (IndexCount > 0)
+                throw new InvalidOperationException("Cannot preallocate indices while buffer is in use");
+            var indexRange = RentIndices(indices);
+            indexBuffer.Write(indexRange);
+            ClearIndices();
+        }
     }
 }

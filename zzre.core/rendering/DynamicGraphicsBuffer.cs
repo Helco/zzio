@@ -117,7 +117,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
 
     private Range AsByteRange(Range range)
     {
-        var (offset, length) = range.GetOffsetAndLength(CommittedCapacity);
+        var (offset, length) = range.GetOffsetAndLength(ReservedCapacity);
         return (offset * sizePerElement)..((offset + length) * sizePerElement);
     }
 
