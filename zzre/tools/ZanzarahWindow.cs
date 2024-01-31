@@ -8,7 +8,7 @@ using zzre.imgui;
 
 namespace zzre.tools;
 
-public class ZanzarahWindow : IZanzarahContainer
+public class ZanzarahWindow : IZanzarahContainer, IECSWindow
 {
     private readonly ITagContainer diContainer;
     private readonly FramebufferArea fbArea;
@@ -187,5 +187,12 @@ public class ZanzarahWindow : IZanzarahContainer
         if (game == null)
             return;
         game.LoadScene(resource.Name.Replace(".scn", ""), () => game.FindEntryTrigger(-1));
+    }
+
+    public IEnumerable<(string, DefaultEcs.World)> GetWorlds()
+    {
+        yield return ("UI", Zanzarah.UI.GetTag<DefaultEcs.World>());
+        if (Zanzarah.CurrentGame != null)
+            yield return ("Overworld", Zanzarah.CurrentGame.GetTag<DefaultEcs.World>());
     }
 }

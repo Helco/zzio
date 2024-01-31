@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using DefaultEcs.Resource;
 using DefaultEcs.System;
 using ImGuiNET;
 using Veldrid;
@@ -13,11 +13,10 @@ using zzio.vfs;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
-using static zzre.materials.EffectMaterial;
 
 namespace zzre.tools;
 
-public partial class EffectEditor : ListDisposable, IDocumentEditor
+public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
 {
     private readonly ITagContainer diContainer;
     private readonly TwoColumnEditorTag editor;
@@ -35,6 +34,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
     private readonly DefaultEcs.World ecsWorld = new();
     private readonly SequentialSystem<float> updateSystems = new();
     private readonly SequentialSystem<CommandList> renderSystems = new();
+    private ECSExplorer? ecsExplorer;
     private bool isPlaying = true;
 
     private EffectCombiner Effect => loadedEffect ?? emptyEffect;
@@ -92,7 +92,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
         diContainer.AddTag(new game.resources.EffectMaterial(diContainer));
 
         updateSystems = new SequentialSystem<float>(
-            new game.systems.effect.EffectCombiner(diContainer),
+            new game.systems.effect.EffectCombiner(diContainer) { AddIndexAsComponent = true },
             new game.systems.effect.MovingPlanes(diContainer));
         AddDisposable(updateSystems);
 
@@ -104,6 +104,13 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
 
         editor.AddInfoSection("Info", HandleInfoContent);
         editor.AddInfoSection("Playback", HandlePlaybackContent);
+
+        menuBar.AddButton("View/Show all parts", () => SetAllVisibilities(true));
+        menuBar.AddButton("View/Hide all parts", () => SetAllVisibilities(false));
+
+#if DEBUG
+        menuBar.AddButton("Debug/ECS Explorer", HandleOpenECSExplorer);
+#endif
     }
 
     public void Load(string pathText)
@@ -176,7 +183,26 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
             AsEntity: effectEntity));
         partEntities = ecsWorld.GetEntities()
             .With<game.components.Parent>()
-            .AsEnumerable().ToArray();
+            .AsEnumerable()
+            .OrderBy(e => e.Get<int>())
+            .ToArray();
+    }
+
+    private void ResetEffect()
+    {
+        var visibilities = partEntities
+            .Select(e => e.Get<game.components.Visibility>())
+            .ToArray();
+        KillEffect();
+        SpawnEffect();
+        foreach (var (entity, visibility) in partEntities.Zip(visibilities))
+            entity.Set(visibility);
+    }
+
+    private void SetAllVisibilities(bool isVisible)
+    {
+        foreach (var entity in partEntities)
+            entity.Set(isVisible ? game.components.Visibility.Visible : game.components.Visibility.Invisible);
     }
 
     private void HandleResize() => camera.Aspect = fbArea.Ratio;
@@ -229,10 +255,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
         UndoSlider("Length", ref playback.Length, 0f, 5f, 1f);
 
         if (ImGui.Button(IconFonts.ForkAwesome.FastBackward))
-        {
-            KillEffect();
-            SpawnEffect();
-        }
+            ResetEffect();
         ImGui.SameLine();
         if (isPlaying && ImGui.Button(IconFonts.ForkAwesome.Pause))
             isPlaying = false;
@@ -252,12 +275,31 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
     private void HandlePartPreContent(int i)
     {
         var isVisible = partEntities[i].Get<game.components.Visibility>() == game.components.Visibility.Visible;
-        if (ImGui.Button(isVisible ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash))
+        var (on, off) = Effect.parts[i] is Sound // that is some unnecessary detail...
+            ? (IconFonts.ForkAwesome.VolumeUp, IconFonts.ForkAwesome.VolumeOff)
+            : (IconFonts.ForkAwesome.Eye, IconFonts.ForkAwesome.EyeSlash);
+        if (ImGui.Button(isVisible ? on : off, new Vector2(24f, 0f)))
         {
             partEntities[i].Set(isVisible
                 ? game.components.Visibility.Invisible
                 : game.components.Visibility.Visible);
             fbArea.IsDirty = true;
         }
+    }
+
+    private void HandleOpenECSExplorer()
+    {
+        if (ecsExplorer == null)
+        {
+            ecsExplorer = new ECSExplorer(diContainer, this);
+            ecsExplorer.Window.OnClose += () => ecsExplorer = null;
+        }
+        else
+            diContainer.GetTag<WindowContainer>().SetNextFocusedWindow(ecsExplorer.Window);
+    }
+
+    public IEnumerable<(string, DefaultEcs.World)> GetWorlds()
+    {
+        yield return ("Effect", ecsWorld);
     }
 }

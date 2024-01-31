@@ -137,8 +137,8 @@ public partial class MovingPlanes : AEntityMultiMapSystem<float, components.Pare
     {
         var curAngle = state.CurRotation * data.rotation * MathEx.DegToRad;
         var rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, curAngle);
-        var right = Vector3.Transform(Vector3.UnitX * data.width * state.CurScale, rotation);
-        var up = Vector3.Transform(Vector3.UnitY * data.height * state.CurScale, rotation);
+        var right = Vector3.Transform(Vector3.UnitX * data.width * Math.Max(0f, state.CurScale), rotation);
+        var up = Vector3.Transform(Vector3.UnitY * data.height * Math.Max(0f, state.CurScale), rotation);
         var center = data.circlesAround
             ? Vector3.Transform(Vector3.UnitY * data.yOffset, rotation)
             : Vector3.Zero;

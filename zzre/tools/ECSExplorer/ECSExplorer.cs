@@ -9,13 +9,18 @@ using zzre.imgui;
 
 using static ImGuiNET.ImGui;
 
+internal interface IECSWindow
+{
+    Window Window { get; }
+    IEnumerable<(string name, DefaultEcs.World)> GetWorlds();
+}
+
 internal partial class ECSExplorer
 {
     private readonly ITagContainer diContainer;
-    private readonly ZanzarahWindow zzWindow;
+    private readonly IECSWindow ecsWindow;
 
     public Window Window { get; }
-    private Zanzarah Zanzarah => zzWindow.Zanzarah;
 
     static ECSExplorer()
     {
@@ -23,14 +28,14 @@ internal partial class ECSExplorer
         AddStandardEntityGrouping();
     }
 
-    public ECSExplorer(ITagContainer diContainer, ZanzarahWindow zzWindow)
+    public ECSExplorer(ITagContainer diContainer, IECSWindow ecsWindow)
     {
         this.diContainer = diContainer;
-        this.zzWindow = zzWindow;
+        this.ecsWindow = ecsWindow;
         Window = diContainer.GetTag<WindowContainer>().NewWindow("ECS Explorer");
         Window.AddTag(this);
         Window.InitialBounds = new Rect(float.NaN, float.NaN, 400, 800);
-        zzWindow.Window.OnClose += Window.Dispose;
+        ecsWindow.Window.OnClose += Window.Dispose;
 
         Window.OnContent += HandleContent;
     }
@@ -38,24 +43,19 @@ internal partial class ECSExplorer
     private void HandleContent()
     {
         BeginTabBar("Worlds", ImGuiTabBarFlags.AutoSelectNewTabs);
-        if (BeginTabItem("UI"))
+        foreach (var (name, world) in ecsWindow.GetWorlds())
         {
-            HandleContentFor(Zanzarah.UI.GetTag<DefaultEcs.World>());
-            EndTabItem();
-        }
-        if (Zanzarah.CurrentGame != null && BeginTabItem("Game"))
-        {
-            HandleContentFor(Zanzarah.CurrentGame.GetTag<DefaultEcs.World>());
-            EndTabItem();
+            if (BeginTabItem(name))
+            {
+                HandleContentFor(world);
+                EndTabItem();
+            }
         }
         EndTabBar();
     }
 
     private void HandleContentFor(DefaultEcs.World world)
     {
-        if (Zanzarah.CurrentGame == null)
-            return;
-
         var entityContentRenderer = new EntityContentRenderer();
 
         var children = world.ToLookup(e => e.TryGet<Parent>().GetValueOrDefault().Entity);

@@ -3,12 +3,15 @@ using System.Linq;
 using System.Numerics;
 using DefaultEcs.Resource;
 using DefaultEcs.System;
+using zzio;
 
 namespace zzre.game.systems.effect;
 
 public partial class EffectCombiner : AEntitySetSystem<float>
 {
     private readonly IDisposable spawnEffectDisposable;
+
+    public bool AddIndexAsComponent { get; set; } = false; // used for EffectEditor
 
     public EffectCombiner(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
@@ -36,9 +39,11 @@ public partial class EffectCombiner : AEntitySetSystem<float>
                 Matrix4x4.CreateLookTo(Vector3.Zero, effect.forwards, effect.upwards))
         });
         
-        foreach (var part in effect.parts)
+        foreach (var (part, index) in effect.parts.Indexed())
         {
             var partEntity = World.CreateEntity();
+            if (AddIndexAsComponent)
+                partEntity.Set(index);
             partEntity.Set(components.RenderOrder.LateEffect);
             partEntity.Set(components.Visibility.Visible);
             partEntity.Set(new components.Parent(entity));
