@@ -72,7 +72,7 @@ vertex
         vec3 up = normalize(cross(inCenterPos - camPos.xyz, right));
         pos += vec4(inVertexPos.x * right + inVertexPos.y * up, 0);
     }
-    pos = projection * pos;
+    gl_Position = projection * pos;
 
     varUV = inUV;
     varColor = inColor;

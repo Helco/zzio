@@ -149,7 +149,7 @@ public partial class MovingPlanes : AEntityMultiMapSystem<float, components.Pare
         if (!data.disableSecondPlane)
         {
             var newTexCoords2 = EffectPartUtility.TexShift(state.TexCoords, 2 * state.CurTexShift, -data.texShift);
-            effectMesh.SetQuad(state.VertexRange, 4, applyCenter, center, right, up, curColor, newTexCoords2);
+            effectMesh.SetQuad(state.VertexRange, 4, applyCenter, center, -right, up, curColor, newTexCoords2);
         }
     }
 }

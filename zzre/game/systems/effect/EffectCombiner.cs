@@ -56,13 +56,17 @@ public partial class EffectCombiner : AEntitySetSystem<float>
     private void Update(
         in DefaultEcs.Entity entity,
         float elapsedTime,
-        ref components.effect.CombinerPlayback playback)
+        ref components.effect.CombinerPlayback playback,
+        zzio.effect.EffectCombiner effect)
     {
-        playback.CurTime += elapsedTime;
         if (playback.IsFinished)
         {
-            playback.CurProgress = 0f;
             entity.Set<components.Dead>();
+            return;
         }
+
+        playback.CurTime += elapsedTime;
+        if (float.IsInfinity(playback.Duration))
+            playback.CurTime %= effect.Duration;
     }
 }

@@ -113,8 +113,8 @@ public class EffectMesh : DynamicMesh
         var attrUV = UV.Write(vertexOffset, 4);
         attrUV[0] = new(texCoords.Min.X, texCoords.Min.Y);
         attrUV[1] = new(texCoords.Min.X, texCoords.Max.Y);
-        attrUV[2] = new(texCoords.Min.X, texCoords.Min.Y);
-        attrUV[3] = new(texCoords.Min.X, texCoords.Min.Y);
+        attrUV[2] = new(texCoords.Max.X, texCoords.Max.Y);
+        attrUV[3] = new(texCoords.Max.X, texCoords.Min.Y);
         Color.Write(vertexOffset, 4).Fill(color);
         if (!applyCenter)
             Center.Write(vertexOffset, 4).Fill(center);

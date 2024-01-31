@@ -228,12 +228,12 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
 
     private void HandlePartPreContent(int i)
     {
-        var isVisible = partEntities[i].Get<game.components.Visibility>() != game.components.Visibility.Visible;
+        var isVisible = partEntities[i].Get<game.components.Visibility>() == game.components.Visibility.Visible;
         if (ImGui.Button(isVisible ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash))
         {
             partEntities[i].Set(isVisible
-                ? game.components.Visibility.Visible
-                : game.components.Visibility.Invisible);
+                ? game.components.Visibility.Invisible
+                : game.components.Visibility.Visible);
             fbArea.IsDirty = true;
         }
     }
