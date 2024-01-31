@@ -47,7 +47,7 @@ public partial class MovingPlanes : AEntityMultiMapSystem<float, components.Pare
             PrevProgress = playback.CurProgress
         });
         Reset(ref entity.Get<components.effect.MovingPlanesState>(), data);
-        var billboardMode = !data.circlesAround && !data.useDirection
+        var billboardMode = data.circlesAround || data.useDirection
             ? EffectMaterial.BillboardMode.None
             : EffectMaterial.BillboardMode.View;
         entity.Set(ManagedResource<EffectMaterial>.Create(new resources.EffectMaterialInfo(
@@ -139,12 +139,15 @@ public partial class MovingPlanes : AEntityMultiMapSystem<float, components.Pare
             : Vector3.Zero;
 
         var location = parent.Entity.Get<Location>();
-        right = Vector3.TransformNormal(right, location.LocalToWorld);
-        up = Vector3.TransformNormal(up, location.LocalToWorld);
+        var applyCenter = data.circlesAround || data.useDirection;
+        if (applyCenter)
+        {
+            right = Vector3.TransformNormal(right, location.LocalToWorld);
+            up = Vector3.TransformNormal(up, location.LocalToWorld);
+        }
         center = Vector3.Transform(center, location.LocalToWorld);
 
         var newTexCoords1 = EffectPartUtility.TexShift(state.TexCoords, 2 * state.CurTexShift, data.texShift);
-        var applyCenter = !data.circlesAround && !data.useDirection;
         effectMesh.SetQuad(state.VertexRange, 0, applyCenter, center, right, up, curColor, newTexCoords1);
         if (!data.disableSecondPlane)
         {
