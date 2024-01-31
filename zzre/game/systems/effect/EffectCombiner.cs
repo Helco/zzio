@@ -27,7 +27,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
         entity.Set(ManagedResource<zzio.effect.EffectCombiner>.Create(msg.EffectId));
         var effect = entity.Get<zzio.effect.EffectCombiner>();
         entity.Set(new components.effect.CombinerPlayback(
-            duration: effect.parts.Sum(p => p.Duration) + 1f,
+            duration: effect.isLooping ? float.PositiveInfinity : effect.Duration,
             depthTest: msg.DepthTest));
         entity.Set(new Location()
         {

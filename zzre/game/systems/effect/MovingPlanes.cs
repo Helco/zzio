@@ -72,14 +72,19 @@ public partial class MovingPlanes : AEntityMultiMapSystem<float, components.Pare
         float elapsedTime,
         in components.Parent parent,
         ref components.effect.MovingPlanesState state,
-        in zzio.effect.parts.MovingPlanes data)
+        in zzio.effect.parts.MovingPlanes data,
+        ref components.effect.RenderIndices indices)
     {
         ref readonly var playback = ref parent.Entity.Get<components.effect.CombinerPlayback>();
         float progressDelta = playback.CurProgress - state.PrevProgress;
         state.PrevProgress = playback.CurProgress;
         if (data.minProgress > playback.CurProgress)
+        {
+            indices.IndexRange = default;
             return;
+        }
 
+        indices.IndexRange = state.IndexRange;
         var curColor = data.color.ToFColor();
         if (data.manualProgress)
         {
@@ -106,7 +111,7 @@ public partial class MovingPlanes : AEntityMultiMapSystem<float, components.Pare
         else
         {
             Reset(ref state, data);
-            Update(elapsedTime, parent, ref state, data);
+            Update(elapsedTime, parent, ref state, data, ref indices);
             return;
         }
         UpdateQuads(parent, ref state, data, curColor);

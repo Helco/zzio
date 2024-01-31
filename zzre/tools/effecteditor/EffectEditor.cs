@@ -1,18 +1,19 @@
-﻿using DefaultEcs.System;
-using ImGuiNET;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using DefaultEcs.Resource;
+using DefaultEcs.System;
+using ImGuiNET;
 using Veldrid;
 using zzio;
 using zzio.effect;
 using zzio.effect.parts;
 using zzio.vfs;
-using zzre.game;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
+using static zzre.materials.EffectMaterial;
 
 namespace zzre.tools;
 
@@ -34,6 +35,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
     private readonly DefaultEcs.World ecsWorld = new();
     private readonly SequentialSystem<float> updateSystems = new();
     private readonly SequentialSystem<CommandList> renderSystems = new();
+    private bool isPlaying = true;
 
     private EffectCombiner Effect => loadedEffect ?? emptyEffect;
     private EffectCombiner? loadedEffect = null;
@@ -120,10 +122,9 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
         if (resource.Equals(CurrentResource))
             return;
         CurrentResource = null;
-        effectEntity.Dispose();
-        foreach (var entity in partEntities)
-            entity.Dispose();
-        partEntities = Array.Empty<DefaultEcs.Entity>();
+        KillEffect();
+        textureLoader.Clear();
+        clumpLoader.Clear();
 
         using (var stream = resource.OpenContent())
         {
@@ -133,14 +134,8 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
             loadedEffect.Read(stream);
         }
 
-        effectEntity = ecsWorld.CreateEntity();
-        effectEntity.Set(loadedEffect);
-        ecsWorld.Publish(new game.messages.SpawnEffectCombiner(
-            0, // we do not have the EffectCombiner resource manager, the value here does not matter
-            AsEntity: effectEntity));
-        partEntities = ecsWorld.GetEntities()
-            .With<game.components.Parent>()
-            .AsEnumerable().ToArray();
+        SpawnEffect();
+        isPlaying = true;
 
         editor.ClearInfoSections();
         editor.AddInfoSection("Info", HandleInfoContent);
@@ -164,11 +159,32 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
         Window.Title = $"Effect Editor - {resource.Path.ToPOSIXString()}";
     }
 
+    private void KillEffect()
+    {
+        effectEntity.Dispose();
+        foreach (var entity in partEntities)
+            entity.Dispose();
+        partEntities = Array.Empty<DefaultEcs.Entity>();
+    }
+
+    private void SpawnEffect()
+    {
+        effectEntity = ecsWorld.CreateEntity();
+        effectEntity.Set(loadedEffect);
+        ecsWorld.Publish(new game.messages.SpawnEffectCombiner(
+            0, // we do not have the EffectCombiner resource manager, the value here does not matter
+            AsEntity: effectEntity));
+        partEntities = ecsWorld.GetEntities()
+            .With<game.components.Parent>()
+            .AsEnumerable().ToArray();
+    }
+
     private void HandleResize() => camera.Aspect = fbArea.Ratio;
 
     private void HandleRender(CommandList cl)
     {
-        updateSystems.Update(gameTime.Delta);
+        if (isPlaying && effectEntity.IsAlive)
+            updateSystems.Update(gameTime.Delta);
 
         cl.PushDebugGroup(Window.Title);
         camera.Update(cl);
@@ -196,25 +212,32 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
                 value = defaultValue;
         }
         game.components.effect.CombinerPlayback dummyPlayback = new();
-        ref var playback = ref (effectEntity.IsAlive
-            ? ref effectEntity.Get<game.components.effect.CombinerPlayback>()
-            : ref dummyPlayback);
+        var optPlayback = effectEntity.TryGet<game.components.effect.CombinerPlayback>();
+        ref var playback = ref (optPlayback.HasValue ? ref optPlayback.Value : ref dummyPlayback);
 
         if (!effectEntity.IsAlive)
             ImGui.BeginDisabled();
 
         ImGui.Checkbox("Looping", ref Effect.isLooping);
-        ImGui.SliderFloat("Time", ref playback.CurTime, 0f, Effect.Duration, $"%.3f / {Effect.Duration}", ImGuiSliderFlags.NoInput);
+        var normalizedTime = playback.CurTime / Effect.Duration;
+        if (playback.IsLooping)
+            normalizedTime = normalizedTime - MathF.Truncate(normalizedTime);
+        ImGui.ProgressBar(normalizedTime, new Vector2(0f, 0f), $"{playback.CurTime:F2} / {Effect.Duration}");
+        ImGui.SameLine();
+        ImGui.Text("Time");
         ImGui.SliderFloat("Progress", ref playback.CurProgress, 0f, 100f);
         UndoSlider("Length", ref playback.Length, 0f, 5f, 1f);
 
-        /*if (ImGui.Button(IconFonts.ForkAwesome.FastBackward))
-            LoadEffectNow(CurrentResource!);
+        if (ImGui.Button(IconFonts.ForkAwesome.FastBackward))
+        {
+            KillEffect();
+            SpawnEffect();
+        }
         ImGui.SameLine();
         if (isPlaying && ImGui.Button(IconFonts.ForkAwesome.Pause))
             isPlaying = false;
-        else if (!isPlaying && ImGui.Button(IconFonts.ForkAwesome.Play) && effectRenderer != null)
-            isPlaying = true;*/
+        else if (!isPlaying && ImGui.Button(IconFonts.ForkAwesome.Play))
+            isPlaying = true;
 
         if (!effectEntity.IsAlive)
             ImGui.EndDisabled();

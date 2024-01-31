@@ -79,8 +79,8 @@ public class EffectMaterial : AResourceManager<EffectMaterialInfo, materials.Eff
 
     protected override void Unload(EffectMaterialInfo info, materials.EffectMaterial resource)
     {
-        base.Unload(info, resource);
-        resource.Texture.Texture?.Dispose();
+        if (textureLoader is not CachedAssetLoader<Texture>)
+            resource.Texture.Texture?.Dispose();
         resource.Dispose();
     }
 
