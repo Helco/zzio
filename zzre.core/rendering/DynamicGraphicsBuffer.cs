@@ -138,7 +138,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
 
     public void Update(CommandList cl)
     {
-        if (!dirtyBytes.Any())
+        if (!dirtyBytes.Any() && (buffer != null || CommittedCapacity == 0))
             return;
         int capacityInBytes = CommittedCapacity * SizePerElement;
         if ((uint)dirtyBytes.MaxValue > (buffer?.SizeInBytes ?? 0))

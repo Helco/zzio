@@ -94,9 +94,9 @@ internal class Program
         windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
 #if DEBUG
-        //new ZanzarahWindow(diContainer);
+        new ZanzarahWindow(diContainer);
 
-        diContainer.GetTag<OpenDocumentSet>().OpenWith<EffectEditor>("resources/effects/e0006.ed");
+        //diContainer.GetTag<OpenDocumentSet>().OpenWith<EffectEditor>("resources/effects/e0006.ed");
 #endif
 
         window.Resized += () =>
