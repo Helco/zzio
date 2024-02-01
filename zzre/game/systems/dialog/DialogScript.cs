@@ -175,6 +175,12 @@ public partial class DialogScript : BaseScript
             entity.Remove<messages.DialogTrading>();
             World.Publish(tradingMessage);
         }
+        else if (entity.TryGet<messages.DialogGambling>(out var gamblingMessage))
+        {
+            Console.WriteLine("published gambling message");
+            entity.Remove<messages.DialogGambling>();
+            World.Publish(gamblingMessage);
+        }
         else
             entity.Set(components.DialogState.WaitForSayString);
     }
@@ -262,8 +268,10 @@ public partial class DialogScript : BaseScript
 
     private void SetupGambling(DefaultEcs.Entity entity, int count, int type, int id)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        if (!entity.TryGet<messages.DialogGambling>(out var gamblingMessage)){
+            entity.Set(new messages.DialogGambling(entity, new()));
+        }
+        entity.Get<messages.DialogGambling>().Cards.Add((count, id));
     }
 
     private bool IfTriggerIsActive(DefaultEcs.Entity entity, int triggerI)
