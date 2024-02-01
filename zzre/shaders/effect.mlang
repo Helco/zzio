@@ -80,7 +80,7 @@ vertex
 
 fragment
 {
-    vec4 color = texture(sampler2D(mainTexture, mainSampler), varUV);
+    vec4 color = texture(sampler2D(mainTexture, mainSampler), varUV) * varColor;
     if (color.a < inAlphaReference)
         discard;
     outColor = color;

@@ -1,40 +1,25 @@
 ﻿using System;
 using System.Numerics;
-using DefaultEcs.System;
+using DefaultEcs.Resource;
 using zzre.materials;
 using zzre.rendering.effectparts;
 using zzio;
-using DefaultEcs.Resource;
 
 namespace zzre.game.systems.effect;
 
-public partial class MovingPlanes : AEntityMultiMapSystem<float, components.Parent>
+public sealed class MovingPlanes : BaseCombinerPart<
+    zzio.effect.parts.MovingPlanes,
+    components.effect.MovingPlanesState>
 {
-    private readonly EffectMesh effectMesh;
-    private readonly IDisposable addDisposable;
-    private readonly IDisposable removeDisposable;
+    public MovingPlanes(ITagContainer diContainer) : base(diContainer) { }
 
-    public MovingPlanes(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
-    {
-        effectMesh = diContainer.GetTag<EffectMesh>();
-        addDisposable = World.SubscribeEntityComponentAdded<zzio.effect.parts.MovingPlanes>(HandleAddedComponent);
-        removeDisposable = World.SubscribeEntityComponentRemoved<components.effect.MovingPlanesState>(HandleRemovedComponent);
-    }
-
-    public override void Dispose()
-    {
-        base.Dispose();
-        addDisposable.Dispose();
-        removeDisposable.Dispose();
-    }
-
-    private void HandleRemovedComponent(in DefaultEcs.Entity entity, in components.effect.MovingPlanesState state)
+    protected override void HandleRemovedComponent(in DefaultEcs.Entity entity, in components.effect.MovingPlanesState state)
     {
         effectMesh.ReturnVertices(state.VertexRange);
         effectMesh.ReturnIndices(state.IndexRange);
     }
 
-    private void HandleAddedComponent(in DefaultEcs.Entity entity, in zzio.effect.parts.MovingPlanes data)
+    protected override void HandleAddedComponent(in DefaultEcs.Entity entity, in zzio.effect.parts.MovingPlanes data)
     {
         var playback = entity.Get<components.Parent>().Entity.Get<components.effect.CombinerPlayback>();
         var vertexRange = effectMesh.RentVertices(data.disableSecondPlane ? 4 : 8);
@@ -47,6 +32,7 @@ public partial class MovingPlanes : AEntityMultiMapSystem<float, components.Pare
             PrevProgress = playback.CurProgress
         });
         Reset(ref entity.Get<components.effect.MovingPlanesState>(), data);
+        
         var billboardMode = data.circlesAround || data.useDirection
             ? EffectMaterial.BillboardMode.None
             : EffectMaterial.BillboardMode.View;
@@ -67,8 +53,7 @@ public partial class MovingPlanes : AEntityMultiMapSystem<float, components.Pare
         state.CurScale = 1f;
     }
 
-    [Update]
-    private void Update(
+    protected override void Update(
         float elapsedTime,
         in components.Parent parent,
         ref components.effect.MovingPlanesState state,

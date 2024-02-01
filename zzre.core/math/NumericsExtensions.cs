@@ -96,6 +96,9 @@ public static class NumericsExtensions
 
     public static int NextSign(this Random random) => random.Next(2) * 2 - 1;
 
+    public static uint Next(this Random random, uint exclusiveMax) =>
+        checked((uint)random.Next((int)exclusiveMax));
+
     public static float Next(this Random random, float min, float max) =>
         min + random.NextFloat() * (max - min);
 

@@ -93,7 +93,8 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
 
         updateSystems = new SequentialSystem<float>(
             new game.systems.effect.EffectCombiner(diContainer) { AddIndexAsComponent = true },
-            new game.systems.effect.MovingPlanes(diContainer));
+            new game.systems.effect.MovingPlanes(diContainer),
+            new game.systems.effect.RandomPlanes(diContainer));
         AddDisposable(updateSystems);
 
         renderSystems = new SequentialSystem<CommandList>(
@@ -180,7 +181,8 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         effectEntity.Set(loadedEffect);
         ecsWorld.Publish(new game.messages.SpawnEffectCombiner(
             0, // we do not have the EffectCombiner resource manager, the value here does not matter
-            AsEntity: effectEntity));
+            AsEntity: effectEntity,
+            Position: Vector3.Zero));
         partEntities = ecsWorld.GetEntities()
             .With<game.components.Parent>()
             .AsEnumerable()

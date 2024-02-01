@@ -50,6 +50,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
             switch(part)
             {
                 case zzio.effect.parts.MovingPlanes movingPlanes: partEntity.Set(movingPlanes); break;
+                case zzio.effect.parts.RandomPlanes randomPlanes: partEntity.Set(randomPlanes); break;
                 default:
                     Console.WriteLine($"Warning: unsupported effect combiner part {part.Name}");
                     break;

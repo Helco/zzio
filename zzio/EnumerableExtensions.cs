@@ -73,4 +73,36 @@ public static class EnumerableExtensions
 
     public static TCompare? MaxOrDefault<TElement, TCompare>(this IEnumerable<TElement> set, Func<TElement, TCompare> selector, TCompare? defaultValue = default) =>
         set.Any() ? set.Max(selector) : defaultValue;
+
+    public delegate bool ReferencePredicate<TElement>(in TElement element);
+
+    public static int Count<TElement>(this ReadOnlySpan<TElement> span, ReferencePredicate<TElement> predicate)
+    {
+        int count = 0;
+        foreach (ref readonly var element in span)
+        {
+            if (predicate(in element))
+                count++;
+        }
+        return count;
+    }
+
+    public static int Count<TElement>(this Span<TElement> span, ReferencePredicate<TElement> predicate)
+    {
+        int count = 0;
+        foreach (ref readonly var element in span)
+        {
+            if (predicate(in element))
+                count++;
+        }
+        return count;
+    }
+
+    public static Range Sub(this Range full, Range sub, int maxValue = int.MaxValue)
+    {
+        var (fullOffset, fullLength) = full.GetOffsetAndLength(maxValue);
+        var (subOffset, subLength) = sub.GetOffsetAndLength(fullLength);
+        int newOffset = fullOffset + subOffset;
+        return newOffset..(newOffset + subLength);
+    }
 }
