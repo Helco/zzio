@@ -271,7 +271,8 @@ public partial class DialogScript : BaseScript
         if (!entity.TryGet<messages.DialogGambling>(out var gamblingMessage)){
             entity.Set(new messages.DialogGambling(entity, new()));
         }
-        entity.Get<messages.DialogGambling>().Cards.Add((count, id));
+        for (int i = 0; i < count; i++)
+            entity.Get<messages.DialogGambling>().Cards.Add(id);
     }
 
     private bool IfTriggerIsActive(DefaultEcs.Entity entity, int triggerI)

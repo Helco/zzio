@@ -5,6 +5,6 @@ namespace zzre.game.messages;
 
 public record struct DialogGambling(
     DefaultEcs.Entity DialogEntity,
-    List<(int count, int id)> Cards
+    List<int> Cards
 );
 

@@ -143,13 +143,11 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
     private void AddTrade(DefaultEcs.Entity entity, components.DialogGambling gambling, int index, Rect bgRect)
     {
-        // var price = gambling.Cards[index].price;
-        var price = 5;
-        var card = db.Spells.FirstOrDefault(c => c.CardId.EntityId == gambling.Cards[index].id);
+        var card = db.Spells.FirstOrDefault(c => c.CardId.EntityId == gambling.Cards[index]);
         if (card == default) return;
 
         var purchase = new components.ui.ElementId(index);
-        var offset = bgRect.Center + new Vector2(-205, -120 + 55 * index);
+        var offset = bgRect.Center + new Vector2(-205, -120 + 10 * index);
 
         preload.CreateImage(entity)
             .With(offset)
@@ -162,26 +160,12 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .With(preload.Fnt002)
             .Build();
 
-        preload.CreateLabel(entity)
-            .With(offset + new Vector2(325, 12))
-            .WithText($"{{0*x}}{price}")
-            .With(preload.Fnt000)
+        preload.CreateButton(entity)
+            .With(purchase)
+            .With(offset + new Vector2(365, 0))
+            .With(new components.ui.ButtonTiles(20, 21))
+            .With(preload.Btn001)
             .Build();
-
-        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
-        if (inventory.CountCards(gambling.Currency.CardId) >= price) {
-            preload.CreateButton(entity)
-                .With(purchase)
-                .With(offset + new Vector2(365, 0))
-                .With(new components.ui.ButtonTiles(20, 21))
-                .With(preload.Btn001)
-                .Build();
-        } else {
-            preload.CreateImage(entity)
-                .With(offset + new Vector2(365, 0))
-                .With(preload.Btn001, 22)
-                .Build();
-        }
 
         gambling.CardPurchaseButtons[purchase] = card;
     }
