@@ -120,6 +120,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.DialogLookAt(this),
             new systems.DialogChoice(this),
             new systems.DialogTrading(this),
+            new systems.DialogGambling(this),
 
             new systems.NonFairyAnimation(this),
             
