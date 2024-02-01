@@ -11,6 +11,6 @@ public struct DialogGambling
     public ItemRow Currency;
     public ItemRow? Purchase;
     public List<(int count, int id)> Cards;
-    public Dictionary<components.ui.ElementId, ItemRow> CardPurchaseButtons;
+    public Dictionary<components.ui.ElementId, SpellRow> CardPurchaseButtons;
     public DefaultEcs.Entity Profile;
 }

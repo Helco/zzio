@@ -145,7 +145,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     {
         // var price = gambling.Cards[index].price;
         var price = 5;
-        var card = db.Items.FirstOrDefault(c => c.CardId.EntityId == gambling.Cards[index].id);
+        var card = db.Spells.FirstOrDefault(c => c.CardId.EntityId == gambling.Cards[index].id);
         if (card == default) return;
 
         var purchase = new components.ui.ElementId(index);
@@ -153,7 +153,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         preload.CreateImage(entity)
             .With(offset)
-            .With(preload.Itm000, card.CardId.EntityId)
+            .With(preload.Spl000, card.CardId.EntityId)
             .Build();
 
         preload.CreateLabel(entity)
