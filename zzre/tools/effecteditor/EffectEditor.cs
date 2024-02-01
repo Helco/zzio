@@ -62,6 +62,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         var menuBar = new MenuBarWindowTag(Window);
         menuBar.AddButton("Open", HandleMenuOpen);
         fbArea = Window.GetTag<FramebufferArea>();
+        fbArea.ClearColor = new(0.18f, 0.11f, 0.035f, 1f);
         fbArea.OnResize += HandleResize;
         fbArea.OnRender += HandleRender;
         diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
@@ -242,6 +243,11 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         game.components.effect.CombinerPlayback dummyPlayback = new();
         var optPlayback = effectEntity.TryGet<game.components.effect.CombinerPlayback>();
         ref var playback = ref (optPlayback.HasValue ? ref optPlayback.Value : ref dummyPlayback);
+
+        var backgroundColor = fbArea.ClearColor.ToVector4();
+        ImGui.ColorEdit4("Background", ref backgroundColor);
+        fbArea.ClearColor = backgroundColor.ToRgbaFloat();
+        ImGui.NewLine();
 
         if (!effectEntity.IsAlive)
             ImGui.BeginDisabled();

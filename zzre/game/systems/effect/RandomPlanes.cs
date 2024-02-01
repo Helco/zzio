@@ -84,7 +84,7 @@ public sealed class RandomPlanes : BaseCombinerPart<
                 state.CurPhase1 -= elapsedTime;
             else if (state.CurPhase2 > 0f)
                 state.CurPhase2 -= elapsedTime;
-            else
+            else if (playback.IsLooping)
             {
                 Reset(ref state, data);
                 Update(elapsedTime, parent, ref state, data, ref indices);

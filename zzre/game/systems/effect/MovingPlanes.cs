@@ -93,12 +93,14 @@ public sealed class MovingPlanes : BaseCombinerPart<
             curColor *= Math.Clamp(state.CurPhase2 / (data.phase2 / 1000f), 0f, 1f);
             AddScale(ref state, data, elapsedTime * data.sizeModSpeed);
         }
-        else
+        else if (playback.IsLooping)
         {
             Reset(ref state, data);
             Update(elapsedTime, parent, ref state, data, ref indices);
             return;
         }
+        else
+            return;
         UpdateQuads(parent, ref state, data, curColor);
     }
 
