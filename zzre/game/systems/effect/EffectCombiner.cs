@@ -49,8 +49,14 @@ public partial class EffectCombiner : AEntitySetSystem<float>
             partEntity.Set(new components.Parent(entity));
             switch(part)
             {
+                case zzio.effect.parts.BeamStar beamStar: partEntity.Set(beamStar); break;
+                case zzio.effect.parts.ElectricBolt electricBolt: partEntity.Set(electricBolt); break;
+                case zzio.effect.parts.Models models: partEntity.Set(models); break;
                 case zzio.effect.parts.MovingPlanes movingPlanes: partEntity.Set(movingPlanes); break;
+                case zzio.effect.parts.ParticleBeam particleBeam: partEntity.Set(particleBeam); break;
                 case zzio.effect.parts.RandomPlanes randomPlanes: partEntity.Set(randomPlanes); break;
+                case zzio.effect.parts.Sound sound: partEntity.Set(sound); break;
+                case zzio.effect.parts.Sparks sparks: partEntity.Set(sparks); break;
                 default:
                     Console.WriteLine($"Warning: unsupported effect combiner part {part.Name}");
                     break;

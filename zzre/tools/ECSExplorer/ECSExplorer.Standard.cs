@@ -9,6 +9,8 @@ using zzio.db;
 using zzio.scn;
 using DefaultEcs.Resource;
 
+using EffectCombinerResource = DefaultEcs.Resource.ManagedResource<int, zzio.effect.EffectCombiner>;
+
 namespace zzre.tools;
 
 partial class ECSExplorer
@@ -36,6 +38,19 @@ partial class ECSExplorer
             _ => "unknown "
         } + entity.Get<Trigger>().idx);
         AddEntityNamerByComponent<CollectionFairy>(Highest, e => $"CollectionFairy \"{e.Get<InventoryFairy>().name}\" {e}");
+
+        AddEntityNamerByComponent<EffectCombinerResource>(Highest, (e, c) => $"EffectCombiner {c.Info} {e}");
+        AddEntityNamerByComponent<zzio.effect.parts.BeamStar>(Highest, (e, c) => $"BeamStar {c.Name} {e}");
+        AddEntityNamerByComponent<zzio.effect.parts.ElectricBolt>(Highest, (e, c) => $"ElectricBolt {c.Name} {e}");
+        AddEntityNamerByComponent<zzio.effect.parts.Models>(Highest, (e, c) => $"Models {c.Name} {e}");
+        AddEntityNamerByComponent<zzio.effect.parts.MovingPlanes>(Highest, (e, c) => $"MovingPlanes {c.Name} {e}");
+        AddEntityNamerByComponent<zzio.effect.parts.ParticleBeam>(Highest, (e, c) => $"ParticleBeam {c.Name} {e}");
+        AddEntityNamerByComponent<zzio.effect.parts.ParticleCollector>(Highest, (e, c) => $"ParticleCollector {c.Name} {e}");
+        AddEntityNamerByComponent<zzio.effect.parts.ParticleEmitter>(Highest, (e, c) => $"ParticleEmitter {c.Type} {c.Name} {e}");
+        AddEntityNamerByComponent<zzio.effect.parts.PlaneBeam>(Highest, (e, c) => $"PlaneBeam {c.Name} {e}");
+        AddEntityNamerByComponent<zzio.effect.parts.RandomPlanes>(Highest, (e, c) => $"RandomPlanes {c.Name} {e}");
+        AddEntityNamerByComponent<zzio.effect.parts.Sound>(Highest, (e, c) => $"Sound {c.Name} {e}");
+        AddEntityNamerByComponent<zzio.effect.parts.Sparks>(Highest, (e, c) => $"Sparks {c.Name} {e}");
 
         AddEntityNamerByComponent<InventoryFairy>(High + 1, e => $"OwnedFairy \"{e.Get<InventoryFairy>().name}\" {e}");
         AddEntityNamerByComponent<FairyRow>(High, e => $"Fairy \"{e.Get<FairyRow>().Name}\" {e}");
@@ -75,12 +90,14 @@ partial class ECSExplorer
         const string NPCs = "NPCs";
         const string Animals = "Animals";
         const string Preload = "Preload";
+        const string Effects = "Effects";
 
         AddEntityGrouperByComponent<NpcRow>(1000, NPCs);
         AddEntityGrouperByComponent<Butterfly>(1000, Animals);
         AddEntityGrouperByComponent<CirclingBird>(1000, Animals);
         AddEntityGrouperByComponent<AnimalWaypointAI>(1000, Animals);
         AddEntityGrouperByComponent<CollectionFairy>(1000, Animals);
+        AddEntityGrouperByComponent<EffectCombiner>(1000, Effects);
         AddEntityGrouperByComponent<ClumpMesh>(0, Models);
         AddEntityGrouperByComponent<Trigger>(-1, Triggers);
 
