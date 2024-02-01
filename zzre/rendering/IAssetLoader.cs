@@ -28,3 +28,8 @@ public interface IAssetLoader<TAsset> where TAsset : class, IDisposable
         return Load(resource);
     }
 }
+
+public interface IAssetLoaderValidation<TAsset> where TAsset : class, IDisposable
+{
+    void ValidateAsset(TAsset asset);
+}

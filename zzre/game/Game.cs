@@ -7,6 +7,7 @@ using Veldrid;
 using zzio;
 using zzio.scn;
 using zzio.vfs;
+using zzre.materials;
 using zzre.rendering;
 
 namespace zzre.game;
@@ -44,12 +45,15 @@ public class Game : BaseDisposable, ITagContainer
         AddTag(savegame);
         AddTag(ecsWorld = new DefaultEcs.World());
         AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
+        AddTag(new EffectMesh(this, 4096, 8192));
         AddTag(camera = new Camera(this));
 
         AddTag(new resources.Clump(this));
         AddTag(new resources.ClumpMaterial(this));
         AddTag(new resources.Actor(this));
         AddTag(new resources.SkeletalAnimation(this));
+        AddTag(new resources.EffectCombiner(this));
+        AddTag(new resources.EffectMaterial(this));
 
         ecsWorld.SetMaxCapacity<Scene>(1);
 
@@ -77,6 +81,11 @@ public class Game : BaseDisposable, ITagContainer
             new systems.BehaviourMagicBridge(this),
             new systems.MoveToLocation(this),
             new systems.AdvanceAnimation(this),
+
+            // Effects
+            new systems.effect.EffectCombiner(this),
+            new systems.effect.MovingPlanes(this),
+            new systems.effect.RandomPlanes(this),
 
             // Animals
             new systems.Animal(this),
@@ -147,11 +156,14 @@ public class Game : BaseDisposable, ITagContainer
             new systems.ActorRenderer(this),
             new systems.ModelRenderer(this, components.RenderOrder.EarlySolid),
             new systems.ModelRenderer(this, components.RenderOrder.EarlyAdditive),
+            new systems.effect.EffectRenderer(this, components.RenderOrder.EarlyEffect),
             new systems.ModelRenderer(this, components.RenderOrder.Solid),
             new systems.ModelRenderer(this, components.RenderOrder.Additive),
             new systems.ModelRenderer(this, components.RenderOrder.EnvMap),
+            new systems.effect.EffectRenderer(this, components.RenderOrder.Effect),
             new systems.ModelRenderer(this, components.RenderOrder.LateSolid),
-            new systems.ModelRenderer(this, components.RenderOrder.LateAdditive));
+            new systems.ModelRenderer(this, components.RenderOrder.LateAdditive),
+            new systems.effect.EffectRenderer(this, components.RenderOrder.LateEffect));
 
         var worldLocation = new Location();
         camera.Location.Parent = worldLocation;

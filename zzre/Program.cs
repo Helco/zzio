@@ -95,6 +95,8 @@ internal class Program
 
 #if DEBUG
         new ZanzarahWindow(diContainer);
+
+        //diContainer.GetTag<OpenDocumentSet>().OpenWith<EffectEditor>("resources/effects/e0006.ed");
 #endif
 
         window.Resized += () =>
@@ -125,7 +127,7 @@ internal class Program
         {
             time.BeginFrame();
             if (time.HasFramerateChanged)
-                window.Title = $"Zanzarah | {graphicsDevice.BackendType} | FPS: {(int)(time.Framerate + 0.5)}";
+                window.Title = $"Zanzarah | {graphicsDevice.BackendType} | {time.FormattedStats}";
 
             windowContainer.Render();
             graphicsDevice.SwapBuffers();

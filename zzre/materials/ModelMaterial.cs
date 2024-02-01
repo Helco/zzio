@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Veldrid;
 using zzio;
@@ -70,25 +71,63 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
     }
 }
 
-public class ModelInstanceBuffer : DynamicMesh
+public sealed class ModelInstanceBuffer : DynamicMesh
 {
     private readonly Attribute<Matrix4x4> attrWorld;
     private readonly Attribute<Matrix3x2> attrTexShift;
     private readonly Attribute<IColor> attrTint;
 
-    public ModelInstanceBuffer(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic)
+    public ModelInstanceBuffer(ITagContainer diContainer,
+        bool dynamic = true,
+        string name = nameof(ModelInstanceBuffer))
+        : base(diContainer, dynamic, name)
     {
         attrWorld = AddAttribute<Matrix4x4>("world");
         attrTexShift = AddAttribute<Matrix3x2>("inTexShift");
         attrTint = AddAttribute<IColor>("inTint");
     }
 
-    public void Add(ModelInstance i)
+    public class InstanceArena : IDisposable
     {
-        var index = Add(1);
-        attrWorld[index] = i.world;
-        attrTexShift[index] = i.texShift;
-        attrTint[index] = i.tint;
+        private readonly ModelInstanceBuffer buffer;
+        private readonly int startIndex, endIndex;
+        private int nextIndex;
+
+        public uint InstanceStart => (uint)startIndex;
+        public uint InstanceCount => (uint)(nextIndex - startIndex);
+
+        public InstanceArena(ModelInstanceBuffer buffer, Range range)
+        {
+            this.buffer = buffer;
+            (startIndex, endIndex) = range.GetOffsetAndLength(buffer.VertexCapacity);
+            endIndex += startIndex;
+        }
+
+        public void Reset() => nextIndex = startIndex;
+
+        public void Add(ModelInstance i)
+        {
+            if (nextIndex < 0)
+                throw new ObjectDisposedException(nameof(InstanceArena));
+            if (nextIndex >= endIndex)
+                throw new InvalidOperationException("Instance range is full");
+            buffer.attrWorld[nextIndex] = i.world;
+            buffer.attrTexShift[nextIndex] = i.texShift;
+            buffer.attrTint[nextIndex] = i.tint;
+            nextIndex++;
+        }
+
+        public void Dispose()
+        {
+            if (nextIndex >= 0)
+            {
+                nextIndex = -1;
+                buffer.ReturnVertices(startIndex..endIndex);
+            }
+        }
     }
+
+    public new InstanceArena RentVertices(int request, bool fast = false) =>
+        new InstanceArena(this, base.RentVertices(request, fast));
 }
 

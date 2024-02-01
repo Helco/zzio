@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 
 namespace zzre;
@@ -7,8 +9,8 @@ namespace zzre;
 public class GameTime
 {
     private readonly Stopwatch watch = new();
+    private readonly List<double> curFrametimes = new List<double>(60);
 
-    private int curFPS = 0;
     private TimeSpan lastSecond;
     private TimeSpan frameStart;
 
@@ -18,9 +20,12 @@ public class GameTime
     public float Delta => Math.Min(MaxDelta, UnclampedDelta);
     public float UnclampedDelta { get; private set; } = 0.0f;
     public int Framerate { get; private set; } = 0;
+    public double FrametimeAvg { get; private set; } = 0f;
+    public double FrametimeSD { get; private set; } = 0f;
     public bool HasFramerateChanged { get; private set; } = false;
 
     private TimeSpan TargetFrametime => TimeSpan.FromSeconds(1.0 / TargetFramerate);
+    public string FormattedStats => $"FPS: {Framerate} | FT: {FrametimeAvg:F2}ms";
 
     public GameTime()
     {
@@ -33,19 +38,21 @@ public class GameTime
         UnclampedDelta = (float)(watch.Elapsed - frameStart).TotalSeconds;
         frameStart = watch.Elapsed;
 
-        curFPS++;
         HasFramerateChanged = false;
         if ((frameStart - lastSecond).TotalSeconds >= 1)
         {
-            Framerate = (int)(curFPS / (frameStart - lastSecond).TotalSeconds + 0.5);
+            Framerate = (int)(curFrametimes.Count / (frameStart - lastSecond).TotalSeconds + 0.5);
+            FrametimeAvg = curFrametimes.Average();
+            FrametimeSD = curFrametimes.Sum(f => Math.Pow(f - FrametimeAvg, 2)) / curFrametimes.Count;
+            curFrametimes.Clear();
             lastSecond = frameStart;
-            curFPS = 0;
             HasFramerateChanged = true;
         }
     }
 
     public void EndFrame()
     {
+        curFrametimes.Add((watch.Elapsed - frameStart).TotalMilliseconds);
         int delayMs = (int)(TargetFrametime - (watch.Elapsed - frameStart)).TotalMilliseconds;
         if (delayMs > 0)
             Thread.Sleep(delayMs);

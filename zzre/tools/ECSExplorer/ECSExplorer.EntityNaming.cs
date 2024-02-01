@@ -11,6 +11,7 @@ partial class ECSExplorer
 {
     public delegate string? TryGetEntityNameFunc(DefaultEcs.Entity entity);
     public delegate string? TryGetEntityNameByComponentFunc<T>(in T component);
+    public delegate string? TryGetEntityNameByComponentAndEntityFunc<T>(DefaultEcs.Entity entity, T component);
 
     private class EntityNamer : IComparable<EntityNamer>
     {
@@ -39,7 +40,10 @@ partial class ECSExplorer
         AddEntityNamer(prio, entity => entity.IsAlive && entity.Has<T>() ? func(entity) : null);
 
     public static void AddEntityNamerByComponent<T>(int prio, TryGetEntityNameByComponentFunc<T> func) =>
-        AddEntityNamer(prio, entity => entity.IsAlive && entity.TryGet<T>(out var comp) ? func(comp) : null);
+        AddEntityNamer(prio, entity => entity.TryGet<T>(out var comp) ? func(comp) : null);
+
+    public static void AddEntityNamerByComponent<T>(int prio, TryGetEntityNameByComponentAndEntityFunc<T> func) =>
+        AddEntityNamer(prio, entity => entity.TryGet<T>(out var comp) ? func(entity, comp) : null);
 
     public static void AddEntityNamerByComponent<T>(int prio, string name) =>
         AddEntityNamer(prio, entity => entity.IsAlive && entity.Has<T>() ? name : null);

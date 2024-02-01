@@ -1,4 +1,7 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Buffers;
+using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Veldrid;
 using zzio;
@@ -55,55 +58,57 @@ public class UIMaterial : MlangMaterial, IStandardTransformMaterial
     }
 }
 
-public class UIInstanceBufferBase<TPosition> : DynamicMesh where TPosition : unmanaged
+public abstract class UIInstanceBufferBase<TPosition> : DynamicMesh where TPosition : unmanaged
 {
-    protected readonly Attribute<TPosition> attrPos;
-    protected readonly Attribute<Vector2>
-        attrSize,
-        attrUVPos,
-        attrUVSize;
-    protected readonly Attribute<float> attrTexWeight;
-    protected readonly Attribute<IColor> attrColor;
+    public readonly Attribute<TPosition> AttrPos;
+    public readonly Attribute<Vector2>
+        AttrSize,
+        AttrUVPos,
+        AttrUVSize;
+    public readonly Attribute<float> AttrTexWeight;
+    public readonly Attribute<IColor> AttrColor;
 
-    public UIInstanceBufferBase(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic)
+    public UIInstanceBufferBase(ITagContainer diContainer,
+        bool dynamic = true,
+        string name = nameof(UIInstanceBuffer))
+        : base(diContainer, dynamic, name)
     {
-        attrPos = AddAttribute<TPosition>("inPos");
-        attrSize = AddAttribute<Vector2>("inSize");
-        attrUVPos = AddAttribute<Vector2>("inUVPos");
-        attrUVSize = AddAttribute<Vector2>("inUVSize");
-        attrColor = AddAttribute<IColor>("inColor");
-        attrTexWeight = AddAttribute<float>("inTexWeight");
+        AttrPos = AddAttribute<TPosition>("inPos");
+        AttrSize = AddAttribute<Vector2>("inSize");
+        AttrUVPos = AddAttribute<Vector2>("inUVPos");
+        AttrUVSize = AddAttribute<Vector2>("inUVSize");
+        AttrColor = AddAttribute<IColor>("inColor");
+        AttrTexWeight = AddAttribute<float>("inTexWeight");
     }
 }
 
-public class UIInstanceBuffer : UIInstanceBufferBase<Vector2>
+public sealed class UIInstanceBuffer : UIInstanceBufferBase<Vector2>
 {
-    public UIInstanceBuffer(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic) { }
-
-    public void Add(UIInstance i)
-    {
-        var index = Add(1);
-        attrPos[index] = i.pos;
-        attrSize[index] = i.size;
-        attrUVPos[index] = i.uvPos;
-        attrUVSize[index] = i.uvSize;
-        attrTexWeight[index] = i.textureWeight;
-        attrColor[index] = i.color;
-    }
+    public UIInstanceBuffer(ITagContainer diContainer,
+        bool dynamic = true,
+        string name = nameof(UIInstanceBuffer))
+        : base(diContainer, dynamic, name) { }
 }
 
-public class DebugIconInstanceBuffer : UIInstanceBufferBase<Vector3>
+public sealed class DebugIconInstanceBuffer : UIInstanceBufferBase<Vector3>
 {
-    public DebugIconInstanceBuffer(ITagContainer diContainer, bool dynamic = true) : base(diContainer, dynamic) { }
+    public DebugIconInstanceBuffer(ITagContainer diContainer,
+        bool dynamic = true,
+        string name = nameof(DebugIconInstanceBuffer))
+        : base(diContainer, dynamic, name) { }
 
-    public void Add(DebugIcon i)
+    public void AddRange(IReadOnlyCollection<DebugIcon> instances)
     {
-        var index = Add(1);
-        attrPos[index] = i.pos;
-        attrSize[index] = i.size;
-        attrUVPos[index] = i.uvPos;
-        attrUVSize[index] = i.uvSize;
-        attrTexWeight[index] = i.textureWeight;
-        attrColor[index] = i.color;
+        var index = RentVertices(instances.Count).Start.Value;
+        foreach (var i in instances)
+        {
+            AttrPos[index] = i.pos;
+            AttrSize[index] = i.size;
+            AttrUVPos[index] = i.uvPos;
+            AttrUVSize[index] = i.uvSize;
+            AttrTexWeight[index] = i.textureWeight;
+            AttrColor[index] = i.color;
+            index++;
+        }
     }
 }

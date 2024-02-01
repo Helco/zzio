@@ -8,7 +8,7 @@ using zzre.rendering;
 
 namespace zzre;
 
-public class TextureAssetLoader : IAssetLoader<Texture>
+public class TextureAssetLoader : IAssetLoader<Texture>, IAssetLoaderValidation<Texture>
 {
     public ITagContainer DIContainer { get; }
     private readonly IResourcePool resourcePool;
@@ -119,4 +119,10 @@ public class TextureAssetLoader : IAssetLoader<Texture>
         Pfim.ImageFormat.Rgba32 => PixelFormat.B8_G8_R8_A8_UNorm,
         _ => null
     };
+
+    public void ValidateAsset(Texture asset)
+    {
+        if (asset.IsDisposed)
+            throw new InvalidOperationException($"Texture {asset.Name} was disposed");
+    }
 }

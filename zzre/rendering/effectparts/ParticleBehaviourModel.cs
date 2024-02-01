@@ -44,6 +44,7 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
     private readonly ParticleEmitter data;
     private readonly Model[] models;
     private readonly ModelInstanceBuffer instanceBuffer;
+    private readonly ModelInstanceBuffer.InstanceArena instanceArena;
 
     public float SpawnRate { get; set; }
     public int CurrentParticles => instanceBuffer.VertexCount;
@@ -96,7 +97,7 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
 
         models = new Model[(int)(data.spawnRate * data.life.value)];
         instanceBuffer = new(diContainer);
-        instanceBuffer.Reserve(models.Length);
+        instanceArena = instanceBuffer.RentVertices(models.Length);
         AddDisposable(instanceBuffer);
     }
 
@@ -132,12 +133,12 @@ public class ParticleBehaviourModel : ListDisposable, IParticleBehaviour
         if (areInstancesDirty)
         {
             areInstancesDirty = false;
-            instanceBuffer.Clear();
+            instanceArena.Reset();
             foreach (ref readonly var model in models.AsSpan())
             {
                 if (model.basic.life < 0f)
                     continue;
-                instanceBuffer.Add(new()
+                instanceArena.Add(new()
                 {
                     world =
                         Matrix4x4.CreateFromAxisAngle(model.rotationAxis, model.rotation * MathF.PI / 180f) *

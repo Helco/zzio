@@ -7,7 +7,7 @@ namespace zzre.tools;
 
 public partial class EffectEditor
 {
-    private void HandlePart(BeamStar data, BeamStarRenderer ren)
+    private void HandlePart(BeamStar data)
     {
         InputText("Name", ref data.name, 128);
         NewLine();

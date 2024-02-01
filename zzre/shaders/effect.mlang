@@ -1,0 +1,87 @@
+option DepthTest;
+option Billboard = IsNoBillboard, IsViewBillboard, IsSparkBillboard;
+option Blend = IsAdditiveBlend, IsAdditiveAlphaBlend, IsAlphaBlend;
+
+attributes
+{
+    float3 inVertexPos;
+    float2 inUV;
+    byte4_norm inColor;
+}
+attributes if (Billboard != IsNoBillboard) float3 inCenterPos;
+attributes if (Billboard == IsSparkBillboard) float3 inDirection;
+
+uniform texture2D mainTexture;
+uniform sampler mainSampler;
+uniform mat4 projection;
+uniform view
+{
+    mat4 viewMatrix;
+    float4 camPos;
+    float4 camDir;
+}
+uniform factors
+{
+    float inAlphaReference;
+}
+
+varying
+{
+    float2 varUV;
+    float4 varColor;
+}
+
+pipeline
+{
+    output r8_g8_b8_a8_unorm outColor;
+    output d24_unorm_s8_uint;
+    depthwrite off;
+    depthtest off;
+}
+
+pipeline if (DepthTest)
+{
+    depthtest on;
+}
+
+pipeline if (Blend == IsAlphaBlend)
+{
+    blend SrcAlpha + InvSrcAlpha;
+}
+
+pipeline if (Blend == IsAdditiveBlend)
+{
+    blend One + One;
+}
+
+pipeline if (Blend == IsAdditiveAlphaBlend)
+{
+    blend SrcAlpha + One;
+}
+
+vertex
+{
+    vec4 pos;
+    if (Billboard == IsNoBillboard)
+        pos = viewMatrix * vec4(inVertexPos, 1);
+    else if (Billboard == IsViewBillboard)
+        pos = viewMatrix * vec4(inCenterPos, 1) + vec4(inVertexPos, 0);
+    else if (Billboard == IsSparkBillboard)
+    {
+        vec3 right = vec3(viewMatrix * vec4(inDirection, 0)).xyz;
+        vec3 up = normalize(cross(inCenterPos - camPos.xyz, right));
+        pos += vec4(inVertexPos.x * right + inVertexPos.y * up, 0);
+    }
+    gl_Position = projection * pos;
+
+    varUV = inUV;
+    varColor = inColor;
+}
+
+fragment
+{
+    vec4 color = texture(sampler2D(mainTexture, mainSampler), varUV) * varColor;
+    if (color.a < inAlphaReference)
+        discard;
+    outColor = color;
+}

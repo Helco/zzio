@@ -46,7 +46,7 @@ public class ParticleBehaviourParticle : ListDisposable, IParticleBehaviour
     private readonly Random random = new();
     private readonly Location location;
     private readonly IQuadMeshBuffer<EffectVertex> quadMeshBuffer;
-    private readonly EffectMaterial material;
+    private readonly EffectMaterialLEGACY material;
     private readonly ParticleEmitter data;
     private readonly Range quadRange;
     private readonly Rect[] tileTexCoords;
@@ -67,7 +67,7 @@ public class ParticleBehaviourParticle : ListDisposable, IParticleBehaviour
         var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
         var camera = diContainer.GetTag<Camera>();
         quadMeshBuffer = diContainer.GetTag<IQuadMeshBuffer<EffectVertex>>();
-        material = EffectMaterial.CreateFor(data.renderMode, diContainer);
+        material = EffectMaterialLEGACY.CreateFor(data.renderMode, diContainer);
         material.LinkTransformsTo(camera);
         material.World.Value = Matrix4x4.Identity; // particles are spawned in world-space
         material.Uniforms.Value = EffectMaterialUniforms.Default;

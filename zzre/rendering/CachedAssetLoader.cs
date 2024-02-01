@@ -33,7 +33,10 @@ public class CachedAssetLoader<TAsset> : BaseDisposable, IAssetLoader<TAsset> wh
     public virtual bool TryLoad(IResource resource, [NotNullWhen(true)] out TAsset? asset)
     {
         if (cache.TryGetValue(resource.Path, out asset))
+        {
+            (parent as IAssetLoaderValidation<TAsset>)?.ValidateAsset(asset);
             return true;
+        }
         if (parent.TryLoad(resource, out asset))
         {
             cache.Add(resource.Path, asset);

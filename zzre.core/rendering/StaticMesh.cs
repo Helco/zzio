@@ -173,28 +173,27 @@ public class StaticMesh : BaseDisposable, IVertexAttributeContainer
         var verticesPerPrimitive = pattern.Max() + 1;
         var primitiveCount = VertexCount / verticesPerPrimitive;
         var buffer = SetIndexCount(primitiveCount * pattern.Count, IndexFormat.UInt16);
-        var indices = GeneratePatternIndices(pattern, 0, primitiveCount, verticesPerPrimitive);
+        var indices = new ushort[IndexCount];
+        GeneratePatternIndices(indices, pattern, primitiveCount, verticesPerPrimitive);
         graphicsDevice.UpdateBuffer(buffer, 0u, indices);
     }
 
-    internal static ushort[] GeneratePatternIndices(IReadOnlyList<ushort> pattern,
-        int primitiveStart,
+    public static void GeneratePatternIndices(
+        Span<ushort> indices,
+        IReadOnlyList<ushort> pattern,
         int primitiveCount,
-        int verticesPerPrimitive)
+        int verticesPerPrimitive,
+        int vertexOffset = 0)
     {
         if (pattern.Count == 0)
             throw new ArgumentOutOfRangeException(nameof(pattern));
-        if (primitiveStart < 0 || primitiveStart > primitiveCount)
-            throw new ArgumentOutOfRangeException(nameof(primitiveStart));
-        if (primitiveStart == primitiveCount)
-            return Array.Empty<ushort>();
-        var indices = new ushort[pattern.Count * (primitiveCount - primitiveStart)];
-        for (int i = primitiveStart; i < primitiveCount; i++)
+        if (primitiveCount <= 0)
+            return;
+        for (int i = 0; i < primitiveCount; i++)
         {
             for (int j = 0; j < pattern.Count; j++)
-                indices[i * pattern.Count + j] = (ushort)(i * verticesPerPrimitive + pattern[j]);
+                indices[i * pattern.Count + j] = (ushort)(i * verticesPerPrimitive + pattern[j] + vertexOffset);
         }
-        return indices;
     }
 
     public void AddSubMesh(SubMesh subMesh)

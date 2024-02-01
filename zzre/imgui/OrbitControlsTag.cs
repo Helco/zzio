@@ -10,7 +10,7 @@ public class OrbitControlsTag : BaseDisposable
 {
     private readonly FramebufferArea fbArea;
     private readonly MouseEventArea mouseArea;
-    private readonly LocationBuffer locationBuffer;
+    private readonly LocationBuffer? locationBuffer;
     private readonly Location target;
     private readonly Location rotationLoc = new();
     private readonly DeviceBufferRange rotationLocRange;
@@ -45,8 +45,11 @@ public class OrbitControlsTag : BaseDisposable
         mouseArea = window.GetTag<MouseEventArea>();
         mouseArea.OnDrag += HandleDrag;
         mouseArea.OnScroll += HandleScroll;
-        locationBuffer = diContainer.GetTag<LocationBuffer>();
-        rotationLocRange = locationBuffer.Add(rotationLoc);
+        if (diContainer.TryGetTag(out LocationBuffer locationBuffer))
+        {
+            this.locationBuffer = locationBuffer;
+            rotationLocRange = locationBuffer.Add(rotationLoc);
+        }
         target.Parent = rotationLoc;
 
         ResetView();
@@ -55,7 +58,7 @@ public class OrbitControlsTag : BaseDisposable
     protected override void DisposeManaged()
     {
         base.DisposeManaged();
-        locationBuffer.Remove(rotationLocRange);
+        locationBuffer?.Remove(rotationLocRange);
     }
 
     private void HandleDrag(MouseButton button, Vector2 delta)

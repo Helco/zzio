@@ -127,7 +127,6 @@ public class DebugSkeletonRenderer : BaseDisposable
         boneMesh.Add("Bone Indices", "inIndices", skinIndices.ToArray());
         boneMesh.SetIndicesFromPattern(RhombusIndices);
 
-        lineRenderer.Reserve(3);
         lineRenderer.Add(Colors[0], Vector3.Zero, Vector3.UnitX * LineLength);
         lineRenderer.Add(Colors[1], Vector3.Zero, Vector3.UnitY * LineLength);
         lineRenderer.Add(Colors[2], Vector3.Zero, Vector3.UnitZ * LineLength);

@@ -37,6 +37,7 @@
     <MlangShader Include="shaders\model.mlang" />
     <MlangShader Include="shaders\debug.mlang" />
     <MlangShader Include="shaders\ui.mlang" />
+    <MlangShader Include="shaders\effect.mlang" />
   </ItemGroup>
 
   <ItemGroup>

@@ -25,6 +25,7 @@ public class MlangMaterial : BaseDisposable, IMaterial
     private ResourceSet[]? resourceSets;
 
     public GraphicsDevice Device { get; }
+    public string DebugName { get; set; } = "";
 
     public IBuiltVariantPipeline Pipeline
     {

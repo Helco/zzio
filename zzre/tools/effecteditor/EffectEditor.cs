@@ -1,8 +1,10 @@
-﻿using ImGuiNET;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using DefaultEcs.System;
+using ImGuiNET;
 using Veldrid;
 using zzio;
 using zzio.effect;
@@ -11,11 +13,10 @@ using zzio.vfs;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
-using zzre.rendering.effectparts;
 
 namespace zzre.tools;
 
-public partial class EffectEditor : ListDisposable, IDocumentEditor
+public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
 {
     private readonly ITagContainer diContainer;
     private readonly TwoColumnEditorTag editor;
@@ -26,23 +27,28 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
     private readonly IResourcePool resourcePool;
     private readonly DebugLineRenderer gridRenderer;
     private readonly OpenFileModal openFileModal;
-    private readonly LocationBuffer locationBuffer;
     private readonly GameTime gameTime;
     private readonly CachedAssetLoader<Texture> textureLoader;
     private readonly CachedAssetLoader<ClumpMesh> clumpLoader;
+    private readonly EffectCombiner emptyEffect = new();
+    private readonly DefaultEcs.World ecsWorld = new();
+    private readonly SequentialSystem<float> updateSystems = new();
+    private readonly SequentialSystem<CommandList> renderSystems = new();
+    private ECSExplorer? ecsExplorer;
+    private bool isPlaying = true;
 
-    private EffectCombinerRenderer? effectRenderer;
-    private EffectCombiner Effect => effectRenderer?.Effect ?? emptyEffect;
-    private EffectCombiner emptyEffect = new();
-    private bool[] isVisible = Array.Empty<bool>();
-    private bool isPlaying = false;
-    private float timeScale = 1f, progressSpeed = 0f;
+    private EffectCombiner Effect => loadedEffect ?? emptyEffect;
+    private EffectCombiner? loadedEffect = null;
+    private DefaultEcs.Entity effectEntity;
+    private DefaultEcs.Entity[] partEntities = Array.Empty<DefaultEcs.Entity>();
 
     public Window Window { get; }
     public IResource? CurrentResource { get; private set; }
 
-    public EffectEditor(ITagContainer diContainer)
+    public EffectEditor(ITagContainer diContainer_)
     {
+        diContainer = diContainer_.ExtendedWith(ecsWorld);
+        AddDisposable(diContainer);
         device = diContainer.GetTag<GraphicsDevice>();
         resourcePool = diContainer.GetTag<IResourcePool>();
         gameTime = diContainer.GetTag<GameTime>();
@@ -56,6 +62,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
         var menuBar = new MenuBarWindowTag(Window);
         menuBar.AddButton("Open", HandleMenuOpen);
         fbArea = Window.GetTag<FramebufferArea>();
+        fbArea.ClearColor = new(0.18f, 0.11f, 0.035f, 1f);
         fbArea.OnResize += HandleResize;
         fbArea.OnRender += HandleRender;
         diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
@@ -67,15 +74,12 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
         };
         openFileModal.OnOpenedResource += Load;
 
-        locationBuffer = new LocationBuffer(device);
-        this.diContainer = diContainer.ExtendedWith(locationBuffer);
-        AddDisposable(this.diContainer);
-        this.diContainer.AddTag(camera = new Camera(this.diContainer));
-        this.diContainer.AddTag<IQuadMeshBuffer<EffectVertex>>(new DynamicQuadMeshBuffer<EffectVertex>(device.ResourceFactory, 1024));
-        this.diContainer.AddTag<IQuadMeshBuffer<SparkVertex>>(new DynamicQuadMeshBuffer<SparkVertex>(device.ResourceFactory, 256));
-        controls = new OrbitControlsTag(Window, camera.Location, this.diContainer);
+        diContainer.AddTag(new EffectMesh(diContainer, 1024, 2048));
+        diContainer.AddTag(camera = new Camera(diContainer));
+        controls = new OrbitControlsTag(Window, camera.Location, diContainer);
         AddDisposable(controls);
-        gridRenderer = new DebugLineRenderer(this.diContainer);
+
+        gridRenderer = new DebugLineRenderer(diContainer);
         gridRenderer.Material.LinkTransformsTo(camera);
         gridRenderer.Material.World.Ref = Matrix4x4.Identity;
         gridRenderer.AddGrid();
@@ -83,17 +87,32 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
 
         AddDisposable(textureLoader = new CachedAssetLoader<Texture>(new TextureAssetLoader(diContainer)));
         AddDisposable(clumpLoader = new CachedClumpMeshLoader(diContainer));
-        this.diContainer.AddTag<IAssetLoader<Texture>>(textureLoader);
-        this.diContainer.AddTag<IAssetLoader<ClumpMesh>>(clumpLoader);
+        diContainer.AddTag<IAssetLoader<Texture>>(textureLoader);
+        diContainer.AddTag<IAssetLoader<ClumpMesh>>(clumpLoader);
+
+        diContainer.AddTag(new game.resources.EffectMaterial(diContainer));
+
+        updateSystems = new SequentialSystem<float>(
+            new game.systems.effect.EffectCombiner(diContainer) { AddIndexAsComponent = true },
+            new game.systems.effect.MovingPlanes(diContainer),
+            new game.systems.effect.RandomPlanes(diContainer));
+        AddDisposable(updateSystems);
+
+        renderSystems = new SequentialSystem<CommandList>(
+            new game.systems.effect.EffectRenderer(diContainer, game.components.RenderOrder.EarlyEffect),
+            new game.systems.effect.EffectRenderer(diContainer, game.components.RenderOrder.Effect),
+            new game.systems.effect.EffectRenderer(diContainer, game.components.RenderOrder.LateEffect));
+        AddDisposable(renderSystems);
 
         editor.AddInfoSection("Info", HandleInfoContent);
         editor.AddInfoSection("Playback", HandlePlaybackContent);
-    }
 
-    protected override void DisposeManaged()
-    {
-        base.DisposeManaged();
-        effectRenderer?.Dispose();
+        menuBar.AddButton("View/Show all parts", () => SetAllVisibilities(true));
+        menuBar.AddButton("View/Hide all parts", () => SetAllVisibilities(false));
+
+#if DEBUG
+        menuBar.AddButton("Debug/ECS Explorer", HandleOpenECSExplorer);
+#endif
     }
 
     public void Load(string pathText)
@@ -112,32 +131,35 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
         if (resource.Equals(CurrentResource))
             return;
         CurrentResource = null;
-        emptyEffect = new EffectCombiner();
+        KillEffect();
+        textureLoader.Clear();
+        clumpLoader.Clear();
 
-        effectRenderer?.Dispose();
-        effectRenderer = new EffectCombinerRenderer(diContainer, resource);
-        effectRenderer.Location.LocalPosition = Vector3.Zero;
-        effectRenderer.Location.LocalRotation = Quaternion.Identity;
+        using (var stream = resource.OpenContent())
+        {
+            if (stream == null)
+                throw new FileNotFoundException($"Failed to open {resource.Path}");
+            loadedEffect = new();
+            loadedEffect.Read(stream);
+        }
+
+        SpawnEffect();
+        isPlaying = true;
 
         editor.ClearInfoSections();
         editor.AddInfoSection("Info", HandleInfoContent);
         editor.AddInfoSection("Playback", HandlePlaybackContent);
-        foreach (var (partRenderer, i) in effectRenderer.Parts.Indexed())
+        foreach (var (part, i) in Effect.parts.Indexed())
         {
-            var part = Effect.parts[i];
             editor.AddInfoSection($"{part.Type} \"{part.Name}\"", part switch
             {
-                MovingPlanes mp => () => HandlePart(mp, (MovingPlanesRenderer)partRenderer),
-                RandomPlanes rp => () => HandlePart(rp, (RandomPlanesRenderer)partRenderer),
-                ParticleEmitter pe => () => HandlePart(pe, (ParticleEmitterRenderer)partRenderer),
-                BeamStar bs => () => HandlePart(bs, (BeamStarRenderer)partRenderer),
+                MovingPlanes mp => () => HandlePart(mp),
+                RandomPlanes rp => () => HandlePart(rp),
+                ParticleEmitter pe => () => HandlePart(pe),
+                BeamStar bs => () => HandlePart(bs),
                 _ => () => { } // ignore for now
             }, defaultOpen: false, () => HandlePartPreContent(i));
         }
-        isVisible = Enumerable.Repeat(true, effectRenderer.Parts.Count).ToArray();
-        isPlaying = true;
-        timeScale = 1f;
-        progressSpeed = 0f;
 
         controls.ResetView();
         controls.CameraAngle = new Vector2(45f, -45f) * MathF.PI / 180f;
@@ -146,31 +168,68 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
         Window.Title = $"Effect Editor - {resource.Path.ToPOSIXString()}";
     }
 
+    private void KillEffect()
+    {
+        effectEntity.Dispose();
+        foreach (var entity in partEntities)
+            entity.Dispose();
+        partEntities = Array.Empty<DefaultEcs.Entity>();
+    }
+
+    private void SpawnEffect()
+    {
+        effectEntity = ecsWorld.CreateEntity();
+        effectEntity.Set(loadedEffect);
+        ecsWorld.Publish(new game.messages.SpawnEffectCombiner(
+            0, // we do not have the EffectCombiner resource manager, the value here does not matter
+            AsEntity: effectEntity,
+            Position: Vector3.Zero));
+        partEntities = ecsWorld.GetEntities()
+            .With<game.components.Parent>()
+            .AsEnumerable()
+            .OrderBy(e => e.Get<int>())
+            .ToArray();
+    }
+
+    private void ResetEffect()
+    {
+        var visibilities = partEntities
+            .Select(e => e.Get<game.components.Visibility>())
+            .ToArray();
+        KillEffect();
+        SpawnEffect();
+        foreach (var (entity, visibility) in partEntities.Zip(visibilities))
+            entity.Set(visibility);
+    }
+
+    private void SetAllVisibilities(bool isVisible)
+    {
+        foreach (var entity in partEntities)
+            entity.Set(isVisible ? game.components.Visibility.Visible : game.components.Visibility.Invisible);
+    }
+
     private void HandleResize() => camera.Aspect = fbArea.Ratio;
 
     private void HandleRender(CommandList cl)
     {
-        locationBuffer.Update(cl);
+        if (isPlaying && effectEntity.IsAlive)
+            updateSystems.Update(gameTime.Delta);
+
+        cl.PushDebugGroup(Window.Title);
         camera.Update(cl);
         gridRenderer.Render(cl);
+        renderSystems.Update(cl);
+        cl.PopDebugGroup();
 
-        if (effectRenderer == null)
-            return;
-        foreach (var part in effectRenderer.Parts.Where((p, i) => isVisible[i]))
-            part.Render(cl);
+        fbArea.IsDirty = true;
     }
 
     private void HandleInfoContent()
     {
         ImGui.InputText("Description", ref Effect.description, 512);
-
-        var pos = effectRenderer?.Location.LocalPosition ?? Vector3.Zero;
-        var forwards = Effect.forwards;
-        var upwards = Effect.upwards;
-        if (ImGui.DragFloat3("Position", ref pos) && effectRenderer != null)
-            effectRenderer.Location.LocalPosition = pos;
-        ImGui.DragFloat3("Forwards", ref forwards);
-        ImGui.DragFloat3("Upwards", ref upwards);
+        ImGui.DragFloat3("Position", ref Effect.position);
+        ImGui.DragFloat3("Forwards", ref Effect.forwards);
+        ImGui.DragFloat3("Upwards", ref Effect.upwards);
     }
 
     private void HandlePlaybackContent()
@@ -181,49 +240,38 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
             if (ImGui.IsItemClicked(ImGuiMouseButton.Right) || ImGui.IsItemClicked(ImGuiMouseButton.Middle))
                 value = defaultValue;
         }
+        game.components.effect.CombinerPlayback dummyPlayback = new();
+        var optPlayback = effectEntity.TryGet<game.components.effect.CombinerPlayback>();
+        ref var playback = ref (optPlayback.HasValue ? ref optPlayback.Value : ref dummyPlayback);
+
+        var backgroundColor = fbArea.ClearColor.ToVector4();
+        ImGui.ColorEdit4("Background", ref backgroundColor);
+        fbArea.ClearColor = backgroundColor.ToRgbaFloat();
+        ImGui.NewLine();
+
+        if (!effectEntity.IsAlive)
+            ImGui.BeginDisabled();
 
         ImGui.Checkbox("Looping", ref Effect.isLooping);
-
-        float curTime = effectRenderer?.CurTime ?? 0f;
-        ImGui.SliderFloat("Time", ref curTime, 0f, Effect.Duration, $"%.3f / {Effect.Duration}", ImGuiSliderFlags.NoInput);
-        UndoSlider("Time Scale", ref timeScale, 0f, 5f, 1f);
-        float progress = effectRenderer?.CurProgress ?? 0f;
-        if (ImGui.SliderFloat("Progress", ref progress, 0f, 100f))
-        {
-            effectRenderer?.AddTime(0f, progress);
-            fbArea.IsDirty = true;
-        }
-        UndoSlider("Progress Speed", ref progressSpeed, -2f, 2f, 0f);
-
-        float length = effectRenderer?.Length ?? 0f;
-        UndoSlider("Length", ref length, 0f, 5f, 1f);
-        if (effectRenderer != null)
-            effectRenderer.Length = length;
+        var normalizedTime = playback.CurTime / Effect.Duration;
+        if (playback.IsLooping)
+            normalizedTime -= MathF.Truncate(normalizedTime);
+        ImGui.ProgressBar(normalizedTime, new Vector2(0f, 0f), $"{playback.CurTime:F2} / {Effect.Duration}");
+        ImGui.SameLine();
+        ImGui.Text("Time");
+        ImGui.SliderFloat("Progress", ref playback.CurProgress, 0f, 100f);
+        UndoSlider("Length", ref playback.Length, 0f, 5f, 1f);
 
         if (ImGui.Button(IconFonts.ForkAwesome.FastBackward))
-        {
-            effectRenderer?.Reset();
-            fbArea.IsDirty = true;
-        }
+            ResetEffect();
         ImGui.SameLine();
         if (isPlaying && ImGui.Button(IconFonts.ForkAwesome.Pause))
             isPlaying = false;
-        else if (!isPlaying && ImGui.Button(IconFonts.ForkAwesome.Play) && effectRenderer != null)
+        else if (!isPlaying && ImGui.Button(IconFonts.ForkAwesome.Play))
             isPlaying = true;
 
-        if (isPlaying && effectRenderer != null)
-        {
-            var newProgress = effectRenderer.CurProgress + progressSpeed * 100f * gameTime.Delta;
-            newProgress = Effect.isLooping
-                ? newProgress < 0f ? 100f - newProgress
-                : newProgress > 100f ? newProgress - 100f
-                : newProgress
-                : Math.Clamp(newProgress, 0f, 100f);
-            effectRenderer.AddTime(gameTime.Delta * timeScale, newProgress);
-            if (effectRenderer.IsDone)
-                isPlaying = false;
-            fbArea.IsDirty = true;
-        }
+        if (!effectEntity.IsAlive)
+            ImGui.EndDisabled();
     }
 
     private void HandleMenuOpen()
@@ -234,10 +282,32 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor
 
     private void HandlePartPreContent(int i)
     {
-        if (ImGui.Button(isVisible[i] ? IconFonts.ForkAwesome.Eye : IconFonts.ForkAwesome.EyeSlash))
+        var isVisible = partEntities[i].Get<game.components.Visibility>() == game.components.Visibility.Visible;
+        var (on, off) = Effect.parts[i] is Sound // that is some unnecessary detail...
+            ? (IconFonts.ForkAwesome.VolumeUp, IconFonts.ForkAwesome.VolumeOff)
+            : (IconFonts.ForkAwesome.Eye, IconFonts.ForkAwesome.EyeSlash);
+        if (ImGui.Button(isVisible ? on : off, new Vector2(24f, 0f)))
         {
-            isVisible[i] = !isVisible[i];
+            partEntities[i].Set(isVisible
+                ? game.components.Visibility.Invisible
+                : game.components.Visibility.Visible);
             fbArea.IsDirty = true;
         }
+    }
+
+    private void HandleOpenECSExplorer()
+    {
+        if (ecsExplorer == null)
+        {
+            ecsExplorer = new ECSExplorer(diContainer, this);
+            ecsExplorer.Window.OnClose += () => ecsExplorer = null;
+        }
+        else
+            diContainer.GetTag<WindowContainer>().SetNextFocusedWindow(ecsExplorer.Window);
+    }
+
+    public IEnumerable<(string, DefaultEcs.World)> GetWorlds()
+    {
+        yield return ("Effect", ecsWorld);
     }
 }
