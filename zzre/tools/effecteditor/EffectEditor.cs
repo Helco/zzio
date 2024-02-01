@@ -255,7 +255,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         ImGui.Checkbox("Looping", ref Effect.isLooping);
         var normalizedTime = playback.CurTime / Effect.Duration;
         if (playback.IsLooping)
-            normalizedTime = normalizedTime - MathF.Truncate(normalizedTime);
+            normalizedTime -= MathF.Truncate(normalizedTime);
         ImGui.ProgressBar(normalizedTime, new Vector2(0f, 0f), $"{playback.CurTime:F2} / {Effect.Duration}");
         ImGui.SameLine();
         ImGui.Text("Time");

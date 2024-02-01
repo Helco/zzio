@@ -9,8 +9,8 @@ namespace zzre;
 public class GameTime
 {
     private readonly Stopwatch watch = new();
+    private readonly List<double> curFrametimes = new List<double>(60);
 
-    private List<double> curFrametimes = new List<double>(60);
     private TimeSpan lastSecond;
     private TimeSpan frameStart;
 
