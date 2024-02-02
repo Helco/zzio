@@ -44,18 +44,26 @@ public class BackdropLoader : ISystem<float>
         if (string.IsNullOrWhiteSpace(backdropName))
             return;
 
-        if (char.IsDigit(backdropName.First()))
+        int? dynBackdropId = char.IsDigit(backdropName.First())
+            ? int.Parse(backdropName[..backdropName.IndexOfAnyNot("0123456789".ToArray())])
+            : null as int?;
+        switch(dynBackdropId)
         {
-            Console.WriteLine("Warning: Unsupported dynamic backdrop " + backdropName);
+            case 10: CreateStaticBackdrop("fbgsm01p", depthTest: false, depthWrite: false,
+                rotation: Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathF.PI / -2));
+                break;
+            case null: CreateStaticBackdrop(backdropName); break;
+            default: Console.WriteLine("Warning: Unsupported dynamic backdrop " + backdropName); break;
         }
-        else
-            CreateStaticBackdrop(backdropName);
     }
 
-    private DefaultEcs.Entity CreateStaticBackdrop(string name)
+    private DefaultEcs.Entity CreateStaticBackdrop(string name, bool depthTest = true, bool depthWrite = true, Quaternion? rotation = null)
     {
         var entity = ecsWorld.CreateEntity();
-        entity.Set(new Location());
+        entity.Set(new Location()
+        {
+            LocalRotation = rotation ?? Quaternion.Identity
+        });
         entity.Set(new components.MoveToLocation(camera.Location, RelativePosition: Vector3.Zero));
         entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Backdrop(name + ".dff")));
         entity.Set(components.Visibility.Visible);
@@ -65,10 +73,15 @@ public class BackdropLoader : ISystem<float>
             Color = IColor.White
         });
 
+        var materialInfo = new resources.ClumpMaterialInfo(zzio.scn.FOModelRenderType.Solid, rwMaterial: null!)
+        {
+            DepthTest = depthTest,
+            DepthWrite = depthWrite
+        };
         var clumpMesh = entity.Get<ClumpMesh>();
         entity.Set(new List<materials.ModelMaterial>(clumpMesh.Materials.Count));
         entity.Set(ManagedResource<materials.ModelMaterial>.Create(clumpMesh.Materials
-            .Select(rwMaterial => new resources.ClumpMaterialInfo(zzio.scn.FOModelRenderType.Solid, rwMaterial))
+            .Select(rwMaterial => materialInfo with { RWMaterial = rwMaterial })
             .ToArray()));
 
         return entity;

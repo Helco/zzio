@@ -67,6 +67,12 @@ public class Game : BaseDisposable, ITagContainer
             new systems.PlayerSpawner(this),
             new systems.PlayerControls(this),
 
+            // Cameras
+            new systems.FlyCamera(this),
+            new systems.OverworldCamera(this),
+            new systems.TriggerCamera(this),
+            new systems.CreatureCamera(this),
+
             // Models and actors
             new systems.ModelLoader(this),
             new systems.BackdropLoader(this),
@@ -131,12 +137,6 @@ public class Game : BaseDisposable, ITagContainer
             new systems.DialogTrading(this),
 
             new systems.NonFairyAnimation(this),
-            
-            // Cameras
-            new systems.FlyCamera(this),
-            new systems.OverworldCamera(this),
-            new systems.TriggerCamera(this),
-            new systems.CreatureCamera(this),
 
             // Gameflows
             new systems.GotCard(this),

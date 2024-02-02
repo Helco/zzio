@@ -39,7 +39,7 @@ public class GameTime
         frameStart = watch.Elapsed;
 
         HasFramerateChanged = false;
-        if ((frameStart - lastSecond).TotalSeconds >= 1)
+        if ((frameStart - lastSecond).TotalSeconds >= 1 && curFrametimes.Any())
         {
             Framerate = (int)(curFrametimes.Count / (frameStart - lastSecond).TotalSeconds + 0.5);
             FrametimeAvg = curFrametimes.Average();

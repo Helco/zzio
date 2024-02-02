@@ -44,6 +44,7 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
     public bool HasTexShift { set => SetOption(nameof(HasTexShift), value); }
     public bool HasEnvMap { set => SetOption(nameof(HasEnvMap), value); }
     public bool DepthWrite { set => SetOption(nameof(DepthWrite), value); }
+    public bool DepthTest { set => SetOption(nameof(DepthTest), value); }
     public BlendMode Blend { set => SetOption(nameof(Blend), (uint)value); }
 
     public UniformBinding<Matrix4x4> World { get; }
@@ -68,6 +69,7 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
         AddBinding("mainSampler", Sampler = new(this));
         AddBinding("pose", Pose = new(this));
         DepthWrite = true;
+        DepthTest = true;
     }
 }
 
