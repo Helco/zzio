@@ -18,6 +18,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private static readonly UID UIDYouHave = new(0x070EE421);
 
     private readonly int currencyI = 23;
+    private readonly int rows = 5;
 
     private readonly MappedDB db;
     private readonly IDisposable resetUISubscription;
@@ -67,8 +68,12 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         preload.CreateDialogBackground(entity, animateOverlay: false, out var bgRect);
         CreateTopbar(entity, gambling.Currency);
-        for (int i = 0; i < gambling.Cards.Count; i++)
-            AddTrade(entity, gambling, i, bgRect);
+        for (int i = 0; i < rows; i++) {
+            Random rnd = new Random();
+            var selectedCard = gambling.Cards.OrderBy(c => rnd.Next()).First();
+            AddTrade(entity, gambling, selectedCard, i, bgRect);
+        }
+
         CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
 
         return entity;
@@ -141,13 +146,13 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
     }
 
-    private void AddTrade(DefaultEcs.Entity entity, components.DialogGambling gambling, int index, Rect bgRect)
+    private void AddTrade(DefaultEcs.Entity entity, components.DialogGambling gambling, int selectedCardId, int index, Rect bgRect)
     {
-        var card = db.Spells.FirstOrDefault(c => c.CardId.EntityId == gambling.Cards[index]);
+        var card = db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCardId);
         if (card == default) return;
 
         var purchase = new components.ui.ElementId(index);
-        var offset = bgRect.Center + new Vector2(-205, -120 + 10 * index);
+        var offset = bgRect.Center + new Vector2(-205, -120 + 55 * index);
 
         preload.CreateImage(entity)
             .With(offset)
