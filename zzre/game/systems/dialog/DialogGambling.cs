@@ -146,13 +146,21 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
     }
 
-    private void AddTrade(DefaultEcs.Entity entity, components.DialogGambling gambling, int selectedCardId, int index, Rect bgRect)
+    private void AddTrade(DefaultEcs.Entity entity, components.DialogGambling gambling, int? selectedCardId, int index, Rect bgRect)
     {
         var card = db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCardId);
-        if (card == default) return;
 
         var purchase = new components.ui.ElementId(index);
         var offset = bgRect.Center + new Vector2(-205, -120 + 55 * index);
+
+        if (card == null) {
+        preload.CreateLabel(entity)
+            .With(offset + new Vector2(40, 16))
+            .WithText("Blank")
+            .With(preload.Fnt000)
+            .Build();
+            return;
+        };
 
         preload.CreateImage(entity)
             .With(offset)

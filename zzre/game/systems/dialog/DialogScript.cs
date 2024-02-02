@@ -272,7 +272,7 @@ public partial class DialogScript : BaseScript
             entity.Set(new messages.DialogGambling(entity, new()));
         }
         for (int i = 0; i < count; i++)
-            entity.Get<messages.DialogGambling>().Cards.Add(id);
+            entity.Get<messages.DialogGambling>().Cards.Add(type == 1 ? id : null);
     }
 
     private bool IfTriggerIsActive(DefaultEcs.Entity entity, int triggerI)
