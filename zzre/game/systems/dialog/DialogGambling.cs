@@ -10,12 +10,29 @@ namespace zzre.game.systems;
 public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, messages.DialogGambling>
 {
     private static readonly components.ui.ElementId IDExit = new(1000);
-    private static readonly components.ui.ElementId IDYes = new(1001);
-    private static readonly components.ui.ElementId IDNo = new(1002);
+    private static readonly components.ui.ElementId IDRepeat = new(1001);
+    private static readonly components.ui.ElementId IDYes = new(1002);
+    private static readonly components.ui.ElementId IDNo = new(1003);
 
     private static readonly UID UIDPurchaseItem = new(0x7B973CA1);
     private static readonly UID UIDItemProfile = new(0x2C2084B1);
     private static readonly UID UIDYouHave = new(0x070EE421);
+
+    private static readonly UID[] UIDClassNames = new UID[]
+    {
+        new(0x448DD8A1), // Nature
+        new(0x30D5D8A1), // Air
+        new(0xC15AD8A1), // Water
+        new(0x6EE2D8A1), // Light
+        new(0x44AAD8A1), // Energy
+        new(0xEC31D8A1), // Psi
+        new(0xAD78D8A1), // Stone
+        new(0x6483DCA1), // Ice
+        new(0x8EC9DCA1), // Fire
+        new(0x8313DCA1), // Dark
+        new(0xC659DCA1), // Chaos
+        new(0x3CE1DCA1)  // Metal
+    };
 
     private readonly int currencyI = 23;
     private readonly int rows = 5;
@@ -74,12 +91,13 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             AddTrade(entity, gambling, selectedCard, i, bgRect);
         }
 
-        CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
+        CreateSingleButton(entity, new UID(0x91A7E821), 1, IDRepeat, bgRect);
+        CreateSingleButton(entity, new UID(0xF7DFDC21), 0, IDExit, bgRect);
 
         return entity;
     }
 
-    private DefaultEcs.Entity CreateItemProfile(DefaultEcs.Entity parent, components.DialogGambling gambling, SpellRow card)
+    private DefaultEcs.Entity CreateSpellProfile(DefaultEcs.Entity parent, components.DialogGambling gambling, SpellRow card)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
@@ -151,7 +169,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var card = db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCardId);
 
         var purchase = new components.ui.ElementId(index);
-        var offset = bgRect.Center + new Vector2(-205, -120 + 55 * index);
+        var offset = bgRect.Center + new Vector2(25-205, 20-30-120 + 50 * index);
 
         if (card == null) {
         preload.CreateLabel(entity)
@@ -168,14 +186,15 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
 
         preload.CreateLabel(entity)
-            .With(offset + new Vector2(50, 16))
-            .WithText(card.Name)
+            .With(offset + new Vector2(49, 16-9))
+            .WithLineHeight(13)
+            .WithText(GetSpellLabel(card))
             .With(preload.Fnt002)
             .Build();
 
         preload.CreateButton(entity)
             .With(purchase)
-            .With(offset + new Vector2(365, 0))
+            .With(offset + new Vector2(370, -1))
             .With(new components.ui.ButtonTiles(20, 21))
             .With(preload.Btn001)
             .Build();
@@ -183,12 +202,30 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         gambling.CardPurchaseButtons[purchase] = card;
     }
 
+    private string GetSpellLabel(SpellRow card) {
+        var name = card.Name;
+        var type = card.Type == 0 ? "Active Spell" : "Passive Spell";
+        var className = db.GetText(UIDClassNames[card.PriceA-1]).Text;
+        var prices = GetSpellPrices(card);
+        return $"{name}\n{type} - {className} - {prices}";
+    }
+
+    private string GetSpellPrices(SpellRow card) {
+        var fontAlt = card.Type == 0 ? 5 : 4;
+        var priceA = fontAlt * 1000 + card.PriceA;
+        var priceB = fontAlt * 1000 + card.PriceB;
+        var priceC = fontAlt * 1000 + card.PriceC;
+        return $"{{{priceA}}}{{{priceB}}}{{{priceC}}}";
+    }
+
+
     private const float ButtonOffsetY = -50f;
-    private void CreateSingleButton(DefaultEcs.Entity entity, UID textUID, components.ui.ElementId elementId, Rect bgRect)
+    private const float RepeatButtonOffsetY = -40f;
+    private void CreateSingleButton(DefaultEcs.Entity entity, UID textUID, int offset, components.ui.ElementId elementId, Rect bgRect)
     {
         preload.CreateButton(entity)
             .With(elementId)
-            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y + ButtonOffsetY))
+            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y + ButtonOffsetY + RepeatButtonOffsetY * offset))
             .With(new components.ui.ButtonTiles(0, 1))
             .With(components.ui.FullAlignment.TopCenter)
             .With(preload.Btn000)
@@ -207,7 +244,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         if (gambling.CardPurchaseButtons.TryGetValue(clickedId, out var card)) {
             gambling.Profile.Dispose();
             gambling.Purchase = card;
-            gambling.Profile = CreateItemProfile(uiEntity, gambling, card);
+            gambling.Profile = CreateSpellProfile(uiEntity, gambling, card);
         }
         else if (clickedId == IDYes) {
             var purchase = gambling.Purchase!;
@@ -221,6 +258,10 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         else if (clickedId == IDNo) {
             gambling.Profile.Dispose();
             gambling.Purchase = null;
+            gambling.Profile = CreatePrimary(uiEntity, gambling);
+        }
+        else if (clickedId == IDRepeat) {
+            gambling.Profile.Dispose();
             gambling.Profile = CreatePrimary(uiEntity, gambling);
         }
         else if (clickedId == IDExit) {
