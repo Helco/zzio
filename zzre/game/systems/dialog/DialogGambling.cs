@@ -79,7 +79,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         return entity;
     }
 
-    private DefaultEcs.Entity CreateItemProfile(DefaultEcs.Entity parent, components.DialogGambling gambling, ItemRow card)
+    private DefaultEcs.Entity CreateItemProfile(DefaultEcs.Entity parent, components.DialogGambling gambling, SpellRow card)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
@@ -94,7 +94,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         preload.CreateImage(entity)
             .With(bgRect.Center + new Vector2(-20, -100))
-            .With(preload.Itm000, card.CardId.EntityId)
+            .With(preload.Spl000, card.CardId.EntityId)
             .Build();
 
         preload.CreateLabel(entity)
@@ -193,34 +193,32 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     }
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId clickedId)
     {
-        // var uiEntity = Set.GetEntities()[0];
-        // ref var gambling = ref uiEntity.Get<components.DialogGambling>();
-        //
-        // if (gambling.CardPurchaseButtons.TryGetValue(clickedId, out var card)) {
-        //     gambling.Profile.Dispose();
-        //     gambling.Purchase = card;
-        //     gambling.Profile = CreateItemProfile(uiEntity, gambling, card);
-        // }
-        // else if (clickedId == IDYes) {
-        //     var purchase = gambling.Purchase!;
-        //     var price = gambling.Cards.First(trade => trade.uid == purchase.Uid).price;
-        //
-        //     var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
-        //     inventory.Add(purchase.CardId);
-        //     inventory.RemoveCards(gambling.Currency.CardId, (uint)price);
-        //
-        //     gambling.Profile.Dispose();
-        //     gambling.Profile = CreatePrimary(uiEntity, gambling);
-        // }
-        // else if (clickedId == IDNo) {
-        //     gambling.Profile.Dispose();
-        //     gambling.Purchase = null;;
-        //     gambling.Profile = CreatePrimary(uiEntity, gambling);
-        // }
-        // else if (clickedId == IDExit) {
-        //     gambling.DialogEntity.Set(components.DialogState.NextScriptOp);
-        //     uiEntity.Dispose();
-        // }
+        var uiEntity = Set.GetEntities()[0];
+        ref var gambling = ref uiEntity.Get<components.DialogGambling>();
+
+        if (gambling.CardPurchaseButtons.TryGetValue(clickedId, out var card)) {
+            gambling.Profile.Dispose();
+            gambling.Purchase = card;
+            gambling.Profile = CreateItemProfile(uiEntity, gambling, card);
+        }
+        else if (clickedId == IDYes) {
+            var purchase = gambling.Purchase!;
+
+            var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+            inventory.Add(purchase.CardId);
+
+            gambling.Profile.Dispose();
+            gambling.Profile = CreatePrimary(uiEntity, gambling);
+        }
+        else if (clickedId == IDNo) {
+            gambling.Profile.Dispose();
+            gambling.Purchase = null;
+            gambling.Profile = CreatePrimary(uiEntity, gambling);
+        }
+        else if (clickedId == IDExit) {
+            gambling.DialogEntity.Set(components.DialogState.NextScriptOp);
+            uiEntity.Dispose();
+        }
     }
 
     protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.DialogGambling component)
