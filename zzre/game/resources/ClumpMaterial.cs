@@ -72,11 +72,15 @@ public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, ModelMaterial>
 
     protected override ModelMaterial Load(ClumpMaterialInfo info)
     {
-        var material = new ModelMaterial(diContainer) { HasTexShift = true, IsInstanced = true };
-        material.Blend = info.BlendMode;
-        material.DepthTest = info.DepthTest;
-        material.DepthWrite = info.DepthWrite;
-        material.HasEnvMap = info.HasEnvMap;
+        var material = new ModelMaterial(diContainer)
+        {
+            HasTexShift = true,
+            IsInstanced = true,
+            Blend = info.BlendMode,
+            DepthTest = info.DepthTest,
+            DepthWrite = info.DepthWrite,
+            HasEnvMap = info.HasEnvMap
+        };
 
         (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(TextureBasePaths, info.RWMaterial);
         material.Projection.BufferRange = camera.ProjectionRange;
