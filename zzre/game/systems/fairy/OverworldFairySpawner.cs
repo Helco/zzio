@@ -75,6 +75,8 @@ public partial class OverworldFairySpawner : AEntitySetSystem<float>
         fairy.Set<components.FairyHoverOffset>();
         fairy.Set(components.FairyHoverBehind.Normal);
         fairy.Set(components.FairyHoverState.Behind);
+        fairy.Set(components.FindActorFloorCollisions.Default);
+        fairy.Set(components.ActorLighting.Default);
         fairy.Set<components.Velocity>();
         fairy.Set(new components.FairyAnimation()
         {

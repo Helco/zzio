@@ -88,6 +88,8 @@ public partial class NPCScript : BaseScript
         entity.Set(new Sphere(Vector3.Zero, colliderSize));
         entity.Set(new components.NonFairyAnimation(Random.Shared));
         entity.Set<components.PuppetActorMovement>();
+        entity.Set(components.FindActorFloorCollisions.Default);
+        entity.Set(components.ActorLighting.Default);
     }
 
     private void SetCamera(DefaultEcs.Entity entity, int triggerArg)
