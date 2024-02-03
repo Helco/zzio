@@ -211,11 +211,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     }
 
     private string GetSpellPrices(SpellRow card) {
-        var fontAlt = card.Type == 0 ? 5 : 4;
-        var priceA = fontAlt * 1000 + card.PriceA;
-        var priceB = fontAlt * 1000 + card.PriceB;
-        var priceC = fontAlt * 1000 + card.PriceC;
-        return $"{{{priceA}}}{{{priceB}}}{{{priceC}}}";
+        var sheet = card.Type == 0 ? 5 : 4;
+        return $"{{{fontAlt}{card.PriceA}}}{{{fontAlt}{card.PriceB}}}{{{fontAlt}{card.PriceC}}}";
     }
 
 
