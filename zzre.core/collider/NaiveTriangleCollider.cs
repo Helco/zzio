@@ -12,7 +12,7 @@ public abstract class NaiveTriangleCollider : TriangleCollider
         .Select(GetTriangle);
 
     public override Raycast? Cast(Ray ray, float maxDist) => CoarseCastable.Cast(ray) == null ? null : Triangles
-        .Select(t => ray.Cast(t.Triangle))
+        .Select(t => ray.Cast(t.Triangle, t.VertexTriangle))
         .Where(c => c?.Distance <= maxDist)
         .OrderBy(c => c?.Distance ?? float.PositiveInfinity)
         .FirstOrDefault();

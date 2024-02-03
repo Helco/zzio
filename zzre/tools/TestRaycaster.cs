@@ -95,7 +95,7 @@ public class TestRaycaster : ListDisposable
             new RaycastObject()
             {
                 Geometry = worldCollider,
-                Shader = ShaderNormal
+                Shader = ShaderMaterialIndex
             }
         };
     }
@@ -184,18 +184,10 @@ public class TestRaycaster : ListDisposable
         return new IColor(d, d, d, 255);
     }
 
-    private IColor ShaderBarycentric(RaycastObject obj, Vector3 _1, Raycast r)
+    private IColor ShaderMaterialIndex(RaycastObject obj, Vector3 _1, Raycast r)
     {
-        var triangle = obj.Geometry switch
-        {
-            Triangle t => t,
-            //AtomicTreeCollider a => a.LastTriangle,
-            //WorldCollider w => w.LastTriangle,
-            _ => throw new InvalidOperationException()
-        };
-        var bary = triangle.Barycentric(r.Point);
-
-        byte Color(float p) => (byte)(p * 255f);
-        return new IColor(Color(bary.X), Color(bary.Y), Color(bary.Z), 255);
+        int m = r.VertexTriangle?.m ?? 0;
+        byte d = (byte)(m * 255 / 31);
+        return new IColor(d, d, d, 25);
     }
 }

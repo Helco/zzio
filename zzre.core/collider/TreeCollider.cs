@@ -67,7 +67,6 @@ public abstract partial class TreeCollider : TriangleCollider
             return prevHit;
 
         Raycast? myHit;
-        Triangle newTriangle = default;
         if (sector.count == RWCollision.SplitCount)
             myHit = RaycastNode(sector.index, ray, minDist, maxDist);
         else
@@ -76,14 +75,11 @@ public abstract partial class TreeCollider : TriangleCollider
             for (int i = 0; i < sector.count; i++)
             {
                 var t = GetTriangle(Collision.map[sector.index + i]);
-                var newHit = ray.Cast(t.Triangle);
+                var newHit = ray.Cast(t.Triangle, t.VertexTriangle);
                 if (newHit == null)
                     continue;
                 if (newHit.Value.Distance < (myHit?.Distance ?? float.MaxValue))
-                {
                     myHit = newHit;
-                    newTriangle = t.Triangle;
-                }
             }
         }
 
