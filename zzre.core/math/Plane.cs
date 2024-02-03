@@ -4,30 +4,21 @@ using System.Numerics;
 
 namespace zzre;
 
-public partial struct Plane : IRaycastable, IIntersectable
+public readonly partial struct Plane : IRaycastable, IIntersectable
 {
-    private Vector3 normal;
-    public Vector3 Normal
-    {
-        get => normal;
-        set => normal = Math.Abs(value.LengthSquared() - 1.0f) > 0.00001f
-            ? Vector3.Normalize(value)
-            : value;
-    }
-
-    public float Distance { get; set; }
+    public readonly Vector3 Normal;
+    public readonly float Distance;
 
     public Plane(Vector3 normal, float distance)
     {
-        this.normal = Vector3.Zero;
         Distance = distance;
         Normal = normal;
     }
 
-    public float SignedDistanceTo(Vector3 point) => Vector3.Dot(point, normal) - Distance;
+    public float SignedDistanceTo(Vector3 point) => Vector3.Dot(point, Normal) - Distance;
     public float DistanceTo(Vector3 point) => Math.Abs(SignedDistanceTo(point));
     public int SideOf(Vector3 point) => Math.Sign(SignedDistanceTo(point));
-    public Vector3 ClosestPoint(Vector3 point) => point - normal * SignedDistanceTo(point);
+    public Vector3 ClosestPoint(Vector3 point) => point - Normal * SignedDistanceTo(point);
 
     public PlaneIntersections SideOf(Box box) => SideOf(box.Corners());
     public PlaneIntersections SideOf(OrientedBox box) => SideOf(box.AABox.Corners(box.Orientation));

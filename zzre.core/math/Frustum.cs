@@ -80,18 +80,19 @@ public struct Frustum
         if (planes == null)
             planes = new Plane[6];
         var row4 = new Vector3(Projection.M14, Projection.M24, Projection.M34);
-        planes[0].Normal = row4 + new Vector3(Projection.M11, Projection.M21, Projection.M31);
-        planes[0].Distance = Projection.M44 + Projection.M41;
-        planes[1].Normal = row4 - new Vector3(Projection.M11, Projection.M21, Projection.M31);
-        planes[1].Distance = Projection.M44 - Projection.M41;
-        planes[2].Normal = row4 + new Vector3(Projection.M12, Projection.M22, Projection.M32);
-        planes[2].Distance = Projection.M44 + Projection.M42;
-        planes[3].Normal = row4 - new Vector3(Projection.M12, Projection.M22, Projection.M32);
-        planes[3].Distance = Projection.M44 - Projection.M42;
-        planes[4].Normal = new Vector3(Projection.M13, Projection.M23, Projection.M33);
-        planes[4].Distance = Projection.M43; // note no substraction because our depth range is 0->1
-        planes[5].Normal = row4 - new Vector3(Projection.M13, Projection.M23, Projection.M33);
-        planes[5].Distance = Projection.M44 - Projection.M43;
+        planes[0] = new(
+            row4 + new Vector3(Projection.M11, Projection.M21, Projection.M31),
+            Projection.M44 + Projection.M41);
+        planes[1] = new Plane(row4 - new Vector3(Projection.M11, Projection.M21, Projection.M31),
+            Projection.M44 - Projection.M41);
+        planes[2] = new Plane(row4 + new Vector3(Projection.M12, Projection.M22, Projection.M32),
+            Projection.M44 + Projection.M42);
+        planes[3] = new Plane(row4 - new Vector3(Projection.M12, Projection.M22, Projection.M32),
+            Projection.M44 - Projection.M42);
+        planes[4] = new Plane(new Vector3(Projection.M13, Projection.M23, Projection.M33),
+            Projection.M43); // note no substraction because our depth range is 0->1
+        planes[5] = new Plane(row4 - new Vector3(Projection.M13, Projection.M23, Projection.M33),
+            Projection.M44 - Projection.M43);
     }
 
     public PlaneIntersections Intersects(Plane plane)

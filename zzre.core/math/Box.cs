@@ -7,39 +7,14 @@ namespace zzre;
 
 // unfortunately very much copy-paste from Rect, CSharp has no better generics support
 
-public partial struct Box : IRaycastable, IIntersectable
+public readonly partial struct Box : IRaycastable, IIntersectable
 {
-    public Vector3 Center;
-    public Vector3 Size;
+    public readonly Vector3 Center;
+    public readonly Vector3 Size;
 
-    public Vector3 HalfSize
-    {
-        get => Size / 2;
-        set => Size = value * 2;
-    }
-
-    public Vector3 Min
-    {
-        get => Center - HalfSize;
-        set
-        {
-            var sizeDelta = Min - value;
-            Center -= sizeDelta / 2;
-            Size += sizeDelta;
-        }
-    }
-
-    public Vector3 Max
-    {
-        get => Center + HalfSize;
-        set
-        {
-            var sizeDelta = value - Max;
-            Center += sizeDelta / 2;
-            Size += sizeDelta;
-        }
-    }
-
+    public Vector3 HalfSize => Size / 2;
+    public Vector3 Min => Center - HalfSize;
+    public Vector3 Max => Center + HalfSize;
     public float MaxSizeComponent => Math.Max(Math.Max(Size.X, Size.Y), Size.Z);
 
     public static Box Zero => new();
