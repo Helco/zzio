@@ -60,6 +60,8 @@ public class PlayerSpawner : ISystem<float>
         playerEntity.Set(components.PhysicParameters.Standard);
         playerEntity.Set(new components.NonFairyAnimation(Random.Shared));
         playerEntity.Set<components.PuppetActorMovement>();
+        playerEntity.Set(components.FindActorFloorCollisions.Default);
+        playerEntity.Set(components.ActorLighting.Default);
         var playerColliderSize = GetColliderSize(playerEntity);
         playerEntity.Set(new components.HumanPhysics(playerColliderSize));
         playerEntity.Set(new Sphere(Vector3.Zero, playerColliderSize));

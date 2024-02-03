@@ -33,6 +33,8 @@ public struct FColor
         w.Write(a);
     }
 
+    public static FColor operator +(FColor a, FColor b) => new(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
+    public static FColor operator -(FColor a, FColor b) => new(a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a);
     public static FColor operator *(FColor a, FColor b) => new(a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a);
 
     public static FColor operator *(FColor a, float f) => new(a.r * f, a.g * f, a.b * f, a.a * f);

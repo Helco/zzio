@@ -87,6 +87,8 @@ public class Game : BaseDisposable, ITagContainer
             new systems.BehaviourMagicBridge(this),
             new systems.MoveToLocation(this),
             new systems.AdvanceAnimation(this),
+            new systems.FindActorFloorCollisions(this),
+            new systems.ActorLighting(this),
 
             // Effects
             new systems.effect.EffectCombiner(this),

@@ -63,6 +63,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private IntersectionPrimitive intersectionPrimitive;
     private bool updateIntersectionPrimitive;
     private float intersectionSize = 0.5f;
+    private bool showVertexColors = false;
 
     public IResource? CurrentResource { get; private set; }
     public Window Window { get; }
@@ -82,6 +83,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         Window.OnKeyDown += HandleKeyDown;
         var menuBar = new MenuBarWindowTag(Window);
         menuBar.AddButton("Open", HandleMenuOpen);
+        menuBar.AddCheckbox("View/Vertex Colors", () => ref showVertexColors, HandleShowVertexColors);
         var gridRenderer = new DebugLineRenderer(diContainer);
         //gridRenderer.Material.LinkTransformsTo(controls.Projection, controls.View, controls.World);
         gridRenderer.AddGrid();
@@ -168,6 +170,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         if (resource.Equals(CurrentResource))
             return;
         CurrentResource = null;
+        showVertexColors = false;
 
         worldMesh = new WorldMesh(diContainer, resource);
         AddDisposable(worldMesh);
@@ -243,6 +246,18 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     {
         openFileModal.InitialSelectedResource = CurrentResource;
         openFileModal.Modal.Open();
+    }
+
+    private void HandleShowVertexColors()
+    {
+        if (showVertexColors)
+        {
+            foreach (var material in materials)
+                material.Texture.Texture = worldRenderer.WhiteTexture;
+        }
+        else
+            worldRenderer.LoadMaterials();
+        fbArea.IsDirty = true;
     }
 
     private void HandleStatisticsContent()

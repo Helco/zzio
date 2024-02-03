@@ -29,6 +29,7 @@ public class WorldRenderer : BaseDisposable
             visibleMeshSections.Clear();
         }
     }
+    public Texture WhiteTexture => whiteTexture;
 
     private Frustum viewFrustum;
     private ModelMaterial[] materials = Array.Empty<ModelMaterial>();
@@ -76,7 +77,7 @@ public class WorldRenderer : BaseDisposable
         materials = Array.Empty<ModelMaterial>();
     }
 
-    private void LoadMaterials()
+    public void LoadMaterials()
     {
         var textureBase = new FilePath("resources/textures/worlds");
         var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
