@@ -25,7 +25,8 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         Box,
         OrientedBox,
         Sphere,
-        Triangle
+        Triangle,
+        Line
     }
 
     private const byte DebugPlaneAlpha = 0xA0;
@@ -578,6 +579,13 @@ public class WorldViewer : ListDisposable, IDocumentEditor
                     center + up * hh);
                 intersections = worldCollider.Intersections(triangle);
                 edges = triangle.Edges();
+                break;
+
+            case IntersectionPrimitive.Line:
+                var pos = camera.Location.GlobalPosition;
+                var line = new Line(pos, pos - camera.Location.GlobalForward * intersectionSize);
+                intersections = worldCollider.Intersections(line);
+                edges = new[] { line };
                 break;
 
             default: return;

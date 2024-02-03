@@ -25,15 +25,4 @@ public readonly partial struct Line : IIntersectable
     public Raycast? Cast(OrientedBox box) => CheckRaycast(new Ray(Start, Direction).Cast(box));
     public Raycast? Cast(Plane plane) => CheckRaycast(new Ray(Start, Direction).Cast(plane));
     public Raycast? Cast(Triangle triangle) => CheckRaycast(new Ray(Start, Direction).Cast(triangle));
-
-    public bool Intersects(Box box) => Cast(box) != null;
-    public bool Intersects(OrientedBox box) => Cast(box) != null;
-    public bool Intersects(Sphere sphere) => Cast(sphere) != null;
-    public bool Intersects(Plane plane) => Cast(plane) != null;
-    public bool Intersects(Triangle triangle) => Cast(triangle) != null;
-
-    // Line-Line intersections in 3D are super rare and are not necessary for zzio.
-    // This will be a fun surprise for anyone actually rellying on this and taking
-    // zzio math without looking into what it actually can and cannot do.
-    public bool Intersects(Line line) => false;
 }

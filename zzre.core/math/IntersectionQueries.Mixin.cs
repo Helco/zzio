@@ -23,7 +23,7 @@ partial class IntersectionQueries
         { a: Sphere A, b: Sphere B } => Intersects(A, B),
         { a: Sphere A, b: Plane B } => Intersects(A, B),
         { a: Plane A, b: Plane B } => Intersects(A, B),
-        { a: IRaycastable raycastable, b: Line line } => raycastable.Cast(line).HasValue,
+        { a: IRaycastable raycastable, b: Line line } => a.Intersects(line.Start) || raycastable.Cast(line).HasValue,
         _ when shouldTryToSwitch => Intersects(b, a, false),
         _ => throw new ArgumentException($"Intersection between {a.GetType().Name} and {b.GetType().Name} is missing")
     };
