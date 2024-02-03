@@ -212,9 +212,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
     private string GetSpellPrices(SpellRow card) {
         var sheet = card.Type == 0 ? 5 : 4;
-        return $"{{{fontAlt}{card.PriceA}}}{{{fontAlt}{card.PriceB}}}{{{fontAlt}{card.PriceC}}}";
+        return $"{{{sheet}{card.PriceA}}}{{{sheet}{card.PriceB}}}{{{sheet}{card.PriceC}}}";
     }
-
 
     private const float ButtonOffsetY = -50f;
     private const float RepeatButtonOffsetY = -40f;
