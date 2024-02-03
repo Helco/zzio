@@ -1,14 +1,17 @@
 ﻿using System.Numerics;
+using zzio;
+using zzio.rwbs;
 
 namespace zzre;
 
-public readonly struct Raycast
+public readonly record struct Raycast(
+    float Distance,
+    Vector3 Point,
+    Vector3 Normal,
+    WorldTriangleId? TriangleId = null)
 {
-    public readonly float Distance;
-    public readonly Vector3 Point;
-    public readonly Vector3 Normal;
-
-    public Raycast(float d, Vector3 p, Vector3 n) => (Distance, Point, Normal) = (d, p, n);
+    public Intersection AsIntersection(Triangle triangle) =>
+        new Intersection(Point, triangle, TriangleId);
 }
 
 public interface IRaycastable

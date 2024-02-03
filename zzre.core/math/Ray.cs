@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using zzio;
 using zzio.rwbs;
 
 namespace zzre;
@@ -129,15 +130,8 @@ public readonly struct Ray
         float t = (planeDistance - rayPos) / angle;
         return angle >= 0.0f || float.IsNaN(t) || t < 0 ? null : t;
     }
-    public Raycast? Cast(CollisionSectorType planeType, float planeDistance)
-    {
-        var t = DistanceTo(planeType, planeDistance);
-        return t.HasValue
-            ? new Raycast(t.Value, Start + Direction * t.Value, planeType.ToNormal())
-            : null;
-    }
 
-    public Raycast? Cast(Triangle triangle)
+    public Raycast? Cast(Triangle triangle, WorldTriangleId? triangleId = null)
     {
         var cast = Cast(triangle.Plane);
         if (cast == null)
@@ -146,11 +140,6 @@ public readonly struct Ray
         return bary.X >= 0.0f && bary.X <= 1.0f &&
             bary.Y >= 0.0f && bary.Y <= 1.0f &&
             bary.Z >= 0.0f && bary.Z <= 1.0f
-            ? cast : null;
+            ? cast.Value with { TriangleId = triangleId } : null;
     }
-
-    public bool Intersects(Box box) => Cast(box) != null;
-    public bool Intersects(OrientedBox box) => Cast(box) != null;
-    public bool Intersects(Sphere sphere) => Cast(sphere) != null;
-    public bool Intersects(Plane plane) => Cast(plane) != null;
 }

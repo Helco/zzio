@@ -183,19 +183,4 @@ public class TestRaycaster : ListDisposable
         byte d = (byte)Math.Clamp(255.0f - r.Distance, 0, 255f);
         return new IColor(d, d, d, 255);
     }
-
-    private IColor ShaderBarycentric(RaycastObject obj, Vector3 _1, Raycast r)
-    {
-        var triangle = obj.Geometry switch
-        {
-            Triangle t => t,
-            AtomicTreeCollider a => a.LastTriangle,
-            WorldCollider w => w.LastTriangle,
-            _ => throw new InvalidOperationException()
-        };
-        var bary = triangle.Barycentric(r.Point);
-
-        byte Color(float p) => (byte)(p * 255f);
-        return new IColor(Color(bary.X), Color(bary.Y), Color(bary.Z), 255);
-    }
 }

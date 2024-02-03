@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace zzre;
 
-public readonly struct Line : IIntersectable
+public readonly partial struct Line : IIntersectable
 {
     public readonly Vector3 Start;
     public readonly Vector3 End;
@@ -16,7 +16,6 @@ public readonly struct Line : IIntersectable
 
     public float PhaseOf(Vector3 point) => Vector3.Dot(point - Start, Vector) / LengthSq;
     public Vector3 ClosestPoint(Vector3 point) => Start + Vector * Math.Clamp(PhaseOf(point), 0f, 1f);
-    public bool Intersects(Vector3 point) => MathEx.CmpZero((point - ClosestPoint(point)).LengthSquared());
 
     private Raycast? CheckRaycast(Raycast? cast) =>
         cast == null || cast.Value.Distance * cast.Value.Distance <= LengthSq ? cast : null;
@@ -26,10 +25,4 @@ public readonly struct Line : IIntersectable
     public Raycast? Cast(OrientedBox box) => CheckRaycast(new Ray(Start, Direction).Cast(box));
     public Raycast? Cast(Plane plane) => CheckRaycast(new Ray(Start, Direction).Cast(plane));
     public Raycast? Cast(Triangle triangle) => CheckRaycast(new Ray(Start, Direction).Cast(triangle));
-
-    public bool Intersects(Box box) => Cast(box) != null;
-    public bool Intersects(OrientedBox box) => Cast(box) != null;
-    public bool Intersects(Sphere sphere) => Cast(sphere) != null;
-    public bool Intersects(Plane plane) => Cast(plane) != null;
-    public bool Intersects(Triangle triangle) => Cast(triangle) != null;
 }
