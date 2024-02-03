@@ -528,7 +528,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         rayRenderer.Add(IColor.Green, ray.Start, ray.Start + ray.Direction * (cast?.Distance ?? 100f));
         if (cast.HasValue)
         {
-            rayRenderer.Add(IColor.Green, worldCollider.LastTriangle.Edges());
+            //rayRenderer.Add(IColor.Green, worldCollider.LastTriangle.Edges());
             rayRenderer.Add(new IColor(255, 0, 255, 255), cast.Value.Point, cast.Value.Point + cast.Value.Normal * 0.2f);
         }
         fbArea.IsDirty = true;

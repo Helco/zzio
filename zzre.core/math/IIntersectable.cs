@@ -1,41 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 
 namespace zzre;
 
-public interface IIntersectable
+public interface IIntersectable<T>
 {
-    public bool Intersects(Box box);
-    public bool Intersects(OrientedBox box);
-    public bool Intersects(Sphere sphere);
-    public bool Intersects(Plane plane);
-    public bool Intersects(Triangle triangle);
-    public bool Intersects(Line line);
+    public bool Intersects(in T item);
 }
 
-public interface IIntersectionable : IIntersectable
+public interface IIntersectionable<T> : IIntersectable<T>
 {
-    public IEnumerable<Intersection> Intersections(Box box);
-    public IEnumerable<Intersection> Intersections(OrientedBox box);
-    public IEnumerable<Intersection> Intersections(Sphere sphere);
-    public IEnumerable<Intersection> Intersections(Triangle triangle);
-    public IEnumerable<Intersection> Intersections(Line line);
+    public IEnumerable<Intersection> Intersections(in T item);
+    bool IIntersectable<T>.Intersects(in T item) => Intersections(item).Any();
 }
 
-public static class IIntersectableExtensions
+public interface IIntersectable :
+    IIntersectable<Vector3>,
+    IIntersectable<Box>,
+    IIntersectable<OrientedBox>,
+    IIntersectable<Sphere>,
+    IIntersectable<Plane>,
+    IIntersectable<Triangle>,
+    IIntersectable<Line>
 {
-    public static bool Intersects(this IIntersectable a, IIntersectable b) => Intersects(a, b, true);
+    public bool Intersects(IIntersectable other) =>
+        IntersectionQueries.Intersects(this, other, true);
+}
 
-    private static bool Intersects(IIntersectable a, IIntersectable b, bool shouldTryToSwitch) => b switch
-    {
-        Box box => a.Intersects(box),
-        OrientedBox box => a.Intersects(box),
-        Sphere sphere => a.Intersects(sphere),
-        Plane plane => a.Intersects(plane),
-        Triangle triangle => a.Intersects(triangle),
-        Line line when a is IRaycastable raycastable => raycastable.Cast(line).HasValue,
-        _ => shouldTryToSwitch
-            ? Intersects(b, a, false)
-            : throw new ArgumentException("One of the arguments has to fit the IIntersectable interface")
-    };
+public interface IIntersectionable :
+    IIntersectionable<Box>,
+    IIntersectionable<OrientedBox>,
+    IIntersectionable<Sphere>,
+    IIntersectionable<Triangle>,
+    IIntersectionable<Line>
+{
 }

@@ -189,8 +189,8 @@ public class TestRaycaster : ListDisposable
         var triangle = obj.Geometry switch
         {
             Triangle t => t,
-            AtomicTreeCollider a => a.LastTriangle,
-            WorldCollider w => w.LastTriangle,
+            //AtomicTreeCollider a => a.LastTriangle,
+            //WorldCollider w => w.LastTriangle,
             _ => throw new InvalidOperationException()
         };
         var bary = triangle.Barycentric(r.Point);

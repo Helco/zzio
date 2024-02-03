@@ -6,7 +6,7 @@ using static zzre.MathEx;
 
 namespace zzre;
 
-public readonly struct Triangle : IRaycastable, IIntersectable
+public readonly partial struct Triangle : IRaycastable, IIntersectable
 {
     public readonly Vector3 A, B, C;
     public Line AB => new(A, B);
@@ -38,7 +38,7 @@ public readonly struct Triangle : IRaycastable, IIntersectable
     public Vector3 ClosestPoint(Vector3 point)
     {
         var closest = Plane.ClosestPoint(point);
-        if (Intersects(closest))
+        if (IntersectionQueries.Intersects(this, closest))
             return closest;
 
         var closestAB = AB.ClosestPoint(point);
@@ -53,73 +53,6 @@ public readonly struct Triangle : IRaycastable, IIntersectable
             return closestBC;
         return closestAC;
     }
-
-    public bool Intersects(Vector3 point)
-    {
-        var (localA, localB, localC) = (A - point, B - point, C - point);
-        var normalPAB = Vector3.Cross(localA, localB);
-        var normalPBC = Vector3.Cross(localB, localC);
-        var normalPCA = Vector3.Cross(localC, localA);
-        return
-            Vector3.Dot(normalPBC, normalPAB) >= 0 &&
-            Vector3.Dot(normalPBC, normalPCA) >= 0;
-    }
-
-    public bool Intersects(Box box) => Intersects(box.Corners(), Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ);
-    public bool Intersects(Box box, Location boxLoc)
-    {
-        var (boxRight, boxUp, boxForward) = boxLoc.GlobalRotation.UnitVectors();
-        return Intersects(box.Corners(boxLoc), boxRight, boxUp, boxForward);
-    }
-    public bool Intersects(OrientedBox box)
-    {
-        var (boxRight, boxUp, boxForward) = box.Orientation.UnitVectors();
-        return Intersects(box.Box.Corners(box.Orientation), boxRight, boxUp, boxForward);
-    }
-
-    private bool Intersects(IEnumerable<Vector3> boxCorners, Vector3 boxRight, Vector3 boxUp, Vector3 boxForward) =>
-        SATIntersects(boxCorners, Corners(), new[]
-        {
-            boxRight, boxUp, boxForward, Normal,
-            Vector3.Cross(boxRight, AB.Vector),
-            Vector3.Cross(boxRight, BC.Vector),
-            Vector3.Cross(boxRight, CA.Vector),
-            Vector3.Cross(boxUp, AB.Vector),
-            Vector3.Cross(boxUp, BC.Vector),
-            Vector3.Cross(boxUp, CA.Vector),
-            Vector3.Cross(boxForward, AB.Vector),
-            Vector3.Cross(boxForward, BC.Vector),
-            Vector3.Cross(boxForward, CA.Vector),
-        });
-
-    public bool Intersects(Triangle other) => SATIntersects(Corners(), other.Corners(), new[]
-    {
-        Normal, other.Normal,
-        SATCrossEdge(AB, other.AB),
-        SATCrossEdge(BC, other.AB),
-        SATCrossEdge(CA, other.AB),
-        SATCrossEdge(AB, other.BC),
-        SATCrossEdge(BC, other.BC),
-        SATCrossEdge(CA, other.BC),
-        SATCrossEdge(AB, other.CA),
-        SATCrossEdge(BC, other.CA),
-        SATCrossEdge(CA, other.CA),
-    });
-
-    public bool Intersects(Plane plane)
-    {
-        var da = plane.SignedDistanceTo(A);
-        var db = plane.SignedDistanceTo(B);
-        var dc = plane.SignedDistanceTo(C);
-
-        var liesOnPlane = CmpZero(da) && CmpZero(db) && CmpZero(dc);
-        var completlyOnLeft = da < 0 && db < 0 && dc < 0;
-        var completlyOnRight = da > 0 && db > 0 && dc > 0;
-        return liesOnPlane || !completlyOnLeft || !completlyOnRight;
-    }
-
-    public bool Intersects(Sphere sphere) => sphere.Intersects(this);
-    public bool Intersects(Line line) => Cast(line).HasValue;
 
     public Vector3 Barycentric(Vector3 point)
     {
@@ -184,7 +117,4 @@ public readonly struct Triangle : IRaycastable, IIntersectable
         var tmp4 = Sse.Shuffle(tmp2, tmp2, 0b11001001);
         return Sse.Subtract(tmp3, tmp4);
     }
-
-    public Raycast? Cast(Ray ray) => ray.Cast(this);
-    public Raycast? Cast(Line line) => line.Cast(this);
 }

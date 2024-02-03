@@ -7,7 +7,7 @@ namespace zzre;
 
 // unfortunately very much copy-paste from Rect, CSharp has no better generics support
 
-public struct Box : IRaycastable, IIntersectable
+public partial struct Box : IRaycastable, IIntersectable
 {
     public Vector3 Center;
     public Vector3 Size;
@@ -153,53 +153,9 @@ public struct Box : IRaycastable, IIntersectable
             forward * Math.Clamp(distanceZ, -HalfSize.Z, +HalfSize.Z);
     }
 
-    public bool Intersects(Vector3 pos) =>
-        pos.X >= Min.X && pos.X < Max.X &&
-        pos.Y >= Min.Y && pos.Y < Max.Y &&
-        pos.Z >= Min.Z && pos.Z < Max.Z;
-
-    public bool Intersects(Location location, Vector3 point) => Intersects(Vector3.Transform(point, location.WorldToLocal));
-
-    public bool Intersects(Box other) =>
-        Min.X <= other.Max.X && Max.X >= other.Min.X &&
-        Min.Y <= other.Max.Y && Max.Y >= other.Min.Y &&
-        Min.Z <= other.Max.Z && Max.Z >= other.Min.Z;
-
-    public bool Intersects(Box other, Location location) => Intersects(other.TransformToWorld(location));
-
-    public bool Intersects(Box other, Quaternion otherOrientation)
-    {
-        var (otherR, otherU, otherF) = otherOrientation.UnitVectors();
-        return MathEx.SATIntersects(Corners(), other.Corners(otherOrientation),
-            new[] { Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ },
-            new[] { otherR, otherU, otherF });
-    }
-
-    public bool Intersects(Location myLocation, Box other, Location otherLocation)
-    {
-        var (meTransformed, meRot) = TransformToWorld(myLocation);
-        var (meR, meU, meF) = meRot.UnitVectors();
-        var (otherTransformed, otherRot) = TransformToWorld(otherLocation);
-        var (otherR, otherU, otherF) = otherRot.UnitVectors();
-        return MathEx.SATIntersects(meTransformed.Corners(meRot), otherTransformed.Corners(otherRot),
-            new[] { meR, meU, meF }, new[] { otherR, otherU, otherF });
-    }
-
-    public bool Intersects(OrientedBox o) => Intersects(o.Box, o.Orientation);
-
     internal Interval IntervalOn(Vector3 axis) => new(Corners().Select(c => Vector3.Dot(c, axis)));
-    public bool Intersects(Plane plane) => IntervalOn(plane.Normal).Intersects(plane.Distance);
 
     internal Interval IntervalOn(Quaternion orientation, Vector3 axis) => new(Corners(orientation).Select(c => Vector3.Dot(c, axis)));
-    public bool Intersects(Quaternion orientation, Plane plane) => IntervalOn(orientation, plane.Normal).Intersects(plane.Distance);
-
-    public bool Intersects(Sphere sphere) => sphere.Intersects(this);
-    public bool Intersects(Triangle triangle) => triangle.Intersects(this);
-    public bool Intersects(Location myLoc, Sphere sphere) => sphere.Intersects(this, myLoc);
-    public bool Intersects(Line line) => Cast(line).HasValue;
-
-    public Raycast? Cast(Ray ray) => ray.Cast(this);
-    public Raycast? Cast(Line line) => line.Cast(this);
 
     public IEnumerable<Triangle> Triangles() => Triangles(Quaternion.Identity);
     public IEnumerable<Triangle> Triangles(Quaternion q)

@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace zzre;
 
-public readonly struct Sphere : IRaycastable, IIntersectable
+public readonly partial struct Sphere : IRaycastable, IIntersectable
 {
     public readonly Vector3 Center;
     public readonly float Radius;
@@ -27,22 +27,6 @@ public readonly struct Sphere : IRaycastable, IIntersectable
     public Sphere TransformToWorld(Location location) => new(
         Vector3.Transform(Center, location.LocalToWorld),
         Radius);
-
-    public bool IsInside(Vector3 point) =>
-        Vector3.DistanceSquared(point, Center) <= RadiusSq;
-
-    public bool Intersects(Vector3 point) => IsInside(point);
-    public bool Intersects(Sphere other) =>
-        (Center - other.Center).LengthSquared() <= MathF.Pow(Radius + other.Radius, 2f);
-    public bool Intersects(Box box) => Intersects(box.ClosestPoint(Center));
-    public bool Intersects(Box box, Location location) => Intersects(box.ClosestPoint(location, Center));
-    public bool Intersects(OrientedBox box) => Intersects(box.Box.ClosestPoint(box.Orientation, Center));
-    public bool Intersects(Plane plane) => Intersects(plane.ClosestPoint(Center));
-    public bool Intersects(Triangle triangle) => Intersects(triangle.ClosestPoint(Center));
-    public bool Intersects(Line line) => Cast(line).HasValue;
-
-    public Raycast? Cast(Ray ray) => ray.Cast(this);
-    public Raycast? Cast(Line line) => line.Cast(this);
 
     public IEnumerable<Line> Edges(int horizontalSections = 8, int verticalSections = 7)
     {
