@@ -6,7 +6,7 @@ namespace zzre;
 public readonly record struct Intersection(
     Vector3 Point,
     Triangle Triangle,
-    VertexTriangle? VertexTriangle = null)
+    WorldTriangleId? TriangleId = null)
 {
     public Vector3 Normal => Triangle.Normal;
 }

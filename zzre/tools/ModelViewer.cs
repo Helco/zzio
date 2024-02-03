@@ -308,7 +308,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             : collider!.Collision.map
                 .Skip(sector.index)
                 .Take(sector.count)
-                .Select(i => collider.GetTriangle(i).Item1)
+                .Select(i => collider.GetTriangle(i).Triangle)
                 .ToArray();
     }
 

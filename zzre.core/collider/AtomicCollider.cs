@@ -18,12 +18,14 @@ public static class AtomicCollider
 
 public interface IAtomicCollider
 {
+    public int AtomicId { get; set; }
     public Box Box { get; }
     public RWAtomicSection Atomic { get; }
 }
 
 public sealed class AtomicTreeCollider : TreeCollider, IAtomicCollider
 {
+    public int AtomicId { get; set; }
     public RWAtomicSection Atomic { get; }
     public Box Box { get; }
     protected override IRaycastable CoarseCastable => Box;
@@ -38,18 +40,20 @@ public sealed class AtomicTreeCollider : TreeCollider, IAtomicCollider
         Box = Box.FromMinMax(atomic.bbox1, atomic.bbox2);
     }
 
-    public override (Triangle, VertexTriangle) GetTriangle(int i)
+    public override (Triangle, WorldTriangleId) GetTriangle(int i)
     {
         var t = Atomic.triangles[i];
         return (new Triangle(
             Atomic.vertices[t.v1],
             Atomic.vertices[t.v2],
-            Atomic.vertices[t.v3]), t);
+            Atomic.vertices[t.v3]),
+            new WorldTriangleId(AtomicId, i));
     }
 }
 
 public sealed class AtomicNaiveCollider : NaiveTriangleCollider, IAtomicCollider
 {
+    public int AtomicId { get; set; }
     public RWAtomicSection Atomic { get; }
     public Box Box { get; }
     protected override IRaycastable CoarseCastable => Box;
@@ -62,12 +66,13 @@ public sealed class AtomicNaiveCollider : NaiveTriangleCollider, IAtomicCollider
         Box = Box.FromMinMax(atomic.bbox1, atomic.bbox2);
     }
 
-    public override (Triangle, VertexTriangle) GetTriangle(int i)
+    public override (Triangle, WorldTriangleId) GetTriangle(int i)
     {
         var t = Atomic.triangles[i];
         return (new Triangle(
             Atomic.vertices[t.v1],
             Atomic.vertices[t.v2],
-            Atomic.vertices[t.v3]), t);
+            Atomic.vertices[t.v3]),
+            new WorldTriangleId(AtomicId, i));
     }
 }

@@ -38,7 +38,7 @@ public sealed class GeometryTreeCollider : TreeCollider
         Location = location ?? new Location();
     }
 
-    public override (Triangle, VertexTriangle) GetTriangle(int i)
+    public override (Triangle Triangle, WorldTriangleId TriangleId) GetTriangle(int i)
     {
         // TODO: Benchmark whether to transform all vertices first
 
@@ -47,7 +47,8 @@ public sealed class GeometryTreeCollider : TreeCollider
         return (new Triangle(
             Vector3.Transform(vertices[indices.v1], Location.LocalToWorld),
             Vector3.Transform(vertices[indices.v2], Location.LocalToWorld),
-            Vector3.Transform(vertices[indices.v3], Location.LocalToWorld)), indices);
+            Vector3.Transform(vertices[indices.v3], Location.LocalToWorld)),
+            new WorldTriangleId(0, i));
     }
 }
 
@@ -68,13 +69,14 @@ public sealed class GeometryNaiveCollider : NaiveTriangleCollider
         Location = location ?? new Location();
     }
 
-    public override (Triangle, VertexTriangle) GetTriangle(int i)
+    public override (Triangle, WorldTriangleId) GetTriangle(int i)
     {
         var vertices = Geometry.morphTargets[0].vertices;
         var indices = Geometry.triangles[i];
         return (new Triangle(
             Vector3.Transform(vertices[indices.v1], Location.LocalToWorld),
             Vector3.Transform(vertices[indices.v2], Location.LocalToWorld),
-            Vector3.Transform(vertices[indices.v3], Location.LocalToWorld)), indices);
+            Vector3.Transform(vertices[indices.v3], Location.LocalToWorld)),
+            new WorldTriangleId(0, i));
     }
 }

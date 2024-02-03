@@ -75,7 +75,7 @@ public abstract partial class TreeCollider : TriangleCollider
             for (int i = 0; i < sector.count; i++)
             {
                 var t = GetTriangle(Collision.map[sector.index + i]);
-                var newHit = ray.Cast(t.Triangle, t.VertexTriangle);
+                var newHit = ray.Cast(t.Triangle, t.TriangleId);
                 if (newHit == null)
                     continue;
                 if (newHit.Value.Distance < (myHit?.Distance ?? float.MaxValue))
@@ -132,7 +132,7 @@ public abstract partial class TreeCollider : TriangleCollider
             var t = GetTriangle(Collision.map[i + sector.index]);
             var intersection = TQueries.Intersect(t.Triangle, primitive);
             if (intersection != null)
-                yield return intersection.Value with { VertexTriangle = t.VertexTriangle };
+                yield return intersection.Value with { TriangleId = t.TriangleId };
         }
     }
 

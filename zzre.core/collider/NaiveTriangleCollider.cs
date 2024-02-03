@@ -7,12 +7,12 @@ namespace zzre;
 
 public abstract class NaiveTriangleCollider : TriangleCollider
 {
-    private IEnumerable<(Triangle Triangle, VertexTriangle VertexTriangle)> Triangles => Enumerable
+    private IEnumerable<(Triangle Triangle, WorldTriangleId TriangleId)> Triangles => Enumerable
         .Range(0, TriangleCount)
         .Select(GetTriangle);
 
     public override Raycast? Cast(Ray ray, float maxDist) => CoarseCastable.Cast(ray) == null ? null : Triangles
-        .Select(t => ray.Cast(t.Triangle, t.VertexTriangle))
+        .Select(t => ray.Cast(t.Triangle, t.TriangleId))
         .Where(c => c?.Distance <= maxDist)
         .OrderBy(c => c?.Distance ?? float.PositiveInfinity)
         .FirstOrDefault();

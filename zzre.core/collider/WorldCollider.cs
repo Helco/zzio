@@ -2,14 +2,27 @@
 using System.Collections.Generic;
 using System.Linq;
 using zzio.rwbs;
+using System.Numerics;
+using zzio;
 
 namespace zzre;
+
+public readonly record struct WorldTriangleId(int AtomicIdx, int TriangleIdx);
+
+public readonly record struct WorldTriangleInfo(RWAtomicSection Atomic, VertexTriangle VertexTriangle)
+{
+    public Triangle Triangle => new(
+        Atomic.vertices[VertexTriangle.v1],
+        Atomic.vertices[VertexTriangle.v2],
+        Atomic.vertices[VertexTriangle.v3]);
+}
 
 public sealed class WorldCollider : BaseGeometryCollider
 {
     public RWWorld World { get; }
     public Box Box { get; }
 
+    private readonly RWAtomicSection[] atomicSections;
     private readonly Section rootSection;
     private readonly IReadOnlyDictionary<RWAtomicSection, TriangleCollider> atomicColliders;
     protected override IRaycastable CoarseCastable => Box;
@@ -19,12 +32,19 @@ public sealed class WorldCollider : BaseGeometryCollider
     {
         World = world;
 
-        var colliders = World
+        atomicSections = World
             .FindAllChildrenById(SectionId.AtomicSection, recursive: true)
-            .Where(s => s.FindChildById(SectionId.CollisionPLG) != null)
             .Cast<RWAtomicSection>()
-            .Select(AtomicCollider.CreateFor)
             .ToArray();
+        var colliders = atomicSections
+            .Select((section, i) =>
+            {
+                var collider = AtomicCollider.CreateFor(section);
+                collider.AtomicId = i;
+                return collider;
+            })
+            .ToArray();
+
 
         atomicColliders = colliders.ToDictionary(c => c.Atomic, c => (TriangleCollider)c);
         Box = colliders.Aggregate(colliders.First().Box, (box, atomic) => box.Union(atomic.Box));
@@ -35,6 +55,9 @@ public sealed class WorldCollider : BaseGeometryCollider
         if (rootPlane != null && rootAtomic != null)
             throw new InvalidDataException("RWWorld has both a root plane and a root atomic");
     }
+
+    public WorldTriangleInfo GetTriangleInfo(WorldTriangleId id) =>
+        new(atomicSections[id.AtomicIdx], atomicSections[id.AtomicIdx].triangles[id.TriangleIdx]);
 
     public override Raycast? Cast(Ray ray, float maxLength)
     {

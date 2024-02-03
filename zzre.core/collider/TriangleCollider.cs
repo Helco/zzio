@@ -40,5 +40,5 @@ public abstract class BaseGeometryCollider :
 public abstract class TriangleCollider : BaseGeometryCollider
 {
     protected abstract int TriangleCount { get; }
-    public abstract (Triangle Triangle, VertexTriangle VertexTriangle) GetTriangle(int i);
+    public abstract (Triangle Triangle, WorldTriangleId TriangleId) GetTriangle(int i);
 }

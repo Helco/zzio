@@ -95,7 +95,7 @@ public class TestRaycaster : ListDisposable
             new RaycastObject()
             {
                 Geometry = worldCollider,
-                Shader = ShaderMaterialIndex
+                Shader = ShaderNormal
             }
         };
     }
@@ -182,12 +182,5 @@ public class TestRaycaster : ListDisposable
             return new IColor(255, 0, 255, 255);
         byte d = (byte)Math.Clamp(255.0f - r.Distance, 0, 255f);
         return new IColor(d, d, d, 255);
-    }
-
-    private IColor ShaderMaterialIndex(RaycastObject obj, Vector3 _1, Raycast r)
-    {
-        int m = r.VertexTriangle?.m ?? 0;
-        byte d = (byte)(m * 255 / 31);
-        return new IColor(d, d, d, 25);
     }
 }

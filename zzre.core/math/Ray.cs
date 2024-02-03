@@ -131,7 +131,7 @@ public readonly struct Ray
         return angle >= 0.0f || float.IsNaN(t) || t < 0 ? null : t;
     }
 
-    public Raycast? Cast(Triangle triangle, VertexTriangle? vertexTriangle = null)
+    public Raycast? Cast(Triangle triangle, WorldTriangleId? triangleId = null)
     {
         var cast = Cast(triangle.Plane);
         if (cast == null)
@@ -140,6 +140,6 @@ public readonly struct Ray
         return bary.X >= 0.0f && bary.X <= 1.0f &&
             bary.Y >= 0.0f && bary.Y <= 1.0f &&
             bary.Z >= 0.0f && bary.Z <= 1.0f
-            ? cast.Value with { VertexTriangle = vertexTriangle } : null;
+            ? cast.Value with { TriangleId = triangleId } : null;
     }
 }
