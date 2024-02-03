@@ -14,9 +14,13 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private static readonly components.ui.ElementId IDYes = new(1002);
     private static readonly components.ui.ElementId IDNo = new(1003);
 
-    private static readonly UID UIDPurchaseItem = new(0x7B973CA1);
-    private static readonly UID UIDItemProfile = new(0x2C2084B1);
     private static readonly UID UIDYouHave = new(0x070EE421);
+
+    private static readonly UID UIDSpellProfile = new(0xBFC6DD81);
+    private static readonly UID UIDTakeIt = new(0x84D35581);
+    private static readonly UID UIDANewSpell = new(0xC38FEBB1);
+    private static readonly UID UIDOffensiveSpell = new(0xD4B02981);
+    private static readonly UID UIDPassiveSpell = new(0x515E2981);
 
     private static readonly UID[] UIDClassNames = new UID[]
     {
@@ -107,50 +111,64 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         preload.CreateLabel(entity)
             .With(bgRect.Min + new Vector2(30, 22))
             .With(preload.Fnt001)
-            .WithText(db.GetText(UIDItemProfile).Text)
+            .WithText(db.GetText(UIDSpellProfile).Text)
             .Build();
 
         preload.CreateImage(entity)
-            .With(bgRect.Center + new Vector2(-20, -100))
+            .With(bgRect.Min + new Vector2(50+40, 50+26))
             .With(preload.Spl000, card.CardId.EntityId)
             .Build();
 
         preload.CreateLabel(entity)
-            .With(bgRect.Center + new Vector2(-72, -40))
-            .With(preload.Fnt001)
+            .With(bgRect.Min + new Vector2(70+40+30, 50+33))
+            .With(preload.Fnt003)
             .WithText(card.Name)
             .Build();
 
-        preload.CreateLabel(entity)
-            .With(bgRect.Min + new Vector2(50, 250))
-            .With(preload.Fnt000)
-            .WithText(card.Info)
-            .WithLineHeight(14)
-            .WithLineWrap(bgRect.Size.X - 100)
-            .WithAnimation()
-            .Build();
+        var texts = new (int row, int col, string text)[] {
+            (0, 0, db.GetText(UIDANewSpell).Text.ToUpper()),
+            (1, 0, "Offensive Spell - Nature"),
+            (2, 0, "Mana"),
+            (2, 1, $"{{1004}}{card.MaxMana}/{card.MaxMana}"),
+            (3, 0, "Level"),
+            (3, 1, GetSpellPrices(card)),
+            (4, 0, "Damage"),
+            (4, 1, ConvertTextIcons(card.Damage)),
+            (5, 0, "Fire Rate"),
+            (5, 1, ConvertTextIcons(card.Loadup))
+        };
+        for (int i = 0; i < texts.Length; i++)
+            preload.CreateLabel(entity)
+                .With(bgRect.Min + new Vector2(50+40 + texts[i].col * 90, 100+36 + texts[i].row * 28))
+                .With(preload.Fnt002)
+                .WithText(texts[i].text)
+                .Build();
 
         preload.CreateLabel(entity)
-            .With(new Vector2(bgRect.Center.X - 76, bgRect.Max.Y - 46))
+            .With(new Vector2(bgRect.Center.X - 76-59, bgRect.Max.Y - 46))
             .With(preload.Fnt002)
-            .WithText(db.GetText(UIDPurchaseItem).Text)
+            .WithText(db.GetText(UIDTakeIt).Text)
             .Build();
 
         preload.CreateButton(entity)
             .With(IDYes)
-            .With(new Vector2(bgRect.Center.X + 20, bgRect.Max.Y - 65))
+            .With(new Vector2(bgRect.Center.X + 20-70, bgRect.Max.Y - 65+5))
             .With(new components.ui.ButtonTiles(5, 6))
             .With(preload.Btn000)
             .Build();
 
         preload.CreateButton(entity)
             .With(IDNo)
-            .With(new Vector2(bgRect.Center.X + 56, bgRect.Max.Y - 65))
+            .With(new Vector2(bgRect.Center.X + 56-56, bgRect.Max.Y - 65+5))
             .With(new components.ui.ButtonTiles(7, 8))
             .With(preload.Btn000)
             .Build();
 
         return entity;
+    }
+
+    private string ConvertTextIcons(int value) {
+        return string.Concat(Enumerable.Repeat("{1017}", value)) + string.Concat(Enumerable.Repeat("{1018}", 5-value));
     }
 
     private void CreateTopbar(DefaultEcs.Entity parent, ItemRow currency)
