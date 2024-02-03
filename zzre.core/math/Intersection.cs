@@ -1,12 +1,12 @@
 ﻿using System.Numerics;
+using zzio;
 
 namespace zzre;
 
-public readonly struct Intersection
+public readonly record struct Intersection(
+    Vector3 Point,
+    Triangle Triangle,
+    VertexTriangle? VertexTriangle = null)
 {
-    public readonly Vector3 Point;
-    public readonly Triangle Triangle;
     public Vector3 Normal => Triangle.Normal;
-
-    public Intersection(Vector3 p, Triangle t) => (Point, Triangle) = (p, t);
 }

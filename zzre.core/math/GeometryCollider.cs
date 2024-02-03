@@ -34,16 +34,16 @@ public sealed class GeometryTreeCollider : TreeCollider
         Location = location ?? new Location();
     }
 
-    public override Triangle GetTriangle(int i)
+    public override (Triangle, VertexTriangle) GetTriangle(int i)
     {
         // TODO: Benchmark whether to transform all vertices first
 
         var vertices = Geometry.morphTargets[0].vertices;
         var indices = Geometry.triangles[i];
-        return new Triangle(
+        return (new Triangle(
             Vector3.Transform(vertices[indices.v1], Location.LocalToWorld),
             Vector3.Transform(vertices[indices.v2], Location.LocalToWorld),
-            Vector3.Transform(vertices[indices.v3], Location.LocalToWorld));
+            Vector3.Transform(vertices[indices.v3], Location.LocalToWorld)), indices);
     }
 }
 
@@ -56,7 +56,7 @@ public class GeometrySlowCollider : IRaycastable, IIntersectable, IIntersectiona
         Geometry.morphTargets[0].bsphereRadius);
 
     private int TriangleCount => Geometry.triangles.Length;
-    private IEnumerable<Triangle> Triangles => Enumerable
+    private IEnumerable<(Triangle Triangle, VertexTriangle VertexTriangle)> Triangles => Enumerable
         .Range(0, TriangleCount)
         .Select(GetTriangle);
 
@@ -67,32 +67,37 @@ public class GeometrySlowCollider : IRaycastable, IIntersectable, IIntersectiona
     }
 
     public Raycast? Cast(Ray ray) => Sphere.Cast(ray) == null ? null : Triangles
-        .Select(ray.Cast)
+        .Select(t => ray.Cast(t.Triangle))
         .OrderBy(c => c?.Distance ?? float.PositiveInfinity)
         .FirstOrDefault();
 
     public Raycast? Cast(Line line) => Sphere.Cast(line) == null ? null : Triangles
-        .Select(line.Cast)
+        .Select(t => line.Cast(t.Triangle))
         .OrderBy(c => c?.Distance ?? float.PositiveInfinity)
         .FirstOrDefault();
 
     public IEnumerable<Intersection> Intersections(Box box) => Sphere.Intersects(box) ? Triangles
-        .Select(t => IntersectionQueries.Default.Intersects(t, box))
+        .Select(t => IntersectionQueries.Default.Intersects(t.Triangle, box))
         .NotNull()
         : Enumerable.Empty<Intersection>();
 
     public IEnumerable<Intersection> Intersections(OrientedBox box) => Sphere.Intersects(box) ? Triangles
-        .Select(t => IntersectionQueries.Default.Intersects(t, box))
+        .Select(t => IntersectionQueries.Default.Intersects(t.Triangle, box))
         .NotNull()
         : Enumerable.Empty<Intersection>();
 
     public IEnumerable<Intersection> Intersections(Sphere sphere) => Sphere.Intersects(sphere) ? Triangles
-        .Select(t => IntersectionQueries.Default.Intersects(t, sphere))
+        .Select(t => IntersectionQueries.Default.Intersects(t.Triangle, sphere))
         .NotNull()
         : Enumerable.Empty<Intersection>();
 
     public IEnumerable<Intersection> Intersections(Triangle triangle) => Sphere.Intersects(triangle) ? Triangles
-        .Select(t => IntersectionQueries.Default.Intersects(t, triangle))
+        .Select(t => IntersectionQueries.Default.Intersects(t.Triangle, triangle))
+        .NotNull()
+        : Enumerable.Empty<Intersection>();
+
+    public IEnumerable<Intersection> Intersections(Line line) => Sphere.Intersects(line) ? Triangles
+        .Select(t => IntersectionQueries.Default.Intersects(t.Triangle, line))
         .NotNull()
         : Enumerable.Empty<Intersection>();
 
@@ -101,14 +106,15 @@ public class GeometrySlowCollider : IRaycastable, IIntersectable, IIntersectiona
     public bool Intersects(Sphere sphere) => Intersections(sphere).Any();
     public bool Intersects(Plane plane) => Sphere.Intersects(plane);
     public bool Intersects(Triangle triangle) => Intersections(triangle).Any();
+    public bool Intersects(Line line) => Cast(line).HasValue;
 
-    private Triangle GetTriangle(int i)
+    private (Triangle, VertexTriangle) GetTriangle(int i)
     {
         var vertices = Geometry.morphTargets[0].vertices;
         var indices = Geometry.triangles[i];
-        return new Triangle(
+        return (new Triangle(
             Vector3.Transform(vertices[indices.v1], Location.LocalToWorld),
             Vector3.Transform(vertices[indices.v2], Location.LocalToWorld),
-            Vector3.Transform(vertices[indices.v3], Location.LocalToWorld));
+            Vector3.Transform(vertices[indices.v3], Location.LocalToWorld)), indices);
     }
 }

@@ -35,6 +35,7 @@ public struct Plane : IRaycastable, IIntersectable
     public bool Intersects(OrientedBox box) => box.Box.Intersects(box.Orientation, this);
     public bool Intersects(Sphere sphere) => sphere.Intersects(this);
     public bool Intersects(Triangle triangle) => triangle.Intersects(this);
+    public bool Intersects(Line line) => SideOf(line) == PlaneIntersections.Intersecting;
 
     public Raycast? Cast(Ray ray) => ray.Cast(this);
     public Raycast? Cast(Line line) => line.Cast(this);
@@ -62,5 +63,12 @@ public struct Plane : IRaycastable, IIntersectable
         return MathF.Abs(dist) <= sphere.Radius
             ? PlaneIntersections.Intersecting
             : dist > 0 ? PlaneIntersections.Inside : PlaneIntersections.Outside;
+    }
+
+    public PlaneIntersections SideOf(Line line)
+    {
+        var start = SideOf(line.Start) > 0 ? PlaneIntersections.Inside : PlaneIntersections.Outside;
+        var end = SideOf(line.End) > 0 ? PlaneIntersections.Inside : PlaneIntersections.Outside;
+        return start | end;
     }
 }

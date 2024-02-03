@@ -119,6 +119,7 @@ public readonly struct Triangle : IRaycastable, IIntersectable
     }
 
     public bool Intersects(Sphere sphere) => sphere.Intersects(this);
+    public bool Intersects(Line line) => Cast(line).HasValue;
 
     public Vector3 Barycentric(Vector3 point)
     {

@@ -113,10 +113,12 @@ public class WorldCollider : IRaycastable, IIntersectable
     public bool Intersects(OrientedBox box) => Intersections(box, intersectionQueries).Any();
     public bool Intersects(Sphere sphere) => Intersections(sphere, intersectionQueries).Any();
     public bool Intersects(Triangle triangle) => Intersections(triangle, intersectionQueries).Any();
+    public bool Intersects(Line line) => Intersections(line, intersectionQueries).Any();
     public IEnumerable<Intersection> Intersections(Box box) => Intersections(box, intersectionQueries);
     public IEnumerable<Intersection> Intersections(OrientedBox box) => Intersections(box, intersectionQueries);
     public IEnumerable<Intersection> Intersections(Sphere sphere) => Intersections(sphere, intersectionQueries);
     public IEnumerable<Intersection> Intersections(Triangle triangle) => Intersections(triangle, intersectionQueries);
+    public IEnumerable<Intersection> Intersections(Line line) => Intersections(line, intersectionQueries);
 
     // only coarse query for planes
     public bool Intersects(Plane plane) => Box.Intersects(plane);
@@ -162,16 +164,19 @@ public class WorldCollider : IRaycastable, IIntersectable
         IIntersectionQueries<Box>,
         IIntersectionQueries<OrientedBox>,
         IIntersectionQueries<Sphere>,
-        IIntersectionQueries<Triangle>
+        IIntersectionQueries<Triangle>,
+        IIntersectionQueries<Line>
     {
         public PlaneIntersections SideOf(in Plane plane, in Box primitive) => plane.SideOf(primitive);
         public PlaneIntersections SideOf(in Plane plane, in Triangle primitive) => plane.SideOf(primitive);
         public PlaneIntersections SideOf(in Plane plane, in OrientedBox primitive) => plane.SideOf(primitive);
         public PlaneIntersections SideOf(in Plane plane, in Sphere primitive) => plane.SideOf(primitive);
+        public PlaneIntersections SideOf(in Plane plane, in Line primitive) => plane.SideOf(primitive);
         public IEnumerable<Intersection> Intersections(IAtomicCollider collider, in Box primitive) => collider.Intersections(primitive);
         public IEnumerable<Intersection> Intersections(IAtomicCollider collider, in Triangle primitive) => collider.Intersections(primitive);
         public IEnumerable<Intersection> Intersections(IAtomicCollider collider, in OrientedBox primitive) => collider.Intersections(primitive);
         public IEnumerable<Intersection> Intersections(IAtomicCollider collider, in Sphere primitive) => collider.Intersections(primitive);
+        public IEnumerable<Intersection> Intersections(IAtomicCollider collider, in Line primitive) => collider.Intersections(primitive);
     }
 
     private static readonly IntersectionQueries intersectionQueries = default;

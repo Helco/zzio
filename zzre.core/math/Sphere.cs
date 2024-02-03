@@ -39,6 +39,7 @@ public readonly struct Sphere : IRaycastable, IIntersectable
     public bool Intersects(OrientedBox box) => Intersects(box.Box.ClosestPoint(box.Orientation, Center));
     public bool Intersects(Plane plane) => Intersects(plane.ClosestPoint(Center));
     public bool Intersects(Triangle triangle) => Intersects(triangle.ClosestPoint(Center));
+    public bool Intersects(Line line) => Cast(line).HasValue;
 
     public Raycast? Cast(Ray ray) => ray.Cast(this);
     public Raycast? Cast(Line line) => line.Cast(this);

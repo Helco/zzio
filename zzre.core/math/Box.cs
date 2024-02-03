@@ -196,6 +196,7 @@ public struct Box : IRaycastable, IIntersectable
     public bool Intersects(Sphere sphere) => sphere.Intersects(this);
     public bool Intersects(Triangle triangle) => triangle.Intersects(this);
     public bool Intersects(Location myLoc, Sphere sphere) => sphere.Intersects(this, myLoc);
+    public bool Intersects(Line line) => Cast(line).HasValue;
 
     public Raycast? Cast(Ray ray) => ray.Cast(this);
     public Raycast? Cast(Line line) => line.Cast(this);

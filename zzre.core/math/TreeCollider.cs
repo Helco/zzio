@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using zzio;
 using zzio.rwbs;
 
 namespace zzre;
@@ -13,7 +14,7 @@ public abstract partial class TreeCollider : IRaycastable, IIntersectable, IInte
 
     protected abstract IRaycastable CoarseCastable { get; }
     protected abstract IIntersectable CoarseIntersectable { get; }
-    public abstract Triangle GetTriangle(int i);
+    public abstract (Triangle Triangle, VertexTriangle VertexTriangle) GetTriangle(int i);
 
     public Raycast? Cast(Ray ray) => Cast(ray, float.PositiveInfinity);
     public Raycast? Cast(Line line) => Cast(new Ray(line.Start, line.Direction), line.Length);
@@ -22,10 +23,12 @@ public abstract partial class TreeCollider : IRaycastable, IIntersectable, IInte
     public bool Intersects(OrientedBox box) => Intersections(box, IntersectionQueries.Default).Any();
     public bool Intersects(Sphere sphere) => Intersections(sphere, IntersectionQueries.Default).Any();
     public bool Intersects(Triangle triangle) => Intersections(triangle, IntersectionQueries.Default).Any();
+    public bool Intersects(Line line) => Intersections(line, IntersectionQueries.Default).Any();
     public IEnumerable<Intersection> Intersections(Box box) => Intersections(box, IntersectionQueries.Default);
     public IEnumerable<Intersection> Intersections(OrientedBox box) => Intersections(box, IntersectionQueries.Default);
     public IEnumerable<Intersection> Intersections(Sphere sphere) => Intersections(sphere, IntersectionQueries.Default);
     public IEnumerable<Intersection> Intersections(Triangle triangle) => Intersections(triangle, IntersectionQueries.Default);
+    public IEnumerable<Intersection> Intersections(Line line) => Intersections(line, IntersectionQueries.Default);
 
     // only coarse query for planes
     public bool Intersects(Plane plane) => CoarseIntersectable.Intersects(plane);
@@ -92,14 +95,14 @@ public abstract partial class TreeCollider : IRaycastable, IIntersectable, IInte
             myHit = null;
             for (int i = 0; i < sector.count; i++)
             {
-                var triangle = GetTriangle(Collision.map[sector.index + i]);
-                var newHit = ray.Cast(triangle);
+                var t = GetTriangle(Collision.map[sector.index + i]);
+                var newHit = ray.Cast(t.Triangle);
                 if (newHit == null)
                     continue;
                 if (newHit.Value.Distance < (myHit?.Distance ?? float.MaxValue))
                 {
                     myHit = newHit;
-                    newTriangle = triangle;
+                    newTriangle = t.Triangle;
                 }
             }
         }
@@ -150,10 +153,10 @@ public abstract partial class TreeCollider : IRaycastable, IIntersectable, IInte
     {
         for (int i = 0; i < sector.count; i++)
         {
-            var triangle = GetTriangle(Collision.map[i + sector.index]);
-            var intersection = queries.Intersects(triangle, primitive);
+            var t = GetTriangle(Collision.map[i + sector.index]);
+            var intersection = queries.Intersects(t.Triangle, primitive);
             if (intersection != null)
-                yield return intersection.Value;
+                yield return intersection.Value with { VertexTriangle = t.VertexTriangle };
         }
     }
 
@@ -170,7 +173,8 @@ public readonly struct IntersectionQueries :
     IIntersectionQueries<Box>,
     IIntersectionQueries<OrientedBox>,
     IIntersectionQueries<Sphere>,
-    IIntersectionQueries<Triangle>
+    IIntersectionQueries<Triangle>,
+    IIntersectionQueries<Line>
 {
     public PlaneIntersections SideOf(in Plane plane, in Box primitive) => plane.SideOf(primitive);
     public Intersection? Intersects(in Triangle triangle, in Box primitive) => triangle.Intersects(primitive)
@@ -191,6 +195,10 @@ public readonly struct IntersectionQueries :
     public Intersection? Intersects(in Triangle triangle, in Sphere primitive) => triangle.Intersects(primitive)
         ? new Intersection(triangle.ClosestPoint(primitive.Center), triangle)
         : null;
+
+    public PlaneIntersections SideOf(in Plane plane, in Line line) => plane.SideOf(line);
+    public Intersection? Intersects(in Triangle triangle, in Line line) =>
+        triangle.Cast(line)?.AsIntersection(triangle);
 
     public static readonly IntersectionQueries Default = default;
 }
