@@ -1,145 +1,137 @@
-﻿#if !DEBUG
-using System;
-#endif
+﻿using System;
 using System.IO;
+using System.Linq;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using Veldrid;
-using Veldrid.StartupUtilities;
-using zzre.imgui;
+using Veldrid.Sdl2;
 using zzio.vfs;
-using zzre.tools;
 using zzre.rendering;
 
 namespace zzre;
 
-internal class Program
+internal partial class Program
 {
-    // We preload some assemblies as they are likely to be loaded during gameplay
-    // which causes very noticeable hickups.
-    // Nevertheless this is symptom based fixing and this list should be checked
-    // regularly and on different platforms.
-    private static readonly string[] PreloadAssemblies =
-    {
-        "System.Text.RegularExpressions",
-        "System.Reflection.Emit.Lightweight",
-        "System.Reflection.Emit.ILGeneration",
-        "System.Reflection.Primitives",
-        "Veldrid.ImageSharp"
-    };
+    private static readonly Option<string[]> OptionPools = new(
+        new[] { "--pool", "-p" },
+        () => new[]
+        {
+            // as if run from a directory like zanzarah/zzre or zanzarah/system
+            Path.Combine(Environment.CurrentDirectory, "..", "Resources", "DATA_0.PAK"),
+            Path.Combine(Environment.CurrentDirectory, "..")
+        },
+        "Adds a resource pool to use (later pools overwrite previous ones).\nCurrently directories and PAK archives are supported");
 
     private static void Main(string[] args)
     {
-        System.Array.ForEach(PreloadAssemblies, n => System.Reflection.Assembly.Load(n));
-
-#if DEBUG
-        RenderDoc? renderDoc = null;
-        if (RenderDoc.Load(out renderDoc))
-        {
-            renderDoc.APIValidation = true;
-            renderDoc.OverlayEnabled = false;
-            renderDoc.RefAllResources = true;
-        }
-#endif
-
         System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
-        var window = VeldridStartup.CreateWindow(new WindowCreateInfo
-        {
-            X = 100,
-            Y = 100,
-            WindowWidth = 1024 * 3 / 2,
-            WindowHeight = 768 * 3 / 2,
-            WindowTitle = "Zanzarah"
-        });
-        var graphicsDevice = VeldridStartup.CreateGraphicsDevice(window, new GraphicsDeviceOptions
-        {
-            PreferDepthRangeZeroToOne = true,
-            PreferStandardClipSpaceYDirection = true,
-            SyncToVerticalBlank = true,
-            Debug = true
-        }, GraphicsBackend.Vulkan);
+        var rootCommand = new RootCommand("zzre - Engine reimplementation and modding tools for Zanzarah");
+        rootCommand.AddGlobalOption(OptionPools);
+        AddGlobalRenderDocOption(rootCommand);
+        AddInDevCommand(rootCommand);
+        rootCommand.Invoke(args);
+    }
 
-        var pipelineCollection = new PipelineCollection(graphicsDevice);
-        pipelineCollection.AddShaderResourceAssemblyOf<Program>();
-        var shaderVariantCollection = new ShaderVariantCollection(graphicsDevice,
-            typeof(Program).Assembly.GetManifestResourceStream("shaders.mlss")
-            ?? throw new InvalidDataException("Shader set is not compiled into zzre"));
-        var windowContainer = new WindowContainer(graphicsDevice);
-        var resourcePool = new CombinedResourcePool(new IResourcePool[]
-        {
-#if DEBUG
-            new PAKResourcePool(new FileStream(@"C:\dev\zanzarah\Resources\DATA_0.PAK", FileMode.Open, FileAccess.Read)),
-            new FileResourcePool(@"C:\dev\zanzarah\")
-#else
-            new PAKResourcePool(new FileStream(Path.Combine(Environment.CurrentDirectory, "..", "Resources", "DATA_0.PAK"), FileMode.Open, FileAccess.Read)),
-            new FileResourcePool(Path.Combine(Environment.CurrentDirectory, ".."))
-#endif
-        });
-        var time = new GameTime();
+    private static void CommonStartupBeforeWindow(InvocationContext ctx)
+    {
+        LoadRenderDoc(ctx);
+    }
+
+    private static ITagContainer CommonStartupAfterWindow(Sdl2Window window, GraphicsDevice graphicsDevice, InvocationContext ctx)
+    {
+        SetupRenderDocKeys(window);
+
         var diContainer = new TagContainer();
-        diContainer
-            .AddTag(time)
-            .AddTag(windowContainer)
+        return diContainer
+            .AddTag(ctx)
+            .AddTag(window)
             .AddTag(graphicsDevice)
             .AddTag(graphicsDevice.ResourceFactory)
-            .AddTag<IResourcePool>(resourcePool)
-            .AddTag(pipelineCollection)
-            .AddTag(shaderVariantCollection)
-            .AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(diContainer))
-            .AddTag(new OpenDocumentSet(diContainer))
-            .AddTag(IconFont.CreateForkAwesome(graphicsDevice));
+            .AddTag(new ShaderVariantCollection(graphicsDevice,
+                typeof(Program).Assembly.GetManifestResourceStream("shaders.mlss")
+                ?? throw new InvalidDataException("Shader set is not compiled into zzre")))
+            .AddTag(new GameTime())
+            .AddTag(CreateResourcePool(ctx))
+            .AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(diContainer));
+    }
 
-        windowContainer.MenuBar.AddButton("Tools/Model Viewer", () => new ModelViewer(diContainer));
-        windowContainer.MenuBar.AddButton("Tools/Actor Viewer", () => new ActorEditor(diContainer));
-        windowContainer.MenuBar.AddButton("Tools/Effect Viewer", () => new EffectEditor(diContainer));
-        windowContainer.MenuBar.AddButton("Tools/World Viewer", () => new WorldViewer(diContainer));
-        windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
-
-#if DEBUG
-        new ZanzarahWindow(diContainer);
-
-        //diContainer.GetTag<OpenDocumentSet>().OpenWith<EffectEditor>("resources/effects/e0006.ed");
-#endif
-
-        window.Resized += () =>
+    private static IResourcePool CreateResourcePool(InvocationContext ctx)
+    {
+        var pools = ctx.ParseResult.GetValueForOption(OptionPools) ?? Array.Empty<string>();
+        return pools.Length switch
         {
-            graphicsDevice.ResizeMainWindow((uint)window.Width, (uint)window.Height);
-            windowContainer.HandleResize(window.Width, window.Height);
+            0 => new InMemoryResourcePool(),
+            1 => CreateSingleResourcePool(pools.Single()),
+            _ => new CombinedResourcePool(pools.Select(CreateSingleResourcePool).ToArray())
         };
+    }
 
-        window.KeyDown += (ev) =>
+    private static IResourcePool CreateSingleResourcePool(string poolName)
+    {
+        // just to normalize
+        var path = Path.Combine(Environment.CurrentDirectory, poolName);
+        var ext = Path.GetExtension(path) ?? "";
+        switch(ext)
         {
-            if (ev.Repeat)
-                return;
-            windowContainer.HandleKeyEvent(ev.Key, ev.Down);
-#if DEBUG
-            if (ev.Key == Key.PrintScreen && renderDoc?.IsTargetControlConnected() == false)
-                renderDoc.LaunchReplayUI();
-#endif
-        };
-
-        window.KeyUp += (ev) =>
-        {
-            if (ev.Repeat)
-                return;
-            windowContainer.HandleKeyEvent(ev.Key, ev.Down);
-        };
-
-        while (window.Exists)
-        {
-            time.BeginFrame();
-            if (time.HasFramerateChanged)
-                window.Title = $"Zanzarah | {graphicsDevice.BackendType} | {time.FormattedStats}";
-
-            windowContainer.Render();
-            graphicsDevice.SwapBuffers();
-            var inputSnapshot = window.PumpEvents();
-            windowContainer.Update(time, inputSnapshot);
-
-            time.EndFrame();
+            case ".pak": return new PAKResourcePool(new FileStream(path, FileMode.Open, FileAccess.Read));
+            case "": return new FileResourcePool(path);
+            default:
+                Console.WriteLine($"Warning: Ignored resource pool {poolName} due to unsupported extension {ext}");
+                return new InMemoryResourcePool();
         }
+    }
 
+    private static void CommonCleanup(ITagContainer diContainer)
+    {
         // dispose graphics device last, otherwise Vulkan will crash
+        diContainer.TryGetTag(out GraphicsDevice graphicsDevice);
         diContainer.RemoveTag<GraphicsDevice>(dispose: false);
         diContainer.Dispose();
-        graphicsDevice.Dispose();
+        graphicsDevice?.Dispose();
     }
+
+#if DEBUG
+    private static readonly Option<bool> OptionRenderDoc = new(
+        "--renderdoc",
+        () => true,
+        "Whether RenderDoc is to be loaded at start.\nIf RenderDoc loading makes problems set this option to \"false\"");
+
+    private static RenderDoc? RenderDoc = null;
+
+    private static void AddGlobalRenderDocOption(RootCommand command) =>
+        command.Add(OptionRenderDoc);
+
+    private static void LoadRenderDoc(InvocationContext ctx)
+    {
+        var shouldLoad = ctx.ParseResult.GetValueForOption(OptionRenderDoc);
+        if (!shouldLoad)
+            return;
+        if (RenderDoc.Load(out RenderDoc))
+        {
+            RenderDoc.APIValidation = true;
+            RenderDoc.OverlayEnabled = false;
+            RenderDoc.RefAllResources = true;
+            Console.WriteLine("Info: RenderDoc was loaded, use the PrintScreen key to capture the next frame");
+        }
+        else
+            Console.WriteLine("Warning: Could not load RenderDoc");
+    }
+
+    private static void SetupRenderDocKeys(Sdl2Window window)
+    {
+        if (RenderDoc == null)
+            return;
+        window.KeyDown += ev =>
+        {
+            if (ev.Repeat || ev.Key != Key.PrintScreen)
+                return;
+            if (!RenderDoc.IsTargetControlConnected())
+                RenderDoc.LaunchReplayUI();
+        };
+    }
+#else
+    private static void AddGlobalRenderDocOption(RootCommand _) { }
+    private static void LoadRenderDoc(InvocationContext _) { }
+    private static void SetupRenderDocKeys(Sdl2Window _) { }
+#endif
 }

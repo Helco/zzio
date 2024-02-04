@@ -35,7 +35,7 @@ public class Zanzarah : ITagContainer
     public Game? CurrentGame { get; private set; }
     public UI UI { get; }
 
-    public Zanzarah(ITagContainer diContainer, IZanzarahContainer zanzarahContainer)
+    public Zanzarah(ITagContainer diContainer, IZanzarahContainer zanzarahContainer, Savegame? savegame = null)
     {
         tagContainer = new TagContainer().FallbackTo(diContainer);
         tagContainer.AddTag(this);
@@ -45,14 +45,8 @@ public class Zanzarah : ITagContainer
         tagContainer.AddTag(UI = new UI(this));
         this.zanzarahContainer = zanzarahContainer;
 
-        var savegame = new zzio.Savegame() { sceneId = 1243 };
-        //using (var fileStream = new System.IO.FileStream(@"C:\dev\zanzarah\Save\_0004.dat", System.IO.FileMode.Open, System.IO.FileAccess.Read))
-        using (var fileStream = new System.IO.FileStream(@"C:\Users\Helco\Downloads\0000.dat", System.IO.FileMode.Open, System.IO.FileAccess.Read))
-        using (var reader = new System.IO.BinaryReader(fileStream))
-            savegame = zzio.Savegame.ReadNew(reader);
-        savegame.entryId = -1;
-        savegame.sceneId = 1243;
-        CurrentGame = new Game(this, savegame);
+        // If savegame is null we should probably start the intro and main menu. But this is not implemented yet
+        CurrentGame = new Game(this, savegame ?? new());
         tagContainer.AddTag(CurrentGame);
     }
 

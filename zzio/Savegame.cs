@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Text;
 
 namespace zzio;
 
@@ -40,6 +41,12 @@ public class Savegame
 
     public IEnumerable<TMod> GetGameStateFor<TMod>(string scene) where TMod : IGameStateMod =>
         GetGameStateFor(scene).OfType<TMod>();
+
+    public static Savegame ReadNew(Stream stream, bool leaveOpen = false)
+    {
+        using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen);
+        return ReadNew(reader);
+    }
 
     public static Savegame ReadNew(BinaryReader r)
     {

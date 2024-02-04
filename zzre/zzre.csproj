@@ -46,9 +46,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Pfim" Version="0.11.2" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="Veldrid.ImageSharp" Version="$(VeldridVersion)" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="$(VeldridVersion)" />
-    <!--<PackageReference Include="Veldrid.SPIRV.BuildTools" Version="1.0.14" /> Disabled as invalid SPIRV modules are generated? Tracked in #203 -->
     <PackageReference Include="Mlang.MSBuild" Version="$(MlangVersion)" />
   </ItemGroup>
 

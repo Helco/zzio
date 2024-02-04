@@ -13,6 +13,7 @@ For developers who would like to contribute to this project:
   - Install a recent [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download)
   - Run `./get-dependencies.sh` in the root repository folder
   - Now you should be able to build `zzio.sln` using the `dotnet` CLI or your favorite IDE
+  - Running `zzre.exe --help` (or currently better `zzre.exe indev --help`) gives a list of options you might want to set
 
 *Keep in mind, that only Windows is tested regularly at the moment and several changes might be required to run this on Linux or MacOS.*
 

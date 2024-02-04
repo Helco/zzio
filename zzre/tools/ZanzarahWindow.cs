@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Veldrid;
+using zzio;
 using zzio.vfs;
 using zzre.game;
 using zzre.imgui;
@@ -82,7 +83,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
     public Vector2 MousePos => mouseArea.MousePosition;
     public bool IsMouseCaptured { get; set; }
 
-    public ZanzarahWindow(ITagContainer diContainer)
+    public ZanzarahWindow(ITagContainer diContainer, Savegame? savegame = null)
     {
         this.diContainer = diContainer;
         Window = diContainer.GetTag<WindowContainer>().NewWindow("Zanzarah");
@@ -91,7 +92,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
 
         fbArea = new FramebufferArea(Window, diContainer.GetTag<GraphicsDevice>());
         mouseArea = new MouseEventArea(Window);
-        Zanzarah = new Zanzarah(diContainer, this);
+        Zanzarah = new Zanzarah(diContainer, this, savegame);
         Window.AddTag(Zanzarah);
 
         selectSceneModal = new(diContainer)
