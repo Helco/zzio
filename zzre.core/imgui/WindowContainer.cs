@@ -24,8 +24,15 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
     public ImGuiRenderer ImGuiRenderer { get; }
     public MenuBar MenuBar { get; } = new();
     private bool isInUpdateEnumeration = false;
+    private readonly OnceAction onceBeforeUpdate = new();
     private readonly OnceAction onceAfterUpdate = new();
     private BaseWindow? nextFocusedWindow = null;
+
+    public event Action OnceBeforeUpdate
+    {
+        add => onceBeforeUpdate.Next += value;
+        remove => onceBeforeUpdate.Next -= value;
+    }
 
     public event Action OnceAfterUpdate
     {
@@ -89,6 +96,7 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
 
     public void Update(GameTime time, InputSnapshot input)
     {
+        onceBeforeUpdate.Invoke();
         ImGuiRenderer.Update(time.Delta, input);
         ImGuizmoNET.ImGuizmo.BeginFrame();
 

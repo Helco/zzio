@@ -48,11 +48,19 @@ public class FramebufferArea : BaseDisposable
     protected override void DisposeManaged()
     {
         base.DisposeManaged();
-        targetColor.Dispose();
-        targetDepth.Dispose();
-        Framebuffer.Dispose();
-        commandList.Dispose();
-        fence.Dispose();
+        WindowContainer.OnceBeforeUpdate += () =>
+        {
+            // Delay disposal so we do not attempt to render the ImGui commands
+            // with the framebuffer texture already disposed
+            if (bindingHandle != IntPtr.Zero)
+                ImGuiRenderer.RemoveImGuiBinding(targetColor);
+            bindingHandle = IntPtr.Zero;
+            targetColor.Dispose();
+            targetDepth.Dispose();
+            Framebuffer.Dispose();
+            commandList.Dispose();
+            fence.Dispose();
+        };
     }
 
     private void Resize(Vector2 newSize)
