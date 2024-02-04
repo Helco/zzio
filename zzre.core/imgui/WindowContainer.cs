@@ -23,7 +23,10 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
     public int Count => windows.Count;
     public ImGuiRenderer ImGuiRenderer { get; }
     public MenuBar MenuBar { get; } = new();
+    public ref bool ShowImGuiDemoWindow => ref showImGuiDemoWindow;
+
     private bool isInUpdateEnumeration = false;
+    private bool showImGuiDemoWindow = false;
     private readonly OnceAction onceBeforeUpdate = new();
     private readonly OnceAction onceAfterUpdate = new();
     private BaseWindow? nextFocusedWindow = null;
@@ -136,6 +139,9 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
         foreach (var window in this.OfType<Window>().Where(w => !w.IsOpen).ToArray())
             window.Dispose();
         isInUpdateEnumeration = false;
+
+        if (showImGuiDemoWindow)
+            ShowDemoWindow(ref showImGuiDemoWindow);
         onceAfterUpdate.Invoke();
     }
 

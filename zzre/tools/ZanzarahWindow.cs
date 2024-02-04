@@ -85,6 +85,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
 
     public ZanzarahWindow(ITagContainer diContainer, Savegame? savegame = null)
     {
+        GlobalWindowIndex++;
         this.diContainer = diContainer;
         Window = diContainer.GetTag<WindowContainer>().NewWindow("Zanzarah");
         Window.AddTag(this);
@@ -156,9 +157,10 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
     private void HandleMouseUp(MouseButton button, Vector2 _) => buttonsDown.Remove(button);
     public bool IsMouseDown(MouseButton button) => buttonsDown.Contains(button);
 
+    private static int GlobalWindowIndex = 0; // to allow for multiple ZanzarahWindows without ImGui being mad
     private void HandleResize()
     {
-        Window.Title = $"Zanzarah {fbArea.Framebuffer.Width}x{fbArea.Framebuffer.Height}###Zanzarah";
+        Window.Title = $"Zanzarah {fbArea.Framebuffer.Width}x{fbArea.Framebuffer.Height}###Zanzarah{GlobalWindowIndex}";
     }
 
     private void HandleOpenScene()

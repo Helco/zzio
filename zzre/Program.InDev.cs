@@ -92,6 +92,9 @@ internal partial class Program
         windowContainer.MenuBar.AddButton("Tools/World Viewer", () => new WorldViewer(diContainer));
         windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
+        windowContainer.MenuBar.AddButton("Launch Game", () => InDevLaunchGame(diContainer, ctx));
+        windowContainer.MenuBar.AddButton("ImGui Demo", () => windowContainer.ShowImGuiDemoWindow = true);
+
         openDocumentSet.AddEditorType<ModelViewer>("dff");
         openDocumentSet.AddEditorType<WorldViewer>("bsp");
         openDocumentSet.AddEditorType<SceneEditor>("scn");
