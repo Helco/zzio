@@ -38,6 +38,7 @@ public readonly record struct ClumpMaterialInfo(
             case FOModelRenderType.EnvMap64:
             case FOModelRenderType.EnvMap96:
             case FOModelRenderType.EnvMap128:
+            case FOModelRenderType.EnvMap196:
             case FOModelRenderType.EnvMap255:
                 BlendMode = ModelMaterial.BlendMode.Alpha;
                 HasEnvMap = true;
