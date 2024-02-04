@@ -113,7 +113,6 @@ public partial class Label : AEntitySetSystem<float>
     private static IReadOnlyList<(TileSheet tileSheet, components.ui.Tile tile)> FormatToTiles(in Rect rect, TileSheet rootTileSheet, string text, float lineHeight)
     {
         var curTileSheet = rootTileSheet;
-        var lineOffset = 0f;
         var cursor = rect.Min;
         var newTiles = new List<(TileSheet, components.ui.Tile)>(text.Length);
         for (int i = 0; i < text.Length; i++)
@@ -130,7 +129,6 @@ public partial class Label : AEntitySetSystem<float>
 
                 case '}':
                     curTileSheet = rootTileSheet;
-                    lineOffset = 0f;
                     break;
 
                 case '{':
@@ -164,7 +162,6 @@ public partial class Label : AEntitySetSystem<float>
             if (alternativeI < 0 || alternativeI >= rootTileSheet.Alternatives.Count)
                 return;
             curTileSheet = rootTileSheet.Alternatives[alternativeI];
-            lineOffset = (rootTileSheet.TotalSize.Y - curTileSheet.TotalSize.Y) / 2f;
         }
 
         void AddSpecialTile(string identifier)
@@ -181,14 +178,21 @@ public partial class Label : AEntitySetSystem<float>
             if (tileI < 0 || tileI >= curTileSheet.Count)
                 return;
             var pixelSize = curTileSheet.GetPixelSize(tileI);
-            var lineOffset = rootTileSheet.LineOffset +
-                (curTileSheet.TotalSize.Y - rootTileSheet.TotalSize.Y) / 2;
+            var lineOffset = rootTileSheet.LineOffset + GetLineOffset(rootTileSheet, curTileSheet);
             var tile = new components.ui.Tile(
                 tileI,
                 TileRect(cursor, pixelSize, lineOffset));
             cursor.X += pixelSize.X + curTileSheet.CharSpacing;
             newTiles.Add((curTileSheet, tile));
         }
+    }
+
+    private static float GetLineOffset(TileSheet root, TileSheet cur)
+    {
+        // We need the integer conversion and rounding for pixel-perfect label layouts
+        var rootH = (int)root.TotalSize.Y;
+        var curH = (int)cur.TotalSize.Y;
+        return (curH / 2) - (rootH / 2);
     }
 
     private components.ui.Tile[] TileWithoutFormatting(in Rect rect, TileSheet tileSheet, string text)
