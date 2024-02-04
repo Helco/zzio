@@ -1,4 +1,5 @@
-﻿using System.CommandLine;
+﻿using System;
+using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Text.RegularExpressions;
 using Veldrid.StartupUtilities;
@@ -79,9 +80,10 @@ internal partial class Program
 
         var diContainer = CommonStartupAfterWindow(window, graphicsDevice, ctx);
         var windowContainer = new WindowContainer(graphicsDevice);
+        var openDocumentSet = new OpenDocumentSet(diContainer);
         diContainer
             .AddTag(windowContainer)
-            .AddTag(new OpenDocumentSet(diContainer))
+            .AddTag(openDocumentSet)
             .AddTag(IconFont.CreateForkAwesome(graphicsDevice));
 
         windowContainer.MenuBar.AddButton("Tools/Model Viewer", () => new ModelViewer(diContainer));
@@ -89,6 +91,12 @@ internal partial class Program
         windowContainer.MenuBar.AddButton("Tools/Effect Viewer", () => new EffectEditor(diContainer));
         windowContainer.MenuBar.AddButton("Tools/World Viewer", () => new WorldViewer(diContainer));
         windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
+
+        openDocumentSet.AddEditorType<ModelViewer>("dff");
+        openDocumentSet.AddEditorType<WorldViewer>("bsp");
+        openDocumentSet.AddEditorType<SceneEditor>("scn");
+        openDocumentSet.AddEditorType<ActorEditor>("aed");
+        openDocumentSet.AddEditorType<EffectEditor>("ed");
 
         window.Resized += () =>
         {
@@ -164,6 +172,9 @@ internal partial class Program
 
     private static void InDevOpenResources(ITagContainer diContainer, InvocationContext ctx)
     {
-
+        var resourcePaths = ctx.ParseResult.GetValueForOption(OptionInDevOpen) ?? Array.Empty<string>();
+        var openDocumentSet = diContainer.GetTag<OpenDocumentSet>();
+        foreach (var path in resourcePaths)
+            openDocumentSet.Open(path);
     }
 }

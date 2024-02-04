@@ -12,6 +12,7 @@ public class OpenDocumentSet
 {
     private readonly ITagContainer diContainer;
     private readonly HashSet<IDocumentEditor> editors = new();
+    private readonly Dictionary<string, Type> editorTypes = new();
 
     public OpenDocumentSet(ITagContainer diContainer)
     {
@@ -57,6 +58,37 @@ public class OpenDocumentSet
         }
         var ctor = GetConstructorFor<TEditor>();
         var newEditor = ctor(diContainer);
+        newEditor.Load(resource);
+        return newEditor;
+    }
+
+    public void AddEditorType<TEditor>(string extension) where TEditor : IDocumentEditor
+    {
+        editorTypes.Add(extension.ToLowerInvariant(), typeof(TEditor));
+        _ = GetConstructorFor<TEditor>();
+    }
+
+    public IDocumentEditor Open(string pathText) =>
+        Open(new FilePath(pathText));
+
+    public IDocumentEditor Open(FilePath path)
+    {
+        var resourcePool = diContainer.GetTag<IResourcePool>();
+        var resource = resourcePool.FindFile(path.ToPOSIXString());
+        if (resource == null)
+            throw new FileNotFoundException($"Could not find resource at {path.ToPOSIXString()}");
+        return Open(resource);
+    }
+
+    public IDocumentEditor Open(IResource resource)
+    {
+        var extension = resource.Path.Extension;
+        if (resource.Type is not ResourceType.File || string.IsNullOrWhiteSpace(extension))
+            throw new ArgumentException("Given resource is not a file or does not have an extension");
+        if (!editorTypes.TryGetValue(extension, out var editorType))
+            throw new KeyNotFoundException($"No editor registered for extension {extension}");
+        var ctor = knownConstructors[editorType];
+        var newEditor = (IDocumentEditor)ctor(diContainer);
         newEditor.Load(resource);
         return newEditor;
     }
