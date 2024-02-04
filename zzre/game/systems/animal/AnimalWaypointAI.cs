@@ -149,10 +149,8 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
                     }
                     if (playerDistanceSqr < BreakoutDistanceSqr)
                     {
-                        // TODO: Test whether this chicken breakout behavior actually occurs
                         var playerToAnimal = Vector3.Normalize(location.GlobalPosition - playerLocation.GlobalPosition);
                         location.LocalPosition += playerToAnimal * moveDistance;
-                        break;
                     }
                 }
                 ai.MovedDistance += moveDistance;
