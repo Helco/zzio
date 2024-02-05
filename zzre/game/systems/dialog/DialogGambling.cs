@@ -112,7 +112,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             (0, 0, db.GetText(UIDANewSpell).Text.ToUpper(new CultureInfo("en-US", false))),
             (1, 0, "Offensive Spell - Nature"),
             (2, 0, "Mana"),
-            (2, 1, card.Mana == 5 ? "{1004}-/-" : $"{1004}{card.MaxMana}/{card.MaxMana}"),
+            (2, 1, "{104}" + (card.Mana == 5 ? "-/-" : $"{card.MaxMana}/{card.MaxMana}")),
             (3, 0, "Level"),
             (3, 1, preload.GetSpellPrices(card)),
             (4, 0, "Damage"),
