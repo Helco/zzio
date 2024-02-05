@@ -23,6 +23,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
     private readonly int currencyI = 23;
     private readonly int rows = 5;
+    private readonly float rowAnimationDelay = 1f;
 
     private readonly MappedDB db;
     private readonly IDisposable resetUISubscription;
@@ -77,6 +78,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             var selectedCard = gambling.Cards.MinBy(c => rnd.Next());
             AddTrade(entity, gambling, selectedCard, i, bgRect);
         }
+        gambling.RowAnimationTimeLeft = rowAnimationDelay;
 
         preload.CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
         preload.CreateSingleButton(entity, new UID(0x91A7E821), IDRepeat, bgRect, offset: 1);
@@ -148,6 +150,10 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
 
         return entity;
+    }
+
+    private void AddRandomTrade() {
+        Console.WriteLine("random trade added");
     }
 
     private void AddTrade(DefaultEcs.Entity entity, components.DialogGambling gambling, int? selectedCardId, int index, Rect bgRect)
@@ -225,7 +231,16 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         }
     }
 
-    protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.DialogGambling component)
+    protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.DialogGambling gambling)
     {
+        if (gambling.RowAnimationTimeLeft != null) {
+            var newTimeLeft = Math.Max(0f, gambling.RowAnimationTimeLeft - timeElapsed);
+            if (newTimeLeft == 0f) {
+                AddRandomTrade();
+                gambling.RowAnimationTimeLeft = rowAnimationDelay;
+            } else {
+                gambling.RowAnimationTimeLeft = newTimeLeft;
+            }
+        }
     }
 }
