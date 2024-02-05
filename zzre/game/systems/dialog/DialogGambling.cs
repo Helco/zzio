@@ -22,22 +22,6 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private static readonly UID UIDOffensiveSpell = new(0xD4B02981);
     private static readonly UID UIDPassiveSpell = new(0x515E2981);
 
-    private static readonly UID[] UIDClassNames = new UID[]
-    {
-        new(0x448DD8A1), // Nature
-        new(0x30D5D8A1), // Air
-        new(0xC15AD8A1), // Water
-        new(0x6EE2D8A1), // Light
-        new(0x44AAD8A1), // Energy
-        new(0xEC31D8A1), // Psi
-        new(0xAD78D8A1), // Stone
-        new(0x6483DCA1), // Ice
-        new(0x8EC9DCA1), // Fire
-        new(0x8313DCA1), // Dark
-        new(0xC659DCA1), // Chaos
-        new(0x3CE1DCA1)  // Metal
-    };
-
     private readonly int currencyI = 23;
     private readonly int rows = 5;
 
@@ -219,7 +203,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private string GetSpellLabel(SpellRow card) {
         var name = card.Name;
         var type = card.Type == 0 ? "Active Spell" : "Passive Spell";
-        var className = db.GetText(UIDClassNames[card.PriceA-1]).Text;
+        var className = preload.GetClassText(card.PriceA);
         var prices = preload.GetSpellPrices(card);
         return $"{name}\n{type} - {className} - {prices}";
     }

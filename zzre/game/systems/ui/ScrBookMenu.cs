@@ -20,21 +20,6 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         new(0xB031B8B1), // Jump Ability
         new(0xB6CA5A11)  // Special
     };
-    private static readonly UID[] UIDClassNames = new UID[]
-    {
-        new(0x448DD8A1), // Nature
-        new(0x30D5D8A1), // Air
-        new(0xC15AD8A1), // Water
-        new(0x6EE2D8A1), // Light
-        new(0x44AAD8A1), // Energy
-        new(0xEC31D8A1), // Psi
-        new(0xAD78D8A1), // Stone
-        new(0x6483DCA1), // Ice
-        new(0x8EC9DCA1), // Fire
-        new(0x8313DCA1), // Dark
-        new(0xC659DCA1), // Chaos
-        new(0x3CE1DCA1)  // Metal
-    };
     private static readonly UID UIDEvol = new (0x69226721); // Evolution at level
 
     public ScrBookMenu(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
@@ -133,7 +118,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
 
         preload.CreateLabel(entity)
             .With(Mid + new Vector2(36, 80))
-            .WithText(db.GetText(UIDClassNames[(int)fairyRow.Class0-1]).Text)
+            .WithText(preload.GetClassText((int)fairyRow.Class0))
             .With(preload.Fnt002)
             .Build();
 
