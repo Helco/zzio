@@ -177,7 +177,6 @@ public partial class DialogScript : BaseScript
         }
         else if (entity.TryGet<messages.DialogGambling>(out var gamblingMessage))
         {
-            Console.WriteLine("published gambling message");
             entity.Remove<messages.DialogGambling>();
             World.Publish(gamblingMessage);
         }
