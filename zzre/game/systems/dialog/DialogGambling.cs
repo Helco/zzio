@@ -225,17 +225,12 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             gambling.Profile = CreateSpellProfile(uiEntity, gambling, card);
         }
         else if (clickedId == IDYes) {
-            var purchase = gambling.Purchase!;
-
-            var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
-            inventory.Add(purchase.CardId);
-
+            zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Add(gambling.Purchase!.CardId);
             gambling.Profile.Dispose();
             gambling.Profile = CreatePrimary(uiEntity, gambling);
         }
         else if (clickedId == IDNo) {
             gambling.Profile.Dispose();
-            gambling.Purchase = null;
             gambling.Profile = CreatePrimary(uiEntity, gambling);
         }
         else if (clickedId == IDRepeat) {
