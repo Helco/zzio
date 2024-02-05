@@ -15,7 +15,6 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
 
     private static readonly UID UIDPurchaseItem = new(0x7B973CA1);
     private static readonly UID UIDItemProfile = new(0x2C2084B1);
-    private static readonly UID UIDYouHave = new(0x070EE421);
 
     private readonly MappedDB db;
     private readonly IDisposable resetUISubscription;
@@ -65,7 +64,7 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
         entity.Set(new components.Parent(parent));
 
         preload.CreateDialogBackground(entity, animateOverlay: false, out var bgRect);
-        CreateTopbar(entity, trading.Currency);
+        preload.CreateCurrencyLabel(entity, trading.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
         for (int i = 0; i < trading.CardTrades.Count; i++)
             AddTrade(entity, trading, i, bgRect);
         CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
@@ -127,17 +126,6 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
             .Build();
 
         return entity;
-    }
-
-    private void CreateTopbar(DefaultEcs.Entity parent, ItemRow currency)
-    {
-        var amountOwned = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().CountCards(currency.CardId);
-
-        preload.CreateLabel(parent)
-            .With(new Vector2(-60, -170))
-            .With(preload.Fnt000)
-            .WithText($"{db.GetText(UIDYouHave).Text} {{{3000 + currency.CardId.EntityId}}}x{amountOwned}")
-            .Build();
     }
 
     private void AddTrade(DefaultEcs.Entity entity, components.DialogTrading trading, int index, Rect bgRect)

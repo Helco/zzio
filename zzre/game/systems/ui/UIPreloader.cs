@@ -57,6 +57,7 @@ public class UIPreloader
         new(0xC659DCA1), // Chaos
         new(0x3CE1DCA1)  // Metal
     };
+    private static readonly UID UIDYouHave = new(0x070EE421);
 
     public UIPreloader(ITagContainer diContainer)
     {
@@ -222,6 +223,13 @@ public class UIPreloader
             InDuration: 0.3f,
             SustainDelay: 0.03f, // this ensures we have at least one frame of pure black to switch scenes/locations
             OutDuration: 0.3f));
+
+    public DefaultEcs.Entity CreateCurrencyLabel(DefaultEcs.Entity parent, ItemRow currency, Inventory inventory) =>
+        CreateLabel(parent)
+            .With(new Vector2(-60, -170))
+            .With(Fnt000)
+            .WithText($"{GetDBText(UIDYouHave)} {{{3000 + currency.CardId.EntityId}}}x{inventory.CountCards(currency.CardId)}")
+            .Build();
 
     public string GetSpellPrices(SpellRow spellRow) {
         var sheet = spellRow.Type == 0 ? 5 : 4;

@@ -14,8 +14,6 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private static readonly components.ui.ElementId IDYes = new(1002);
     private static readonly components.ui.ElementId IDNo = new(1003);
 
-    private static readonly UID UIDYouHave = new(0x070EE421);
-
     private static readonly UID UIDSpellProfile = new(0xBFC6DD81);
     private static readonly UID UIDTakeIt = new(0x84D35581);
     private static readonly UID UIDANewSpell = new(0xC38FEBB1);
@@ -72,7 +70,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         entity.Set(new components.Parent(parent));
 
         preload.CreateDialogBackground(entity, animateOverlay: false, out var bgRect);
-        CreateTopbar(entity, gambling.Currency);
+        preload.CreateCurrencyLabel(entity, gambling.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
         for (int i = 0; i < rows; i++) {
             Random rnd = new Random();
             var selectedCard = gambling.Cards.OrderBy(c => rnd.Next()).First();
@@ -149,17 +147,6 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
 
         return entity;
-    }
-
-    private void CreateTopbar(DefaultEcs.Entity parent, ItemRow currency)
-    {
-        var amountOwned = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().CountCards(currency.CardId);
-
-        preload.CreateLabel(parent)
-            .With(new Vector2(-60, -170))
-            .With(preload.Fnt000)
-            .WithText($"{db.GetText(UIDYouHave).Text} {{{3000 + currency.CardId.EntityId}}}x{amountOwned}")
-            .Build();
     }
 
     private void AddTrade(DefaultEcs.Entity entity, components.DialogGambling gambling, int? selectedCardId, int index, Rect bgRect)
