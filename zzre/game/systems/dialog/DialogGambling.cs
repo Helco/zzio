@@ -129,13 +129,13 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             (0, 0, db.GetText(UIDANewSpell).Text.ToUpper()),
             (1, 0, "Offensive Spell - Nature"),
             (2, 0, "Mana"),
-            (2, 1, $"{{1004}}{card.MaxMana}/{card.MaxMana}"),
+            (2, 1, card.Mana == 5 ? "{{1004}}-/-" : $"{{1004}}{card.MaxMana}/{card.MaxMana}"),
             (3, 0, "Level"),
-            (3, 1, GetSpellPrices(card)),
+            (3, 1, preload.GetSpellPrices(card)),
             (4, 0, "Damage"),
-            (4, 1, ConvertTextIcons(card.Damage)),
+            (4, 1, preload.GetLightsIndicator(card.Damage)),
             (5, 0, "Fire Rate"),
-            (5, 1, ConvertTextIcons(card.Loadup))
+            (5, 1, preload.GetLightsIndicator(card.Loadup))
         };
         for (int i = 0; i < texts.Length; i++)
             preload.CreateLabel(entity)
@@ -165,10 +165,6 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
 
         return entity;
-    }
-
-    private string ConvertTextIcons(int value) {
-        return string.Concat(Enumerable.Repeat("{1017}", value)) + string.Concat(Enumerable.Repeat("{1018}", 5-value));
     }
 
     private void CreateTopbar(DefaultEcs.Entity parent, ItemRow currency)
@@ -224,13 +220,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var name = card.Name;
         var type = card.Type == 0 ? "Active Spell" : "Passive Spell";
         var className = db.GetText(UIDClassNames[card.PriceA-1]).Text;
-        var prices = GetSpellPrices(card);
+        var prices = preload.GetSpellPrices(card);
         return $"{name}\n{type} - {className} - {prices}";
-    }
-
-    private string GetSpellPrices(SpellRow card) {
-        var sheet = card.Type == 0 ? 5 : 4;
-        return $"{{{sheet}{card.PriceA}}}{{{sheet}{card.PriceB}}}{{{sheet}{card.PriceC}}}";
     }
 
     private const float ButtonOffsetY = -50f;

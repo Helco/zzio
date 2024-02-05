@@ -170,7 +170,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
 
         preload.CreateLabel(entity)
             .With(Mid + new Vector2(111, 266 + index*17))
-            .WithText(string.Concat(Enumerable.Repeat("{1017}", value)) + string.Concat(Enumerable.Repeat("{1018}", 5-value)))
+            .WithText(preload.GetLightsIndicator(value))
             .With(preload.Fnt001)
             .Build();
     }

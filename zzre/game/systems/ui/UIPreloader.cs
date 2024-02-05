@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Numerics;
 using DefaultEcs.Resource;
 using zzio;
+using zzio.db;
 using zzre.rendering;
 
 namespace zzre.game.systems.ui;
@@ -204,4 +206,13 @@ public class UIPreloader
             InDuration: 0.3f,
             SustainDelay: 0.03f, // this ensures we have at least one frame of pure black to switch scenes/locations
             OutDuration: 0.3f));
+
+    public string GetSpellPrices(SpellRow spellRow) {
+        var sheet = spellRow.Type == 0 ? 5 : 4;
+        return $"{{{sheet}{spellRow.PriceA}}}{{{sheet}{spellRow.PriceB}}}{{{sheet}{spellRow.PriceC}}}";
+    }
+
+    public string GetLightsIndicator(int value) {
+        return string.Concat(Enumerable.Repeat("{1017}", value)) + string.Concat(Enumerable.Repeat("{1018}", 5-value));
+    }
 }
