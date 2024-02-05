@@ -67,7 +67,7 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
         preload.CreateCurrencyLabel(entity, trading.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
         for (int i = 0; i < trading.CardTrades.Count; i++)
             AddTrade(entity, trading, i, bgRect);
-        CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
+        preload.CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
 
         return entity;
     }
@@ -171,22 +171,6 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
         trading.CardPurchaseButtons[purchase] = card;
     }
 
-    private const float ButtonOffsetY = -50f;
-    private void CreateSingleButton(DefaultEcs.Entity entity, UID textUID, components.ui.ElementId elementId, Rect bgRect)
-    {
-        preload.CreateButton(entity)
-            .With(elementId)
-            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y + ButtonOffsetY))
-            .With(new components.ui.ButtonTiles(0, 1))
-            .With(components.ui.FullAlignment.TopCenter)
-            .With(preload.Btn000)
-            .WithLabel()
-            .With(preload.Fnt000)
-            .WithText(textUID)
-            .Build();
-
-        // TODO: Set cursor position in dialog trading
-    }
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId clickedId)
     {
         var uiEntity = Set.GetEntities()[0];

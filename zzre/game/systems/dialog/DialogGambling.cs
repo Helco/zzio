@@ -78,8 +78,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             AddTrade(entity, gambling, selectedCard, i, bgRect);
         }
 
-        CreateSingleButton(entity, new UID(0x91A7E821), 1, IDRepeat, bgRect);
-        CreateSingleButton(entity, new UID(0xF7DFDC21), 0, IDExit, bgRect);
+        preload.CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
+        preload.CreateSingleButton(entity, new UID(0x91A7E821), IDRepeat, bgRect, offset: 1);
 
         return entity;
     }
@@ -194,24 +194,6 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var className = preload.GetClassText(card.PriceA);
         var prices = preload.GetSpellPrices(card);
         return $"{name}\n{type} - {className} - {prices}";
-    }
-
-    private const float ButtonOffsetY = -50f;
-    private const float RepeatButtonOffsetY = -40f;
-    private void CreateSingleButton(DefaultEcs.Entity entity, UID textUID, int offset, components.ui.ElementId elementId, Rect bgRect)
-    {
-        preload.CreateButton(entity)
-            .With(elementId)
-            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y + ButtonOffsetY + RepeatButtonOffsetY * offset))
-            .With(new components.ui.ButtonTiles(0, 1))
-            .With(components.ui.FullAlignment.TopCenter)
-            .With(preload.Btn000)
-            .WithLabel()
-            .With(preload.Fnt000)
-            .WithText(textUID)
-            .Build();
-
-        // TODO: Set cursor position in dialog gambling
     }
 
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId clickedId)

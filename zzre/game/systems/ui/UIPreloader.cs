@@ -231,6 +231,25 @@ public class UIPreloader
             .WithText($"{GetDBText(UIDYouHave)} {{{3000 + currency.CardId.EntityId}}}x{inventory.CountCards(currency.CardId)}")
             .Build();
 
+    private const float ButtonOffsetY = -50f;
+    private const float RepeatButtonOffsetY = -40f;
+    public DefaultEcs.Entity CreateSingleButton(DefaultEcs.Entity entity, UID textUID, components.ui.ElementId elementId, Rect bgRect, int offset = 0)
+    {
+        var button = CreateButton(entity)
+            .With(elementId)
+            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y + ButtonOffsetY + RepeatButtonOffsetY * offset))
+            .With(new components.ui.ButtonTiles(0, 1))
+            .With(components.ui.FullAlignment.TopCenter)
+            .With(Btn000)
+            .WithLabel()
+            .With(Fnt000)
+            .WithText(textUID)
+            .Build();
+
+        // TODO: Set cursor position in dialog gambling
+        return button;
+    }
+
     public string GetSpellPrices(SpellRow spellRow) {
         var sheet = spellRow.Type == 0 ? 5 : 4;
         return $"{{{sheet}{spellRow.PriceA}}}{{{sheet}{spellRow.PriceB}}}{{{sheet}{spellRow.PriceC}}}";
