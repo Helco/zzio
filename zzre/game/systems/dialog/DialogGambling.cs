@@ -72,8 +72,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         preload.CreateDialogBackground(entity, animateOverlay: false, out var bgRect);
         preload.CreateCurrencyLabel(entity, gambling.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
         for (int i = 0; i < rows; i++) {
-            Random rnd = new Random();
-            var selectedCard = gambling.Cards.OrderBy(c => rnd.Next()).First();
+            Random rnd = new();
+            var selectedCard = gambling.Cards.MinBy(c => rnd.Next());
             AddTrade(entity, gambling, selectedCard, i, bgRect);
         }
 
@@ -108,7 +108,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
 
         var texts = new (int row, int col, string text)[] {
-            (0, 0, db.GetText(UIDANewSpell).Text.ToUpper()),
+            (0, 0, db.GetText(UIDANewSpell).Text.ToUpper(new CultureInfo("en-US", false))),
             (1, 0, "Offensive Spell - Nature"),
             (2, 0, "Mana"),
             (2, 1, card.Mana == 5 ? "{{1004}}-/-" : $"{{1004}}{card.MaxMana}/{card.MaxMana}"),
@@ -212,6 +212,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         // TODO: Set cursor position in dialog gambling
     }
+
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId clickedId)
     {
         var uiEntity = Set.GetEntities()[0];
