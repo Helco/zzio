@@ -53,6 +53,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
                 case zzio.effect.parts.ElectricBolt electricBolt: partEntity.Set(electricBolt); break;
                 case zzio.effect.parts.Models models: partEntity.Set(models); break;
                 case zzio.effect.parts.MovingPlanes movingPlanes: partEntity.Set(movingPlanes); break;
+                case zzio.effect.parts.ParticleEmitter emitter: partEntity.Set(emitter); break;
                 case zzio.effect.parts.ParticleBeam particleBeam: partEntity.Set(particleBeam); break;
                 case zzio.effect.parts.RandomPlanes randomPlanes: partEntity.Set(randomPlanes); break;
                 case zzio.effect.parts.Sound sound: partEntity.Set(sound); break;

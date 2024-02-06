@@ -94,6 +94,8 @@ public class Game : BaseDisposable, ITagContainer
             new systems.effect.EffectCombiner(this),
             new systems.effect.MovingPlanes(this),
             new systems.effect.RandomPlanes(this),
+            new systems.effect.Emitter(this),
+            new systems.effect.ParticleEmitter(this),
 
             // Animals
             new systems.Animal(this),

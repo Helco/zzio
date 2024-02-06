@@ -4,6 +4,7 @@ using DefaultEcs.Resource;
 using zzre.materials;
 using zzre.rendering.effectparts;
 using zzio;
+using Silk.NET.Core;
 
 namespace zzre.game.systems.effect;
 
@@ -46,15 +47,21 @@ public sealed class MovingPlanes : BaseCombinerPart<
 
     private void Reset(ref components.effect.MovingPlanesState state, zzio.effect.parts.MovingPlanes data)
     {
-        state.CurPhase1 = data.phase1 / 1000f;
-        state.CurPhase2 = data.phase2 / 1000f;
         state.CurRotation = 0f;
         state.CurTexShift = 0f;
+        ResetCycle(ref state, data);
+    }
+
+    private void ResetCycle(ref components.effect.MovingPlanesState state, zzio.effect.parts.MovingPlanes data)
+    {
+        state.CurPhase1 = data.phase1 / 1000f;
+        state.CurPhase2 = data.phase2 / 1000f;
         state.CurScale = 1f;
     }
 
     protected override void Update(
         float elapsedTime,
+        in DefaultEcs.Entity entity,
         in components.Parent parent,
         ref components.effect.MovingPlanesState state,
         in zzio.effect.parts.MovingPlanes data,
@@ -95,8 +102,8 @@ public sealed class MovingPlanes : BaseCombinerPart<
         }
         else if (playback.IsLooping)
         {
-            Reset(ref state, data);
-            Update(elapsedTime, parent, ref state, data, ref indices);
+            ResetCycle(ref state, data);
+            Update(elapsedTime, entity, parent, ref state, data, ref indices);
             return;
         }
         else

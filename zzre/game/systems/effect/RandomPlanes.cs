@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Buffers;
 using System.Numerics;
 using DefaultEcs.Resource;
 using zzre.materials;
 using zzre.rendering.effectparts;
 using zzio;
-using System.Buffers;
 
 namespace zzre.game.systems.effect;
 
@@ -65,10 +65,13 @@ public sealed class RandomPlanes : BaseCombinerPart<
         state.CurTexShift = 0f;
         if (state.CurPhase1 <= 0f)
             state.CurPhase1 = 1f;
+        foreach (ref var plane in state.Planes.Span)
+            plane.Life = -1f;
     }
 
     protected override void Update(
         float elapsedTime,
+        in DefaultEcs.Entity entity,
         in components.Parent parent,
         ref components.effect.RandomPlanesState state,
         in zzio.effect.parts.RandomPlanes data,
@@ -87,7 +90,7 @@ public sealed class RandomPlanes : BaseCombinerPart<
             else if (playback.IsLooping)
             {
                 Reset(ref state, data);
-                Update(elapsedTime, parent, ref state, data, ref indices);
+                Update(elapsedTime, entity, parent, ref state, data, ref indices);
                 return;
             }
         }

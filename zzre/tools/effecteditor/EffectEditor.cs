@@ -95,7 +95,9 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         updateSystems = new SequentialSystem<float>(
             new game.systems.effect.EffectCombiner(diContainer) { AddIndexAsComponent = true },
             new game.systems.effect.MovingPlanes(diContainer),
-            new game.systems.effect.RandomPlanes(diContainer));
+            new game.systems.effect.RandomPlanes(diContainer),
+            new game.systems.effect.Emitter(diContainer),
+            new game.systems.effect.ParticleEmitter(diContainer));
         AddDisposable(updateSystems);
 
         renderSystems = new SequentialSystem<CommandList>(

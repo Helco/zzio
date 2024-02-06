@@ -34,6 +34,7 @@ public abstract partial class BaseCombinerPart<TData, TState> : AEntityMultiMapS
     [Update]
     protected abstract void Update(
         float elapsedTime,
+        in DefaultEcs.Entity entity,
         in components.Parent parent,
         ref TState state,
         in TData data,
