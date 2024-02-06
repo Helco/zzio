@@ -23,6 +23,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
     private readonly int currencyI = 23;
     private readonly int rows = 5;
+    private readonly int price = 2;
     private readonly float rowAnimationDelay = 0.5f;
 
     private readonly MappedDB db;
@@ -75,7 +76,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
-        preload.CreateCurrencyLabel(entity, gambling.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
+        gambling.CurrencyLabel = preload.CreateCurrencyLabel(entity, gambling.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
         // for (int i = 0; i < rows; i++) {
         //     Random rnd = new();
         //     var selectedCard = gambling.Cards.MinBy(c => rnd.Next());
@@ -85,7 +86,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             gambling.RowAnimationTimeLeft = rowAnimationDelay;
         } else {
             for (int i = 0; i < rows; i++) {
-                gambling.SelectedCards.Add(PullRandomCard(ref gambling));
+                PullRandomCard(ref gambling);
                 AddTrade(entity, ref gambling, gambling.SelectedCards[i]?.CardId.EntityId, i);
                 if (allowTradeButtons)
                     AddTradeButton(entity, ref gambling, gambling.SelectedCards[i]?.CardId.EntityId, i);
@@ -161,11 +162,11 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         return entity;
     }
 
-    private SpellRow? PullRandomCard(ref components.DialogGambling gambling) {
+    private void PullRandomCard(ref components.DialogGambling gambling) {
         Random rnd = new();
         var selectedCardId = gambling.Cards.MinBy(c => rnd.Next());
         var selectedCard = db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCardId);
-        return selectedCard;
+        gambling.SelectedCards.Add(selectedCard);
         // gambling.SelectedCards.Add(db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCard));
         // AddTrade(entity, ref gambling, selectedCard, gambling.SelectedCards.Count-1);
     }
@@ -211,7 +212,13 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
 
         gambling.CardPurchaseButtons[purchase] = card;
+    }
 
+    private void Pay(ref components.DialogGambling gambling) {
+        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        inventory.RemoveCards(gambling.Currency.CardId, (uint)price);
+        gambling.CurrencyLabel.Dispose();
+        gambling.CurrencyLabel = preload.CreateCurrencyLabel(gambling.Profile, gambling.Currency, inventory);
     }
 
     private string GetSpellLabel(SpellRow card) {
@@ -260,8 +267,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             if (gambling.RowAnimationTimeLeft <= 0f) {
                 if (gambling.SelectedCards.Count < rows) {
                     // Add one trade, restart timer
-
-                    gambling.SelectedCards.Add(PullRandomCard(ref gambling));
+                    Pay(ref gambling);
+                    PullRandomCard(ref gambling);
                     AddTrade(gambling.Profile, ref gambling, gambling.SelectedCards.Last()?.CardId.EntityId, gambling.SelectedCards.Count-1);
                     gambling.RowAnimationTimeLeft = rowAnimationDelay;
                 } else {

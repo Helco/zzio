@@ -14,6 +14,7 @@ public struct DialogGambling
     public List<SpellRow?> SelectedCards;
     public Rect bgRect;
     public Dictionary<components.ui.ElementId, SpellRow> CardPurchaseButtons;
+    public DefaultEcs.Entity CurrencyLabel;
     public DefaultEcs.Entity Profile;
     public float? RowAnimationTimeLeft;
 }
