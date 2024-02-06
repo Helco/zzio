@@ -60,6 +60,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             DialogEntity = message.DialogEntity,
             Currency = db.Items.ElementAt(currencyI),
             Cards = message.Cards,
+            SelectedCards = new(),
             CardPurchaseButtons = new()
         });
         ref var gambling = ref uiEntity.Get<components.DialogGambling>();
@@ -72,27 +73,29 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         entity.Set(new components.Parent(parent));
 
         preload.CreateDialogBackground(entity, animateOverlay: false, out var bgRect);
-        preload.CreateCurrencyLabel(entity, gambling.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
-        for (int i = 0; i < rows; i++) {
-            Random rnd = new();
-            var selectedCard = gambling.Cards.MinBy(c => rnd.Next());
-            AddTrade(entity, gambling, selectedCard, i, bgRect);
-        }
-        gambling.RowAnimationTimeLeft = rowAnimationDelay;
-        Console.WriteLine(gambling.RowAnimationTimeLeft);
+        gambling.bgRect = bgRect;
 
-        preload.CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
-        preload.CreateSingleButton(entity, new UID(0x91A7E821), IDRepeat, bgRect, offset: 1);
+        preload.CreateCurrencyLabel(entity, gambling.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
+        // for (int i = 0; i < rows; i++) {
+        //     Random rnd = new();
+        //     var selectedCard = gambling.Cards.MinBy(c => rnd.Next());
+        //     AddTrade(entity, gambling, selectedCard, i, bgRect);
+        // }
+        gambling.RowAnimationTimeLeft = rowAnimationDelay;
+
+        // preload.CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
+        // preload.CreateSingleButton(entity, new UID(0x91A7E821), IDRepeat, bgRect, offset: 1);
 
         return entity;
     }
 
-    private DefaultEcs.Entity CreateSpellProfile(DefaultEcs.Entity parent, components.DialogGambling gambling, SpellRow card)
+    private DefaultEcs.Entity CreateSpellProfile(DefaultEcs.Entity parent, ref components.DialogGambling gambling, SpellRow card)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
         preload.CreateDialogBackground(entity, animateOverlay: false, out var bgRect);
+        gambling.bgRect = bgRect;
 
         preload.CreateLabel(entity)
             .With(bgRect.Min + new Vector2(30, 22))
@@ -153,8 +156,11 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         return entity;
     }
 
-    private void AddRandomTrade() {
-        Console.WriteLine("random trade added");
+    private void AddRandomTrade(DefaultEcs.Entity entity, ref components.DialogGambling gambling) {
+        Random rnd = new();
+        var selectedCard = gambling.Cards.MinBy(c => rnd.Next());
+        gambling.SelectedCards.Add(db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCard));
+        AddTrade(entity, gambling, selectedCard, gambling.SelectedCards.Count-1, gambling.bgRect);
     }
 
     private void AddTrade(DefaultEcs.Entity entity, components.DialogGambling gambling, int? selectedCardId, int index, Rect bgRect)
@@ -211,7 +217,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         if (gambling.CardPurchaseButtons.TryGetValue(clickedId, out var card)) {
             gambling.Profile.Dispose();
             gambling.Purchase = card;
-            gambling.Profile = CreateSpellProfile(uiEntity, gambling, card);
+            gambling.Profile = CreateSpellProfile(uiEntity, ref gambling, card);
         }
         else if (clickedId == IDYes) {
             zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Add(gambling.Purchase!.CardId);
@@ -237,7 +243,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         if (gambling.RowAnimationTimeLeft != null) {
             gambling.RowAnimationTimeLeft -= timeElapsed;
             if (gambling.RowAnimationTimeLeft <= 0f) {
-                AddRandomTrade();
+                AddRandomTrade(entity, ref gambling);
                 gambling.RowAnimationTimeLeft = rowAnimationDelay;
             }
         }
