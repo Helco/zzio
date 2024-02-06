@@ -45,6 +45,7 @@ public class Game : BaseDisposable, ITagContainer
         AddTag(savegame);
         AddTag(ecsWorld = new DefaultEcs.World());
         AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
+        AddTag(new ModelInstanceBuffer(diContainer, 512)); // TODO: ModelRenderer should use central ModelInstanceBuffer
         AddTag(new EffectMesh(this, 4096, 8192));
         AddTag(camera = new Camera(this));
 
@@ -96,6 +97,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.effect.RandomPlanes(this),
             new systems.effect.Emitter(this),
             new systems.effect.ParticleEmitter(this),
+            new systems.effect.ModelEmitter(this),
 
             // Animals
             new systems.Animal(this),
@@ -161,13 +163,16 @@ public class Game : BaseDisposable, ITagContainer
             new systems.ModelRenderer(this, components.RenderOrder.EarlySolid),
             new systems.ModelRenderer(this, components.RenderOrder.EarlyAdditive),
             new systems.effect.EffectRenderer(this, components.RenderOrder.EarlyEffect),
+            new systems.effect.EffectModelRenderer(this, components.RenderOrder.EarlyEffect),
             new systems.ModelRenderer(this, components.RenderOrder.Solid),
             new systems.ModelRenderer(this, components.RenderOrder.Additive),
             new systems.ModelRenderer(this, components.RenderOrder.EnvMap),
             new systems.effect.EffectRenderer(this, components.RenderOrder.Effect),
+            new systems.effect.EffectModelRenderer(this, components.RenderOrder.Effect),
             new systems.ModelRenderer(this, components.RenderOrder.LateSolid),
             new systems.ModelRenderer(this, components.RenderOrder.LateAdditive),
-            new systems.effect.EffectRenderer(this, components.RenderOrder.LateEffect));
+            new systems.effect.EffectRenderer(this, components.RenderOrder.LateEffect),
+            new systems.effect.EffectModelRenderer(this, components.RenderOrder.LateEffect));
 
         var worldLocation = new Location();
         camera.Location.Parent = worldLocation;

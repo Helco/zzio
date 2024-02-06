@@ -27,7 +27,6 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
         public ClumpCount Increment() => new(Clump, Materials, Count + 1);
     }
 
-    private readonly ITagContainer diContainer;
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadedSubscription;
     private readonly components.RenderOrder responsibility;
@@ -39,7 +38,6 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
     public ModelRenderer(ITagContainer diContainer, components.RenderOrder responsibility) :
         base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
-        this.diContainer = diContainer;
         this.responsibility = responsibility;
         instanceBuffer = new(diContainer);
         sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);

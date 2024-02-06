@@ -59,8 +59,7 @@ public readonly struct ParticleEmitterState(
 
 public readonly struct ModelEmitterState(
     IMemoryOwner<ModelEmitterState.Particle> particleMemoryOwner,
-    int maxParticleCount,
-    ModelInstanceBuffer.InstanceArena instanceArena)
+    int maxParticleCount)
 {
     public struct Particle
     {
@@ -72,7 +71,6 @@ public readonly struct ModelEmitterState(
 
     public readonly IMemoryOwner<Particle> ParticleMemoryOwner = particleMemoryOwner;
     public readonly Memory<Particle> Particles = particleMemoryOwner.Memory.Slice(0, maxParticleCount);
-    public readonly ModelInstanceBuffer.InstanceArena InstanceArena = instanceArena;
 }
 
 public readonly struct SparkEmitterState(

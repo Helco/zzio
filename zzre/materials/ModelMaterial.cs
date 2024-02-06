@@ -80,6 +80,7 @@ public sealed class ModelInstanceBuffer : DynamicMesh
     private readonly Attribute<IColor> attrTint;
 
     public ModelInstanceBuffer(ITagContainer diContainer,
+        int preallocateInstances = 0,
         bool dynamic = true,
         string name = nameof(ModelInstanceBuffer))
         : base(diContainer, dynamic, name)
@@ -87,6 +88,7 @@ public sealed class ModelInstanceBuffer : DynamicMesh
         attrWorld = AddAttribute<Matrix4x4>("world");
         attrTexShift = AddAttribute<Matrix3x2>("inTexShift");
         attrTint = AddAttribute<IColor>("inTint");
+        Preallocate(preallocateInstances, 0);
     }
 
     public class InstanceArena : IDisposable

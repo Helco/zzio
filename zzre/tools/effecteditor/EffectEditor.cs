@@ -75,6 +75,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         openFileModal.OnOpenedResource += Load;
 
         diContainer.AddTag(new EffectMesh(diContainer, 1024, 2048));
+        diContainer.AddTag(new ModelInstanceBuffer(diContainer, 128));
         diContainer.AddTag(camera = new Camera(diContainer));
         controls = new OrbitControlsTag(Window, camera.Location, diContainer);
         AddDisposable(controls);
@@ -90,6 +91,8 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         diContainer.AddTag<IAssetLoader<Texture>>(textureLoader);
         diContainer.AddTag<IAssetLoader<ClumpMesh>>(clumpLoader);
 
+        diContainer.AddTag(new game.resources.Clump(diContainer));
+        diContainer.AddTag(new game.resources.ClumpMaterial(diContainer));
         diContainer.AddTag(new game.resources.EffectMaterial(diContainer));
 
         updateSystems = new SequentialSystem<float>(
@@ -97,13 +100,17 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
             new game.systems.effect.MovingPlanes(diContainer),
             new game.systems.effect.RandomPlanes(diContainer),
             new game.systems.effect.Emitter(diContainer),
-            new game.systems.effect.ParticleEmitter(diContainer));
+            new game.systems.effect.ParticleEmitter(diContainer),
+            new game.systems.effect.ModelEmitter(diContainer));
         AddDisposable(updateSystems);
 
         renderSystems = new SequentialSystem<CommandList>(
             new game.systems.effect.EffectRenderer(diContainer, game.components.RenderOrder.EarlyEffect),
+            new game.systems.effect.EffectModelRenderer(diContainer, game.components.RenderOrder.EarlyEffect),
             new game.systems.effect.EffectRenderer(diContainer, game.components.RenderOrder.Effect),
-            new game.systems.effect.EffectRenderer(diContainer, game.components.RenderOrder.LateEffect));
+            new game.systems.effect.EffectModelRenderer(diContainer, game.components.RenderOrder.Effect),
+            new game.systems.effect.EffectRenderer(diContainer, game.components.RenderOrder.LateEffect),
+            new game.systems.effect.EffectModelRenderer(diContainer, game.components.RenderOrder.LateEffect));
         AddDisposable(renderSystems);
 
         editor.AddInfoSection("Info", HandleInfoContent);

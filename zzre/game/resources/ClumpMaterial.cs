@@ -15,7 +15,8 @@ public readonly record struct ClumpMaterialInfo(
     ModelMaterial.BlendMode BlendMode = ModelMaterial.BlendMode.Opaque,
     bool DepthWrite = true,
     bool DepthTest = true,
-    bool HasEnvMap = false)
+    bool HasEnvMap = false,
+    bool HasTexShift = true)
 {
     public ClumpMaterialInfo(FOModelRenderType renderType, RWMaterial rwMaterial) : this(rwMaterial)
     {
@@ -48,6 +49,16 @@ public readonly record struct ClumpMaterialInfo(
                 throw new NotSupportedException($"Unsupported render type for material {renderType}");
         }
     }
+
+    public ClumpMaterialInfo(RWMaterial rwMaterial, zzio.effect.EffectPartRenderMode renderMode, bool depthTest)
+        : this(rwMaterial, renderMode switch
+        {
+            zzio.effect.EffectPartRenderMode.Additive => ModelMaterial.BlendMode.Additive,
+            zzio.effect.EffectPartRenderMode.AdditiveAlpha => ModelMaterial.BlendMode.AdditiveAlpha,
+            zzio.effect.EffectPartRenderMode.NormalBlend => ModelMaterial.BlendMode.Alpha,
+            _ => throw new NotSupportedException($"Unsupported effect part render mode: {renderMode}")
+        }, DepthWrite: false, depthTest, HasTexShift: false)
+    { }
 }
 
 public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, ModelMaterial>
@@ -75,12 +86,12 @@ public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, ModelMaterial>
     {
         var material = new ModelMaterial(diContainer)
         {
-            HasTexShift = true,
             IsInstanced = true,
             Blend = info.BlendMode,
             DepthTest = info.DepthTest,
             DepthWrite = info.DepthWrite,
-            HasEnvMap = info.HasEnvMap
+            HasEnvMap = info.HasEnvMap,
+            HasTexShift = info.HasTexShift
         };
 
         (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(TextureBasePaths, info.RWMaterial);
