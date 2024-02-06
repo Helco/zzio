@@ -93,5 +93,16 @@ public partial class OverworldFairySpawner : AEntitySetSystem<float>
         if (parent.TryGet<components.ActorParts>(out var parentActorParts) &&
             parentActorParts.Body.Get<components.Visibility>() == components.Visibility.Invisible)
             World.Publish(new messages.CreatureSetVisibility(fairy, false));
+
+        if (dbRow.Glow > 0)
+        {
+            var effect = World.CreateEntity();
+            World.Publish(new messages.SpawnEffectCombiner(
+                EffectId: 4000 + dbRow.Glow,
+                AsEntity: effect));
+            effect.Set(new components.Parent(fairy));
+            effect.Set<components.FairyGlowEffectPosition>();
+            effect.Get<Location>().Parent = World.Get<Location>();
+        }
     }
 }
