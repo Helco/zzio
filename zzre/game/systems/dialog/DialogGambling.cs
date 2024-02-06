@@ -263,9 +263,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         ref var gambling = ref uiEntity.Get<components.DialogGambling>();
 
         if (gambling.CardPurchaseButtons.TryGetValue(clickedId, out var card)) {
-            gambling.Profile.Dispose();
-            gambling.RowAnimationTimeLeft = null;
             gambling.Purchase = card;
+            gambling.Profile.Dispose();
             gambling.Profile = CreateSpellProfile(uiEntity, ref gambling, card);
         }
         else if (clickedId == IDYes) {
@@ -278,8 +277,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             gambling.Profile = CreatePrimary(uiEntity, ref gambling);
         }
         else if (clickedId == IDRepeat) {
-            gambling.Profile.Dispose();
             gambling.SelectedCards = new();
+            gambling.Profile.Dispose();
             gambling.Profile = CreatePrimary(uiEntity, ref gambling, animate: true);
         }
         else if (clickedId == IDExit) {
