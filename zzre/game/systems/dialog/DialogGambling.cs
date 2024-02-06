@@ -78,44 +78,50 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         entity.Set(new components.Parent(parent));
 
         gambling.CurrencyLabel = preload.CreateCurrencyLabel(entity, gambling.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
-        if (animate) {
-            gambling.RowAnimationTimeLeft = rowAnimationDelay;
-        } else {
+        if (gambling.SelectedCards.Count == rows) {
             RebuildPrimary(entity, ref gambling, allowTradeButtons);
+        } else {
+            StartAnimation(ref gambling);
         }
 
         return entity;
     }
 
-    private void AnimatePrimary(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
+    private void StartAnimation(ref components.DialogGambling gambling) => gambling.RowAnimationTimeLeft = rowAnimationDelay;
+    private void EndAnimation(ref components.DialogGambling gambling) => gambling.RowAnimationTimeLeft = null;
+    private void TickAnimation(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
     {
         if (gambling.SelectedCards.Count < rows) {
-            // Add one trade, restart timer
             Pay(ref gambling);
             PullRandomCard(ref gambling);
             AddTrade(parent, ref gambling, gambling.SelectedCards.Count - 1);
-            gambling.RowAnimationTimeLeft = rowAnimationDelay;
+            StartAnimation(ref gambling);
         } else {
-            // Add buttons, stop timer
-            preload.CreateSingleButton(parent, new UID(0xF7DFDC21), IDExit, gambling.bgRect);
-            preload.CreateSingleButton(parent, new UID(0x91A7E821), IDRepeat, gambling.bgRect, offset: 1);
-            for (int i = 0; i < rows; i++)
-                AddTradeButton(parent, ref gambling, i);
-
-            gambling.RowAnimationTimeLeft = null;
+            AddBottomButtons(parent, ref gambling);
+            AddTradeButtons(parent, ref gambling);
+            EndAnimation(ref gambling);
         }
     }
 
     private void RebuildPrimary(DefaultEcs.Entity parent, ref components.DialogGambling gambling, bool allowTradeButtons)
     {
-        for (int i = 0; i < rows; i++) {
+        for (int i = 0; i < rows; i++)
             AddTrade(parent, ref gambling, i);
-        }
+        AddBottomButtons(parent, ref gambling);
+        if (allowTradeButtons)
+            AddTradeButtons(parent, ref gambling);
+    }
+
+    private void AddBottomButtons(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
+    {
         preload.CreateSingleButton(parent, new UID(0xF7DFDC21), IDExit, gambling.bgRect);
         preload.CreateSingleButton(parent, new UID(0x91A7E821), IDRepeat, gambling.bgRect, offset: 1);
-        if (allowTradeButtons)
-            for (int i = 0; i < rows; i++)
-                AddTradeButton(parent, ref gambling, i);
+    }
+
+    private void AddTradeButtons(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
+    {
+        for (int i = 0; i < rows; i++)
+            AddTradeButton(parent, ref gambling, i);
     }
 
     private DefaultEcs.Entity CreateSpellProfile(DefaultEcs.Entity parent, ref components.DialogGambling gambling, SpellRow card)
@@ -188,8 +194,6 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var selectedCardId = gambling.Cards.MinBy(c => rnd.Next());
         var selectedCard = db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCardId);
         gambling.SelectedCards.Add(selectedCard);
-        // gambling.SelectedCards.Add(db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCard));
-        // AddTrade(entity, ref gambling, selectedCard, gambling.SelectedCards.Count-1);
     }
 
     private void AddTrade(DefaultEcs.Entity entity, ref components.DialogGambling gambling, int index)
@@ -287,7 +291,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.DialogGambling gambling)
     {
         if (gambling.RowAnimationTimeLeft != null) {
-            if (gambling.RowAnimationTimeLeft <= 0f) AnimatePrimary(gambling.Profile, ref gambling);
+            if (gambling.RowAnimationTimeLeft <= 0f) TickAnimation(gambling.Profile, ref gambling);
             gambling.RowAnimationTimeLeft -= timeElapsed;
         }
     }
