@@ -23,7 +23,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
     private readonly int currencyI = 23;
     private readonly int rows = 5;
-    private readonly float rowAnimationDelay = 1f;
+    private readonly float rowAnimationDelay = 0.5f;
 
     private readonly MappedDB db;
     private readonly IDisposable resetUISubscription;
@@ -68,9 +68,9 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         preload.CreateDialogBackground(uiEntity, animateOverlay: false, out var bgRect);
         gambling.bgRect = bgRect;
 
-        gambling.Profile = CreatePrimary(uiEntity, ref gambling);
+        gambling.Profile = CreatePrimary(uiEntity, ref gambling, animate: true);
     }
-    private DefaultEcs.Entity CreatePrimary(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
+    private DefaultEcs.Entity CreatePrimary(DefaultEcs.Entity parent, ref components.DialogGambling gambling, bool animate = false)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
@@ -81,10 +81,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         //     var selectedCard = gambling.Cards.MinBy(c => rnd.Next());
         //     AddTrade(entity, gambling, selectedCard, i);
         // }
-        gambling.RowAnimationTimeLeft = rowAnimationDelay;
-
-        // preload.CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
-        // preload.CreateSingleButton(entity, new UID(0x91A7E821), IDRepeat, bgRect, offset: 1);
+        if (animate) gambling.RowAnimationTimeLeft = rowAnimationDelay;
 
         return entity;
     }
@@ -158,14 +155,13 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var selectedCard = gambling.Cards.MinBy(c => rnd.Next());
         gambling.SelectedCards.Add(db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCard));
         AddTrade(entity, ref gambling, selectedCard, gambling.SelectedCards.Count-1);
+        AddTradeButton(entity, ref gambling, selectedCard, gambling.SelectedCards.Count-1);
     }
 
     private void AddTrade(DefaultEcs.Entity entity, ref components.DialogGambling gambling, int? selectedCardId, int index)
     {
         var card = db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCardId);
-
-        var purchase = new components.ui.ElementId(index);
-        var offset = gambling.bgRect.Center + new Vector2(25-205, 20-30-120 + 50 * index);
+        var offset = gambling.bgRect.Center + new Vector2(-180, -130 + 50 * index);
 
         if (card == null) {
         preload.CreateLabel(entity)
@@ -187,7 +183,15 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .WithText(GetSpellLabel(card))
             .With(preload.Fnt002)
             .Build();
+    }
 
+    private void AddTradeButton(DefaultEcs.Entity entity, ref components.DialogGambling gambling, int? selectedCardId, int index) {
+
+        var card = db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCardId);
+        var offset = gambling.bgRect.Center + new Vector2(-180, -130 + 50 * index);
+        if (card == null) return;
+
+        var purchase = new components.ui.ElementId(index);
         preload.CreateButton(entity)
             .With(purchase)
             .With(offset + new Vector2(370, -1))
@@ -196,6 +200,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
 
         gambling.CardPurchaseButtons[purchase] = card;
+
     }
 
     private string GetSpellLabel(SpellRow card) {
@@ -213,6 +218,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         if (gambling.CardPurchaseButtons.TryGetValue(clickedId, out var card)) {
             gambling.Profile.Dispose();
+            gambling.RowAnimationTimeLeft = null;
             gambling.Purchase = card;
             gambling.Profile = CreateSpellProfile(uiEntity, ref gambling, card);
         }
@@ -227,7 +233,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         }
         else if (clickedId == IDRepeat) {
             gambling.Profile.Dispose();
-            gambling.Profile = CreatePrimary(uiEntity, ref gambling);
+            gambling.SelectedCards = new();
+            gambling.Profile = CreatePrimary(uiEntity, ref gambling, animate: true);
         }
         else if (clickedId == IDExit) {
             gambling.DialogEntity.Set(components.DialogState.NextScriptOp);
@@ -240,8 +247,14 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         if (gambling.RowAnimationTimeLeft != null) {
             gambling.RowAnimationTimeLeft -= timeElapsed;
             if (gambling.RowAnimationTimeLeft <= 0f) {
-                AddRandomTrade(entity, ref gambling);
-                gambling.RowAnimationTimeLeft = rowAnimationDelay;
+                if (gambling.SelectedCards.Count == rows) {
+                    gambling.RowAnimationTimeLeft = null;
+                    preload.CreateSingleButton(gambling.Profile, new UID(0xF7DFDC21), IDExit, gambling.bgRect);
+                    preload.CreateSingleButton(gambling.Profile, new UID(0x91A7E821), IDRepeat, gambling.bgRect, offset: 1);
+                } else if (gambling.SelectedCards.Count < rows) {
+                    AddRandomTrade(gambling.Profile, ref gambling);
+                    gambling.RowAnimationTimeLeft = rowAnimationDelay;
+                }
             }
         }
     }
