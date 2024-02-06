@@ -65,6 +65,9 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         });
         ref var gambling = ref uiEntity.Get<components.DialogGambling>();
 
+        preload.CreateDialogBackground(uiEntity, animateOverlay: false, out var bgRect);
+        gambling.bgRect = bgRect;
+
         gambling.Profile = CreatePrimary(uiEntity, ref gambling);
     }
     private DefaultEcs.Entity CreatePrimary(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
@@ -72,14 +75,11 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
-        preload.CreateDialogBackground(entity, animateOverlay: false, out var bgRect);
-        gambling.bgRect = bgRect;
-
         preload.CreateCurrencyLabel(entity, gambling.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
         // for (int i = 0; i < rows; i++) {
         //     Random rnd = new();
         //     var selectedCard = gambling.Cards.MinBy(c => rnd.Next());
-        //     AddTrade(entity, gambling, selectedCard, i, bgRect);
+        //     AddTrade(entity, gambling, selectedCard, i);
         // }
         gambling.RowAnimationTimeLeft = rowAnimationDelay;
 
@@ -94,22 +94,19 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
-        preload.CreateDialogBackground(entity, animateOverlay: false, out var bgRect);
-        gambling.bgRect = bgRect;
-
         preload.CreateLabel(entity)
-            .With(bgRect.Min + new Vector2(30, 22))
+            .With(gambling.bgRect.Min + new Vector2(30, 22))
             .With(preload.Fnt001)
             .WithText(db.GetText(UIDSpellProfile).Text)
             .Build();
 
         preload.CreateImage(entity)
-            .With(bgRect.Min + new Vector2(50+40, 50+26))
+            .With(gambling.bgRect.Min + new Vector2(50+40, 50+26))
             .With(preload.Spl000, card.CardId.EntityId)
             .Build();
 
         preload.CreateLabel(entity)
-            .With(bgRect.Min + new Vector2(70+40+30, 50+33))
+            .With(gambling.bgRect.Min + new Vector2(70+40+30, 50+33))
             .With(preload.Fnt003)
             .WithText(card.Name)
             .Build();
@@ -128,27 +125,27 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         };
         for (int i = 0; i < texts.Length; i++)
             preload.CreateLabel(entity)
-                .With(bgRect.Min + new Vector2(50+40 + texts[i].col * 90, 100+36 + texts[i].row * 28))
+                .With(gambling.bgRect.Min + new Vector2(50+40 + texts[i].col * 90, 100+36 + texts[i].row * 28))
                 .With(preload.Fnt002)
                 .WithText(texts[i].text)
                 .Build();
 
         preload.CreateLabel(entity)
-            .With(new Vector2(bgRect.Center.X - 76-59, bgRect.Max.Y - 46))
+            .With(new Vector2(gambling.bgRect.Center.X - 76-59, gambling.bgRect.Max.Y - 46))
             .With(preload.Fnt002)
             .WithText(db.GetText(UIDTakeIt).Text)
             .Build();
 
         preload.CreateButton(entity)
             .With(IDYes)
-            .With(new Vector2(bgRect.Center.X + 20-70, bgRect.Max.Y - 65+5))
+            .With(new Vector2(gambling.bgRect.Center.X + 20-70, gambling.bgRect.Max.Y - 65+5))
             .With(new components.ui.ButtonTiles(5, 6))
             .With(preload.Btn000)
             .Build();
 
         preload.CreateButton(entity)
             .With(IDNo)
-            .With(new Vector2(bgRect.Center.X + 56-56, bgRect.Max.Y - 65+5))
+            .With(new Vector2(gambling.bgRect.Center.X + 56-56, gambling.bgRect.Max.Y - 65+5))
             .With(new components.ui.ButtonTiles(7, 8))
             .With(preload.Btn000)
             .Build();
@@ -160,15 +157,15 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         Random rnd = new();
         var selectedCard = gambling.Cards.MinBy(c => rnd.Next());
         gambling.SelectedCards.Add(db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCard));
-        AddTrade(entity, gambling, selectedCard, gambling.SelectedCards.Count-1, gambling.bgRect);
+        AddTrade(entity, ref gambling, selectedCard, gambling.SelectedCards.Count-1);
     }
 
-    private void AddTrade(DefaultEcs.Entity entity, components.DialogGambling gambling, int? selectedCardId, int index, Rect bgRect)
+    private void AddTrade(DefaultEcs.Entity entity, ref components.DialogGambling gambling, int? selectedCardId, int index)
     {
         var card = db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCardId);
 
         var purchase = new components.ui.ElementId(index);
-        var offset = bgRect.Center + new Vector2(25-205, 20-30-120 + 50 * index);
+        var offset = gambling.bgRect.Center + new Vector2(25-205, 20-30-120 + 50 * index);
 
         if (card == null) {
         preload.CreateLabel(entity)
