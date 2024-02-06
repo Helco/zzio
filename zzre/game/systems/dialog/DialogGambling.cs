@@ -70,9 +70,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         gambling.Profile = CreatePrimary(uiEntity, ref gambling, animate: true);
     }
-    private DefaultEcs.Entity CreatePrimary(DefaultEcs.Entity parent, ref components.DialogGambling gambling, bool animate = false)
+    private DefaultEcs.Entity CreatePrimary(DefaultEcs.Entity parent, ref components.DialogGambling gambling, bool animate = false, bool allowTradeButtons = true)
     {
-        Console.WriteLine("Creating Primary Profile");
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
@@ -88,7 +87,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             for (int i = 0; i < rows; i++) {
                 gambling.SelectedCards.Add(PullRandomCard(ref gambling));
                 AddTrade(entity, ref gambling, gambling.SelectedCards[i]?.CardId.EntityId, i);
-                AddTradeButton(entity, ref gambling, gambling.SelectedCards[i]?.CardId.EntityId, i);
+                if (allowTradeButtons)
+                    AddTradeButton(entity, ref gambling, gambling.SelectedCards[i]?.CardId.EntityId, i);
             }
             preload.CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, gambling.bgRect);
             preload.CreateSingleButton(entity, new UID(0x91A7E821), IDRepeat, gambling.bgRect, offset: 1);
@@ -236,7 +236,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         else if (clickedId == IDYes) {
             zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Add(gambling.Purchase!.CardId);
             gambling.Profile.Dispose();
-            gambling.Profile = CreatePrimary(uiEntity, ref gambling);
+            gambling.Profile = CreatePrimary(uiEntity, ref gambling, allowTradeButtons: false);
         }
         else if (clickedId == IDNo) {
             gambling.Profile.Dispose();
