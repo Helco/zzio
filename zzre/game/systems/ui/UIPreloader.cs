@@ -44,18 +44,6 @@ public class UIPreloader
 
     private static readonly UID[] UIDClassNames = new UID[]
     {
-        new(0x448DD8A1), // Nature
-        new(0x30D5D8A1), // Air
-        new(0xC15AD8A1), // Water
-        new(0x6EE2D8A1), // Light
-        new(0x44AAD8A1), // Energy
-        new(0xEC31D8A1), // Psi
-        new(0xAD78D8A1), // Stone
-        new(0x6483DCA1), // Ice
-        new(0x8EC9DCA1), // Fire
-        new(0x8313DCA1), // Dark
-        new(0xC659DCA1), // Chaos
-        new(0x3CE1DCA1)  // Metal
     };
     private static readonly UID UIDYouHave = new(0x070EE421);
 
@@ -252,13 +240,26 @@ public class UIPreloader
 
     public string GetSpellPrices(SpellRow spellRow) {
         var sheet = spellRow.Type == 0 ? 5 : 4;
-        return $"{{{sheet}{spellRow.PriceA}}}{{{sheet}{spellRow.PriceB}}}{{{sheet}{spellRow.PriceC}}}";
+        return $"{{{sheet}{(int)spellRow.PriceA}}}{{{sheet}{(int)spellRow.PriceB}}}{{{sheet}{(int)spellRow.PriceC}}}";
     }
 
     public string GetLightsIndicator(int value) {
         return string.Concat(Enumerable.Repeat("{1017}", value)) + string.Concat(Enumerable.Repeat("{1018}", 5-value));
     }
 
-    public string GetClassText(int Class0) =>
-        GetDBText(UIDClassNames[Class0-1]);
+    public string GetClassText(ZZClass zzClass) => zzClass switch {
+        ZZClass.Nature  => GetDBText(new UID(0x448DD8A1)), // Nature
+        ZZClass.Air     => GetDBText(new UID(0x30D5D8A1)), // Air
+        ZZClass.Water   => GetDBText(new UID(0xC15AD8A1)), // Water
+        ZZClass.Light   => GetDBText(new UID(0x6EE2D8A1)), // Light
+        ZZClass.Energy  => GetDBText(new UID(0x44AAD8A1)), // Energy
+        ZZClass.Mental  => GetDBText(new UID(0xEC31D8A1)), // Psi
+        ZZClass.Stone   => GetDBText(new UID(0xAD78D8A1)), // Stone
+        ZZClass.Ice     => GetDBText(new UID(0x6483DCA1)), // Ice
+        ZZClass.Fire    => GetDBText(new UID(0x8EC9DCA1)), // Fire
+        ZZClass.Dark    => GetDBText(new UID(0x8313DCA1)), // Dark
+        ZZClass.Chaos   => GetDBText(new UID(0xC659DCA1)), // Chaos
+        ZZClass.Metal   => GetDBText(new UID(0x3CE1DCA1)), // Metal
+        _ => throw new ArgumentException($"Unknown spell class: {zzClass}")
+    };
 }

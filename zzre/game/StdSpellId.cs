@@ -25,12 +25,12 @@ public static class StdSpells
     private static bool IsSpellCompatible(SpellRow spell, zzio.ZZClass zzClass, uint level)
     {
         var price =
-            (spell.PriceA > 0 ? 1 : 0) +
-            (spell.PriceB > 1 ? 1 : 0) +
-            (spell.PriceC > 1 ? 1 : 0);
+            (spell.PriceA != zzio.ZZClass.None ? 1 : 0) +
+            (spell.PriceB != zzio.ZZClass.None && spell.PriceB != zzio.ZZClass.Nature ? 1 : 0) +
+            (spell.PriceC != zzio.ZZClass.None && spell.PriceC != zzio.ZZClass.Nature ? 1 : 0);
         var maxPrice = GetMaxPriceFor(level);
         var maxRelevantPrice = spell.Type == 0 ? maxPrice.attack : maxPrice.support;
-        return spell.PriceA == (byte)zzClass && price <= maxRelevantPrice;
+        return spell.PriceA == zzClass && price <= maxRelevantPrice;
     }
 
     public static StdSpellId GetStarterSpellFor(zzio.ZZClass zzClass) => zzClass switch

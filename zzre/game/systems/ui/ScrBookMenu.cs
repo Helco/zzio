@@ -118,7 +118,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
 
         preload.CreateLabel(entity)
             .With(Mid + new Vector2(36, 80))
-            .WithText(preload.GetClassText((int)fairyRow.Class0))
+            .WithText(preload.GetClassText(fairyRow.Class0))
             .With(preload.Fnt002)
             .Build();
 
