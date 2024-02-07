@@ -15,6 +15,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private static readonly components.ui.ElementId IDRepeat = new(1002);
     private static readonly components.ui.ElementId IDExit = new(1003);
 
+    private static readonly UID UIDCannotAfford = new(0x534DCEB1);
     private static readonly UID UIDBlank = new(0x1AF6CAB1);
     private static readonly UID UIDOffensiveSpell = new(0xD4B02981);
     private static readonly UID UIDPassiveSpell = new(0x515E2981);
@@ -112,7 +113,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         preload.CreateLabel(parent)
             .With(gambling.bgRect.Center + new Vector2(0, -3))
             .With(preload.Fnt000)
-            .WithText("You do not have enough money!")
+            .WithText(UIDCannotAfford)
             .With(components.ui.FullAlignment.Center)
             .Build();
         AddBottomButtons(parent, ref gambling);
@@ -223,7 +224,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         preload.CreateLabel(entity)
             .With(gambling.bgRect.Min + new Vector2(30, 22))
             .With(preload.Fnt001)
-            .WithText(db.GetText(UIDSpellProfile).Text)
+            .WithText(UIDSpellProfile)
             .Build();
 
         preload.CreateImage(entity)
@@ -263,7 +264,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         preload.CreateLabel(entity)
             .With(new Vector2(gambling.bgRect.Center.X - 135, gambling.bgRect.Max.Y - 46))
             .With(preload.Fnt002)
-            .WithText(db.GetText(UIDTakeIt).Text)
+            .WithText(UIDTakeIt)
             .Build();
 
         preload.CreateButton(entity)
@@ -299,7 +300,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         if (card == null) {
         preload.CreateLabel(entity)
             .With(offset + new Vector2(40, 16))
-            .WithText(db.GetText(UIDBlank).Text)
+            .WithText(UIDBlank)
             .With(preload.Fnt000)
             .Build();
             return;
