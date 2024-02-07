@@ -201,7 +201,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         Vector2 cardTypeOffset = isAttack ? new(0, 0) : new(0, 28);
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(30, 22))
+            .With(gambling.bgRect.Min + new Vector2(30, 22))
             .With(preload.Fnt001)
             .WithText(db.GetText(UIDSpellProfile).Text)
             .Build();
@@ -225,17 +225,17 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(180, 136 + 28*2))
+            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(180, 192))
             .With(preload.Fnt002)
             .WithLineHeight(28)
             .WithText(SpellValues(card))
             .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(90, 136 + (isAttack ? 6 : 4) * 28))
+            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(90, isAttack ? 300 : 244))
             .With(preload.Fnt000)
             .WithText(card.Info)
-            .WithLineHeight(28)
+            .WithLineHeight(22)
             .WithLineWrap(gambling.bgRect.Size.X - 100)
             .WithAnimation()
             .Build();
