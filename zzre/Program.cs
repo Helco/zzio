@@ -70,7 +70,7 @@ internal partial class Program
     {
         // just to normalize
         var path = Path.Combine(Environment.CurrentDirectory, poolName);
-        var ext = Path.GetExtension(path) ?? "";
+        var ext = Path.GetExtension(path).ToLowerInvariant() ?? "";
         switch(ext)
         {
             case ".pak": return new PAKResourcePool(new FileStream(path, FileMode.Open, FileAccess.Read));
