@@ -73,6 +73,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         uiEntity.Set(new components.DialogGambling{
             DialogEntity = message.DialogEntity,
+            Currency = db.Items.ElementAt(currencyI),
             Cards = CloverleafFilter(message.Cards),
             SelectedCards = new(),
             CardPurchaseButtons = new()
