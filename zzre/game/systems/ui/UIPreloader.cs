@@ -42,9 +42,6 @@ public class UIPreloader
         Cls001,
         Map000;
 
-    private static readonly UID[] UIDClassNames = new UID[]
-    {
-    };
     private static readonly UID UIDYouHave = new(0x070EE421);
 
     public UIPreloader(ITagContainer diContainer)

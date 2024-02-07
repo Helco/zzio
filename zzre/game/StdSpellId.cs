@@ -26,8 +26,8 @@ public static class StdSpells
     {
         var price =
             (spell.PriceA != zzio.ZZClass.None ? 1 : 0) +
-            (spell.PriceB != zzio.ZZClass.None && spell.PriceB != zzio.ZZClass.Nature ? 1 : 0) +
-            (spell.PriceC != zzio.ZZClass.None && spell.PriceC != zzio.ZZClass.Nature ? 1 : 0);
+            (spell.PriceB != zzio.ZZClass.None ? 1 : 0) +
+            (spell.PriceC != zzio.ZZClass.None ? 1 : 0);
         var maxPrice = GetMaxPriceFor(level);
         var maxRelevantPrice = spell.Type == 0 ? maxPrice.attack : maxPrice.support;
         return spell.PriceA == zzClass && price <= maxRelevantPrice;
