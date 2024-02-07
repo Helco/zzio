@@ -64,7 +64,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
     protected override void HandleOpen(in messages.DialogGambling message)
     {
-        message.DialogEntity.Set(components.DialogState.Talk);
+        message.DialogEntity.Set(components.DialogState.Gambling);
         World.Publish(new messages.DialogResetUI(message.DialogEntity));
 
         var uiEntity = World.CreateEntity();

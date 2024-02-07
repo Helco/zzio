@@ -8,6 +8,7 @@ public enum DialogState
     Talk,
     Choice,
     Trading,
+    Gambling,
     PreFightWild,
     PreFightNpc,
     NpcWalking,
