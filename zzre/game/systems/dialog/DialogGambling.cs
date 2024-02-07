@@ -126,31 +126,46 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         }
     }
 
+    private string SpellCountText(SpellRow card) {
+        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        var count = inventory.CountCards(card.CardId);
+        var countInUse = inventory.CountCards(card.CardId, inUse: true);
+
+        if (count == 0){
+            return db.GetText(UIDANewSpell).Text.ToUpper(new CultureInfo("en-US", false));
+        } else {
+            return $"You already have this spell! Number: {count}, in use: {countInUse}";
+        }
+    }
+
     private DefaultEcs.Entity CreateSpellProfile(DefaultEcs.Entity parent, ref components.DialogGambling gambling, SpellRow card)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
+        var isAttack = card.Type == 0;
+        Vector2 cardTypeOffset = isAttack ? new(0, 0) : new(0, 28);
+
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + new Vector2(30, 22))
+            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(30, 22))
             .With(preload.Fnt001)
             .WithText(db.GetText(UIDSpellProfile).Text)
             .Build();
 
         preload.CreateImage(entity)
-            .With(gambling.bgRect.Min + new Vector2(90, 76))
+            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(90, 76))
             .With(card.CardId)
             .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + new Vector2(140, 83))
+            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(140, 83))
             .With(preload.Fnt003)
             .WithText(card.Name)
             .Build();
 
         var texts = new (int row, int col, string text)[] {
-            (0, 0, db.GetText(UIDANewSpell).Text.ToUpper(new CultureInfo("en-US", false))),
-            (1, 0, "Offensive Spell - Nature"),
+            (0, 0, SpellCountText(card)),
+            (1, 0, $"{(isAttack ? db.GetText(UIDOffensiveSpell).Text : db.GetText(UIDPassiveSpell).Text)} - {preload.GetClassText(card.PriceA)}"),
             (2, 0, "Mana"),
             (2, 1, "{104}" + (card.Mana == 5 ? "-/-" : $"{card.MaxMana}/{card.MaxMana}")),
             (3, 0, "Level"),
@@ -162,17 +177,17 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         };
         for (int i = 0; i < texts.Length; i++)
             preload.CreateLabel(entity)
-                .With(gambling.bgRect.Min + new Vector2(90 + texts[i].col * 90, 136 + texts[i].row * 28))
+                .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(90 + texts[i].col * 90, 136 + texts[i].row * 28))
                 .With(preload.Fnt002)
                 .WithText(texts[i].text)
                 .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + new Vector2(90, 136 + (texts.Last().row + 1) * 28))
+            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(90, 136 + (texts.Last().row + 1) * 28))
             .With(preload.Fnt000)
             .WithText(card.Info)
             .WithLineHeight(15)
-            .WithLineWrap(gambling.bgRect.Size.X - 140)
+            .WithLineWrap(gambling.bgRect.Size.X - 100)
             .WithAnimation()
             .Build();
 
