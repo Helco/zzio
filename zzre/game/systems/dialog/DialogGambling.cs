@@ -138,7 +138,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         preload.CreateImage(entity)
             .With(gambling.bgRect.Min + new Vector2(90, 76))
-            .With(preload.Spl000, card.CardId.EntityId)
+            .With(card.CardId)
             .Build();
 
         preload.CreateLabel(entity)
@@ -213,7 +213,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         preload.CreateImage(entity)
             .With(offset)
-            .With(preload.Spl000, card.CardId.EntityId)
+            .With(card.CardId)
             .Build();
 
         preload.CreateLabel(entity)
