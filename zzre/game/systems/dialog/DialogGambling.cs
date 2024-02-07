@@ -22,6 +22,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private static readonly UID UIDPassiveSpell = new(0x515E2981);
 
     private readonly int currencyI = 23;
+    private readonly int cloverleafI = 64;
     private readonly int rows = 5;
     private readonly int pricePerRow = 2;
     private readonly float rowAnimationDelay = 0.5f;
@@ -60,7 +61,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         uiEntity.Set(new components.DialogGambling{
             DialogEntity = message.DialogEntity,
             Currency = db.Items.ElementAt(currencyI),
-            Cards = message.Cards,
+            Cards = CloverLeafFilter(message.Cards),
             SelectedCards = new(),
             CardPurchaseButtons = new()
         });
@@ -268,6 +269,18 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var className = preload.GetClassText(card.PriceA);
         var prices = preload.GetSpellPrices(card);
         return $"{name}\n{type} - {className} - {prices}";
+    }
+
+    private List<int?> CloverLeafFilter(List<int?> cards) {
+        if (!zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Contains(db.Items.ElementAt(cloverleafI).CardId))
+            return cards;
+
+        List<int?> filteredCards = new();
+        Random rnd = new();
+        foreach (var card in cards)
+            if (card != null || rnd.NextDouble() >= 0.8)
+                filteredCards.Add(card);
+        return filteredCards;
     }
 
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId clickedId)
