@@ -167,6 +167,15 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
                 .Build();
 
         preload.CreateLabel(entity)
+            .With(gambling.bgRect.Min + new Vector2(90, 136 + (texts.Last().row + 1) * 28))
+            .With(preload.Fnt000)
+            .WithText(card.Info)
+            .WithLineHeight(15)
+            .WithLineWrap(gambling.bgRect.Size.X - 140)
+            .WithAnimation()
+            .Build();
+
+        preload.CreateLabel(entity)
             .With(new Vector2(gambling.bgRect.Center.X - 135, gambling.bgRect.Max.Y - 46))
             .With(preload.Fnt002)
             .WithText(db.GetText(UIDTakeIt).Text)
