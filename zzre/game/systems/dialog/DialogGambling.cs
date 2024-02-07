@@ -10,10 +10,16 @@ namespace zzre.game.systems;
 
 public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, messages.DialogGambling>
 {
-    private static readonly components.ui.ElementId IDExit = new(1000);
-    private static readonly components.ui.ElementId IDRepeat = new(1001);
-    private static readonly components.ui.ElementId IDYes = new(1002);
-    private static readonly components.ui.ElementId IDNo = new(1003);
+    private static readonly components.ui.ElementId IDYes = new(1000);
+    private static readonly components.ui.ElementId IDNo = new(1001);
+    private static readonly components.ui.ElementId IDRepeat = new(1002);
+    private static readonly components.ui.ElementId IDExit = new(1003);
+
+    private static readonly UID UIDBlank = new(0x1AF6CAB1);
+    private static readonly UID UIDOffensiveSpell = new(0xD4B02981);
+    private static readonly UID UIDPassiveSpell = new(0x515E2981);
+    private static readonly UID UIDRepeat = new(0x91A7E821);
+    private static readonly UID UIDExit = new(0xF7DFDC21);
 
     private static readonly UID UIDSpellProfile = new(0xBFC6DD81);
     private static readonly UID UIDTakeIt = new(0x84D35581);
@@ -21,9 +27,6 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private static readonly UID UIDOldSpell = new(0x92A1EBB1);
     private static readonly UID UIDOldSpell1 = new(0xE9C9EFB1);
     private static readonly UID UIDOldSpell2 = new(0x8B19EFB1);
-    private static readonly UID UIDOffensiveSpell = new(0xD4B02981);
-    private static readonly UID UIDPassiveSpell = new(0x515E2981);
-    private static readonly UID UIDBlank = new(0x1AF6CAB1);
 
     private static readonly UID UIDMana = new(0x238A3981);
     private static readonly UID UIDLevel = new(0xCDF3D81);
@@ -114,8 +117,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private void AddBottomButtons(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
     {
         if (CanAfford(ref gambling))
-            preload.CreateSingleButton(parent, new UID(0x91A7E821), IDRepeat, gambling.bgRect, offset: 1);
-        preload.CreateSingleButton(parent, new UID(0xF7DFDC21), IDExit, gambling.bgRect);
+            preload.CreateSingleButton(parent, UIDRepeat, IDRepeat, gambling.bgRect, offset: 1);
+        preload.CreateSingleButton(parent, UIDExit, IDExit, gambling.bgRect);
     }
 
     private void AddPurchaseButtons(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
@@ -203,7 +206,6 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         entity.Set(new components.Parent(parent));
 
         var isAttack = card.Type == 0;
-        Vector2 cardTypeOffset = isAttack ? new(0, 0) : new(0, 28);
 
         preload.CreateLabel(entity)
             .With(gambling.bgRect.Min + new Vector2(30, 22))
@@ -212,32 +214,32 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
 
         preload.CreateImage(entity)
-            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(90, 76))
+            .With(gambling.bgRect.Min + new Vector2(90, 76 + (isAttack ? 0 : 28)))
             .With(card.CardId)
             .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(140, 83))
+            .With(gambling.bgRect.Min + new Vector2(140, 83 + (isAttack ? 0 : 28)))
             .With(preload.Fnt003)
             .WithText(card.Name)
             .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(90, 136))
+            .With(gambling.bgRect.Min + new Vector2(90, 136 + (isAttack ? 0 : 28)))
             .With(preload.Fnt002)
             .WithLineHeight(28)
             .WithText(SpellStats(card))
             .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(180, 192))
+            .With(gambling.bgRect.Min + new Vector2(180, 192 + (isAttack ? 0 : 28)))
             .With(preload.Fnt002)
             .WithLineHeight(28)
             .WithText(SpellValues(card))
             .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(90, isAttack ? 300 : 244))
+            .With(gambling.bgRect.Min + new Vector2(90, isAttack ? 300 : 272))
             .With(preload.Fnt000)
             .WithText(card.Info)
             .WithLineHeight(22)
