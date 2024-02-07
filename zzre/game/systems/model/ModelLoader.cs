@@ -17,7 +17,8 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     private readonly IDisposable sceneLoadSubscription;
     private readonly IDisposable createItemSubscription;
     private readonly IDisposable removeModelSubscription;
-    private readonly IDisposable removeItemSubscription;
+    // note: we do not react to GSModRemoveItem, removing the visual model is done by BehaviourCollectable at the *correct* time
+    // while removing it at load is handled here
 
     private readonly Dictionary<uint, DefaultEcs.Entity> entitiesById = new();
 
@@ -29,7 +30,6 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         createItemSubscription = ecsWorld.Subscribe<messages.CreateItem>(HandleCreateItem);
         removeModelSubscription = ecsWorld.Subscribe<GSModRemoveModel>(HandleRemoveModel);
-        removeItemSubscription = ecsWorld.Subscribe<GSModRemoveItem>(HandleRemoveItem);
     }
 
     protected override void DisposeManaged()
@@ -39,7 +39,6 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         sceneChangingSubscription.Dispose();
         createItemSubscription.Dispose();
         removeModelSubscription.Dispose();
-        removeItemSubscription.Dispose();
     }
 
     public bool IsEnabled { get; set; } = true;
