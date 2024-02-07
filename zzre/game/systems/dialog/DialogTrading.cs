@@ -67,7 +67,7 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
         preload.CreateCurrencyLabel(entity, trading.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
         for (int i = 0; i < trading.CardTrades.Count; i++)
             AddTrade(entity, trading, i, bgRect);
-        preload.CreateSingleButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
+        preload.CreateSingleDialogButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
 
         return entity;
     }

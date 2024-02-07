@@ -233,7 +233,7 @@ public class UIPreloader
 
     private const float ButtonOffsetY = -50f;
     private const float RepeatButtonOffsetY = -40f;
-    public DefaultEcs.Entity CreateSingleButton(DefaultEcs.Entity entity, UID textUID, components.ui.ElementId elementId, Rect bgRect, int offset = 0)
+    public DefaultEcs.Entity CreateSingleDialogButton(DefaultEcs.Entity entity, UID textUID, components.ui.ElementId elementId, Rect bgRect, int offset = 0)
     {
         var button = CreateButton(entity)
             .With(elementId)

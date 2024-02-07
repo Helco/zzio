@@ -14,7 +14,7 @@ public struct DialogGambling
     public List<SpellRow?> SelectedCards;
     public SpellRow? Purchase;
 
-    public Rect bgRect;
+    public Rect BgRect;
     public Dictionary<components.ui.ElementId, SpellRow> CardPurchaseButtons;
     public DefaultEcs.Entity CurrencyLabel;
     public DefaultEcs.Entity Profile;

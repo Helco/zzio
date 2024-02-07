@@ -34,12 +34,13 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private static readonly UID UIDDamage = new(0xE946ECA1);
     private static readonly UID UIDLoadup = new(0x4211121);
 
-    private readonly int currencyI = 23;
-    private readonly int cloverleafI = 64;
-    private readonly int rows = 5;
-    private readonly int pricePerRow = 2;
-    private readonly float rowAnimationDelay = 0.5f;
+    static readonly CultureInfo cultureInfo = new("en-US", false);
 
+    private const int rows = 5;
+    private const int pricePerRow = 2;
+    private const float rowAnimationDelay = 0.5f;
+
+    private readonly Random random = Random.Shared;
     private readonly MappedDB db;
     private readonly IDisposable resetUISubscription;
 
@@ -73,15 +74,15 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         uiEntity.Set(new components.DialogGambling{
             DialogEntity = message.DialogEntity,
-            Currency = db.Items.ElementAt(currencyI),
+            Currency = db.GetItem((int)StdItemId.Gold),
             Cards = CloverleafFilter(message.Cards),
-            SelectedCards = new(),
-            CardPurchaseButtons = new()
+            SelectedCards = new(rows),
+            CardPurchaseButtons = new(rows)
         });
         ref var gambling = ref uiEntity.Get<components.DialogGambling>();
 
         preload.CreateDialogBackground(uiEntity, animateOverlay: false, out var bgRect);
-        gambling.bgRect = bgRect;
+        gambling.BgRect = bgRect;
 
         gambling.Profile = CreatePrimary(uiEntity, ref gambling);
     }
@@ -93,8 +94,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         if (HasCloverleaf())
             preload.CreateImage(entity)
-                .With(new Vector2(gambling.bgRect.Max.X - 55, gambling.bgRect.Min.Y + 29))
-                .With(db.Items.ElementAt(cloverleafI).CardId)
+                .With(new Vector2(gambling.BgRect.Max.X - 55, gambling.BgRect.Min.Y + 29))
+                .With(new CardId(CardType.Item, (int)StdItemId.CloverLeaf))
                 .Build();
         gambling.CurrencyLabel = preload.CreateCurrencyLabel(entity, gambling.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
         if (gambling.SelectedCards.Count == rows) {
@@ -111,7 +112,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private void MessageCannotAfford(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
     {
         preload.CreateLabel(parent)
-            .With(gambling.bgRect.Center + new Vector2(0, -3))
+            .With(gambling.BgRect.Center + new Vector2(0, -3))
             .With(preload.Fnt000)
             .WithText(UIDCannotAfford)
             .With(components.ui.FullAlignment.Center)
@@ -131,8 +132,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private void AddBottomButtons(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
     {
         if (CanAfford(ref gambling))
-            preload.CreateSingleButton(parent, UIDRepeat, IDRepeat, gambling.bgRect, offset: 1);
-        preload.CreateSingleButton(parent, UIDExit, IDExit, gambling.bgRect);
+            preload.CreateSingleDialogButton(parent, UIDRepeat, IDRepeat, gambling.BgRect, offset: 1);
+        preload.CreateSingleDialogButton(parent, UIDExit, IDExit, gambling.BgRect);
     }
 
     private void AddPurchaseButtons(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
@@ -165,7 +166,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var prices = preload.GetSpellPrices(card);
 
         if (!zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Contains(card.CardId)) {
-            var newSpell = db.GetText(UIDNewSpell).Text.ToUpper(new CultureInfo("en-US", false));
+            var newSpell = db.GetText(UIDNewSpell).Text.ToUpper(cultureInfo);
             return $"{name} - {newSpell}\n{spellType} - {spellClass} - {prices}";
         } else {
             return $"{name}\n{spellType} - {spellClass} - {prices}";
@@ -228,61 +229,61 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var isAttack = card.Type == 0;
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + new Vector2(30, 22))
+            .With(gambling.BgRect.Min + new Vector2(30, 22))
             .With(preload.Fnt001)
             .WithText(UIDSpellProfile)
             .Build();
 
         preload.CreateImage(entity)
-            .With(gambling.bgRect.Min + new Vector2(90, 76 + (isAttack ? 0 : 28)))
+            .With(gambling.BgRect.Min + new Vector2(90, 76 + (isAttack ? 0 : 28)))
             .With(card.CardId)
             .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + new Vector2(140, 83 + (isAttack ? 0 : 28)))
+            .With(gambling.BgRect.Min + new Vector2(140, 83 + (isAttack ? 0 : 28)))
             .With(preload.Fnt003)
             .WithText(card.Name)
             .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + new Vector2(90, 136 + (isAttack ? 0 : 28)))
+            .With(gambling.BgRect.Min + new Vector2(90, 136 + (isAttack ? 0 : 28)))
             .With(preload.Fnt002)
             .WithLineHeight(28)
             .WithText(SpellStats(card))
             .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + new Vector2(180, 192 + (isAttack ? 0 : 28)))
+            .With(gambling.BgRect.Min + new Vector2(180, 192 + (isAttack ? 0 : 28)))
             .With(preload.Fnt002)
             .WithLineHeight(28)
             .WithText(SpellValues(card))
             .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + new Vector2(90, isAttack ? 300 : 272))
+            .With(gambling.BgRect.Min + new Vector2(90, isAttack ? 300 : 272))
             .With(preload.Fnt000)
             .WithText(card.Info)
             .WithLineHeight(22)
-            .WithLineWrap(gambling.bgRect.Size.X - 100)
-            .WithAnimation()
+            .WithLineWrap(gambling.BgRect.Size.X - 100)
+            .WithAnimation(segmentsPerAdd: 2)
             .Build();
 
         preload.CreateLabel(entity)
-            .With(new Vector2(gambling.bgRect.Center.X - 135, gambling.bgRect.Max.Y - 46))
+            .With(new Vector2(gambling.BgRect.Center.X - 135, gambling.BgRect.Max.Y - 46))
             .With(preload.Fnt002)
             .WithText(UIDTakeIt)
             .Build();
 
         preload.CreateButton(entity)
             .With(IDYes)
-            .With(new Vector2(gambling.bgRect.Center.X - 50, gambling.bgRect.Max.Y - 60))
+            .With(new Vector2(gambling.BgRect.Center.X - 50, gambling.BgRect.Max.Y - 60))
             .With(new components.ui.ButtonTiles(5, 6))
             .With(preload.Btn000)
             .Build();
 
         preload.CreateButton(entity)
             .With(IDNo)
-            .With(new Vector2(gambling.bgRect.Center.X, gambling.bgRect.Max.Y - 60))
+            .With(new Vector2(gambling.BgRect.Center.X, gambling.BgRect.Max.Y - 60))
             .With(new components.ui.ButtonTiles(7, 8))
             .With(preload.Btn000)
             .Build();
@@ -292,8 +293,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
     private void PullRandomCard(ref components.DialogGambling gambling)
     {
-        Random rnd = new();
-        var selectedCardId = gambling.Cards.MinBy(c => rnd.Next());
+        var selectedCardId = random.NextOf(gambling.Cards);
         var selectedCard = db.Spells.FirstOrDefault(c => c.CardId.EntityId == selectedCardId);
         gambling.SelectedCards.Add(selectedCard);
     }
@@ -301,7 +301,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private void AddTrade(DefaultEcs.Entity entity, ref components.DialogGambling gambling, int index)
     {
         var card = gambling.SelectedCards[index];
-        var offset = gambling.bgRect.Center + new Vector2(-180, -130 + 50 * index);
+        var offset = gambling.BgRect.Center + new Vector2(-180, -130 + 50 * index);
 
         if (card == null) {
         preload.CreateLabel(entity)
@@ -328,7 +328,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private void AddTradeButton(DefaultEcs.Entity entity, ref components.DialogGambling gambling, int index)
     {
         var card = gambling.SelectedCards[index];
-        var offset = gambling.bgRect.Center + new Vector2(-180, -130 + 50 * index);
+        var offset = gambling.BgRect.Center + new Vector2(-180, -130 + 50 * index);
         if (card == null) return;
 
         var purchase = new components.ui.ElementId(index);
@@ -354,15 +354,14 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     }
 
     private bool HasCloverleaf() =>
-        zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Contains(db.Items.ElementAt(cloverleafI).CardId);
+        zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Contains(StdItemId.CloverLeaf);
 
     private List<int?> CloverleafFilter(List<int?> cards) {
         if (!HasCloverleaf()) return cards;
 
         List<int?> filteredCards = new();
-        Random rnd = new();
         foreach (var card in cards)
-            if (card != null || rnd.NextDouble() >= 0.8)
+            if (card != null || random.NextDouble() >= 0.8)
                 filteredCards.Add(card);
         return filteredCards;
     }
@@ -387,7 +386,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             gambling.Profile = CreatePrimary(uiEntity, ref gambling);
         }
         else if (clickedId == IDRepeat) {
-            gambling.SelectedCards = new();
+            gambling.SelectedCards.Clear();
             gambling.Profile.Dispose();
             gambling.Profile = CreatePrimary(uiEntity, ref gambling);
         }

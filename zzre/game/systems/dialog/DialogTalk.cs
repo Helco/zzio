@@ -56,9 +56,9 @@ public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.
         var talkLabels = message.DialogEntity.TryGet<components.DialogTalkLabels>()
             .GetValueOrDefault(components.DialogTalkLabels.Exit);
         if (talkLabels == components.DialogTalkLabels.Exit)
-            preload.CreateSingleButton(uiEntity, new UID(0xF7DFDC21), IDExit, bgRect);
+            preload.CreateSingleDialogButton(uiEntity, new UID(0xF7DFDC21), IDExit, bgRect);
         else if (talkLabels == components.DialogTalkLabels.Continue)
-            preload.CreateSingleButton(uiEntity, new UID(0xCABAD411), IDContinue, bgRect);
+            preload.CreateSingleDialogButton(uiEntity, new UID(0xCABAD411), IDContinue, bgRect);
         else
             CreateYesNoButtons(uiEntity, bgRect);
     }
