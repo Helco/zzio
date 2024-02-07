@@ -358,8 +358,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         var dbSpell = mappedDB.GetSpell(spell.dbUID);
         var mana = dbSpell.Mana == 5 ? "-/-" : $"{spell.mana}/{dbSpell.MaxMana}";
-        var sheet = dbSpell.Type == 0 ? '5' : '4';
-        return $"{dbSpell.Name}\n{{104}}{mana} {{{sheet}{dbSpell.PriceA}}}{{{sheet}{dbSpell.PriceB}}}{{{sheet}{dbSpell.PriceC}}}";
+        return $"{dbSpell.Name}\n{{104}}{mana} {preload.GetSpellPrices(dbSpell)}";
     }
 
     private void CreateFairyInfos(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)

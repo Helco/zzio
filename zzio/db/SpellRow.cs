@@ -10,9 +10,9 @@ public class SpellRow : MappedRow
 
     public CardId CardId => new(row.cells[2].Integer);
 
-    public byte PriceA => row.cells[3].Byte;
-    public byte PriceB => row.cells[4].Byte;
-    public byte PriceC => row.cells[5].Byte;
+    public ZZClass PriceA => (ZZClass)row.cells[3].Byte;
+    public ZZClass PriceB => (ZZClass)row.cells[4].Byte;
+    public ZZClass PriceC => (ZZClass)row.cells[5].Byte;
 
     public string Info => foreignText(6);
 

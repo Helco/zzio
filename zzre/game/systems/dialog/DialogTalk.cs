@@ -56,9 +56,9 @@ public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.
         var talkLabels = message.DialogEntity.TryGet<components.DialogTalkLabels>()
             .GetValueOrDefault(components.DialogTalkLabels.Exit);
         if (talkLabels == components.DialogTalkLabels.Exit)
-            CreateSingleButton(uiEntity, new UID(0xF7DFDC21), IDExit, bgRect);
+            preload.CreateSingleDialogButton(uiEntity, new UID(0xF7DFDC21), IDExit, bgRect);
         else if (talkLabels == components.DialogTalkLabels.Continue)
-            CreateSingleButton(uiEntity, new UID(0xCABAD411), IDContinue, bgRect);
+            preload.CreateSingleDialogButton(uiEntity, new UID(0xCABAD411), IDContinue, bgRect);
         else
             CreateYesNoButtons(uiEntity, bgRect);
     }
@@ -135,22 +135,6 @@ public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.
 
     private const float YesNoButtonOffsetX = 4f;
     private const float ButtonOffsetY = -50f;
-    private void CreateSingleButton(DefaultEcs.Entity parent, UID textUID, components.ui.ElementId elementId, Rect bgRect)
-    {
-        preload.CreateButton(parent)
-            .With(elementId)
-            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y + ButtonOffsetY))
-            .With(new components.ui.ButtonTiles(0, 1))
-            .With(components.ui.FullAlignment.TopCenter)
-            .With(preload.Btn000)
-            .WithLabel()
-            .With(preload.Fnt000)
-            .WithText(textUID)
-            .Build();
-
-        // TODO: Set cursor position in dialog talk
-    }
-
     private void CreateYesNoButtons(DefaultEcs.Entity parent, Rect bgRect)
     {
         preload.CreateButton(parent)

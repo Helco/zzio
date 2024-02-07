@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Numerics;
 using DefaultEcs.Resource;
 using zzio;
+using zzio.db;
 using zzre.rendering;
 
 namespace zzre.game.systems.ui;
@@ -39,6 +41,8 @@ public class UIPreloader
         Cls000,
         Cls001,
         Map000;
+
+    private static readonly UID UIDYouHave = new(0x070EE421);
 
     public UIPreloader(ITagContainer diContainer)
     {
@@ -204,4 +208,55 @@ public class UIPreloader
             InDuration: 0.3f,
             SustainDelay: 0.03f, // this ensures we have at least one frame of pure black to switch scenes/locations
             OutDuration: 0.3f));
+
+    public DefaultEcs.Entity CreateCurrencyLabel(DefaultEcs.Entity parent, ItemRow currency, Inventory inventory) =>
+        CreateLabel(parent)
+            .With(new Vector2(-60, -170))
+            .With(Fnt000)
+            .WithText($"{GetDBText(UIDYouHave)} {{{3000 + currency.CardId.EntityId}}}x{inventory.CountCards(currency.CardId)}")
+            .Build();
+
+    private const float ButtonOffsetY = -50f;
+    private const float RepeatButtonOffsetY = -40f;
+    public DefaultEcs.Entity CreateSingleDialogButton(DefaultEcs.Entity entity, UID textUID, components.ui.ElementId elementId, Rect bgRect, int offset = 0)
+    {
+        var button = CreateButton(entity)
+            .With(elementId)
+            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y + ButtonOffsetY + RepeatButtonOffsetY * offset))
+            .With(new components.ui.ButtonTiles(0, 1))
+            .With(components.ui.FullAlignment.TopCenter)
+            .With(Btn000)
+            .WithLabel()
+            .With(Fnt000)
+            .WithText(textUID)
+            .Build();
+
+        // TODO: Set cursor position in dialog gambling
+        return button;
+    }
+
+    public string GetSpellPrices(SpellRow spellRow) {
+        var sheet = spellRow.Type == 0 ? 5 : 4;
+        return $"{{{sheet}{(int)spellRow.PriceA}}}{{{sheet}{(int)spellRow.PriceB}}}{{{sheet}{(int)spellRow.PriceC}}}";
+    }
+
+    public string GetLightsIndicator(int value) {
+        return string.Concat(Enumerable.Repeat("{1017}", value)) + string.Concat(Enumerable.Repeat("{1018}", 5-value));
+    }
+
+    public string GetClassText(ZZClass zzClass) => zzClass switch {
+        ZZClass.Nature  => GetDBText(new UID(0x448DD8A1)), // Nature
+        ZZClass.Air     => GetDBText(new UID(0x30D5D8A1)), // Air
+        ZZClass.Water   => GetDBText(new UID(0xC15AD8A1)), // Water
+        ZZClass.Light   => GetDBText(new UID(0x6EE2D8A1)), // Light
+        ZZClass.Energy  => GetDBText(new UID(0x44AAD8A1)), // Energy
+        ZZClass.Mental  => GetDBText(new UID(0xEC31D8A1)), // Psi
+        ZZClass.Stone   => GetDBText(new UID(0xAD78D8A1)), // Stone
+        ZZClass.Ice     => GetDBText(new UID(0x6483DCA1)), // Ice
+        ZZClass.Fire    => GetDBText(new UID(0x8EC9DCA1)), // Fire
+        ZZClass.Dark    => GetDBText(new UID(0x8313DCA1)), // Dark
+        ZZClass.Chaos   => GetDBText(new UID(0xC659DCA1)), // Chaos
+        ZZClass.Metal   => GetDBText(new UID(0x3CE1DCA1)), // Metal
+        _ => throw new ArgumentException($"Unknown spell class: {zzClass}")
+    };
 }
