@@ -61,7 +61,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         uiEntity.Set(new components.DialogGambling{
             DialogEntity = message.DialogEntity,
             Currency = db.Items.ElementAt(currencyI),
-            Cards = CloverLeafFilter(message.Cards),
+            Cards = CloverleafFilter(message.Cards),
             SelectedCards = new(),
             CardPurchaseButtons = new()
         });
@@ -271,9 +271,11 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         return $"{name}\n{type} - {className} - {prices}";
     }
 
-    private List<int?> CloverLeafFilter(List<int?> cards) {
-        if (!zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Contains(db.Items.ElementAt(cloverleafI).CardId))
-            return cards;
+    private bool HasCloverleaf() =>
+        zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Contains(db.Items.ElementAt(cloverleafI).CardId);
+
+    private List<int?> CloverleafFilter(List<int?> cards) {
+        if (!HasCloverleaf()) return cards;
 
         List<int?> filteredCards = new();
         Random rnd = new();
