@@ -30,16 +30,16 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadedSubscription;
     private readonly components.RenderOrder responsibility;
-
     private readonly ModelInstanceBuffer instanceBuffer;
+
     private readonly List<ClumpCount> clumpCounts = new();
-    private ModelInstanceBuffer.InstanceArena instanceArena = null!;
+    private ModelInstanceBuffer.InstanceArena? instanceArena;
 
     public ModelRenderer(ITagContainer diContainer, components.RenderOrder responsibility) :
         base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         this.responsibility = responsibility;
-        instanceBuffer = new(diContainer);
+        instanceBuffer = diContainer.GetTag<ModelInstanceBuffer>();
         sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
     }
@@ -49,19 +49,31 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
         base.Dispose();
         sceneChangingSubscription.Dispose();
         sceneLoadedSubscription.Dispose();
-        instanceBuffer.Dispose();
     }
 
     private void HandleSceneChanging(in messages.SceneChanging message)
     {
         instanceArena?.Dispose();
+        instanceArena = null;
     }
 
     private void HandleSceneLoaded(in messages.SceneLoaded message)
     {
         clumpCounts.EnsureCapacity(MultiMap.Keys.Count());
-        instanceBuffer.Clear();
-        instanceArena = instanceBuffer.RentVertices(MultiMap.Keys.Sum(MultiMap.Count) + 1);
+        var totalCount = MultiMap.Keys.Sum(MultiMap.Count);
+        if (totalCount > 0)
+            instanceArena = instanceBuffer.RentVertices(totalCount);
+    }
+
+    protected override void PreUpdate(CommandList cl)
+    {
+        // this allocates, MultiMap should just give the total count of entities instead
+        int totalCount = MultiMap.Keys.Sum(MultiMap.Count);
+        if ((instanceArena?.Capacity ?? 0) < totalCount)
+        {
+            instanceArena?.Dispose();
+            instanceArena = instanceBuffer.RentVertices(totalCount);
+        }
     }
 
     [WithPredicate]
@@ -81,7 +93,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
         else
             clumpCounts[^1] = clumpCounts[^1].Increment();
 
-        instanceArena.Add(new()
+        instanceArena!.Add(new()
         {
             tint = materialInfo.Color,
             world = location.LocalToWorld,
@@ -91,14 +103,14 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
 
     protected override void PostUpdate(CommandList cl)
     {
-        if (instanceArena.InstanceCount == 0)
+        if (instanceArena is null or { InstanceCount: 0 })
             return;
         cl.PushDebugGroup($"{nameof(ModelRenderer)} {responsibility}");
 
         instanceBuffer.Update(cl);
 
         bool isFirstDraw;
-        var curInstanceStart = 0u;
+        var curInstanceStart = instanceArena.InstanceStart;
         foreach (var clumpCount in clumpCounts)
         {
             var (clump, materials, count) = (clumpCount.Clump, clumpCount.Materials, clumpCount.Count);

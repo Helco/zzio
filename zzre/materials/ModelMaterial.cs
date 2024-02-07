@@ -99,12 +99,15 @@ public sealed class ModelInstanceBuffer : DynamicMesh
 
         public uint InstanceStart => (uint)startIndex;
         public uint InstanceCount => (uint)(nextIndex - startIndex);
+        public int Capacity => endIndex - startIndex;
+        public Range Range => startIndex..endIndex;
 
         public InstanceArena(ModelInstanceBuffer buffer, Range range)
         {
             this.buffer = buffer;
             (startIndex, endIndex) = range.GetOffsetAndLength(buffer.VertexCapacity);
             endIndex += startIndex;
+            Reset();
         }
 
         public void Reset() => nextIndex = startIndex;

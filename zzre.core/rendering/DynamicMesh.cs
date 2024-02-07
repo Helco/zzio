@@ -118,6 +118,8 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
     {
         if (!attributes.Any())
             throw new InvalidOperationException("Cannot rent any vertices without attributes");
+        if (request == 0)
+            return default;
         var range = attributes.First().Buffer.Rent(request, fast);
         foreach (var attribute in attributes.Skip(1))
         {
@@ -130,6 +132,8 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
 
     public void ReturnVertices(Range range)
     {
+        if (range.GetLength(int.MaxValue) == 0)
+            return;
         foreach (var attribute in attributes)
             attribute.Buffer.Return(range);
     }

@@ -50,8 +50,6 @@ public partial class EffectModelRenderer : AEntitySetSystem<CommandList>
             return;
         cl.PushDebugGroup(mesh.Name);
         bool isFirstDraw = true;
-
-        // TODO: Move updating the central ModelInstanceBuffer out of EffectModelRenderer
         instanceBuffer.Update(cl);
 
         foreach (var (subMesh, material) in mesh.SubMeshes.Zip(materials))

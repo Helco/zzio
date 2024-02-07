@@ -58,7 +58,9 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
         foreach (var entity in SortedSet.GetEntities())
             totalRects += tiles[entity].Length;
         instanceBuffer.Clear();
-        maxInstanceCount = instanceBuffer.RentVertices(totalRects).GetLength(instanceBuffer.VertexCapacity);
+        if (totalRects > 0)
+            instanceBuffer.RentVertices(totalRects);
+        maxInstanceCount = totalRects;
         nextInstanceIndex = 0;
     }
 
