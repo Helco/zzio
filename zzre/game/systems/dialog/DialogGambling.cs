@@ -87,6 +87,11 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
+        if (HasCloverleaf())
+            preload.CreateImage(entity)
+                .With(new Vector2(gambling.bgRect.Max.X - 55, gambling.bgRect.Min.Y + 29))
+                .With(db.Items.ElementAt(cloverleafI).CardId)
+                .Build();
         gambling.CurrencyLabel = preload.CreateCurrencyLabel(entity, gambling.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
         if (gambling.SelectedCards.Count == rows) {
             RebuildPrimary(entity, ref gambling, allowPurchaseButtons);
