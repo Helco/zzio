@@ -163,7 +163,13 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var spellType = card.Type == 0 ? db.GetText(UIDOffensiveSpell).Text : db.GetText(UIDPassiveSpell).Text;
         var spellClass = preload.GetClassText(card.PriceA);
         var prices = preload.GetSpellPrices(card);
-        return $"{name}\n{spellType} - {spellClass} - {prices}";
+
+        if (!zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Contains(card.CardId)) {
+            var newSpell = db.GetText(UIDNewSpell).Text.ToUpper(new CultureInfo("en-US", false));
+            return $"{name} - {newSpell}\n{spellType} - {spellClass} - {prices}";
+        } else {
+            return $"{name}\n{spellType} - {spellClass} - {prices}";
+        }
     }
 
     private string TextSpellCount(SpellRow card) {
