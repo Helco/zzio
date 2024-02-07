@@ -137,12 +137,12 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
 
         preload.CreateImage(entity)
-            .With(gambling.bgRect.Min + new Vector2(50+40, 50+26))
+            .With(gambling.bgRect.Min + new Vector2(90, 76))
             .With(preload.Spl000, card.CardId.EntityId)
             .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + new Vector2(70+40+30, 50+33))
+            .With(gambling.bgRect.Min + new Vector2(140, 83))
             .With(preload.Fnt003)
             .WithText(card.Name)
             .Build();
@@ -161,27 +161,27 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         };
         for (int i = 0; i < texts.Length; i++)
             preload.CreateLabel(entity)
-                .With(gambling.bgRect.Min + new Vector2(50+40 + texts[i].col * 90, 100+36 + texts[i].row * 28))
+                .With(gambling.bgRect.Min + new Vector2(90 + texts[i].col * 90, 136 + texts[i].row * 28))
                 .With(preload.Fnt002)
                 .WithText(texts[i].text)
                 .Build();
 
         preload.CreateLabel(entity)
-            .With(new Vector2(gambling.bgRect.Center.X - 76-59, gambling.bgRect.Max.Y - 46))
+            .With(new Vector2(gambling.bgRect.Center.X - 135, gambling.bgRect.Max.Y - 46))
             .With(preload.Fnt002)
             .WithText(db.GetText(UIDTakeIt).Text)
             .Build();
 
         preload.CreateButton(entity)
             .With(IDYes)
-            .With(new Vector2(gambling.bgRect.Center.X + 20-70, gambling.bgRect.Max.Y - 65+5))
+            .With(new Vector2(gambling.bgRect.Center.X - 50, gambling.bgRect.Max.Y - 60))
             .With(new components.ui.ButtonTiles(5, 6))
             .With(preload.Btn000)
             .Build();
 
         preload.CreateButton(entity)
             .With(IDNo)
-            .With(new Vector2(gambling.bgRect.Center.X + 56-56, gambling.bgRect.Max.Y - 65+5))
+            .With(new Vector2(gambling.bgRect.Center.X, gambling.bgRect.Max.Y - 60))
             .With(new components.ui.ButtonTiles(7, 8))
             .With(preload.Btn000)
             .Build();
@@ -217,7 +217,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .Build();
 
         preload.CreateLabel(entity)
-            .With(offset + new Vector2(49, 16-9))
+            .With(offset + new Vector2(49, 7))
             .WithLineHeight(13)
             .WithText(GetSpellLabel(card))
             .With(preload.Fnt002)
