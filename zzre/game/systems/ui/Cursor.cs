@@ -6,7 +6,7 @@ using DefaultEcs.System;
 namespace zzre.game.systems.ui;
 
 [Without(typeof(components.Disabled))]
-public partial class Cursor : AEntitySetSystem<float>
+public partial class Cursor : AEntitySetSystem<float>, ISystem<float>
 {
     private readonly IZanzarahContainer zzContainer;
     private readonly EntityCommandRecorder recorder;
@@ -22,7 +22,17 @@ public partial class Cursor : AEntitySetSystem<float>
         ui = diContainer.GetTag<UI>();
     }
 
-    protected override void PreUpdate(float state)
+    public new void Update(float elapsedTime)
+    {
+        // DefaultEcs does not call Pre/PostUpdate when the entity set is empty.
+        // this is somewhat unexpected. If we modify DefaultEcs further we should
+        // just change this 
+        RealPreUpdate(elapsedTime);
+        base.Update(elapsedTime);
+        RealPostUpdate(elapsedTime);
+    }
+
+    protected void RealPreUpdate(float state)
     {
         ref var rect = ref ui.CursorEntity.Get<Rect>();
         rect.Center = zzContainer.MousePos / new Vector2(zzContainer.Framebuffer.Width, zzContainer.Framebuffer.Height);
@@ -57,7 +67,7 @@ public partial class Cursor : AEntitySetSystem<float>
             entity.Remove<components.ui.Hovered>();
     }
 
-    protected override void PostUpdate(float state)
+    protected void RealPostUpdate(float state)
     {
         if (hoveredElement == null)
             World.Remove<components.ui.HoveredElement>();
