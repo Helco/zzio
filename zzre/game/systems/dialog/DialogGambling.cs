@@ -98,11 +98,24 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         gambling.CurrencyLabel = preload.CreateCurrencyLabel(entity, gambling.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
         if (gambling.SelectedCards.Count == rows) {
             RebuildPrimary(entity, ref gambling, allowPurchaseButtons);
+        } else if (!CanAfford(ref gambling)) {
+            MessageCannotAfford(entity, ref gambling);
         } else {
             StartAnimation(ref gambling);
         }
 
         return entity;
+    }
+
+    private void MessageCannotAfford(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
+    {
+        preload.CreateLabel(parent)
+            .With(gambling.bgRect.Center + new Vector2(0, -3))
+            .With(preload.Fnt000)
+            .WithText("You do not have enough money!")
+            .With(components.ui.FullAlignment.Center)
+            .Build();
+        AddBottomButtons(parent, ref gambling);
     }
 
     private void RebuildPrimary(DefaultEcs.Entity parent, ref components.DialogGambling gambling, bool allowPurchaseButtons)
