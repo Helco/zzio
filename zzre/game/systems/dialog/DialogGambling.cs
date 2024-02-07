@@ -17,9 +17,18 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
     private static readonly UID UIDSpellProfile = new(0xBFC6DD81);
     private static readonly UID UIDTakeIt = new(0x84D35581);
-    private static readonly UID UIDANewSpell = new(0xC38FEBB1);
+    private static readonly UID UIDNewSpell = new(0xC38FEBB1);
+    private static readonly UID UIDOldSpell = new(0x92A1EBB1);
+    private static readonly UID UIDOldSpell1 = new(0xE9C9EFB1);
+    private static readonly UID UIDOldSpell2 = new(0x8B19EFB1);
     private static readonly UID UIDOffensiveSpell = new(0xD4B02981);
     private static readonly UID UIDPassiveSpell = new(0x515E2981);
+    private static readonly UID UIDBlank = new(0x1AF6CAB1);
+
+    private static readonly UID UIDMana = new(0x238A3981);
+    private static readonly UID UIDLevel = new(0xCDF3D81);
+    private static readonly UID UIDDamage = new(0xE946ECA1);
+    private static readonly UID UIDLoadup = new(0x4211121);
 
     private readonly int currencyI = 23;
     private readonly int cloverleafI = 64;
@@ -126,15 +135,60 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         }
     }
 
-    private string SpellCountText(SpellRow card) {
+    private string GetSpellLabel(SpellRow card)
+    {
+        var name = card.Name;
+        var spellType = card.Type == 0 ? db.GetText(UIDOffensiveSpell).Text : db.GetText(UIDPassiveSpell).Text;
+        var spellClass = preload.GetClassText(card.PriceA);
+        var prices = preload.GetSpellPrices(card);
+        return $"{name}\n{spellType} - {spellClass} - {prices}";
+    }
+
+    private string TextSpellCount(SpellRow card) {
         var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
         var count = inventory.CountCards(card.CardId);
         var countInUse = inventory.CountCards(card.CardId, inUse: true);
 
         if (count == 0){
-            return db.GetText(UIDANewSpell).Text.ToUpper(new CultureInfo("en-US", false));
+            return db.GetText(UIDNewSpell).Text.ToUpper(new CultureInfo("en-US", false));
         } else {
-            return $"You already have this spell! Number: {count}, in use: {countInUse}";
+            return $"{db.GetText(UIDOldSpell).Text} {db.GetText(UIDOldSpell1).Text} {count}{db.GetText(UIDOldSpell2).Text} {countInUse}";
+        }
+    }
+
+    private string SpellStats(SpellRow card)
+    {
+        var isAttack = card.Type == 0;
+
+        var spellCount = TextSpellCount(card);
+        var spellType = isAttack ? db.GetText(UIDOffensiveSpell).Text : db.GetText(UIDPassiveSpell).Text;
+        var spellClass = preload.GetClassText(card.PriceA);
+
+        var mana = db.GetText(UIDMana).Text;
+        var level = db.GetText(UIDLevel).Text;
+        var damage = db.GetText(UIDDamage).Text;
+        var loadup = db.GetText(UIDLoadup).Text;
+
+        if (isAttack) {
+            return $"{spellCount}\n{spellType} - {spellClass}\n{mana}\n{level}\n{damage}\n{loadup}";
+        } else {
+            return $"{spellCount}\n{spellType} - {spellClass}\n{mana}\n{level}";
+        }
+    }
+
+    private string SpellValues(SpellRow card)
+    {
+        var isAttack = card.Type == 0;
+
+        var mana = "{104}" + (card.Mana == 5 ? "-/-" : $"{card.MaxMana}/{card.MaxMana}");
+        var level = preload.GetSpellPrices(card);
+        var damage = preload.GetLightsIndicator(card.Damage);
+        var loadup = preload.GetLightsIndicator(card.Loadup);
+
+        if (isAttack) {
+            return $"{mana}\n{level}\n{damage}\n{loadup}";
+        } else {
+            return $"{mana}\n{level}";
         }
     }
 
@@ -163,30 +217,25 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .WithText(card.Name)
             .Build();
 
-        var texts = new (int row, int col, string text)[] {
-            (0, 0, SpellCountText(card)),
-            (1, 0, $"{(isAttack ? db.GetText(UIDOffensiveSpell).Text : db.GetText(UIDPassiveSpell).Text)} - {preload.GetClassText(card.PriceA)}"),
-            (2, 0, "Mana"),
-            (2, 1, "{104}" + (card.Mana == 5 ? "-/-" : $"{card.MaxMana}/{card.MaxMana}")),
-            (3, 0, "Level"),
-            (3, 1, preload.GetSpellPrices(card)),
-            (4, 0, "Damage"),
-            (4, 1, preload.GetLightsIndicator(card.Damage)),
-            (5, 0, "Fire Rate"),
-            (5, 1, preload.GetLightsIndicator(card.Loadup))
-        };
-        for (int i = 0; i < texts.Length; i++)
-            preload.CreateLabel(entity)
-                .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(90 + texts[i].col * 90, 136 + texts[i].row * 28))
-                .With(preload.Fnt002)
-                .WithText(texts[i].text)
-                .Build();
+        preload.CreateLabel(entity)
+            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(90, 136))
+            .With(preload.Fnt002)
+            .WithLineHeight(28)
+            .WithText(SpellStats(card))
+            .Build();
 
         preload.CreateLabel(entity)
-            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(90, 136 + (texts.Last().row + 1) * 28))
+            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(180, 136 + 28*2))
+            .With(preload.Fnt002)
+            .WithLineHeight(28)
+            .WithText(SpellValues(card))
+            .Build();
+
+        preload.CreateLabel(entity)
+            .With(gambling.bgRect.Min + cardTypeOffset + new Vector2(90, 136 + (isAttack ? 6 : 4) * 28))
             .With(preload.Fnt000)
             .WithText(card.Info)
-            .WithLineHeight(15)
+            .WithLineHeight(28)
             .WithLineWrap(gambling.bgRect.Size.X - 100)
             .WithAnimation()
             .Build();
@@ -230,7 +279,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         if (card == null) {
         preload.CreateLabel(entity)
             .With(offset + new Vector2(40, 16))
-            .WithText("Blank")
+            .WithText(db.GetText(UIDBlank).Text)
             .With(preload.Fnt000)
             .Build();
             return;
@@ -275,15 +324,6 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         inventory.RemoveCards(gambling.Currency.CardId, (uint)pricePerRow);
         gambling.CurrencyLabel.Dispose();
         gambling.CurrencyLabel = preload.CreateCurrencyLabel(gambling.Profile, gambling.Currency, inventory);
-    }
-
-    private string GetSpellLabel(SpellRow card)
-    {
-        var name = card.Name;
-        var type = card.Type == 0 ? "Active Spell" : "Passive Spell";
-        var className = preload.GetClassText(card.PriceA);
-        var prices = preload.GetSpellPrices(card);
-        return $"{name}\n{type} - {className} - {prices}";
     }
 
     private bool HasCloverleaf() =>
