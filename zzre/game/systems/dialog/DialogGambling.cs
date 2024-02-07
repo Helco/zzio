@@ -25,9 +25,9 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private static readonly UID UIDSpellProfile = new(0xBFC6DD81);
     private static readonly UID UIDTakeIt = new(0x84D35581);
     private static readonly UID UIDNewSpell = new(0xC38FEBB1);
-    private static readonly UID UIDOldSpell = new(0x92A1EBB1);
-    private static readonly UID UIDOldSpell1 = new(0xE9C9EFB1);
-    private static readonly UID UIDOldSpell2 = new(0x8B19EFB1);
+    private static readonly UID UIDOldSpell = new(0x92A1EBB1); // You already have this spell!
+    private static readonly UID UIDOldSpell1 = new(0xE9C9EFB1); // Number:
+    private static readonly UID UIDOldSpell2 = new(0x8B19EFB1); // , in use:
 
     private static readonly UID UIDMana = new(0x238A3981);
     private static readonly UID UIDLevel = new(0xCDF3D81);
@@ -73,7 +73,6 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         uiEntity.Set(new components.DialogGambling{
             DialogEntity = message.DialogEntity,
-            Currency = db.Items.ElementAt(currencyI),
             Cards = CloverleafFilter(message.Cards),
             SelectedCards = new(),
             CardPurchaseButtons = new()
