@@ -79,7 +79,7 @@ public sealed class ParticleEmitter : BaseCombinerPart<
                 if (extras[i].TileLife < 0f)
                 {
                     extras[i].TileLife = data.tileDuration / 1000f;
-                    extras[i].TileI = (extras[i].TileI + 1) / data.tileCount;
+                    extras[i].TileI = (extras[i].TileI + 1) % data.tileCount;
                 }
             }
             else if (emitter.SpawnsLeft > 0)
