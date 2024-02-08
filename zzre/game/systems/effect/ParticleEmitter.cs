@@ -12,6 +12,9 @@ public sealed class ParticleEmitter : BaseCombinerPart<
     zzio.effect.parts.ParticleEmitter,
     components.effect.ParticleEmitterState>
 {
+    // a case of bad math: the original engine rotates (1,1,1) randomly, but this does not result in normalized vectors
+    private static readonly float DistanceFactor = MathF.Sqrt(3f);
+
     private readonly MemoryPool<components.effect.ParticleEmitterState.Particle> particleMemoryPool;
     private readonly Random random = Random.Shared;
 
@@ -106,7 +109,7 @@ public sealed class ParticleEmitter : BaseCombinerPart<
         Emitter.SpawnParticleScale(random, data, ref basic);
 
         basic.PrevPos = basic.Pos = location.GlobalPosition +
-            random.InCube() * new Vector3(data.horRadius, data.verRadius, data.horRadius);
+            random.OnSphere() * DistanceFactor * new Vector3(data.horRadius, data.verRadius, data.horRadius);
 
         basic.Acceleration = (dir * random.In(data.acc) - basic.Velocity) / basic.MaxLife;
 
@@ -121,7 +124,7 @@ public sealed class ParticleEmitter : BaseCombinerPart<
         in components.effect.ParticleEmitterState.Particle extra,
         int index)
     {
-        var size = MathF.Max(data.scale.value, basic.Scale) * 0.5f;
+        var size = basic.Scale * 0.5f;
         var right = Vector3.UnitX * size;
         var up = Vector3.UnitY * size;
         var texCoords = EffectPartUtility.GetTileUV(data.tileW, data.tileH, (data.tileId + extra.TileI));
