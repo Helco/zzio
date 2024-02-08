@@ -227,6 +227,7 @@ public static class ImGuiEx
 
     public static bool ValueRangeAnimation(string label, ref ValueRangeAnimation a, float min = float.MinValue, float max = float.MaxValue)
     {
+        PushID(label);
         Text(label + ':');
         Indent();
         float minValue = a.value - a.width, maxValue = a.value + a.width;
@@ -238,6 +239,7 @@ public static class ImGuiEx
         }
         result |= DragFloat("Modifier", ref a.mod);
         Unindent();
+        PopID();
         return result;
     }
 
