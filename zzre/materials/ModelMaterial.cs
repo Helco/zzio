@@ -14,13 +14,15 @@ public struct ModelFactors
     public float vertexColorFactor;
     public float tintFactor;
     public float alphaReference;
+    public Vector4 ambient;
 
     public static readonly ModelFactors Default = new()
     {
         textureFactor = 1f,
         vertexColorFactor = 1f,
         tintFactor = 1f,
-        alphaReference = 0.6f
+        alphaReference = 0.6f,
+        ambient = Vector4.One,
     };
 }
 

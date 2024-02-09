@@ -44,6 +44,7 @@ uniform factors
     float inVertexColorFactor;
     float inTintFactor;
     float inAlphaReference;
+    float4 inAmbient;
 }
 uniform if (IsSkinned) buffer mat4[] pose;
 
@@ -120,14 +121,29 @@ vertex
         uv = inTexShift * vec3(uv, 1);
 	varUV = uv;
 
-	varColor = inColor;
+    if (IsSkinned)
+    {
+        varColor = clamp(inTint + inAmbient, 0, 1);
+    }
+    else
+    {
+        varColor = inColor;
+    }
 }
 
 fragment
 {
-    vec4 color = weighColor(texture(sampler2D(mainTexture, mainSampler), varUV), inTextureFactor)
-		* weighColor(varColor, inVertexColorFactor)
-		* weighColor(inTint, inTintFactor);
+    vec4 color;
+    if (IsSkinned)
+    {
+        color = varColor * texture(sampler2D(mainTexture, mainSampler), varUV);
+    }
+    else
+    {
+        color = weighColor(texture(sampler2D(mainTexture, mainSampler), varUV), inTextureFactor)
+		    * weighColor(varColor, inVertexColorFactor)
+		    * weighColor(inTint, inTintFactor);
+    }
 	if (color.a < inAlphaReference)
 		discard;
 	outColor = color;

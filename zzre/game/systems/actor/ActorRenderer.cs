@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
+using System.Numerics;
 using DefaultEcs.System;
 using Veldrid;
 using zzio;
+using zzio.scn;
 using zzre.materials;
 using zzre.rendering;
 
@@ -23,8 +25,10 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     private readonly Camera camera;
     private readonly Texture whiteTexture;
     private readonly IAssetLoader<Texture> textureLoader;
+    private readonly UniformBuffer<ModelFactors> modelFactors;
     private readonly IDisposable addSubscription;
     private readonly IDisposable removeSubscription;
+    private readonly IDisposable sceneLoadedSubscription;
 
     public ActorRenderer(ITagContainer diContainer) :
         base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
@@ -34,25 +38,37 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
         addSubscription = World.SubscribeEntityComponentAdded<components.ActorPart>(HandleAddedComponent);
         removeSubscription = World.SubscribeEntityComponentRemoved<ModelMaterial[]>(HandleRemovedComponent);
+        sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
 
         graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         whiteTexture = graphicsDevice.ResourceFactory.CreateTexture(new(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
         whiteTexture.Name = "White";
         graphicsDevice.UpdateTexture(whiteTexture, new byte[] { 255, 255, 255, 255 }, 0, 0, 0, 1, 1, 1, 0, 0);
+
+        modelFactors = new(graphicsDevice.ResourceFactory);
+        modelFactors.Ref = ModelFactors.Default with
+        {
+            vertexColorFactor = 0f,
+            tintFactor = 1f,
+            ambient = Vector4.One
+        };
     }
 
     public override void Dispose()
     {
         base.Dispose();
+        modelFactors.Dispose();
         whiteTexture.Dispose();
         addSubscription.Dispose();
         removeSubscription.Dispose();
+        sceneLoadedSubscription.Dispose();
     }
 
     protected override void PreUpdate(CommandList cl)
     {
         base.PreUpdate(cl);
         cl.PushDebugGroup(nameof(ActorRenderer));
+        modelFactors.Update(cl);
     }
 
     [WithPredicate]
@@ -104,11 +120,7 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
                 (material.Texture.Texture, material.Sampler.Sampler) = (whiteTexture, graphicsDevice.PointSampler);
             else
                 (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(BaseTexturePaths, rwMaterial);
-            material.Factors.Ref = ModelFactors.Default with
-            {
-                vertexColorFactor = 0f,
-                tintFactor = 1f,
-            };
+            material.Factors.Buffer = modelFactors.Buffer;
             material.Tint.Ref = rwMaterial.color;
             if (skeleton != null)
                 material.Pose.Skeleton = skeleton;
@@ -129,5 +141,10 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
                 material.Sampler.Sampler.Dispose();
             material.Dispose();
         }
+    }
+
+    private void HandleSceneLoaded(in messages.SceneLoaded msg)
+    {
+        modelFactors.Ref.ambient = msg.Scene.misc.ambientLight.ToNumerics();
     }
 }
