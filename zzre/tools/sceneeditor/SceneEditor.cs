@@ -72,6 +72,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
             .AddTag<IAssetLoader<Texture>>(new CachedAssetLoader<Texture>(diContainer.GetTag<IAssetLoader<Texture>>()))
             .AddTag<IAssetLoader<ClumpMesh>>(new CachedClumpMeshLoader(diContainer))
             .AddTag(camera);
+        new MiscComponent(localDiContainer);
         new DatasetComponent(localDiContainer);
         new WorldComponent(localDiContainer);
         new ModelComponent(localDiContainer);

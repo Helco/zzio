@@ -85,7 +85,7 @@ public class OpenDocumentSet
         var extension = resource.Path.Extension;
         if (resource.Type is not ResourceType.File || string.IsNullOrWhiteSpace(extension))
             throw new ArgumentException("Given resource is not a file or does not have an extension");
-        if (!editorTypes.TryGetValue(extension, out var editorType))
+        if (!editorTypes.TryGetValue(extension.ToLowerInvariant(), out var editorType))
             throw new KeyNotFoundException($"No editor registered for extension {extension}");
         var ctor = knownConstructors[editorType];
         var newEditor = (IDocumentEditor)ctor(diContainer);
