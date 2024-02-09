@@ -25,8 +25,6 @@ public partial class SceneEditor
         private const float PointTriggerSize = 0.1f;
         private const float SelectableSize = 0.2f;
 
-        private readonly ITagContainer diContainer;
-
         public Location Location { get; } = new Location();
         public zzio.scn.Trigger SceneTrigger { get; }
         public int Index { get; }
@@ -49,9 +47,8 @@ public partial class SceneEditor
             _ => throw new NotImplementedException("Unknown TriggerColliderType")
         };
 
-        public Trigger(ITagContainer diContainer, zzio.scn.Trigger sceneTrigger, int index)
+        public Trigger(zzio.scn.Trigger sceneTrigger, int index)
         {
-            this.diContainer = diContainer;
             SceneTrigger = sceneTrigger;
             Index = index;
 
@@ -134,7 +131,7 @@ public partial class SceneEditor
             if (editor.scene == null)
                 return;
 
-            triggers = editor.scene.triggers.Select((t, i) => new Trigger(diContainer, t, i)).ToArray();
+            triggers = editor.scene.triggers.Select((t, i) => new Trigger(t, i)).ToArray();
 
             UpdateIcons();
         }

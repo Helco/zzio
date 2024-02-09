@@ -78,6 +78,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         new FOModelComponent(localDiContainer);
         new TriggerComponent(localDiContainer);
         new LightComponent(localDiContainer);
+        new EffectComponent(localDiContainer);
         new SelectionComponent(localDiContainer);
     }
 

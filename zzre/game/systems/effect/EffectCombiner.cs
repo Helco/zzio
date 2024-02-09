@@ -9,25 +9,56 @@ namespace zzre.game.systems.effect;
 
 public partial class EffectCombiner : AEntitySetSystem<float>
 {
+    private readonly IDisposable sceneChangingSubscription;
+    private readonly IDisposable sceneLoadSubscription;
     private readonly IDisposable spawnEffectDisposable;
 
     public bool AddIndexAsComponent { get; set; } = false; // used for EffectEditor
 
     public EffectCombiner(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
+        sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
+        sceneLoadSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         spawnEffectDisposable = World.Subscribe<messages.SpawnEffectCombiner>(HandleSpawnEffect);
     }
 
     public override void Dispose()
     {
         base.Dispose();
+        sceneLoadSubscription.Dispose();
+        sceneChangingSubscription.Dispose();
         spawnEffectDisposable.Dispose();
+    }
+
+    private void HandleSceneChanging(in messages.SceneChanging _) => Set.DisposeAll();
+
+    private void HandleSceneLoaded(in messages.SceneLoaded message)
+    {
+        if (!IsEnabled)
+            return;
+
+        foreach (var sceneEffect in message.Scene.effects.Where(e => e.type is zzio.scn.SceneEffectType.Combiner))
+        {
+            // TODO: Respect min quality level for scene effect combiners
+            var entity = World.CreateEntity();
+            HandleSpawnEffect(new(sceneEffect.effectFile, entity, sceneEffect.pos));
+            entity.Get<Location>().LocalRotation = Quaternion.CreateFromRotationMatrix(
+                Matrix4x4.CreateLookAt(Vector3.Zero, sceneEffect.dir, sceneEffect.up));
+
+            entity.Set(sceneEffect.order switch
+            {
+                zzio.scn.SceneEffectOrder.Early => components.RenderOrder.EarlyEffect,
+                zzio.scn.SceneEffectOrder.Solid => components.RenderOrder.Effect,
+                zzio.scn.SceneEffectOrder.Late => components.RenderOrder.LateEffect,
+                _ => components.RenderOrder.LateEffect
+            });
+        }
     }
 
     private void HandleSpawnEffect(in messages.SpawnEffectCombiner msg)
     {
         var entity = msg.AsEntity ?? World.CreateEntity();
-        entity.Set(ManagedResource<zzio.effect.EffectCombiner>.Create(msg.EffectId));
+        entity.Set(ManagedResource<zzio.effect.EffectCombiner>.Create(msg.EffectFilename));
         var effect = entity.Get<zzio.effect.EffectCombiner>();
         entity.Set(new components.effect.CombinerPlayback(
             duration: effect.isLooping ? float.PositiveInfinity : effect.Duration,

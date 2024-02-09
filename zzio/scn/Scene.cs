@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using zzio;
 using System.Numerics;
+using System.Linq;
 
 namespace zzio
 {
@@ -24,8 +25,7 @@ namespace zzio
             public Trigger[] triggers = Array.Empty<Trigger>();
             public Sample2D[] samples2D = Array.Empty<Sample2D>();
             public Sample3D[] samples3D = Array.Empty<Sample3D>();
-            public Effect[] effects = Array.Empty<Effect>();
-            public EffectV2[] effects2 = Array.Empty<EffectV2>();
+            public SceneEffect[] effects = Array.Empty<SceneEffect>();
             public VertexModifier[] vertexModifiers = Array.Empty<VertexModifier>();
             public TextureProperty[] textureProperties = Array.Empty<TextureProperty>();
             public Behavior[] behaviors = Array.Empty<Behavior>();
@@ -49,6 +49,8 @@ namespace zzio
                 if (reader.ReadZString() != "[Scenefile]")
                     throw new InvalidDataException("Magic section name missing in scene file");
 
+                var effectsV1 = Array.Empty<SceneEffect>();
+                var effectsV2 = Array.Empty<SceneEffect>();
                 Dictionary<string, Action> sectionHandlers = new()
                 {
                     { "[Version]",           () => (version =          new Version()).Read(new GatekeeperStream(stream)) },
@@ -68,8 +70,8 @@ namespace zzio
                     { "[2DSamples_v2]",      () => samples2D =         readArray(reader, () => new Sample2D()) },
                     { "[3DSamples_v2]",      () => samples3D =         readArray(reader, () => new Sample3D()) },
                     { "[3DSamples_v3]",      () => samples3D =         readArray(reader, () => new Sample3D()) },
-                    { "[Effects]",           () => effects =           readArray(reader, () => new Effect()) },
-                    { "[Effects_v2]",        () => effects2 =          readArray(reader, () => new EffectV2()) },
+                    { "[Effects]",           () => effectsV1 =         readArray(reader, () => new SceneEffect(SceneEffectReadVersion.V1)) },
+                    { "[Effects_v2]",        () => effectsV2 =         readArray(reader, () => new SceneEffect(SceneEffectReadVersion.V2)) },
                     { "[VertexModifiers]",   () => vertexModifiers =   readArray(reader, () => new VertexModifier()) },
                     { "[TextureProperties]", () => textureProperties = readArray(reader, () => new TextureProperty()) },
                     { "[Behaviours]",        () => behaviors =         readArray(reader, () => new Behavior()) },
@@ -86,6 +88,7 @@ namespace zzio
                     else
                         throw new InvalidDataException("Invalid scene section \"" + sectionName + "\"");
                 }
+                effects = effectsV1.Concat(effectsV2).ToArray();
             }
 
             private static void writeSingle<T>(BinaryWriter writer, T value, string sectionName) where T : ISceneSection
@@ -96,12 +99,12 @@ namespace zzio
                 value.Write(new GatekeeperStream(writer.BaseStream));
             }
 
-            private static void writeArray<T>(BinaryWriter writer, T[] array, string sectionName) where T : ISceneSection
+            private static void writeArray<T>(BinaryWriter writer, IEnumerable<T> array, string sectionName) where T : ISceneSection
             {
-                if (array.Length == 0)
+                if (!array.Any())
                     return;
                 writer.WriteZString(sectionName);
-                writer.Write((uint)array.Length);
+                writer.Write((uint)array.Count());
                 foreach (T section in array)
                     section.Write(new GatekeeperStream(writer.BaseStream, false));
             }
@@ -123,7 +126,8 @@ namespace zzio
                 writer.Write(ambientSound);
                 writer.WriteZString("[Music]");
                 writer.Write(music);
-                writeArray(writer, effects2, "[Effects_v2]");
+                writeArray(writer, effects.Where(e => e.ReadVersion is SceneEffectReadVersion.V1), "[Effects]");
+                writeArray(writer, effects.Where(e => e.ReadVersion is SceneEffectReadVersion.V2), "[Effects_v2]");
                 writeArray(writer, sceneItems, "[Scene]");
                 writeArray(writer, vertexModifiers, "[VertexModifiers]");
                 writeArray(writer, behaviors, "[Behaviours]");
