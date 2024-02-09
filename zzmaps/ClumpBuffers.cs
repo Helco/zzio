@@ -55,7 +55,6 @@ public class ClumpBuffers : BaseDisposable
 
     private readonly DeviceBuffer vertexBuffer;
     private readonly DeviceBuffer indexBuffer;
-    private readonly DeviceBuffer? skinBuffer;
     private readonly SubMesh[] subMeshes;
 
     public int VertexCount => (int)(vertexBuffer.SizeInBytes / ModelStandardVertex.Stride);
@@ -122,27 +121,7 @@ public class ClumpBuffers : BaseDisposable
         indexBuffer.Name = $"Clump {name} Indices";
         device.UpdateBuffer(indexBuffer, 0, indices);
 
-        Skin = clump.FindChildById(SectionId.SkinPLG, true) as RWSkinPLG;
-        if (Skin != null)
-        {
-            if (vertices.Length != Skin.vertexWeights.GetLength(0))
-                throw new InvalidDataException("Vertex count in skin is not equal to geometry");
-            var skinVertices = new SkinVertex[vertices.Length];
-            for (int i = 0; i < skinVertices.Length; i++)
-            {
-                skinVertices[i].bone0 = Skin.vertexIndices[i, 0];
-                skinVertices[i].bone1 = Skin.vertexIndices[i, 1];
-                skinVertices[i].bone2 = Skin.vertexIndices[i, 2];
-                skinVertices[i].bone3 = Skin.vertexIndices[i, 3];
-                skinVertices[i].weights.X = Skin.vertexWeights[i, 0];
-                skinVertices[i].weights.Y = Skin.vertexWeights[i, 1];
-                skinVertices[i].weights.Z = Skin.vertexWeights[i, 2];
-                skinVertices[i].weights.W = Skin.vertexWeights[i, 3];
-            }
-            skinBuffer = device.ResourceFactory.CreateBuffer(new BufferDescription((uint)skinVertices.Length * SkinVertex.Stride, BufferUsage.VertexBuffer));
-            skinBuffer.Name = $"Clump {name} Skin";
-            device.UpdateBuffer(skinBuffer, 0, skinVertices);
-        }
+        Skin = null; // zzmaps does not need skinned meshes
     }
 
     protected override void DisposeManaged()
@@ -150,19 +129,12 @@ public class ClumpBuffers : BaseDisposable
         base.DisposeManaged();
         vertexBuffer.Dispose();
         indexBuffer.Dispose();
-        skinBuffer?.Dispose();
     }
 
     public void SetBuffers(CommandList commandList)
     {
         commandList.SetVertexBuffer(0, vertexBuffer);
         commandList.SetIndexBuffer(indexBuffer, IndexFormat.UInt16);
-    }
-
-    public void SetSkinBuffer(CommandList commandList)
-    {
-        if (skinBuffer != null)
-            commandList.SetVertexBuffer(1, skinBuffer);
     }
 }
 
