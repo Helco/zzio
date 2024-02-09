@@ -98,6 +98,9 @@ public static class EnumerableExtensions
         return count;
     }
 
+    public static Range Sub(this Range full, int offset, int count, int maxValue = int.MaxValue) =>
+        Sub(full, offset..(offset + count), maxValue);
+
     public static Range Sub(this Range full, Range sub, int maxValue = int.MaxValue)
     {
         var (fullOffset, fullLength) = full.GetOffsetAndLength(maxValue);

@@ -98,6 +98,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.effect.Emitter(this),
             new systems.effect.ParticleEmitter(this),
             new systems.effect.ModelEmitter(this),
+            new systems.effect.BeamStar(this),
 
             // Animals
             new systems.Animal(this),

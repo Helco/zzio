@@ -101,7 +101,8 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
             new game.systems.effect.RandomPlanes(diContainer),
             new game.systems.effect.Emitter(diContainer),
             new game.systems.effect.ParticleEmitter(diContainer),
-            new game.systems.effect.ModelEmitter(diContainer));
+            new game.systems.effect.ModelEmitter(diContainer),
+            new game.systems.effect.BeamStar(diContainer));
         AddDisposable(updateSystems);
 
         renderSystems = new SequentialSystem<CommandList>(
@@ -205,8 +206,11 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         var visibilities = partEntities
             .Select(e => e.Get<game.components.Visibility>())
             .ToArray();
+        var length = effectEntity.TryGet<game.components.effect.CombinerPlayback>(out var playback)
+            ? playback.Length : 1f;
         KillEffect();
         SpawnEffect();
+        effectEntity.Get<game.components.effect.CombinerPlayback>().Length = length;
         foreach (var (entity, visibility) in partEntities.Zip(visibilities))
             entity.Set(visibility);
     }

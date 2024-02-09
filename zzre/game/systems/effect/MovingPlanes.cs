@@ -4,7 +4,6 @@ using DefaultEcs.Resource;
 using zzre.materials;
 using zzre.rendering.effectparts;
 using zzio;
-using Silk.NET.Core;
 
 namespace zzre.game.systems.effect;
 
