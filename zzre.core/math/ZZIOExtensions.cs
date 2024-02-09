@@ -23,6 +23,7 @@ public static class ZZIOExtensions
     public static RgbaByte ToVeldrid(this IColor c) => new(c.r, c.g, c.b, c.a);
     public static RgbaFloat ToVeldrid(this FColor c) => new(c.r, c.g, c.b, c.a);
     public static FColor ToFColor(this Vector4 v) => new(v.X, v.Y, v.Z, v.W);
+    public static RgbaFloat ToRgbaFloat(this Vector4 v) => new(v);
 
     public static Vector3 ToNormal(this CollisionSectorType sectorType) => sectorType switch
     {
