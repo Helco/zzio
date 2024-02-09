@@ -40,6 +40,7 @@ uniform view
 }
 uniform factors
 {
+    float inTextureFactor;
     float inVertexColorFactor;
     float inTintFactor;
     float inAlphaReference;
@@ -124,7 +125,7 @@ vertex
 
 fragment
 {
-    vec4 color = texture(sampler2D(mainTexture, mainSampler), varUV)
+    vec4 color = weighColor(texture(sampler2D(mainTexture, mainSampler), varUV), inTextureFactor)
 		* weighColor(varColor, inVertexColorFactor)
 		* weighColor(inTint, inTintFactor);
 	if (color.a < inAlphaReference)

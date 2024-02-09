@@ -102,6 +102,7 @@ public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, ModelMaterial>
         material.View.BufferRange = camera.ViewRange;
         material.Factors.Ref = new()
         {
+            textureFactor = 1f,
             vertexColorFactor = 1f,
             tintFactor = 1f,
             alphaReference = 0.082352944f

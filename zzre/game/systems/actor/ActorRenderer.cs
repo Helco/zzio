@@ -106,7 +106,8 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
                 (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(BaseTexturePaths, rwMaterial);
             material.Factors.Ref = ModelFactors.Default with
             {
-                vertexColorFactor = 0f
+                vertexColorFactor = 0f,
+                tintFactor = 1f,
             };
             material.Tint.Ref = rwMaterial.color;
             if (skeleton != null)

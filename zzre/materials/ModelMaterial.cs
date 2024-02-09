@@ -10,12 +10,14 @@ namespace zzre.materials;
 [StructLayout(LayoutKind.Sequential)]
 public struct ModelFactors
 {
+    public float textureFactor;
     public float vertexColorFactor;
     public float tintFactor;
     public float alphaReference;
 
     public static readonly ModelFactors Default = new()
     {
+        textureFactor = 1f,
         vertexColorFactor = 1f,
         tintFactor = 1f,
         alphaReference = 0.6f

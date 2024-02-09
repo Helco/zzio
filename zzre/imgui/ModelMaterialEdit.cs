@@ -65,6 +65,7 @@ public class ModelMaterialEdit : BaseDisposable
         bool didChange = false;
         Text("Globals");
         var mat = materials.First().Factors.Value;
+        didChange |= SliderFloat("Texture Factor", ref mat.textureFactor, 0f, 1f);
         didChange |= SliderFloat("Vertex Color Factor", ref mat.vertexColorFactor, 0.0f, 1.0f);
         didChange |= SliderFloat("Global Tint Factor", ref mat.tintFactor, 0.0f, 1.0f);
         didChange |= SliderFloat("Alpha Reference", ref mat.alphaReference, 0.0f, 1.0f, "%.3f");
@@ -72,6 +73,7 @@ public class ModelMaterialEdit : BaseDisposable
         {
             foreach (var material in materials)
             {
+                material.Factors.Ref.textureFactor = mat.textureFactor;
                 material.Factors.Ref.vertexColorFactor = mat.vertexColorFactor;
                 material.Factors.Ref.tintFactor = mat.tintFactor;
                 material.Factors.Ref.alphaReference = mat.alphaReference;
