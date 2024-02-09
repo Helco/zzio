@@ -39,8 +39,10 @@ public static class BinaryIOExtension
         return len == 0 ? "" : Encoding.GetString(buf, 0, len);
     }
 
-    public static unsafe void ReadStructureArray<T>(this BinaryReader reader, T[] array) where T : unmanaged
+    public static unsafe void ReadStructureArray<T>(this BinaryReader reader, T[] array, int expectedSizeOfElement) where T : unmanaged
     {
+        if (sizeof(T) != expectedSizeOfElement || !BitConverter.IsLittleEndian)
+            throw new NotSupportedException($"Fast structure reading is not possible on this platform");
         fixed (T* arrayPtr = array)
         {
             var span = new Span<byte>(arrayPtr, sizeof(T) * array.Length);
@@ -50,10 +52,10 @@ public static class BinaryIOExtension
         }
     }
 
-    public static T[] ReadStructureArray<T>(this BinaryReader reader, int count) where T : unmanaged
+    public static T[] ReadStructureArray<T>(this BinaryReader reader, int count, int expectedSizeOfElement) where T : unmanaged
     {
         var array = new T[count];
-        reader.ReadStructureArray(array);
+        reader.ReadStructureArray(array, expectedSizeOfElement);
         return array;
     }
 
@@ -102,8 +104,10 @@ public static class BinaryIOExtension
             writer.Write((byte)0);
     }
 
-    public static unsafe void WriteStructureArray<T>(this BinaryWriter writer, T[] array) where T : unmanaged
+    public static unsafe void WriteStructureArray<T>(this BinaryWriter writer, T[] array, int expectedSizeOfElement) where T : unmanaged
     {
+        if (sizeof(T) != expectedSizeOfElement || !BitConverter.IsLittleEndian)
+            throw new NotSupportedException($"Fast structure writing is not supported on this platform");
         fixed (T* arrayPtr = array)
         {
             writer.Write(new ReadOnlySpan<byte>(arrayPtr, sizeof(T) * array.Length));

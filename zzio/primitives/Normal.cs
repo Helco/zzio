@@ -1,8 +1,9 @@
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace zzio;
 
-[System.Serializable]
+[StructLayout(LayoutKind.Sequential)]
 public struct Normal
 {
     public byte x, y, z;

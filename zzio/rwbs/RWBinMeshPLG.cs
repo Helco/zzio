@@ -34,13 +34,11 @@ public class RWBinMeshPLG : Section
         subMeshes = new SubMesh[reader.ReadUInt32()];
         totalIndexCount = reader.ReadUInt32();
 
-        for (int i = 0; i < subMeshes.Length; i++)
+        foreach (ref SubMesh m in subMeshes.AsSpan())
         {
-            subMeshes[i].indices = new uint[reader.ReadUInt32()];
-            subMeshes[i].matIndex = reader.ReadUInt32();
-
-            for (int j = 0; j < subMeshes[i].indices.Length; j++)
-                subMeshes[i].indices[j] = reader.ReadUInt32();
+            m.indices = new uint[reader.ReadUInt32()];
+            m.matIndex = reader.ReadUInt32();
+            reader.ReadStructureArray(m.indices, expectedSizeOfElement: 4);
         }
     }
 
@@ -51,13 +49,11 @@ public class RWBinMeshPLG : Section
         writer.Write(subMeshes.Length);
         writer.Write(totalIndexCount);
 
-        foreach (SubMesh m in subMeshes)
+        foreach (ref readonly SubMesh m in subMeshes.AsSpan())
         {
             writer.Write(m.indices.Length);
             writer.Write(m.matIndex);
-
-            foreach (uint i in m.indices)
-                writer.Write(i);
+            writer.WriteStructureArray(m.indices, expectedSizeOfElement: 4);
         }
     }
 }

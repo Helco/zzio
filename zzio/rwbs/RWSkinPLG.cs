@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using zzio;
 
 namespace zzio.rwbs;
@@ -16,50 +17,35 @@ public enum BoneFlags
     UnknownFlag3 = (1 << 3)
 }
 
-[System.Serializable]
+[StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct Bone
 {
     public uint id, idx;
     public BoneFlags flags;
     public Matrix4x4 objectToBone;
+
+    public const int ExpectedSize = (3 + 4 * 4) * 4;
 }
 
 [Serializable]
 public class RWSkinPLG : Section
 {
+    public const int BonesPerVertex = 4;
     public override SectionId sectionId => SectionId.SkinPLG;
 
-    public byte[,] vertexIndices = new byte[0, 0]; // 4 per vertex
-    public float[,] vertexWeights = new float[0, 0]; // 4 per vertex
+    public byte[] vertexIndices = Array.Empty<byte>();
+    public float[] vertexWeights = Array.Empty<float>(); // 4 per vertex
     public Bone[] bones = Array.Empty<Bone>();
 
     protected override void readBody(Stream stream)
     {
         using BinaryReader reader = new(stream);
         bones = new Bone[reader.ReadUInt32()];
-        uint vertexCount = reader.ReadUInt32();
-        vertexIndices = new byte[vertexCount, 4];
-        vertexWeights = new float[vertexCount, 4];
+        int vertexCount = reader.ReadInt32();
 
-        for (int i = 0; i < vertexCount; i++)
-        {
-            for (int j = 0; j < 4; j++)
-                vertexIndices[i, j] = reader.ReadByte();
-        }
-
-        for (int i = 0; i < vertexCount; i++)
-        {
-            for (int j = 0; j < 4; j++)
-                vertexWeights[i, j] = reader.ReadSingle();
-        }
-
-        for (int i = 0; i < bones.Length; i++)
-        {
-            bones[i].id = reader.ReadUInt32();
-            bones[i].idx = reader.ReadUInt32();
-            bones[i].flags = EnumUtils.intToFlags<BoneFlags>(reader.ReadUInt32());
-            bones[i].objectToBone = reader.ReadMatrix4x4();
-        }
+        vertexIndices = reader.ReadStructureArray<byte>(vertexCount * BonesPerVertex, expectedSizeOfElement: 1);
+        vertexWeights = reader.ReadStructureArray<float>(vertexCount * BonesPerVertex, expectedSizeOfElement: 4);
+        reader.ReadStructureArray(bones, Bone.ExpectedSize);
     }
 
     protected override void writeBody(Stream stream)
@@ -69,24 +55,8 @@ public class RWSkinPLG : Section
         int vertexCount = vertexIndices.GetLength(0);
         writer.Write(vertexCount);
 
-        for (int i = 0; i < vertexCount; i++)
-        {
-            for (int j = 0; j < 4; j++)
-                writer.Write(vertexIndices[i, j]);
-        }
-
-        for (int i = 0; i < vertexCount; i++)
-        {
-            for (int j = 0; j < 4; j++)
-                writer.Write(vertexWeights[i, j]);
-        }
-
-        foreach (Bone b in bones)
-        {
-            writer.Write(b.id);
-            writer.Write(b.idx);
-            writer.Write((uint)b.flags);
-            writer.Write(b.objectToBone);
-        }
+        writer.WriteStructureArray(vertexIndices, expectedSizeOfElement: 1);
+        writer.WriteStructureArray(vertexWeights, expectedSizeOfElement: 4);
+        writer.WriteStructureArray(bones, expectedSizeOfElement: Bone.ExpectedSize);
     }
 }

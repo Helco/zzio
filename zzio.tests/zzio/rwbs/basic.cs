@@ -1,4 +1,5 @@
 using System.IO;
+using System.Numerics;
 using NUnit.Framework;
 using zzio.rwbs;
 
@@ -32,11 +33,9 @@ public class TestRWBSBasic
         Frame frame = frameList.frames[0];
         Assert.AreEqual(0, frame.creationFlags);
         Assert.AreEqual(0xffffffff, frame.frameIndex);
-        Assert.AreEqual(new float[] {
-             1.0f, 0.0f, 0.0f,
-             0.0f, 1.0f, 0.0f,
-             0.0f, 0.0f, 1.0f
-        }, frame.rotMatrix);
+        Assert.AreEqual(Vector3.UnitX, frame.rotMatrix0);
+        Assert.AreEqual(Vector3.UnitY, frame.rotMatrix1);
+        Assert.AreEqual(Vector3.UnitZ, frame.rotMatrix2);
         Assert.AreEqual(0.0f, frame.position.X);
         Assert.AreEqual(0.0f, frame.position.Y);
         Assert.AreEqual(0.0f, frame.position.Z);

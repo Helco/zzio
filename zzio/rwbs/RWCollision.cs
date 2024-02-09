@@ -84,7 +84,7 @@ public class RWCollision : Section
             }
         }
 
-        reader.ReadStructureArray(map);
+        reader.ReadStructureArray(map, expectedSizeOfElement: 4);
     }
 
     protected override void writeBody(Stream stream)
@@ -125,6 +125,6 @@ public class RWCollision : Section
             writer.Write((ushort)cur.count);
         }
 
-        writer.WriteStructureArray(map);
+        writer.WriteStructureArray(map, expectedSizeOfElement: 4);
     }
 }

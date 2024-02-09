@@ -81,8 +81,8 @@ public class ClumpMesh : StaticMesh
             // TODO: Replace multidimensional arrays in RWSkin
             var boneIndices = Add("Bone Indices", "inIndices", VertexCount, sizeof(byte) * 4);
             var boneWeights = Add("Bone Weights", "inWeights", VertexCount, sizeof(Vector4));
-            graphicsDevice.UpdateBuffer(boneIndices.DeviceBuffer, 0, ref Skin.vertexIndices[0, 0], (uint)(sizeof(byte) * 4 * VertexCount));
-            graphicsDevice.UpdateBuffer(boneWeights.DeviceBuffer, 0, ref Skin.vertexWeights[0, 0], (uint)(sizeof(Vector4) * VertexCount));
+            graphicsDevice.UpdateBuffer(boneIndices.DeviceBuffer, 0, Skin.vertexIndices);
+            graphicsDevice.UpdateBuffer(boneWeights.DeviceBuffer, 0, Skin.vertexWeights);
         }
 
         var trianglesByMatIdx = geometry.triangles.GroupBy(t => t.m).Where(g => g.Any());

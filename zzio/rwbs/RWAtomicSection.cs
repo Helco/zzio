@@ -34,40 +34,21 @@ public class RWAtomicSection : StructSection
         reader.ReadUInt32(); // unused
         reader.ReadUInt32();
 
-        for (int i = 0; i < vertices.Length; i++)
-            vertices[i] = reader.ReadVector3();
+        reader.ReadStructureArray(vertices, expectedSizeOfElement: 12);
 
         if ((worldFormat & GeometryFormat.Normals) > 0)
-        {
-            normals = new Normal[vertices.Length];
-            for (int i = 0; i < normals.Length; i++)
-                normals[i] = Normal.ReadNew(reader);
-        }
+            normals = reader.ReadStructureArray<Normal>(vertices.Length, expectedSizeOfElement: 4);
 
         if ((worldFormat & GeometryFormat.Prelit) > 0)
-        {
-            colors = new IColor[vertices.Length];
-            for (int i = 0; i < colors.Length; i++)
-                colors[i] = IColor.ReadNew(reader);
-        }
+            colors = reader.ReadStructureArray<IColor>(vertices.Length, expectedSizeOfElement: 4);
 
-        if ((worldFormat & GeometryFormat.Textured) > 0 ||
-            (worldFormat & GeometryFormat.Textured2) > 0)
-        {
-            texCoords1 = new Vector2[vertices.Length];
-            for (int i = 0; i < texCoords1.Length; i++)
-                texCoords1[i] = reader.ReadVector2();
-        }
+        if ((worldFormat & (GeometryFormat.Textured | GeometryFormat.Textured2)) > 0)
+            texCoords1 = reader.ReadStructureArray<Vector2>(vertices.Length, expectedSizeOfElement: 8);
 
         if ((worldFormat & GeometryFormat.Textured2) > 0)
-        {
-            texCoords2 = new Vector2[vertices.Length];
-            for (int i = 0; i < texCoords2.Length; i++)
-                texCoords2[i] = reader.ReadVector2();
-        }
+            texCoords2 = reader.ReadStructureArray<Vector2>(vertices.Length, expectedSizeOfElement: 8);
 
-        for (int i = 0; i < triangles.Length; i++)
-            triangles[i] = VertexTriangle.ReadNew(reader);
+        reader.ReadStructureArray(triangles, expectedSizeOfElement: 8);
     }
 
     protected override void writeStruct(Stream stream)
@@ -85,32 +66,20 @@ public class RWAtomicSection : StructSection
         writer.Write(0U);
         writer.Write(0U);
 
-        Array.ForEach(vertices, writer.Write);
+        writer.WriteStructureArray(vertices, expectedSizeOfElement: 12);
 
         if ((worldFormat & GeometryFormat.Normals) > 0)
-        {
-            foreach (Normal n in normals)
-                n.Write(writer);
-        }
+            writer.WriteStructureArray(normals, expectedSizeOfElement: 4);
 
         if ((worldFormat & GeometryFormat.Prelit) > 0)
-        {
-            foreach (IColor c in colors)
-                c.Write(writer);
-        }
+            writer.WriteStructureArray(colors, expectedSizeOfElement: 4);
 
-        if ((worldFormat & GeometryFormat.Textured) > 0 ||
-            (worldFormat & GeometryFormat.Textured2) > 0)
-        {
-            Array.ForEach(texCoords1, writer.Write);
-        }
+        if ((worldFormat & (GeometryFormat.Textured | GeometryFormat.Textured2)) > 0)
+            writer.WriteStructureArray(texCoords1, expectedSizeOfElement: 8);
 
         if ((worldFormat & GeometryFormat.Textured2) > 0)
-        {
-            Array.ForEach(texCoords2, writer.Write);
-        }
+            writer.WriteStructureArray(texCoords2, expectedSizeOfElement: 8);
 
-        foreach (VertexTriangle t in triangles)
-            t.Write(writer);
+        writer.WriteStructureArray(triangles, expectedSizeOfElement: 8);
     }
 }

@@ -4,15 +4,19 @@ using System.IO;
 using System.Collections.Generic;
 using zzio;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace zzio;
 
-[Serializable]
+[StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct AnimationKeyFrame
 {
     public Quaternion rot;
     public Vector3 pos;
     public float time;
+    public int parentFrameOffset;
+
+    public const int ExpectedSize = (4 + 3 + 1 + 1) * 4;
 
     public static AnimationKeyFrame ReadNew(BinaryReader reader)
     {
@@ -35,8 +39,6 @@ public struct AnimationKeyFrame
 [Serializable]
 public class SkeletalAnimation
 {
-    private static readonly int KEYFRAME_SIZE = (4 + 3 + 1 + 1) * 4;
-
     public uint flags = 0; // TODO: Format of flags are still unknown 
     public float duration = 0.0f;
     public AnimationKeyFrame[][] boneFrames = Array.Empty<AnimationKeyFrame[]>(); // a set of keyframes for every bone
@@ -48,34 +50,24 @@ public class SkeletalAnimation
         SkeletalAnimation anim = new();
         using BinaryReader reader = new(stream);
 
-        uint frameCount = reader.ReadUInt32();
+        var frameCount = reader.ReadInt32();
         anim.flags = reader.ReadUInt32();
         anim.duration = reader.ReadSingle();
 
-        List<List<AnimationKeyFrame>> boneSets = new();
+        var allFrames = reader.ReadStructureArray<AnimationKeyFrame>(frameCount, AnimationKeyFrame.ExpectedSize);
         int[] frameBones = new int[frameCount];
-        for (uint i = 0; i < frameCount; i++)
+        int nextBoneI = 0;
+        for(int i = 0; i < frameCount; i++)
         {
-            AnimationKeyFrame keyFrame = AnimationKeyFrame.ReadNew(reader);
-
-            int parentFrameOffset = reader.ReadInt32();
-            if (parentFrameOffset < 0)
-            {
-                // new unknown bone
-                frameBones[i] = boneSets.Count;
-                boneSets.Add(new List<AnimationKeyFrame>() { keyFrame });
-            }
+            if (allFrames[i].parentFrameOffset < 0) // new unknown bone
+                frameBones[i] = nextBoneI++;
             else
-            {
-                // known bone
-                int parentFrame = parentFrameOffset / KEYFRAME_SIZE;
-                frameBones[i] = frameBones[parentFrame];
-                boneSets[frameBones[i]].Add(keyFrame);
-            }
+                frameBones[i] = frameBones[allFrames[i].parentFrameOffset / AnimationKeyFrame.ExpectedSize];
         }
-
-        anim.boneFrames = boneSets
-            .Select(keyFrameSet => keyFrameSet.ToArray())
+        anim.boneFrames = allFrames
+            .Zip(frameBones)
+            .GroupBy(t => t.Second)
+            .Select(g => g.Select(t => t.First).ToArray())
             .ToArray();
         return anim;
     }
@@ -100,7 +92,7 @@ public class SkeletalAnimation
             var mapping = sortedMapping[writtenI];
             boneFrames[mapping.Key][mapping.Value].Write(writer);
             writer.Write(lastParentOffsets[mapping.Key]);
-            lastParentOffsets[mapping.Key] = writtenI * KEYFRAME_SIZE;
+            lastParentOffsets[mapping.Key] = writtenI * AnimationKeyFrame.ExpectedSize;
         }
     }
 }

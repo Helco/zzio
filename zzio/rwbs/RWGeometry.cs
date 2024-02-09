@@ -30,7 +30,7 @@ public class RWGeometry : StructSection
         using BinaryReader reader = new(stream);
         format = EnumUtils.intToFlags<GeometryFormat>(reader.ReadUInt32());
         triangles = new VertexTriangle[reader.ReadUInt32()];
-        uint vertexCount = reader.ReadUInt32();
+        var vertexCount = reader.ReadInt32();
         morphTargets = new MorphTarget[reader.ReadUInt32()];
         ambient = reader.ReadSingle();
         specular = reader.ReadSingle();
@@ -39,14 +39,9 @@ public class RWGeometry : StructSection
         if ((format & GeometryFormat.Native) == 0)
         {
             if ((format & GeometryFormat.Prelit) > 0)
-            {
-                colors = new IColor[vertexCount];
-                for (int i = 0; i < colors.Length; i++)
-                    colors[i] = IColor.ReadNew(reader);
-            }
+                colors = reader.ReadStructureArray<IColor>(vertexCount, expectedSizeOfElement: 4);
 
-            if ((format & GeometryFormat.Textured) > 0 ||
-                (format & GeometryFormat.Textured2) > 0)
+            if ((format & (GeometryFormat.Textured | GeometryFormat.Textured2)) > 0)
             {
                 int texCount = (((int)format) >> 16) & 0xff;
                 if (texCount == 0)
@@ -54,21 +49,12 @@ public class RWGeometry : StructSection
 
                 texCoords = new Vector2[texCount][];
                 for (int i = 0; i < texCount; i++)
-                {
-                    texCoords[i] = new Vector2[vertexCount];
-                    for (int j = 0; j < vertexCount; j++)
-                        texCoords[i][j] = reader.ReadVector2();
-                }
+                    texCoords[i] = reader.ReadStructureArray<Vector2>(vertexCount, expectedSizeOfElement: 8);
             }
 
-            for (int i = 0; i < triangles.Length; i++)
-            {
-                // Triangle members are ordered differently in RWGeometry...
-                triangles[i].v2 = reader.ReadUInt16();
-                triangles[i].v1 = reader.ReadUInt16();
-                triangles[i].m = reader.ReadUInt16();
-                triangles[i].v3 = reader.ReadUInt16();
-            }
+            reader.ReadStructureArray(triangles, expectedSizeOfElement: 8);
+            foreach (ref var t in triangles.AsSpan())
+                t = t.ShuffledForGeometry; // Triangle members are ordered differently in RWGeometry...
         } // no native format
 
         for (int i = 0; i < morphTargets.Length; i++)
@@ -76,24 +62,14 @@ public class RWGeometry : StructSection
             morphTargets[i] = new MorphTarget
             {
                 bsphereCenter = reader.ReadVector3(),
-                bsphereRadius = reader.ReadSingle(),
-                vertices = Array.Empty<Vector3>(),
-                normals = Array.Empty<Vector3>()
+                bsphereRadius = reader.ReadSingle()
             };
             bool hasVertices = reader.ReadUInt32() > 0;
             bool hasNormals = reader.ReadUInt32() > 0;
             if (hasVertices)
-            {
-                morphTargets[i].vertices = new Vector3[vertexCount];
-                for (uint j = 0; j < vertexCount; j++)
-                    morphTargets[i].vertices[j] = reader.ReadVector3();
-            }
+                morphTargets[i].vertices = reader.ReadStructureArray<Vector3>(vertexCount, expectedSizeOfElement: 12);
             if (hasNormals)
-            {
-                morphTargets[i].normals = new Vector3[vertexCount];
-                for (uint j = 0; j < vertexCount; j++)
-                    morphTargets[i].normals[j] = reader.ReadVector3();
-            }
+                morphTargets[i].normals = reader.ReadStructureArray<Vector3>(vertexCount, expectedSizeOfElement: 12);
         }
     }
 
@@ -111,32 +87,22 @@ public class RWGeometry : StructSection
         if ((format & GeometryFormat.Native) == 0)
         {
             if ((format & GeometryFormat.Prelit) > 0)
-            {
-                foreach (IColor c in colors)
-                    c.Write(writer);
-            }
+                writer.WriteStructureArray(colors, expectedSizeOfElement: 4);
 
-            if ((format & GeometryFormat.Textured) > 0 ||
-                (format & GeometryFormat.Textured2) > 0)
+            if ((format & (GeometryFormat.Textured | GeometryFormat.Textured2)) > 0)
             {
                 int texCount = (((int)format) >> 16) & 0xff;
                 if (texCount == 0)
                     texCount = ((format & GeometryFormat.Textured2) > 0 ? 2 : 1);
 
                 for (int i = 0; i < texCount; i++)
-                {
-                    for (int j = 0; j < vertexCount; j++)
-                        writer.Write(texCoords[i][j]);
-                }
+                    writer.WriteStructureArray(texCoords[i], expectedSizeOfElement: 8);
             }
 
-            foreach (VertexTriangle t in triangles)
-            {
-                writer.Write(t.v2);
-                writer.Write(t.v1);
-                writer.Write(t.m);
-                writer.Write(t.v3);
-            }
+            var trianglesCopy = (VertexTriangle[])triangles.Clone();
+            foreach (ref VertexTriangle t in trianglesCopy.AsSpan())
+                t = t.ShuffledForGeometry;
+            writer.WriteStructureArray(trianglesCopy, expectedSizeOfElement: 8);
         } // no native
 
         foreach (MorphTarget mt in morphTargets)
@@ -145,8 +111,8 @@ public class RWGeometry : StructSection
             writer.Write(mt.bsphereRadius);
             writer.Write((uint)(mt.vertices.Length == 0 ? 0 : 1));
             writer.Write((uint)(mt.normals.Length == 0 ? 0 : 1));
-            Array.ForEach(mt.vertices, writer.Write);
-            Array.ForEach(mt.normals, writer.Write);
+            writer.WriteStructureArray(mt.vertices, expectedSizeOfElement: 12);
+            writer.WriteStructureArray(mt.normals, expectedSizeOfElement: 12);
         }
     }
 }

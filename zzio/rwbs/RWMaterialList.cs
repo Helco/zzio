@@ -14,16 +14,13 @@ public class RWMaterialList : StructSection
     {
         using BinaryReader reader = new(stream);
         uint count = reader.ReadUInt32();
-        materialIndices = new int[count];
-        for (uint i = 0; i < count; i++)
-            materialIndices[i] = reader.ReadInt32();
+        materialIndices = reader.ReadStructureArray<int>((int)count, expectedSizeOfElement: 4);
     }
 
     protected override void writeStruct(Stream stream)
     {
         using BinaryWriter writer = new(stream);
         writer.Write((uint)materialIndices.Length);
-        foreach (int index in materialIndices)
-            writer.Write(index);
+        writer.WriteStructureArray(materialIndices, expectedSizeOfElement: 4);
     }
 }

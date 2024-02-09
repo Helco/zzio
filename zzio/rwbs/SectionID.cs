@@ -160,7 +160,7 @@
             NativeDataPLG = 0x0510,
             ZModelerLock = 0xF21E,
 
-            //yes I skipped the Rockstar Custom Sections at now
+            //yes I skipped the Rockstar Custom Sections for now
 
             Unknown = -1
         }

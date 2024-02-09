@@ -1,12 +1,15 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace zzio;
 
-[Serializable]
+[StructLayout(LayoutKind.Sequential)]
 public struct VertexTriangle
 {
     public ushort m, v1, v2, v3;
+
+    public VertexTriangle ShuffledForGeometry => new(v1, m, v3, v2);
 
     public VertexTriangle(ushort v1, ushort v2, ushort v3, ushort m)
     {
