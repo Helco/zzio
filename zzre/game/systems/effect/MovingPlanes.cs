@@ -129,15 +129,30 @@ public sealed class MovingPlanes : BaseCombinerPart<
         zzio.effect.parts.MovingPlanes data,
         IColor curColor)
     {
+        var location = parent.Entity.Get<Location>();
         var curAngle = state.CurRotation * data.rotation * MathEx.DegToRad;
-        var rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, curAngle);
+
+        UpdateQuad(location, ref state, data, offset: 0, curAngle, state.CurTexShift, curColor);
+        if (!data.disableSecondPlane)
+            UpdateQuad(location, ref state, data, offset: 4, -curAngle, -state.CurTexShift, curColor);
+    }
+
+    private void UpdateQuad(
+        Location location,
+        ref components.effect.MovingPlanesState state,
+        zzio.effect.parts.MovingPlanes data,
+        int offset,
+        float angle,
+        float texShift,
+        IColor curColor)
+    {
+        var rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, angle);
         var right = Vector3.Transform(Vector3.UnitX * data.width * Math.Max(0f, state.CurScale), rotation);
         var up = Vector3.Transform(Vector3.UnitY * data.height * Math.Max(0f, state.CurScale), rotation);
         var center = data.circlesAround
             ? Vector3.Transform(Vector3.UnitY * data.yOffset, rotation)
             : Vector3.Zero;
 
-        var location = parent.Entity.Get<Location>();
         var applyCenter = data.circlesAround || data.useDirection;
         if (applyCenter)
         {
@@ -146,12 +161,7 @@ public sealed class MovingPlanes : BaseCombinerPart<
         }
         center = Vector3.Transform(center, location.LocalToWorld);
 
-        var newTexCoords1 = EffectPartUtility.TexShift(state.TexCoords, 2 * state.CurTexShift, data.texShift);
-        effectMesh.SetQuad(state.VertexRange, 0, applyCenter, center, right, up, curColor, newTexCoords1);
-        if (!data.disableSecondPlane)
-        {
-            var newTexCoords2 = EffectPartUtility.TexShift(state.TexCoords, 2 * state.CurTexShift, -data.texShift);
-            effectMesh.SetQuad(state.VertexRange, 4, applyCenter, center, -right, up, curColor, newTexCoords2);
-        }
+        var newTexCoords1 = EffectPartUtility.TexShift(state.TexCoords, 2 * texShift, data.texShift);
+        effectMesh.SetQuad(state.VertexRange, offset, applyCenter, center, right, up, curColor, newTexCoords1);
     }
 }
