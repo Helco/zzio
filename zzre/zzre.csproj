@@ -8,8 +8,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>1701;1702;DEA0005,DEA0022</NoWarn>
 
-    <ShaderVariantDef>shaders/ShaderVariants.json</ShaderVariantDef>
-    <EmbedGeneratedShaders>true</EmbedGeneratedShaders>
     <MlangOutputGeneratedSourceOnError>true</MlangOutputGeneratedSourceOnError>
     <MlangEmbedShaderSource>true</MlangEmbedShaderSource>
   </PropertyGroup>

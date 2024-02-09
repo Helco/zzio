@@ -2,7 +2,6 @@
 using System.Numerics;
 using DefaultEcs.Resource;
 using zzre.materials;
-using zzre.rendering.effectparts;
 using zzio;
 using zzio.effect.parts;
 

@@ -3,7 +3,6 @@ using System.Buffers;
 using System.Numerics;
 using DefaultEcs.Resource;
 using zzre.materials;
-using zzre.rendering.effectparts;
 using zzio;
 
 namespace zzre.game.systems.effect;
@@ -186,8 +185,8 @@ public sealed class RandomPlanes : BaseCombinerPart<
                 ? Vector3.Transform(plane.Pos, rotation)
                 : plane.Pos;
             var color = plane.CurColor.ToFColor();
-            var texCoords = EffectPartUtility.GetTileUV(data.tileW, data.tileH, data.tileId + plane.TileI);
-            texCoords = EffectPartUtility.TexShift(texCoords, state.CurTexShift, data.texShift);
+            var texCoords = EffectMesh.GetTileUV(data.tileW, data.tileH, data.tileId + plane.TileI);
+            texCoords = EffectMesh.TexShift(texCoords, state.CurTexShift, data.texShift);
 
             var location = parent.Entity.Get<Location>();
             if (applyCenter)

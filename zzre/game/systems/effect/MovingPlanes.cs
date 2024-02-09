@@ -2,7 +2,6 @@
 using System.Numerics;
 using DefaultEcs.Resource;
 using zzre.materials;
-using zzre.rendering.effectparts;
 using zzio;
 
 namespace zzre.game.systems.effect;
@@ -27,7 +26,7 @@ public sealed class MovingPlanes : BaseCombinerPart<
         entity.Set(new components.effect.MovingPlanesState(
             vertexRange,
             indexRange,
-            EffectPartUtility.GetTileUV(data.tileW, data.tileH, data.tileId))
+            EffectMesh.GetTileUV(data.tileW, data.tileH, data.tileId))
         {
             PrevProgress = playback.CurProgress
         });
@@ -160,7 +159,7 @@ public sealed class MovingPlanes : BaseCombinerPart<
         }
         center = Vector3.Transform(center, location.LocalToWorld);
 
-        var newTexCoords1 = EffectPartUtility.TexShift(state.TexCoords, 2 * texShift, data.texShift);
+        var newTexCoords1 = EffectMesh.TexShift(state.TexCoords, 2 * texShift, data.texShift);
         effectMesh.SetQuad(state.VertexRange, offset, applyCenter, center, right, up, curColor, newTexCoords1);
     }
 }

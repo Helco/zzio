@@ -4,7 +4,6 @@ using System.Numerics;
 using DefaultEcs.Resource;
 using zzio;
 using zzre.materials;
-using zzre.rendering.effectparts;
 
 namespace zzre.game.systems.effect;
 
@@ -127,7 +126,7 @@ public sealed class ParticleEmitter : BaseCombinerPart<
         var size = basic.Scale * 0.5f;
         var right = Vector3.UnitX * size;
         var up = Vector3.UnitY * size;
-        var texCoords = EffectPartUtility.GetTileUV(data.tileW, data.tileH, (data.tileId + extra.TileI));
+        var texCoords = EffectMesh.GetTileUV(data.tileW, data.tileH, (data.tileId + extra.TileI));
         effectMesh.SetQuad(state.VertexRange, index * 4, applyCenter: false,
             basic.Pos, right, up, basic.Color.ToFColor(), texCoords);
     }
