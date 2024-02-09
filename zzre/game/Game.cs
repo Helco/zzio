@@ -162,6 +162,7 @@ public class Game : BaseDisposable, ITagContainer
         renderSystems = new SequentialSystem<CommandList>(
             new systems.ModelRenderer(this, components.RenderOrder.Backdrop),
             worldRenderer,
+            new systems.ModelRenderer(this, components.RenderOrder.World),
             new systems.ActorRenderer(this),
             new systems.ModelRenderer(this, components.RenderOrder.EarlySolid),
             new systems.ModelRenderer(this, components.RenderOrder.EarlyAdditive),

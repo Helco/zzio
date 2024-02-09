@@ -48,7 +48,7 @@ uniform if (IsSkinned) buffer mat4[] pose;
 
 pipeline
 {
-    blend One + Zero;
+    blend One + Zero One + One;
     output r8_g8_b8_a8_unorm outColor;
     output d24_unorm_s8_uint;
     depthwrite off;

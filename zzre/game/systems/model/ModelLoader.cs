@@ -81,7 +81,9 @@ public class ModelLoader : BaseDisposable, ISystem<float>
             if (HasEmptyMesh(entity))
                 throw new InvalidOperationException("Model has an empty model, maybe we can ignore them but let's have a look whether they are used somehow");
 
-            LoadMaterialsFor(entity, FOModelRenderType.Solid, model.color, model.surfaceProps);
+            var renderType = model.isVisualOnly ? FOModelRenderType.Solid : null as FOModelRenderType?;
+
+            LoadMaterialsFor(entity, renderType, model.color, model.surfaceProps);
             SetCollider(entity);
             if (behaviors.TryGetValue(model.idx, out var behaviour))
             {
@@ -150,7 +152,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     }
 
     // Used by e.g. NPCTrigger
-    internal static void LoadMaterialsFor(DefaultEcs.Entity entity, FOModelRenderType renderType, IColor color, SurfaceProperties surfaceProps)
+    internal static void LoadMaterialsFor(DefaultEcs.Entity entity, FOModelRenderType? renderType, IColor color, SurfaceProperties surfaceProps)
     {
         var clumpMesh = entity.Get<ClumpMesh>();
         entity.Set(components.Visibility.Visible);
@@ -198,8 +200,9 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         });
     }
 
-    private static components.RenderOrder RenderOrderFromRenderType(FOModelRenderType type) => type switch
+    private static components.RenderOrder RenderOrderFromRenderType(FOModelRenderType? type) => type switch
     {
+        null => components.RenderOrder.World,
         FOModelRenderType.EarlySolid => components.RenderOrder.EarlySolid,
         FOModelRenderType.Solid => components.RenderOrder.Solid,
         FOModelRenderType.LateSolid => components.RenderOrder.LateSolid,
@@ -216,7 +219,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         _ => throw new NotSupportedException($"Unsupported FOModelRenderType: {type}")
     };
 
-    private static byte AlphaFromRenderType(FOModelRenderType type) => type switch
+    private static byte AlphaFromRenderType(FOModelRenderType? type) => type switch
     {
         FOModelRenderType.EnvMap32 => 32,
         FOModelRenderType.EnvMap64 => 64,

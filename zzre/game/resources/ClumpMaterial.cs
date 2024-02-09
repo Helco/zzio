@@ -18,10 +18,13 @@ public readonly record struct ClumpMaterialInfo(
     bool HasEnvMap = false,
     bool HasTexShift = true)
 {
-    public ClumpMaterialInfo(FOModelRenderType renderType, RWMaterial rwMaterial) : this(rwMaterial)
+    public ClumpMaterialInfo(FOModelRenderType? renderType, RWMaterial rwMaterial) : this(rwMaterial)
     {
         switch(renderType)
         {
+            case null:
+                BlendMode = ModelMaterial.BlendMode.Opaque;
+                break;
             case FOModelRenderType.EarlySolid:
             case FOModelRenderType.LateSolid:
             case FOModelRenderType.Solid:
