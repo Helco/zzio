@@ -144,22 +144,45 @@ public sealed class MovingPlanes : BaseCombinerPart<
         float texShift,
         IColor curColor)
     {
-        var rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, angle);
-        var right = Vector3.Transform(Vector3.UnitX * data.width * Math.Max(0f, state.CurScale), rotation);
-        var up = Vector3.Transform(Vector3.UnitY * data.height * Math.Max(0f, state.CurScale), rotation);
-        var center = data.circlesAround
-            ? Vector3.Transform(Vector3.UnitY * data.yOffset, rotation)
-            : Vector3.Zero;
+        var center =
+            Vector3.Transform(new(data.xOffset, 0, 0), location.LocalToWorld) +
+            Vector3.UnitY * data.yOffset;
+        var newTexCoords = EffectMesh.TexShift(state.TexCoords, 2 * texShift, data.texShift);
+        var w = data.width * Math.Max(0f, state.CurScale);
+        var h = data.width * Math.Max(0f, state.CurScale);
+        Vector3 right, up;
+        bool applyCenter = true;
 
-        var applyCenter = data.circlesAround || data.useDirection;
-        if (applyCenter)
+        if (data.circlesAround)
         {
-            right = Vector3.TransformNormal(right, location.LocalToWorld);
-            up = Vector3.TransformNormal(up, location.LocalToWorld);
+            var rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, angle);
+            right = Vector3.Transform(Vector3.UnitX * w, rotation);
+            up = Vector3.Transform(Vector3.UnitZ * -h, rotation);
         }
-        center = Vector3.Transform(center, location.LocalToWorld);
+        else if (data.useDirection)
+        {
+            // what even is this rotation, only used in e5021...
+            var dir = location.GlobalForward;
+            var rotUp = Vector3.Cross(dir, Vector3.One * 0.42340001f);
+            var rotRight = Vector3.Cross(dir, rotUp);
+            var rotForward = Vector3.Cross(rotUp, rotRight);
+            var rotMatrix = new Matrix4x4(
+                rotRight.X, rotRight.Y, rotRight.Z, 0f,
+                rotUp.X, rotUp.Y, rotUp.Z, 0f,
+                rotForward.X, rotForward.Y, rotForward.Z, 0f,
+                0f, 0f, 0f, 1f);
+            rotMatrix = Matrix4x4.Transform(rotMatrix, Quaternion.CreateFromAxisAngle(Vector3.UnitZ, angle));
+            right = Vector3.Transform(Vector3.UnitX * w, rotMatrix);
+            up = Vector3.Transform(Vector3.UnitY * h, rotMatrix);
+        }
+        else
+        {
+            var rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, angle);
+            right = Vector3.Transform(Vector3.UnitX * w, rotation);
+            up = Vector3.Transform(Vector3.UnitY * h, rotation);
+            applyCenter = false;
+        }
 
-        var newTexCoords1 = EffectMesh.TexShift(state.TexCoords, 2 * texShift, data.texShift);
-        effectMesh.SetQuad(state.VertexRange, offset, applyCenter, center, right, up, curColor, newTexCoords1);
+        effectMesh.SetQuad(state.VertexRange, offset, applyCenter, center, right, up, curColor, newTexCoords);
     }
 }

@@ -24,7 +24,7 @@ public partial class EffectEditor
         InputFloat("SizeModSpeed", ref data.sizeModSpeed);
         InputFloat("Target Size", ref data.targetSize);
         InputFloat("Rotation", ref data.rotation);
-        InputFloat("Y Offset", ref data.yOffset);
+        InputFloat2("Offset", ref data.xOffset, ref data.yOffset);
         InputFloat("Tex Shift", ref data.texShift);
         Checkbox("CirclesAround", ref data.circlesAround);
         Checkbox("Use Direction", ref data.useDirection);

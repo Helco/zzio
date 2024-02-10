@@ -23,7 +23,8 @@ public class MovingPlanes : IEffectPart
         rotation = 0.0f,
         texShift = 0.0f,
         minProgress = 1.0f,
-        yOffset = 0.0f;
+        yOffset = 0.0f,
+        xOffset = 0.0f;
     public string
         texName = "standard",
         name = "Moving Planes";
@@ -67,6 +68,6 @@ public class MovingPlanes : IEffectPart
         useDirection = r.ReadBoolean();
         r.BaseStream.Seek(3, SeekOrigin.Current);
         if (size > 136)
-            r.BaseStream.Seek(4, SeekOrigin.Current); // unused value            
+            xOffset = r.ReadSingle();
     }
 }
