@@ -89,7 +89,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
         }
         int missingElements = request - FreeCountAtEnd;
         if (missingElements > 0)
-            ReservedCapacity = Math.Max(ReservedCapacity, CommittedCapacity + missingElements);
+            ReservedCapacity += missingElements;
 
         var firstFree = LastUsedIndex + 1;
         var endRange = firstFree..(firstFree + request);

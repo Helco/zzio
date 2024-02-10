@@ -92,6 +92,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.ActorLighting(this),
 
             // Effects
+            new systems.effect.LensFlare(this),
             new systems.effect.EffectCombiner(this),
             new systems.effect.MovingPlanes(this),
             new systems.effect.RandomPlanes(this),

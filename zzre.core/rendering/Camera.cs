@@ -7,6 +7,8 @@ namespace zzre.rendering;
 
 public class Camera : BaseDisposable
 {
+    public static readonly Box ViewBox = Box.FromMinMax(new(-1f, -1f, 0f), new(1f, 1f, 1.01f));
+
     private struct CameraView
     {
         public Matrix4x4 locationMatrix;
@@ -123,5 +125,16 @@ public class Camera : BaseDisposable
         return new Ray(
             Location.GlobalPosition,
             Vector3.Normalize(transformed - Location.GlobalPosition));
+    }
+
+    /// <returns>Whether the point is in the frustum of the camera</returns>
+    public Vector3? TransformWorldPoint(Vector3 point)
+    {
+        point = Vector3.Transform(point, View);
+        point = Vector3.Transform(point, Projection);
+        if (point.Z < 0f)
+            return null;
+        point /= point.Z;
+        return ViewBox.Intersects(point) ? point : null;
     }
 }

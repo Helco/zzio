@@ -14,7 +14,8 @@ public readonly record struct EffectMaterialInfo(
     bool DepthTest,
     BillboardMode BillboardMode,
     BlendMode BlendMode,
-    string TextureName)
+    string TextureName,
+    float AlphaReference = 0.03f)
 {
     public EffectMaterialInfo(
         bool depthTest,
@@ -69,7 +70,7 @@ public class EffectMaterial : AResourceManager<EffectMaterialInfo, materials.Eff
         material.View.BufferRange = camera.ViewRange;
         material.Factors.Value = new()
         {
-            alphaReference = 0.03f
+            alphaReference = info.AlphaReference
         };
         material.DebugName = $"{info.TextureName} {info.BillboardMode} {info.BlendMode}";
         if (!info.DepthTest)

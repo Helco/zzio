@@ -34,7 +34,7 @@ public class EffectRenderer : AEntityMultiMapSystem<CommandList, EffectMaterial>
     protected override void PreUpdate(CommandList cl)
     {
         indexRanges.MaxRangeValue = effectMesh.IndexCapacity;
-        cl.PushDebugGroup("EffectRenderer");
+        cl.PushDebugGroup($"EffectRenderer {responsibility}");
         effectMesh.Update(cl);
         cl.SetIndexBuffer(effectMesh.IndexBuffer, effectMesh.IndexFormat);
     }

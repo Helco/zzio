@@ -1,5 +1,5 @@
 option DepthTest;
-option Billboard = IsNoBillboard, IsViewBillboard, IsSparkBillboard;
+option Billboard = IsNoBillboard, IsViewBillboard, IsSparkBillboard, IsLensFlare;
 option Blend = IsAdditiveBlend, IsAdditiveAlphaBlend, IsAlphaBlend;
 
 attributes
@@ -72,7 +72,14 @@ vertex
         vec3 up = normalize(cross(inCenterPos - camPos.xyz, right));
         pos += vec4(inVertexPos.x * right + inVertexPos.y * up, 0);
     }
-    gl_Position = projection * pos;
+    else if (Billboard == IsLensFlare)
+    {
+        pos = vec4(inCenterPos + inVertexPos, 1);
+        gl_Position = pos;
+    }
+
+    if (Billboard != IsLensFlare)
+        gl_Position = projection * pos;
 
     varUV = inUV;
     varColor = inColor;

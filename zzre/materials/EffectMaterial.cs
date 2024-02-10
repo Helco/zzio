@@ -27,7 +27,8 @@ public class EffectMaterial : MlangMaterial
     {
         None,
         View,
-        Spark
+        Spark,
+        LensFlare
     }
 
     public enum BlendMode : uint

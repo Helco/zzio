@@ -44,6 +44,14 @@ public static class MathEx
             : v * (1f / MathF.Sqrt(lengthSqr));
     }
 
+    public static Vector3 SafeNormalize(Vector3 v, Vector3 alternative)
+    {
+        var lengthSqr = v.LengthSquared();
+        return CmpZero(lengthSqr)
+            ? alternative
+            : v * (1f / MathF.Sqrt(lengthSqr));
+    }
+
     public static Vector3 Perpendicular(Vector3 length, Vector3 dir) =>
         length - Project(length, dir);
 

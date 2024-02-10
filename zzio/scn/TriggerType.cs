@@ -37,9 +37,9 @@ public enum TriggerType
     WizformMarker, // unused
                    // RemoveLock, // this name is in the executable, but it messes up with the rest of the types
     IndoorCamera, // unused
-    LensFlare, // unused
+    UnusedCameraTrigger, // unused
+    LensFlare,
     FogModifier,
-    OpenMagicWaypoints, // unused
     RuneTarget, // no name present in the executable
     Unused38, // no name present in the executable
     Animal,
