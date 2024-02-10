@@ -133,7 +133,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.FairyHoverBehind(this),
             new systems.FairyKeepLastHover(this),
             new systems.FairyAnimation(this),
-            new systems.FairyGlowEffectPosition(this),
+            new systems.FairyGlowEffect(this),
 
             // Dialogs
             new systems.DialogScript(this),

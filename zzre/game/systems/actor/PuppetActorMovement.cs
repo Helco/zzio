@@ -112,8 +112,13 @@ public partial class PuppetActorMovement : AEntitySetSystem<float>
         var visibility = message.IsVisible ? components.Visibility.Visible : components.Visibility.Invisible;
         if (message.Entity.TryGet<components.ActorParts>(out var actorParts))
         {
-            actorParts.Body.Set(visibility);
-            actorParts.Wings?.Set(visibility);
+            actorParts.Body.Get<components.Visibility>() = visibility;
+            actorParts.Body.NotifyChanged<components.Visibility>();
+            if (actorParts.Wings.HasValue)
+            {
+                actorParts.Wings.Value.Get<components.Visibility>() = visibility;
+                actorParts.Wings.Value.NotifyChanged<components.Visibility>();
+            }
         }
         if (message.Entity.TryGet<components.SpawnedFairy>(out var spawnedFairy) &&
             spawnedFairy.Entity.IsAlive)

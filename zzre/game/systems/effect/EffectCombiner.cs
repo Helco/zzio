@@ -41,7 +41,10 @@ public partial class EffectCombiner : AEntitySetSystem<float>
         {
             // TODO: Respect min quality level for scene effect combiners
             var entity = World.CreateEntity();
-            HandleSpawnEffect(new(sceneEffect.effectFile, entity, sceneEffect.pos));
+            HandleSpawnEffect(new(
+                sceneEffect.effectFile,
+                AsEntity: entity,
+                Position: sceneEffect.pos));
             entity.Get<Location>().LocalRotation = Quaternion.CreateFromRotationMatrix(
                 Matrix4x4.CreateLookAt(Vector3.Zero, sceneEffect.dir, sceneEffect.up));
 
@@ -58,6 +61,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
     private void HandleSpawnEffect(in messages.SpawnEffectCombiner msg)
     {
         var entity = msg.AsEntity ?? World.CreateEntity();
+        entity.Set(components.Visibility.Visible);
         entity.Set(ManagedResource<zzio.effect.EffectCombiner>.Create(msg.EffectFilename));
         var effect = entity.Get<zzio.effect.EffectCombiner>();
         entity.Set(new components.effect.CombinerPlayback(
@@ -76,7 +80,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
             if (AddIndexAsComponent)
                 partEntity.Set(index);
             partEntity.Set(components.RenderOrder.LateEffect);
-            partEntity.Set(components.Visibility.Visible);
+            partEntity.SetSameAs<components.Visibility>(entity);
             partEntity.Set(new components.Parent(entity));
             switch(part)
             {

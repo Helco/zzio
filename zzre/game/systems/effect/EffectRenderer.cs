@@ -42,8 +42,11 @@ public class EffectRenderer : AEntityMultiMapSystem<CommandList, EffectMaterial>
     protected override void Update(CommandList cl, in EffectMaterial key, ReadOnlySpan<DefaultEcs.Entity> entities)
     {
         var renderIndicesComponents = World.GetComponents<components.effect.RenderIndices>();
+        var visibilityComponents = World.GetComponents<components.Visibility>();
         foreach (var entity in entities)
         {
+            if (visibilityComponents[entity] == components.Visibility.Invisible)
+                continue;
             var renderIndices = renderIndicesComponents[entity];
             indexRanges.Add(renderIndices.IndexRange);
         }

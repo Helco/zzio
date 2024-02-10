@@ -44,9 +44,10 @@ public partial class EffectModelRenderer : AEntitySetSystem<CommandList>
         CommandList cl,
         ClumpMesh mesh,
         List<ModelMaterial> materials,
-        ModelInstanceBuffer.InstanceArena instanceArena)
+        ModelInstanceBuffer.InstanceArena instanceArena,
+        in components.Visibility visibility) // thanks to SetSameAs, we do not necessarily get the notification of this changing
     {
-        if (instanceArena.InstanceCount == 0)
+        if (instanceArena.InstanceCount == 0 || visibility == components.Visibility.Invisible)
             return;
         cl.PushDebugGroup(mesh.Name);
         bool isFirstDraw = true;
