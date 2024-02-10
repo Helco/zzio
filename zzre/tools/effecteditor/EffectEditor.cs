@@ -5,10 +5,12 @@ using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
 using ImGuiNET;
+using ImGuizmoNET;
 using Veldrid;
 using zzio;
 using zzio.effect;
 using zzio.effect.parts;
+using zzio.scn;
 using zzio.vfs;
 using zzre.imgui;
 using zzre.materials;
@@ -18,6 +20,13 @@ namespace zzre.tools;
 
 public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
 {
+    private enum TransformMode
+    {
+        None,
+        Move,
+        Rotate
+    }
+
     private readonly ITagContainer diContainer;
     private readonly TwoColumnEditorTag editor;
     private readonly Camera camera;
@@ -36,6 +45,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private readonly SequentialSystem<CommandList> renderSystems = new();
     private ECSExplorer? ecsExplorer;
     private bool isPlaying = true;
+    private TransformMode transformMode = TransformMode.None;
 
     private EffectCombiner Effect => loadedEffect ?? emptyEffect;
     private EffectCombiner? loadedEffect = null;
@@ -56,6 +66,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         Window.InitialBounds = new Rect(float.NaN, float.NaN, 1100f, 600f);
         Window.AddTag(this);
         editor = new TwoColumnEditorTag(Window, diContainer);
+        editor.Window.OnContent += HandleGizmos;
         var onceAction = new OnceAction();
         Window.AddTag(onceAction);
         Window.OnContent += onceAction.Invoke;
@@ -144,6 +155,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         KillEffect();
         textureLoader.Clear();
         clumpLoader.Clear();
+        transformMode = TransformMode.None;
 
         using (var stream = resource.OpenContent())
         {
@@ -223,6 +235,24 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
 
     private void HandleResize() => camera.Aspect = fbArea.Ratio;
 
+    private void HandleGizmos()
+    {
+        if (transformMode == TransformMode.None || !effectEntity.TryGet<Location>(out var location))
+            return;
+
+        var operation = transformMode is TransformMode.Move
+            ? OPERATION.TRANSLATE : OPERATION.ROTATE;
+        var view = camera.Location.WorldToLocal;
+        var projection = camera.Projection;
+        var matrix = location.LocalToWorld;
+        ImGuizmo.SetDrawlist();
+        if (ImGuizmo.Manipulate(ref view.M11, ref projection.M11, operation, MODE.LOCAL, ref matrix.M11))
+        {
+            location.LocalToWorld = matrix;
+            fbArea.IsDirty = true;
+        }
+    }
+
     private void HandleRender(CommandList cl)
     {
         if (isPlaying && effectEntity.IsAlive)
@@ -240,9 +270,39 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private void HandleInfoContent()
     {
         ImGui.InputText("Description", ref Effect.description, 512);
-        ImGui.DragFloat3("Position", ref Effect.position);
-        ImGui.DragFloat3("Forwards", ref Effect.forwards);
-        ImGui.DragFloat3("Upwards", ref Effect.upwards);
+
+        ImGui.NewLine();
+        ImGui.Text("Transform");
+        var location = effectEntity.TryGet<Location>().GetValueOrDefault() ?? new();
+        if (ImGui.DragFloat3("Position", ref Effect.position))
+        {
+            location.LocalPosition = Effect.position;
+            fbArea.IsDirty = true;
+        }
+        ImGui.BeginDisabled();
+        var v = location.InnerForward;
+        ImGui.DragFloat3("Forwards", ref v);
+        v = location.InnerUp;
+        ImGui.DragFloat3("Upwards", ref v);
+        ImGui.EndDisabled();
+
+        int tMode = (int)transformMode;
+        ImGui.RadioButton("Fixed", ref tMode, (int)TransformMode.None); ImGui.SameLine();
+        ImGui.RadioButton("Move", ref tMode, (int)TransformMode.Move); ImGui.SameLine();
+        ImGui.RadioButton("Rotate", ref tMode, (int)TransformMode.Rotate);
+        transformMode = (TransformMode)tMode;
+
+        if (ImGui.Button("Reset transform"))
+        {
+            location.LocalPosition = Vector3.Zero;
+            location.LocalRotation = Quaternion.CreateFromRotationMatrix(
+                Matrix4x4.CreateLookAt(Vector3.Zero, Effect.forwards, Effect.upwards));
+        }
+        if (ImGui.Button("Set transform to identity"))
+        {
+            location.LocalPosition = Vector3.Zero;
+            location.LocalRotation = Quaternion.Identity;
+        }
     }
 
     private void HandlePlaybackContent()
