@@ -2,8 +2,8 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Text.RegularExpressions;
-using Veldrid.StartupUtilities;
 using Veldrid;
+using Veldrid.Sdl2;
 using zzre.imgui;
 using zzre.tools;
 using zzre.rendering;
@@ -62,23 +62,12 @@ internal partial class Program
         CommonStartupBeforeWindow(ctx);
 
         var (windowWidth, windowHeight) = ParseWindowSize(ctx);
-        var window = VeldridStartup.CreateWindow(new WindowCreateInfo
-        {
-            X = 100,
-            Y = 100,
-            WindowWidth = windowWidth,
-            WindowHeight = windowHeight,
-            WindowTitle = "Zanzarah"
-        });
-        var graphicsDevice = VeldridStartup.CreateGraphicsDevice(window, new GraphicsDeviceOptions
-        {
-            PreferDepthRangeZeroToOne = true,
-            PreferStandardClipSpaceYDirection = true,
-            SyncToVerticalBlank = true,
-            Debug = true
-        }, GraphicsBackend.Vulkan);
+        var window = new Sdl2Window("Zanzarah", 100, 100, windowWidth, windowHeight,
+            SDL_WindowFlags.Resizable,
+            threadedProcessing: false);
 
-        var diContainer = CommonStartupAfterWindow(window, graphicsDevice, ctx);
+        var diContainer = CommonStartupAfterWindow(window, ctx);
+        var graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         var windowContainer = new WindowContainer(graphicsDevice);
         var openDocumentSet = new OpenDocumentSet(diContainer);
         diContainer

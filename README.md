@@ -24,13 +24,14 @@ For developers who would like to contribute to this project:
 | zzio      | Library | Read and write functionality for non-standard file formats (e.g. scn, fbs, bsp) |
 | zzre      | Program | Recreation of the engine and associated tools (only viewers at the moment) |
 | zzre.core | Library | Isolated base and utility functionality used in zzre |
-| zzmaps    | Program | Renders Zanzarah maps as tiles (compatible with [Leaflet](https://leafletjs.com)) alongside some metadata |
 | zzsc      | Program | Small tool to replace script commands from short to long names |
 | zzio_cli  | Program | **Deprecated** tool to dump the non-standard file formats into JSON or CSV files |
 | zzio_dbsqlite | Program | Tool to convert the internal [FBS database](https://helco.github.io/zzdocs/resources/FBS/) into a [SQLite database](https://www.sqlite.org/index.html) |
 | zzio.tests | Tests | |
 | zzre.core.tests | Tests | |
 | extern | Submodules | Git submodules to (forked) dependencies |
+
+The previous `zzmaps` was removed as it was no longer used and caused problems with evolving the rendering code in zzre.
 
 ## License
 

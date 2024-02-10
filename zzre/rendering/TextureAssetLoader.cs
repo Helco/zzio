@@ -42,8 +42,10 @@ public class TextureAssetLoader : IAssetLoader<Texture>, IAssetLoaderValidation<
             return null;
         try
         {
-            return new Veldrid.ImageSharp.ImageSharpTexture(textureStream, true)
-                .CreateDeviceTexture(device, device.ResourceFactory);
+            var image = StbImageSharp.Decoding.BmpDecoder.Decode(textureStream, StbImageSharp.ColorComponents.RedGreenBlueAlpha);
+            if (image == null)
+                return null;
+            return image.ToTexture(device);
         }
         catch (Exception)
         {

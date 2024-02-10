@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using DefaultEcs.Resource;
+using StbImageSharp;
 using Veldrid;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using zzio.vfs;
 using zzre.materials;
 using zzre.rendering;
@@ -62,7 +62,7 @@ public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.
 
     protected override TileSheet Load(UITileSheetInfo info)
     {
-        using var bitmap = UIBitmap.LoadMaskedBitmap(resourcePool, info.Name);
+        var bitmap = UIBitmap.LoadMaskedBitmap(resourcePool, info.Name);
         var tileSheet = new TileSheet(info.Name, bitmap, info.IsFont);
 
         var texture = resourceFactory.CreateTexture(
@@ -76,7 +76,8 @@ public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.
                 TextureUsage.Sampled,
                 TextureType.Texture2D));
         texture.Name = (info.IsFont ? "UIFont " : "UITileSheet ") + info.Name;
-        UploadTileSheet(bitmap, texture, info.IsFont);
+        graphicsDevice.UpdateTexture(texture, bitmap.Data.AsSpan(bitmap.Width * 4),
+            0, 0, 0, width: texture.Width, height: texture.Height, depth: 1, mipLevel: 0, arrayLayer: 0);
 
         var material = new UIMaterial(diContainer) { IsFont = info.IsFont };
         material.MainTexture.Texture = texture;
@@ -98,23 +99,5 @@ public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.
         material.MainTexture.Texture?.Dispose();
         material.Dispose();
         materials.Remove(resource);
-    }
-
-    private unsafe void UploadTileSheet(Image<Rgba32> bitmap, Texture texture, bool isFont)
-    {
-        // skipping the first row
-
-        if (!bitmap.TryGetSinglePixelSpan(out var totalSpan) || totalSpan.Length != bitmap.Width * bitmap.Height)
-            throw new System.ArgumentException("TileSheets can only be uploaded for contiguous bitmaps");
-
-        fixed (Rgba32* src = totalSpan)
-        {
-            graphicsDevice.UpdateTexture(texture,
-                new(src + bitmap.Width), (uint)totalSpan.Length * 4,
-                x: 0, y: 0, z: 0,
-                (uint)bitmap.Width, (uint)bitmap.Height - 1, depth: 1,
-                mipLevel: 0,
-                arrayLayer: 0);
-        }
     }
 }

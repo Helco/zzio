@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using StbImageSharp;
 using Veldrid;
 using zzio;
 using zzio.rwbs;
@@ -16,6 +17,35 @@ public static class TextureAssetLoaderExtensions
     {
         "marker"
     };
+
+    public static int Count(this ColorComponents c) => c switch
+    {
+        ColorComponents.Grey => 1,
+        ColorComponents.GreyAlpha => 2,
+        ColorComponents.RedGreenBlue => 3,
+        ColorComponents.RedGreenBlueAlpha => 4,
+        _ => throw new NotImplementedException($"Unimplemented StbImageSharp.ColorComponents: {c}")
+    };
+
+    public static Texture ToTexture(this ImageResult image, GraphicsDevice gd, bool srgb = false)
+    {
+        if (image.BitsPerChannel != 8)
+            throw new NotSupportedException($"Unsupported bits per channel: {image.BitsPerChannel}");
+        var format = image.ColorComponents switch
+        {
+            ColorComponents.Grey => PixelFormat.R8_UNorm,
+            ColorComponents.GreyAlpha => PixelFormat.R8_G8_UNorm,
+            ColorComponents.RedGreenBlue => throw new NotSupportedException("Veldrid does not support 24 bit textures"),
+            ColorComponents.RedGreenBlueAlpha when srgb => PixelFormat.R8_G8_B8_A8_UNorm_SRgb,
+            ColorComponents.RedGreenBlueAlpha when !srgb => PixelFormat.R8_G8_B8_A8_UNorm,
+            _ => throw new NotSupportedException($"Unsupported StbImageSharp.ColorComponents: {image.ColorComponents}")
+        };
+        var texture = gd.ResourceFactory.CreateTexture(new(
+            (uint)image.Width, (uint)image.Height, depth: 1, mipLevels: 1, arrayLayers: 1,
+            format, TextureUsage.Sampled, TextureType.Texture2D));
+        gd.UpdateTexture(texture, image.Data, 0, 0, 0, (uint)image.Width, (uint)image.Height, depth: 1, mipLevel: 0, arrayLayer: 0);
+        return texture;
+    }
 
     public static FilePath GetTexturePathFromModel(this IAssetLoader<Texture> _, FilePath modelPath)
     {

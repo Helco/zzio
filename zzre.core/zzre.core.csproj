@@ -17,12 +17,18 @@
 
   <ItemGroup>
     <EmbeddedResource Include="assets\forkawesome-webfont.ttf" />
+    <EmbeddedResource Include="assets\imgui-vertex.spv">
+      <LogicalName>imgui-vertex</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="assets\imgui-frag.spv">
+      <LogicalName>imgui-frag</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <PackageReference Include="Veldrid" Version="$(VeldridVersion)"/>
-    <PackageReference Include="Veldrid.ImGui" Version="$(VeldridImguiVersion)"/>
+    <PackageReference Include="Veldrid.SDL2" Version="$(VeldridVersion)" />
     <PackageReference Include="ImGui.NET" Version="$(ImguiVersion)" />
     <PackageReference Include="ImGuizmo.NET" Version="$(ImguizmoVersion)" />
     <PackageReference Include="Mlang" Version="$(MlangVersion)" />

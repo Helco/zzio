@@ -1,10 +1,10 @@
-﻿using DefaultEcs.Resource;
+﻿using System.IO;
+using DefaultEcs.Resource;
+using StbImageSharp;
 using Veldrid;
-using Veldrid.ImageSharp;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using zzio;
 using zzio.vfs;
+using zzre.rendering;
 
 namespace zzre.game.resources;
 
@@ -33,9 +33,7 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
 
     protected override materials.UIMaterial Load(string name)
     {
-        using var bitmap = LoadMaskedBitmap(resourcePool, name);
-        var texture = new ImageSharpTexture(bitmap, mipmap: false)
-            .CreateDeviceTexture(graphicsDevice, resourceFactory);
+        var texture = LoadMaskedBitmap(resourcePool, name).ToTexture(graphicsDevice);
         texture.Name = "UIBitmap " + name;
         var material = new materials.UIMaterial(diContainer);
         material.MainTexture.Texture = texture;
@@ -55,34 +53,39 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
         resource.Dispose();
     }
 
-    internal static Image<Rgba32> LoadMaskedBitmap(IResourcePool resourcePool, string name)
+    internal static ImageResult LoadMaskedBitmap(IResourcePool resourcePool, string name)
     {
         var bitmap =
-            LoadBitmap<Rgba32>(resourcePool, name, UnmaskedSuffix) ??
-            LoadBitmap<Rgba32>(resourcePool, name, ColorSuffix) ??
+            LoadBitmap(resourcePool, name, UnmaskedSuffix, withAlpha: true) ??
+            LoadBitmap(resourcePool, name, ColorSuffix, withAlpha: true) ??
             throw new System.IO.FileNotFoundException($"Could not open bitmap {name}");
 
-        using var maskBitmap = LoadBitmap<Rgb24>(resourcePool, name, MaskSuffix);
+        var maskBitmap = LoadBitmap(resourcePool, name, MaskSuffix, withAlpha: null);
         if (maskBitmap == null)
             return bitmap;
+        if (bitmap.Width != maskBitmap.Width || bitmap.Height != maskBitmap.Height)
+            throw new InvalidDataException("Mask bitmap size does not match color bitmap");
 
-        for (int y = 0; y < bitmap.Height; y++)
-        {
-            var colorSpan = bitmap.GetPixelRowSpan(y);
-            var maskSpan = maskBitmap.GetPixelRowSpan(y);
-            for (int x = 0; x < bitmap.Width; x++)
-                colorSpan[x].A = maskSpan[x].R;
-        }
+        var maskBpp = maskBitmap.ColorComponents.Count();
+        for (int i = 0; i < bitmap.Width * bitmap.Height; i++)
+            bitmap.Data[i * 4 + 3] = maskBitmap.Data[i * maskBpp];
         return bitmap;
     }
 
-    internal static Image<TPixel>? LoadBitmap<TPixel>(IResourcePool resourcePool, string name, string suffix)
-        where TPixel : unmanaged, IPixel<TPixel>
+    internal static ImageResult? LoadBitmap(IResourcePool resourcePool, string name, string suffix, bool? withAlpha)
     {
         var path = BasePath.Combine(name + suffix);
         using var stream = resourcePool.FindAndOpen(path);
         if (stream == null)
             return null;
-        return Image.Load<TPixel>(stream);
+        var result = StbImageSharp.Decoding.BmpDecoder.Decode(stream, withAlpha switch
+        {
+            null => null,
+            true => ColorComponents.RedGreenBlueAlpha,
+            false => ColorComponents.RedGreenBlue
+        });
+        if (result == null)
+            throw new System.IO.InvalidDataException($"Could not decode bitmap {name}{suffix}");
+        return result;
     }
 }

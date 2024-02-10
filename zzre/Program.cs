@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Runtime.CompilerServices;
 using Veldrid;
 using Veldrid.Sdl2;
 using zzio.vfs;
@@ -22,11 +23,21 @@ internal partial class Program
         },
         "Adds a resource pool to use (later pools overwrite previous ones).\nCurrently directories and PAK archives are supported");
 
+    private static readonly Option<bool> OptionDebugLayers = new(
+        new[] { "--debug-layers" },
+#if DEBUG
+        () => true,
+#else
+        () => false,
+#endif
+        "Enable Vulkan debug layers");
+
     private static void Main(string[] args)
     {
         System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
         var rootCommand = new RootCommand("zzre - Engine reimplementation and modding tools for Zanzarah");
         rootCommand.AddGlobalOption(OptionPools);
+        rootCommand.AddGlobalOption(OptionDebugLayers);
         AddGlobalRenderDocOption(rootCommand);
         AddInDevCommand(rootCommand);
         rootCommand.Invoke(args);
@@ -37,9 +48,10 @@ internal partial class Program
         LoadRenderDoc(ctx);
     }
 
-    private static ITagContainer CommonStartupAfterWindow(Sdl2Window window, GraphicsDevice graphicsDevice, InvocationContext ctx)
+    private static ITagContainer CommonStartupAfterWindow(Sdl2Window window, InvocationContext ctx)
     {
         SetupRenderDocKeys(window);
+        var graphicsDevice = CreateGraphicsDevice(window, ctx);
 
         var diContainer = new TagContainer();
         return diContainer
@@ -53,6 +65,54 @@ internal partial class Program
             .AddTag(new GameTime())
             .AddTag(CreateResourcePool(ctx))
             .AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(diContainer));
+    }
+
+    private static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, InvocationContext ctx)
+    {
+        var options = new GraphicsDeviceOptions()
+        {
+            Debug = ctx.ParseResult.GetValueForOption(OptionDebugLayers),
+            HasMainSwapchain = true,
+            PreferDepthRangeZeroToOne = true,
+            PreferStandardClipSpaceYDirection = true,
+            SyncToVerticalBlank = true
+        };
+        SwapchainDescription scDesc = new SwapchainDescription(
+            GetSwapchainSource(window),
+            (uint)window.Width,
+            (uint)window.Height,
+            options.SwapchainDepthFormat,
+            options.SyncToVerticalBlank,
+            colorSrgb : false);
+        return GraphicsDevice.CreateVulkan(options, scDesc);
+    }
+
+    private static unsafe SwapchainSource GetSwapchainSource(Sdl2Window window)
+    {
+        IntPtr sdlHandle = window.SdlWindowHandle;
+        SDL_SysWMinfo sysWmInfo;
+        Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
+        Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
+        switch (sysWmInfo.subsystem)
+        {
+            case SysWMType.Windows:
+                Win32WindowInfo w32Info = Unsafe.Read<Win32WindowInfo>(&sysWmInfo.info);
+                return SwapchainSource.CreateWin32(w32Info.Sdl2Window, w32Info.hinstance);
+            case SysWMType.X11:
+                X11WindowInfo x11Info = Unsafe.Read<X11WindowInfo>(&sysWmInfo.info);
+                return SwapchainSource.CreateXlib(
+                    x11Info.display,
+                    x11Info.Sdl2Window);
+            case SysWMType.Wayland:
+                WaylandWindowInfo wlInfo = Unsafe.Read<WaylandWindowInfo>(&sysWmInfo.info);
+                return SwapchainSource.CreateWayland(wlInfo.display, wlInfo.surface);
+            case SysWMType.Cocoa:
+                CocoaWindowInfo cocoaInfo = Unsafe.Read<CocoaWindowInfo>(&sysWmInfo.info);
+                IntPtr nsWindow = cocoaInfo.Window;
+                return SwapchainSource.CreateNSWindow(nsWindow);
+            default:
+                throw new PlatformNotSupportedException("Cannot create a SwapchainSource for " + sysWmInfo.subsystem + ".");
+        }
     }
 
     private static IResourcePool CreateResourcePool(InvocationContext ctx)

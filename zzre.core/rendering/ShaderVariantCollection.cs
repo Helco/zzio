@@ -24,7 +24,6 @@ using VeldridCullMode = Veldrid.FaceCullMode;
 using MlangCullMode = Mlang.Model.FaceCullMode;
 using VeldridFillMode = Veldrid.PolygonFillMode;
 using MlangFillMode = Mlang.Model.FaceFillMode;
-using SharpGen.Runtime.Win32;
 
 namespace zzre.rendering;
 

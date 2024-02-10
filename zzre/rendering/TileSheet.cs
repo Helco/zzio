@@ -2,9 +2,8 @@
 using System.Numerics;
 using System.Collections.Generic;
 using System.Collections;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using System.Linq;
+using StbImageSharp;
 
 namespace zzre.rendering;
 
@@ -24,8 +23,11 @@ public class TileSheet : IReadOnlyList<Rect>
     public float CharSpacing { get; set; }
     public IList<TileSheet> Alternatives { get; } = new List<TileSheet>();
 
-    public TileSheet(string name, Image<Rgba32> image, bool isFont)
+    public TileSheet(string name, ImageResult image, bool isFont)
     {
+        if (image.ColorComponents != ColorComponents.RedGreenBlueAlpha || image.BitsPerChannel != 8)
+            throw new ArgumentException("TileSheet can only be initialized with RGBA32 images");
+
         Name = name;
         IsFont = isFont;
         var height = image.Height - 1;
@@ -33,14 +35,14 @@ public class TileSheet : IReadOnlyList<Rect>
         OneTexel = Vector2.One / TotalSize;
         LineHeight = TotalSize.Y;
 
-        var firstRow = image.GetPixelRowSpan(0);
         int tileStartX = 0;
         var tileEndXOffset = isFont ? 0 : 1;
         var tiles = new List<Rect>();
         var pixelSizes = new List<Vector2>();
         for (int tileEndX = 0; tileEndX < image.Width; tileEndX++)
         {
-            if (firstRow[tileEndX].R == 0 && firstRow[tileEndX].G == 0 && firstRow[tileEndX].B == 0 ||
+            var dataI = tileEndX * 4;
+            if (image.Data[dataI + 0] == 0 && image.Data[dataI + 1] == 0 && image.Data[dataI + 2] == 0 ||
                 tileEndX == tileStartX)
                 continue;
 

@@ -1,11 +1,10 @@
 ﻿using System;
 using DefaultEcs.Resource;
 using Veldrid;
-using Veldrid.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using zzio;
 using zzio.vfs;
 using zzre.materials;
+using zzre.rendering;
 
 namespace zzre.game.resources;
 
@@ -33,9 +32,9 @@ public class UIRawMaskedBitmap : AResourceManager<RawMaskedBitmapInfo, UIMateria
 
     protected override UIMaterial Load(RawMaskedBitmapInfo info)
     {
-        var bitmap = UIBitmap.LoadBitmap<Rgba32>(resourcePool, info.colorFile, suffix: "") ??
+        var bitmap = UIBitmap.LoadBitmap(resourcePool, info.colorFile, suffix: "", withAlpha: true) ??
             throw new System.IO.FileNotFoundException($"Could not open bitmap {info.colorFile}");
-        var mainTexture = new ImageSharpTexture(bitmap, mipmap: false).CreateDeviceTexture(graphicsDevice, resourceFactory);
+        var mainTexture = bitmap.ToTexture(graphicsDevice);
         mainTexture.Name = "UIRawMaskedBitmap " + info.colorFile;
 
         var mask = LoadMask(info.maskFile, bitmap.Width, bitmap.Height);
