@@ -24,19 +24,19 @@ public class TestCombinedResourcePool
         MyAssert.ContainsExactly(
             new[] { "hello.txt" },
             a.Files.Select(f => f.Name));
-        Assert.IsEmpty(a.Directories);
+        Assert.That(a.Directories, Is.Empty);
 
         var b = pool.Root.Directories.First(d => d.Name == "b");
         MyAssert.ContainsExactly(
             new[] { "hello.txt" },
             b.Files.Select(f => f.Name));
-        Assert.IsEmpty(b.Directories);
+        Assert.That(b.Directories, Is.Empty);
 
         var common = pool.Root.Directories.First(d => d.Name == "common");
         MyAssert.ContainsExactly(
             new[] { "content.txt", "a.txt", "b.txt" },
             common.Files.Select(f => f.Name));
-        Assert.IsEmpty(common.Directories);
+        Assert.That(common.Directories, Is.Empty);
     }
 
     [Test]

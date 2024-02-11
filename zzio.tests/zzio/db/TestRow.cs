@@ -20,7 +20,7 @@ public class TestRow
 
     private void testRow(Row row)
     {
-        Assert.NotNull(row);
+        Assert.That(row, Is.Not.Null);
         Assert.That(row.uid, Is.EqualTo(new UID(0xdeadbeef)));
         Assert.That(row.cells.Length, Is.EqualTo(3));
 

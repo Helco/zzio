@@ -91,12 +91,12 @@ public class TestRangeCollection
 
         // Returns null on empty and too small
         coll = new RangeCollection(5);
-        Assert.IsNull(coll.AddBestFit(10));
-        Assert.IsEmpty(coll);
+        Assert.That(coll.AddBestFit(10), Is.Null);
+        Assert.That(coll, Is.Empty);
 
         // Returns null on too small
         coll = new RangeCollection(10) { 3..8 };
-        Assert.IsNull(coll.AddBestFit(9));
+        Assert.That(coll.AddBestFit(9), Is.Null);
         Assert.That(coll, Is.EqualTo(new[] { 3..8 }));
     }
 
@@ -104,9 +104,9 @@ public class TestRangeCollection
     public void RemoveNonExistant()
     {
         var coll = new RangeCollection();
-        Assert.False(coll.Remove(0..5));
+        Assert.That(coll.Remove(0..5), Is.False);
         coll.Add(0..5);
-        Assert.False(coll.Remove(10..15));
+        Assert.That(coll.Remove(10..15), Is.False);
     }
 
     [Test]
@@ -119,7 +119,7 @@ public class TestRangeCollection
             11..20
         };
 
-        Assert.True(coll.Remove(2..18));
+        Assert.That(coll.Remove(2..18));
         Assert.That(coll, Is.EqualTo(new[] { 0..2, 18..20 }));
     }
 }

@@ -42,7 +42,7 @@ public class TestCommonResourcePool
     [Test, Combinatorial]
     public void poolIsAlwaysSet([ValueSource(nameof(testPools))] IResourcePool pool) => VisitResources(pool, res =>
     {
-        Assert.IsNotNull(res.Pool);
+        Assert.That(res.Pool, Is.Not.Null);
     });
 
     [Test, Combinatorial]
@@ -73,7 +73,7 @@ public class TestCommonResourcePool
         using var stream = res.OpenContent();
         if (res.Type == ResourceType.File)
         {
-            Assert.IsNotNull(stream);
+            Assert.That(stream, Is.Not.Null);
             Assert.That(stream!.CanRead);
         }
         else
@@ -85,7 +85,7 @@ public class TestCommonResourcePool
     {
         if (res.Type == ResourceType.File)
         {
-            Assert.IsEmpty(res);
+            Assert.That(res, Is.Empty);
         }
     });
 }

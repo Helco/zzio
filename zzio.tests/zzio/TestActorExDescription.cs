@@ -12,7 +12,7 @@ public class TestActorExDescription
 
     private void testInstance(ActorExDescription aed)
     {
-        Assert.NotNull(aed);
+        Assert.That(aed, Is.Not.Null);
         Assert.That(aed.headBoneID, Is.EqualTo(1337));
         Assert.That(aed.body.model, Is.EqualTo("hello.dff"));
         Assert.That(aed.wings.model, Is.EqualTo("wings.dff"));

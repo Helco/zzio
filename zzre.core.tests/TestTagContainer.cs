@@ -21,7 +21,7 @@ public class TestTagContainer
     [Test]
     public void StartsEmpty()
     {
-        Assert.IsEmpty(container.GetTags<object>());
+        Assert.That(container.GetTags<object>(), Is.Empty);
     }
 
     [Test]

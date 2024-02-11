@@ -14,7 +14,7 @@ public class TestTable
     private void testTable(Table table)
     {
         Row row;
-        Assert.NotNull(table);
+        Assert.That(table, Is.Not.Null);
         Assert.That(table.rows.Count, Is.EqualTo(3));
 
         Assert.That(table.rows.ContainsKey(new UID(0xdeadbeef)), Is.True);

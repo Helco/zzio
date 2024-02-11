@@ -34,9 +34,9 @@ public class TestRelativeOrder
         var indexByItem = solver
             .Select((item, index) => (item, index))
             .ToDictionary(p => p.item, p => p.index);
-        Assert.Less(indexByItem[item1], indexByItem[item2]);
-        Assert.Less(indexByItem[item2], indexByItem[item3]);
-        Assert.Less(indexByItem[item3], indexByItem[item4]);
+        Assert.That(indexByItem[item1], Is.LessThan(indexByItem[item2]));
+        Assert.That(indexByItem[item2], Is.LessThan(indexByItem[item3]));
+        Assert.That(indexByItem[item3], Is.LessThan(indexByItem[item4]));
     }
 
     [Test]
@@ -53,9 +53,9 @@ public class TestRelativeOrder
         var indexByItem = solver
             .Select((item, index) => (item, index))
             .ToDictionary(p => p.item, p => p.index);
-        Assert.Less(indexByItem[item1], indexByItem[item2]);
-        Assert.Less(indexByItem[item2], indexByItem[item3]);
-        Assert.Less(indexByItem[item3], indexByItem[item4]);
+        Assert.That(indexByItem[item1], Is.LessThan(indexByItem[item2]));
+        Assert.That(indexByItem[item2], Is.LessThan(indexByItem[item3]));
+        Assert.That(indexByItem[item3], Is.LessThan(indexByItem[item4]));
     }
 
     [Test]
@@ -72,9 +72,9 @@ public class TestRelativeOrder
         var indexByItem = solver
             .Select((item, index) => (item, index))
             .ToDictionary(p => p.item, p => p.index);
-        Assert.Less(indexByItem[item1], indexByItem[item2]);
-        Assert.Less(indexByItem[item2], indexByItem[item3]);
-        Assert.Less(indexByItem[item3], indexByItem[item4]);
+        Assert.That(indexByItem[item1], Is.LessThan(indexByItem[item2]));
+        Assert.That(indexByItem[item2], Is.LessThan(indexByItem[item3]));
+        Assert.That(indexByItem[item3], Is.LessThan(indexByItem[item4]));
     }
 
     [Test]
@@ -91,9 +91,9 @@ public class TestRelativeOrder
         var indexByItem = solver
             .Select((item, index) => (item, index))
             .ToDictionary(p => p.item, p => p.index);
-        Assert.Less(indexByItem[item1], indexByItem[item2]);
-        Assert.Less(indexByItem[item2], indexByItem[item3]);
-        Assert.Less(indexByItem[item3], indexByItem[item4]);
+        Assert.That(indexByItem[item1], Is.LessThan(indexByItem[item2]));
+        Assert.That(indexByItem[item2], Is.LessThan(indexByItem[item3]));
+        Assert.That(indexByItem[item3], Is.LessThan(indexByItem[item4]));
     }
 
     [Test]
@@ -109,7 +109,7 @@ public class TestRelativeOrder
         var indexByItem = solver
             .Select((item, index) => (item, index))
             .ToDictionary(p => p.item, p => p.index);
-        Assert.Less(indexByItem[item1], indexByItem[item2]);
-        Assert.Less(indexByItem[item2], indexByItem[item3]);
+        Assert.That(indexByItem[item1], Is.LessThan(indexByItem[item2]));
+        Assert.That(indexByItem[item2], Is.LessThan(indexByItem[item3]));
     }
 }

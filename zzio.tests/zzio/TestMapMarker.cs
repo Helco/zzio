@@ -12,7 +12,7 @@ public class TestMapMarker
 
     private void testMarkers(MapMarker[] mapMarkers)
     {
-        Assert.NotNull(mapMarkers);
+        Assert.That(mapMarkers, Is.Not.Null);
         Assert.That(mapMarkers.Length, Is.EqualTo(3));
 
         Assert.That(mapMarkers[0].posX, Is.EqualTo(1234));

@@ -58,8 +58,8 @@ public class TestFallbackTagContainer
     public void ModifiesMain()
     {
         container.AddTag(new Tag4());
-        Assert.True(main.HasTag<Tag4>());
-        Assert.True(container.RemoveTag<Tag4>());
-        Assert.False(main.HasTag<Tag4>());
+        Assert.That(main.HasTag<Tag4>());
+        Assert.That(container.RemoveTag<Tag4>());
+        Assert.That(main.HasTag<Tag4>(), Is.False);
     }
 }

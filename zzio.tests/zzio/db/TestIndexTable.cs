@@ -13,7 +13,7 @@ public class TestIndexTable
 
     private void testIndexTable(IndexTable table)
     {
-        Assert.NotNull(table);
+        Assert.That(table, Is.Not.Null);
         Assert.That(table.ColumnCount, Is.EqualTo(3));
         Assert.That(table.columnNames.Length, Is.EqualTo(3));
         Assert.That(table.columnNumbers.Length, Is.EqualTo(3));

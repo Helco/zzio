@@ -25,7 +25,7 @@ public class TestSkeletalAnimation
 
     private void testAnimation(SkeletalAnimation ani)
     {
-        Assert.NotNull(ani);
+        Assert.That(ani, Is.Not.Null);
         Assert.That(ani.flags, Is.EqualTo(4));
         Assert.That(ani.duration, Is.EqualTo(3.0f).Within(TOLERANCE));
         Assert.That(ani.BoneCount, Is.EqualTo(3));
