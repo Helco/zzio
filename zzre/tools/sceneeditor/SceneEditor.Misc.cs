@@ -35,6 +35,7 @@ partial class SceneEditor
             }
             LabelText("World Path", misc.worldPath);
             LabelText("Texture Path", misc.texturePath);
+            LabelText("Backdrop", editor.scene?.backdropFile ?? "--"); // technically not misc
 
             NewLine();
             Text("Lighting");

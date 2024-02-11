@@ -23,6 +23,7 @@ public class Game : BaseDisposable, ITagContainer
     private readonly ISystem<float> updateSystems;
     private readonly ISystem<CommandList> renderSystems;
     private readonly systems.SyncedLocation syncedLocation;
+    private RgbaFloat clearColor = RgbaFloat.Black;
 
     public DefaultEcs.Entity PlayerEntity => // Placeholder during transition
         ecsWorld.GetEntities().With<components.PlayerPuppet>().AsEnumerable().First();
@@ -217,6 +218,7 @@ public class Game : BaseDisposable, ITagContainer
     {
         camera.Update(cl);
         syncedLocation.Update(cl);
+        cl.ClearColorTarget(0, clearColor);
         renderSystems.Update(cl);
     }
 
@@ -238,6 +240,7 @@ public class Game : BaseDisposable, ITagContainer
         var scene = new Scene();
         scene.Read(sceneStream);
         ecsWorld.Set(scene);
+        clearColor = (scene.misc.clearColor.ToFColor() with { a = 1f }).ToVeldrid();
 
         ecsWorld.Publish(new messages.SceneLoaded(scene, GetTag<Savegame>()));
         ecsWorld.Publish(new messages.PlayerEntered(findEntryTrigger()));

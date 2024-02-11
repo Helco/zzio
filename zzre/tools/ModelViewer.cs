@@ -134,6 +134,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             textureLoader.GetTexturePathFromModel(resource.Path),
             new FilePath("resources/textures/models"),
             new FilePath("resources/textures/worlds"),
+            new FilePath("resources/textures/backdrops"),
         };
 
         normalRenderer.Clear();
