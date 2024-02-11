@@ -146,6 +146,9 @@ public class DynamicGraphicsBuffer : BaseDisposable
             buffer?.Dispose();
             buffer = device.ResourceFactory.CreateBuffer(new((uint)capacityInBytes, usage));
             buffer.Name = bufferName;
+            dirtyBytes.Clear();
+            foreach (var usedElementRange in usedElements)
+                dirtyBytes.Add(AsByteRange(usedElementRange));
         }
 
         dirtyBytes.MergeNearbyRanges(MaxUploadDistance);
