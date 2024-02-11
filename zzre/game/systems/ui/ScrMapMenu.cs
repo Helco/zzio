@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Veldrid;
 using DefaultEcs.Resource;
-using zzio;
 using zzio.db;
 using zzre.game.resources;
+using KeyCode = Silk.NET.SDL.KeyCode;
 using static zzre.game.systems.ui.InGameScreen;
 
 namespace zzre.game.systems.ui;
@@ -93,23 +92,23 @@ public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.
             mapMenuEntity.Dispose();
     }
 
-    protected override void HandleKeyDown(Key key)
+    protected override void HandleKeyDown(KeyCode key)
     {
         var mapMenuEntity = Set.GetEntities()[0];
         base.HandleKeyDown(key);
-        if (key == Key.F2) {
+        if (key == KeyCode.KF2) {
             mapMenuEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
         }
-        if (key == Key.F3) {
+        if (key == KeyCode.KF3) {
             mapMenuEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
         }
-        if (key == Key.F5) {
+        if (key == KeyCode.KF5) {
             mapMenuEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenDeck>();
         }
-        if (key == Key.Enter || key == Key.Escape || key == Key.F4)
+        if (key == KeyCode.KReturn || key == KeyCode.KEscape || key == KeyCode.KF3)
             Set.DisposeAll();
     }
 }

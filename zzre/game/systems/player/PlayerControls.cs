@@ -1,24 +1,24 @@
 ﻿using System;
 using DefaultEcs.System;
-using Veldrid;
+using Silk.NET.SDL;
 
 namespace zzre.game.systems;
 
 public class PlayerControls : AComponentSystem<float, components.PlayerControls>
 {
     private const float JumpLockDuration = 0.8f;
-    private const Key ForwardKey = Key.W;
-    private const Key BackwardKey = Key.S;
-    private const Key LeftKey = Key.A;
-    private const Key RightKey = Key.D;
-    private const Key JumpKey = Key.Space;
-    private const Key MenuKey = Key.Enter;
-    // private const Key PauseKey = Key.F1;
-    private const Key RuneMenuKey = Key.F2;
-    private const Key BookMenuKey = Key.F3;
-    private const Key MapMenuKey = Key.F4;
-    private const Key DeckMenuKey = Key.F5;
-    // private const Key EscapeKey = Key.Escape;
+    private const KeyCode ForwardKey = KeyCode.KW;
+    private const KeyCode BackwardKey = KeyCode.KS;
+    private const KeyCode LeftKey = KeyCode.KA;
+    private const KeyCode RightKey = KeyCode.KD;
+    private const KeyCode JumpKey = KeyCode.KSpace;
+    private const KeyCode MenuKey = KeyCode.KReturn;
+    // private const KeyCode PauseKey = KeyCode.F1;
+    private const KeyCode RuneMenuKey = KeyCode.KF2;
+    private const KeyCode BookMenuKey = KeyCode.KF3;
+    private const KeyCode MapMenuKey = KeyCode.KF4;
+    private const KeyCode DeckMenuKey = KeyCode.KF5;
+    // private const KeyCode EscapeKey = KeyCode.Escape;
     private readonly IZanzarahContainer zzContainer;
     private readonly UI ui;
     private readonly IDisposable lockMessageSubscription;
@@ -85,11 +85,11 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         }
     }
 
-    private void HandleKeyDown(Key obj) => HandleKey(obj, true);
-    private void HandleKeyUp(Key obj) => HandleKey(obj, false);
-    private void HandleKey(Key key, bool isDown)
+    private void HandleKeyDown(KeyCode obj) => HandleKey(obj, true);
+    private void HandleKeyUp(KeyCode obj) => HandleKey(obj, false);
+    private void HandleKey(KeyCode KeyCode, bool isDown)
     {
-        switch (key)
+        switch (KeyCode)
         {
             case ForwardKey: nextControls.GoesForward = isDown; break;
             case BackwardKey: nextControls.GoesBackward = isDown; break;
@@ -101,7 +101,7 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
 
         if (isDown && !IsLocked)
         {
-            switch (key)
+            switch (KeyCode)
             {
                 case MenuKey: ui.Publish<messages.ui.OpenDeck>(); break;
                 case RuneMenuKey: ui.Publish<messages.ui.OpenRuneMenu>(); break;

@@ -3,11 +3,12 @@ using System.IO;
 using System.Linq;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.Runtime.CompilerServices;
 using Veldrid;
-using Veldrid.Sdl2;
 using zzio.vfs;
 using zzre.rendering;
+using Silk.NET.SDL;
+
+using Texture = Veldrid.Texture;
 
 namespace zzre;
 
@@ -43,20 +44,26 @@ internal partial class Program
         rootCommand.Invoke(args);
     }
 
-    private static void CommonStartupBeforeWindow(InvocationContext ctx)
+    private static ITagContainer CommonStartupBeforeWindow(InvocationContext ctx)
     {
+        var diContainer = new TagContainer();
+        diContainer.AddTag(ctx);
+
+        SdlProvider.SetMainReady = true;
+        diContainer.AddTag(SdlProvider.SDL.Value);
+
         LoadRenderDoc(ctx);
+        return diContainer;
     }
 
-    private static ITagContainer CommonStartupAfterWindow(Sdl2Window window, InvocationContext ctx)
+    private static ITagContainer CommonStartupAfterWindow(ITagContainer diContainer)
     {
+        var window = diContainer.GetTag<SdlWindow>();
+        var ctx = diContainer.GetTag<InvocationContext>();
         SetupRenderDocKeys(window);
         var graphicsDevice = CreateGraphicsDevice(window, ctx);
 
-        var diContainer = new TagContainer();
         return diContainer
-            .AddTag(ctx)
-            .AddTag(window)
             .AddTag(graphicsDevice)
             .AddTag(graphicsDevice.ResourceFactory)
             .AddTag(new ShaderVariantCollection(graphicsDevice,
@@ -67,7 +74,7 @@ internal partial class Program
             .AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(diContainer));
     }
 
-    private static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, InvocationContext ctx)
+    private static GraphicsDevice CreateGraphicsDevice(SdlWindow window, InvocationContext ctx)
     {
         var options = new GraphicsDeviceOptions()
         {
@@ -78,41 +85,13 @@ internal partial class Program
             SyncToVerticalBlank = true
         };
         SwapchainDescription scDesc = new SwapchainDescription(
-            GetSwapchainSource(window),
+            window.CreateSwapchainSource(),
             (uint)window.Width,
             (uint)window.Height,
             options.SwapchainDepthFormat,
             options.SyncToVerticalBlank,
             colorSrgb : false);
         return GraphicsDevice.CreateVulkan(options, scDesc);
-    }
-
-    private static unsafe SwapchainSource GetSwapchainSource(Sdl2Window window)
-    {
-        IntPtr sdlHandle = window.SdlWindowHandle;
-        SDL_SysWMinfo sysWmInfo;
-        Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
-        Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
-        switch (sysWmInfo.subsystem)
-        {
-            case SysWMType.Windows:
-                Win32WindowInfo w32Info = Unsafe.Read<Win32WindowInfo>(&sysWmInfo.info);
-                return SwapchainSource.CreateWin32(w32Info.Sdl2Window, w32Info.hinstance);
-            case SysWMType.X11:
-                X11WindowInfo x11Info = Unsafe.Read<X11WindowInfo>(&sysWmInfo.info);
-                return SwapchainSource.CreateXlib(
-                    x11Info.display,
-                    x11Info.Sdl2Window);
-            case SysWMType.Wayland:
-                WaylandWindowInfo wlInfo = Unsafe.Read<WaylandWindowInfo>(&sysWmInfo.info);
-                return SwapchainSource.CreateWayland(wlInfo.display, wlInfo.surface);
-            case SysWMType.Cocoa:
-                CocoaWindowInfo cocoaInfo = Unsafe.Read<CocoaWindowInfo>(&sysWmInfo.info);
-                IntPtr nsWindow = cocoaInfo.Window;
-                return SwapchainSource.CreateNSWindow(nsWindow);
-            default:
-                throw new PlatformNotSupportedException("Cannot create a SwapchainSource for " + sysWmInfo.subsystem + ".");
-        }
     }
 
     private static IResourcePool CreateResourcePool(InvocationContext ctx)
@@ -177,13 +156,13 @@ internal partial class Program
             Console.WriteLine("Warning: Could not load RenderDoc");
     }
 
-    private static void SetupRenderDocKeys(Sdl2Window window)
+    private static void SetupRenderDocKeys(SdlWindow window)
     {
         if (RenderDoc == null)
             return;
-        window.KeyDown += ev =>
+        window.OnKey += ev =>
         {
-            if (ev.Repeat || ev.Key != Key.PrintScreen)
+            if (ev.Repeat != 0 || (KeyCode)ev.Keysym.Sym != KeyCode.KPrintscreen)
                 return;
             if (!RenderDoc.IsTargetControlConnected())
                 RenderDoc.LaunchReplayUI();

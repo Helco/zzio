@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using DefaultEcs.System;
+using KeyCode = Silk.NET.SDL.KeyCode;
 
 namespace zzre.game.systems.ui;
 
@@ -84,11 +85,11 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
             zanzarah.CurrentGame?.Publish<messages.ui.GameScreenClosed>();
     }
 
-    private void HandleMouseDown(Veldrid.MouseButton button, Vector2 pos) => HandleMouse(button, pos, isDown: true);
-    private void HandleMouseUp(Veldrid.MouseButton button, Vector2 pos) => HandleMouse(button, pos, isDown: false);
-    private void HandleMouse(Veldrid.MouseButton button, Vector2 pos, bool isDown)
+    private void HandleMouseDown(MouseButton button, Vector2 pos) => HandleMouse(button, pos, isDown: true);
+    private void HandleMouseUp(MouseButton button, Vector2 pos) => HandleMouse(button, pos, isDown: false);
+    private void HandleMouse(MouseButton button, Vector2 pos, bool isDown)
     {
-        if (button != Veldrid.MouseButton.Left)
+        if (button != MouseButton.Left)
             return;
 
         if (!uiWorld.Has<components.ui.HoveredElement>())
@@ -101,7 +102,7 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
             OnElementUp?.Invoke(hovered.Entity, hovered.Id);
     }
 
-    protected virtual void HandleKeyDown(Veldrid.Key key)
+    protected virtual void HandleKeyDown(KeyCode key)
     {
     }
 

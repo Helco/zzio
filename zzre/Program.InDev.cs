@@ -3,7 +3,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Text.RegularExpressions;
 using Veldrid;
-using Veldrid.Sdl2;
+using Silk.NET.SDL;
 using zzre.imgui;
 using zzre.tools;
 using zzre.rendering;
@@ -59,16 +59,16 @@ internal partial class Program
 
     private static void HandleInDev(InvocationContext ctx)
     {
-        CommonStartupBeforeWindow(ctx);
+        var diContainer = CommonStartupBeforeWindow(ctx);
+        var sdl = diContainer.GetTag<Sdl>();
 
         var (windowWidth, windowHeight) = ParseWindowSize(ctx);
-        var window = new Sdl2Window("Zanzarah", 100, 100, windowWidth, windowHeight,
-            SDL_WindowFlags.Resizable,
-            threadedProcessing: false);
+        var window = new SdlWindow(sdl, "Zanzarah", windowWidth, windowHeight, WindowFlags.Resizable);
+        diContainer.AddTag(window);
 
-        var diContainer = CommonStartupAfterWindow(window, ctx);
+        CommonStartupAfterWindow(diContainer);
         var graphicsDevice = diContainer.GetTag<GraphicsDevice>();
-        var windowContainer = new WindowContainer(graphicsDevice);
+        var windowContainer = new WindowContainer(window, graphicsDevice);
         var openDocumentSet = new OpenDocumentSet(diContainer);
         diContainer
             .AddTag(windowContainer)
@@ -90,31 +90,16 @@ internal partial class Program
         openDocumentSet.AddEditorType<ActorEditor>("aed");
         openDocumentSet.AddEditorType<EffectEditor>("ed");
 
-        window.Resized += () =>
+        window.OnResized += (w, h) =>
         {
-            graphicsDevice.ResizeMainWindow((uint)window.Width, (uint)window.Height);
-            windowContainer.HandleResize(window.Width, window.Height);
-        };
-
-        window.KeyDown += (ev) =>
-        {
-            if (ev.Repeat)
-                return;
-            windowContainer.HandleKeyEvent(ev.Key, ev.Down);
-        };
-
-        window.KeyUp += (ev) =>
-        {
-            if (ev.Repeat)
-                return;
-            windowContainer.HandleKeyEvent(ev.Key, ev.Down);
+            graphicsDevice.ResizeMainWindow((uint)w, (uint)h);
         };
 
         InDevLaunchGame(diContainer, ctx);
         InDevOpenResources(diContainer, ctx);
 
         var time = diContainer.GetTag<GameTime>();
-        while (window.Exists)
+        while (window.IsOpen)
         {
             time.BeginFrame();
             if (time.HasFramerateChanged)
@@ -122,8 +107,17 @@ internal partial class Program
 
             windowContainer.Render();
             graphicsDevice.SwapBuffers();
-            var inputSnapshot = window.PumpEvents();
-            windowContainer.Update(time, inputSnapshot);
+            sdl.PumpEvents();
+            windowContainer.BeginEventUpdate(time);
+            Event ev = default;
+            while (sdl.PollEvent(ref ev) != 0)
+            {
+                if (window.HandleEvent(ev))
+                    continue;
+                else if ((EventType)ev.Type is EventType.AppTerminating or EventType.Quit)
+                    window.Dispose();
+            }
+            windowContainer.EndEventUpdate();
 
             time.EndFrame();
         }

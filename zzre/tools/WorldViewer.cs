@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Reflection;
 using Veldrid;
 using zzio;
 using zzio.rwbs;
@@ -13,6 +12,7 @@ using zzre.debug;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
+using KeyCode = Silk.NET.SDL.KeyCode;
 using static ImGuiNET.ImGui;
 
 namespace zzre.tools;
@@ -236,9 +236,9 @@ public class WorldViewer : ListDisposable, IDocumentEditor
 
     private void HandleResize() => camera.Aspect = fbArea.Ratio;
 
-    private void HandleKeyDown(Key key)
+    private void HandleKeyDown(KeyCode key)
     {
-        if (key == Key.Space)
+        if (key == KeyCode.KSpace)
             ShootRay();
     }
 

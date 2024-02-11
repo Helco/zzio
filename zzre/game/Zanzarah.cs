@@ -6,6 +6,7 @@ using Veldrid;
 using zzio;
 using zzio.vfs;
 using zzre.rendering;
+using KeyCode = Silk.NET.SDL.KeyCode;
 
 namespace zzre.game;
 
@@ -16,11 +17,11 @@ public interface IZanzarahContainer
     bool IsMouseCaptured { get; set; }
 
     bool IsMouseDown(MouseButton mouseButton);
-    bool IsKeyDown(Key key);
+    bool IsKeyDown(KeyCode key);
 
     event Action OnResize;
-    event Action<Key> OnKeyDown;
-    event Action<Key> OnKeyUp;
+    event Action<KeyCode> OnKeyDown;
+    event Action<KeyCode> OnKeyUp;
     event Action<MouseButton, Vector2> OnMouseDown;
     event Action<MouseButton, Vector2> OnMouseUp;
     event Action<Vector2> OnMouseMove;

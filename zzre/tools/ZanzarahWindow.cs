@@ -6,6 +6,7 @@ using zzio;
 using zzio.vfs;
 using zzre.game;
 using zzre.imgui;
+using KeyCode = Silk.NET.SDL.KeyCode;
 
 namespace zzre.tools;
 
@@ -15,7 +16,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
     private readonly FramebufferArea fbArea;
     private readonly MouseEventArea mouseArea;
     private readonly OpenFileModal selectSceneModal;
-    private readonly HashSet<Key> keysDown = new();
+    private readonly HashSet<KeyCode> keysDown = new();
     private readonly HashSet<MouseButton> buttonsDown = new();
     private Action<Vector2>? onMouseMove;
     private bool moveCamWithDrag;
@@ -47,13 +48,13 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
         remove => fbArea.OnResize -= value;
     }
 
-    public event Action<Key> OnKeyDown
+    public event Action<KeyCode> OnKeyDown
     {
         add => Window.OnKeyDown += value;
         remove => Window.OnKeyDown -= value;
     }
 
-    public event Action<Key> OnKeyUp
+    public event Action<KeyCode> OnKeyUp
     {
         add => Window.OnKeyUp += value;
         remove => Window.OnKeyUp -= value;
@@ -150,9 +151,9 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
             onMouseMove?.Invoke(delta);
     }
 
-    private void HandleKeyDown(Key key) => keysDown.Add(key);
-    private void HandleKeyUp(Key key) => keysDown.Remove(key);
-    public bool IsKeyDown(Key key) => keysDown.Contains(key);
+    private void HandleKeyDown(KeyCode key) => keysDown.Add(key);
+    private void HandleKeyUp(KeyCode key) => keysDown.Remove(key);
+    public bool IsKeyDown(KeyCode key) => keysDown.Contains(key);
     private void HandleMouseDown(MouseButton button, Vector2 _) => buttonsDown.Add(button);
     private void HandleMouseUp(MouseButton button, Vector2 _) => buttonsDown.Remove(button);
     public bool IsMouseDown(MouseButton button) => buttonsDown.Contains(button);

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Numerics;
 using DefaultEcs.System;
-using Veldrid;
 
 namespace zzre.game.systems;
 
 public partial class DialogWaitForSayString : AEntitySetSystem<float>
 {
-    private const MouseButton SpeedUpButton = Veldrid.MouseButton.Left;
+    private const MouseButton SpeedUpButton = MouseButton.Left;
     private const int SlowSegmentsToAdd = 4;
     private const int FastSegmentsToAdd = 16;
 

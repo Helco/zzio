@@ -1,4 +1,5 @@
 ﻿using ImGuiNET;
+using Silk.NET.SDL;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -43,7 +44,7 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
         remove => onceAfterUpdate.Next -= value;
     }
 
-    public WindowContainer(GraphicsDevice device)
+    public WindowContainer(SdlWindow window, GraphicsDevice device)
     {
         Device = device;
 
@@ -58,6 +59,9 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
         io.ConfigWindowsResizeFromEdges = true;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
+
+        ImGuiRenderer.UseWith(window);
+        window.EventFilter += HandleEvent;
 
         LoadForkAwesomeFont();
         ImGuiRenderer.ManualNewFrame();
@@ -97,10 +101,25 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
         return modal;
     }
 
-    public void Update(GameTime time, InputSnapshot input)
+    public void BeginEventUpdate(GameTime time)
     {
         onceBeforeUpdate.Invoke();
-        ImGuiRenderer.Update(time.Delta, input);
+        ImGuiRenderer.BeginEventUpdate(time.Delta);
+    }
+
+    private bool HandleEvent(SdlWindow window, Event ev)
+    {
+        if ((EventType)ev.Type is EventType.Keydown or EventType.Keyup)
+        {
+            FocusedWindow?.HandleKeyEvent((KeyCode)ev.Key.Keysym.Sym, (EventType)ev.Type is EventType.Keydown);
+            return FocusedWindow != null;
+        }
+        return false;
+    }
+
+    public void EndEventUpdate()
+    {
+        ImGuiRenderer.EndEventUpdate();
         ImGuizmoNET.ImGuizmo.BeginFrame();
 
         var viewport = GetMainViewport();
@@ -162,17 +181,6 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
         ImGuiRenderer.Render(Device, commandList);
         commandList.End();
         Device.SubmitCommands(commandList, fence);
-    }
-
-    public void HandleKeyEvent(Key sym, bool isDown)
-    {
-        if (!GetIO().WantTextInput)
-            FocusedWindow?.HandleKeyEvent(sym, isDown);
-    }
-
-    public void HandleResize(int width, int height)
-    {
-        ImGuiRenderer.WindowResized(width, height);
     }
 
     public void RemoveWindow(BaseWindow window) => windows.Remove(window);

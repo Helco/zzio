@@ -11,7 +11,7 @@ namespace zzre.game.systems;
 [PauseDuring(PauseTrigger.UIScreen)]
 public class PlayerTriggers : ISystem<float>
 {
-    private const Veldrid.MouseButton TriggerButton = Veldrid.MouseButton.Left;
+    private const MouseButton TriggerButton = MouseButton.Left;
     private const float MaxNpcDirDistance = 0.4f;
     private const float NpcMarkerDistance = 0.3f;
     private const float FlyingNpcMarkerDistance = 0.2f;
@@ -56,7 +56,7 @@ public class PlayerTriggers : ISystem<float>
         npcMarker = default;
     }
 
-    private void HandleMouseDown(Veldrid.MouseButton button, Vector2 _)
+    private void HandleMouseDown(MouseButton button, Vector2 _)
     {
         if (!IsEnabled || !IsMarkerActive || button != TriggerButton)
             return;

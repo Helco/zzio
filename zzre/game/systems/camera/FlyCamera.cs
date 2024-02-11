@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Numerics;
-using Veldrid;
+using KeyCode = Silk.NET.SDL.KeyCode;
 
 namespace zzre.game.systems;
 
@@ -41,14 +41,14 @@ public class FlyCamera : BaseCamera
         var target = camera.Location;
         var moveDir = Vector3.Zero;
         var speedFactor = 1.0f;
-        if (zzContainer.IsKeyDown(Key.ShiftLeft)) speedFactor *= 2.0f;
-        if (zzContainer.IsKeyDown(Key.ControlLeft)) speedFactor /= 2.0f;
-        if (zzContainer.IsKeyDown(Key.S)) moveDir += target.GlobalForward;
-        if (zzContainer.IsKeyDown(Key.W)) moveDir -= target.GlobalForward;
-        if (zzContainer.IsKeyDown(Key.D)) moveDir += target.GlobalRight;
-        if (zzContainer.IsKeyDown(Key.A)) moveDir -= target.GlobalRight;
-        if (zzContainer.IsKeyDown(Key.E)) moveDir += target.GlobalUp;
-        if (zzContainer.IsKeyDown(Key.Q)) moveDir -= target.GlobalUp;
+        if (zzContainer.IsKeyDown(KeyCode.KLshift)) speedFactor *= 2.0f;
+        if (zzContainer.IsKeyDown(KeyCode.KLctrl)) speedFactor /= 2.0f;
+        if (zzContainer.IsKeyDown(KeyCode.KS)) moveDir += target.GlobalForward;
+        if (zzContainer.IsKeyDown(KeyCode.KW)) moveDir -= target.GlobalForward;
+        if (zzContainer.IsKeyDown(KeyCode.KD)) moveDir += target.GlobalRight;
+        if (zzContainer.IsKeyDown(KeyCode.KA)) moveDir -= target.GlobalRight;
+        if (zzContainer.IsKeyDown(KeyCode.KE)) moveDir += target.GlobalUp;
+        if (zzContainer.IsKeyDown(KeyCode.KQ)) moveDir -= target.GlobalUp;
         target.LocalPosition += moveDir * elapsedTime * speed * speedFactor;
     }
 }

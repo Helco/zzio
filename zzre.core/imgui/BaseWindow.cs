@@ -1,6 +1,6 @@
 ﻿using ImGuiNET;
 using System;
-using Veldrid;
+using Silk.NET.SDL;
 
 namespace zzre.imgui;
 
@@ -15,8 +15,8 @@ public abstract class BaseWindow : TagContainer
     public event Action OnRender = () => { };
     public event Action OnBeforeContent = () => { };
     public event Action OnContent = () => { };
-    public event Action<Key> OnKeyDown = _ => { };
-    public event Action<Key> OnKeyUp = _ => { };
+    public event Action<KeyCode> OnKeyDown = _ => { };
+    public event Action<KeyCode> OnKeyUp = _ => { };
 
     protected BaseWindow(WindowContainer container, string title)
     {
@@ -32,7 +32,7 @@ public abstract class BaseWindow : TagContainer
 
     protected void RaiseBeforeContent() => OnBeforeContent();
     protected void RaiseContent() => OnContent();
-    public void HandleKeyEvent(Key sym, bool isDown) => (isDown ? OnKeyDown : OnKeyUp)(sym);
+    public void HandleKeyEvent(KeyCode sym, bool isDown) => (isDown ? OnKeyDown : OnKeyUp)(sym);
     public void HandleRender() => OnRender();
 
     public abstract void Update();

@@ -42,7 +42,7 @@ public partial class Slider : AEntitySetSystem<float>
     {
         var offsettedRect = new Rect(rect.Center, rect.Size * slider.SizeFactor);
         var isHovered = entity.Has<components.ui.Hovered>();
-        if (zzContainer.IsMouseDown(Veldrid.MouseButton.Left) && (isHovered || slider.WasHovered))
+        if (zzContainer.IsMouseDown(MouseButton.Left) && (isHovered || slider.WasHovered))
         {
             var offsettedMousePos = offset.CalcReverse(zzContainer.MousePos, ui.LogicalScreen);
             slider.Current = Vector2.Clamp(offsettedRect.RelativePos(offsettedMousePos), Vector2.Zero, Vector2.One);

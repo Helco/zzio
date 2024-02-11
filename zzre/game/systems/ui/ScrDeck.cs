@@ -8,6 +8,7 @@ using zzio;
 using Tab = zzre.game.components.ui.ScrDeck.Tab;
 using static zzre.game.systems.ui.InGameScreen;
 using Veldrid;
+using Silk.NET.SDL;
 
 namespace zzre.game.systems.ui;
 
@@ -592,23 +593,23 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         }
     }
 
-    protected override void HandleKeyDown(Key key)
+    protected override void HandleKeyDown(KeyCode key)
     {
         var deckEntity = Set.GetEntities()[0];
         base.HandleKeyDown(key);
-        if (key == Key.F2) {
+        if (key == KeyCode.KF2) {
             deckEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
         }
-        if (key == Key.F3) {
+        if (key == KeyCode.KF3) {
             deckEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
         }
-        if (key == Key.F4) {
+        if (key == KeyCode.KF4) {
             deckEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
         }
-        if (key == Key.Enter || key == Key.Escape || key == Key.F5)
+        if (key == KeyCode.KReturn || key == KeyCode.KEscape || key == KeyCode.KF3)
             Set.DisposeAll();
     }
 }

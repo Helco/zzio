@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using Silk.NET.SDL;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
 
@@ -15,10 +16,10 @@ public class MouseEventArea
 
     public Vector2 MousePosition => GetIO().MousePos - validBounds.Min;
 
-    public event Action<Veldrid.MouseButton, Vector2>? OnDrag;
+    public event Action<MouseButton, Vector2>? OnDrag;
     public event Action<float>? OnScroll;
-    public event Action<Veldrid.MouseButton, Vector2>? OnButtonDown;
-    public event Action<Veldrid.MouseButton, Vector2>? OnButtonUp;
+    public event Action<MouseButton, Vector2>? OnButtonDown;
+    public event Action<MouseButton, Vector2>? OnButtonUp;
     public event Action<Vector2>? OnMove;
 
     public MouseEventArea(Window parent)
@@ -63,7 +64,7 @@ public class MouseEventArea
             {
                 ((triggerClickEvent[i] = IsMouseDown(button))
                     ? OnButtonDown
-                    : OnButtonUp)?.Invoke(ToVeldrid(button), validBounds.RelativePos(GetIO().MouseClickedPos[i]));
+                    : OnButtonUp)?.Invoke(ToSDL(button), validBounds.RelativePos(GetIO().MouseClickedPos[i]));
             }
 
             if (!IsMouseDragging(button))
@@ -73,16 +74,16 @@ public class MouseEventArea
             }
 
             var delta = GetMouseDragDelta(button);
-            OnDrag?.Invoke(ToVeldrid(button), delta - lastDragDelta[i]);
+            OnDrag?.Invoke(ToSDL(button), delta - lastDragDelta[i]);
             lastDragDelta[i] = delta;
         }
     }
 
-    private static Veldrid.MouseButton ToVeldrid(ImGuiMouseButton btn) => btn switch
+    private static MouseButton ToSDL(ImGuiMouseButton btn) => btn switch
     {
-        ImGuiMouseButton.Left => Veldrid.MouseButton.Left,
-        ImGuiMouseButton.Right => Veldrid.MouseButton.Right,
-        ImGuiMouseButton.Middle => Veldrid.MouseButton.Middle,
+        ImGuiMouseButton.Left => MouseButton.Left,
+        ImGuiMouseButton.Right => MouseButton.Right,
+        ImGuiMouseButton.Middle => MouseButton.Middle,
         _ => throw new NotSupportedException($"Unsupported imgui mouse button: {btn}")
     };
 }
