@@ -26,6 +26,7 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     private readonly Texture whiteTexture;
     private readonly IAssetLoader<Texture> textureLoader;
     private readonly UniformBuffer<ModelFactors> modelFactors;
+    private readonly UniformBuffer<FogParams> fogParams; // this is not owned by us!
     private readonly IDisposable addSubscription;
     private readonly IDisposable removeSubscription;
     private readonly IDisposable sceneLoadedSubscription;
@@ -36,6 +37,7 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         this.diContainer = diContainer;
         camera = diContainer.GetTag<Camera>();
         textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
+        fogParams = diContainer.GetTag<UniformBuffer<FogParams>>();
         addSubscription = World.SubscribeEntityComponentAdded<components.ActorPart>(HandleAddedComponent);
         removeSubscription = World.SubscribeEntityComponentRemoved<ModelMaterial[]>(HandleRemovedComponent);
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
@@ -115,12 +117,17 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         var syncedLocation = entity.Get<components.SyncedLocation>();
         var zzreMaterials = rwMaterials.Select(rwMaterial =>
         {
-            var material = new ModelMaterial(diContainer) { IsSkinned = skeleton != null };
+            var material = new ModelMaterial(diContainer)
+            {
+                IsSkinned = skeleton != null,
+                HasFog = true
+            };
             if (rwMaterial.FindChildById(zzio.rwbs.SectionId.Texture, recursive: true) == null)
                 (material.Texture.Texture, material.Sampler.Sampler) = (whiteTexture, graphicsDevice.PointSampler);
             else
                 (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(BaseTexturePaths, rwMaterial);
             material.Factors.Buffer = modelFactors.Buffer;
+            material.FogParams.Buffer = fogParams.Buffer;
             material.Tint.Ref = rwMaterial.color;
             if (skeleton != null)
                 material.Pose.Skeleton = skeleton;

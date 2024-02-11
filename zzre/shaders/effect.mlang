@@ -1,6 +1,7 @@
 option DepthTest;
 option Billboard = IsNoBillboard, IsViewBillboard, IsSparkBillboard, IsLensFlare;
 option Blend = IsAdditiveBlend, IsAdditiveAlphaBlend, IsAlphaBlend;
+option HasFog;
 
 attributes
 {
@@ -24,12 +25,20 @@ uniform factors
 {
     float inAlphaReference;
 }
+uniform fogParams if (HasFog)
+{
+    float4 fogColor;
+    float fogOffset;
+    float fogScale;
+    float fogExp;
+}
 
 varying
 {
     float2 varUV;
     float4 varColor;
 }
+varying if (HasFog) float varFogFactor;
 
 pipeline
 {
@@ -83,6 +92,14 @@ vertex
 
     varUV = inUV;
     varColor = inColor;
+
+    if (HasFog)
+    {
+        float fogFactor = (fogOffset - pos.z) * fogScale;
+        if (fogExp > 0)
+            fogFactor = 1 / pow(2, pow(fogFactor, fogExp));
+        varFogFactor = clamp(1 - fogFactor, 0, 1);
+    }
 }
 
 fragment
@@ -90,5 +107,8 @@ fragment
     vec4 color = texture(sampler2D(mainTexture, mainSampler), varUV) * varColor;
     if (color.a < inAlphaReference)
         discard;
-    outColor = color;
+    if (HasFog)
+	    outColor = vec4(mix(color.xyz, fogColor.xyz, varFogFactor), color.a);
+    else
+        outColor = color;
 }

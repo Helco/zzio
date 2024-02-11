@@ -60,6 +60,7 @@ public class Game : BaseDisposable, ITagContainer
 
         // create it now for extra priority in the scene loading events
         var worldRenderer = new systems.WorldRendererSystem(this);
+        var fogModifier = new systems.FogModifier(this);
 
         var updateSystems = new systems.RecordingSequentialSystem<float>(this);
         this.updateSystems = updateSystems;
@@ -92,6 +93,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.ActorLighting(this),
 
             // Effects
+            fogModifier,
             new systems.effect.LensFlare(this),
             new systems.effect.EffectCombiner(this),
             new systems.effect.MovingPlanes(this),
@@ -161,6 +163,7 @@ public class Game : BaseDisposable, ITagContainer
 
         syncedLocation = new systems.SyncedLocation(this);
         renderSystems = new SequentialSystem<CommandList>(
+            fogModifier,
             new systems.ModelRenderer(this, components.RenderOrder.Backdrop),
             worldRenderer,
             new systems.ModelRenderer(this, components.RenderOrder.World),

@@ -33,6 +33,35 @@ public struct ModelInstance
     public IColor tint;
 }
 
+[StructLayout(LayoutKind.Sequential, Pack = sizeof(float))]
+public struct FogParams
+{
+    public FColor color;
+    public float offset;
+    public float scale;
+    public float exp;
+
+    public static FogParams None => Linear(FColor.Black, float.PositiveInfinity, float.PositiveInfinity);
+
+    public static FogParams Linear(FColor color, float start, float end) => new()
+    {
+        color = color,
+        offset = end,
+        scale = 1f / (end - start)
+    };
+
+    public static FogParams Exponential(FColor color, float density, float exp = 1f) => new()
+    {
+        color = color,
+        offset = 0f,
+        scale = -density,
+        exp = exp
+    };
+
+    public static FogParams Exponential2(FColor color, float density) =>
+        Exponential(color, density, exp: 2f);
+}
+
 public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
 {
     public enum BlendMode : uint
@@ -50,6 +79,7 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
     public bool DepthWrite { set => SetOption(nameof(DepthWrite), value); }
     public bool DepthTest { set => SetOption(nameof(DepthTest), value); }
     public BlendMode Blend { set => SetOption(nameof(Blend), (uint)value); }
+    public bool HasFog { set => SetOption(nameof(HasFog), value); }
 
     public UniformBinding<Matrix4x4> World { get; }
     public UniformBinding<Matrix4x4> Projection { get; }
@@ -57,6 +87,7 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
     public UniformBinding<Matrix3x2> TexShift { get; }
     public UniformBinding<FColor> Tint { get; }
     public UniformBinding<ModelFactors> Factors { get; }
+    public UniformBinding<FogParams> FogParams { get; }
     public TextureBinding Texture { get; }
     public SamplerBinding Sampler { get; }
     public SkeletonPoseBinding Pose { get; }
@@ -69,6 +100,7 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
         AddBinding("inTexShift", TexShift = new(this));
         AddBinding("inTint", Tint = new(this));
         AddBinding("factors", Factors = new(this));
+        AddBinding("fogParams", FogParams = new(this));
         AddBinding("mainTexture", Texture = new(this));
         AddBinding("mainSampler", Sampler = new(this));
         AddBinding("pose", Pose = new(this));

@@ -87,10 +87,11 @@ public class WorldRenderer : BaseDisposable
 
         if (worldMesh == null)
             return;
+        diContainer.TryGetTag(out UniformBuffer<FogParams> fogParams);
         materials = new ModelMaterial[worldMesh.Materials.Count];
         foreach (var (rwMaterial, index) in worldMesh.Materials.Indexed())
         {
-            var material = materials[index] = new ModelMaterial(diContainer);
+            var material = materials[index] = new ModelMaterial(diContainer) { HasFog = fogParams != null };
             if (rwMaterial.isTextured)
                 (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBase, rwMaterial);
             else
@@ -102,6 +103,8 @@ public class WorldRenderer : BaseDisposable
             material.World.BufferRange = locationRange;
             material.Tint.Ref = FColor.White;
             material.Factors.Ref = ModelFactors.Default;
+            if (fogParams != null)
+                material.FogParams.Buffer = fogParams.Buffer;
         }
     }
 

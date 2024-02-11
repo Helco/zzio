@@ -16,7 +16,8 @@ public readonly record struct ClumpMaterialInfo(
     bool DepthWrite = true,
     bool DepthTest = true,
     bool HasEnvMap = false,
-    bool HasTexShift = true)
+    bool HasTexShift = true,
+    bool HasFog = true)
 {
     public ClumpMaterialInfo(FOModelRenderType? renderType, RWMaterial rwMaterial) : this(rwMaterial)
     {
@@ -33,10 +34,12 @@ public readonly record struct ClumpMaterialInfo(
             case FOModelRenderType.EarlyAdditive:
             case FOModelRenderType.Additive:
                 BlendMode = ModelMaterial.BlendMode.AdditiveAlpha;
+                HasFog = false;
                 break;
             case FOModelRenderType.LateAdditive:
                 BlendMode = ModelMaterial.BlendMode.AdditiveAlpha;
                 DepthWrite = false;
+                HasFog = false;
                 break;
             case FOModelRenderType.EnvMap32:
             case FOModelRenderType.EnvMap64:
@@ -94,7 +97,8 @@ public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, ModelMaterial>
             DepthTest = info.DepthTest,
             DepthWrite = info.DepthWrite,
             HasEnvMap = info.HasEnvMap,
-            HasTexShift = info.HasTexShift
+            HasTexShift = info.HasTexShift,
+            HasFog = info.HasFog
         };
 
         (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(TextureBasePaths, info.RWMaterial);
@@ -107,6 +111,9 @@ public class ClumpMaterial : AResourceManager<ClumpMaterialInfo, ModelMaterial>
             tintFactor = 1f,
             alphaReference = 0.082352944f
         };
+        // only a little bit hacky: we delay retrieving the fog params for the system to initialize
+        if (info.HasFog && diContainer.TryGetTag<UniformBuffer<FogParams>>(out var fogParams))
+            material.FogParams.Buffer = fogParams.Buffer;
         return material;
     }
 

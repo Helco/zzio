@@ -41,12 +41,14 @@ public class EffectMaterial : MlangMaterial
     public bool DepthTest { set => SetOption(nameof(DepthTest), value); }
     public BillboardMode Billboard { set => SetOption(nameof(Billboard), (uint)value); }
     public BlendMode Blend { set => SetOption(nameof(Blend), (uint)value); }
+    public bool HasFog { set => SetOption(nameof(HasFog), value); }
 
     public TextureBinding Texture { get; }
     public SamplerBinding Sampler { get; }
     public UniformBinding<Matrix4x4> Projection { get; }
     public UniformBinding<Matrix4x4> View { get; }
     public UniformBinding<EffectFactors> Factors { get; }
+    public UniformBinding<FogParams> FogParams { get; }
 
     public EffectMaterial(ITagContainer diContainer) : base(diContainer, "effect")
     {
@@ -56,6 +58,7 @@ public class EffectMaterial : MlangMaterial
         AddBinding("projection", Projection = new(this));
         AddBinding("view", View = new(this));
         AddBinding("factors", Factors = new(this));
+        AddBinding("fogParams", FogParams = new(this));
     }
 }
 

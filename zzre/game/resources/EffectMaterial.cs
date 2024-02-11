@@ -5,6 +5,7 @@ using DefaultEcs.Resource;
 using Veldrid;
 using zzio;
 using zzio.effect;
+using zzre.materials;
 using zzre.rendering;
 using static zzre.materials.EffectMaterial;
 
@@ -15,7 +16,8 @@ public readonly record struct EffectMaterialInfo(
     BillboardMode BillboardMode,
     BlendMode BlendMode,
     string TextureName,
-    float AlphaReference = 0.03f)
+    float AlphaReference = 0.03f,
+    bool HasFog = true)
 {
     public EffectMaterialInfo(
         bool depthTest,
@@ -58,11 +60,13 @@ public class EffectMaterial : AResourceManager<EffectMaterialInfo, materials.Eff
 
     protected override materials.EffectMaterial Load(EffectMaterialInfo info)
     {
+        diContainer.TryGetTag<UniformBuffer<FogParams>>(out var fogParams);
         var material = new materials.EffectMaterial(diContainer)
         {
             DepthTest = info.DepthTest,
             Billboard = info.BillboardMode,
-            Blend = info.BlendMode
+            Blend = info.BlendMode,
+            HasFog = info.HasFog && fogParams != null,
         };
         material.Texture.Texture = textureLoader.LoadTexture(TextureBasePaths, info.TextureName);
         material.Sampler.Sampler = graphicsDevice.LinearSampler;
@@ -72,6 +76,8 @@ public class EffectMaterial : AResourceManager<EffectMaterialInfo, materials.Eff
         {
             alphaReference = info.AlphaReference
         };
+        if (info.HasFog && fogParams != null)
+            material.FogParams.Buffer = fogParams.Buffer;
         material.DebugName = $"{info.TextureName} {info.BillboardMode} {info.BlendMode}";
         if (!info.DepthTest)
             material.DebugName += " NoDepthTest";

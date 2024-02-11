@@ -5,6 +5,14 @@ using zzio;
 
 namespace zzio.scn;
 
+public enum FogType : byte
+{
+    None,
+    Linear,
+    Exponential,
+    Exponential2
+}
+
 [Serializable]
 public class Misc : ISceneSection
 {
@@ -12,10 +20,10 @@ public class Misc : ISceneSection
     public FColor ambientLight;
     public Vector3 v1, v2;
     public IColor clearColor;
-    public byte fogType;
+    public FogType fogType;
     public IColor fogColor;
-    public float fogDistance;
-    public float f1, farClip;
+    public float fogDistance, fogDensity;
+    public float farClip;
 
     public void Read(Stream stream)
     {
@@ -27,7 +35,7 @@ public class Misc : ISceneSection
         v1 = reader.ReadVector3();
         v2 = reader.ReadVector3();
         clearColor = IColor.ReadNew(reader);
-        fogType = reader.ReadByte();
+        fogType = (FogType)reader.ReadByte();
         if (fogType != 0)
         {
             fogColor = IColor.ReadNew(reader);
@@ -38,7 +46,7 @@ public class Misc : ISceneSection
             fogColor = new IColor();
             fogDistance = 0.0f;
         }
-        f1 = reader.ReadSingle();
+        fogDensity = reader.ReadSingle();
         farClip = reader.ReadSingle();
     }
 
@@ -52,13 +60,13 @@ public class Misc : ISceneSection
         writer.Write(v1);
         writer.Write(v2);
         clearColor.Write(writer);
-        writer.Write(fogType);
+        writer.Write((byte)fogType);
         if (fogType != 0)
         {
             fogColor.Write(writer);
             writer.Write(fogDistance);
         }
-        writer.Write(f1);
+        writer.Write(fogDensity);
         writer.Write(farClip);
     }
 }

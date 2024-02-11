@@ -5,6 +5,7 @@ option HasEnvMap;
 option DepthWrite; // enabled by default in the C# material
 option DepthTest; // also enabled by default
 option Blend = IsOpaque, IsAlphaBlend, IsAdditiveBlend, IsAdditiveAlphaBlend;
+option HasFog;
 
 attributes
 {
@@ -28,6 +29,7 @@ varying
     float2 varUV;
     float4 varColor;
 }
+varying if (HasFog) float varFogFactor;
 
 uniform texture2D mainTexture;
 uniform sampler mainSampler;
@@ -45,6 +47,13 @@ uniform factors
     float inTintFactor;
     float inAlphaReference;
     float4 inAmbient;
+}
+uniform fogParams if (HasFog)
+{
+    float4 fogColor;
+    float fogOffset;
+    float fogScale;
+    float fogExp;
 }
 uniform if (IsSkinned) buffer mat4[] pose;
 
@@ -129,6 +138,15 @@ vertex
     {
         varColor = inColor;
     }
+
+    // Let's start with per-vertex fog and see where this leads us
+    if (HasFog)
+    {
+        float fogFactor = (fogOffset - pos.z) * fogScale;
+        if (fogExp > 0)
+            fogFactor = 1 / pow(2, pow(fogFactor, fogExp));
+        varFogFactor = clamp(1 - fogFactor, 0, 1);
+    }
 }
 
 fragment
@@ -146,5 +164,8 @@ fragment
     }
 	if (color.a < inAlphaReference)
 		discard;
-	outColor = color;
+    if (HasFog)
+	    outColor = vec4(mix(color.xyz, fogColor.xyz, varFogFactor), color.a);
+    else
+        outColor = color;
 }

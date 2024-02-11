@@ -45,10 +45,10 @@ partial class SceneEditor
 
             NewLine();
             Text("Fog");
-            InputInt("Fog Type", ref misc.fogType);
+            EnumCombo("Fog Type", ref misc.fogType);
             ColorEdit4("Fog Color", ref misc.fogColor);
             InputFloat("Fog Distance", ref misc.fogDistance);
-            InputFloat("F1", ref misc.f1);
+            InputFloat("Fog Density", ref misc.fogDensity);
             InputFloat("Far Clip", ref misc.farClip);
         }
     }
