@@ -110,13 +110,15 @@ internal partial class Program
             sdl.PumpEvents();
             windowContainer.BeginEventUpdate(time);
             Event ev = default;
-            while (sdl.PollEvent(ref ev) != 0)
+            while (window.IsOpen && sdl.PollEvent(ref ev) != 0)
             {
                 if (window.HandleEvent(ev))
                     continue;
                 else if ((EventType)ev.Type is EventType.AppTerminating or EventType.Quit)
                     window.Dispose();
             }
+            if (!window.IsOpen)
+                break;
             windowContainer.EndEventUpdate();
 
             time.EndFrame();
