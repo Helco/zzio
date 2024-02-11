@@ -7,6 +7,7 @@ namespace zzre.rendering;
 
 public class Camera : BaseDisposable
 {
+    public const float StandardVFoV = 73.7397953f; // thanks to RW "ViewWindow", this is 2*atan(0.75f)
     public static readonly Box ViewBox = Box.FromMinMax(new(-1f, -1f, 0f), new(1f, 1f, 1.01f));
 
     private struct CameraView
@@ -19,7 +20,7 @@ public class Camera : BaseDisposable
     private readonly ResettableLazyValue<Matrix4x4> invProjection;
     private readonly UniformBuffer<CameraView> view;
     private float aspect = 1.0f;
-    private float vfov = 60.0f * MathF.PI / 180.0f;
+    private float vfov = StandardVFoV * MathF.PI / 180.0f;
     private float nearPlane = 0.1f;
     private float farPlane = 500.0f;
 
