@@ -9,44 +9,44 @@ public class TestCardId
     public void fromRaw()
     {
         CardId fairy0 = new(512);
-        Assert.AreEqual(512, fairy0.raw);
-        Assert.AreEqual(CardType.Fairy, fairy0.Type);
-        Assert.AreEqual(0, fairy0.EntityId);
+        Assert.That(fairy0.raw, Is.EqualTo(512));
+        Assert.That(fairy0.Type, Is.EqualTo(CardType.Fairy));
+        Assert.That(fairy0.EntityId, Is.EqualTo(0));
 
         CardId fairy76 = new(4981248);
-        Assert.AreEqual(4981248, fairy76.raw);
-        Assert.AreEqual(CardType.Fairy, fairy76.Type);
-        Assert.AreEqual(76, fairy76.EntityId);
+        Assert.That(fairy76.raw, Is.EqualTo(4981248));
+        Assert.That(fairy76.Type, Is.EqualTo(CardType.Fairy));
+        Assert.That(fairy76.EntityId, Is.EqualTo(76));
 
         CardId spell105 = new(6881536);
-        Assert.AreEqual(6881536, spell105.raw);
-        Assert.AreEqual(CardType.Spell, spell105.Type);
-        Assert.AreEqual(105, spell105.EntityId);
+        Assert.That(spell105.raw, Is.EqualTo(6881536));
+        Assert.That(spell105.Type, Is.EqualTo(CardType.Spell));
+        Assert.That(spell105.EntityId, Is.EqualTo(105));
     }
 
     [Test]
     public void fromComponents()
     {
         CardId fairy0 = new(CardType.Fairy, 0);
-        Assert.AreEqual(512, fairy0.raw);
+        Assert.That(fairy0.raw, Is.EqualTo(512));
 
         CardId fairy76 = new(CardType.Fairy, 76);
-        Assert.AreEqual(4981248, fairy76.raw);
+        Assert.That(fairy76.raw, Is.EqualTo(4981248));
 
         CardId spell105 = new(CardType.Spell, 105);
-        Assert.AreEqual(6881536, spell105.raw);
+        Assert.That(spell105.raw, Is.EqualTo(6881536));
     }
 
     [Test]
     public void toString()
     {
         CardId fairy0 = new(CardType.Fairy, 0);
-        Assert.AreEqual("Fairy:0", fairy0.ToString());
+        Assert.That(fairy0.ToString(), Is.EqualTo("Fairy:0"));
 
         CardId item49 = new(CardType.Item, 49);
-        Assert.AreEqual("Item:49", item49.ToString());
+        Assert.That(item49.ToString(), Is.EqualTo("Item:49"));
 
         CardId spell105 = new(6881536);
-        Assert.AreEqual("Spell:105", spell105.ToString());
+        Assert.That(spell105.ToString(), Is.EqualTo("Spell:105"));
     }
 }

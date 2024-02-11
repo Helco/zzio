@@ -55,9 +55,9 @@ public class TestLocation
         location.ParentToLocal = location.ParentToLocal;
         var actPoint = Vector3.Transform(origPoint, location.LocalToWorld);
 
-        Assert.AreEqual(expPoint.X, actPoint.X, EPS);
-        Assert.AreEqual(expPoint.Y, actPoint.Y, EPS);
-        Assert.AreEqual(expPoint.Z, actPoint.Z, EPS);
+        Assert.That(actPoint.X, Is.EqualTo(expPoint.X).Within(EPS));
+        Assert.That(actPoint.Y, Is.EqualTo(expPoint.Y).Within(EPS));
+        Assert.That(actPoint.Z, Is.EqualTo(expPoint.Z).Within(EPS));
     }
 
     [Test]
@@ -69,9 +69,9 @@ public class TestLocation
         var newPoint = Vector3.Transform(prevPoint, location.LocalToWorld);
         newPoint = Vector3.Transform(newPoint, location.WorldToLocal);
 
-        Assert.AreEqual(prevPoint.X, newPoint.X, EPS);
-        Assert.AreEqual(prevPoint.Y, newPoint.Y, EPS);
-        Assert.AreEqual(prevPoint.Z, newPoint.Z, EPS);
+        Assert.That(newPoint.X, Is.EqualTo(prevPoint.X).Within(EPS));
+        Assert.That(newPoint.Y, Is.EqualTo(prevPoint.Y).Within(EPS));
+        Assert.That(newPoint.Z, Is.EqualTo(prevPoint.Z).Within(EPS));
     }
 
     [Test]
@@ -92,9 +92,9 @@ public class TestLocation
         var expPoint = Vector3.Transform(origPoint, final.LocalToWorld);
         var actPoint = Vector3.Transform(origPoint, part3.LocalToWorld);
 
-        Assert.AreEqual(expPoint.X, actPoint.X, EPS * 10);
-        Assert.AreEqual(expPoint.Y, actPoint.Y, EPS * 10);
-        Assert.AreEqual(expPoint.Z, actPoint.Z, EPS * 10);
+        Assert.That(actPoint.X, Is.EqualTo(expPoint.X).Within(EPS * 10));
+        Assert.That(actPoint.Y, Is.EqualTo(expPoint.Y).Within(EPS * 10));
+        Assert.That(actPoint.Z, Is.EqualTo(expPoint.Z).Within(EPS * 10));
     }
 
     [Test]
@@ -107,9 +107,9 @@ public class TestLocation
         location.LocalToWorld = location.LocalToWorld;
         var actPoint = Vector3.Transform(origPoint, location.LocalToWorld);
 
-        Assert.AreEqual(expPoint.X, actPoint.X, EPS * 10);
-        Assert.AreEqual(expPoint.Y, actPoint.Y, EPS * 10);
-        Assert.AreEqual(expPoint.Z, actPoint.Z, EPS * 10);
+        Assert.That(actPoint.X, Is.EqualTo(expPoint.X).Within(EPS * 10));
+        Assert.That(actPoint.Y, Is.EqualTo(expPoint.Y).Within(EPS * 10));
+        Assert.That(actPoint.Z, Is.EqualTo(expPoint.Z).Within(EPS * 10));
     }
 
     [Test]
@@ -122,8 +122,8 @@ public class TestLocation
         location.WorldToLocal = location.WorldToLocal;
         var actPoint = Vector3.Transform(origPoint, location.LocalToWorld);
 
-        Assert.AreEqual(expPoint.X, actPoint.X, EPS * 10);
-        Assert.AreEqual(expPoint.Y, actPoint.Y, EPS * 10);
-        Assert.AreEqual(expPoint.Z, actPoint.Z, EPS * 10);
+        Assert.That(actPoint.X, Is.EqualTo(expPoint.X).Within(EPS * 10));
+        Assert.That(actPoint.Y, Is.EqualTo(expPoint.Y).Within(EPS * 10));
+        Assert.That(actPoint.Z, Is.EqualTo(expPoint.Z).Within(EPS * 10));
     }
 }

@@ -14,12 +14,12 @@ public class TestIndexTable
     private void testIndexTable(IndexTable table)
     {
         Assert.NotNull(table);
-        Assert.AreEqual(3, table.ColumnCount);
-        Assert.AreEqual(3, table.columnNames.Length);
-        Assert.AreEqual(3, table.columnNumbers.Length);
+        Assert.That(table.ColumnCount, Is.EqualTo(3));
+        Assert.That(table.columnNames.Length, Is.EqualTo(3));
+        Assert.That(table.columnNumbers.Length, Is.EqualTo(3));
 
-        Assert.AreEqual(new string[] { "Mesh", "Name", "CardId" }, table.columnNames);
-        Assert.AreEqual(new uint[] { 1, 2, 3 }, table.columnNumbers);
+        Assert.That(table.columnNames, Is.EqualTo(new string[] { "Mesh", "Name", "CardId" }));
+        Assert.That(table.columnNumbers, Is.EqualTo(new uint[] { 1, 2, 3 }));
     }
 
     [Test]

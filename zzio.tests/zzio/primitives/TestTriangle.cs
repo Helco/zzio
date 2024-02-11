@@ -17,10 +17,10 @@ public class TestTriangle
     public void ctor()
     {
         VertexTriangle tri = new(1, 2, 3, 4);
-        Assert.AreEqual(1, tri.v1);
-        Assert.AreEqual(2, tri.v2);
-        Assert.AreEqual(3, tri.v3);
-        Assert.AreEqual(4, tri.m);
+        Assert.That(tri.v1, Is.EqualTo(1));
+        Assert.That(tri.v2, Is.EqualTo(2));
+        Assert.That(tri.v3, Is.EqualTo(3));
+        Assert.That(tri.m, Is.EqualTo(4));
     }
 
     [Test]
@@ -29,10 +29,10 @@ public class TestTriangle
         MemoryStream stream = new(expected, false);
         using BinaryReader reader = new(stream);
         VertexTriangle tri = VertexTriangle.ReadNew(reader);
-        Assert.AreEqual(30806, tri.v1);
-        Assert.AreEqual(48282, tri.v2);
-        Assert.AreEqual(61662, tri.v3);
-        Assert.AreEqual(13330, tri.m);
+        Assert.That(tri.v1, Is.EqualTo(30806));
+        Assert.That(tri.v2, Is.EqualTo(48282));
+        Assert.That(tri.v3, Is.EqualTo(61662));
+        Assert.That(tri.m, Is.EqualTo(13330));
     }
 
     [Test]
@@ -44,6 +44,6 @@ public class TestTriangle
         tri.Write(writer);
 
         byte[] actual = stream.ToArray();
-        Assert.AreEqual(actual, expected);
+        Assert.That(expected, Is.EqualTo(actual));
     }
 }

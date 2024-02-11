@@ -19,9 +19,9 @@ public class TestIntersectionsBox
             LocalRotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, 90f * MathF.PI / 180f)
         };
 
-        Assert.IsFalse(box.Intersects(point));
-        Assert.IsFalse(box.Intersects(new Location(), point));
-        Assert.IsTrue(box.Intersects(loc, point));
+        Assert.That(box.Intersects(point), Is.False);
+        Assert.That(box.Intersects(new Location(), point), Is.False);
+        Assert.That(box.Intersects(loc, point));
     }
 
     [Test]
@@ -29,9 +29,9 @@ public class TestIntersectionsBox
     {
         var box = new Box(Vector3.Zero, new Vector3(1.0f, 2.0f, 3.0f) * 2f);
 
-        Assert.AreEqual(new Vector3(-1.0f, -2.0f, -3.0f), box.ClosestPoint(Vector3.One * -100));
-        Assert.AreEqual(new Vector3(1.0f, 2.0f, 3.0f), box.ClosestPoint(Vector3.One * 100));
-        Assert.AreEqual(new Vector3(1.0f, -2.0f, 3.0f), box.ClosestPoint(new Vector3(1, -1, 1) * 100));
+        Assert.That(box.ClosestPoint(Vector3.One * -100), Is.EqualTo(new Vector3(-1.0f, -2.0f, -3.0f)));
+        Assert.That(box.ClosestPoint(Vector3.One * 100), Is.EqualTo(new Vector3(1.0f, 2.0f, 3.0f)));
+        Assert.That(box.ClosestPoint(new Vector3(1, -1, 1) * 100), Is.EqualTo(new Vector3(1.0f, -2.0f, 3.0f)));
     }
 
     [Test]
@@ -44,9 +44,9 @@ public class TestIntersectionsBox
             LocalRotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, 90f * MathF.PI / 180f)
         };
 
-        Assert.AreEqual(0.0f, Vector3.Distance(new Vector3(-1.0f, -22.0f, -3.0f), box.ClosestPoint(loc, Vector3.One * -100)), EPS);
-        Assert.AreEqual(0.0f, Vector3.Distance(new Vector3(1.0f, -18.0f, 3.0f), box.ClosestPoint(loc, Vector3.One * 100)), EPS);
-        Assert.AreEqual(0.0f, Vector3.Distance(new Vector3(1.0f, -22.0f, 0.0f), box.ClosestPoint(loc, new Vector3(1, -1, 0) * 100)), EPS);
+        Assert.That(Vector3.Distance(new Vector3(-1.0f, -22.0f, -3.0f), box.ClosestPoint(loc, Vector3.One * -100)), Is.EqualTo(0.0f).Within(EPS));
+        Assert.That(Vector3.Distance(new Vector3(1.0f, -18.0f, 3.0f), box.ClosestPoint(loc, Vector3.One * 100)), Is.EqualTo(0.0f).Within(EPS));
+        Assert.That(Vector3.Distance(new Vector3(1.0f, -22.0f, 0.0f), box.ClosestPoint(loc, new Vector3(1, -1, 0) * 100)), Is.EqualTo(0.0f).Within(EPS));
 
     }
 }

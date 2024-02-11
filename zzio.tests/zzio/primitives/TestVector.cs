@@ -17,9 +17,9 @@ public class TestVector3
     public void ctor()
     {
         Vector3 vec = new(0.1f, 0.2f, 0.3f);
-        Assert.AreEqual(0.1f, vec.X);
-        Assert.AreEqual(0.2f, vec.Y);
-        Assert.AreEqual(0.3f, vec.Z);
+        Assert.That(vec.X, Is.EqualTo(0.1f));
+        Assert.That(vec.Y, Is.EqualTo(0.2f));
+        Assert.That(vec.Z, Is.EqualTo(0.3f));
     }
 
     [Test]
@@ -28,9 +28,9 @@ public class TestVector3
         MemoryStream stream = new(expected, false);
         using BinaryReader reader = new(stream);
         Vector3 vec = reader.ReadVector3();
-        Assert.AreEqual(-345.0f, vec.X);
-        Assert.AreEqual(678.0f, vec.Y);
-        Assert.AreEqual(23.8f, vec.Z);
+        Assert.That(vec.X, Is.EqualTo(-345.0f));
+        Assert.That(vec.Y, Is.EqualTo(678.0f));
+        Assert.That(vec.Z, Is.EqualTo(23.8f));
     }
 
     [Test]
@@ -42,6 +42,6 @@ public class TestVector3
         writer.Write(vec);
 
         byte[] actual = stream.ToArray();
-        Assert.AreEqual(actual, expected);
+        Assert.That(expected, Is.EqualTo(actual));
     }
 }

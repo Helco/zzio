@@ -13,22 +13,22 @@ public class TestMapMarker
     private void testMarkers(MapMarker[] mapMarkers)
     {
         Assert.NotNull(mapMarkers);
-        Assert.AreEqual(3, mapMarkers.Length);
+        Assert.That(mapMarkers.Length, Is.EqualTo(3));
 
-        Assert.AreEqual(1234, mapMarkers[0].posX);
-        Assert.AreEqual(5678, mapMarkers[0].posY);
-        Assert.AreEqual(MapMarkerSection.EnchantedForest, mapMarkers[0].section);
-        Assert.AreEqual(1337, mapMarkers[0].sceneId);
+        Assert.That(mapMarkers[0].posX, Is.EqualTo(1234));
+        Assert.That(mapMarkers[0].posY, Is.EqualTo(5678));
+        Assert.That(mapMarkers[0].section, Is.EqualTo(MapMarkerSection.EnchantedForest));
+        Assert.That(mapMarkers[0].sceneId, Is.EqualTo(1337));
 
-        Assert.AreEqual(9876, mapMarkers[1].posX);
-        Assert.AreEqual(5432, mapMarkers[1].posY);
-        Assert.AreEqual(MapMarkerSection.DarkSwamp, mapMarkers[1].section);
-        Assert.AreEqual(42, mapMarkers[1].sceneId);
+        Assert.That(mapMarkers[1].posX, Is.EqualTo(9876));
+        Assert.That(mapMarkers[1].posY, Is.EqualTo(5432));
+        Assert.That(mapMarkers[1].section, Is.EqualTo(MapMarkerSection.DarkSwamp));
+        Assert.That(mapMarkers[1].sceneId, Is.EqualTo(42));
 
-        Assert.AreEqual(1357, mapMarkers[2].posX);
-        Assert.AreEqual(2468, mapMarkers[2].posY);
-        Assert.AreEqual(MapMarkerSection.RealmOfClouds, mapMarkers[2].section);
-        Assert.AreEqual(1037, mapMarkers[2].sceneId);
+        Assert.That(mapMarkers[2].posX, Is.EqualTo(1357));
+        Assert.That(mapMarkers[2].posY, Is.EqualTo(2468));
+        Assert.That(mapMarkers[2].section, Is.EqualTo(MapMarkerSection.RealmOfClouds));
+        Assert.That(mapMarkers[2].sceneId, Is.EqualTo(1037));
     }
 
     [Test]

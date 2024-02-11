@@ -16,8 +16,8 @@ public class TestVector2
     public void ctor()
     {
         Vector2 tex = new(0.1f, 0.2f);
-        Assert.AreEqual(0.1f, tex.X);
-        Assert.AreEqual(0.2f, tex.Y);
+        Assert.That(tex.X, Is.EqualTo(0.1f));
+        Assert.That(tex.Y, Is.EqualTo(0.2f));
     }
 
     [Test]
@@ -26,8 +26,8 @@ public class TestVector2
         MemoryStream stream = new(expected, false);
         using BinaryReader reader = new(stream);
         Vector2 tex = reader.ReadVector2();
-        Assert.AreEqual(-345.0f, tex.X);
-        Assert.AreEqual(678.0f, tex.Y);
+        Assert.That(tex.X, Is.EqualTo(-345.0f));
+        Assert.That(tex.Y, Is.EqualTo(678.0f));
     }
 
     [Test]
@@ -39,6 +39,6 @@ public class TestVector2
         writer.Write(tex);
 
         byte[] actual = stream.ToArray();
-        Assert.AreEqual(actual, expected);
+        Assert.That(expected, Is.EqualTo(actual));
     }
 }

@@ -15,13 +15,13 @@ public class TestGatekeeperStream
         try
         {
             stream.Write(buffer, 0, 1);
-            Assert.AreEqual(1, stream.Read(buffer, 0, 1));
+            Assert.That(stream.Read(buffer, 0, 1), Is.EqualTo(1));
         }
         catch (Exception)
         {
             exceptionWasThrown = true;
         }
-        Assert.AreEqual(expected, exceptionWasThrown);
+        Assert.That(exceptionWasThrown, Is.EqualTo(expected));
     }
 
     [Test]

@@ -24,19 +24,19 @@ public class TestCommonResourcePool
     [Test, Combinatorial]
     public void rootIsDirectory([ValueSource(nameof(testPools))] IResourcePool pool)
     {
-        Assert.AreEqual(ResourceType.Directory, pool.Root.Type);
+        Assert.That(pool.Root.Type, Is.EqualTo(ResourceType.Directory));
     }
 
     [Test, Combinatorial]
     public void rootHasNoParent([ValueSource(nameof(testPools))] IResourcePool pool)
     {
-        Assert.IsNull(pool.Root.Parent);
+        Assert.That(pool.Root.Parent, Is.Null);
     }
 
     [Test, Combinatorial]
     public void rootHasEmptyPath([ValueSource(nameof(testPools))] IResourcePool pool)
     {
-        Assert.AreEqual("", pool.Root.Path.ToString());
+        Assert.That(pool.Root.Path.ToString(), Is.EqualTo(""));
     }
 
     [Test, Combinatorial]
@@ -55,16 +55,16 @@ public class TestCommonResourcePool
     public void resourcesTypesInSplit([ValueSource(nameof(testPools))] IResourcePool pool) => VisitResources(pool, res =>
     {
         foreach (var file in res.Files)
-            Assert.AreEqual(ResourceType.File, file.Type);
+            Assert.That(file.Type, Is.EqualTo(ResourceType.File));
         foreach (var dir in res.Directories)
-            Assert.AreEqual(ResourceType.Directory, dir.Type);
+            Assert.That(dir.Type, Is.EqualTo(ResourceType.Directory));
     });
 
     [Test, Combinatorial]
     public void parentIsSetCorrectly([ValueSource(nameof(testPools))] IResourcePool pool) => VisitResources(pool, res =>
     {
         foreach (var child in res)
-            Assert.AreEqual(res, child.Parent);
+            Assert.That(child.Parent, Is.EqualTo(res));
     });
 
     [Test, Combinatorial]
@@ -74,10 +74,10 @@ public class TestCommonResourcePool
         if (res.Type == ResourceType.File)
         {
             Assert.IsNotNull(stream);
-            Assert.IsTrue(stream!.CanRead);
+            Assert.That(stream!.CanRead);
         }
         else
-            Assert.IsNull(stream);
+            Assert.That(stream, Is.Null);
     });
 
     [Test, Combinatorial]

@@ -14,7 +14,7 @@ public class TestIResourceExtensions
 
         MyAssert.Equals("common from b", pool.FindAndOpen("COMMON/CONTENT.txt"));
         MyAssert.Equals("from b", pool.FindAndOpen("content.txt"));
-        Assert.IsNull(pool.FindAndOpen("common/c.txt"));
-        Assert.IsNull(pool.FindAndOpen("hello.txt"));
+        Assert.That(pool.FindAndOpen("common/c.txt"), Is.Null);
+        Assert.That(pool.FindAndOpen("hello.txt"), Is.Null);
     }
 }

@@ -10,12 +10,12 @@ public class TestRangeCollection
     public void AddSimple()
     {
         var coll = new RangeCollection();
-        Assert.AreEqual(Array.Empty<Range>(), coll);
+        Assert.That(coll, Is.EqualTo(Array.Empty<Range>()));
         coll.Add(0..1);
         coll.Add(6..9);
-        Assert.AreEqual(new[] { 0..1, 6..9 }, coll);
-        Assert.AreEqual(2, coll.Count);
-        Assert.AreEqual(0..9, coll.Total);
+        Assert.That(coll, Is.EqualTo(new[] { 0..1, 6..9 }));
+        Assert.That(coll.Count, Is.EqualTo(2));
+        Assert.That(coll.Total, Is.EqualTo(0..9));
     }
 
     [Test]
@@ -26,7 +26,7 @@ public class TestRangeCollection
             0..3,
             3..7
         };
-        Assert.AreEqual(new[] { 0..7 }, coll);
+        Assert.That(coll, Is.EqualTo(new[] { 0..7 }));
     }
 
     [Test]
@@ -37,7 +37,7 @@ public class TestRangeCollection
             5..10,
             3..7
         };
-        Assert.AreEqual(new[] { 3..10 }, coll);
+        Assert.That(coll, Is.EqualTo(new[] { 3..10 }));
     }
 
     [Test]
@@ -49,7 +49,7 @@ public class TestRangeCollection
             7..10,
             3..7
         };
-        Assert.AreEqual(new[] { 0..10 }, coll);
+        Assert.That(coll, Is.EqualTo(new[] { 0..10 }));
     }
 
     [Test]
@@ -63,7 +63,7 @@ public class TestRangeCollection
 
             2..17
         };
-        Assert.AreEqual(new[] { 0..17 }, coll);
+        Assert.That(coll, Is.EqualTo(new[] { 0..17 }));
     }
 
     [Test]
@@ -71,23 +71,23 @@ public class TestRangeCollection
     {
         // Finds hole in the middle
         var coll = new RangeCollection { 0..3, 7..10 };
-        Assert.AreEqual(3..5, coll.AddBestFit(2));
-        Assert.AreEqual(new[] { 0..5, 7..10 }, coll);
+        Assert.That(coll.AddBestFit(2), Is.EqualTo(3..5));
+        Assert.That(coll, Is.EqualTo(new[] { 0..5, 7..10 }));
 
         // Finds hole at the start
         coll = new RangeCollection { 7..10 };
-        Assert.AreEqual(0..3, coll.AddBestFit(3));
-        Assert.AreEqual(new[] { 0..3, 7..10 }, coll);
+        Assert.That(coll.AddBestFit(3), Is.EqualTo(0..3));
+        Assert.That(coll, Is.EqualTo(new[] { 0..3, 7..10 }));
 
         // Ignores holes that are too small
         coll = new RangeCollection { 2..5, 7..10, 15..20 };
-        Assert.AreEqual(10..14, coll.AddBestFit(4));
-        Assert.AreEqual(new[] { 2..5, 7..14, 15..20 }, coll);
+        Assert.That(coll.AddBestFit(4), Is.EqualTo(10..14));
+        Assert.That(coll, Is.EqualTo(new[] { 2..5, 7..14, 15..20 }));
 
         // Preferes better fitting holes
         coll = new RangeCollection { 5..10, 13..15 };
-        Assert.AreEqual(10..12, coll.AddBestFit(2));
-        Assert.AreEqual(new[] { 5..12, 13..15 }, coll);
+        Assert.That(coll.AddBestFit(2), Is.EqualTo(10..12));
+        Assert.That(coll, Is.EqualTo(new[] { 5..12, 13..15 }));
 
         // Returns null on empty and too small
         coll = new RangeCollection(5);
@@ -97,7 +97,7 @@ public class TestRangeCollection
         // Returns null on too small
         coll = new RangeCollection(10) { 3..8 };
         Assert.IsNull(coll.AddBestFit(9));
-        Assert.AreEqual(new[] { 3..8 }, coll);
+        Assert.That(coll, Is.EqualTo(new[] { 3..8 }));
     }
 
     [Test]
@@ -120,6 +120,6 @@ public class TestRangeCollection
         };
 
         Assert.True(coll.Remove(2..18));
-        Assert.AreEqual(new[] { 0..2, 18..20 }, coll);
+        Assert.That(coll, Is.EqualTo(new[] { 0..2, 18..20 }));
     }
 }

@@ -25,7 +25,7 @@ public class TestEndpointResourcePool
     [Test, Combinatorial]
     public void endpointPoolIsSetCorrectly([ValueSource(nameof(testPools))] IResourcePool pool) => VisitResources(pool, res =>
     {
-        Assert.AreSame(pool, res.Pool);
+        Assert.That(res.Pool, Is.SameAs(pool));
     });
 
     [Test, Combinatorial]

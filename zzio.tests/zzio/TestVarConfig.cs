@@ -14,22 +14,22 @@ public class TestVarConfig
 
     private void testConfig(VarConfig cfg)
     {
-        Assert.AreEqual(new byte[] { 0xc0, 0xff, 0xee }, cfg.header);
-        Assert.AreEqual(1.0f, cfg.firstValue.floatValue, TOLERANCE);
-        Assert.AreEqual("", cfg.firstValue.stringValue);
-        Assert.AreEqual(3, cfg.variables.Count);
+        Assert.That(cfg.header, Is.EqualTo(new byte[] { 0xc0, 0xff, 0xee }));
+        Assert.That(cfg.firstValue.floatValue, Is.EqualTo(1.0f).Within(TOLERANCE));
+        Assert.That(cfg.firstValue.stringValue, Is.EqualTo(""));
+        Assert.That(cfg.variables.Count, Is.EqualTo(3));
 
-        Assert.True(cfg.variables.ContainsKey("MY_FLOAT_VAR"));
-        Assert.AreEqual(2.0f, cfg.variables["MY_FLOAT_VAR"].floatValue, TOLERANCE);
-        Assert.AreEqual("", cfg.variables["MY_FLOAT_VAR"].stringValue);
+        Assert.That(cfg.variables.ContainsKey("MY_FLOAT_VAR"), Is.True);
+        Assert.That(cfg.variables["MY_FLOAT_VAR"].floatValue, Is.EqualTo(2.0f).Within(TOLERANCE));
+        Assert.That(cfg.variables["MY_FLOAT_VAR"].stringValue, Is.EqualTo(""));
 
-        Assert.True(cfg.variables.ContainsKey("MY_STRING_VAR"));
-        Assert.AreEqual(0.0f, cfg.variables["MY_STRING_VAR"].floatValue, TOLERANCE);
-        Assert.AreEqual("Zanzarah", cfg.variables["MY_STRING_VAR"].stringValue);
+        Assert.That(cfg.variables.ContainsKey("MY_STRING_VAR"), Is.True);
+        Assert.That(cfg.variables["MY_STRING_VAR"].floatValue, Is.EqualTo(0.0f).Within(TOLERANCE));
+        Assert.That(cfg.variables["MY_STRING_VAR"].stringValue, Is.EqualTo("Zanzarah"));
 
-        Assert.True(cfg.variables.ContainsKey("MY_BOTH_VAR"));
-        Assert.AreEqual(3.0f, cfg.variables["MY_BOTH_VAR"].floatValue);
-        Assert.AreEqual("Hello", cfg.variables["MY_BOTH_VAR"].stringValue);
+        Assert.That(cfg.variables.ContainsKey("MY_BOTH_VAR"), Is.True);
+        Assert.That(cfg.variables["MY_BOTH_VAR"].floatValue, Is.EqualTo(3.0f));
+        Assert.That(cfg.variables["MY_BOTH_VAR"].stringValue, Is.EqualTo("Hello"));
     }
 
     [Test]

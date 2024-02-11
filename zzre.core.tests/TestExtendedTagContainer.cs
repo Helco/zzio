@@ -29,23 +29,23 @@ public class TestExtendedTagContainer
     [Test]
     public void HasAllTags()
     {
-        Assert.IsTrue(container.HasTag<Tag1>());
-        Assert.IsTrue(container.HasTag<Tag2>());
-        Assert.IsTrue(container.HasTag<Tag3>());
+        Assert.That(container.HasTag<Tag1>());
+        Assert.That(container.HasTag<Tag2>());
+        Assert.That(container.HasTag<Tag3>());
     }
 
     [Test]
     public void HasOverwrittenTagFromParent()
     {
-        Assert.IsTrue(container.HasTag<SubTag2Of1>());
-        Assert.AreSame(container.GetTag<SubTag2Of1>(), container.GetTag<Tag1>());
+        Assert.That(container.HasTag<SubTag2Of1>());
+        Assert.That(container.GetTag<Tag1>(), Is.SameAs(container.GetTag<SubTag2Of1>()));
     }
 
     [Test]
     public void GetTagsTakesFromBoth()
     {
         var tags = container.GetTags<Tag1>();
-        Assert.AreEqual(2, tags.Count());
+        Assert.That(tags.Count(), Is.EqualTo(2));
         var tagTypes = tags.Select(t => t.GetType());
         Assert.That(tagTypes, Is.EquivalentTo(new Type[] { typeof(SubTag1Of1), typeof(SubTag2Of1) }));
     }
@@ -54,14 +54,14 @@ public class TestExtendedTagContainer
     public void AddTagDoesNotModifyParent()
     {
         container.AddTag(new Tag4());
-        Assert.IsTrue(container.HasTag<Tag4>());
-        Assert.IsFalse(parentContainer.HasTag<Tag4>());
+        Assert.That(container.HasTag<Tag4>());
+        Assert.That(parentContainer.HasTag<Tag4>(), Is.False);
     }
 
     [Test]
     public void RemoveTagDoesNotModifyParent()
     {
-        Assert.IsFalse(container.RemoveTag<Tag2>());
-        Assert.IsTrue(parentContainer.HasTag<Tag2>());
+        Assert.That(container.RemoveTag<Tag2>(), Is.False);
+        Assert.That(parentContainer.HasTag<Tag2>());
     }
 }

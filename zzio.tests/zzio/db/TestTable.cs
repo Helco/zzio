@@ -15,25 +15,25 @@ public class TestTable
     {
         Row row;
         Assert.NotNull(table);
-        Assert.AreEqual(3, table.rows.Count);
+        Assert.That(table.rows.Count, Is.EqualTo(3));
 
-        Assert.True(table.rows.ContainsKey(new UID(0xdeadbeef)));
+        Assert.That(table.rows.ContainsKey(new UID(0xdeadbeef)), Is.True);
         row = table.rows[new UID(0xdeadbeef)];
-        Assert.AreEqual(2, row.cells.Length);
-        Assert.AreEqual(new Cell("Zan", 1), row.cells[0]);
-        Assert.AreEqual(new Cell((byte)0x10, 2), row.cells[1]);
+        Assert.That(row.cells.Length, Is.EqualTo(2));
+        Assert.That(row.cells[0], Is.EqualTo(new Cell("Zan", 1)));
+        Assert.That(row.cells[1], Is.EqualTo(new Cell((byte)0x10, 2)));
 
-        Assert.True(table.rows.ContainsKey(new UID(0xdabbad00)));
+        Assert.That(table.rows.ContainsKey(new UID(0xdabbad00)), Is.True);
         row = table.rows[new UID(0xdabbad00)];
-        Assert.AreEqual(2, row.cells.Length);
-        Assert.AreEqual(new Cell("za", 1), row.cells[0]);
-        Assert.AreEqual(new Cell((byte)0x20, 2), row.cells[1]);
+        Assert.That(row.cells.Length, Is.EqualTo(2));
+        Assert.That(row.cells[0], Is.EqualTo(new Cell("za", 1)));
+        Assert.That(row.cells[1], Is.EqualTo(new Cell((byte)0x20, 2)));
 
-        Assert.True(table.rows.ContainsKey(new UID(0x00bada2a)));
+        Assert.That(table.rows.ContainsKey(new UID(0x00bada2a)), Is.True);
         row = table.rows[new UID(0x00bada2a)];
-        Assert.AreEqual(2, row.cells.Length);
-        Assert.AreEqual(new Cell("rah", 1), row.cells[0]);
-        Assert.AreEqual(new Cell((byte)0x30, 2), row.cells[1]);
+        Assert.That(row.cells.Length, Is.EqualTo(2));
+        Assert.That(row.cells[0], Is.EqualTo(new Cell("rah", 1)));
+        Assert.That(row.cells[1], Is.EqualTo(new Cell((byte)0x30, 2)));
     }
 
     [Test]

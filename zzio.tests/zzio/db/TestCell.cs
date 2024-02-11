@@ -41,7 +41,7 @@ public class TestCell
 
     private void testCellType(CellDataType expected, Cell cell)
     {
-        Assert.AreEqual(expected, cell.Type);
+        Assert.That(cell.Type, Is.EqualTo(expected));
         if (expected != CellDataType.String)
             Assert.That(() => cell.String, Throws.Exception);
         if (expected != CellDataType.Integer)
@@ -58,32 +58,32 @@ public class TestCell
     public void create()
     {
         testCellType(CellDataType.String, stringCell);
-        Assert.AreEqual(13, stringCell.ColumnIndex);
-        Assert.AreEqual("Hello", stringCell.String);
+        Assert.That(stringCell.ColumnIndex, Is.EqualTo(13));
+        Assert.That(stringCell.String, Is.EqualTo("Hello"));
 
         testCellType(CellDataType.Integer, integerCell);
-        Assert.AreEqual(13, integerCell.ColumnIndex);
-        Assert.AreEqual(123456, integerCell.Integer);
+        Assert.That(integerCell.ColumnIndex, Is.EqualTo(13));
+        Assert.That(integerCell.Integer, Is.EqualTo(123456));
 
         testCellType(CellDataType.Byte, byteCell);
-        Assert.AreEqual(13, byteCell.ColumnIndex);
-        Assert.AreEqual(0xcd, byteCell.Byte);
+        Assert.That(byteCell.ColumnIndex, Is.EqualTo(13));
+        Assert.That(byteCell.Byte, Is.EqualTo(0xcd));
 
         testCellType(CellDataType.ForeignKey, foreignKeyCell);
-        Assert.AreEqual(-1, foreignKeyCell.ColumnIndex);
-        Assert.AreEqual(0xc0fffeee, foreignKeyCell.ForeignKey.uid.raw);
-        Assert.AreEqual(0xbadc0de, foreignKeyCell.ForeignKey.type.raw);
+        Assert.That(foreignKeyCell.ColumnIndex, Is.EqualTo(-1));
+        Assert.That(foreignKeyCell.ForeignKey.uid.raw, Is.EqualTo(0xc0fffeee));
+        Assert.That(foreignKeyCell.ForeignKey.type.raw, Is.EqualTo(0xbadc0de));
 
         testCellType(CellDataType.Buffer, bufferCell);
-        Assert.AreEqual(-1, bufferCell.ColumnIndex);
-        Assert.AreEqual(new byte[] { 0x37, 0x53, 0x73 }, bufferCell.Buffer);
+        Assert.That(bufferCell.ColumnIndex, Is.EqualTo(-1));
+        Assert.That(bufferCell.Buffer, Is.EqualTo(new byte[] { 0x37, 0x53, 0x73 }));
     }
 
     private void testCellEquality(bool expected, Cell compare, Cell actual)
     {
-        Assert.AreEqual(expected, compare.Equals(actual));
+        Assert.That(compare.Equals(actual), Is.EqualTo(expected));
         bool hashEquality = compare.GetHashCode() == actual.GetHashCode();
-        Assert.AreEqual(expected, hashEquality);
+        Assert.That(hashEquality, Is.EqualTo(expected));
     }
 
     [Test]
@@ -106,7 +106,7 @@ public class TestCell
         MemoryStream stream = new(sourceBytes, false);
         using BinaryReader reader = new(stream);
         Cell readCell = Cell.ReadNew(reader);
-        Assert.AreEqual(true, expected.Equals(readCell));
+        Assert.That(expected.Equals(readCell), Is.EqualTo(true));
     }
 
     [Test]
@@ -124,7 +124,7 @@ public class TestCell
         MemoryStream stream = new();
         using BinaryWriter writer = new(stream);
         sourceCell.Write(writer);
-        Assert.AreEqual(expected, stream.ToArray());
+        Assert.That(stream.ToArray(), Is.EqualTo(expected));
     }
 
     [Test]

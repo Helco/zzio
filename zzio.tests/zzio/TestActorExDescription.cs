@@ -13,19 +13,19 @@ public class TestActorExDescription
     private void testInstance(ActorExDescription aed)
     {
         Assert.NotNull(aed);
-        Assert.AreEqual(1337, aed.headBoneID);
-        Assert.AreEqual("hello.dff", aed.body.model);
-        Assert.AreEqual("wings.dff", aed.wings.model);
+        Assert.That(aed.headBoneID, Is.EqualTo(1337));
+        Assert.That(aed.body.model, Is.EqualTo("hello.dff"));
+        Assert.That(aed.wings.model, Is.EqualTo("wings.dff"));
 
-        Assert.AreEqual(2, aed.body.animations.Length);
-        Assert.AreEqual("first.ani", aed.body.animations[0].filename);
-        Assert.AreEqual(AnimationType.Jump, aed.body.animations[0].type);
-        Assert.AreEqual("second.ani", aed.body.animations[1].filename);
-        Assert.AreEqual(AnimationType.Run, aed.body.animations[1].type);
+        Assert.That(aed.body.animations.Length, Is.EqualTo(2));
+        Assert.That(aed.body.animations[0].filename, Is.EqualTo("first.ani"));
+        Assert.That(aed.body.animations[0].type, Is.EqualTo(AnimationType.Jump));
+        Assert.That(aed.body.animations[1].filename, Is.EqualTo("second.ani"));
+        Assert.That(aed.body.animations[1].type, Is.EqualTo(AnimationType.Run));
 
-        Assert.AreEqual(1, aed.wings.animations.Length);
-        Assert.AreEqual("third.ani", aed.wings.animations[0].filename);
-        Assert.AreEqual(AnimationType.RunForwardLeft, aed.wings.animations[0].type);
+        Assert.That(aed.wings.animations.Length, Is.EqualTo(1));
+        Assert.That(aed.wings.animations[0].filename, Is.EqualTo("third.ani"));
+        Assert.That(aed.wings.animations[0].type, Is.EqualTo(AnimationType.RunForwardLeft));
     }
 
     [Test]

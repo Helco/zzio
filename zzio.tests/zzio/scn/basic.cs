@@ -13,25 +13,25 @@ public class TestSceneBasic
 
     private void testScene(Scene scn)
     {
-        Assert.AreEqual(12, scn.ambientSound);
+        Assert.That(scn.ambientSound, Is.EqualTo(12));
 
-        Assert.AreEqual("Helco", scn.version.author);
-        Assert.AreEqual(4, scn.version.buildVersion);
-        Assert.AreEqual(VersionBuildCountry.Germany, scn.version.country);
-        Assert.AreEqual("22.05.2018", scn.version.date);
-        Assert.AreEqual("15:56", scn.version.time);
-        Assert.AreEqual(VersionBuildType.Debug, scn.version.type);
-        Assert.AreEqual(0, scn.version.v3);
-        Assert.AreEqual(2, scn.version.vv2);
-        Assert.AreEqual(2018, scn.version.year);
+        Assert.That(scn.version.author, Is.EqualTo("Helco"));
+        Assert.That(scn.version.buildVersion, Is.EqualTo(4));
+        Assert.That(scn.version.country, Is.EqualTo(VersionBuildCountry.Germany));
+        Assert.That(scn.version.date, Is.EqualTo("22.05.2018"));
+        Assert.That(scn.version.time, Is.EqualTo("15:56"));
+        Assert.That(scn.version.type, Is.EqualTo(VersionBuildType.Debug));
+        Assert.That(scn.version.v3, Is.EqualTo(0));
+        Assert.That(scn.version.vv2, Is.EqualTo(2));
+        Assert.That(scn.version.year, Is.EqualTo(2018));
 
-        Assert.AreEqual(2, scn.sceneItems.Length);
-        Assert.AreEqual(2, scn.sceneItems[0].index);
-        Assert.AreEqual(4, scn.sceneItems[0].type);
-        Assert.AreEqual("", scn.sceneItems[0].name);
-        Assert.AreEqual(3, scn.sceneItems[1].index);
-        Assert.AreEqual(4, scn.sceneItems[1].type);
-        Assert.AreEqual("", scn.sceneItems[1].name);
+        Assert.That(scn.sceneItems.Length, Is.EqualTo(2));
+        Assert.That(scn.sceneItems[0].index, Is.EqualTo(2));
+        Assert.That(scn.sceneItems[0].type, Is.EqualTo(4));
+        Assert.That(scn.sceneItems[0].name, Is.EqualTo(""));
+        Assert.That(scn.sceneItems[1].index, Is.EqualTo(3));
+        Assert.That(scn.sceneItems[1].type, Is.EqualTo(4));
+        Assert.That(scn.sceneItems[1].name, Is.EqualTo(""));
     }
 
     [Test]

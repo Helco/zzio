@@ -24,15 +24,15 @@ public class TestRangeStream
 
         byte[] part1 = new byte[3];
         int part1Len = rangeStream.Read(part1, 0, 3);
-        Assert.AreEqual(3, part1Len);
-        Assert.AreEqual(0x01, part1[0]);
-        Assert.AreEqual(0x02, part1[1]);
-        Assert.AreEqual(0x03, part1[2]);
+        Assert.That(part1Len, Is.EqualTo(3));
+        Assert.That(part1[0], Is.EqualTo(0x01));
+        Assert.That(part1[1], Is.EqualTo(0x02));
+        Assert.That(part1[2], Is.EqualTo(0x03));
 
         byte[] part2 = new byte[4];
         int part2Len = rangeStream.Read(part2, 1, 3);
-        Assert.AreEqual(1, part2Len);
-        Assert.AreEqual(0x04, part2[1]);
+        Assert.That(part2Len, Is.EqualTo(1));
+        Assert.That(part2[1], Is.EqualTo(0x04));
     }
 
     [Test]
@@ -50,7 +50,7 @@ public class TestRangeStream
         expected[testDataOffset + 3] = 0x40;
         rangeStream.Write(expected, testDataOffset, testDataLength);
 
-        Assert.AreEqual(expected, actual);
+        Assert.That(actual, Is.EqualTo(expected));
     }
 
     [Test]
@@ -60,14 +60,14 @@ public class TestRangeStream
         memStream.Seek(testDataOffset, SeekOrigin.Current);
         RangeStream rangeStream = new(memStream, testDataLength);
 
-        Assert.AreEqual(testData[testDataOffset + 0], rangeStream.ReadByte());
+        Assert.That(rangeStream.ReadByte(), Is.EqualTo(testData[testDataOffset + 0]));
         rangeStream.Position += 2;
-        Assert.AreEqual(testData[testDataOffset + 3], rangeStream.ReadByte());
-        Assert.AreEqual(0, rangeStream.Seek(0, SeekOrigin.Begin));
-        Assert.AreEqual(testData[testDataOffset + 0], rangeStream.ReadByte());
-        Assert.AreEqual(2, rangeStream.Seek(1, SeekOrigin.Current));
-        Assert.AreEqual(testData[testDataOffset + 2], rangeStream.ReadByte());
-        Assert.AreEqual(1, rangeStream.Seek(-3, SeekOrigin.End));
-        Assert.AreEqual(testData[testDataOffset + 1], rangeStream.ReadByte());
+        Assert.That(rangeStream.ReadByte(), Is.EqualTo(testData[testDataOffset + 3]));
+        Assert.That(rangeStream.Seek(0, SeekOrigin.Begin), Is.EqualTo(0));
+        Assert.That(rangeStream.ReadByte(), Is.EqualTo(testData[testDataOffset + 0]));
+        Assert.That(rangeStream.Seek(1, SeekOrigin.Current), Is.EqualTo(2));
+        Assert.That(rangeStream.ReadByte(), Is.EqualTo(testData[testDataOffset + 2]));
+        Assert.That(rangeStream.Seek(-3, SeekOrigin.End), Is.EqualTo(1));
+        Assert.That(rangeStream.ReadByte(), Is.EqualTo(testData[testDataOffset + 1]));
     }
 }

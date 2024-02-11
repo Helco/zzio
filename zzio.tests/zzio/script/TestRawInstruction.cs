@@ -38,28 +38,28 @@ public class TestRawInstruction
     [Test]
     public void command()
     {
-        Assert.AreEqual("a", new RawInstruction("a").Command);
-        Assert.AreEqual("a", new RawInstruction("a.bcd").Command);
-        Assert.AreEqual("a", new RawInstruction("a.bcd.\"def\"").Command);
-        Assert.AreEqual("setModel", new RawInstruction("setModel.f000w000").Command);
-        Assert.AreEqual(".", new RawInstruction("  .").Command);
-        Assert.AreEqual(".", new RawInstruction("  ..def").Command);
-        Assert.AreEqual("\"", new RawInstruction("\"").Command);
-        Assert.AreEqual("\"", new RawInstruction("\".ghi").Command);
+        Assert.That(new RawInstruction("a").Command, Is.EqualTo("a"));
+        Assert.That(new RawInstruction("a.bcd").Command, Is.EqualTo("a"));
+        Assert.That(new RawInstruction("a.bcd.\"def\"").Command, Is.EqualTo("a"));
+        Assert.That(new RawInstruction("setModel.f000w000").Command, Is.EqualTo("setModel"));
+        Assert.That(new RawInstruction("  .").Command, Is.EqualTo("."));
+        Assert.That(new RawInstruction("  ..def").Command, Is.EqualTo("."));
+        Assert.That(new RawInstruction("\"").Command, Is.EqualTo("\""));
+        Assert.That(new RawInstruction("\".ghi").Command, Is.EqualTo("\""));
     }
 
     [Test]
     public void arguments()
     {
-        Assert.AreEqual(0, new RawInstruction("a").Arguments.Length);
+        Assert.That(new RawInstruction("a").Arguments.Length, Is.EqualTo(0));
 
         var args1 = new RawInstruction("a.abc").Arguments;
-        Assert.AreEqual(1, args1.Length);
-        Assert.AreEqual("abc", args1[0]);
+        Assert.That(args1.Length, Is.EqualTo(1));
+        Assert.That(args1[0], Is.EqualTo("abc"));
 
         var args2 = new RawInstruction("a.\"def\\\"\\\\\\n\".abc").Arguments;
-        Assert.AreEqual(2, args2.Length);
-        Assert.AreEqual("def\"\\\n", args2[0]);
-        Assert.AreEqual("abc", args2[1]);
+        Assert.That(args2.Length, Is.EqualTo(2));
+        Assert.That(args2[0], Is.EqualTo("def\"\\\n"));
+        Assert.That(args2[1], Is.EqualTo("abc"));
     }
 }

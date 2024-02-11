@@ -15,10 +15,10 @@ public class TestNormal
     public void ctor()
     {
         Normal norm = new(1, 2, 3, 4);
-        Assert.AreEqual(1, norm.x);
-        Assert.AreEqual(2, norm.y);
-        Assert.AreEqual(3, norm.z);
-        Assert.AreEqual(4, norm.p);
+        Assert.That(norm.x, Is.EqualTo(1));
+        Assert.That(norm.y, Is.EqualTo(2));
+        Assert.That(norm.z, Is.EqualTo(3));
+        Assert.That(norm.p, Is.EqualTo(4));
     }
 
     [Test]
@@ -27,10 +27,10 @@ public class TestNormal
         MemoryStream stream = new(expected, false);
         using BinaryReader reader = new(stream);
         Normal norm = Normal.ReadNew(reader);
-        Assert.AreEqual(0x12, norm.x);
-        Assert.AreEqual(0x34, norm.y);
-        Assert.AreEqual(0x56, norm.z);
-        Assert.AreEqual(-123, norm.p);
+        Assert.That(norm.x, Is.EqualTo(0x12));
+        Assert.That(norm.y, Is.EqualTo(0x34));
+        Assert.That(norm.z, Is.EqualTo(0x56));
+        Assert.That(norm.p, Is.EqualTo(-123));
     }
 
     [Test]
@@ -42,6 +42,6 @@ public class TestNormal
         norm.Write(writer);
 
         byte[] actual = stream.ToArray();
-        Assert.AreEqual(actual, expected);
+        Assert.That(expected, Is.EqualTo(actual));
     }
 }

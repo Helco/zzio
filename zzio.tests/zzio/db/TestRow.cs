@@ -21,12 +21,12 @@ public class TestRow
     private void testRow(Row row)
     {
         Assert.NotNull(row);
-        Assert.AreEqual(new UID(0xdeadbeef), row.uid);
-        Assert.AreEqual(3, row.cells.Length);
+        Assert.That(row.uid, Is.EqualTo(new UID(0xdeadbeef)));
+        Assert.That(row.cells.Length, Is.EqualTo(3));
 
-        Assert.AreEqual(new Cell("zzio", 1), row.cells[0]);
-        Assert.AreEqual(new Cell((1 << 16) - 1, 2), row.cells[1]);
-        Assert.AreEqual(new Cell(new byte[] { 0xc0, 0xff, 0xee }, 3), row.cells[2]);
+        Assert.That(row.cells[0], Is.EqualTo(new Cell("zzio", 1)));
+        Assert.That(row.cells[1], Is.EqualTo(new Cell((1 << 16) - 1, 2)));
+        Assert.That(row.cells[2], Is.EqualTo(new Cell(new byte[] { 0xc0, 0xff, 0xee }, 3)));
     }
 
     [Test]
@@ -55,6 +55,6 @@ public class TestRow
         MemoryStream stream = new();
         using BinaryWriter writer = new(stream);
         row.Write(writer);
-        Assert.AreEqual(rowBytes, stream.ToArray());
+        Assert.That(stream.ToArray(), Is.EqualTo(rowBytes));
     }
 }

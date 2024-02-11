@@ -18,27 +18,27 @@ public class TestPAKArchive
         MemoryStream stream = new(sampleData, false);
         PAKArchive archive = PAKArchive.ReadNew(stream);
 
-        Assert.True(archive.ContainsFile("A/a.txt"));
-        Assert.True(archive.ContainsFile("a/B.txt"));
-        Assert.True(archive.ContainsFile("a/c/d.txt"));
-        Assert.True(archive.ContainsFile("a/e/f/g.txt"));
-        Assert.True(archive.ContainsFile("a/A.tXT"));
-        Assert.True(archive.ContainsFile("a/../a/./\\..\\A\\a.txt"));
+        Assert.That(archive.ContainsFile("A/a.txt"), Is.True);
+        Assert.That(archive.ContainsFile("a/B.txt"), Is.True);
+        Assert.That(archive.ContainsFile("a/c/d.txt"), Is.True);
+        Assert.That(archive.ContainsFile("a/e/f/g.txt"), Is.True);
+        Assert.That(archive.ContainsFile("a/A.tXT"), Is.True);
+        Assert.That(archive.ContainsFile("a/../a/./\\..\\A\\a.txt"), Is.True);
 
-        Assert.False(archive.ContainsFile("a.txt"));
-        Assert.False(archive.ContainsFile(".."));
-        Assert.False(archive.ContainsFile("../A/"));
-        Assert.False(archive.ContainsFile("../a/Z.txt"));
+        Assert.That(archive.ContainsFile("a.txt"), Is.False);
+        Assert.That(archive.ContainsFile(".."), Is.False);
+        Assert.That(archive.ContainsFile("../A/"), Is.False);
+        Assert.That(archive.ContainsFile("../a/Z.txt"), Is.False);
     }
 
     private void testStream(Stream stream, string expected)
     {
         byte[] expectedBuffer = Encoding.UTF8.GetBytes(expected);
         byte[] actualBuffer = new byte[expectedBuffer.Length];
-        Assert.AreEqual(0, stream.Position);
-        Assert.AreEqual(expectedBuffer.Length, stream.Read(actualBuffer, 0, expectedBuffer.Length));
-        Assert.AreEqual(-1, stream.ReadByte());
-        Assert.AreEqual(expectedBuffer, actualBuffer);
+        Assert.That(stream.Position, Is.EqualTo(0));
+        Assert.That(stream.Read(actualBuffer, 0, expectedBuffer.Length), Is.EqualTo(expectedBuffer.Length));
+        Assert.That(stream.ReadByte(), Is.EqualTo(-1));
+        Assert.That(actualBuffer, Is.EqualTo(expectedBuffer));
         stream.Close();
     }
 
@@ -63,7 +63,7 @@ public class TestPAKArchive
         MemoryStream stream = new(sampleData, false);
         PAKArchive archive = PAKArchive.ReadNew(stream);
 
-        Assert.AreEqual(Array.Empty<string>(), archive.GetDirectoryContent("G/H/I"));
+        Assert.That(archive.GetDirectoryContent("G/H/I"), Is.EqualTo(Array.Empty<string>()));
 
         Assert.That(archive.GetDirectoryContent("", true), Is.EquivalentTo(new string[]
         {

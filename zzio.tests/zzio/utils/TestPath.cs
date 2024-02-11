@@ -17,25 +17,25 @@ public class TestPath
     {
 #pragma warning disable CS1718
         FilePath path = new("a/b/c/d");
-        Assert.AreEqual(true, path == new FilePath(path));
-        Assert.AreEqual(true, path == "a/b/c/d");
-        Assert.AreEqual(false, path.Equals("a/c/e/d"));
-        Assert.AreEqual(true, path == "A/B/c/d");
-        Assert.AreEqual(false, path != "a/b/c/d");
-        Assert.AreEqual(true, path != "a/c/e/d");
+        Assert.That(path == new FilePath(path), Is.EqualTo(true));
+        Assert.That(path == "a/b/c/d", Is.EqualTo(true));
+        Assert.That(path.Equals("a/c/e/d"), Is.EqualTo(false));
+        Assert.That(path == "A/B/c/d", Is.EqualTo(true));
+        Assert.That(path != "a/b/c/d", Is.EqualTo(false));
+        Assert.That(path != "a/c/e/d", Is.EqualTo(true));
 
-        Assert.AreEqual(true, path.Equals("A/b/C/d", false));
-        Assert.AreEqual(false, path.Equals("a/b/C/D", true));
+        Assert.That(path.Equals("A/b/C/d", false), Is.EqualTo(true));
+        Assert.That(path.Equals("a/b/C/D", true), Is.EqualTo(false));
 
-        Assert.AreEqual(true, path.Equals("a/../a/b/.//c///d\\e/.."));
-        Assert.AreEqual(false, path.Equals("a/b/c/d/../e/"));
+        Assert.That(path.Equals("a/../a/b/.//c///d\\e/.."), Is.EqualTo(true));
+        Assert.That(path.Equals("a/b/c/d/../e/"), Is.EqualTo(false));
 
         FilePath? nullPath = null;
-        Assert.AreEqual(false, nullPath == "a/b");
-        Assert.AreEqual(true, nullPath != "a/b");
-        Assert.AreEqual(true, nullPath == nullPath);
-        Assert.AreEqual(false, new FilePath("a/b") == nullPath);
-        Assert.AreEqual(true, new FilePath("a/b") != nullPath);
+        Assert.That(nullPath == "a/b", Is.EqualTo(false));
+        Assert.That(nullPath != "a/b", Is.EqualTo(true));
+        Assert.That(nullPath == nullPath, Is.EqualTo(true));
+        Assert.That(new FilePath("a/b") == nullPath, Is.EqualTo(false));
+        Assert.That(new FilePath("a/b") != nullPath, Is.EqualTo(true));
 
 #pragma warning restore CS1718
     }
@@ -43,23 +43,22 @@ public class TestPath
     [Test]
     public void root()
     {
-        Assert.AreEqual("c:", new FilePath("c:/a/b").Root);
-        Assert.AreEqual("/", new FilePath("/d/e/f/").Root);
-        Assert.AreEqual("def:/", new FilePath("def:").Root);
-        Assert.AreEqual("/", new FilePath("/").Root);
-        Assert.AreEqual("pak:/", new FilePath("pak:/").Root);
+        Assert.That(new FilePath("c:/a/b").Root, Is.EqualTo("c:"));
+        Assert.That(new FilePath("/d/e/f/").Root, Is.EqualTo("/"));
+        Assert.That(new FilePath("def:").Root, Is.EqualTo("def:/"));
+        Assert.That(new FilePath("/").Root, Is.EqualTo("/"));
+        Assert.That(new FilePath("pak:/").Root, Is.EqualTo("pak:/"));
 
-        Assert.AreEqual(
-            Env(Environment.CurrentDirectory.Substring(0, 1) + ":\\", "/"),
+        Assert.That(
             new FilePath("./a\\b/c").Root
-        );
+, Is.EqualTo(Env(Environment.CurrentDirectory.Substring(0, 1) + ":\\", "/")));
     }
 
     [Test]
     public void combine()
     {
-        Assert.AreEqual("a/b/c/d/", new FilePath("a/b").Combine(new FilePath("c/d/")));
-        Assert.AreEqual("../b/c", new FilePath("a").Combine(new FilePath("../../b/c")));
+        Assert.That(new FilePath("a/b").Combine(new FilePath("c/d/")), Is.EqualTo("a/b/c/d/"));
+        Assert.That(new FilePath("a").Combine(new FilePath("../../b/c")), Is.EqualTo("../b/c"));
 
         Assert.That(() => new FilePath("a/b").Combine("/c"), Throws.Exception);
         Assert.That(() => new FilePath("a/b").Combine("hello:\\"), Throws.Exception);
@@ -68,64 +67,64 @@ public class TestPath
     [Test]
     public void absolute()
     {
-        Assert.AreEqual("c:/a/b/", new FilePath("c:/a/b/c/../").Absolute.ToPOSIXString());
-        Assert.AreEqual("/b/c/d", new FilePath("/b/./././/c/d").Absolute.ToPOSIXString());
+        Assert.That(new FilePath("c:/a/b/c/../").Absolute.ToPOSIXString(), Is.EqualTo("c:/a/b/"));
+        Assert.That(new FilePath("/b/./././/c/d").Absolute.ToPOSIXString(), Is.EqualTo("/b/c/d"));
 
         string cur = Environment.CurrentDirectory;
         if (!cur.EndsWith(FilePath.Separator))
             cur += FilePath.Separator;
-        Assert.AreEqual(cur + "a", new FilePath("a").Absolute);
-        Assert.AreEqual(cur + "a", new FilePath("./b/..\\a").Absolute);
+        Assert.That(new FilePath("a").Absolute, Is.EqualTo(cur + "a"));
+        Assert.That(new FilePath("./b/..\\a").Absolute, Is.EqualTo(cur + "a"));
     }
 
     [Test]
     public void parts()
     {
-        Assert.AreEqual(new string[] { "a", "b", "C" }, new FilePath("a/b\\C/").Parts);
-        Assert.AreEqual(new string[] { "c:", "d" }, new FilePath("c:\\d").Parts);
-        Assert.AreEqual(new string[] { "e", "f" }, new FilePath("/e/f").Parts);
+        Assert.That(new FilePath("a/b\\C/").Parts, Is.EqualTo(new string[] { "a", "b", "C" }));
+        Assert.That(new FilePath("c:\\d").Parts, Is.EqualTo(new string[] { "c:", "d" }));
+        Assert.That(new FilePath("/e/f").Parts, Is.EqualTo(new string[] { "e", "f" }));
     }
 
     [Test]
     public void staysinbound()
     {
-        Assert.True(new FilePath("a/b/c").StaysInbound);
-        Assert.True(new FilePath("a/b/../").StaysInbound);
-        Assert.True(new FilePath("a/../").StaysInbound);
-        Assert.True(new FilePath("c:/d/../").StaysInbound);
-        Assert.True(new FilePath("/d/..").StaysInbound);
-        Assert.False(new FilePath("a/../../").StaysInbound);
-        Assert.False(new FilePath("..").StaysInbound);
-        Assert.False(new FilePath("c:/..").StaysInbound);
-        Assert.False(new FilePath("/../").StaysInbound);
+        Assert.That(new FilePath("a/b/c").StaysInbound, Is.True);
+        Assert.That(new FilePath("a/b/../").StaysInbound, Is.True);
+        Assert.That(new FilePath("a/../").StaysInbound, Is.True);
+        Assert.That(new FilePath("c:/d/../").StaysInbound, Is.True);
+        Assert.That(new FilePath("/d/..").StaysInbound, Is.True);
+        Assert.That(new FilePath("a/../../").StaysInbound, Is.False);
+        Assert.That(new FilePath("..").StaysInbound, Is.False);
+        Assert.That(new FilePath("c:/..").StaysInbound, Is.False);
+        Assert.That(new FilePath("/../").StaysInbound, Is.False);
     }
 
     [Test]
     public void parent()
     {
         FilePath? path = new("a/b/c");
-        Assert.AreEqual("a/b/", (path = path?.Parent));
-        Assert.AreEqual("a/", (path = path?.Parent));
-        Assert.AreEqual("./", (path = path?.Parent));
-        Assert.AreEqual("../", (path = path?.Parent));
-        Assert.AreEqual("../../", (path = path?.Parent));
+        Assert.That((path = path?.Parent), Is.EqualTo("a/b/"));
+        Assert.That((path = path?.Parent), Is.EqualTo("a/"));
+        Assert.That((path = path?.Parent), Is.EqualTo("./"));
+        Assert.That((path = path?.Parent), Is.EqualTo("../"));
+        Assert.That((path = path?.Parent), Is.EqualTo("../../"));
 
-        Assert.AreEqual("a/", new FilePath("a/b/../c/.//").Parent);
+        Assert.That(new FilePath("a/b/../c/.//").Parent, Is.EqualTo("a/"));
 
-        Assert.AreEqual("c:", new FilePath("c:/a").Parent);
-        Assert.AreEqual(null, new FilePath("c:/a/").Parent?.Parent);
+        Assert.That(new FilePath("c:/a").Parent, Is.EqualTo("c:"));
+        Assert.That(new FilePath("c:/a/").Parent?.Parent, Is.EqualTo(null));
 
-        Assert.AreEqual("/d", new FilePath("/d/e").Parent);
-        Assert.AreEqual(null, new FilePath("/d/e").Parent?.Parent);
+        Assert.That(new FilePath("/d/e").Parent, Is.EqualTo("/d"));
+        Assert.That(new FilePath("/d/e").Parent?.Parent, Is.EqualTo(null));
     }
 
     [Test]
     public void relativeto()
     {
-        Assert.AreEqual("c/d", new FilePath("a/b/c/d").RelativeTo("a/b"));
-        Assert.AreEqual("../../c/d/", new FilePath("a/b/c/d/").RelativeTo("a/b/e/f"));
-        Assert.AreEqual("../../", new FilePath("a/b").RelativeTo("a/b/c/d"));
-        Assert.AreEqual("", new FilePath("").RelativeTo(""));
+        Assert.That(new FilePath("a/b/c/d").RelativeTo("a/b"), Is.EqualTo("c/d"));
+        Assert.That(new FilePath("a/b/c/d/").RelativeTo("a/b/e/f"), Is.EqualTo("../../c/d/"));
+        Assert.That(new FilePath("a/b").RelativeTo("a/b/c/d"), Is.EqualTo("../../"));
+        Assert.That(new FilePath("").RelativeTo(""), Is.EqualTo(""));
 
         Assert.That(() => new FilePath("/a/b/c").RelativeTo("c:/d/e"), Throws.Exception);
         Assert.That(() => new FilePath("c:/d/e").RelativeTo("d:/e/f"), Throws.Exception);
@@ -135,39 +134,39 @@ public class TestPath
     [Test]
     public void tostring()
     {
-        Assert.AreEqual("c:\\a\\b\\", new FilePath("c:/a\\b/").ToWin32String());
-        Assert.AreEqual("a\\..\\b\\c", new FilePath("a/../b\\c").ToWin32String());
+        Assert.That(new FilePath("c:/a\\b/").ToWin32String(), Is.EqualTo("c:\\a\\b\\"));
+        Assert.That(new FilePath("a/../b\\c").ToWin32String(), Is.EqualTo("a\\..\\b\\c"));
 
-        Assert.AreEqual("/a/b/c/", new FilePath("\\a\\b\\c/").ToPOSIXString());
-        Assert.AreEqual("c/d/e", new FilePath("c\\d/e").ToPOSIXString());
+        Assert.That(new FilePath("\\a\\b\\c/").ToPOSIXString(), Is.EqualTo("/a/b/c/"));
+        Assert.That(new FilePath("c\\d/e").ToPOSIXString(), Is.EqualTo("c/d/e"));
 
-        Assert.AreEqual(Env("a\\b\\c", "a/b/c"), new FilePath("a\\b/c").ToString());
+        Assert.That(new FilePath("a\\b/c").ToString(), Is.EqualTo(Env("a\\b\\c", "a/b/c")));
     }
 
     [Test]
     public void gethashcode()
     {
-        Assert.AreEqual(new FilePath("").GetHashCode(), new FilePath("").GetHashCode());
-        Assert.AreEqual(new FilePath("/a/b/c").GetHashCode(), new FilePath("/a/b/c").GetHashCode());
-        Assert.AreNotEqual(new FilePath("c:/d/e").GetHashCode(), new FilePath("d\\b/c").GetHashCode());
-        Assert.AreEqual(new FilePath("").GetHashCode(), new FilePath(".").GetHashCode());
-        Assert.AreEqual(new FilePath("a/").GetHashCode(), new FilePath("a").GetHashCode());
-        Assert.AreEqual(new FilePath("a").GetHashCode(), new FilePath("a/b/./c/../././../").GetHashCode());
+        Assert.That(new FilePath("").GetHashCode(), Is.EqualTo(new FilePath("").GetHashCode()));
+        Assert.That(new FilePath("/a/b/c").GetHashCode(), Is.EqualTo(new FilePath("/a/b/c").GetHashCode()));
+        Assert.That(new FilePath("d\\b/c").GetHashCode(), Is.Not.EqualTo(new FilePath("c:/d/e").GetHashCode()));
+        Assert.That(new FilePath(".").GetHashCode(), Is.EqualTo(new FilePath("").GetHashCode()));
+        Assert.That(new FilePath("a").GetHashCode(), Is.EqualTo(new FilePath("a/").GetHashCode()));
+        Assert.That(new FilePath("a/b/./c/../././../").GetHashCode(), Is.EqualTo(new FilePath("a").GetHashCode()));
     }
 
     [Test]
     public void extension()
     {
-        Assert.IsNull(new FilePath("").Extension);
-        Assert.IsNull(new FilePath("/").Extension);
-        Assert.IsNull(new FilePath("resources/").Extension);
-        Assert.IsNull(new FilePath("a/b.cdef/g").Extension);
-        Assert.IsNull(new FilePath("a/b.").Extension);
+        Assert.That(new FilePath("").Extension, Is.Null);
+        Assert.That(new FilePath("/").Extension, Is.Null);
+        Assert.That(new FilePath("resources/").Extension, Is.Null);
+        Assert.That(new FilePath("a/b.cdef/g").Extension, Is.Null);
+        Assert.That(new FilePath("a/b.").Extension, Is.Null);
 
-        Assert.AreEqual("txt", new FilePath("a.txt").Extension);
-        Assert.AreEqual("txt", new FilePath("c:/b.cedf/asd/a.txt").Extension);
-        Assert.AreEqual("txt", new FilePath("c:/b.cedf/asd/a.qwe.rtz.yxc.txt").Extension);
-        Assert.AreEqual("t", new FilePath("c:/b.cedf/asd/a.qwe.rtz.yxc.t").Extension);
-        Assert.AreEqual("abcdefghijkl", new FilePath("c:/b.cedf/asd/a.qwe.rtz.yxc.abcdefghijkl").Extension);
+        Assert.That(new FilePath("a.txt").Extension, Is.EqualTo("txt"));
+        Assert.That(new FilePath("c:/b.cedf/asd/a.txt").Extension, Is.EqualTo("txt"));
+        Assert.That(new FilePath("c:/b.cedf/asd/a.qwe.rtz.yxc.txt").Extension, Is.EqualTo("txt"));
+        Assert.That(new FilePath("c:/b.cedf/asd/a.qwe.rtz.yxc.t").Extension, Is.EqualTo("t"));
+        Assert.That(new FilePath("c:/b.cedf/asd/a.qwe.rtz.yxc.abcdefghijkl").Extension, Is.EqualTo("abcdefghijkl"));
     }
 }

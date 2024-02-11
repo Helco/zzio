@@ -25,19 +25,19 @@ public class TestEnumUtils
     [Test]
     public void intToEnum()
     {
-        Assert.AreEqual(TestEnum.A, EnumUtils.intToEnum<TestEnum>(0));
-        Assert.AreEqual(TestEnum.B, EnumUtils.intToEnum<TestEnum>(100));
-        Assert.AreEqual(TestEnum.Unknown, EnumUtils.intToEnum<TestEnum>(200));
-        Assert.AreEqual(TestEnum.Unknown, EnumUtils.intToEnum<TestEnum>(-1));
+        Assert.That(EnumUtils.intToEnum<TestEnum>(0), Is.EqualTo(TestEnum.A));
+        Assert.That(EnumUtils.intToEnum<TestEnum>(100), Is.EqualTo(TestEnum.B));
+        Assert.That(EnumUtils.intToEnum<TestEnum>(200), Is.EqualTo(TestEnum.Unknown));
+        Assert.That(EnumUtils.intToEnum<TestEnum>(-1), Is.EqualTo(TestEnum.Unknown));
     }
 
     [Test]
     public void intToFlags()
     {
-        Assert.AreEqual("0", EnumUtils.intToFlags<TestFlags>(0).ToString());
-        Assert.AreEqual("A", EnumUtils.intToFlags<TestFlags>(1).ToString());
-        Assert.AreEqual("A, B, C", EnumUtils.intToFlags<TestFlags>(1 + 2 + 32).ToString());
-        Assert.AreEqual("A, B", EnumUtils.intToFlags<TestFlags>(1 + 2 + 4).ToString());
-        Assert.AreEqual("0", EnumUtils.intToFlags<TestFlags>(4 + 16).ToString());
+        Assert.That(EnumUtils.intToFlags<TestFlags>(0).ToString(), Is.EqualTo("0"));
+        Assert.That(EnumUtils.intToFlags<TestFlags>(1).ToString(), Is.EqualTo("A"));
+        Assert.That(EnumUtils.intToFlags<TestFlags>(1 + 2 + 32).ToString(), Is.EqualTo("A, B, C"));
+        Assert.That(EnumUtils.intToFlags<TestFlags>(1 + 2 + 4).ToString(), Is.EqualTo("A, B"));
+        Assert.That(EnumUtils.intToFlags<TestFlags>(4 + 16).ToString(), Is.EqualTo("0"));
     }
 }

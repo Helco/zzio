@@ -18,10 +18,10 @@ public class TestQuaternion
     public void ctor()
     {
         Quaternion quat = new(0.1f, 0.2f, 0.3f, 0.4f);
-        Assert.AreEqual(0.1f, quat.X);
-        Assert.AreEqual(0.2f, quat.Y);
-        Assert.AreEqual(0.3f, quat.Z);
-        Assert.AreEqual(0.4f, quat.W);
+        Assert.That(quat.X, Is.EqualTo(0.1f));
+        Assert.That(quat.Y, Is.EqualTo(0.2f));
+        Assert.That(quat.Z, Is.EqualTo(0.3f));
+        Assert.That(quat.W, Is.EqualTo(0.4f));
     }
 
     [Test]
@@ -30,10 +30,10 @@ public class TestQuaternion
         MemoryStream stream = new(expected, false);
         using BinaryReader reader = new(stream);
         Quaternion quat = reader.ReadQuaternion();
-        Assert.AreEqual(-345.0f, quat.X);
-        Assert.AreEqual(678.0f, quat.Y);
-        Assert.AreEqual(23.8f, quat.Z);
-        Assert.AreEqual(89.12f, quat.W);
+        Assert.That(quat.X, Is.EqualTo(-345.0f));
+        Assert.That(quat.Y, Is.EqualTo(678.0f));
+        Assert.That(quat.Z, Is.EqualTo(23.8f));
+        Assert.That(quat.W, Is.EqualTo(89.12f));
     }
 
     [Test]
@@ -45,6 +45,6 @@ public class TestQuaternion
         writer.Write(quat);
 
         byte[] actual = stream.ToArray();
-        Assert.AreEqual(actual, expected);
+        Assert.That(expected, Is.EqualTo(actual));
     }
 }

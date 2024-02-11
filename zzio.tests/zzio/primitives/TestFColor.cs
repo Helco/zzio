@@ -17,10 +17,10 @@ public class TestFColor
     public void ctor()
     {
         FColor color = new(0.1f, 0.2f, 0.3f, 0.4f);
-        Assert.AreEqual(0.1f, color.r);
-        Assert.AreEqual(0.2f, color.g);
-        Assert.AreEqual(0.3f, color.b);
-        Assert.AreEqual(0.4f, color.a);
+        Assert.That(color.r, Is.EqualTo(0.1f));
+        Assert.That(color.g, Is.EqualTo(0.2f));
+        Assert.That(color.b, Is.EqualTo(0.3f));
+        Assert.That(color.a, Is.EqualTo(0.4f));
     }
 
     [Test]
@@ -29,10 +29,10 @@ public class TestFColor
         MemoryStream stream = new(expected, false);
         using BinaryReader reader = new(stream);
         FColor color = FColor.ReadNew(reader);
-        Assert.AreEqual(0.1f, color.r);
-        Assert.AreEqual(0.3f, color.g);
-        Assert.AreEqual(0.7f, color.b);
-        Assert.AreEqual(1.0f, color.a);
+        Assert.That(color.r, Is.EqualTo(0.1f));
+        Assert.That(color.g, Is.EqualTo(0.3f));
+        Assert.That(color.b, Is.EqualTo(0.7f));
+        Assert.That(color.a, Is.EqualTo(1.0f));
     }
 
     [Test]
@@ -44,6 +44,6 @@ public class TestFColor
         color.Write(writer);
 
         byte[] actual = stream.ToArray();
-        Assert.AreEqual(actual, expected);
+        Assert.That(expected, Is.EqualTo(actual));
     }
 }

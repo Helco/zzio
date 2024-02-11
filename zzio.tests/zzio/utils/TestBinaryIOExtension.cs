@@ -29,7 +29,7 @@ public class TextBinaryIOExtension
     {
         MemoryStream stream = new(expectedZString, false);
         using BinaryReader reader = new(stream);
-        Assert.AreEqual("Hello World!", reader.ReadZString());
+        Assert.That(reader.ReadZString(), Is.EqualTo("Hello World!"));
     }
 
     [Test]
@@ -38,7 +38,7 @@ public class TextBinaryIOExtension
         MemoryStream stream = new();
         using BinaryWriter writer = new(stream);
         writer.WriteZString("Hello World!");
-        Assert.AreEqual(expectedZString, stream.ToArray());
+        Assert.That(stream.ToArray(), Is.EqualTo(expectedZString));
     }
 
     [Test]
@@ -46,7 +46,7 @@ public class TextBinaryIOExtension
     {
         MemoryStream stream = new(testCString, false);
         using BinaryReader reader = new(stream);
-        Assert.AreEqual("TestOh no", reader.ReadSizedString((int)stream.Length));
+        Assert.That(reader.ReadSizedString((int)stream.Length), Is.EqualTo("TestOh no"));
     }
 
     [Test]
@@ -54,8 +54,8 @@ public class TextBinaryIOExtension
     {
         MemoryStream stream = new(testCString, false);
         using BinaryReader reader = new(stream);
-        Assert.AreEqual("Test", reader.ReadSizedCString((int)stream.Length));
-        Assert.AreEqual(stream.Position, stream.Length);
+        Assert.That(reader.ReadSizedCString((int)stream.Length), Is.EqualTo("Test"));
+        Assert.That(stream.Length, Is.EqualTo(stream.Position));
     }
 
     [Test]
@@ -64,11 +64,11 @@ public class TextBinaryIOExtension
         MemoryStream stream = new();
         BinaryWriter writer = new(stream);
         writer.WriteSizedCString("cstring", 8);
-        Assert.AreEqual(expectedCString, stream.ToArray());
+        Assert.That(stream.ToArray(), Is.EqualTo(expectedCString));
 
         stream = new MemoryStream();
         writer = new BinaryWriter(stream);
         writer.WriteSizedCString("cstrings are the best", 8);
-        Assert.AreEqual(expectedCString, stream.ToArray());
+        Assert.That(stream.ToArray(), Is.EqualTo(expectedCString));
     }
 }

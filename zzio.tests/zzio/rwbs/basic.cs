@@ -14,45 +14,45 @@ public class TestRWBSBasic
 
     private void testSection(Section section)
     {
-        Assert.IsInstanceOf(typeof(RWClump), section);
+        Assert.That(section, Is.InstanceOf(typeof(RWClump)));
         RWClump clump = (RWClump)section;
-        Assert.AreEqual(SectionId.Clump, section.sectionId);
-        Assert.AreEqual(null, section.parent);
-        Assert.AreEqual(0, clump.atomicCount);
-        Assert.AreEqual(0, clump.camCount);
-        Assert.AreEqual(0, clump.lightCount);
-        Assert.AreEqual(3, clump.children.Count);
+        Assert.That(section.sectionId, Is.EqualTo(SectionId.Clump));
+        Assert.That(section.parent, Is.EqualTo(null));
+        Assert.That(clump.atomicCount, Is.EqualTo(0));
+        Assert.That(clump.camCount, Is.EqualTo(0));
+        Assert.That(clump.lightCount, Is.EqualTo(0));
+        Assert.That(clump.children.Count, Is.EqualTo(3));
 
 
-        Assert.IsInstanceOf(typeof(RWFrameList), clump.children[0]);
+        Assert.That(clump.children[0], Is.InstanceOf(typeof(RWFrameList)));
         RWFrameList frameList = (RWFrameList)clump.children[0];
-        Assert.AreSame(clump, frameList.parent);
-        Assert.AreEqual(SectionId.FrameList, frameList.sectionId);
-        Assert.AreEqual(1, frameList.children.Count);
-        Assert.AreEqual(1, frameList.frames.Length);
+        Assert.That(frameList.parent, Is.SameAs(clump));
+        Assert.That(frameList.sectionId, Is.EqualTo(SectionId.FrameList));
+        Assert.That(frameList.children.Count, Is.EqualTo(1));
+        Assert.That(frameList.frames.Length, Is.EqualTo(1));
         Frame frame = frameList.frames[0];
-        Assert.AreEqual(0, frame.creationFlags);
-        Assert.AreEqual(0xffffffff, frame.frameIndex);
-        Assert.AreEqual(Vector3.UnitX, frame.rotMatrix0);
-        Assert.AreEqual(Vector3.UnitY, frame.rotMatrix1);
-        Assert.AreEqual(Vector3.UnitZ, frame.rotMatrix2);
-        Assert.AreEqual(0.0f, frame.position.X);
-        Assert.AreEqual(0.0f, frame.position.Y);
-        Assert.AreEqual(0.0f, frame.position.Z);
+        Assert.That(frame.creationFlags, Is.EqualTo(0));
+        Assert.That(frame.frameIndex, Is.EqualTo(0xffffffff));
+        Assert.That(frame.rotMatrix0, Is.EqualTo(Vector3.UnitX));
+        Assert.That(frame.rotMatrix1, Is.EqualTo(Vector3.UnitY));
+        Assert.That(frame.rotMatrix2, Is.EqualTo(Vector3.UnitZ));
+        Assert.That(frame.position.X, Is.EqualTo(0.0f));
+        Assert.That(frame.position.Y, Is.EqualTo(0.0f));
+        Assert.That(frame.position.Z, Is.EqualTo(0.0f));
 
-        Assert.IsInstanceOf(typeof(RWExtension), frameList.children[0]);
+        Assert.That(frameList.children[0], Is.InstanceOf(typeof(RWExtension)));
 
-        Assert.IsInstanceOf(typeof(RWGeometryList), clump.children[1]);
+        Assert.That(clump.children[1], Is.InstanceOf(typeof(RWGeometryList)));
         RWGeometryList geoList = (RWGeometryList)clump.children[1];
-        Assert.AreSame(clump, geoList.parent);
-        Assert.AreEqual(SectionId.GeometryList, geoList.sectionId);
-        Assert.AreEqual(0, geoList.children.Count);
-        Assert.AreEqual(0, geoList.geometryCount);
+        Assert.That(geoList.parent, Is.SameAs(clump));
+        Assert.That(geoList.sectionId, Is.EqualTo(SectionId.GeometryList));
+        Assert.That(geoList.children.Count, Is.EqualTo(0));
+        Assert.That(geoList.geometryCount, Is.EqualTo(0));
 
-        Assert.IsInstanceOf(typeof(RWExtension), clump.children[2]);
+        Assert.That(clump.children[2], Is.InstanceOf(typeof(RWExtension)));
         RWExtension extension = (RWExtension)clump.children[2];
-        Assert.AreSame(clump, extension.parent);
-        Assert.AreEqual(0, extension.children.Count);
+        Assert.That(extension.parent, Is.SameAs(clump));
+        Assert.That(extension.children.Count, Is.EqualTo(0));
     }
 
     [Test]

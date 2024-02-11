@@ -20,9 +20,9 @@ internal static class MyAssert
         byte[] expectedBytes = Encoding.UTF8.GetBytes(expected);
         byte[] actualBytes = new byte[expectedBytes.Length];
         Assert.NotNull(stream);
-        Assert.AreEqual(actualBytes.Length, stream!.Read(actualBytes, 0, actualBytes.Length));
-        Assert.AreEqual(expectedBytes, actualBytes);
-        Assert.AreEqual(-1, stream.ReadByte());
+        Assert.That(stream!.Read(actualBytes, 0, actualBytes.Length), Is.EqualTo(actualBytes.Length));
+        Assert.That(actualBytes, Is.EqualTo(expectedBytes));
+        Assert.That(stream.ReadByte(), Is.EqualTo(-1));
         stream.Close();
     }
 }
