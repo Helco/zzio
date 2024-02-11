@@ -7,6 +7,9 @@ option DepthTest; // also enabled by default
 option Blend = IsOpaque, IsAlphaBlend, IsAdditiveBlend, IsAdditiveAlphaBlend;
 option HasFog;
 
+variants exclude if (IsSkinned && (IsInstanced || HasEnvMap || HasTexShift));
+variants exclude if (!IsInstanced && (HasTexShift || HasEnvMap || !DepthWrite || !DepthTest || Blend != IsOpaque)); // we only use opaque materials for non-instanced currently
+
 attributes
 {
     float3 inPos;

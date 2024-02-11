@@ -3,6 +3,8 @@ option Billboard = IsNoBillboard, IsViewBillboard, IsSparkBillboard, IsLensFlare
 option Blend = IsAdditiveBlend, IsAdditiveAlphaBlend, IsAlphaBlend;
 option HasFog;
 
+variants exclude if (Billboard == IsLensFlare && HasFog);
+
 attributes
 {
     float3 inVertexPos;

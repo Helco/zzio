@@ -18,7 +18,8 @@ public partial class LensFlare : AEntitySetSystem<float>
         EffectMaterial.BillboardMode.LensFlare,
         EffectMaterial.BlendMode.AdditiveAlpha,
         TextureName: "lsf000t",
-        AlphaReference: 0.0196078f);
+        AlphaReference: 0.0196078f,
+        HasFog: false);
 
     private const float PrimarySizeFactor = 0.7f;
     private const float PrimaryAngleFactor = 4f;

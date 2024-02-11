@@ -3,6 +3,9 @@ option ColorMode = VertexColor, SkinWeights, SingleBoneWeight;
 option Topology = Triangles, Lines;
 option BothSided;
 
+variants exclude if (ColorMode != VertexColor && IsSkinned);
+variants exclude if (Topology == Lines && BothSided);
+
 attributes float3 inPos;
 attributes if (ColorMode == VertexColor) byte4_norm inColor;
 attributes if (IsSkinned || ColorMode != VertexColor)

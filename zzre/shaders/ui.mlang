@@ -3,6 +3,10 @@ option IsFont;
 option HasMask;
 option Is3D;
 
+variants exclude if (!IsInstanced);
+variants exclude if (IsFont && (Is3D || HasMask));
+variants exclude if (HasMask && (IsFont || Is3D));
+
 instances if (!Is3D) float2 inPos;
 instances if (Is3D) float3 inPos;
 instances
