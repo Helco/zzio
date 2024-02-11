@@ -34,10 +34,10 @@ jobs:
           path: zzio
           submodules: true
           fetch-depth: 0
-      - name: Setup .NET Core 7.0.x
+      - name: Setup .NET Core 8.0.x
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: 8.0.x
       - name: Build local dependencies
         run: bash zzio/get-dependencies.sh
       - name: Install remote dependencies
@@ -47,7 +47,7 @@ jobs:
           dotnet build zzio/zzio.sln --configuration Release --no-restore
           dotnet build zzio/zzre/zzre.csproj -c Release --no-restore -r ${{ matrix.target }}
       - name: Publish
-        run: dotnet publish zzio/zzre/zzre.csproj -f net6.0 -c Release --no-build --self-contained true -r ${{ matrix.target }} -o ./zzre
+        run: dotnet publish zzio/zzre/zzre.csproj -f net8.0 -c Release --no-build --self-contained true -r ${{ matrix.target }} -o ./zzre
       - name: Create archive
         uses: thedoctor0/zip-release@master
         with:

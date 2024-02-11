@@ -171,6 +171,6 @@ internal partial class Program
 #else
     private static void AddGlobalRenderDocOption(RootCommand _) { }
     private static void LoadRenderDoc(InvocationContext _) { }
-    private static void SetupRenderDocKeys(Sdl2Window _) { }
+    private static void SetupRenderDocKeys(SdlWindow _) { }
 #endif
 }
