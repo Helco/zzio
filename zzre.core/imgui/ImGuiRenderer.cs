@@ -542,9 +542,10 @@ namespace zzre.imgui
                 case KeyCode.KScrolllock:
                     result = ImGuiKey.ScrollLock;
                     return true;
-                case KeyCode.KPrintscreen:
-                    result = ImGuiKey.PrintScreen;
-                    return true;
+                // Let's just not use PrintScreen for ImGui purposes and let it be used for RenderDoc
+                //case KeyCode.KPrintscreen:
+                //    result = ImGuiKey.PrintScreen;
+                //    return true;
                 case KeyCode.KPause:
                     result = ImGuiKey.Pause;
                     return true;

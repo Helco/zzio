@@ -162,7 +162,7 @@ internal partial class Program
             return;
         window.OnKey += ev =>
         {
-            if (ev.Repeat != 0 || (KeyCode)ev.Keysym.Sym != KeyCode.KPrintscreen)
+            if (ev.Repeat != 0 || ev.Type != (uint)EventType.Keydown || (KeyCode)ev.Keysym.Sym != KeyCode.KPrintscreen)
                 return;
             if (!RenderDoc.IsTargetControlConnected())
                 RenderDoc.LaunchReplayUI();
