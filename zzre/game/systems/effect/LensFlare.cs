@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using DefaultEcs.Resource;
 using DefaultEcs.System;
+using Serilog;
 using zzio.rwbs;
 using zzre.materials;
 using zzre.rendering;
@@ -64,6 +65,7 @@ public partial class LensFlare : AEntitySetSystem<float>
         new Flare[] {new Flare(1f, 0.4f, 9) }
     };
 
+    private readonly ILogger logger;
     private readonly Camera camera;
     private readonly IZanzarahContainer zzContainer;
     private readonly EffectMesh effectMesh;
@@ -76,6 +78,7 @@ public partial class LensFlare : AEntitySetSystem<float>
 
     public LensFlare(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
+        logger = diContainer.GetTag<ILogger>();
         camera = diContainer.GetTag<Camera>();
         zzContainer = diContainer.GetTag<IZanzarahContainer>();
         effectMesh = diContainer.GetTag<EffectMesh>();
@@ -115,7 +118,7 @@ public partial class LensFlare : AEntitySetSystem<float>
         {
             if (trigger.ii1 > FlareInfos.Count)
             {
-                Console.WriteLine($"Warning: Ignored LensFlare with type {trigger.ii1}");
+                logger.Warning("Ignored LensFlare with type {Type}", trigger.ii1);
                 continue;
             }
 

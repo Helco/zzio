@@ -1,10 +1,12 @@
 ﻿namespace zzre.game.systems;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using DefaultEcs.System;
+using Serilog;
 using zzio.script;
 
-public abstract class BaseScript : AEntitySetSystem<float>
+public abstract class BaseScript<TLogContext> : AEntitySetSystem<float>
 {
     private const string CmdLabel = "$";
     private const string CmdExit = "%";
@@ -25,9 +27,12 @@ public abstract class BaseScript : AEntitySetSystem<float>
         UnknownInstruction
     }
 
+    protected readonly ILogger logger;
+
     protected BaseScript(ITagContainer diContainer, Func<object, DefaultEcs.World, DefaultEcs.EntitySet> entitySetCreation)
         : base(diContainer.GetTag<DefaultEcs.World>(), entitySetCreation, useBuffer: true)
     {
+        logger = diContainer.GetLoggerFor<TLogContext>();
     }
 
     protected abstract OpReturn Execute(in DefaultEcs.Entity entity, ref components.ScriptExecution script, RawInstruction instruction);
@@ -42,7 +47,8 @@ public abstract class BaseScript : AEntitySetSystem<float>
     {
         while (!script.HasStopped)
         {
-            var opReturn = ExecuteSystem(entity, ref script, script.Instructions[script.CurrentI]);
+            var instruction = script.Instructions[script.CurrentI];
+            var opReturn = ExecuteSystem(entity, ref script, instruction);
             switch (opReturn)
             {
                 case OpReturn.Continue:
@@ -61,7 +67,11 @@ public abstract class BaseScript : AEntitySetSystem<float>
                     ConditionalSkip(ref script);
                     break;
 
-                case OpReturn.UnknownInstruction: throw new InvalidInstructionException();
+                case OpReturn.UnknownInstruction:
+                    logger.Error("Unknown script instruction at {Index}: {@Instruction}", script.CurrentI, instruction);
+                    script.CurrentI++;
+                    return true;
+
                 default: throw new NotImplementedException($"Unimplemented op return type {opReturn}");
             }
         }
@@ -105,7 +115,8 @@ public abstract class BaseScript : AEntitySetSystem<float>
             case CmdSetGlobal:
             case CmdIfGlobal:
                 // TODO: Add global variables
-                throw new NotImplementedException("Global variables are not implemented yet");
+                logger.Error("Global variables are not implemented yet");
+                return OpReturn.Continue;
 
             default:
                 return Execute(entity, ref script, instruction);
@@ -123,4 +134,7 @@ public abstract class BaseScript : AEntitySetSystem<float>
         }
         script.CurrentI++; // prevent else from executing (triggering another skip)
     }
+
+    protected void LogUnimplementedInstructionWarning([CallerMemberName] string method = "<not set>") =>
+        logger.Warning("Unimplemented instruction \"{Name}\"", method);
 }

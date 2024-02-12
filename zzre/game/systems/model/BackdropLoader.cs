@@ -6,11 +6,13 @@ using DefaultEcs.Resource;
 using zzre.rendering;
 using System.Numerics;
 using zzio;
+using Serilog;
 
 namespace zzre.game.systems;
 
 public class BackdropLoader : ISystem<float>
 {
+    private readonly ILogger logger;
     private readonly Camera camera;
     private readonly DefaultEcs.World ecsWorld;
     private readonly IDisposable sceneLoadSubscription;
@@ -19,6 +21,7 @@ public class BackdropLoader : ISystem<float>
 
     public BackdropLoader(ITagContainer diContainer)
     {
+        logger = diContainer.GetLoggerFor<BackdropLoader>();
         camera = diContainer.GetTag<Camera>();
         ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
@@ -53,7 +56,7 @@ public class BackdropLoader : ISystem<float>
                 rotation: Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathF.PI / -2));
                 break;
             case null: CreateStaticBackdrop(backdropName); break;
-            default: Console.WriteLine("Warning: Unsupported dynamic backdrop " + backdropName); break;
+            default: logger.Warning("Unsupported dynamic backdrop {Name}", backdropName); break;
         }
     }
 

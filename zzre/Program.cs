@@ -7,12 +7,13 @@ using Veldrid;
 using zzio.vfs;
 using zzre.rendering;
 using Silk.NET.SDL;
+using Serilog;
 
 using Texture = Veldrid.Texture;
 
 namespace zzre;
 
-internal partial class Program
+internal static partial class Program
 {
     private static readonly Option<string[]> OptionPools = new(
         new[] { "--pool", "-p" },
@@ -40,19 +41,19 @@ internal partial class Program
         rootCommand.AddGlobalOption(OptionPools);
         rootCommand.AddGlobalOption(OptionDebugLayers);
         AddGlobalRenderDocOption(rootCommand);
+        AddLoggingOptions(rootCommand);
         AddInDevCommand(rootCommand);
         rootCommand.Invoke(args);
     }
 
     private static ITagContainer CommonStartupBeforeWindow(InvocationContext ctx)
     {
-        var diContainer = new TagContainer();
-        diContainer.AddTag(ctx);
-
         SdlProvider.SetMainReady = true;
-        diContainer.AddTag(SdlProvider.SDL.Value);
-
-        LoadRenderDoc(ctx);
+        var diContainer = new TagContainer()
+            .AddTag(ctx)
+            .AddTag(CreateLogging(ctx))
+            .AddTag(SdlProvider.SDL.Value);
+        LoadRenderDoc(diContainer);
         return diContainer;
     }
 
@@ -70,7 +71,7 @@ internal partial class Program
                 typeof(Program).Assembly.GetManifestResourceStream("shaders.mlss")
                 ?? throw new InvalidDataException("Shader set is not compiled into zzre")))
             .AddTag(new GameTime())
-            .AddTag(CreateResourcePool(ctx))
+            .AddTag(CreateResourcePool(diContainer))
             .AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(diContainer));
     }
 
@@ -94,83 +95,48 @@ internal partial class Program
         return GraphicsDevice.CreateVulkan(options, scDesc);
     }
 
-    private static IResourcePool CreateResourcePool(InvocationContext ctx)
+    private static IResourcePool CreateResourcePool(ITagContainer diContainer)
     {
+        var ctx = diContainer.GetTag<InvocationContext>();
+        var logger = diContainer.GetLoggerFor<IResourcePool>();
         var pools = ctx.ParseResult.GetValueForOption(OptionPools) ?? Array.Empty<string>();
+        if (!pools.Any())
+            logger.Warning("No resource pools selected");
         return pools.Length switch
         {
             0 => new InMemoryResourcePool(),
-            1 => CreateSingleResourcePool(pools.Single()),
-            _ => new CombinedResourcePool(pools.Select(CreateSingleResourcePool).ToArray())
+            1 => CreateSingleResourcePool(logger, pools.Single()),
+            _ => new CombinedResourcePool(pools.Select(p => CreateSingleResourcePool(logger, p)).ToArray())
         };
     }
 
-    private static IResourcePool CreateSingleResourcePool(string poolName)
+    private static IResourcePool CreateSingleResourcePool(ILogger logger, string poolName)
     {
         // just to normalize
         var path = Path.Combine(Environment.CurrentDirectory, poolName);
         var ext = Path.GetExtension(path).ToLowerInvariant() ?? "";
         switch(ext)
         {
-            case ".pak": return new PAKResourcePool(new FileStream(path, FileMode.Open, FileAccess.Read));
-            case "": return new FileResourcePool(path);
+            case ".pak":
+                logger.Debug("Selected PAK resource pool {PoolName}", poolName);
+                return new PAKResourcePool(new FileStream(path, FileMode.Open, FileAccess.Read));
+            case "":
+                logger.Debug("Selected path reosurce pool {PoolName}", poolName);
+                return new FileResourcePool(path);
             default:
-                Console.WriteLine($"Warning: Ignored resource pool {poolName} due to unsupported extension {ext}");
+                logger.Warning("Ignored resource pool {PoolName} due to unsupported extension {Ext}", poolName, ext);
                 return new InMemoryResourcePool();
         }
     }
 
     private static void CommonCleanup(ITagContainer diContainer)
     {
+        diContainer.GetTag<ILogger>().Information("Cleanup");
+
         // dispose graphics device last, otherwise Vulkan will crash
         diContainer.TryGetTag(out GraphicsDevice graphicsDevice);
         diContainer.RemoveTag<GraphicsDevice>(dispose: false);
         diContainer.Dispose();
         graphicsDevice?.Dispose();
     }
-
-#if DEBUG
-    private static readonly Option<bool> OptionRenderDoc = new(
-        "--renderdoc",
-        () => true,
-        "Whether RenderDoc is to be loaded at start.\nIf RenderDoc loading makes problems set this option to \"false\"");
-
-    private static RenderDoc? RenderDoc = null;
-
-    private static void AddGlobalRenderDocOption(RootCommand command) =>
-        command.Add(OptionRenderDoc);
-
-    private static void LoadRenderDoc(InvocationContext ctx)
-    {
-        var shouldLoad = ctx.ParseResult.GetValueForOption(OptionRenderDoc);
-        if (!shouldLoad)
-            return;
-        if (RenderDoc.Load(out RenderDoc))
-        {
-            RenderDoc.APIValidation = true;
-            RenderDoc.OverlayEnabled = false;
-            RenderDoc.RefAllResources = true;
-            Console.WriteLine("Info: RenderDoc was loaded, use the PrintScreen key to capture the next frame");
-        }
-        else
-            Console.WriteLine("Warning: Could not load RenderDoc");
-    }
-
-    private static void SetupRenderDocKeys(SdlWindow window)
-    {
-        if (RenderDoc == null)
-            return;
-        window.OnKey += ev =>
-        {
-            if (ev.Repeat != 0 || ev.Type != (uint)EventType.Keydown || (KeyCode)ev.Keysym.Sym != KeyCode.KPrintscreen)
-                return;
-            if (!RenderDoc.IsTargetControlConnected())
-                RenderDoc.LaunchReplayUI();
-        };
-    }
-#else
-    private static void AddGlobalRenderDocOption(RootCommand _) { }
-    private static void LoadRenderDoc(InvocationContext _) { }
-    private static void SetupRenderDocKeys(SdlWindow _) { }
-#endif
 }

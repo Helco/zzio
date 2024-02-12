@@ -13,7 +13,7 @@ public class RawInstruction
     public string Command { get; }
     public string[] Arguments { get; }
 
-    private string regexArgumentSource =>
+    private const string RegexArgumentSource =
         @"\.(-?\w+)|" + // simple case
 
         // string constant
@@ -24,16 +24,16 @@ public class RawInstruction
                 @"\\[\w\\\""]" + // escape sequences
             ")*)" +
         @"\""";
-    private Regex regexArgument => new(regexArgumentSource);
-    private Regex regexInstruction => new(
+    private static Regex RegexArgument => new(RegexArgumentSource);
+    private static Regex RegexInstruction => new(
         @"^(.\w*)((" +                   // command
-            regexArgumentSource + ")*" + // arguments
+            RegexArgumentSource + ")*" + // arguments
         ")$"
     );
 
     public RawInstruction(string instruction)
     {
-        var fullMatch = regexInstruction.Match(instruction.Trim());
+        var fullMatch = RegexInstruction.Match(instruction.Trim());
         if (!fullMatch.Success)
             throw new InvalidInstructionException();
         Command = fullMatch.Groups[1].Value;
@@ -43,7 +43,7 @@ public class RawInstruction
             Arguments = Array.Empty<string>();
             return;
         }
-        var argumentMatchesColl = regexArgument.Matches(fullMatch.Groups[2].Value);
+        var argumentMatchesColl = RegexArgument.Matches(fullMatch.Groups[2].Value);
         var argumentMatches = new Match[argumentMatchesColl.Count]; // copy manually to be able to use LINQ, remove with .NET Standard 2.1
         argumentMatchesColl.CopyTo(argumentMatches, 0);
 

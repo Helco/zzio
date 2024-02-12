@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
+using Serilog;
 using Veldrid;
 using zzio;
 using zzio.scn;
@@ -16,6 +17,7 @@ public class Game : BaseDisposable, ITagContainer
 {
     private readonly ITagContainer tagContainer;
     private readonly IZanzarahContainer zzContainer;
+    private readonly ILogger logger;
     private readonly GameTime time;
     private readonly DefaultEcs.World ecsWorld;
     private readonly Camera camera;
@@ -40,6 +42,7 @@ public class Game : BaseDisposable, ITagContainer
         tagContainer = new TagContainer().FallbackTo(diContainer);
         zzContainer = GetTag<IZanzarahContainer>();
         zzContainer.OnResize += HandleResize;
+        logger = diContainer.GetLoggerFor<Game>();
         time = GetTag<GameTime>();
 
         AddTag(this);
@@ -227,7 +230,7 @@ public class Game : BaseDisposable, ITagContainer
 
     public void LoadScene(string sceneName, Func<Trigger> findEntryTrigger)
     {
-        Console.WriteLine("Load " + sceneName);
+        logger.Information("Load " + sceneName);
         ecsWorld.Publish(new messages.SceneChanging());
         ecsWorld.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
 

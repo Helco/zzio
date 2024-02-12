@@ -9,7 +9,7 @@ using zzio.db;
 
 namespace zzre.game.systems;
 
-public partial class DialogScript : BaseScript
+public partial class DialogScript : BaseScript<DialogScript>
 {
     public enum SpecialInventoryCheck
     {
@@ -199,8 +199,7 @@ public partial class DialogScript : BaseScript
 
     private void Fight(DefaultEcs.Entity entity, int stage, bool canFlee)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void ChangeDatabase(DefaultEcs.Entity entity, UID uid)
@@ -245,14 +244,12 @@ public partial class DialogScript : BaseScript
 
     private void CatchWizform(DefaultEcs.Entity entity)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void KillPlayer(DefaultEcs.Entity entity)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void TradingCurrency(DefaultEcs.Entity entity, UID uid)
@@ -276,8 +273,7 @@ public partial class DialogScript : BaseScript
 
     private bool IfTriggerIsActive(DefaultEcs.Entity entity, int triggerI)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
         return false;
     }
 
@@ -295,14 +291,12 @@ public partial class DialogScript : BaseScript
 
     private void ModifyTrigger(DefaultEcs.Entity entity, int enableTrigger, int id, int triggerI)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void NpcWizformEscapes(DefaultEcs.Entity entity)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void Talk(DefaultEcs.Entity entity, UID uid)
@@ -324,8 +318,7 @@ public partial class DialogScript : BaseScript
 
     private void ChafferWizforms(UID uid, UID uid2, UID uid3)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void DeployMeAtTrigger(int triggerI)
@@ -353,7 +346,7 @@ public partial class DialogScript : BaseScript
         World.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, triggerI, orientByTrigger: true, moveToGround: !isFairyNpc));
 
         if (isFairyNpc)
-            Console.WriteLine("Warning: DeployNPCAtTrigger not implemented for fairy NPCs"); // TODO: Implement DeployNPCAtTrigger for fairy NPCs
+            logger.Warning("DeployNPCAtTrigger not implemented for fairy NPCs"); // TODO: Implement DeployNPCAtTrigger for fairy NPCs
     }
 
     private void Delay(DefaultEcs.Entity entity, int duration)
@@ -383,28 +376,24 @@ public partial class DialogScript : BaseScript
 
     private bool IfPlayerIsClose(DefaultEcs.Entity entity, int maxDistSqr)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
         return false;
     }
 
     private bool IfNumberOfNpcsIs(DefaultEcs.Entity entity, int count, UID uid)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
         return false;
     }
 
     private void StartEffect(DefaultEcs.Entity entity, int effectType, int triggerI)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void TradeWizform(DefaultEcs.Entity entity, int id)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void CreateDynamicItems(DefaultEcs.Entity entity, int id, int count, int triggerI)
@@ -419,69 +408,58 @@ public partial class DialogScript : BaseScript
 
     private void PlayVideo(DefaultEcs.Entity entity, int id)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void RemoveNpcAtTrigger(int triggerI)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private bool IfTriggerIsEnabled(int triggerI)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
         return false;
     }
 
     private void PlaySound(DefaultEcs.Entity entity, int id)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void PlayInArena(DefaultEcs.Entity entity, int arg)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void EndActorEffect(DefaultEcs.Entity entity)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void CreateSceneObjects(DefaultEcs.Entity entity, SceneObjectType objectType)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void RemoveBehavior(DefaultEcs.Entity entity, int id)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void UnlockDoor(DefaultEcs.Entity entity, int id, bool isMetalDoor)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void EndGame(DefaultEcs.Entity entity)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void SubGame(DefaultEcs.Entity entity, SubGameType subGameType, int size, int labelExit)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void PlayAnimation(DefaultEcs.Entity entity, AnimationType animation)
@@ -490,7 +468,7 @@ public partial class DialogScript : BaseScript
         if (body.Get<components.AnimationPool>().Contains(animation))
             NPCEntity.Get<components.NonFairyAnimation>().Next = animation;
         else
-            Console.WriteLine("Warning: Dialog script tried to play missing animation: " + animation);
+            logger.Warning("Dialog script tried to play missing animation: " + animation);
     }
 
     private void PlayPlayerAnimation(DefaultEcs.Entity entity, AnimationType animation)
@@ -500,19 +478,16 @@ public partial class DialogScript : BaseScript
 
     private void PlayAmyVoice(string v)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void CreateDynamicModel(DefaultEcs.Entity entity)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void DeploySound(DefaultEcs.Entity entity, int id, int triggerI)
     {
-        var curMethod = System.Reflection.MethodBase.GetCurrentMethod();
-        Console.WriteLine($"Warning: unimplemented dialog instruction \"{curMethod!.Name}\"");
+        LogUnimplementedInstructionWarning();
     }
 }

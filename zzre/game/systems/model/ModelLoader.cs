@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using DefaultEcs.Resource;
 using DefaultEcs.System;
+using Serilog;
 using zzio;
 using zzio.scn;
 using zzre.rendering;
@@ -12,6 +13,7 @@ using zzre.rendering;
 public class ModelLoader : BaseDisposable, ISystem<float>
 {
     private readonly ITagContainer diContainer;
+    private readonly ILogger logger;
     private readonly DefaultEcs.World ecsWorld;
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
@@ -25,6 +27,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     public ModelLoader(ITagContainer diContainer)
     {
         this.diContainer = diContainer;
+        logger = diContainer.GetLoggerFor<ModelLoader>();
         ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
@@ -91,7 +94,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 if (model.wiggleAmpl > 0)
                 {
                     model.wiggleAmpl = 0;
-                    Console.WriteLine($"Warning: Model {model.idx} with a {behaviour} behaviour also has a plant wiggle set.");
+                    logger.Warning("Model {ModelIndex} with a {Behaviour} behaviour also has a plant wiggle set.", model.idx, behaviour);
                 }
             }
             SetPlantWiggle(entity, model.wiggleAmpl, plantWiggleDelay);
@@ -238,7 +241,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         new Vector2(0.036f, 0.036f)
     };
 
-    private static void SetBehaviour(DefaultEcs.Entity entity, BehaviourType behaviour, uint modelId)
+    private void SetBehaviour(DefaultEcs.Entity entity, BehaviourType behaviour, uint modelId)
     {
         switch (behaviour)
         {
@@ -312,12 +315,11 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 entity.Set<components.Collidable>();
                 break;
 
-            default: Console.WriteLine($"Warning: unsupported behaviour type {behaviour}"); break;
+            default: logger.Warning("Unsupported behaviour type {Behaviour}", behaviour); break;
         }
     }
 
     private void HandleRemoveModel(in GSModRemoveModel model) => HandleRemove(model.ModelId);
-    private void HandleRemoveItem(in GSModRemoveItem model) => HandleRemove(model.ModelId);
     private void HandleRemove(uint modelId)
     {
         if (entitiesById.TryGetValue(modelId, out var entity))

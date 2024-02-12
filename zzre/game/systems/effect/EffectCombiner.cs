@@ -3,12 +3,14 @@ using System.Linq;
 using System.Numerics;
 using DefaultEcs.Resource;
 using DefaultEcs.System;
+using Serilog;
 using zzio;
 
 namespace zzre.game.systems.effect;
 
 public partial class EffectCombiner : AEntitySetSystem<float>
 {
+    private readonly ILogger logger;
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
     private readonly IDisposable spawnEffectDisposable;
@@ -17,6 +19,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
 
     public EffectCombiner(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
+        logger = diContainer.GetLoggerFor<EffectCombiner>();
         sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         spawnEffectDisposable = World.Subscribe<messages.SpawnEffectCombiner>(HandleSpawnEffect);
@@ -94,7 +97,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
                 case zzio.effect.parts.Sound sound: partEntity.Set(sound); break;
                 case zzio.effect.parts.Sparks sparks: partEntity.Set(sparks); break;
                 default:
-                    Console.WriteLine($"Warning: unsupported effect combiner part {part.Name}");
+                    logger.Warning("Unsupported effect combiner part {PartName}", part.Name);
                     break;
             }
         }

@@ -11,7 +11,7 @@ using zzio;
 using zzre.rendering;
 
 [PauseDuring(PauseTrigger.UIScreen)]
-public partial class NPCScript : BaseScript
+public partial class NPCScript : BaseScript<NPCScript>
 {
     private const float FlyingColliderSize = 0.2f;
     private const float ItemColliderSizeOffset = -0.05f;
@@ -172,7 +172,7 @@ public partial class NPCScript : BaseScript
 
     private bool IfTriggerIsEnabled(DefaultEcs.Entity entity, int triggerI)
     {
-        Console.WriteLine("Warning unimplemented NPC instruction \"ifTriggerIsEnabled\"");
+        logger.Debug("Warning unimplemented NPC instruction \"ifTriggerIsEnabled\"");
         return false;
     }
 
@@ -335,16 +335,16 @@ public partial class NPCScript : BaseScript
 
     private void PlaySound(DefaultEcs.Entity entity, int soundId)
     {
-        Console.WriteLine("Warning: unimplemented NPC instruction \"playSound\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void StartActorEffect(DefaultEcs.Entity entity, int effectId)
     {
-        Console.WriteLine("Warning unimplemented NPC instruction \"startActorEffect\"");
+        LogUnimplementedInstructionWarning();
     }
 
     private void EndActorEffect(DefaultEcs.Entity entity)
     {
-        Console.WriteLine("Warning unimplemented NPC instruction \"endActorEffect\"");
+        LogUnimplementedInstructionWarning();
     }
 }

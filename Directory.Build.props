@@ -1,4 +1,14 @@
 <Project>
+    <!-- Metadata -->
+    <PropertyGroup>
+        <Author>Helco</Author>
+        <VersionPrefix>1.0.0</VersionPrefix> <!-- Do not copy SlangVersion as we might want to increment for our own code -->
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/Helco/zzio</RepositoryUrl>
+        <GitVersion>false</GitVersion>
+    </PropertyGroup>
+
+    <!-- Common Dependency versioning -->
     <PropertyGroup>
         <RestoreSources>$(RestoreSources);../nuget-feed;https://api.nuget.org/v3/index.json</RestoreSources>
         <VeldridHash>g603c7f2521</VeldridHash>
@@ -13,4 +23,18 @@
         <ImguizmoVersion>1.61.0-$(ImguiHash)</ImguizmoVersion>
         <MlangVersion>1.0.0-$(MlangHash)</MlangVersion>
     </PropertyGroup>
+
+    <Target Name="GitVersion" />
+    <ItemGroup>
+        <PackageReference Include="GitInfo" Version="3.3.3" PrivateAssets="all"/>
+    </ItemGroup>
+
+    <Target Name="PopulateRepositoryInfo" DependsOnTargets="GitVersion" BeforeTargets="GetAssemblyVersion;GenerateNuspec;GetPackageContents">
+        <PropertyGroup>
+            <RepositoryBranch>$(GitBranch)</RepositoryBranch>
+            <RepositoryCommit>$(GitCommit)</RepositoryCommit>
+            <VersionSuffix Condition="'$(VersionSuffix)' == ''">$(GitCommit)</VersionSuffix>
+            <VersionSuffix Condition="'$(VersionSuffix)' != ''">$(GitCommit)-$(VersionSuffix)</VersionSuffix>
+        </PropertyGroup>
+    </Target>
 </Project>

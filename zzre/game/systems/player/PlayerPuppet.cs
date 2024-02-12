@@ -2,6 +2,7 @@
 using System;
 using System.Numerics;
 using DefaultEcs.System;
+using Serilog;
 using zzre.rendering;
 using AnimationState = zzre.game.components.HumanPhysics.AnimationState;
 
@@ -21,11 +22,13 @@ public partial class PlayerPuppet : AEntitySetSystem<float>
     private const string ThudVoiceSample1 = ThudVoiceSampleBase + "A.WAV";
     private const string ThudVoiceSample2 = ThudVoiceSampleBase + "B.WAV";
 
+    private readonly ILogger logger;
     private readonly Camera camera;
     private readonly IDisposable resetMovementSubscription;
 
     public PlayerPuppet(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
+        logger = diContainer.GetLoggerFor<PlayerPuppet>();
         camera = diContainer.GetTag<Camera>();
         resetMovementSubscription = World.Subscribe<messages.ResetPlayerMovement>(HandleResetMovement);
     }
@@ -60,7 +63,7 @@ public partial class PlayerPuppet : AEntitySetSystem<float>
             return;
 
         if (physics.IsDrowning)
-            Console.WriteLine("Player died of drowning"); // TODO: Add player death caused by drowning
+            logger.Debug("Player died of drowning"); // TODO: Add player death caused by drowning
 
         Animation(elapsedTime, ref puppet, physics, ref animation);
         Falling(elapsedTime, ref puppet, ref physics, ref animation);
@@ -102,7 +105,7 @@ public partial class PlayerPuppet : AEntitySetSystem<float>
             puppet.FallTimer += elapsedTime;
             var maxFallTime = physics.GravityModifier < 0f ? MaxWhirlFallTime : MaxFallTime;
             if (puppet.FallTimer > maxFallTime)
-                Console.WriteLine("Player died because of fall"); // TODO: Add player death based on fall time
+                logger.Debug("Player died because of fall"); // TODO: Add player death based on fall time
         }
         else
             puppet.FallTimer = 0f;
@@ -136,7 +139,7 @@ public partial class PlayerPuppet : AEntitySetSystem<float>
 
         // TODO: Add voice sample for falls
         // TODO: Add force footstep sound for falls
-        Console.WriteLine($"Player fell, cannot move for {lockControlsFor} and says {voiceSample}");
+        logger.Debug("Player fell, cannot move for {Seconds} and says {VoiceSample}", lockControlsFor, voiceSample);
         World.Publish(new messages.LockPlayerControl(lockControlsFor));
 
         physics.Velocity *= Vector3.UnitY;
