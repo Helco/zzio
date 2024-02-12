@@ -6,9 +6,9 @@ if [[ "$1" != "no-submodule-update" ]]; then
 fi
 
 if [[ "$OSTYPE" == "msys" ]]; then
-    powershell -executionpolicy bypass -File "extern/ImGui.NET/download-native-deps.ps1" -tag 1.88 -repository "https://github.com/Helco/ImGui.NET-nativebuild"
+    powershell -executionpolicy bypass -File "extern/ImGui.NET/download-native-deps.ps1" -tag 1.90.1 -repository "https://github.com/Helco/ImGui.NET-nativebuild"
 else
-    bash extern/ImGui.NET/download-native-deps.sh 1.88
+    bash extern/ImGui.NET/download-native-deps.sh 1.90.1
 fi
 
 DefaultEcsHash=`git -C extern/DefaultEcs rev-parse --short HEAD`

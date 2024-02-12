@@ -45,7 +45,7 @@ public class TwoColumnEditorTag
             ImGui.SetColumnWidth(0, Window.InitialBounds.Size.X * 0.3f);
             didSetColumnWidth++;
         }
-        ImGui.BeginChild("LeftColumn", ImGui.GetContentRegionAvail(), false, ImGuiWindowFlags.HorizontalScrollbar);
+        ImGui.BeginChild("LeftColumn", ImGui.GetContentRegionAvail(), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar);
         var i = 0;
         foreach (var (name, content, isDefaultOpen, preContent) in infoSections)
         {

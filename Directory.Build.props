@@ -13,13 +13,13 @@
         <RestoreSources>$(RestoreSources);../nuget-feed;https://api.nuget.org/v3/index.json</RestoreSources>
         <VeldridHash>g603c7f2521</VeldridHash>
         <DefaultEcsHash>0e92bb5</DefaultEcsHash>
-        <ImguiHash>beeb8dd</ImguiHash>
+        <ImguiHash>9b51cce</ImguiHash>
         <MlangHash>331cf83</MlangHash>
         <VeldridVersion>4.9.0-$(VeldridHash)</VeldridVersion>
         <VeldridRenderdocVersion>1.0.1-$(VeldridHash)</VeldridRenderdocVersion>
         <DefaultEcsVersion>1.0.0-$(DefaultEcsHash)</DefaultEcsVersion>
         <DefaultEcsSafeVersion>1.0.0-safe-$(DefaultEcsHash)</DefaultEcsSafeVersion>
-        <ImguiVersion>1.88.0-$(ImguiHash)</ImguiVersion>
+        <ImguiVersion>1.90.1.1-$(ImguiHash)</ImguiVersion>
         <ImguizmoVersion>1.61.0-$(ImguiHash)</ImguizmoVersion>
         <MlangVersion>1.0.0-$(MlangHash)</MlangVersion>
     </PropertyGroup>

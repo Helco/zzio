@@ -365,6 +365,7 @@ namespace zzre.imgui
             }
 
             SetPerFrameImGuiData(deltaSeconds);
+            ImGui.GetIO().MouseWheel = 0f;
         }
 
         public void UseWith(SdlWindow window)
@@ -380,6 +381,7 @@ namespace zzre.imgui
             {
                 case EventType.Mousemotion when ev.Motion.WindowID == window.WindowID:
                     io.AddMousePosEvent(ev.Motion.X, ev.Motion.Y);
+                    io.MousePos = new(ev.Motion.X, ev.Motion.Y);
                     return true;
 
                 case EventType.Mousebuttondown or EventType.Mousebuttonup when ev.Motion.WindowID == window.WindowID:
@@ -391,11 +393,15 @@ namespace zzre.imgui
                         _ => ImGuiMouseButton.COUNT
                     };
                     if (button != ImGuiMouseButton.COUNT)
-                        io.AddMouseButtonEvent((int)button, ev.Type == (uint)EventType.Mousebuttondown);
+                    {
+                        var isDown = ev.Type == (uint)EventType.Mousebuttondown;
+                        io.AddMouseButtonEvent((int)button, isDown);
+                    }
                     return button != ImGuiMouseButton.COUNT;
 
                 case EventType.Mousewheel when ev.Wheel.WindowID == window.WindowID:
                     io.AddMouseWheelEvent(ev.Wheel.PreciseX, ev.Wheel.PreciseY);
+                    io.MouseWheel = ev.Wheel.PreciseY;
                     return true;
 
                 case EventType.Keydown or EventType.Keyup when ev.Key.WindowID == window.WindowID:
@@ -637,7 +643,7 @@ namespace zzre.imgui
 
             for (int i = 0; i < draw_data.CmdListsCount; i++)
             {
-                ImDrawListPtr cmd_list = ((ImDrawList**)draw_data.CmdLists)[i];
+                ImDrawListPtr cmd_list = draw_data.CmdLists[i];
 
                 cl.UpdateBuffer(
                     _vertexBuffer,
@@ -682,7 +688,7 @@ namespace zzre.imgui
             int idx_offset = 0;
             for (int n = 0; n < draw_data.CmdListsCount; n++)
             {
-                ImDrawListPtr cmd_list = ((ImDrawList**)draw_data.CmdLists)[n];
+                ImDrawListPtr cmd_list = draw_data.CmdLists[n];
                 for (int cmd_i = 0; cmd_i < cmd_list.CmdBuffer.Size; cmd_i++)
                 {
                     ImDrawCmdPtr pcmd = cmd_list.CmdBuffer[cmd_i];

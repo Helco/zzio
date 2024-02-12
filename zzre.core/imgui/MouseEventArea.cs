@@ -12,9 +12,11 @@ public class MouseEventArea
     private Vector2? lastPosition;
     private readonly Vector2[] lastDragDelta = new Vector2[(int)ImGuiMouseButton.COUNT];
     private readonly bool[] triggerClickEvent = new bool[(int)ImGuiMouseButton.COUNT];
+    private readonly Vector2[] mouseLastDownPos = new Vector2[(int)ImGuiMouseButton.COUNT];
+    private readonly bool[] mouseLastDownState = new bool[(int)ImGuiMouseButton.COUNT];
     private Rect validBounds = Rect.Zero;
 
-    public Vector2 MousePosition => GetIO().MousePos - validBounds.Min;
+    public Vector2 MousePosition => GetMousePos() - validBounds.Min;
 
     public event Action<MouseButton, Vector2>? OnDrag;
     public event Action<float>? OnScroll;
@@ -28,7 +30,7 @@ public class MouseEventArea
         parent.AddTag(this);
     }
 
-    public void Content()
+    public unsafe void Content()
     {
         if (!window.IsOpen || !window.IsFocused)
             return;
@@ -53,18 +55,24 @@ public class MouseEventArea
         else
             lastPosition = null;
 
-        // Drag event
+        // Drag and button events
         for (int i = 0; i < (int)ImGuiMouseButton.COUNT; i++)
         {
             var button = (ImGuiMouseButton)i;
-            if (!validBounds.IsInside(GetIO().MouseClickedPos[i]))
+
+            var isDown = IsMouseDown(button);
+            if (isDown && !mouseLastDownState[i])
+                mouseLastDownPos[i] = GetIO().MousePos;
+            mouseLastDownState[i] = isDown;
+
+            if (!validBounds.IsInside(mouseLastDownPos[i]))
                 continue;
 
             if (triggerClickEvent[i] != IsMouseDown(button))
             {
                 ((triggerClickEvent[i] = IsMouseDown(button))
                     ? OnButtonDown
-                    : OnButtonUp)?.Invoke(ToSDL(button), validBounds.RelativePos(GetIO().MouseClickedPos[i]));
+                    : OnButtonUp)?.Invoke(ToSDL(button), validBounds.RelativePos(mouseLastDownPos[i]));
             }
 
             if (!IsMouseDragging(button))
