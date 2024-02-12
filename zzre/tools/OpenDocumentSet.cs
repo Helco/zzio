@@ -37,10 +37,14 @@ public class OpenDocumentSet
         return openEditor != null;
     }
 
-    public TEditor OpenWith<TEditor>(string pathText) where TEditor : IDocumentEditor =>
+    public TEditor OpenWith<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEditor
+        >(string pathText) where TEditor : IDocumentEditor =>
         OpenWith<TEditor>(new FilePath(pathText));
 
-    public TEditor OpenWith<TEditor>(FilePath path) where TEditor : IDocumentEditor
+    public TEditor OpenWith<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEditor
+        >(FilePath path) where TEditor : IDocumentEditor
     {
         var resourcePool = diContainer.GetTag<IResourcePool>();
         var resource = resourcePool.FindFile(path.ToPOSIXString());
@@ -49,7 +53,9 @@ public class OpenDocumentSet
         return OpenWith<TEditor>(resource);
     }
 
-    public TEditor OpenWith<TEditor>(IResource resource) where TEditor : IDocumentEditor
+    public TEditor OpenWith<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEditor
+        >(IResource resource) where TEditor : IDocumentEditor
     {
         if (TryGetEditorFor(resource, out var prevEditor))
         {
@@ -62,7 +68,9 @@ public class OpenDocumentSet
         return newEditor;
     }
 
-    public void AddEditorType<TEditor>(string extension) where TEditor : IDocumentEditor
+    public void AddEditorType<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEditor
+        >(string extension) where TEditor : IDocumentEditor
     {
         editorTypes.Add(extension.ToLowerInvariant(), typeof(TEditor));
         _ = GetConstructorFor<TEditor>();
@@ -94,7 +102,10 @@ public class OpenDocumentSet
     }
 
     private static readonly Dictionary<Type, Func<ITagContainer, object>> knownConstructors = new();
-    private static Func<ITagContainer, TEditor> GetConstructorFor<TEditor>() where TEditor : IDocumentEditor
+    
+    private static Func<ITagContainer, TEditor> GetConstructorFor<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEditor>()
+        where TEditor : IDocumentEditor
     {
         var type = typeof(TEditor);
         if (knownConstructors.TryGetValue(type, out var prevCtor))
