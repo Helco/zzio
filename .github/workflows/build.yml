@@ -6,6 +6,10 @@ on:
       runs-on:
         required: true
         type: string
+      sarif-report:
+        default: false
+        required: false
+        type: boolean
     
 defaults:
   run:
@@ -24,6 +28,7 @@ jobs:
       run: |
         cat get-dependencies.sh > cache-key
         git submodule status >> cache-key
+        mkdir zzio/sarif-output
     - name: Cache local dependencies
       uses: actions/cache@v3
       id: cache-local
@@ -43,9 +48,15 @@ jobs:
       run: cp temp-ci-fix/libshaderc_shared.so ~/.nuget/packages/mlang.msbuild/1.0.0-331cf83/tasks/netstandard2.0/runtimes/linux-x64/native/
     - name: Debug
       run: |
-        dotnet build --configuration Debug --no-restore --verbosity normal
+        dotnet build --configuration Debug --no-restore --verbosity normal ${{ inputs.sarif-output && '-p:SarifOutput=true' || '' }}
         dotnet test --configuration Debug --no-restore --verbosity normal
     - name: Release
       run: |
         dotnet build --configuration Release --no-restore --verbosity normal
         dotnet test --configuration Release --no-restore --verbosity normal
+    - name: Upload SARIF reports
+      uses: actions/codeql-action/upload-sarif@v3
+      if: inputs.sarif-output
+      with:
+        sarif_file: zzio/sarif-output
+        checkout_path: zzio

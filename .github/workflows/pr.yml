@@ -1,5 +1,8 @@
 name: PullRequest
 
+permissions:
+  security-events: write
+
 on:
   pull_request:
     branches: [ master ]
@@ -13,3 +16,4 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       runs-on: ${{ matrix.os }}
+      sarif-report: true
