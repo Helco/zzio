@@ -48,7 +48,7 @@ jobs:
       run: cp temp-ci-fix/libshaderc_shared.so ~/.nuget/packages/mlang.msbuild/1.0.0-331cf83/tasks/netstandard2.0/runtimes/linux-x64/native/
     - name: Debug
       run: |
-        dotnet build --configuration Debug --no-restore --verbosity normal ${{ inputs.sarif-output && '-p:SarifOutput=true' || '' }}
+        dotnet build --configuration Debug --no-restore --verbosity normal ${{ inputs.sarif-report && '-p:SarifOutput=true' || '' }}
         dotnet test --configuration Debug --no-restore --verbosity normal
     - name: Release
       run: |
@@ -56,7 +56,7 @@ jobs:
         dotnet test --configuration Release --no-restore --verbosity normal
     - name: Upload SARIF reports
       uses: github/codeql-action/upload-sarif@v3
-      if: inputs.sarif-output
+      if: inputs.sarif-report
       with:
         sarif_file: zzio/sarif-output
         checkout_path: zzio
