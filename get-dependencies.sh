@@ -6,10 +6,12 @@ if [[ "$1" != "no-submodule-update" ]]; then
 fi
 
 if [[ "$OSTYPE" == "msys" ]]; then
-    echo powershell -executionpolicy bypass -File "extern/ImGui.NET/download-native-deps.ps1" -tag 1.90.1 -repository "https://github.com/Helco/ImGui.NET-nativebuild"
+    powershell -executionpolicy bypass -File "extern/ImGui.NET/download-native-deps.ps1" -tag 1.90.1 -repository "https://github.com/Helco/ImGui.NET-nativebuild"
 else
     bash extern/ImGui.NET/download-native-deps.sh 1.90.1
 fi
+
+mkdir -p nuget-feed
 
 # Why does ImGui use OS-specific downloads again?
 REMOTERY_REPO=https://github.com/Helco/Remotery.NET
