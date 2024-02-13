@@ -58,5 +58,5 @@ jobs:
       uses: github/codeql-action/upload-sarif@v3
       if: inputs.sarif-report
       with:
-        sarif_file: sarif-output
+        sarif_file: zzio/sarif-output
         checkout_path: zzio
