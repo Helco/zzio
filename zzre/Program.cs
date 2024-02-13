@@ -10,6 +10,7 @@ using Silk.NET.SDL;
 using Serilog;
 
 using Texture = Veldrid.Texture;
+using Serilog.Core;
 
 namespace zzre;
 
@@ -40,8 +41,9 @@ internal static partial class Program
         var rootCommand = new RootCommand("zzre - Engine reimplementation and modding tools for Zanzarah");
         rootCommand.AddGlobalOption(OptionPools);
         rootCommand.AddGlobalOption(OptionDebugLayers);
-        AddGlobalRenderDocOption(rootCommand);
         AddLoggingOptions(rootCommand);
+        AddGlobalRenderDocOption(rootCommand);
+        AddRemoteryOptions(rootCommand);
         AddInDevCommand(rootCommand);
         rootCommand.Invoke(args);
     }
@@ -49,22 +51,24 @@ internal static partial class Program
     private static ITagContainer CommonStartupBeforeWindow(InvocationContext ctx)
     {
         SdlProvider.SetMainReady = true;
-        var diContainer = new TagContainer()
+        var diContainer = new TagContainer();
+        diContainer
             .AddTag(ctx)
-            .AddTag(CreateLogging(ctx))
+            .AddTag(CreateLogging(diContainer))
+            .AddTag(CreateRemotery(diContainer))
             .AddTag(SdlProvider.SDL.Value);
         LoadRenderDoc(diContainer);
         return diContainer;
     }
 
-    private static ITagContainer CommonStartupAfterWindow(ITagContainer diContainer)
+    private static void CommonStartupAfterWindow(ITagContainer diContainer)
     {
         var window = diContainer.GetTag<SdlWindow>();
         var ctx = diContainer.GetTag<InvocationContext>();
         SetupRenderDocKeys(window);
         var graphicsDevice = CreateGraphicsDevice(window, ctx);
 
-        return diContainer
+        diContainer
             .AddTag(graphicsDevice)
             .AddTag(graphicsDevice.ResourceFactory)
             .AddTag(new ShaderVariantCollection(graphicsDevice,

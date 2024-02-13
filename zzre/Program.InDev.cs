@@ -99,14 +99,21 @@ internal partial class Program
         InDevOpenResources(diContainer, ctx);
 
         var time = diContainer.GetTag<GameTime>();
+        var remotery = diContainer.GetTag<Remotery>();
+        windowContainer.CreateProfilerSample = n => remotery.SampleCPU(n);
         while (window.IsOpen)
         {
             time.BeginFrame();
+            using var frameSample = remotery.SampleCPU("zzre", RemoteryNET.rmtSampleFlags.RMTSF_Root);
             if (time.HasFramerateChanged)
                 window.Title = $"Zanzarah | {graphicsDevice.BackendType} | {time.FormattedStats}";
 
-            windowContainer.Render();
-            graphicsDevice.SwapBuffers();
+            using (remotery.SampleCPU("WindowContainer.Render"))
+            {
+                windowContainer.Render();
+                using (remotery.SampleCPU("SwapBuffers"))
+                    graphicsDevice.SwapBuffers();
+            }
             sdl.PumpEvents();
             windowContainer.BeginEventUpdate(time);
             Event ev = default;
@@ -121,6 +128,7 @@ internal partial class Program
                 break;
             windowContainer.EndEventUpdate();
 
+            frameSample.Dispose();
             time.EndFrame();
         }
 

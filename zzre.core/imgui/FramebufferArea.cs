@@ -119,7 +119,7 @@ public class FramebufferArea : BaseDisposable
         PopStyleColor(2);
         PopStyleVar(2);
 
-        ImGuizmoNET.ImGuizmo.SetRect(offset.X, offset.Y, size.X, size.Y);
+        //ImGuizmoNET.ImGuizmo.SetRect(offset.X, offset.Y, size.X, size.Y);
     }
 
     private void HandleRender()

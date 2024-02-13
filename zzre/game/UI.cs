@@ -15,10 +15,11 @@ public class UI : BaseDisposable, ITagContainer
 {
     private readonly ITagContainer tagContainer;
     private readonly IZanzarahContainer zzContainer;
+    private readonly Remotery profiler;
     private readonly GameTime time;
     private readonly DefaultEcs.World ecsWorld;
     private readonly systems.RecordingSequentialSystem<float> updateSystems;
-    private readonly ISystem<CommandList> renderSystems;
+    private readonly systems.RecordingSequentialSystem<CommandList> renderSystems;
     private readonly GraphicsDevice graphicsDevice;
 
     public DeviceBuffer ProjectionBuffer { get; }
@@ -31,6 +32,7 @@ public class UI : BaseDisposable, ITagContainer
         tagContainer = new TagContainer().FallbackTo(diContainer);
         zzContainer = GetTag<IZanzarahContainer>();
         zzContainer.OnResize += HandleResize;
+        profiler = GetTag<Remotery>();
         time = GetTag<GameTime>();
 
         var resourceFactory = GetTag<ResourceFactory>();
@@ -71,7 +73,8 @@ public class UI : BaseDisposable, ITagContainer
             new systems.Reaper(this),
             new systems.ParentReaper(this));
 
-        renderSystems = new SequentialSystem<CommandList>(
+        renderSystems = new systems.RecordingSequentialSystem<CommandList>(this);
+        renderSystems.Add(
             new systems.ui.Batcher(this));
     }
 
@@ -86,9 +89,17 @@ public class UI : BaseDisposable, ITagContainer
     public void Publish<T>() => ecsWorld.Publish(default(T));
     public void Publish<T>(in T message) => ecsWorld.Publish(message);
 
-    public void Update() => updateSystems.Update(time.Delta);
+    public void Update()
+    {
+        using var _ = profiler.SampleCPU("UI.Update");
+        updateSystems.Update(time.Delta);
+    }
 
-    public void Render(CommandList cl) => renderSystems.Update(cl);
+    public void Render(CommandList cl)
+    {
+        using var _ = profiler.SampleCPU("UI.Render");
+        renderSystems.Update(cl);
+    }
 
     private void HandleResize()
     {

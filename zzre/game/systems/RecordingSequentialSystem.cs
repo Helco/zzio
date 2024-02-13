@@ -10,8 +10,10 @@ public class RecordingSequentialSystem<T> : ISystem<T>
 {
     private readonly ITagContainer diContainer;
     private readonly DefaultEcs.World world;
+    private readonly Remotery profiler;
     private readonly List<ISystem<T>> systems = new();
-    private readonly EntityCommandRecorder recorder = new(1024 * 1024); // 1MiB should suffice, right?
+    private readonly List<string> systemNames = new();
+    private readonly EntityCommandRecorder recorder;
 
     public bool IsEnabled { get; set; } = true;
     public IReadOnlyList<ISystem<T>> Systems => systems;
@@ -20,7 +22,9 @@ public class RecordingSequentialSystem<T> : ISystem<T>
     {
         this.diContainer = diContainer;
         world = diContainer.GetTag<DefaultEcs.World>();
-        diContainer.AddTag(recorder);
+        profiler = diContainer.GetTag<Remotery>();
+        if (!diContainer.TryGetTag(out recorder))
+            diContainer.AddTag(recorder = new(1024 * 1024)); // 1MiB should suffice, right?
     }
 
     public void Dispose()
@@ -30,7 +34,11 @@ public class RecordingSequentialSystem<T> : ISystem<T>
         recorder.Dispose();
     }
 
-    public void Add(params ISystem<T>[] systems) => this.systems.AddRange(systems);
+    public void Add(params ISystem<T>[] systems)
+    {
+        this.systems.AddRange(systems);
+        systemNames.AddRange(systems.Select(s => s.GetType().Name));
+    }
 
     public void Update(T state)
     {
@@ -38,9 +46,10 @@ public class RecordingSequentialSystem<T> : ISystem<T>
             return;
         recorder.Execute();
 
-        foreach (var system in Systems)
+        for (int i = 0; i < systems.Count; i++)
         {
-            system.Update(state);
+            using var _ = profiler.SampleCPU(systemNames[i]);
+            systems[i].Update(state);
             recorder.Execute();
         }
     }

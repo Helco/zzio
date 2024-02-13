@@ -22,6 +22,7 @@
         <ImguiVersion>1.90.1.1-$(ImguiHash)</ImguiVersion>
         <ImguizmoVersion>1.61.0-$(ImguiHash)</ImguizmoVersion>
         <MlangVersion>1.0.0-$(MlangHash)</MlangVersion>
+        <RemoteryVersion>1.21.1</RemoteryVersion>
     </PropertyGroup>
 
     <Target Name="GitVersion" />

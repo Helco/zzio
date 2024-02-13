@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 
 namespace zzre; 
@@ -46,8 +47,9 @@ partial class Program
         command.AddGlobalOption(OptionLogOverrides);
     }
 
-    private static ILogger CreateLogging(InvocationContext ctx)
+    private static ILogger CreateLogging(ITagContainer diContainer, ILogEventSink? additionalSink = null)
     {
+        var ctx = diContainer.GetTag<InvocationContext>();
         var config = new LoggerConfiguration()
             .MinimumLevel.Is(ctx.ParseResult.GetValueForOption(OptionLogLevel))
             .WriteTo.Async(wt => wt.Console(outputTemplate: LoggingOutputTemplate));
@@ -55,6 +57,9 @@ partial class Program
         var filePath = ctx.ParseResult.GetValueForOption(OptionLogFilePath);
         if (filePath is not null)
             config = config.WriteTo.File(filePath.FullName, outputTemplate: LoggingOutputTemplate);
+
+        if (additionalSink != null)
+            config.WriteTo.Sink(additionalSink);
 
         var overrides = ctx.ParseResult.GetValueForOption(OptionLogOverrides) ?? Array.Empty<string>();
         foreach (var @override in overrides)

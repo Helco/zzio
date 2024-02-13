@@ -18,6 +18,7 @@ public class Game : BaseDisposable, ITagContainer
     private readonly ITagContainer tagContainer;
     private readonly IZanzarahContainer zzContainer;
     private readonly ILogger logger;
+    private readonly Remotery profiler;
     private readonly GameTime time;
     private readonly DefaultEcs.World ecsWorld;
     private readonly Camera camera;
@@ -43,6 +44,7 @@ public class Game : BaseDisposable, ITagContainer
         zzContainer = GetTag<IZanzarahContainer>();
         zzContainer.OnResize += HandleResize;
         logger = diContainer.GetLoggerFor<Game>();
+        profiler = diContainer.GetTag<Remotery>();
         time = GetTag<GameTime>();
 
         AddTag(this);
@@ -166,7 +168,9 @@ public class Game : BaseDisposable, ITagContainer
         ecsWorld.Publish(new messages.SetCameraMode(-1, default));
 
         syncedLocation = new systems.SyncedLocation(this);
-        renderSystems = new SequentialSystem<CommandList>(
+        var renderSystems = new systems.RecordingSequentialSystem<CommandList>(this);
+        this.renderSystems = renderSystems;
+        renderSystems.Add(
             fogModifier,
             new systems.ModelRenderer(this, components.RenderOrder.Backdrop),
             worldRenderer,
@@ -213,12 +217,14 @@ public class Game : BaseDisposable, ITagContainer
 
     public void Update()
     {
+        using var _ = profiler.SampleCPU("Game.Update");
         onceUpdate.Invoke();
         updateSystems.Update(time.Delta);
     }
 
     public void Render(CommandList cl)
     {
+        using var _ = profiler.SampleCPU("Game.Render");
         camera.Update(cl);
         syncedLocation.Update(cl);
         cl.ClearColorTarget(0, clearColor);

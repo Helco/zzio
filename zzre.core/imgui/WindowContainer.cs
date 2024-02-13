@@ -44,14 +44,16 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
         remove => onceAfterUpdate.Next -= value;
     }
 
+    public Func<string, IDisposable>? CreateProfilerSample { get; set; } = null;
+
     public WindowContainer(SdlWindow window, GraphicsDevice device)
     {
         Device = device;
 
         var fb = device.MainSwapchain.Framebuffer;
         ImGuiRenderer = new(device, fb.OutputDescription, (int)fb.Width, (int)fb.Height, ColorSpaceHandling.Legacy, callNewFrame: false);
-        ImGuizmoNET.ImGuizmo.SetImGuiContext(ImGui.GetCurrentContext());
-        ImGuizmoNET.ImGuizmo.AllowAxisFlip(false);
+        //ImGuizmoNET.ImGuizmo.SetImGuiContext(ImGui.GetCurrentContext());
+        //ImGuizmoNET.ImGuizmo.AllowAxisFlip(false);
         commandList = Factory.CreateCommandList();
         fence = Factory.CreateFence(true);
 
@@ -103,6 +105,7 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
 
     public void BeginEventUpdate(GameTime time)
     {
+        using var _ = CreateProfilerSample?.Invoke("Dear Imgui");
         onceBeforeUpdate.Invoke();
         ImGuiRenderer.BeginEventUpdate(time.Delta);
     }
@@ -120,7 +123,7 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
     public void EndEventUpdate()
     {
         ImGuiRenderer.EndEventUpdate();
-        ImGuizmoNET.ImGuizmo.BeginFrame();
+        //ImGuizmoNET.ImGuizmo.BeginFrame();
 
         var viewport = GetMainViewport();
         SetNextWindowPos(viewport.Pos);
@@ -166,21 +169,29 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
 
     public void Render()
     {
-        foreach (var window in this)
-            window.HandleRender();
-        if (onceFences.Count > 0)
-            Device.WaitForFences(onceFences.ToArray(), true, TimeSpan.FromSeconds(10000.0)); // timeout is a workaround
-        onceFences.Clear();
-
-        if (!fence.Signaled)
-            Device.WaitForFence(fence);
-        fence.Reset();
-        commandList.Begin();
-        commandList.SetFramebuffer(Device.MainSwapchain.Framebuffer);
-        commandList.ClearColorTarget(0, RgbaFloat.Cyan);
-        ImGuiRenderer.Render(Device, commandList);
-        commandList.End();
-        Device.SubmitCommands(commandList, fence);
+        using (CreateProfilerSample?.Invoke("Windows.Submit"))
+        {
+            foreach (var window in this)
+                window.HandleRender();
+        }
+        using (CreateProfilerSample?.Invoke("Windows.Finish"))
+        {
+            if (onceFences.Count > 0)
+                Device.WaitForFences(onceFences.ToArray(), true, TimeSpan.FromSeconds(10000.0)); // timeout is a workaround
+            onceFences.Clear();
+        }
+        using (CreateProfilerSample?.Invoke("Container"))
+        {
+            if (!fence.Signaled)
+                Device.WaitForFence(fence);
+            fence.Reset();
+            commandList.Begin();
+            commandList.SetFramebuffer(Device.MainSwapchain.Framebuffer);
+            commandList.ClearColorTarget(0, RgbaFloat.Cyan);
+            ImGuiRenderer.Render(Device, commandList);
+            commandList.End();
+            Device.SubmitCommands(commandList, fence);
+        }
     }
 
     public void RemoveWindow(BaseWindow window) => windows.Remove(window);

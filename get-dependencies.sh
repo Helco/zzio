@@ -6,10 +6,20 @@ if [[ "$1" != "no-submodule-update" ]]; then
 fi
 
 if [[ "$OSTYPE" == "msys" ]]; then
-    powershell -executionpolicy bypass -File "extern/ImGui.NET/download-native-deps.ps1" -tag 1.90.1 -repository "https://github.com/Helco/ImGui.NET-nativebuild"
+    echo powershell -executionpolicy bypass -File "extern/ImGui.NET/download-native-deps.ps1" -tag 1.90.1 -repository "https://github.com/Helco/ImGui.NET-nativebuild"
 else
     bash extern/ImGui.NET/download-native-deps.sh 1.90.1
 fi
+
+# Why does ImGui use OS-specific downloads again?
+REMOTERY_REPO=https://github.com/Helco/Remotery.NET
+REMOTERY_TAG=1.21.1
+CURL_ARGS="-Lo"
+if [[ "$OSTYPE" == "msys" ]]; then
+    CURL_ARGS="--ssl-no-revoke -Lo" # oh that's why
+fi
+curl $CURL_ARGS "nuget-feed/Remotery.NET.Native.$REMOTERY_TAG.nupkg" --ssl-no-revoke "$REMOTERY_REPO/releases/download/$REMOTERY_TAG/Remotery.NET.Native.$REMOTERY_TAG.nupkg"
+curl $CURL_ARGS "nuget-feed/Remotery.NET.$REMOTERY_TAG.nupkg" --ssl-no-revoke "$REMOTERY_REPO/releases/download/$REMOTERY_TAG/Remotery.NET.$REMOTERY_TAG.nupkg"
 
 DefaultEcsHash=`git -C extern/DefaultEcs rev-parse --short HEAD`
 VeldridHash=`git -C extern/Veldrid rev-parse --short HEAD`
