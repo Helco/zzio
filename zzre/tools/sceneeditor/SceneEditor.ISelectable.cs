@@ -1,4 +1,4 @@
-//using ImGuizmoNET;
+using ImGuizmoNET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -96,13 +96,13 @@ public partial class SceneEditor
             var view = camera.Location.WorldToLocal;
             var projection = camera.Projection;
             var matrix = selected.Location.LocalToWorld;
-            /*ImGuizmo.SetDrawlist();
+            ImGuizmo.SetDrawlist();
             if (ImGuizmo.Manipulate(ref view.M11, ref projection.M11, OPERATION.TRANSLATE, MODE.LOCAL, ref matrix.M11))
             {
                 selected.Location.LocalToWorld = matrix;
                 editor.TriggerSelectionManipulate();
                 HandleNewSelection(selected); // to update the bounds
-            }*/
+            }
         }
 
         private void HandleNewSelection(ISelectable? newSelected)

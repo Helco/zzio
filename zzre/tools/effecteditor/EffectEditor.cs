@@ -5,7 +5,7 @@ using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
 using ImGuiNET;
-//using ImGuizmoNET;
+using ImGuizmoNET;
 using Veldrid;
 using zzio;
 using zzio.effect;
@@ -237,7 +237,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
 
     private void HandleGizmos()
     {
-        /*if (transformMode == TransformMode.None || !effectEntity.TryGet<Location>(out var location))
+        if (transformMode == TransformMode.None || !effectEntity.TryGet<Location>(out var location))
             return;
 
         var operation = transformMode is TransformMode.Move
@@ -250,7 +250,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         {
             location.LocalToWorld = matrix;
             fbArea.IsDirty = true;
-        }*/
+        }
     }
 
     private void HandleRender(CommandList cl)

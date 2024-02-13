@@ -52,8 +52,8 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
 
         var fb = device.MainSwapchain.Framebuffer;
         ImGuiRenderer = new(device, fb.OutputDescription, (int)fb.Width, (int)fb.Height, ColorSpaceHandling.Legacy, callNewFrame: false);
-        //ImGuizmoNET.ImGuizmo.SetImGuiContext(ImGui.GetCurrentContext());
-        //ImGuizmoNET.ImGuizmo.AllowAxisFlip(false);
+        ImGuizmoNET.ImGuizmo.SetImGuiContext(ImGui.GetCurrentContext());
+        ImGuizmoNET.ImGuizmo.AllowAxisFlip(false);
         commandList = Factory.CreateCommandList();
         fence = Factory.CreateFence(true);
 
@@ -123,7 +123,7 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
     public void EndEventUpdate()
     {
         ImGuiRenderer.EndEventUpdate();
-        //ImGuizmoNET.ImGuizmo.BeginFrame();
+        ImGuizmoNET.ImGuizmo.BeginFrame();
 
         var viewport = GetMainViewport();
         SetNextWindowPos(viewport.Pos);
