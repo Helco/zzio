@@ -55,7 +55,7 @@ jobs:
         dotnet build --configuration Release --no-restore --verbosity normal
         dotnet test --configuration Release --no-restore --verbosity normal
     - name: Upload SARIF reports
-      uses: actions/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v3
       if: inputs.sarif-output
       with:
         sarif_file: zzio/sarif-output
