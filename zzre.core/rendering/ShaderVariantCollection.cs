@@ -44,7 +44,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         // but for now we only unload everything at once upon disposal of the collection
     }
 
-    private class BuiltPipeline : IBuiltPipeline
+    private sealed class BuiltPipeline : IBuiltPipeline
     {
         public required ShaderVariant ShaderVariant { get; init; }
         public required Pipeline Pipeline { get; init; }
