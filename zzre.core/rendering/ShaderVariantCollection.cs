@@ -27,9 +27,11 @@ using MlangFillMode = Mlang.Model.FaceFillMode;
 
 namespace zzre.rendering;
 
-public interface IBuiltVariantPipeline : IBuiltPipeline
+public interface IBuiltPipeline
 {
+    Pipeline Pipeline { get; }
     ShaderVariant ShaderVariant { get; }
+    IReadOnlyList<ResourceLayout> ResourceLayouts { get; }
 }
 
 public class ShaderVariantCollection : zzio.BaseDisposable
@@ -42,7 +44,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         // but for now we only unload everything at once upon disposal of the collection
     }
 
-    private class BuiltPipeline : IBuiltVariantPipeline
+    private class BuiltPipeline : IBuiltPipeline
     {
         public required ShaderVariant ShaderVariant { get; init; }
         public required Pipeline Pipeline { get; init; }
@@ -83,7 +85,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
 
     public ShaderInfo GetShaderInfo(string name) => shaderSet.GetShaderInfo(name);
 
-    public IBuiltVariantPipeline GetBuiltPipeline(ShaderVariantKey variantKey)
+    public IBuiltPipeline GetBuiltPipeline(ShaderVariantKey variantKey)
     {
         if (builtPipelines.TryGetValue(variantKey, out var builtShader))
             return builtShader;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Globalization;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using Veldrid;
@@ -10,7 +11,6 @@ using Silk.NET.SDL;
 using Serilog;
 
 using Texture = Veldrid.Texture;
-using Serilog.Core;
 
 namespace zzre;
 
@@ -37,7 +37,11 @@ internal static partial class Program
 
     private static void Main(string[] args)
     {
-        System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+        CultureInfo.DefaultThreadCurrentCulture =
+            CultureInfo.DefaultThreadCurrentUICulture =
+            System.Threading.Thread.CurrentThread.CurrentCulture =
+            System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+
         var rootCommand = new RootCommand("zzre - Engine reimplementation and modding tools for Zanzarah");
         rootCommand.AddGlobalOption(OptionPools);
         rootCommand.AddGlobalOption(OptionDebugLayers);

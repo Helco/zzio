@@ -21,13 +21,13 @@ public class MlangMaterial : BaseDisposable, IMaterial
     private readonly Dictionary<string, BaseBinding?> bindings;
     private readonly string shaderName;
     protected readonly ShaderInfo shaderInfo;
-    private IBuiltVariantPipeline? pipeline;
+    private IBuiltPipeline? pipeline;
     private ResourceSet[]? resourceSets;
 
     public GraphicsDevice Device { get; }
     public string DebugName { get; set; } = "";
 
-    public IBuiltVariantPipeline Pipeline
+    public IBuiltPipeline Pipeline
     {
         get
         {

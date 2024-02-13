@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../CodeQuality.props"/>
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <WarningsAsErrors>NU1605;nullable;CS8618</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>1701;1702;DEA0005,DEA0022</NoWarn>
 
     <Remotery Condition="'$(Remotery)' == '' and '$(Configuration)'=='Debug'">true</Remotery>
     <Remotery Condition="'$(Remotery)' == '' and '$(Configuration)'!='Debug'">false</Remotery>

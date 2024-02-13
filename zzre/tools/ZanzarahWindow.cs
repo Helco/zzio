@@ -108,7 +108,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
         menuBar.AddCheckbox(
             "Controls/Move camera by dragging",
             () => ref moveCamWithDrag,
-            () => MoveCamWithDrag = MoveCamWithDrag);
+            () => MoveCamWithDrag = moveCamWithDrag);
         menuBar.AddButton("Open scene", HandleOpenScene);
         menuBar.AddButton("Debug/ECS Explorer", HandleOpenECSExplorer);
         menuBar.AddButton("Debug/Teleport to scene", selectSceneModal.Modal.Open);
