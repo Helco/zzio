@@ -28,7 +28,7 @@ jobs:
       run: |
         cat get-dependencies.sh > cache-key
         git submodule status >> cache-key
-        mkdir zzio/sarif-output
+        mkdir sarif-output
     - name: Cache local dependencies
       uses: actions/cache@v3
       id: cache-local
@@ -58,5 +58,5 @@ jobs:
       uses: github/codeql-action/upload-sarif@v3
       if: inputs.sarif-report
       with:
-        sarif_file: zzio/sarif-output
+        sarif_file: sarif-output
         checkout_path: zzio
