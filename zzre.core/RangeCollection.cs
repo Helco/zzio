@@ -130,27 +130,13 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
         return newRange;
     }
 
-    public Range? RemoveBestFit(int length)
-    {
-        var range = ranges
-            .Where(r => r.GetLength(MaxRangeValue) >= length)
-            .OrderBy(r => r.GetLength(MaxRangeValue))
-            .FirstOrDefault();
-        if (range.Equals(default))
-            return null;
-        ranges.Remove(range);
-        range = range.Start..range.Start.Offset(length);
-        ranges.Add(range);
-        return range;
-    }
-
     public bool Contains(Range item) =>
         FindIntersections(item)
         .Any(i => Contains(item, i));
 
     public bool Intersects(Range item) => FindIntersections(item).Any();
 
-    public IEnumerable<Range> FindIntersections(Range search) => ranges
+    private IEnumerable<Range> FindIntersections(Range search) => ranges
         .Where(r => Intersects(r, search));
 
     private bool Intersects(Range r1, Range r2) =>
@@ -171,7 +157,7 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
         int mergeStart = -1;
         for (int i = 1; i < rangeCount; i++)
         {
-            int distance = rangeArray[i].Start.GetOffset(MaxRangeValue) - rangeArray[i].End.GetOffset(MaxRangeValue);
+            int distance = rangeArray[i].Start.GetOffset(MaxRangeValue) - rangeArray[i - 1].End.GetOffset(MaxRangeValue);
             if (distance > maxDistance)
             {
                 ApplyMergeUpTo(i);
@@ -191,6 +177,7 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
                 ranges.Remove(rangeArray[i]);
             var mergedRange = rangeArray[mergeStart].Start..rangeArray[endI - 1].End;
             ranges.Add(mergedRange);
+            mergeStart = -1;
         }
     }
 

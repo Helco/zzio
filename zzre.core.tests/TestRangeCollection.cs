@@ -67,35 +67,49 @@ public class TestRangeCollection
     }
 
     [Test]
-    public void AddBestFit()
+    public void AddBestFit_HoleInTheMiddle()
     {
-        // Finds hole in the middle
         var coll = new RangeCollection { 0..3, 7..10 };
         Assert.That(coll.AddBestFit(2), Is.EqualTo(3..5));
         Assert.That(coll, Is.EqualTo(new[] { 0..5, 7..10 }));
+    }
 
-        // Finds hole at the start
-        coll = new RangeCollection { 7..10 };
+    [Test]
+    public void AddBestFit_HoleAtStart()
+    {
+        var coll = new RangeCollection { 7..10 };
         Assert.That(coll.AddBestFit(3), Is.EqualTo(0..3));
         Assert.That(coll, Is.EqualTo(new[] { 0..3, 7..10 }));
+    }
 
-        // Ignores holes that are too small
-        coll = new RangeCollection { 2..5, 7..10, 15..20 };
+    [Test]
+    public void AddBestFit_IgnoresHolesTooSmall()
+    {
+        var coll = new RangeCollection { 2..5, 7..10, 15..20 };
         Assert.That(coll.AddBestFit(4), Is.EqualTo(10..14));
         Assert.That(coll, Is.EqualTo(new[] { 2..5, 7..14, 15..20 }));
+    }
 
-        // Preferes better fitting holes
-        coll = new RangeCollection { 5..10, 13..15 };
+    [Test]
+    public void AddBestFit_PrefersBetterFittingHoles()
+    {
+        var coll = new RangeCollection { 5..10, 13..15 };
         Assert.That(coll.AddBestFit(2), Is.EqualTo(10..12));
         Assert.That(coll, Is.EqualTo(new[] { 5..12, 13..15 }));
+    }
 
-        // Returns null on empty and too small
-        coll = new RangeCollection(5);
+    [Test]
+    public void AddBestFit_ReturnsNullOnEmptyAndTooSmall()
+    {
+        var coll = new RangeCollection(5);
         Assert.That(coll.AddBestFit(10), Is.Null);
         Assert.That(coll, Is.Empty);
+    }
 
-        // Returns null on too small
-        coll = new RangeCollection(10) { 3..8 };
+    [Test]
+    public void AddBestFit_ReturnsNullOnTooSmall()
+    {
+        var coll = new RangeCollection(10) { 3..8 };
         Assert.That(coll.AddBestFit(9), Is.Null);
         Assert.That(coll, Is.EqualTo(new[] { 3..8 }));
     }
@@ -121,5 +135,236 @@ public class TestRangeCollection
 
         Assert.That(coll.Remove(2..18));
         Assert.That(coll, Is.EqualTo(new[] { 0..2, 18..20 }));
+    }
+
+    [Test]
+    public void Contains_Full()
+    {
+        var coll = new RangeCollection(5)
+        {
+            0..5
+        };
+        Assert.That(coll.Contains(0..5));
+    }
+
+    [Test]
+    public void Contains_FullyContained()
+    {
+        var coll = new RangeCollection(10)
+        {
+            2..7
+        };
+        Assert.That(coll.Contains(3..5));
+    }
+
+    [Test]
+    public void Contains_PartiallyContainedFront()
+    {
+        var coll = new RangeCollection(10)
+        {
+            2..7
+        };
+        Assert.That(coll.Contains(0..5), Is.False);
+    }
+
+    [Test]
+    public void Contains_PartiallyContainedBack()
+    {
+        var coll = new RangeCollection(10)
+        {
+            2..7
+        };
+        Assert.That(coll.Contains(5..9), Is.False);
+    }
+
+    [Test]
+    public void Contains_PartiallyContainedMiddle()
+    {
+        var coll = new RangeCollection(10)
+        {
+            2..7
+        };
+        Assert.That(coll.Contains(1..9), Is.False);
+    }
+
+    [Test]
+    public void Contains_HoleInMiddle()
+    {
+        var coll = new RangeCollection(10)
+        {
+            2..4,
+            6..8
+        };
+        Assert.That(coll.Contains(3..7), Is.False);
+    }
+
+    [Test]
+    public void Contains_FullOut()
+    {
+        var coll = new RangeCollection(10)
+        {
+            2..4
+        };
+        Assert.That(coll.Contains(6..8), Is.False);
+    }
+    
+
+    [Test]
+    public void Contains_Empty()
+    {
+        var coll = new RangeCollection(10);
+        Assert.That(coll.Contains(6..8), Is.False);
+    }
+
+    [Test]
+    public void Intersects_Full()
+    {
+        var coll = new RangeCollection(5)
+        {
+            0..5
+        };
+        Assert.That(coll.Intersects(0..5));
+    }
+
+    [Test]
+    public void Intersects_FullyContained()
+    {
+        var coll = new RangeCollection(10)
+        {
+            2..7
+        };
+        Assert.That(coll.Intersects(3..5));
+    }
+
+    [Test]
+    public void Intersects_PartiallyContainedFront()
+    {
+        var coll = new RangeCollection(10)
+        {
+            2..7
+        };
+        Assert.That(coll.Intersects(0..5));
+    }
+
+    [Test]
+    public void Intersects_PartiallyContainedBack()
+    {
+        var coll = new RangeCollection(10)
+        {
+            2..7
+        };
+        Assert.That(coll.Intersects(5..9));
+    }
+
+    [Test]
+    public void Intersects_PartiallyContainedMiddle()
+    {
+        var coll = new RangeCollection(10)
+        {
+            2..7
+        };
+        Assert.That(coll.Intersects(1..9));
+    }
+
+    [Test]
+    public void Intersects_HoleInMiddle()
+    {
+        var coll = new RangeCollection(10)
+        {
+            2..4,
+            6..8
+        };
+        Assert.That(coll.Intersects(3..7));
+    }
+
+    [Test]
+    public void Intersects_FullOut()
+    {
+        var coll = new RangeCollection(10)
+        {
+            2..4
+        };
+        Assert.That(coll.Intersects(6..8), Is.False);
+    }
+
+
+    [Test]
+    public void Intersects_Empty()
+    {
+        var coll = new RangeCollection(10);
+        Assert.That(coll.Intersects(6..8), Is.False);
+    }
+
+    [Test]
+    public void MergeNearbyRanges_Empty()
+    {
+        var coll = new RangeCollection(10);
+        coll.MergeNearbyRanges(5);
+        Assert.That(coll, Is.Empty);
+        coll.MergeNearbyRanges(20);
+        Assert.That(coll, Is.Empty);
+    }
+
+    [Test]
+    public void MergeNearbyRanges_Full()
+    {
+        var coll = new RangeCollection(10) { .. };
+        coll.MergeNearbyRanges(5);
+        Assert.That(coll, Is.EqualTo(new[] { 0..10 }));
+        coll.MergeNearbyRanges(20);
+        Assert.That(coll, Is.EqualTo(new[] { 0..10 }));
+    }
+
+    [Test]
+    public void MergeNearbyRanges_SingleHoleInMiddle()
+    {
+        var coll = new RangeCollection(10)
+        {
+            0..4,
+            6..10
+        };
+        coll.MergeNearbyRanges(5);
+        Assert.That(coll, Is.EqualTo(new[] { 0..10 }));
+    }
+
+    [Test]
+    public void MergeNearbyRanges_IgnoresFrontAndBack()
+    {
+        var coll = new RangeCollection(10)
+        {
+            3..4,
+            6..8
+        };
+        coll.MergeNearbyRanges(5);
+        Assert.That(coll, Is.EqualTo(new[] { 3..8 }));
+    }
+
+    [Test]
+    public void MergeNearbyRanges_MultipleHoles()
+    {
+        var coll = new RangeCollection(10)
+        {
+            0..2,
+            4..6,
+            5..8,
+            9..10
+        };
+        coll.MergeNearbyRanges(5);
+        Assert.That(coll, Is.EqualTo(new[] { 0..10 }));
+    }
+
+    [Test]
+    public void MergeNearbyRanges_DoesNotMergeTooFarApart()
+    {
+        var coll = new RangeCollection(10)
+        {
+            0..1,
+            3..4,
+            // so hole 4..7
+            7..8,
+            9..10
+        };
+        coll.MergeNearbyRanges(2);
+        Assert.That(coll, Is.EqualTo(new[] { 0..4, 7..10 }));
     }
 }
