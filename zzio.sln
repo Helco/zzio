@@ -29,6 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0Common", "0Common", "{FB32
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		CodeQuality.props = CodeQuality.props
+		NoCodeQuality.props = NoCodeQuality.props
 	EndProjectSection
 EndProject
 Global
