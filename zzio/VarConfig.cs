@@ -70,10 +70,11 @@ public class VarConfig
             config.variables[name] = value;
         }
 
-        using var md5 = MD5.Create();
-        byte[] actualChecksum = md5.ComputeHash(buffer, startOfHashed, buffer.Length - startOfHashed);
+#pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
+        var actualChecksum = MD5.HashData(buffer.AsSpan(startOfHashed..));
         if (!actualChecksum.SequenceEqual(expectedChecksum))
             throw new InvalidDataException("VarConfig checksums do not match");
+#pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
 
         return config;
     }
@@ -92,6 +93,7 @@ public class VarConfig
             firstValue.Write(writer);
         }
 
+#pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
         MD5 md5 = MD5.Create();
         CryptoStream hashStream = new(stream, md5, CryptoStreamMode.Write);
         using (var writer = new BinaryWriter(hashStream, Encoding.UTF8, leaveOpen: true))
@@ -100,6 +102,7 @@ public class VarConfig
                 WriteEncryptedString(writer, pair.Key);
                 pair.Value.Write(writer);
             }
+#pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
 
         hashStream.FlushFinalBlock();
         stream.Seek(startPosition, SeekOrigin.Begin);

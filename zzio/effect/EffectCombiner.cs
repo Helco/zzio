@@ -47,7 +47,7 @@ public partial class EffectCombiner
         while (shouldReadNext)
         {
             string sectionName = r.ReadZString();
-            if (!sectionName.StartsWith("[") || !sectionName.EndsWith("]"))
+            if (!sectionName.StartsWith('[') || !sectionName.EndsWith(']'))
                 throw new InvalidDataException("Invalid section name format: \"" + sectionName + "\"");
             sectionName = sectionName[1..^1];
 

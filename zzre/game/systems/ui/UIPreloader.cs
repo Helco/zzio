@@ -10,8 +10,6 @@ namespace zzre.game.systems.ui;
 
 public class UIPreloader
 {
-    private const float ButtonTextSpacing = 10f;
-
     public static readonly FColor DefaultOverlayColor = new(0.029999999f, 0.050000001f, 0.029999999f, 0.8f);
 
     internal readonly DefaultEcs.World UIWorld;

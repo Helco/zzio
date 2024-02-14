@@ -18,7 +18,6 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
     private readonly ITagContainer diContainer;
     private readonly UI ui;
     private readonly GraphicsDevice graphicsDevice;
-    private readonly ResourceFactory resourceFactory;
     private readonly IResourcePool resourcePool;
 
     public UIBitmap(ITagContainer diContainer)
@@ -26,7 +25,6 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
         this.diContainer = diContainer;
         ui = diContainer.GetTag<UI>();
         graphicsDevice = diContainer.GetTag<GraphicsDevice>();
-        resourceFactory = diContainer.GetTag<ResourceFactory>();
         resourcePool = diContainer.GetTag<IResourcePool>();
         Manage(diContainer.GetTag<DefaultEcs.World>());
     }

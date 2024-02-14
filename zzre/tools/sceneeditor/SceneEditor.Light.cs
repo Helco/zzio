@@ -22,10 +22,7 @@ partial class SceneEditor
 {
     private sealed class Light : BaseDisposable, ISelectable
     {
-        private const float PointTriggerSize = 0.1f;
         private const float SelectableSize = 0.2f;
-
-        private readonly ITagContainer diContainer;
 
         public Location Location { get; } = new Location();
         public zzio.scn.Light SceneLight { get; }
@@ -44,7 +41,6 @@ partial class SceneEditor
 
         public Light(ITagContainer diContainer, zzio.scn.Light light, int index)
         {
-            this.diContainer = diContainer;
             SceneLight = light;
             Index = index;
 

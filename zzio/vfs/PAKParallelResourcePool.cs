@@ -73,7 +73,7 @@ public class PAKParallelResourcePool : IResourcePool
         baseOffset = keepAliveStream.Position;
     }
 
-    private class PAKDirectory : IResource
+    private sealed class PAKDirectory : IResource
     {
         public ResourceType Type => ResourceType.Directory;
         public FilePath Path { get; }
@@ -93,7 +93,7 @@ public class PAKParallelResourcePool : IResourcePool
         }
     }
 
-    private class PAKFile : IResource
+    private sealed class PAKFile : IResource
     {
         private readonly PAKParallelResourcePool pool;
         private readonly PAKArchiveEntry entry;

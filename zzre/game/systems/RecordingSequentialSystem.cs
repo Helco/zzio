@@ -8,8 +8,6 @@ namespace zzre.game.systems;
 
 public class RecordingSequentialSystem<T> : ISystem<T>
 {
-    private readonly ITagContainer diContainer;
-    private readonly DefaultEcs.World world;
     private readonly Remotery profiler;
     private readonly List<ISystem<T>> systems = new();
     private readonly List<string> systemNames = new();
@@ -20,8 +18,6 @@ public class RecordingSequentialSystem<T> : ISystem<T>
 
     public RecordingSequentialSystem(ITagContainer diContainer)
     {
-        this.diContainer = diContainer;
-        world = diContainer.GetTag<DefaultEcs.World>();
         profiler = diContainer.GetTag<Remotery>();
         if (!diContainer.TryGetTag(out recorder))
             diContainer.AddTag(recorder = new(1024 * 1024)); // 1MiB should suffice, right?

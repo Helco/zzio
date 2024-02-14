@@ -35,7 +35,7 @@ public class RawInstruction
     {
         var fullMatch = RegexInstruction.Match(instruction.Trim());
         if (!fullMatch.Success)
-            throw new InvalidInstructionException();
+            throw new ArgumentException("Failed to parse instruction", nameof(instruction));
         Command = fullMatch.Groups[1].Value;
 
         if (fullMatch.Groups[2].Length == 0)
@@ -48,7 +48,7 @@ public class RawInstruction
         argumentMatchesColl.CopyTo(argumentMatches, 0);
 
         if (!argumentMatches.Any() || argumentMatches.Any(m => !m.Success))
-            throw new Exception("Assertion failed during syntax error");
+            throw new ArgumentException("Failed to parse instruction arguments");
         Arguments = argumentMatches
             .Select(m => m.Groups[1].Success
                 ? m.Groups[1].Value

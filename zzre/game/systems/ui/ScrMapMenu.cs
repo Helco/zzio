@@ -12,11 +12,8 @@ namespace zzre.game.systems.ui;
 
 public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.ui.OpenMapMenu>
 {
-    private readonly MappedDB db;
-
     public ScrMapMenu(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
     {
-        db = diContainer.GetTag<MappedDB>();
         OnElementDown += HandleElementDown;
     }
 

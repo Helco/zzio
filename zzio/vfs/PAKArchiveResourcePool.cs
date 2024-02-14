@@ -16,7 +16,7 @@ public class PAKArchiveResourcePool : IResourcePool
         this.archive = archive;
     }
 
-    private class PAKDirectory : IResource
+    private sealed class PAKDirectory : IResource
     {
         private readonly PAKArchiveResourcePool pool;
         public ResourceType Type => ResourceType.Directory;
@@ -41,7 +41,7 @@ public class PAKArchiveResourcePool : IResourcePool
             .Select(fileName => new PAKDirectory(pool, this, Path.Combine(fileName)));
     }
 
-    private class PAKFile : IResource
+    private sealed class PAKFile : IResource
     {
         private readonly PAKArchiveResourcePool pool;
         public ResourceType Type => ResourceType.File;

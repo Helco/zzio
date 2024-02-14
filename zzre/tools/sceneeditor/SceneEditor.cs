@@ -12,7 +12,6 @@ namespace zzre.tools;
 
 public partial class SceneEditor : ListDisposable, IDocumentEditor
 {
-    private readonly ITagContainer diContainer;
     private readonly TwoColumnEditorTag editor;
     private readonly FlyControlsTag controls;
     private readonly FramebufferArea fbArea;
@@ -32,7 +31,6 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
 
     public SceneEditor(ITagContainer diContainer)
     {
-        this.diContainer = diContainer;
         resourcePool = diContainer.GetTag<IResourcePool>();
         Window = diContainer.GetTag<WindowContainer>().NewWindow("Scene Editor");
         Window.AddTag(this);

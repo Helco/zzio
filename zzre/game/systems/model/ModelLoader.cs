@@ -12,7 +12,6 @@ using zzre.rendering;
 
 public class ModelLoader : BaseDisposable, ISystem<float>
 {
-    private readonly ITagContainer diContainer;
     private readonly ILogger logger;
     private readonly DefaultEcs.World ecsWorld;
     private readonly IDisposable sceneChangingSubscription;
@@ -26,7 +25,6 @@ public class ModelLoader : BaseDisposable, ISystem<float>
 
     public ModelLoader(ITagContainer diContainer)
     {
-        this.diContainer = diContainer;
         logger = diContainer.GetLoggerFor<ModelLoader>();
         ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
@@ -291,7 +289,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 // TODO: Add shadow to collectable
                 break;
             case BehaviourType.CollectableEffect0:
-            case BehaviourType.Collectable_EFF1:
+            case BehaviourType.CollectableEffect1:
                 entity.Set(new components.behaviour.Collectable() { IsDynamic = false, ModelId = modelId });
                 // TODO: Add 4004 effect to collectable_eff0/1
                 break;

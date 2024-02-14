@@ -12,7 +12,6 @@ namespace zzre.imgui;
 
 public class OpenFileModal : BaseDisposable
 {
-    private const float FilterColumnWidth = 75.0f;
     private const float FileTreeSize = 400.0f;
 
     private readonly IResourcePool pool;

@@ -6,11 +6,8 @@ namespace zzre.game.systems;
 
 public partial class DialogDelay : AEntitySetSystem<float>
 {
-    private readonly Game game;
-
     public DialogDelay(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
-        game = diContainer.GetTag<Game>();
     }
 
     [WithPredicate]

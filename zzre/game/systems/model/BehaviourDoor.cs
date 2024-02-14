@@ -8,7 +8,7 @@ namespace zzre.game.systems;
 
 public partial class BehaviourDoor : AEntitySetSystem<float>
 {
-    private const float MaxLockDistanceSqr = 8f;
+    //private const float MaxLockDistanceSqr = 8f;
     private const float MaxPlayerDistanceSqr = 3f * 3f;
     private const float MaxPlayerYDistance = 1.5f;
     private const float MaxAngle = 90f;

@@ -31,7 +31,6 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private readonly TwoColumnEditorTag editor;
     private readonly Camera camera;
     private readonly OrbitControlsTag controls;
-    private readonly GraphicsDevice device;
     private readonly FramebufferArea fbArea;
     private readonly IResourcePool resourcePool;
     private readonly DebugLineRenderer gridRenderer;
@@ -59,7 +58,6 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     {
         diContainer = parentDiContainer.ExtendedWith(ecsWorld);
         AddDisposable(diContainer);
-        device = diContainer.GetTag<GraphicsDevice>();
         resourcePool = diContainer.GetTag<IResourcePool>();
         gameTime = diContainer.GetTag<GameTime>();
         Window = diContainer.GetTag<WindowContainer>().NewWindow("Effect Editor");

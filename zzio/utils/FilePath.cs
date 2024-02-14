@@ -34,11 +34,11 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
         IsDirectory = isDirectory;
     }
 
-    private static bool hasDrivePart(IReadOnlyList<string> parts) => parts.Any(p => p.EndsWith(":"));
+    private static bool hasDrivePart(IReadOnlyList<string> parts) => parts.Any(p => p.EndsWith(':'));
 
     private static bool isDirectoryPart(string part)
     {
-        return part == "." || part == ".." || part == "~" || part.EndsWith(":");
+        return part == "." || part == ".." || part == "~" || part.EndsWith(':');
     }
 
     /// <summary>Constructs a new path out of a string</summary>
@@ -155,7 +155,7 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
                 return new FilePath(Array.Empty<string>(), PathType.Root, true);
             else if (type == PathType.Drive)
             {
-                string drive = Parts.Last(part => part.EndsWith(":"));
+                string drive = Parts.Last(part => part.EndsWith(':'));
                 return new FilePath(new string[] { drive }, PathType.Drive, true);
             }
             else
@@ -214,7 +214,7 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
                     continue;
                 else if (part == ".." && newParts.Count > 0 && newParts.Last() != "..")
                     newParts.RemoveAt(newParts.Count - 1);
-                else if (part == "~" || part.EndsWith(":"))
+                else if (part == "~" || part.EndsWith(':'))
                 {
                     newParts.Clear();
                     newParts.Add(part);

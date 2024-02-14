@@ -22,11 +22,9 @@ public class TestRaycaster : ListDisposable
         public Func<RaycastObject, Vector3, Raycast, IColor> Shader { get; init; } = (_1, _2, _3) => IColor.Black;
     }
 
-    private readonly ITagContainer diContainer;
     private readonly FramebufferArea fbArea;
     private readonly MouseEventArea mouseEventArea;
     private readonly Camera camera;
-    private readonly FlyControlsTag controls;
     private readonly GraphicsDevice device;
     private readonly IReadOnlyList<RaycastObject> objects;
     private readonly RaycastObject rotatingBox;
@@ -39,7 +37,6 @@ public class TestRaycaster : ListDisposable
 
     public TestRaycaster(ITagContainer diContainer)
     {
-        this.diContainer = diContainer;
         device = diContainer.GetTag<GraphicsDevice>();
         Window = diContainer.GetTag<WindowContainer>().NewWindow("Test Raycaster");
         Window.AddTag(this);
@@ -50,7 +47,7 @@ public class TestRaycaster : ListDisposable
         localDiContainer.AddTag(camera = new Camera(localDiContainer));
         fbArea = new FramebufferArea(Window, device);
         mouseEventArea = new MouseEventArea(Window);
-        controls = new FlyControlsTag(Window, camera.Location, localDiContainer);
+        new FlyControlsTag(Window, camera.Location, localDiContainer);
         AddDisposable(camera);
 
         fbArea.OnResize += OnResize;

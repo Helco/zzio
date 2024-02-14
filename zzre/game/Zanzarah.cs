@@ -31,7 +31,6 @@ public class Zanzarah : ITagContainer
 {
     private const int MaxDatabaseModule = (int)(zzio.db.ModuleType.Dialog + 1); // module filenames are one-based
     private readonly ITagContainer tagContainer;
-    private readonly IZanzarahContainer zanzarahContainer;
     private readonly Remotery profiler;
 
     public Game? CurrentGame { get; private set; }
@@ -45,7 +44,6 @@ public class Zanzarah : ITagContainer
         tagContainer.AddTag(zanzarahContainer);
         tagContainer.AddTag(LoadDatabase());
         tagContainer.AddTag(UI = new UI(this));
-        this.zanzarahContainer = zanzarahContainer;
         profiler = diContainer.GetTag<Remotery>();
 
         // If savegame is null we should probably start the intro and main menu. But this is not implemented yet

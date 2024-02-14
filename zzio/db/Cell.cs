@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 namespace zzio.db;
 
+#pragma warning disable CA1720 // Identifier contains type name
 public enum CellDataType
 {
     // To have a useful default ctor, this types are shifted by one
@@ -182,3 +183,4 @@ public struct Cell : IEquatable<Cell>
         dataWriters[Type](writer, this);
     }
 }
+#pragma warning restore CA1720 // Identifier contains type name

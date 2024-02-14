@@ -23,7 +23,6 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private readonly TwoColumnEditorTag editor;
     private readonly Camera camera;
     private readonly OrbitControlsTag controls;
-    private readonly ImGuiRenderer imGuiRenderer;
     private readonly GraphicsDevice device;
     private readonly FramebufferArea fbArea;
     private readonly IAssetLoader<Texture> textureLoader;
@@ -74,7 +73,6 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             IsFilterChangeable = false
         };
         openFileModal.OnOpenedResource += Load;
-        imGuiRenderer = Window.Container.ImGuiRenderer;
 
         locationBuffer = new LocationBuffer(device);
         AddDisposable(locationBuffer);

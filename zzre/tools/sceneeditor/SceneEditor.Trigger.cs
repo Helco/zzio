@@ -84,7 +84,6 @@ public partial class SceneEditor
         private static readonly IColor NormalColor = IColor.White;
         private static readonly IColor SelectedColor = IColor.Red;
 
-        private readonly ITagContainer diContainer;
         private readonly DebugIconRenderer iconRenderer;
         private readonly IconFont iconFont;
         private readonly SceneEditor editor;
@@ -96,7 +95,6 @@ public partial class SceneEditor
         public TriggerComponent(ITagContainer diContainer)
         {
             diContainer.AddTag(this);
-            this.diContainer = diContainer;
             editor = diContainer.GetTag<SceneEditor>();
             editor.fbArea.OnRender += HandleRender;
             editor.fbArea.OnResize += HandleResize;

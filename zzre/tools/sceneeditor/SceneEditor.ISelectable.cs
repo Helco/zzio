@@ -54,7 +54,6 @@ public partial class SceneEditor
         private const float MinViewDistance = 0.5f;
 
         private readonly SceneEditor editor;
-        private readonly ITagContainer diContainer;
         private readonly Camera camera;
         private readonly DebugLineRenderer boundsRenderer;
 
@@ -64,7 +63,6 @@ public partial class SceneEditor
         public SelectionComponent(ITagContainer diContainer)
         {
             diContainer.AddTag(this);
-            this.diContainer = diContainer;
             editor = diContainer.GetTag<SceneEditor>();
             camera = diContainer.GetTag<Camera>();
             var fbArea = diContainer.GetTag<FramebufferArea>();

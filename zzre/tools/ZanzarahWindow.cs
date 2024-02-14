@@ -25,7 +25,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
 
     private bool MoveCamWithDrag
     {
-        get => moveCamWithDrag;
+        //get => moveCamWithDrag;
         set
         {
             moveCamWithDrag = value;

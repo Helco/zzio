@@ -7,7 +7,6 @@ public partial class SceneEditor
 {
     private sealed class DatasetComponent
     {
-        private readonly ITagContainer diContainer;
         private readonly SceneEditor editor;
         private zzio.scn.Dataset? dataset;
         private zzio.scn.Version? version;
@@ -15,7 +14,6 @@ public partial class SceneEditor
         public DatasetComponent(ITagContainer diContainer)
         {
             diContainer.AddTag(this);
-            this.diContainer = diContainer;
 
             editor = diContainer.GetTag<SceneEditor>();
             editor.OnLoadScene += HandleLoadScene;

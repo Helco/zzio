@@ -42,11 +42,8 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     private static readonly components.ui.ElementId IDTabSupportSpells = new(13);
 
     private static readonly components.ui.ElementId FirstFairySlot = new(20);
-    private static readonly components.ui.ElementId LastFairySlot = new(19 + Inventory.FairySlotCount);
     private static readonly components.ui.ElementId FirstSpellSlot = new(30);
-    private static readonly components.ui.ElementId LastSpellSlot = new(29 + Inventory.FairySlotCount * InventoryFairy.SpellSlotCount);
     private static readonly components.ui.ElementId FirstListCell = new(50);
-    private static readonly components.ui.ElementId LastListCell = new(49 + 6 * 6);
 
     private readonly zzio.db.MappedDB mappedDB;
 

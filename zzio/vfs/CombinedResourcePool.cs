@@ -30,7 +30,7 @@ public class CombinedResourcePool : IResourcePool
         }
     }
 
-    private class CombinedDirectory : IResource
+    private sealed class CombinedDirectory : IResource
     {
         private readonly CombinedResourcePool pool;
         private readonly IResource[] sources;
@@ -61,7 +61,7 @@ public class CombinedResourcePool : IResourcePool
     }
 
     // Combined file is still necessary so the parent reference is correct
-    private class CombinedFile : IResource
+    private sealed class CombinedFile : IResource
     {
         private readonly IResource source;
         public ResourceType Type => ResourceType.File;
