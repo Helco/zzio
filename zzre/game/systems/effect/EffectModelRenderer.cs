@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using DefaultEcs.System;
 using Veldrid;
 using zzre.rendering;
@@ -51,8 +50,10 @@ public partial class EffectModelRenderer : AEntitySetSystem<CommandList>
         bool isFirstDraw = true;
         instanceBuffer.Update(cl);
 
-        foreach (var (subMesh, material) in mesh.SubMeshes.Zip(materials))
+        for (int i = 0; i < materials.Count; i++)
         {
+            var material = materials[i];
+            var subMesh = mesh.SubMeshes[i];
             (material as IMaterial).Apply(cl);
             if (isFirstDraw)
             {

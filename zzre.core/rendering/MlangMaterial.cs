@@ -88,8 +88,10 @@ public class MlangMaterial : BaseDisposable, IMaterial
     public void ApplyBindings(CommandList cl)
     {
         bool isDirty = false;
-        foreach (var binding in bindings.Values.NotNull())
+        foreach (var binding in bindings.Values)
         {
+            if (binding == null)
+                continue;
             binding.Update(cl);
             isDirty |= binding.ResetIsDirty();
         }
@@ -110,8 +112,8 @@ public class MlangMaterial : BaseDisposable, IMaterial
             }
             resourceSets = setDescriptions.Select(Device.ResourceFactory.CreateResourceSet).ToArray();
         }
-        foreach (var (resourceSet, index) in resourceSets.Indexed())
-            cl.SetGraphicsResourceSet((uint)index, resourceSet);
+        for (int i = 0; i < resourceSets.Length; i++)
+            cl.SetGraphicsResourceSet((uint)i, resourceSets[i]);
     }
 
     public void ApplyAttributes(CommandList cl, IVertexAttributeContainer mesh, IVertexAttributeContainer? mesh2 = null, bool requireAll = true)

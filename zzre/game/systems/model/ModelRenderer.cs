@@ -117,8 +117,10 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
             cl.PushDebugGroup(clump.Name);
 
             isFirstDraw = true;
-            foreach (var (subMesh, material) in clump.SubMeshes.Zip(materials))
+            for (int i = 0; i < clump.SubMeshes.Count; i++)
             {
+                var material = materials[i];
+                var subMesh = clump.SubMeshes[i];
                 (material as IMaterial).Apply(cl);
                 if (isFirstDraw)
                 {

@@ -59,7 +59,6 @@ public class BaseMaterial : BaseDisposable, IMaterial
     private readonly BindingSet[] bindingSets;
     public GraphicsDevice Device { get; }
     public IBuiltPipeline Pipeline { get; }
-    public IEnumerable<BaseBinding> Bindings => bindingSets.SelectMany(set => set.Bindings);
 
     protected BaseMaterial(GraphicsDevice device, IBuiltPipeline pipeline)
     {
