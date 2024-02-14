@@ -13,7 +13,7 @@ public partial class NPCIdle : AEntitySetSystem<float>
     private static bool IsIdleNPCState(in components.NPCState value) => value == components.NPCState.Idle;
 
     [Update]
-    private void Update(
+    private static void Update(
         float elapsedTime,
         in DefaultEcs.Entity entity,
         ref components.NPCIdle idle)

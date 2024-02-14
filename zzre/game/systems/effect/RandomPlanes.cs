@@ -57,7 +57,7 @@ public sealed class RandomPlanes : BaseCombinerPart<
         entity.Set(new components.effect.RenderIndices(default));
     }
 
-    private void Reset(ref components.effect.RandomPlanesState state, zzio.effect.parts.RandomPlanes data)
+    private static void Reset(ref components.effect.RandomPlanesState state, zzio.effect.parts.RandomPlanes data)
     {
         state.CurPhase1 = data.phase1 / 1000f;
         state.CurPhase2 = data.phase2 / 1000f;
@@ -99,7 +99,7 @@ public sealed class RandomPlanes : BaseCombinerPart<
         UpdateQuads(parent, ref state, data, ref indices);
     }
 
-    private void UpdatePlane(
+    private static void UpdatePlane(
         float elapsedTime,
         ref components.effect.RandomPlanesState state,
         in zzio.effect.parts.RandomPlanes data,

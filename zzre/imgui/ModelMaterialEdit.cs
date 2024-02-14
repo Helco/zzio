@@ -107,7 +107,7 @@ public class ModelMaterialEdit : BaseDisposable
         return didChange;
     }
 
-    private void TexturePreview(Texture? texture, IntPtr binding)
+    private static void TexturePreview(Texture? texture, IntPtr binding)
     {
         if (texture == null)
             return;

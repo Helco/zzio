@@ -10,7 +10,7 @@ public partial class PuppetActorTarget : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(
+    private static void Update(
         Location myLocation,
         in components.PuppetActorTarget target,
         ref components.PuppetActorMovement movement)

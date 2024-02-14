@@ -54,7 +54,7 @@ internal sealed partial class ECSExplorer
         EndTabBar();
     }
 
-    private void HandleContentFor(DefaultEcs.World world)
+    private static void HandleContentFor(DefaultEcs.World world)
     {
         var entityContentRenderer = new EntityContentRenderer();
 

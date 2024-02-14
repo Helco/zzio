@@ -11,7 +11,7 @@ public partial class CirclingBird : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(float elapsedTime, in Location location, in components.CirclingBird bird)
+    private static void Update(float elapsedTime, in Location location, in components.CirclingBird bird)
     {
         var moveSin = MathF.Sin(elapsedTime * bird.Speed);
         var moveCos = MathF.Cos(elapsedTime * bird.Speed);

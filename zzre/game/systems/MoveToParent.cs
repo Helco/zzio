@@ -10,7 +10,7 @@ public partial class MoveToLocation : AEntitySetSystem<float>
     }
 
     [Update]
-    public void Update(
+    public static void Update(
         Location location,
         in components.MoveToLocation move)
     {

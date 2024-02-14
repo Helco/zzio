@@ -9,7 +9,7 @@ public partial class AdvanceAnimation : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(float elapsedTime, DefaultEcs.Entity entity, ref Skeleton component)
+    private static void Update(float elapsedTime, DefaultEcs.Entity entity, ref Skeleton component)
     {
         var optSpeed= entity.TryGet<components.AnimationSpeed>();
         float factor = optSpeed.HasValue ? optSpeed.Value.Factor : 1f;

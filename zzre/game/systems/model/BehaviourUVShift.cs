@@ -24,7 +24,7 @@ public partial class BehaviourUVShift : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(float elapsedTime, in components.behaviour.UVShift shift, ref components.TexShift texShift)
+    private static void Update(float elapsedTime, in components.behaviour.UVShift shift, ref components.TexShift texShift)
     {
         texShift.Matrix.M31 += shift.Shift * elapsedTime;
     }

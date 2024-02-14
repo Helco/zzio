@@ -61,7 +61,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         CreateFairyButtons(preload, entity, inventory, ref book);
     }
 
-    private void CreateFairyButtons(UIPreloader preload, in DefaultEcs.Entity entity, Inventory inventory, ref components.ui.ScrBookMenu book)
+    private static void CreateFairyButtons(UIPreloader preload, in DefaultEcs.Entity entity, Inventory inventory, ref components.ui.ScrBookMenu book)
     {
         var fairies = book.Fairies;
         for (int i = 0; i < fairies.Length; i++)
@@ -155,12 +155,12 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
 
         preload.CreateLabel(entity)
             .With(Mid + new Vector2(111, 266 + index*17))
-            .WithText(preload.GetLightsIndicator(value))
+            .WithText(UIPreloader.GetLightsIndicator(value))
             .With(preload.Fnt001)
             .Build();
     }
 
-    private Vector2 FairyButtonPos(int fairyI) {
+    private static Vector2 FairyButtonPos(int fairyI) {
         return new Vector2(226 + 45 * (fairyI % 9), 66 + 45 * (fairyI / 9));
     }
 

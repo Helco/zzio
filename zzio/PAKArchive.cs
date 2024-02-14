@@ -95,7 +95,7 @@ public class PAKArchive
     public string[] GetDirectoriesIn(string pathString, bool recursive = true) =>
         GetContentIn(directories.Values, pathString, recursive);
 
-    private string[] GetContentIn(IEnumerable<FilePath> set, string pathString, bool recursive)
+    private static string[] GetContentIn(IEnumerable<FilePath> set, string pathString, bool recursive)
     {
         FilePath dirPath = new(pathString);
         if (!dirPath.StaysInbound)

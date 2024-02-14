@@ -52,7 +52,7 @@ public partial class ActorLighting : AEntitySetSystem<float>
         SetColor(nextColor, actorParts.Wings);
     }
 
-    private void SetColor(FColor color, DefaultEcs.Entity? entity)
+    private static void SetColor(FColor color, DefaultEcs.Entity? entity)
     {
         if (entity is null || !entity.Value.TryGet<ModelMaterial[]>(out var materials))
             return;

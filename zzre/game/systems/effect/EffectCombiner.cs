@@ -104,7 +104,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(
+    private static void Update(
         in DefaultEcs.Entity entity,
         float elapsedTime,
         ref components.effect.CombinerPlayback playback,

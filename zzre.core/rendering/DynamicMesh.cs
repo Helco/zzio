@@ -66,7 +66,7 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
     public int VertexCount => attributes.FirstOrDefault()?.Buffer.Count ?? 0;
     public int IndexCapacity => indexBuffer.ReservedCapacity;
     public int IndexCount => indexBuffer.Count;
-    public IndexFormat IndexFormat => IndexFormat.UInt16;
+    public static IndexFormat IndexFormat => IndexFormat.UInt16;
     public DeviceBuffer IndexBuffer => indexBuffer.Buffer;
 
     public DynamicMesh(ITagContainer diContainer,

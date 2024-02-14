@@ -8,7 +8,7 @@ namespace zzio.tests.utils;
 [TestFixture]
 public class TestGatekeeperStream
 {
-    private void assertStreamClosed(bool expected, Stream stream)
+    private static void assertStreamClosed(bool expected, Stream stream)
     {
         byte[] buffer = new byte[] { 1 };
         bool exceptionWasThrown = false;
@@ -33,7 +33,7 @@ public class TestGatekeeperStream
         assertStreamClosed(true, stream);
     }
 
-    private void testStreamAccess(Stream stream, Func<IResolveConstraint> expectedFact)
+    private static void testStreamAccess(Stream stream, Func<IResolveConstraint> expectedFact)
     {
         Assert.That(() => stream.Write(new byte[] { 3, 4, 5 }, 0, 3), expectedFact());
         Assert.That(() => stream.Read(new byte[3], 0, 3), expectedFact());

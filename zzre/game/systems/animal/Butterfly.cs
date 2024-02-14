@@ -13,7 +13,7 @@ public partial class Butterfly : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(float elapsedTime, in Location location, ref components.Butterfly butterfly)
+    private static void Update(float elapsedTime, in Location location, ref components.Butterfly butterfly)
     {
         var angleDelta = elapsedTime * AngleSpeed;
         butterfly.Angle += angleDelta;

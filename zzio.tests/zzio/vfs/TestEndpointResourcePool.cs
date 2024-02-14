@@ -11,7 +11,7 @@ public class TestEndpointResourcePool
 {
     public static IResourcePool[] testPools = PoolResources.EndpointResourcePools;
 
-    private void VisitResources(IResourcePool pool, Action<IResource> action)
+    private static void VisitResources(IResourcePool pool, Action<IResource> action)
     {
         void visit(IResource res)
         {

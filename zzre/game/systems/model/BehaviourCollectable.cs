@@ -50,7 +50,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         Rotation(elapsedTime, location, collectable);
     }
 
-    private void Aging(
+    private static void Aging(
         float elapsedTime,
         in DefaultEcs.Entity entity,
         ref components.behaviour.Collectable collectable)
@@ -76,7 +76,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
             : targetPos; // TODO: Fix FPS dep. in collectable lerp
     }
 
-    private void Rotation(
+    private static void Rotation(
         float elapsedTime,
         Location location,
         in components.behaviour.Collectable collectable)

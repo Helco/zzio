@@ -162,7 +162,7 @@ public class TestRaycaster : ListDisposable
             0, 0);
     }
 
-    private IColor ShaderSolid(RaycastObject obj, Vector3 _1, Raycast _2) => obj.Color;
+    private static IColor ShaderSolid(RaycastObject obj, Vector3 _1, Raycast _2) => obj.Color;
 
     private IColor ShaderNormal(RaycastObject obj, Vector3 _1, Raycast r) => new(
         (byte)((r.Normal.X + 1f) * 127f),
@@ -170,13 +170,13 @@ public class TestRaycaster : ListDisposable
         (byte)((r.Normal.Z + 1f) * 127f),
         255);
 
-    private IColor ShaderChecker(RaycastObject obj, Vector3 _1, Raycast r)
+    private static IColor ShaderChecker(RaycastObject obj, Vector3 _1, Raycast r)
     {
         int Check(float p) => Math.Abs(((int)Math.Round(p)) % 2);
         return Check(r.Point.X) == Check(r.Point.Z) ? IColor.Red : IColor.Blue;
     }
 
-    private IColor ShaderDistance(RaycastObject obj, Vector3 _1, Raycast r)
+    private static IColor ShaderDistance(RaycastObject obj, Vector3 _1, Raycast r)
     {
         if (r.Distance < 0f)
             return new IColor(255, 0, 255, 255);

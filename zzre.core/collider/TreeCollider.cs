@@ -136,5 +136,5 @@ public abstract partial class TreeCollider : TriangleCollider
         }
     }
 
-    private Plane GetPlane(CollisionSector sector) => new(sector.type.ToNormal(), sector.value);
+    private static Plane GetPlane(CollisionSector sector) => new(sector.type.ToNormal(), sector.value);
 }

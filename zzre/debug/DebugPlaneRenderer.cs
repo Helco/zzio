@@ -66,7 +66,7 @@ public class DebugPlaneRenderer : BaseDisposable
         mesh.Update(cl);
         (Material as IMaterial).Apply(cl);
         Material.ApplyAttributes(cl, mesh);
-        cl.SetIndexBuffer(mesh.IndexBuffer, mesh.IndexFormat);
+        cl.SetIndexBuffer(mesh.IndexBuffer, DynamicMesh.IndexFormat);
         cl.DrawIndexed((uint) mesh.IndexCount);
     }
 }

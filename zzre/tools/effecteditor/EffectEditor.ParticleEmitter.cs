@@ -6,7 +6,7 @@ namespace zzre.tools;
 
 public partial class EffectEditor
 {
-    private void HandlePart(ParticleEmitter data)
+    private static void HandlePart(ParticleEmitter data)
     {
         //Text($"Current: {ren.CurrentParticles} / {ren.MaxParticles}");
         Text($"Current: ? / ?");

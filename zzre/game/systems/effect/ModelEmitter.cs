@@ -112,7 +112,7 @@ public sealed class ModelEmitter : BaseCombinerPart<
         extra.Rotation = random.InLine() * MathF.PI;
     }
 
-    private void UpdateInstance(
+    private static void UpdateInstance(
         ModelInstanceBuffer.InstanceArena instanceArena,
         in components.effect.EmitterState.Particle basic,
         in components.effect.ModelEmitterState.Particle extra)

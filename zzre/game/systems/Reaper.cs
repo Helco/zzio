@@ -10,7 +10,7 @@ public partial class Reaper : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(in DefaultEcs.Entity entity)
+    private static void Update(in DefaultEcs.Entity entity)
     {
         entity.Dispose();
     }

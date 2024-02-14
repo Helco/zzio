@@ -64,7 +64,7 @@ public abstract class BaseScript<TLogContext> : AEntitySetSystem<float>
                     return false;
 
                 case OpReturn.ConditionalSkip:
-                    ConditionalSkip(ref script);
+                    BaseScript<TLogContext>.ConditionalSkip(ref script);
                     break;
 
                 case OpReturn.UnknownInstruction:
@@ -123,7 +123,7 @@ public abstract class BaseScript<TLogContext> : AEntitySetSystem<float>
         }
     }
 
-    private void ConditionalSkip(ref components.ScriptExecution script)
+    private static void ConditionalSkip(ref components.ScriptExecution script)
     {
         script.CurrentI++; // jump over skipping instruction
         for (; script.CurrentI < script.Instructions.Count; script.CurrentI++)

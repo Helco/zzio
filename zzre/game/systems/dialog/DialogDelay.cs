@@ -17,7 +17,7 @@ public partial class DialogDelay : AEntitySetSystem<float>
     private bool IsInDelayState(in components.DialogState state) => state == components.DialogState.Delay;
 
     [Update]
-    private void Update(
+    private static void Update(
         float timeElapsed,
         in DefaultEcs.Entity dialogEntity,
         ref components.DialogDelay delay)

@@ -8,7 +8,7 @@ public class TestLocation
 {
     private const float EPS = 0.0001f;
 
-    private Location SomeLocation1()
+    private static Location SomeLocation1()
     {
         var location = new Location
         {
@@ -17,7 +17,7 @@ public class TestLocation
         };
         return location;
     }
-    private Location SomeLocation2()
+    private static Location SomeLocation2()
     {
         var location = new Location
         {
@@ -26,7 +26,7 @@ public class TestLocation
         };
         return location;
     }
-    private Location SomeLocation3()
+    private static Location SomeLocation3()
     {
         var location = new Location
         {
@@ -35,7 +35,7 @@ public class TestLocation
         };
         return location;
     }
-    private Location SomeLocation()
+    private static Location SomeLocation()
     {
         var l1 = SomeLocation1();
         var l2 = SomeLocation2();

@@ -6,7 +6,7 @@ namespace zzio.tests.utils;
 [TestFixture]
 public class TestPath
 {
-    private T Env<T>(T windows, T posix)
+    private static T Env<T>(T windows, T posix)
     {
         return Environment.OSVersion.Platform == PlatformID.Win32NT
             ? windows : posix;

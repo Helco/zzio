@@ -5,7 +5,7 @@ namespace zzre.game.systems;
 
 partial class DialogScript
 {
-    private string GetScriptSource(in messages.StartDialog message)
+    private static string GetScriptSource(in messages.StartDialog message)
     {
         var dbRow = message.NpcEntity.Get<zzio.db.NpcRow>();
         return message.Cause switch

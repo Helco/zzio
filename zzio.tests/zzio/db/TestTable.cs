@@ -11,7 +11,7 @@ public class TestTable
         Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/table.fbs")
     );
 
-    private void testTable(Table table)
+    private static void testTable(Table table)
     {
         Row row;
         Assert.That(table, Is.Not.Null);

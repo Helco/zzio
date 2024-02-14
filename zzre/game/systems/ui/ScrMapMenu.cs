@@ -61,7 +61,7 @@ public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.
         StdItemId.MapForest,
         StdItemId.MapMountain
     };
-    private uint CollectMaskBits(Inventory inventory) => MapSectionItems
+    private static uint CollectMaskBits(Inventory inventory) => MapSectionItems
         .Select((item, i) => inventory.Contains(item) ? 1u << i : 0u)
         .Aggregate((a, b) => a | b);
 

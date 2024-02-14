@@ -305,7 +305,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             : $"{{104}}{spell.mana}/{dbSpell.MaxMana}";
     }
 
-    private string FormatSummary(Inventory inv, InventoryFairy fairy)
+    private static string FormatSummary(Inventory inv, InventoryFairy fairy)
     {
         var builder = new System.Text.StringBuilder();
         builder.Append(fairy.name);
@@ -359,7 +359,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         var dbSpell = mappedDB.GetSpell(spell.dbUID);
         var mana = dbSpell.Mana == 5 ? "-/-" : $"{spell.mana}/{dbSpell.MaxMana}";
-        return $"{dbSpell.Name}\n{{104}}{mana} {preload.GetSpellPrices(dbSpell)}";
+        return $"{dbSpell.Name}\n{{104}}{mana} {UIPreloader.GetSpellPrices(dbSpell)}";
     }
 
     private void CreateFairyInfos(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
@@ -372,7 +372,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             CreateFairyInfo(entity, ref deck, i);
     }
 
-    private void ResetList(ref components.ui.ScrDeck deck)
+    private static void ResetList(ref components.ui.ScrDeck deck)
     {
         var allEntities = new[]
         {
@@ -386,7 +386,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             Array.Empty<DefaultEcs.Entity>();
     }
 
-    private Vector2 ListCellPos(int column, int row) =>
+    private static Vector2 ListCellPos(int column, int row) =>
         Mid + new Vector2(322 + column * 42, 70 + row * 43);
 
     private DefaultEcs.Resource.ManagedResource<resources.UITileSheetInfo, rendering.TileSheet> ListTileSheet(in components.ui.ScrDeck deck) => deck.ActiveTab switch

@@ -77,7 +77,7 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     private bool IsVisible(in components.Visibility vis) => vis == components.Visibility.Visible;
 
     [Update]
-    private void Update(CommandList cl,
+    private static void Update(CommandList cl,
         in DefaultEcs.Entity entity,
         in ClumpMesh clumpMesh,
         in ModelMaterial[] materials)

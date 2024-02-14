@@ -31,7 +31,7 @@ public class TestPAKArchive
         Assert.That(archive.ContainsFile("../a/Z.txt"), Is.False);
     }
 
-    private void testStream(Stream stream, string expected)
+    private static void testStream(Stream stream, string expected)
     {
         byte[] expectedBuffer = Encoding.UTF8.GetBytes(expected);
         byte[] actualBuffer = new byte[expectedBuffer.Length];

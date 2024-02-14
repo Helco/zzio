@@ -195,7 +195,7 @@ public partial class Label : AEntitySetSystem<float>
         return (curH / 2) - (rootH / 2);
     }
 
-    private components.ui.Tile[] TileWithoutFormatting(in Rect rect, TileSheet tileSheet, string text)
+    private static components.ui.Tile[] TileWithoutFormatting(in Rect rect, TileSheet tileSheet, string text)
     {
         var tiles = new List<components.ui.Tile>(text.Length);
         var cursor = rect.Min;

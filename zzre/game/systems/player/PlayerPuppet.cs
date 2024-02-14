@@ -72,7 +72,7 @@ public partial class PlayerPuppet : AEntitySetSystem<float>
         ActorTargetDirection(physics, ref puppetActorMovement);
     }
 
-    private void Animation(
+    private static void Animation(
         float elapsedTime,
         ref components.PlayerPuppet puppet,
         in components.HumanPhysics physics,
@@ -146,7 +146,7 @@ public partial class PlayerPuppet : AEntitySetSystem<float>
         puppet.DidResetPlanarVelocity = true;
     }
 
-    private void Idling(
+    private static void Idling(
         ref components.PlayerPuppet puppet,
         ref components.HumanPhysics physics)
     {

@@ -187,7 +187,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         };
     }
 
-    private VeldridBlendFactor CreateBlendFactor(MlangBlendFactor f) => f switch
+    private static VeldridBlendFactor CreateBlendFactor(MlangBlendFactor f) => f switch
     {
         MlangBlendFactor.BlendFactor => VeldridBlendFactor.BlendFactor,
         MlangBlendFactor.SrcColor => VeldridBlendFactor.SourceColor,
@@ -204,7 +204,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         _ => throw new NotImplementedException($"Unimplemented Mlang blend factor: {f}")
     };
 
-    private VeldridBlendFunction CreateBlendFunction(MlangBlendFunction f) => f switch
+    private static VeldridBlendFunction CreateBlendFunction(MlangBlendFunction f) => f switch
     {
         MlangBlendFunction.Add => VeldridBlendFunction.Add,
         MlangBlendFunction.Maximum => VeldridBlendFunction.Maximum,
@@ -227,7 +227,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         StencilFront = CreateStencilBehavior(state.StencilFront),
     };
 
-    private StencilBehaviorDescription CreateStencilBehavior(StencilState state) => new()
+    private static StencilBehaviorDescription CreateStencilBehavior(StencilState state) => new()
     {
         Comparison = CreateComparisonKind(state.Comparison),
         Pass = CreateStencilOperation(state.Pass),
@@ -235,7 +235,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         DepthFail = CreateStencilOperation(state.DepthFail),
     };
 
-    private VeldridComparisonKind CreateComparisonKind(MlangComparisonKind kind) => kind switch
+    private static VeldridComparisonKind CreateComparisonKind(MlangComparisonKind kind) => kind switch
     {
         MlangComparisonKind.Always => VeldridComparisonKind.Always,
         MlangComparisonKind.Equal => VeldridComparisonKind.Equal,
@@ -248,7 +248,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         _ => throw new NotImplementedException($"Unimplemented Mlang comparison kind: {kind}")
     };
 
-    private VeldridStencilOperation CreateStencilOperation(MlangStencilOperation op) => op switch
+    private static VeldridStencilOperation CreateStencilOperation(MlangStencilOperation op) => op switch
     {
         MlangStencilOperation.DecrementAndClamp => VeldridStencilOperation.DecrementAndClamp,
         MlangStencilOperation.DecrementAndWrap => VeldridStencilOperation.DecrementAndWrap,
@@ -261,14 +261,14 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         _ => throw new NotImplementedException($"Unimplemented Mlang stencil operation: {op}")
     };
 
-    private OutputDescription CreateOutputDescription(PipelineState state) => new()
+    private static OutputDescription CreateOutputDescription(PipelineState state) => new()
     {
         ColorAttachments = state.ColorOutputs.Select(c => new OutputAttachmentDescription(CreatePixelFormat(c.Value))).ToArray(),
-        DepthAttachment = state.DepthOutput == null ? null : new(CreatePixelFormat(state.DepthOutput.Value)),
+        DepthAttachment = state.DepthOutput == null ? null : new(global::zzre.rendering.ShaderVariantCollection.CreatePixelFormat(state.DepthOutput.Value)),
         SampleCount = CreateSampleCount(state.OutputSamples)
     };
 
-    private VeldridPixelFormat CreatePixelFormat(MlangPixelFormat f) => f switch
+    private static VeldridPixelFormat CreatePixelFormat(MlangPixelFormat f) => f switch
     {
         MlangPixelFormat.B8_G8_R8_A8_UNorm => VeldridPixelFormat.B8_G8_R8_A8_UNorm,
         MlangPixelFormat.B8_G8_R8_A8_UNorm_SRgb => VeldridPixelFormat.B8_G8_R8_A8_UNorm_SRgb,
@@ -317,7 +317,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         _ => throw new NotImplementedException($"Unimplemented Mlang pixel format: {f}")
     };
 
-    private TextureSampleCount CreateSampleCount(byte count) => count switch
+    private static TextureSampleCount CreateSampleCount(byte count) => count switch
     {
         1 => TextureSampleCount.Count1,
         2 => TextureSampleCount.Count2,
@@ -328,7 +328,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         _ => throw new NotSupportedException($"Unsupported sample count: {count}")
     };
 
-    private VeldridPrimitiveTopology CreatePrimitiveTopology(MlangPrimitiveTopology t) => t switch
+    private static VeldridPrimitiveTopology CreatePrimitiveTopology(MlangPrimitiveTopology t) => t switch
     {
         MlangPrimitiveTopology.LineList => VeldridPrimitiveTopology.LineList,
         MlangPrimitiveTopology.LineStrip => VeldridPrimitiveTopology.LineStrip,
@@ -338,7 +338,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         _ => throw new NotImplementedException($"Unimplemented Mlang primitive topology: {t}")
     };
 
-    private RasterizerStateDescription CreateRasterizerState(PipelineState state) => new()
+    private static RasterizerStateDescription CreateRasterizerState(PipelineState state) => new()
     {
         DepthClipEnabled = state.DepthClip,
         ScissorTestEnabled = state.ScissorTest,
@@ -347,14 +347,14 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         FillMode = CreateFillMode(state.FillMode)
     };
 
-    private VeldridFrontFace CreateFrontFace(MlangFrontFace f) => f switch
+    private static VeldridFrontFace CreateFrontFace(MlangFrontFace f) => f switch
     {
         MlangFrontFace.Clockwise => VeldridFrontFace.Clockwise,
         MlangFrontFace.CounterClockwise => VeldridFrontFace.CounterClockwise,
         _ => throw new NotImplementedException($"Unimplemented Mlang front face: {f}")
     };
 
-    private VeldridCullMode CreateCullMode(MlangCullMode m) => m switch
+    private static VeldridCullMode CreateCullMode(MlangCullMode m) => m switch
     {
         MlangCullMode.None => VeldridCullMode.None,
         MlangCullMode.Back => VeldridCullMode.Back,
@@ -362,14 +362,14 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         _ => throw new NotImplementedException($"Unimplemented Mlang cull mode: {m}")
     };
 
-    private VeldridFillMode CreateFillMode(MlangFillMode m) => m switch
+    private static VeldridFillMode CreateFillMode(MlangFillMode m) => m switch
     {
         MlangFillMode.Solid => VeldridFillMode.Solid,
         MlangFillMode.Wireframe => VeldridFillMode.Wireframe,
         _ => throw new NotImplementedException($"Unimplemented Mlang fill mode: {m}")
     };
 
-    private VertexLayoutDescription[] CreateVertexLayouts(ShaderVariant variant) => variant.VertexAttributes.Select(attr => new VertexLayoutDescription()
+    private static VertexLayoutDescription[] CreateVertexLayouts(ShaderVariant variant) => variant.VertexAttributes.Select(attr => new VertexLayoutDescription()
     {
         InstanceStepRate = attr.IsInstance ? 1u : 0u,
         Stride = (uint)(SizeOfScalar(attr.Type) * attr.Type.Rows * attr.Type.Columns),

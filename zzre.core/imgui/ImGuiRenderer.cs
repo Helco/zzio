@@ -447,7 +447,7 @@ namespace zzre.imgui
             io.DeltaTime = deltaSeconds; // DeltaTime is in seconds.
         }
 
-        private bool TryMapKey(KeyCode key, out ImGuiKey result)
+        private static bool TryMapKey(KeyCode key, out ImGuiKey result)
         {
             ImGuiKey keyToImGuiKeyShortcut(KeyCode keyToConvert, KeyCode startKey1, ImGuiKey startKey2)
             {

@@ -11,7 +11,7 @@ public partial class BehaviourRotate : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(float elapsedTime, Location location, in components.behaviour.Rotate rotate)
+    private static void Update(float elapsedTime, Location location, in components.behaviour.Rotate rotate)
     {
         location.LocalRotation *= Quaternion.CreateFromAxisAngle(
             rotate.Axis,

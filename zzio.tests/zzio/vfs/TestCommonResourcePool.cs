@@ -10,7 +10,7 @@ public class TestCommonResourcePool
 {
     public static IResourcePool[] testPools = PoolResources.AllResourcePools;
 
-    private void VisitResources(IResourcePool pool, Action<IResource> action)
+    private static void VisitResources(IResourcePool pool, Action<IResource> action)
     {
         void visit(IResource res)
         {

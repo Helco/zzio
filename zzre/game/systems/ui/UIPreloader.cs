@@ -235,12 +235,12 @@ public class UIPreloader
         return button;
     }
 
-    public string GetSpellPrices(SpellRow spellRow) {
+    public static string GetSpellPrices(SpellRow spellRow) {
         var sheet = spellRow.Type == 0 ? 5 : 4;
         return $"{{{sheet}{(int)spellRow.PriceA}}}{{{sheet}{(int)spellRow.PriceB}}}{{{sheet}{(int)spellRow.PriceC}}}";
     }
 
-    public string GetLightsIndicator(int value) {
+    public static string GetLightsIndicator(int value) {
         return string.Concat(Enumerable.Repeat("{1017}", value)) + string.Concat(Enumerable.Repeat("{1018}", 5-value));
     }
 

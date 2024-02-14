@@ -16,7 +16,7 @@ public partial class FairyAnimation : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(
+    private static void Update(
         float elapsedTime,
         in components.Velocity velocity,
         in components.ActorParts actorParts,
@@ -27,7 +27,7 @@ public partial class FairyAnimation : AEntitySetSystem<float>
         SwitchAnimation(next, actorParts, ref animation);
     }
 
-    private void WingSpeed(
+    private static void WingSpeed(
         float elapsedTime,
         in components.Velocity velocity,
         in components.ActorParts actorParts,
@@ -52,7 +52,7 @@ public partial class FairyAnimation : AEntitySetSystem<float>
         actorParts.Wings.Value.Set(new components.AnimationSpeed(newWingSpeed + 1f));
     }
 
-    private zzio.AnimationType GetNextAnimation(
+    private static zzio.AnimationType GetNextAnimation(
         in components.Velocity velocity,
         in components.FairyAnimation animation)
     {
@@ -91,7 +91,7 @@ public partial class FairyAnimation : AEntitySetSystem<float>
         }
     }
 
-    private void SwitchAnimation(
+    private static void SwitchAnimation(
         zzio.AnimationType nextAnimation,
         in components.ActorParts actorParts,
         ref components.FairyAnimation fairy)

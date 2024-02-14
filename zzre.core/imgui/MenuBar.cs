@@ -89,7 +89,7 @@ public class MenuBar
         EndMenuBar();
     }
 
-    private void UpdateItem(MenuBarItem item)
+    private static void UpdateItem(MenuBarItem item)
     {
         if (item.OnContent != null)
         {

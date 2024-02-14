@@ -10,7 +10,7 @@ public partial class CorrectRenderOrder : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(
+    private static void Update(
         in DefaultEcs.Entity entity,
         in components.ui.RenderOrder renderOrder,
         materials.UIMaterial? material)

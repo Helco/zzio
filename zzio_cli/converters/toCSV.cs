@@ -32,12 +32,12 @@ public class FBStoCSV : IConverter
         }
     }
 
-    private string escapeString(string str)
+    private static string escapeString(string str)
     {
         return "\"" + str.Replace("\"", "\"\"") + "\"";
     }
 
-    private void writeCells(StreamWriter writer, params object[] args)
+    private static void writeCells(StreamWriter writer, params object[] args)
     {
         writer.WriteLine(string.Join(",", args.Select(arg =>
         {
@@ -164,7 +164,7 @@ public class FBStoCSV : IConverter
                 dialog.Voice);
     }
 
-    private void writeUnknownTable(StreamWriter writer, Table table)
+    private static void writeUnknownTable(StreamWriter writer, Table table)
     {
         foreach (Row row in table.rows.Values)
         {

@@ -137,7 +137,7 @@ public partial class NPC : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(float elapsedTime, ref components.NPCState npc)
+    private static void Update(float elapsedTime, ref components.NPCState npc)
     {
     }
 

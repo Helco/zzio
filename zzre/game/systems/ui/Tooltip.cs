@@ -58,5 +58,5 @@ public partial class Tooltip : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update() { }
+    private static void Update() { }
 }

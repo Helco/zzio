@@ -115,7 +115,7 @@ public class TextureAssetLoader : IAssetLoader<Texture>, IAssetLoaderValidation<
         return texture;
     }
 
-    private PixelFormat? TryConvertPixelFormat(Pfim.ImageFormat img) => img switch
+    private static PixelFormat? TryConvertPixelFormat(Pfim.ImageFormat img) => img switch
     {
         Pfim.ImageFormat.Rgb8 => PixelFormat.R8_UNorm,
         Pfim.ImageFormat.Rgba32 => PixelFormat.B8_G8_R8_A8_UNorm,

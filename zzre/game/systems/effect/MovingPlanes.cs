@@ -43,14 +43,14 @@ public sealed class MovingPlanes : BaseCombinerPart<
         entity.Set(new components.effect.RenderIndices(indexRange));
     }
 
-    private void Reset(ref components.effect.MovingPlanesState state, zzio.effect.parts.MovingPlanes data)
+    private static void Reset(ref components.effect.MovingPlanesState state, zzio.effect.parts.MovingPlanes data)
     {
         state.CurRotation = 0f;
         state.CurTexShift = 0f;
         ResetCycle(ref state, data);
     }
 
-    private void ResetCycle(ref components.effect.MovingPlanesState state, zzio.effect.parts.MovingPlanes data)
+    private static void ResetCycle(ref components.effect.MovingPlanesState state, zzio.effect.parts.MovingPlanes data)
     {
         state.CurPhase1 = data.phase1 / 1000f;
         state.CurPhase2 = data.phase2 / 1000f;
@@ -109,7 +109,7 @@ public sealed class MovingPlanes : BaseCombinerPart<
         UpdateQuads(parent, ref state, data, curColor);
     }
 
-    private void AddScale(
+    private static void AddScale(
         ref components.effect.MovingPlanesState state,
         zzio.effect.parts.MovingPlanes data,
         float amount)

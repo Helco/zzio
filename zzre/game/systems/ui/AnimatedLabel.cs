@@ -19,7 +19,7 @@ public partial class AnimatedLabel : AEntitySetSystem<float>
     private bool IsSomethingToDo(in components.ui.AnimatedLabel anim) => !anim.IsDone || anim.IsBlinking;
 
     [Update]
-    private void Update(
+    private static void Update(
         float elapsedTime,
         DefaultEcs.Entity entity,
         ref components.ui.AnimatedLabel anim,
@@ -41,7 +41,7 @@ public partial class AnimatedLabel : AEntitySetSystem<float>
         }
     }
 
-    private void AdvanceSegment(ref components.ui.AnimatedLabel anim)
+    private static void AdvanceSegment(ref components.ui.AnimatedLabel anim)
     {
         var length = anim.FullText.Length;
         if (anim.NextCharI + 2 < length &&
@@ -65,7 +65,7 @@ public partial class AnimatedLabel : AEntitySetSystem<float>
             anim.NextCharI++;
     }
 
-    private string Blink(ref components.ui.AnimatedLabel anim)
+    private static string Blink(ref components.ui.AnimatedLabel anim)
     {
         anim.NextBlinkI = (anim.NextBlinkI + 1) % BlinkTexts.Length;
         return anim.FullText + BlinkTexts[anim.NextBlinkI];

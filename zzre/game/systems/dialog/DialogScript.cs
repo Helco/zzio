@@ -252,17 +252,17 @@ public partial class DialogScript : BaseScript<DialogScript>
         LogUnimplementedInstructionWarning();
     }
 
-    private void TradingCurrency(DefaultEcs.Entity entity, UID uid)
+    private static void TradingCurrency(DefaultEcs.Entity entity, UID uid)
     {
         entity.Set(new messages.DialogTrading(entity, uid, new()));
     }
 
-    private void TradingCard(DefaultEcs.Entity entity, int price, UID uid)
+    private static void TradingCard(DefaultEcs.Entity entity, int price, UID uid)
     {
         entity.Get<messages.DialogTrading>().CardTrades.Add((price, uid));
     }
 
-    private void SetupGambling(DefaultEcs.Entity entity, int count, int type, int id)
+    private static void SetupGambling(DefaultEcs.Entity entity, int count, int type, int id)
     {
         if (!entity.TryGet<messages.DialogGambling>(out var gamblingMessage)){
             entity.Set(new messages.DialogGambling(entity, new()));
@@ -299,13 +299,13 @@ public partial class DialogScript : BaseScript<DialogScript>
         LogUnimplementedInstructionWarning();
     }
 
-    private void Talk(DefaultEcs.Entity entity, UID uid)
+    private static void Talk(DefaultEcs.Entity entity, UID uid)
     {
         // do not publish directly to let two sequential Talk commands override each other
         entity.Set(new messages.DialogTalk(entity, uid));
     }
 
-    private void SetTalkLabels(DefaultEcs.Entity entity, int labelYes, int labelNo, TalkMode mode)
+    private static void SetTalkLabels(DefaultEcs.Entity entity, int labelYes, int labelNo, TalkMode mode)
     {
         entity.Set(mode switch
         {
