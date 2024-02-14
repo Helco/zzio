@@ -214,7 +214,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
         _ => throw new NotImplementedException($"Unimplemented Mlang blend function: {f}")
     };
 
-    private DepthStencilStateDescription CreateDepthStencilState(PipelineState state) => new()
+    private static DepthStencilStateDescription CreateDepthStencilState(PipelineState state) => new()
     {
         DepthComparison = CreateComparisonKind(state.DepthComparison),
         DepthTestEnabled = state.DepthTest,
