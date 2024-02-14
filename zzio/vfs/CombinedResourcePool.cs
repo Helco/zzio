@@ -14,7 +14,7 @@ public class CombinedResourcePool : IResourcePool
 
     public CombinedResourcePool(IResourcePool[] pools)
     {
-        this.pools = [.. pools];
+        this.pools = pools;
     }
 
     private CombinedDirectory GetDirectoryFor(IResource? parent, FilePath path, IEnumerable<IResource> sources)
