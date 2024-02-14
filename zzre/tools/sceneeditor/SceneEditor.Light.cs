@@ -5,7 +5,6 @@ using System.Linq;
 using System.Numerics;
 using IconFonts;
 using ImGuiNET;
-using System.Runtime.CompilerServices;
 using Veldrid;
 using zzio;
 using zzio.scn;
@@ -69,7 +68,7 @@ partial class SceneEditor
         private readonly IconFont iconFont;
         private readonly SceneEditor editor;
 
-        private Light[] lights = Array.Empty<Light>();
+        private Light[] lights = [];
         private bool wasSelected;
         private float iconSize = 128f;
 
@@ -107,7 +106,7 @@ partial class SceneEditor
         {
             foreach (var oldLight in lights)
                 oldLight.Dispose();
-            lights = Array.Empty<Light>();
+            lights = [];
             if (editor.scene == null)
                 return;
 

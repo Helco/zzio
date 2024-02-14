@@ -45,7 +45,7 @@ public struct Cell : IEquatable<Cell>
     public int Integer { get { checkType(CellDataType.Integer); return integerValue; } }
     public byte Byte { get { checkType(CellDataType.Byte); return byteValue; } }
     public ForeignKey ForeignKey { get { checkType(CellDataType.ForeignKey); return foreignKeyValue; } }
-    public byte[] Buffer { get { checkType(CellDataType.Buffer); return bufferValue!.ToArray(); } }
+    public byte[] Buffer { get { checkType(CellDataType.Buffer); return [.. bufferValue!]; } }
 
     public Cell(string value, int columnIndex = -1) : this()
     {
@@ -78,7 +78,7 @@ public struct Cell : IEquatable<Cell>
     public Cell(byte[] value, int columnIndex = -1) : this()
     {
         Type = CellDataType.Buffer;
-        bufferValue = value.ToArray();
+        bufferValue = [.. value];
         ColumnIndex = columnIndex;
     }
 

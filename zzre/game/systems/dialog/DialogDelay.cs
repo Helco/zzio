@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Numerics;
 using DefaultEcs.System;
 
 namespace zzre.game.systems;

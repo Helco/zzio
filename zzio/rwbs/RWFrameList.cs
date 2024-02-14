@@ -21,7 +21,7 @@ public class RWFrameList : StructSection
 {
     public override SectionId sectionId => SectionId.FrameList;
 
-    public Frame[] frames = Array.Empty<Frame>();
+    public Frame[] frames = [];
 
     protected override void readStruct(Stream stream)
     {

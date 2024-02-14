@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Numerics;
-using Silk.NET.SDL;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
 

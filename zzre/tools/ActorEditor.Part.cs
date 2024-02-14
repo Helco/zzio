@@ -81,9 +81,7 @@ public partial class ActorEditor
             SkeletalAnimation LoadAnimation(string filename)
             {
                 var animationPath = new FilePath("resources/models/actorsex/").Combine(filename);
-                using var contentStream = resourcePool.FindAndOpen(animationPath);
-                if (contentStream == null)
-                    throw new IOException($"Could not open animation at {animationPath.ToPOSIXString()}");
+                using var contentStream = resourcePool.FindAndOpen(animationPath) ?? throw new IOException($"Could not open animation at {animationPath.ToPOSIXString()}");
                 var animation = SkeletalAnimation.ReadNew(contentStream);
                 if (skeleton != null && animation.BoneCount != skeleton.Bones.Count)
                     throw new InvalidDataException($"Animation {filename} is incompatible with actor skeleton {modelName}");

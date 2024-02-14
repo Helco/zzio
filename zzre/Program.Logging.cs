@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace zzre; 
+namespace zzre;
 
 partial class Program
 {
@@ -61,7 +57,7 @@ partial class Program
         if (additionalSink != null)
             config.WriteTo.Sink(additionalSink);
 
-        var overrides = ctx.ParseResult.GetValueForOption(OptionLogOverrides) ?? Array.Empty<string>();
+        var overrides = ctx.ParseResult.GetValueForOption(OptionLogOverrides) ?? [];
         foreach (var @override in overrides)
         {
             if (TryParseLogOverride(@override, out var source, out var level))

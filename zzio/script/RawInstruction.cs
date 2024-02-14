@@ -40,7 +40,7 @@ public class RawInstruction
 
         if (fullMatch.Groups[2].Length == 0)
         {
-            Arguments = Array.Empty<string>();
+            Arguments = [];
             return;
         }
         var argumentMatchesColl = RegexArgument.Matches(fullMatch.Groups[2].Value);
@@ -59,7 +59,7 @@ public class RawInstruction
     public RawInstruction(string command, string[] arguments)
     {
         Command = command;
-        Arguments = arguments.ToArray();
+        Arguments = [.. arguments];
     }
 
     public static bool TryParse(string line, [NotNullWhen(true)] out RawInstruction? parsed)

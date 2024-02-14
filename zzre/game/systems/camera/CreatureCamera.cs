@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Numerics;
-using System.Linq;
-using DefaultEcs.System;
 using SubMode = zzre.game.messages.SetCameraMode.SubMode;
 
 namespace zzre.game.systems;

@@ -170,7 +170,7 @@ public class TestRaycaster : ListDisposable
 
     private static IColor ShaderChecker(RaycastObject obj, Vector3 _1, Raycast r)
     {
-        int Check(float p) => Math.Abs(((int)Math.Round(p)) % 2);
+        static int Check(float p) => Math.Abs(((int)Math.Round(p)) % 2);
         return Check(r.Point.X) == Check(r.Point.Z) ? IColor.Red : IColor.Blue;
     }
 

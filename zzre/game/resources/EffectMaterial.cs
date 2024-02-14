@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using DefaultEcs.Resource;
 using Veldrid;
 using zzio;
@@ -39,10 +37,10 @@ public readonly record struct EffectMaterialInfo(
 public class EffectMaterial : AResourceManager<EffectMaterialInfo, materials.EffectMaterial>
 {
     private static readonly FilePath[] TextureBasePaths =
-    {
+    [
         new("resources/textures/effects"),
         new("resources/textures/models")
-    };
+    ];
 
     private readonly ITagContainer diContainer;
     private readonly GraphicsDevice graphicsDevice;

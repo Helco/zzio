@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Numerics;
-using System.Collections.Generic;
 using zzio;
 using zzio.db;
 
@@ -51,7 +50,7 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
             DialogEntity = message.DialogEntity,
             Currency = db.GetItem(message.CurrencyUID),
             CardTrades = message.CardTrades,
-            CardPurchaseButtons = new()
+            CardPurchaseButtons = []
         });
         ref var trading = ref uiEntity.Get<components.DialogTrading>();
 

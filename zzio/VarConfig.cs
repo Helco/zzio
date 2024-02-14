@@ -46,7 +46,7 @@ public class VarConfig
     public byte[] header = new byte[3]; // 3 bytes, meaning unknown
     public VarConfigValue firstValue; // name is always empty
     public Dictionary<string, VarConfigValue> variables =
-        new();
+        [];
 
     public static VarConfig ReadNew(Stream stream)
     {

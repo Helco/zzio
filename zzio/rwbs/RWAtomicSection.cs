@@ -11,13 +11,13 @@ public class RWAtomicSection : StructSection
 
     public uint matIdBase;
     public Vector3 bbox1, bbox2;
-    public Vector3[] vertices = Array.Empty<Vector3>();
-    public Normal[] normals = Array.Empty<Normal>();
-    public IColor[] colors = Array.Empty<IColor>();
+    public Vector3[] vertices = [];
+    public Normal[] normals = [];
+    public IColor[] colors = [];
     public Vector2[]
-        texCoords1 = Array.Empty<Vector2>(),
-        texCoords2 = Array.Empty<Vector2>();
-    public VertexTriangle[] triangles = Array.Empty<VertexTriangle>();
+        texCoords1 = [],
+        texCoords2 = [];
+    public VertexTriangle[] triangles = [];
 
     protected override void readStruct(Stream stream)
     {

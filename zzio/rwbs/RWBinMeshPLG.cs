@@ -25,7 +25,7 @@ public class RWBinMeshPLG : Section
 
     public BinMeshType type;
     public uint totalIndexCount;
-    public SubMesh[] subMeshes = Array.Empty<SubMesh>();
+    public SubMesh[] subMeshes = [];
 
     protected override void readBody(Stream stream)
     {

@@ -15,8 +15,8 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
 {
     private GraphicsDevice Device { get; }
     private ResourceFactory Factory => Device.ResourceFactory;
-    private readonly List<BaseWindow> windows = new();
-    private readonly List<Fence> onceFences = new();
+    private readonly List<BaseWindow> windows = [];
+    private readonly List<Fence> onceFences = [];
     private readonly CommandList commandList;
     private readonly Fence fence;
 
@@ -177,7 +177,7 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
         using (CreateProfilerSample?.Invoke("Windows.Finish"))
         {
             if (onceFences.Count > 0)
-                Device.WaitForFences(onceFences.ToArray(), true, TimeSpan.FromSeconds(10000.0)); // timeout is a workaround
+                Device.WaitForFences([.. onceFences], true, TimeSpan.FromSeconds(10000.0)); // timeout is a workaround
             onceFences.Clear();
         }
         using (CreateProfilerSample?.Invoke("Container"))

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
-using System.Linq;
 using DefaultEcs.System;
 using Veldrid;
 using zzre.materials;
@@ -13,7 +12,7 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
 {
     public record struct Batch(UIMaterial Material, uint Instances);
 
-    private readonly List<Batch> batches = new();
+    private readonly List<Batch> batches = [];
     private readonly UI ui;
     private readonly UIInstanceBuffer instanceBuffer;
     private readonly UIMaterial untexturedMaterial;

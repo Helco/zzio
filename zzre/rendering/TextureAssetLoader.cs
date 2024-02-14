@@ -55,7 +55,7 @@ public class TextureAssetLoader : IAssetLoader<Texture>, IAssetLoaderValidation<
 
     private Texture? TryLoadDDSTexture(IResource resource)
     {
-        Pfim.IImage? TryCreate(Stream stream)
+        static Pfim.IImage? TryCreate(Stream stream)
         {
             try
             {

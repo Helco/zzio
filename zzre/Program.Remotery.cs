@@ -2,17 +2,13 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using RemoteryNET;
-using RemoteryNET.Pretty;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Display;
-using Veldrid;
 using static RemoteryNET.RemoteryPInvoke;
 
 // To make it easier for us the Remotery class and the Remotery bindings package are
@@ -40,7 +36,7 @@ public sealed unsafe class Remotery : IDisposable, ILogEventSink
     private readonly RemoteryInstance* instance;
     private readonly MemoryStream logMemory;
     private readonly StreamWriter logWriter; // StreamWriter having a second buffer is a bit silly here...
-    private readonly Dictionary<string, uint> nameHashCache = new();
+    private readonly Dictionary<string, uint> nameHashCache = [];
     private bool disposedValue;
 
     public Remotery(ITagContainer diContainer, RemoteryInstance* instance)
@@ -155,7 +151,7 @@ public sealed unsafe class Remotery : IDisposable, ILogEventSink
 unsafe partial class Program
 {
 #if REMOTERY
-    private static Option<ushort> OptionRemoteryPort = new(
+    private static readonly Option<ushort> OptionRemoteryPort = new(
         "--remotery-port",
         () => 0,
         "Sets the port for the Remotery server. Use 0 to disable Remotery, 17815 for the default UI port.");

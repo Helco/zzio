@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 
 namespace zzre.game.components;
@@ -7,7 +6,7 @@ namespace zzre.game.components;
 public readonly struct Siblings : IReadOnlyList<DefaultEcs.Entity>
 {
     private readonly DefaultEcs.Entity[] _siblings;
-    private IReadOnlyList<DefaultEcs.Entity> siblings => _siblings ?? Array.Empty<DefaultEcs.Entity>();
+    private IReadOnlyList<DefaultEcs.Entity> siblings => _siblings ?? [];
 
     public Siblings(DefaultEcs.Entity[] siblings) => _siblings = siblings;
 

@@ -9,8 +9,8 @@ namespace zzre.game.systems;
 public class RecordingSequentialSystem<T> : ISystem<T>
 {
     private readonly Remotery profiler;
-    private readonly List<ISystem<T>> systems = new();
-    private readonly List<string> systemNames = new();
+    private readonly List<ISystem<T>> systems = [];
+    private readonly List<string> systemNames = [];
     private readonly EntityCommandRecorder recorder;
 
     public bool IsEnabled { get; set; } = true;

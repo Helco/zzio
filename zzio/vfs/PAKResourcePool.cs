@@ -78,8 +78,8 @@ public class PAKResourcePool : IResourcePool
         public Stream? OpenContent() => null;
         public IEnumerable<IResource> Files => FileList;
         public IEnumerable<IResource> Directories => DirectoryList;
-        public List<PAKFile> FileList { get; } = new List<PAKFile>();
-        public List<PAKDirectory> DirectoryList { get; } = new List<PAKDirectory>();
+        public List<PAKFile> FileList { get; } = [];
+        public List<PAKDirectory> DirectoryList { get; } = [];
 
         public PAKDirectory(IResourcePool pool, PAKDirectory? parent, FilePath path)
         {

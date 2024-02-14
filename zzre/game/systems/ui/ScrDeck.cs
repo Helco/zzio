@@ -2,12 +2,10 @@
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
-using DefaultEcs.System;
 using zzio;
 
 using Tab = zzre.game.components.ui.ScrDeck.Tab;
 using static zzre.game.systems.ui.InGameScreen;
-using Veldrid;
 using Silk.NET.SDL;
 
 namespace zzre.game.systems.ui;
@@ -17,20 +15,20 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     private const int ListRows = 6;
 
     private static readonly UID UIDChooseFairyToSwap = new(0x41912581);
-    private static readonly UID[] UIDSpellSlotNames = new UID[]
-    {
+    private static readonly UID[] UIDSpellSlotNames =
+    [
         new(0x37697321), // First offensive slot
         new(0x8A717321), // First defensive slot
         new(0x0F207721), // Second offensive slot
         new(0x5C577721)  // Second defensive slot
-    };
-    private static readonly UID[] UIDFairyInfoDescriptions = new UID[]
-    {
+    ];
+    private static readonly UID[] UIDFairyInfoDescriptions =
+    [
         new(0x45B032A1), // Current and max HP
         new(0xE58236A1), // Level of your fairy
         new(0xB26B36A1), // XP, current and necessary for next level
         new(0xB26B36A1)
-    };
+    ];
 
     private static readonly components.ui.ElementId IDSliderUp = new(1);
     private static readonly components.ui.ElementId IDSliderDown = new(2);
@@ -63,7 +61,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         entity.Set<components.ui.ScrDeck>();
         ref var deck = ref entity.Get<components.ui.ScrDeck>();
         deck.Inventory = inventory;
-        deck.DeckSlotParents = Array.Empty<DefaultEcs.Entity>();
+        deck.DeckSlotParents = [];
 
         CreateBackgrounds(entity, ref deck);
         CreateListControls(entity, ref deck);
@@ -380,7 +378,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         foreach (var entity in allEntities)
             entity.Dispose();
         deck.ListButtons = deck.ListSummaries = deck.ListUsedMarkers =
-            Array.Empty<DefaultEcs.Entity>();
+            [];
     }
 
     private static Vector2 ListCellPos(int column, int row) =>

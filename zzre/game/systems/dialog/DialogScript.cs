@@ -254,7 +254,7 @@ public partial class DialogScript : BaseScript<DialogScript>
 
     private static void TradingCurrency(DefaultEcs.Entity entity, UID uid)
     {
-        entity.Set(new messages.DialogTrading(entity, uid, new()));
+        entity.Set(new messages.DialogTrading(entity, uid, []));
     }
 
     private static void TradingCard(DefaultEcs.Entity entity, int price, UID uid)
@@ -265,7 +265,7 @@ public partial class DialogScript : BaseScript<DialogScript>
     private static void SetupGambling(DefaultEcs.Entity entity, int count, int type, int id)
     {
         if (!entity.TryGet<messages.DialogGambling>(out var gamblingMessage)){
-            entity.Set(new messages.DialogGambling(entity, new()));
+            entity.Set(new messages.DialogGambling(entity, []));
         }
         for (int i = 0; i < count; i++)
             entity.Get<messages.DialogGambling>().Cards.Add(type == 1 ? id : null);

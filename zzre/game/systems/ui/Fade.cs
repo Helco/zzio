@@ -1,5 +1,4 @@
-﻿using System;
-using DefaultEcs.System;
+﻿using DefaultEcs.System;
 using DefaultEcs.Command;
 
 namespace zzre.game.systems.ui;

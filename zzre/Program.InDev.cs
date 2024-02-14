@@ -1,5 +1,4 @@
-﻿using System;
-using System.CommandLine;
+﻿using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Text.RegularExpressions;
 using Veldrid;
@@ -168,7 +167,7 @@ internal partial class Program
 
     private static void InDevOpenResources(ITagContainer diContainer, InvocationContext ctx)
     {
-        var resourcePaths = ctx.ParseResult.GetValueForOption(OptionInDevOpen) ?? Array.Empty<string>();
+        var resourcePaths = ctx.ParseResult.GetValueForOption(OptionInDevOpen) ?? [];
         var openDocumentSet = diContainer.GetTag<OpenDocumentSet>();
         foreach (var path in resourcePaths)
             openDocumentSet.Open(path);

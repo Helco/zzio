@@ -34,16 +34,16 @@ public class DebugSkeletonRenderer : BaseDisposable
      *        5
      */
     private const int RhombusVertexCount = 6;
-    private static readonly ushort[] RhombusIndices = new ushort[]
-    {
+    private static readonly ushort[] RhombusIndices =
+    [
         0, 2, 1,    0, 3, 2,    0, 4, 3,    0, 1, 4,
         5, 3, 4,    5, 2, 3,    5, 1, 2,    5, 4, 1
-    };
+    ];
     private const float RhombusBaseSize = 0.075f; // based on a rhombus of length 1
     private const float RhombusBaseOffset = 0.1f; // ^
     private const byte Alpha = 120;
     private const float LineLength = 0.1f;
-    private static readonly IColor[] Colors = { IColor.Red.WithA(Alpha), IColor.Green.WithA(Alpha), IColor.Blue.WithA(Alpha) };
+    private static readonly IColor[] Colors = [IColor.Red.WithA(Alpha), IColor.Green.WithA(Alpha), IColor.Blue.WithA(Alpha)];
 
     private readonly LocationBuffer locationBuffer;
     private readonly GraphicsDevice device;

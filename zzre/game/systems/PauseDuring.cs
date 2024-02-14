@@ -38,7 +38,7 @@ public class PauseDuring : ISystem<float>
         systems = allSystems
             .Select(s => (system: s, attribute: Attribute.GetCustomAttribute(s.GetType(), typeof(PauseDuringAttribute)) as PauseDuringAttribute))
             .Where(t => t.attribute != null)
-            .SelectMany(t => t.attribute!.AllTriggers.Select(trigger => (system: t.system, trigger)))
+            .SelectMany(t => t.attribute!.AllTriggers.Select(trigger => (t.system, trigger)))
             .ToLookup(t => t.trigger, t => t.system);
 
         var ecsWorld = diContainer.GetTag<DefaultEcs.World>();

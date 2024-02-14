@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Numerics;
-using zzio;
 
 namespace zzio.scn;
 
@@ -23,7 +22,7 @@ public class DynModel : ISceneSection
     public float f1, f2;
     public Vector3 v1;
     public uint ii1, ii2;
-    public DynModelData[] data = Array.Empty<DynModelData>(); //always three
+    public DynModelData[] data = []; //always three
 
     public void Read(Stream stream)
     {

@@ -1,6 +1,5 @@
 ﻿using DefaultEcs.Resource;
 using zzio;
-using zzio.effect;
 using zzio.vfs;
 
 namespace zzre.game.resources;

@@ -31,8 +31,8 @@ public struct PAKArchiveEntry
 public class PAKArchive
 {
     private readonly Stream stream;
-    private readonly Dictionary<string, PAKArchiveEntry> entries = new();
-    private readonly Dictionary<string, FilePath> directories = new(); // use Dictionary to preserve case
+    private readonly Dictionary<string, PAKArchiveEntry> entries = [];
+    private readonly Dictionary<string, FilePath> directories = []; // use Dictionary to preserve case
     private uint baseOffset;
 
     private PAKArchive(Stream str)

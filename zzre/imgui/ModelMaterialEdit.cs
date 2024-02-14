@@ -19,8 +19,8 @@ public class ModelMaterialEdit : BaseDisposable
     private readonly ResourceFactory resourceFactory;
     private readonly ImGuiRenderer imGuiRenderer;
     private IReadOnlyList<ModelMaterial> materials = Array.Empty<ModelMaterial>();
-    private IntPtr[] textureBindings = Array.Empty<IntPtr>();
-    private OnceAction onceAction;
+    private IntPtr[] textureBindings = [];
+    private readonly OnceAction onceAction;
 
     public bool OpenEntriesByDefault { get; set; } = true;
 

@@ -88,7 +88,7 @@ public partial class SceneEditor
         private readonly IconFont iconFont;
         private readonly SceneEditor editor;
 
-        private Trigger[] triggers = Array.Empty<Trigger>();
+        private Trigger[] triggers = [];
         private bool wasSelected;
         private float iconSize = 128f;
 
@@ -125,7 +125,7 @@ public partial class SceneEditor
         {
             foreach (var oldTrigger in triggers)
                 oldTrigger.Dispose();
-            triggers = Array.Empty<Trigger>();
+            triggers = [];
             if (editor.scene == null)
                 return;
 

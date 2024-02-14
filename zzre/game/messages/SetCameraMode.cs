@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace zzre.game.messages;
+﻿namespace zzre.game.messages;
 
 public record struct SetCameraMode(int Mode, DefaultEcs.Entity TargetEntity)
 {

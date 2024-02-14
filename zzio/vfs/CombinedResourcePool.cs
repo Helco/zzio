@@ -9,12 +9,12 @@ namespace zzio.vfs;
 public class CombinedResourcePool : IResourcePool
 {
     private readonly IResourcePool[] pools;
-    private readonly Dictionary<FilePath, CombinedDirectory> knownDirectories = new();
+    private readonly Dictionary<FilePath, CombinedDirectory> knownDirectories = [];
     public IResource Root => GetDirectoryFor(null, new FilePath(""), pools.Reverse().Select(p => p.Root)); // reverse for easier overwrite behaviour
 
     public CombinedResourcePool(IResourcePool[] pools)
     {
-        this.pools = pools.ToArray();
+        this.pools = [.. pools];
     }
 
     private CombinedDirectory GetDirectoryFor(IResource? parent, FilePath path, IEnumerable<IResource> sources)

@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using DefaultEcs;
+﻿using DefaultEcs;
 using zzre.game.systems.ui;
 
 namespace zzre.game.uibuilder;

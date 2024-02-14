@@ -27,8 +27,8 @@ public class WaypointSystem : ISceneSection
 {
     public uint version;
     public byte[] data = new byte[0x18];
-    public WaypointData[] waypointData = Array.Empty<WaypointData>();
-    public WaypointInnerData[] inner2data1 = Array.Empty<WaypointInnerData>();
+    public WaypointData[] waypointData = [];
+    public WaypointInnerData[] inner2data1 = [];
 
     public void Read(Stream stream)
     {

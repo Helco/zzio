@@ -7,7 +7,7 @@ namespace zzio.db;
 [Serializable]
 public class Table
 {
-    public Dictionary<UID, Row> rows = new();
+    public Dictionary<UID, Row> rows = [];
 
     public void Read(Stream stream)
     {

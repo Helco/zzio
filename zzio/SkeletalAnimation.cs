@@ -41,7 +41,7 @@ public class SkeletalAnimation
 {
     public uint flags; // TODO: Format of flags are still unknown 
     public float duration;
-    public AnimationKeyFrame[][] boneFrames = Array.Empty<AnimationKeyFrame[]>(); // a set of keyframes for every bone
+    public AnimationKeyFrame[][] boneFrames = []; // a set of keyframes for every bone
 
     public int BoneCount => boneFrames.Length;
 

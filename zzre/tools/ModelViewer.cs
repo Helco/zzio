@@ -37,7 +37,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
 
     private ClumpMesh? mesh;
     private GeometryTreeCollider? collider;
-    private ModelMaterial[] materials = Array.Empty<ModelMaterial>();
+    private ModelMaterial[] materials = [];
     private DebugSkeletonRenderer? skeletonRenderer;
     private int highlightedSplitI = -1;
     private bool showNormals;
@@ -113,9 +113,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
 
     public void Load(string pathText)
     {
-        var resource = resourcePool.FindFile(pathText);
-        if (resource == null)
-            throw new FileNotFoundException($"Could not find model at {pathText}");
+        var resource = resourcePool.FindFile(pathText) ?? throw new FileNotFoundException($"Could not find model at {pathText}");
         Load(resource);
     }
 
@@ -280,7 +278,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     {
         highlightedSplitI = splitI;
         triangleRenderer.Clear();
-        planeRenderer.Planes = Array.Empty<DebugPlane>();
+        planeRenderer.Planes = [];
         if (collider == null || mesh == null || highlightedSplitI < 0)
             return;
 
@@ -335,14 +333,17 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         };
         if (centerValue.HasValue)
         {
-            planes = planes.Append(
+            planes =
+            [
+                .. planes,
                 new DebugPlane()
                 {
                     center = planarCenter + normal * centerValue.Value,
                     normal = normal,
                     size = size,
                     color = IColor.Green.WithA(DebugPlaneAlpha)
-                }).ToArray();
+                },
+            ];
         }
         planeRenderer.Planes = planes;
     }

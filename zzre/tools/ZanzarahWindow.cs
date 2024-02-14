@@ -16,8 +16,8 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
     private readonly FramebufferArea fbArea;
     private readonly MouseEventArea mouseArea;
     private readonly OpenFileModal selectSceneModal;
-    private readonly HashSet<KeyCode> keysDown = new();
-    private readonly HashSet<MouseButton> buttonsDown = new();
+    private readonly HashSet<KeyCode> keysDown = [];
+    private readonly HashSet<MouseButton> buttonsDown = [];
     private Action<Vector2>? onMouseMove;
     private bool moveCamWithDrag;
     private ECSExplorer? ecsExplorer;

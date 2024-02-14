@@ -81,9 +81,7 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
             null => null,
             true => ColorComponents.RedGreenBlueAlpha,
             false => ColorComponents.RedGreenBlue
-        });
-        if (result == null)
-            throw new System.IO.InvalidDataException($"Could not decode bitmap {name}{suffix}");
+        }) ?? throw new System.IO.InvalidDataException($"Could not decode bitmap {name}{suffix}");
         return result;
     }
 }

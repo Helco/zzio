@@ -93,7 +93,7 @@ public static class ImGuiEx
     public static bool EnumRadioButtonGroup<T>(ref T value, string[]? labels = null) where T : Enum
     {
         var values = Enum.GetValues(typeof(T)).Cast<T>().ToArray();
-        labels = labels ?? Enum.GetNames(typeof(T));
+        labels ??= Enum.GetNames(typeof(T));
 
         bool hasChanged = false;
         for (int i = 0; i < labels.Length; i++)

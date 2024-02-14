@@ -4,7 +4,6 @@ using System.Numerics;
 using DefaultEcs.System;
 using Veldrid;
 using zzio;
-using zzio.scn;
 using zzre.materials;
 using zzre.rendering;
 
@@ -14,11 +13,11 @@ namespace zzre.game.systems;
 public partial class ActorRenderer : AEntitySetSystem<CommandList>
 {
     private static readonly FilePath[] BaseTexturePaths =
-    {
+    [
         new("resources/textures/actorsex"),
         new("resources/textures/models"),
         new("resources/textures/worlds")
-    };
+    ];
 
     private readonly ITagContainer diContainer;
     private readonly GraphicsDevice graphicsDevice;

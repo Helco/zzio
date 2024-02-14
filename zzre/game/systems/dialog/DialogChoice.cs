@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Linq;
 using System.Numerics;
-using zzio;
-using zzio.db;
 
 namespace zzre.game.systems;
 
@@ -41,13 +38,13 @@ public partial class DialogChoice : ui.BaseScreen<components.DialogChoice, messa
         {
             uiEntity = World.CreateEntity();
             uiEntity.Set(new components.Parent(message.DialogEntity));
-            uiEntity.Set(new components.DialogChoice(message.DialogEntity, Array.Empty<int>()));
+            uiEntity.Set(new components.DialogChoice(message.DialogEntity, []));
         }
         else
             uiEntity = Set.GetEntities()[0];
 
         ref var dialogChoices = ref uiEntity.Get<components.DialogChoice>();
-        dialogChoices = dialogChoices with { Labels = dialogChoices.Labels.Append(message.Label).ToArray() };
+        dialogChoices = dialogChoices with { Labels = [.. dialogChoices.Labels, message.Label] };
 
         var sayLabel = message.DialogEntity.Get<components.DialogCommonUI>().SayLabel;
         var sayLabelPosY = sayLabel.Get<Rect>().Min.Y;

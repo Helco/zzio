@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using Silk.NET.SDL;
 using Veldrid;
 using zzio;
@@ -22,10 +20,9 @@ public unsafe class SdlWindow : BaseDisposable
     public delegate bool EventFilterFunc(SdlWindow window, Event ev);
 
     private readonly Sdl sdl;
-    private readonly List<EventFilterFunc> eventFilters = new();
+    private readonly List<EventFilterFunc> eventFilters = [];
     private Window* window;
     private string title;
-    private int width, height;
 
     public uint WindowID { get; }
     public bool IsOpen => window != null;
@@ -42,16 +39,16 @@ public unsafe class SdlWindow : BaseDisposable
         }
     }
 
-    public int Width => width;
-    public int Height => height;
+    public int Width { get; private set; }
+    public int Height { get; private set; }
 
     public (int w, int h) Size
     {
-        get => (width, height);
+        get => (Width, Height);
         set
         {
             CheckPointer();
-            if (value == (width, height)) return;
+            if (value == (Width, Height)) return;
             sdl.SetWindowSize(window, value.w, value.h);
         }
     }
@@ -71,8 +68,8 @@ public unsafe class SdlWindow : BaseDisposable
     {
         this.sdl = sdl;
         this.title = title;
-        this.width = width;
-        this.height = height;
+        this.Width = width;
+        this.Height = height;
         window = sdl.CreateWindow(title, Sdl.WindowposUndefined, Sdl.WindowposUndefined, width, height, (uint)flags);
         if (window == null)
             ThrowSdlError(nameof(Sdl.CreateWindow));
@@ -122,9 +119,9 @@ public unsafe class SdlWindow : BaseDisposable
         switch((WindowEventID)ev.Window.Event)
         {
             case WindowEventID.SizeChanged:
-                width = ev.Window.Data1;
-                height = ev.Window.Data2;
-                OnResized?.Invoke(width, height);
+                Width = ev.Window.Data1;
+                Height = ev.Window.Data2;
+                OnResized?.Invoke(Width, Height);
                 break;
             case WindowEventID.Close:
                 Dispose();

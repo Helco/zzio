@@ -21,7 +21,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     // note: we do not react to GSModRemoveItem, removing the visual model is done by BehaviourCollectable at the *correct* time
     // while removing it at load is handled here
 
-    private readonly Dictionary<uint, DefaultEcs.Entity> entitiesById = new();
+    private readonly Dictionary<uint, DefaultEcs.Entity> entitiesById = [];
 
     public ModelLoader(ITagContainer diContainer)
     {

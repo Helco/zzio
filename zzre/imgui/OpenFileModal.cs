@@ -15,8 +15,8 @@ public class OpenFileModal : BaseDisposable
     private const float FileTreeSize = 400.0f;
 
     private readonly IResourcePool pool;
-    private readonly List<(IResource res, string nameWithId, int depth)> content = new();
-    private readonly HashSet<IResource> openDirectories = new();
+    private readonly List<(IResource res, string nameWithId, int depth)> content = [];
+    private readonly HashSet<IResource> openDirectories = [];
     private string filterText = "";
     private Regex filterRegex = new("");
     private bool isFirstTreeContent = true;
@@ -151,7 +151,7 @@ public class OpenFileModal : BaseDisposable
 
     private void OpenResource(IResource resource, int parentIndex, int depth)
     {
-        string GetNameWithIdFor(IResource resource) =>
+        static string GetNameWithIdFor(IResource resource) =>
             $"{resource.Name}##{resource.Path.ToPOSIXString()}";
 
         if (parentIndex >= 0)

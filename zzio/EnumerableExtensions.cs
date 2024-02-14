@@ -26,7 +26,7 @@ public static class EnumerableExtensions
 
     public static int IndexOf<T>(this IEnumerable<T> set, T value) => set
         .Indexed()
-        .Where(p => value?.Equals(p.Value) ?? ReferenceEquals(p.Value, null))
+        .Where(p => value?.Equals(p.Value) ?? p.Value is null)
         .Select(prop => prop.Index)
         .Append(-1)
         .First();

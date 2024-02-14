@@ -15,7 +15,7 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
     /// <value>The platform-dependant path separator</value>
     public static string Separator => Environment.OSVersion.Platform == PlatformID.Win32NT ? "\\" : "/";
 
-    private static readonly char[] separators = new char[] { '/', '\\' };
+    private static readonly char[] separators = ['/', '\\'];
 
     private enum PathType
     {
@@ -109,8 +109,8 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
     /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
     public static bool operator ==(FilePath? pathA, object? pathB)
     {
-        if (ReferenceEquals(pathA, null))
-            return ReferenceEquals(pathB, null);
+        if (pathA is null)
+            return pathB is null;
         return pathA.Equals(pathB);
     }
 
@@ -119,8 +119,8 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
     /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
     public static bool operator !=(FilePath? pathA, object? pathB)
     {
-        if (ReferenceEquals(pathA, null))
-            return !ReferenceEquals(pathB, null);
+        if (pathA is null)
+            return pathB is not null;
         return !pathA.Equals(pathB);
     }
 
@@ -207,7 +207,7 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
     {
         get
         {
-            List<string> newParts = new();
+            List<string> newParts = [];
             foreach (string part in Parts)
             {
                 if (part == ".")

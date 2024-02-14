@@ -52,8 +52,8 @@ public class ShaderVariantCollection : zzio.BaseDisposable
     }
 
     private readonly IShaderSet shaderSet;
-    private readonly Dictionary<ShaderVariantKey, BuiltPrograms> builtPrograms = new();
-    private readonly Dictionary<ShaderVariantKey, BuiltPipeline> builtPipelines = new();
+    private readonly Dictionary<ShaderVariantKey, BuiltPrograms> builtPrograms = [];
+    private readonly Dictionary<ShaderVariantKey, BuiltPipeline> builtPipelines = [];
 
     public GraphicsDevice Device { get; }
     public ResourceFactory Factory => Device.ResourceFactory;
@@ -104,7 +104,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
             ShaderSet = new()
             {
                 Shaders = new Shader[] { programs.Vertex, programs.Fragment },
-                Specializations = Array.Empty<SpecializationConstant>(),
+                Specializations = [],
                 VertexLayouts = CreateVertexLayouts(variant)
             }
         });

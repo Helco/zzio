@@ -94,9 +94,7 @@ public partial class ActorEditor : ListDisposable, IDocumentEditor
 
     public void Load(string pathText)
     {
-        var resource = resourcePool.FindFile(pathText);
-        if (resource == null)
-            throw new FileNotFoundException($"Could not find actor at {pathText}");
+        var resource = resourcePool.FindFile(pathText) ?? throw new FileNotFoundException($"Could not find actor at {pathText}");
         Load(resource);
     }
 
@@ -109,9 +107,7 @@ public partial class ActorEditor : ListDisposable, IDocumentEditor
             return;
         CurrentResource = null;
 
-        using var contentStream = resource.OpenContent();
-        if (contentStream == null)
-            throw new IOException($"Could not open actor at {resource.Path.ToPOSIXString()}");
+        using var contentStream = resource.OpenContent() ?? throw new IOException($"Could not open actor at {resource.Path.ToPOSIXString()}");
         description = ActorExDescription.ReadNew(contentStream);
 
         body = new Part(localDiContainer, description.body.model, description.body.animations);

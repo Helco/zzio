@@ -209,7 +209,7 @@ public partial class Label : AEntitySetSystem<float>
                 tiles.Add(new(tileI, TileRect(cursor, pixelSize)));
             cursor.X += pixelSize.X;
         }
-        return tiles.ToArray();
+        return [.. tiles];
     }
 
     private static Rect TileRect(Vector2 cursor, Vector2 pixelSize, float lineOffset = 0f)

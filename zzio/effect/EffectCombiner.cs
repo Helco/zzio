@@ -31,13 +31,13 @@ public partial class EffectCombiner
     public string description = "";
     public bool isLooping;
     public Vector3 upwards, forwards, position;
-    public IEffectPart[] parts = Array.Empty<IEffectPart>();
+    public IEffectPart[] parts = [];
 
     public float Duration => parts.Any() ? parts.Max(p => p.Duration) : 0f;
 
     public void Read(Stream stream)
     {
-        List<IEffectPart> partsList = new();
+        List<IEffectPart> partsList = [];
         using BinaryReader r = new(stream);
 
         if (r.ReadZString() != "[Effect Combiner]")
@@ -82,6 +82,6 @@ public partial class EffectCombiner
             }
         }
 
-        parts = partsList.ToArray();
+        parts = [.. partsList];
     }
 }

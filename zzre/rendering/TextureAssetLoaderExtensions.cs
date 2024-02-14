@@ -105,10 +105,7 @@ public static class TextureAssetLoaderExtensions
             .Select(resourcePool.FindFile)
             .Where(res => res != null)
             .Select(res => loader.TryLoad(res!, out var texture) ? texture : null)
-            .FirstOrDefault(tex => tex != null);
-
-        if (texture == null)
-            throw new InvalidDataException($"Could not load texture {texName}");
+            .FirstOrDefault(tex => tex != null) ?? throw new InvalidDataException($"Could not load texture {texName}");
         texture.Name = texName;
         return texture;
     }

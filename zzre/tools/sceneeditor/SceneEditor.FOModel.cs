@@ -50,7 +50,7 @@ public partial class SceneEditor
             mesh = clumpLoader.Load(new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
             if (mesh.IsEmpty)
             {
-                materials = Array.Empty<ModelMaterial>();
+                materials = [];
                 return;
             }
             materials = mesh.Materials.Select(rwMaterial =>
@@ -145,7 +145,7 @@ public partial class SceneEditor
         private readonly ITagContainer diContainer;
         private readonly SceneEditor editor;
 
-        private FOModel[] models = Array.Empty<FOModel>();
+        private FOModel[] models = [];
         private int detailLevel = 4; // Detail levels from 1, invisible is 0
 
         public FOModelComponent(ITagContainer diContainer)
@@ -171,7 +171,7 @@ public partial class SceneEditor
         {
             foreach (var oldModel in models)
                 oldModel.Dispose();
-            models = Array.Empty<FOModel>();
+            models = [];
             if (editor.scene == null)
                 return;
 

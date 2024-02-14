@@ -21,7 +21,7 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
     private readonly Game game;
     private readonly IDisposable sceneLoadedSubscription;
     private readonly IDisposable addSubscription;
-    private Trigger[] waypoints = Array.Empty<Trigger>();
+    private Trigger[] waypoints = [];
 
     public AnimalWaypointAI(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {

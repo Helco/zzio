@@ -32,7 +32,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
     private readonly components.RenderOrder responsibility;
     private readonly ModelInstanceBuffer instanceBuffer;
 
-    private readonly List<ClumpCount> clumpCounts = new();
+    private readonly List<ClumpCount> clumpCounts = [];
     private ModelInstanceBuffer.InstanceArena? instanceArena;
 
     public ModelRenderer(ITagContainer diContainer, components.RenderOrder responsibility) :

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace zzre.game.components;
+﻿namespace zzre.game.components;
 
 public struct DialogCommonUI
 {

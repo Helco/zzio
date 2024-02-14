@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using DefaultEcs.System;
 using Serilog;
 using Veldrid;
@@ -243,9 +242,7 @@ public class Game : BaseDisposable, ITagContainer
         var resourcePool = GetTag<IResourcePool>();
         SceneResource = resourcePool.FindFile($"resources/worlds/{sceneName}.scn") ??
             throw new System.IO.FileNotFoundException($"Could not find scene: {sceneName}"); ;
-        using var sceneStream = SceneResource.OpenContent();
-        if (sceneStream == null)
-            throw new System.IO.FileNotFoundException($"Could not open scene: {sceneName}");
+        using var sceneStream = SceneResource.OpenContent() ?? throw new System.IO.FileNotFoundException($"Could not open scene: {sceneName}");
         var scene = new Scene();
         scene.Read(sceneStream);
         ecsWorld.Set(scene);

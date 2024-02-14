@@ -16,7 +16,7 @@ public class BaseMaterial : BaseDisposable, IMaterial
         private readonly string parentName;
         private ResourceSet? resourceSet;
 
-        public List<BaseBinding> Bindings { get; } = new List<BaseBinding>();
+        public List<BaseBinding> Bindings { get; } = [];
 
         public BindingSet(ResourceFactory factory, ResourceLayout layout, uint index, string parentName)
         {

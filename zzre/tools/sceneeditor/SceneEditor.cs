@@ -84,9 +84,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
 
     public void Load(string pathText)
     {
-        var resource = resourcePool.FindFile(pathText);
-        if (resource == null)
-            throw new FileNotFoundException($"Could not find world at {pathText}");
+        var resource = resourcePool.FindFile(pathText) ?? throw new FileNotFoundException($"Could not find world at {pathText}");
         Load(resource);
     }
 
@@ -101,9 +99,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         localDiContainer.GetTag<IAssetLoader<Texture>>().Clear();
         localDiContainer.GetTag<IAssetLoader<ClumpMesh>>().Clear();
 
-        using var contentStream = resource.OpenContent();
-        if (contentStream == null)
-            throw new IOException($"Could not open scene at {resource.Path.ToPOSIXString()}");
+        using var contentStream = resource.OpenContent() ?? throw new IOException($"Could not open scene at {resource.Path.ToPOSIXString()}");
         scene = new Scene();
         scene.Read(contentStream);
 

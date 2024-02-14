@@ -1,6 +1,5 @@
 ﻿using IconFonts;
 using ImGuiNET;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -101,7 +100,7 @@ partial class SceneEditor
         private readonly IconFont iconFont;
         private readonly SceneEditor editor;
 
-        private Effect[] effects = Array.Empty<Effect>();
+        private Effect[] effects = [];
         private bool wasSelected;
         private float iconSize = 128f;
 
@@ -139,7 +138,7 @@ partial class SceneEditor
         {
             foreach (var oldEffect in effects)
                 oldEffect.Dispose();
-            effects = Array.Empty<Effect>();
+            effects = [];
             if (editor.scene == null)
                 return;
 

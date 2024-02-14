@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Numerics;
-using zzio;
 
 namespace zzio.rwbs;
 
@@ -10,7 +9,7 @@ public class MorphTarget
 {
     public Vector3 bsphereCenter;
     public float bsphereRadius;
-    public Vector3[] vertices = Array.Empty<Vector3>(), normals = Array.Empty<Vector3>();
+    public Vector3[] vertices = [], normals = [];
 }
 
 [Serializable]
@@ -20,10 +19,10 @@ public class RWGeometry : StructSection
 
     public GeometryFormat format;
     public float ambient, specular, diffuse;
-    public IColor[] colors = Array.Empty<IColor>();
-    public Vector2[][] texCoords = Array.Empty<Vector2[]>();
-    public VertexTriangle[] triangles = Array.Empty<VertexTriangle>();
-    public MorphTarget[] morphTargets = Array.Empty<MorphTarget>();
+    public IColor[] colors = [];
+    public Vector2[][] texCoords = [];
+    public VertexTriangle[] triangles = [];
+    public MorphTarget[] morphTargets = [];
 
     protected override void readStruct(Stream stream)
     {

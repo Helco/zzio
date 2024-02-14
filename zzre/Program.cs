@@ -107,7 +107,7 @@ internal static partial class Program
     {
         var ctx = diContainer.GetTag<InvocationContext>();
         var logger = diContainer.GetLoggerFor<IResourcePool>();
-        var pools = ctx.ParseResult.GetValueForOption(OptionPools) ?? Array.Empty<string>();
+        var pools = ctx.ParseResult.GetValueForOption(OptionPools) ?? [];
         if (!pools.Any())
             logger.Warning("No resource pools selected");
         return pools.Length switch

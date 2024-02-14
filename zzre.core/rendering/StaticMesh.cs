@@ -34,8 +34,8 @@ public class StaticMesh : BaseDisposable, IVertexAttributeContainer
 
     protected readonly GraphicsDevice graphicsDevice;
     protected readonly ResourceFactory resourceFactory;
-    private readonly List<SubMesh> subMeshes = new();
-    private readonly List<VertexAttribute> attributes = new();
+    private readonly List<SubMesh> subMeshes = [];
+    private readonly List<VertexAttribute> attributes = [];
     private DeviceBuffer? indexBuffer;
 
     public IReadOnlyList<SubMesh> SubMeshes => subMeshes;

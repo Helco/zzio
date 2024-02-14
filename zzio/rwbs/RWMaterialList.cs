@@ -8,7 +8,7 @@ public class RWMaterialList : StructSection
 {
     public override SectionId sectionId => SectionId.MaterialList;
 
-    public int[] materialIndices = Array.Empty<int>();
+    public int[] materialIndices = [];
 
     protected override void readStruct(Stream stream)
     {

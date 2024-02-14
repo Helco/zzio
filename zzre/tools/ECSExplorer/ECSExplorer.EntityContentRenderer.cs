@@ -7,8 +7,6 @@ using System.Numerics;
 using System.Reflection;
 using DefaultEcs.Serialization;
 using ImGuiNET;
-using Vulkan;
-using zzre.imgui;
 using static ImGuiNET.ImGui;
 
 internal partial class ECSExplorer
@@ -31,7 +29,7 @@ internal partial class ECSExplorer
         public RenderComponentFunc<T>? Render { get; init; }
     }
 
-    private static readonly Dictionary<Type, LazySortedList<ComponentRenderer>> componentRenderers = new();
+    private static readonly Dictionary<Type, LazySortedList<ComponentRenderer>> componentRenderers = [];
 
     public static void AddComponentRenderer<T>(int prio, RenderComponentFunc<T> render)
     {

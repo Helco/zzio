@@ -8,7 +8,7 @@ namespace zzre;
 
 public class TagContainer : BaseDisposable, ITagContainer
 {
-    private readonly Dictionary<Type, object> tags = new();
+    private readonly Dictionary<Type, object> tags = [];
 
     protected override void DisposeManaged()
     {

@@ -348,7 +348,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private void Pay(ref components.DialogGambling gambling)
     {
         var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
-        inventory.RemoveCards(gambling.Currency.CardId, (uint)pricePerRow);
+        inventory.RemoveCards(gambling.Currency.CardId, pricePerRow);
         gambling.CurrencyLabel.Dispose();
         gambling.CurrencyLabel = preload.CreateCurrencyLabel(gambling.Profile, gambling.Currency, inventory);
     }
@@ -359,7 +359,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private List<int?> CloverleafFilter(List<int?> cards) {
         if (!HasCloverleaf()) return cards;
 
-        List<int?> filteredCards = new();
+        List<int?> filteredCards = [];
         foreach (var card in cards)
             if (card != null || random.NextDouble() >= 0.8)
                 filteredCards.Add(card);

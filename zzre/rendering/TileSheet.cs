@@ -54,8 +54,8 @@ public class TileSheet : IReadOnlyList<Rect>
 
             tileStartX = tileEndX + 1;
         }
-        this.tiles = tiles.ToArray();
-        this.pixelSizes = pixelSizes.ToArray();
+        this.tiles = [.. tiles];
+        this.pixelSizes = [.. pixelSizes];
     }
 
     public Vector2 GetPixelSize(int tileId) => pixelSizes[tileId];
@@ -70,7 +70,7 @@ public class TileSheet : IReadOnlyList<Rect>
         // we need both behaviours in some places but the objectively correct one should be the default
         (text.Count(ch => ch == '\n') + (removeFirstLine ? 0 : 1)) * (overrideLineHeight ?? LineHeight);
 
-    private static readonly char[] SpaceChars = { ' ', '\n' };
+    private static readonly char[] SpaceChars = [' ', '\n'];
     public string WrapLines(string text, float maxWidth)
     {
         var newText = text.ToCharArray();

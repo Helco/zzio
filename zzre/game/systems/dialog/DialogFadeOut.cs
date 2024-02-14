@@ -6,8 +6,8 @@ namespace zzre.game.systems;
 
 public partial class DialogFadeOut : AEntitySetSystem<float>
 {
-    private EntityCommandRecorder recorder;
-    private IDisposable setStateDisposable;
+    private readonly EntityCommandRecorder recorder;
+    private readonly IDisposable setStateDisposable;
 
     public DialogFadeOut(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {

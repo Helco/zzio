@@ -59,7 +59,7 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
     private readonly bool dynamic;
     private readonly string meshName;
     private readonly float minGrowFactor;
-    private readonly List<IAttribute> attributes = new();
+    private readonly List<IAttribute> attributes = [];
     private readonly DynamicGraphicsBuffer indexBuffer;
 
     public int VertexCapacity => attributes.FirstOrDefault()?.Buffer.ReservedCapacity ?? 0;

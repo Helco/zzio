@@ -55,7 +55,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private WorldCollider? worldCollider;
     private RWAtomicSection? sectionAtomic;
     private RWCollision? sectionCollision;
-    private int[] sectionDepths = Array.Empty<int>();
+    private int[] sectionDepths = [];
     private int highlightedSectionI = -1;
     private int highlightedSplitI = -1;
     private bool updateViewFrustumCulling = true;
@@ -156,9 +156,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
 
     public void Load(string pathText)
     {
-        var resource = resourcePool.FindFile(pathText);
-        if (resource == null)
-            throw new FileNotFoundException($"Could not find world at {pathText}");
+        var resource = resourcePool.FindFile(pathText) ?? throw new FileNotFoundException($"Could not find world at {pathText}");
         Load(resource);
     }
 
@@ -359,7 +357,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
             return;
         boundsRenderer.Clear();
         boundsRenderer.AddBox(worldMesh.Sections[index].Bounds, IColor.Red);
-        planeRenderer.Planes = Array.Empty<DebugPlane>();
+        planeRenderer.Planes = [];
 
         if (worldMesh.Sections[index] is WorldMesh.PlaneSection planeSection)
         {
@@ -436,14 +434,17 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         };
         if (centerValue.HasValue)
         {
-            planes = planes.Append(
+            planes =
+            [
+                .. planes,
                 new DebugPlane()
                 {
                     center = planarCenter + normal * centerValue.Value,
                     normal = normal,
                     size = size,
                     color = IColor.Green.WithA(DebugPlaneAlpha)
-                }).ToArray();
+                },
+            ];
         }
         planeRenderer.Planes = planes;
     }

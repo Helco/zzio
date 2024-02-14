@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace zzio;
 
@@ -79,7 +78,7 @@ public class InventoryFairy : InventoryCard
     public uint xpChangeCount;
     public uint xp;
     public readonly SpellReq[] spellReqs = new SpellReq[SpellSlotCount];
-    public readonly int[] spellIndices = new int[SpellSlotCount] { -1, -1, -1, -1 };
+    public readonly int[] spellIndices = [-1, -1, -1, -1];
     public int slotIndex;
     public ZZPermSpellStatus status;
     public readonly byte[] unknown3 = new byte[20];

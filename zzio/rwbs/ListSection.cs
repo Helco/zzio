@@ -8,7 +8,7 @@ namespace zzio.rwbs;
 [Serializable]
 public abstract class ListSection : Section
 {
-    public List<Section> children = new();
+    public List<Section> children = [];
 
     protected override void readBody(Stream stream)
     {

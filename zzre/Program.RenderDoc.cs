@@ -1,5 +1,4 @@
-﻿using System;
-using System.CommandLine.Invocation;
+﻿using System.CommandLine.Invocation;
 using System.CommandLine;
 using Serilog;
 using Silk.NET.SDL;

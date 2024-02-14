@@ -1,7 +1,6 @@
 ﻿using ImGuiNET;
 using System;
 using System.Numerics;
-using Veldrid;
 
 namespace zzre.imgui;
 

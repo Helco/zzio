@@ -1,6 +1,4 @@
-﻿using System;
-using System.Numerics;
-using DefaultEcs.System;
+﻿using System.Numerics;
 using zzio;
 
 namespace zzre.game.systems.ui;
@@ -17,13 +15,13 @@ public static class InGameScreen
     public static readonly components.ui.ElementId IDSaveGame = new(1005);
 
     private record struct TabInfo(components.ui.ElementId Id, int PosX, int TileI, UID TooltipUID, StdItemId Item);
-    private static readonly TabInfo[] Tabs = new TabInfo[]
-    {
+    private static readonly TabInfo[] Tabs =
+    [
         new(IDOpenDeck,      PosX: 553, TileI: 21, TooltipUID: new(0x6659B4A1), StdItemId.FairyBag),
         new(IDOpenRunes,     PosX: 427, TileI: 12, TooltipUID: new(0x6636B4A1), StdItemId.RuneFairyGarden),
         new(IDOpenFairybook, PosX: 469, TileI: 15, TooltipUID: new(0x8D1BBCA1), StdItemId.FairyBook),
         new(IDOpenMap,       PosX: 511, TileI: 18, TooltipUID: new(0xC51E6991), StdItemId.MapFairyGarden)
-    };
+    ];
 
     public static void CreateTopButtons(UIPreloader preload, in DefaultEcs.Entity parent, Inventory inventory, components.ui.ElementId curTab)
     {

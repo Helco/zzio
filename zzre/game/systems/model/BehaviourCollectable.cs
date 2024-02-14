@@ -133,8 +133,8 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         Enumerable.Repeat(StdItemId.HealingHerb, 1)
     }.SelectMany().ToImmutableArray();
 
-    private static readonly ImmutableArray<StdItemId> ItemPoolYYY = new[]
-    {
+    private static readonly ImmutableArray<StdItemId> ItemPoolYYY =
+    [
         StdItemId.SmallHealingPotion,
         StdItemId.SmallHealingPotion,
         StdItemId.SmallHealingPotion,
@@ -145,15 +145,15 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         StdItemId.ManaPotion,
         StdItemId.GarlicDispenser,
         StdItemId.GarlicDispenser
-    }.ToImmutableArray();
+    ];
 
-    private static readonly ImmutableArray<StdItemId> ItemPoolZZZ = new[]
-    {
+    private static readonly ImmutableArray<StdItemId> ItemPoolZZZ =
+    [
         StdItemId.BigHealingPotion,
         StdItemId.BigHealingPotion,
         StdItemId.HealingHerb,
         StdItemId.ManaPotion,
         StdItemId.GarlicDispenser,
         StdItemId.GoldenCarrot
-    }.ToImmutableArray();
+    ];
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -11,7 +10,6 @@ using Veldrid;
 using zzio;
 using zzio.effect;
 using zzio.effect.parts;
-using zzio.scn;
 using zzio.vfs;
 using zzre.imgui;
 using zzre.materials;
@@ -49,7 +47,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private EffectCombiner Effect => loadedEffect ?? emptyEffect;
     private EffectCombiner? loadedEffect;
     private DefaultEcs.Entity effectEntity;
-    private DefaultEcs.Entity[] partEntities = Array.Empty<DefaultEcs.Entity>();
+    private DefaultEcs.Entity[] partEntities = [];
 
     public Window Window { get; }
     public IResource? CurrentResource { get; private set; }
@@ -136,9 +134,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
 
     public void Load(string pathText)
     {
-        var resource = resourcePool.FindFile(pathText);
-        if (resource == null)
-            throw new FileNotFoundException($"Could not find model at {pathText}");
+        var resource = resourcePool.FindFile(pathText) ?? throw new FileNotFoundException($"Could not find model at {pathText}");
         Load(resource);
     }
 
@@ -193,7 +189,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         effectEntity.Dispose();
         foreach (var entity in partEntities)
             entity.Dispose();
-        partEntities = Array.Empty<DefaultEcs.Entity>();
+        partEntities = [];
     }
 
     private void SpawnEffect()
@@ -204,11 +200,14 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
             0, // we do not have the EffectCombiner resource manager, the value here does not matter
             AsEntity: effectEntity,
             Position: Vector3.Zero));
-        partEntities = ecsWorld.GetEntities()
-            .With<game.components.Parent>()
-            .AsEnumerable()
-            .OrderBy(e => e.Get<int>())
-            .ToArray();
+        partEntities =
+        [
+            .. ecsWorld.GetEntities()
+                        .With<game.components.Parent>()
+                        .AsEnumerable()
+                        .OrderBy(e => e.Get<int>())
+,
+        ];
     }
 
     private void ResetEffect()

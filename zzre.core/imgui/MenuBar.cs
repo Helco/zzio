@@ -12,7 +12,7 @@ public class MenuBar
         public string Name { get; }
         public Action<string>? OnContent { get; }
         public MenuBarItem? Parent { get; }
-        public List<MenuBarItem> Children { get; } = new List<MenuBarItem>();
+        public List<MenuBarItem> Children { get; } = [];
 
         public MenuBarItem(MenuBarItem? parent, string name, Action<string>? onClick)
         {
@@ -32,9 +32,7 @@ public class MenuBar
         var parts = path.Split("/");
         foreach (var part in parts[..^1])
         {
-            var nextParent = curParent.Children.FirstOrDefault(i => i.Name.Equals(part, comp));
-            if (nextParent == null)
-                nextParent = new MenuBarItem(curParent, part, null);
+            var nextParent = curParent.Children.FirstOrDefault(i => i.Name.Equals(part, comp)) ?? new MenuBarItem(curParent, part, null);
             curParent = nextParent;
         }
 

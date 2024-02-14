@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using Veldrid;
 using zzio;
 using zzre.materials;
