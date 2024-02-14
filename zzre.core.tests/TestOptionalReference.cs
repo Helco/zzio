@@ -40,7 +40,7 @@ public class TestOptionalReference
         {
             var empty = new OptionalReference<int>();
             int value = empty.Value;
-        }, Throws.InstanceOf<NullReferenceException>());
+        }, Throws.InstanceOf<ArgumentNullException>());
     }
 
     [Test]
