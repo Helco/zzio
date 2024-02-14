@@ -12,7 +12,6 @@ using zzre.rendering;
 
 public class ModelLoader : BaseDisposable, ISystem<float>
 {
-    private readonly ITagContainer diContainer;
     private readonly ILogger logger;
     private readonly DefaultEcs.World ecsWorld;
     private readonly IDisposable sceneChangingSubscription;
@@ -22,11 +21,10 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     // note: we do not react to GSModRemoveItem, removing the visual model is done by BehaviourCollectable at the *correct* time
     // while removing it at load is handled here
 
-    private readonly Dictionary<uint, DefaultEcs.Entity> entitiesById = new();
+    private readonly Dictionary<uint, DefaultEcs.Entity> entitiesById = [];
 
     public ModelLoader(ITagContainer diContainer)
     {
-        this.diContainer = diContainer;
         logger = diContainer.GetLoggerFor<ModelLoader>();
         ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
@@ -150,7 +148,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
             entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model($"itm{msg.ItemId:D3}.dff")));
             LoadMaterialsFor(entity, FOModelRenderType.Solid, IColor.White, new(1f, 1f, 1f));
             SetCollider(entity);
-            SetBehaviour(entity, BehaviourType.Collectable_Physics, uint.MaxValue);
+            SetBehaviour(entity, BehaviourType.CollectablePhysics, uint.MaxValue);
         }
     }
 
@@ -290,12 +288,12 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 entity.Set(new components.behaviour.Collectable() { IsDynamic = false, ModelId = modelId });
                 // TODO: Add shadow to collectable
                 break;
-            case BehaviourType.Collectable_EFF0:
-            case BehaviourType.Collectable_EFF1:
+            case BehaviourType.CollectableEffect0:
+            case BehaviourType.CollectableEffect1:
                 entity.Set(new components.behaviour.Collectable() { IsDynamic = false, ModelId = modelId });
                 // TODO: Add 4004 effect to collectable_eff0/1
                 break;
-            case BehaviourType.Collectable_Physics:
+            case BehaviourType.CollectablePhysics:
                 entity.Set(new components.behaviour.Collectable() { IsDynamic = true, ModelId = modelId });
                 entity.Set<components.behaviour.CollectablePhysics>();
                 break;

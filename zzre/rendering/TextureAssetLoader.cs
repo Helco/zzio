@@ -23,7 +23,7 @@ public class TextureAssetLoader : IAssetLoader<Texture>, IAssetLoaderValidation<
 
     public bool TryLoad(IResource resource, [NotNullWhen(true)] out Texture? texture)
     {
-        var extension = resource.Path.Extension?.ToLower();
+        var extension = resource.Path.Extension?.ToLowerInvariant();
         texture = extension switch
         {
             "dds" => TryLoadDDSTexture(resource),
@@ -55,7 +55,7 @@ public class TextureAssetLoader : IAssetLoader<Texture>, IAssetLoaderValidation<
 
     private Texture? TryLoadDDSTexture(IResource resource)
     {
-        Pfim.IImage? TryCreate(Stream stream)
+        static Pfim.IImage? TryCreate(Stream stream)
         {
             try
             {
@@ -115,7 +115,7 @@ public class TextureAssetLoader : IAssetLoader<Texture>, IAssetLoaderValidation<
         return texture;
     }
 
-    private PixelFormat? TryConvertPixelFormat(Pfim.ImageFormat img) => img switch
+    private static PixelFormat? TryConvertPixelFormat(Pfim.ImageFormat img) => img switch
     {
         Pfim.ImageFormat.Rgb8 => PixelFormat.R8_UNorm,
         Pfim.ImageFormat.Rgba32 => PixelFormat.B8_G8_R8_A8_UNorm,

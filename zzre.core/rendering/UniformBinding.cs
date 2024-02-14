@@ -8,7 +8,7 @@ public abstract class UniformBinding : BaseBinding
     protected abstract uint SizeInBytes { get; }
 
     private DeviceBuffer? buffer; // if set, this buffer is owned
-    private DeviceBufferRange? range = null;
+    private DeviceBufferRange? range;
 
     public bool OwnsBuffer => buffer != null || range?.Buffer == null;
 
@@ -73,7 +73,7 @@ public class UniformBinding<T> : UniformBinding where T : unmanaged
 {
     protected override uint SizeInBytes => (uint)((Marshal.SizeOf<T>() + 15) / 16 * 16); // has to be aligned
 
-    private T value = default;
+    private T value;
     private bool isContentDirty = true;
 
     public ref T Ref

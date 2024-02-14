@@ -16,8 +16,8 @@ public class TwoColumnEditorTag
     private readonly MouseEventArea mouseArea;
     private readonly FramebufferArea fbArea;
 
-    private int didSetColumnWidth = 0;
-    private readonly List<(string name, Action content, bool defaultOpen, Action?)> infoSections = new();
+    private int didSetColumnWidth;
+    private readonly List<(string name, Action content, bool defaultOpen, Action?)> infoSections = [];
 
     public Window Window { get; }
 

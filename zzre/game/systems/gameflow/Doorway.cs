@@ -1,6 +1,5 @@
 ﻿namespace zzre.game.systems;
 using System;
-using System.Linq;
 using DefaultEcs.System;
 using zzio;
 using zzio.db;
@@ -33,6 +32,7 @@ public partial class Doorway : AEntitySetSystem<float>
     {
         base.Dispose();
         doorwayTriggerDisposable.Dispose();
+        enteredDisposable.Dispose();
     }
 
     private void HandleActiveTrigger(in DefaultEcs.Entity entity, in components.ActiveTrigger value)

@@ -1,6 +1,5 @@
 ﻿using IconFonts;
 using ImGuiNET;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +20,7 @@ namespace zzre.tools;
 
 partial class SceneEditor
 {
-    private class Effect : BaseDisposable, ISelectable
+    private sealed class Effect : BaseDisposable, ISelectable
     {
         private const float PointTriggerSize = 0.1f;
         private const float SelectableSize = 0.2f;
@@ -91,7 +90,7 @@ partial class SceneEditor
         }
     }
 
-    private class EffectComponent : BaseDisposable, IEnumerable<ISelectable>
+    private sealed class EffectComponent : BaseDisposable, IEnumerable<ISelectable>
     {
         private static readonly IColor NormalColor = IColor.White;
         private static readonly IColor SelectedColor = IColor.Red;
@@ -101,8 +100,8 @@ partial class SceneEditor
         private readonly IconFont iconFont;
         private readonly SceneEditor editor;
 
-        private Effect[] effects = Array.Empty<Effect>();
-        private bool wasSelected = false;
+        private Effect[] effects = [];
+        private bool wasSelected;
         private float iconSize = 128f;
 
         public EffectComponent(ITagContainer diContainer)
@@ -139,7 +138,7 @@ partial class SceneEditor
         {
             foreach (var oldEffect in effects)
                 oldEffect.Dispose();
-            effects = Array.Empty<Effect>();
+            effects = [];
             if (editor.scene == null)
                 return;
 

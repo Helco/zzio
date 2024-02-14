@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace zzre.game.components;
+﻿namespace zzre.game.components;
 
 public record struct DialogTalkLabels(bool IsLast, int LabelYes, int LabelNo)
 {

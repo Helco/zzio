@@ -6,7 +6,7 @@ namespace zzre.rendering;
 
 public class UniformBuffer<T> : BaseDisposable where T : unmanaged
 {
-    private T value = default;
+    private T value;
     private bool isDirty = true;
 
     public ref T Ref

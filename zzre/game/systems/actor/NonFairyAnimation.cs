@@ -22,7 +22,7 @@ public partial class NonFairyAnimation : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(
+    private static void Update(
         float elapsedTime,
         in components.ActorParts actorParts,
         ref components.NonFairyAnimation animation)
@@ -37,7 +37,7 @@ public partial class NonFairyAnimation : AEntitySetSystem<float>
             Switch(bodySkeleton, pool, ref animation);
     }
 
-    private void Maintain(
+    private static void Maintain(
         Skeleton bodySkeleton,
         in components.AnimationPool pool,
         ref components.NonFairyAnimation animation)
@@ -87,7 +87,7 @@ public partial class NonFairyAnimation : AEntitySetSystem<float>
         Switch(bodySkeleton, bodyPool, ref animation);
     }
 
-    private void Switch(
+    private static void Switch(
         Skeleton bodySkeleton,
         in components.AnimationPool pool,
         ref components.NonFairyAnimation animation)

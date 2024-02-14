@@ -66,7 +66,7 @@ public partial class NPCScript : BaseScript<NPCScript>
         Continue(entity, ref execution);
     }
 
-    private void SetModel(DefaultEcs.Entity entity, string name)
+    private static void SetModel(DefaultEcs.Entity entity, string name)
     {
         if (entity.TryGet<components.ActorParts>(out var oldActorParts))
         {
@@ -97,7 +97,7 @@ public partial class NPCScript : BaseScript<NPCScript>
         World.Publish(new messages.SetCameraMode(3000 + triggerArg, entity));
     }
 
-    private void Wizform(DefaultEcs.Entity entity, int atIndex, int fairyId, int level)
+    private static void Wizform(DefaultEcs.Entity entity, int atIndex, int fairyId, int level)
     {
         var inventory = entity.Get<Inventory>();
         var invFairy = inventory.AddFairy(fairyId);
@@ -119,7 +119,7 @@ public partial class NPCScript : BaseScript<NPCScript>
         }
     }
 
-    private void Spell(DefaultEcs.Entity entity, int fairyI, int slotI, int spellId)
+    private static void Spell(DefaultEcs.Entity entity, int fairyI, int slotI, int spellId)
     {
         var inventory = entity.Get<Inventory>();
         var invFairy = inventory.GetFairyAtSlot(fairyI) ??
@@ -134,7 +134,7 @@ public partial class NPCScript : BaseScript<NPCScript>
         entity.Set(components.NPCState.Waypoint);
     }
 
-    private void LookAtPlayer(DefaultEcs.Entity entity, int intDuration, components.NPCLookAtPlayer.Mode mode)
+    private static void LookAtPlayer(DefaultEcs.Entity entity, int intDuration, components.NPCLookAtPlayer.Mode mode)
     {
         intDuration *= 100;
         float actualDuration = intDuration == 0 || intDuration > 20000
@@ -181,7 +181,7 @@ public partial class NPCScript : BaseScript<NPCScript>
         World.Publish(new messages.NPCMoveSystem(entity, mode, wpCategory));
     }
 
-    private void MovementSpeed(DefaultEcs.Entity entity, int speed)
+    private static void MovementSpeed(DefaultEcs.Entity entity, int speed)
     {
         entity.Get<components.NPCMovement>().Speed = speed * 0.1f;
     }
@@ -198,7 +198,7 @@ public partial class NPCScript : BaseScript<NPCScript>
             World.Publish(messages.LockPlayerControl.Unlock);
     }
 
-    private void PlayAnimation(DefaultEcs.Entity entity, zzio.AnimationType animationType, int intDuration)
+    private static void PlayAnimation(DefaultEcs.Entity entity, zzio.AnimationType animationType, int intDuration)
     {
         intDuration *= 100;
         float actualDuration = intDuration == 0 || intDuration > 20000
@@ -217,7 +217,7 @@ public partial class NPCScript : BaseScript<NPCScript>
             World.Publish(new messages.StartDialog(entity, components.DialogCause.Trigger));
     }
 
-    private void SetNPCType(DefaultEcs.Entity entity, components.NPCType type)
+    private static void SetNPCType(DefaultEcs.Entity entity, components.NPCType type)
     {
         entity.Set(type);
     }
@@ -232,13 +232,13 @@ public partial class NPCScript : BaseScript<NPCScript>
         World.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, triggerI));
     }
 
-    private bool IfCloseToWaypoint(DefaultEcs.Entity entity, int waypointI)
+    private static bool IfCloseToWaypoint(DefaultEcs.Entity entity, int waypointI)
     {
         ref readonly var move = ref entity.Get<components.NPCMovement>();
         return move.CurWaypointId == waypointI;
     }
 
-    private bool IfNPCModifierHasValue(DefaultEcs.Entity entity, int value)
+    private static bool IfNPCModifierHasValue(DefaultEcs.Entity entity, int value)
     {
         return entity.Get<components.NPCModifier>().Value == value;
     }
@@ -291,7 +291,7 @@ public partial class NPCScript : BaseScript<NPCScript>
             DefaultWizform(entity, (int)fairyId, slotI, level);
     }
 
-    private void Idle(DefaultEcs.Entity entity)
+    private static void Idle(DefaultEcs.Entity entity)
     {
         entity.Set(components.NPCIdle.Default);
         entity.Set(components.NPCState.Idle);
@@ -304,7 +304,7 @@ public partial class NPCScript : BaseScript<NPCScript>
         return Vector3.DistanceSquared(location.LocalPosition, playerLocation.LocalPosition) < maxDistSqr;
     }
 
-    private void SetCollision(DefaultEcs.Entity entity, bool isSolid)
+    private static void SetCollision(DefaultEcs.Entity entity, bool isSolid)
     {
         if (isSolid)
             entity.Set<components.Collidable>();
@@ -322,9 +322,9 @@ public partial class NPCScript : BaseScript<NPCScript>
         World.Publish(new messages.CreateItem(itemId, position, count));
     }
 
-    private void Revive(DefaultEcs.Entity entity) => entity.Get<Inventory>().FillMana();
+    private static void Revive(DefaultEcs.Entity entity) => entity.Get<Inventory>().FillMana();
 
-    private void LookAtTrigger(DefaultEcs.Entity entity, int intDuration, int triggerI)
+    private static void LookAtTrigger(DefaultEcs.Entity entity, int intDuration, int triggerI)
     {
         float actualDuration = intDuration == 0 || intDuration > 20000
             ? float.PositiveInfinity

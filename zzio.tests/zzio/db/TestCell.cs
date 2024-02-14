@@ -39,7 +39,7 @@ public class TestCell
         5, 0, 0, 0, 255, 255, 255, 255, 3, 0, 0, 0, 0x37, 0x53, 0x73
     };
 
-    private void testCellType(CellDataType expected, Cell cell)
+    private static void testCellType(CellDataType expected, Cell cell)
     {
         Assert.That(cell.Type, Is.EqualTo(expected));
         if (expected != CellDataType.String)
@@ -79,7 +79,7 @@ public class TestCell
         Assert.That(bufferCell.Buffer, Is.EqualTo(new byte[] { 0x37, 0x53, 0x73 }));
     }
 
-    private void testCellEquality(bool expected, Cell compare, Cell actual)
+    private static void testCellEquality(bool expected, Cell compare, Cell actual)
     {
         Assert.That(compare.Equals(actual), Is.EqualTo(expected));
         bool hashEquality = compare.GetHashCode() == actual.GetHashCode();
@@ -101,7 +101,7 @@ public class TestCell
         testCellEquality(false, cell, new Cell(new byte[] { 13, 0, 0, 0 }, 15));
     }
 
-    private void testCellRead(Cell expected, byte[] sourceBytes)
+    private static void testCellRead(Cell expected, byte[] sourceBytes)
     {
         MemoryStream stream = new(sourceBytes, false);
         using BinaryReader reader = new(stream);
@@ -119,7 +119,7 @@ public class TestCell
         testCellRead(bufferCell, bufferCellBytes);
     }
 
-    private void testCellWrite(byte[] expected, Cell sourceCell)
+    private static void testCellWrite(byte[] expected, Cell sourceCell)
     {
         MemoryStream stream = new();
         using BinaryWriter writer = new(stream);

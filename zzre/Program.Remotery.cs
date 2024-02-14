@@ -1,19 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
 using RemoteryNET;
-using RemoteryNET.Pretty;
-using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+#if DEBUG
+using System.Collections.Generic;
+using System.CommandLine.Invocation;
+using System.IO;
+using System.Text;
+using Serilog;
 using Serilog.Formatting.Display;
-using Veldrid;
 using static RemoteryNET.RemoteryPInvoke;
+#endif
 
 // To make it easier for us the Remotery class and the Remotery bindings package are
 // always available to the application with equal interfaces
@@ -40,7 +38,7 @@ public sealed unsafe class Remotery : IDisposable, ILogEventSink
     private readonly RemoteryInstance* instance;
     private readonly MemoryStream logMemory;
     private readonly StreamWriter logWriter; // StreamWriter having a second buffer is a bit silly here...
-    private readonly Dictionary<string, uint> nameHashCache = new();
+    private readonly Dictionary<string, uint> nameHashCache = [];
     private bool disposedValue;
 
     public Remotery(ITagContainer diContainer, RemoteryInstance* instance)
@@ -145,7 +143,9 @@ public sealed unsafe class Remotery : IDisposable, ILogEventSink
     public Remotery(ITagContainer _0, RemoteryInstance* _1) { }
     public void Dispose() { }
     public void Emit(LogEvent _) { }
+#pragma warning disable CA1822 // Mark members as static
     public IDisposable SampleCPU(string name, rmtSampleFlags flags = default) => NullDisposable.Instance;
+#pragma warning restore CA1822 // Mark members as static
     //public IDisposable SampleGPU(string name, CommandList cl) => NullDisposable.Instance;
 #endif
 }
@@ -153,7 +153,7 @@ public sealed unsafe class Remotery : IDisposable, ILogEventSink
 unsafe partial class Program
 {
 #if REMOTERY
-    private static Option<ushort> OptionRemoteryPort = new(
+    private static readonly Option<ushort> OptionRemoteryPort = new(
         "--remotery-port",
         () => 0,
         "Sets the port for the Remotery server. Use 0 to disable Remotery, 17815 for the default UI port.");

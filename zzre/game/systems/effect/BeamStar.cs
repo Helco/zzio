@@ -38,7 +38,7 @@ public sealed class BeamStar : BaseCombinerPart<
         entity.Set(new components.effect.RenderIndices(indexRange));
     }
 
-    private void Reset(ref components.effect.BeamStarState state, zzio.effect.parts.BeamStar data)
+    private static void Reset(ref components.effect.BeamStarState state, zzio.effect.parts.BeamStar data)
     {
         state.CurPhase1 = data.phase1 / 1000f;
         state.CurPhase2 = data.phase2 / 1000f;

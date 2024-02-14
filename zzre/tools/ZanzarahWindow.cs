@@ -16,8 +16,8 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
     private readonly FramebufferArea fbArea;
     private readonly MouseEventArea mouseArea;
     private readonly OpenFileModal selectSceneModal;
-    private readonly HashSet<KeyCode> keysDown = new();
-    private readonly HashSet<MouseButton> buttonsDown = new();
+    private readonly HashSet<KeyCode> keysDown = [];
+    private readonly HashSet<MouseButton> buttonsDown = [];
     private Action<Vector2>? onMouseMove;
     private bool moveCamWithDrag;
     private ECSExplorer? ecsExplorer;
@@ -25,7 +25,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
 
     private bool MoveCamWithDrag
     {
-        get => moveCamWithDrag;
+        //get => moveCamWithDrag;
         set
         {
             moveCamWithDrag = value;
@@ -108,7 +108,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
         menuBar.AddCheckbox(
             "Controls/Move camera by dragging",
             () => ref moveCamWithDrag,
-            () => MoveCamWithDrag = MoveCamWithDrag);
+            () => MoveCamWithDrag = moveCamWithDrag);
         menuBar.AddButton("Open scene", HandleOpenScene);
         menuBar.AddButton("Debug/ECS Explorer", HandleOpenECSExplorer);
         menuBar.AddButton("Debug/Teleport to scene", selectSceneModal.Modal.Open);
@@ -158,7 +158,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
     private void HandleMouseUp(MouseButton button, Vector2 _) => buttonsDown.Remove(button);
     public bool IsMouseDown(MouseButton button) => buttonsDown.Contains(button);
 
-    private static int GlobalWindowIndex = 0; // to allow for multiple ZanzarahWindows without ImGui being mad
+    private static int GlobalWindowIndex; // to allow for multiple ZanzarahWindows without ImGui being mad
     private void HandleResize()
     {
         Window.Title = $"Zanzarah {fbArea.Framebuffer.Width}x{fbArea.Framebuffer.Height}###Zanzarah{GlobalWindowIndex}";

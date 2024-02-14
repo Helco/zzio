@@ -16,7 +16,7 @@ namespace zzre.tools;
 
 public partial class SceneEditor
 {
-    private class FOModel : BaseDisposable, ISelectable
+    private sealed class FOModel : BaseDisposable, ISelectable
     {
         private readonly ITagContainer diContainer;
         private readonly DeviceBufferRange locationRange;
@@ -50,7 +50,7 @@ public partial class SceneEditor
             mesh = clumpLoader.Load(new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
             if (mesh.IsEmpty)
             {
-                materials = Array.Empty<ModelMaterial>();
+                materials = [];
                 return;
             }
             materials = mesh.Materials.Select(rwMaterial =>
@@ -132,12 +132,20 @@ public partial class SceneEditor
         }
     }
 
-    private class FOModelComponent : BaseDisposable, IEnumerable<ISelectable>
+    private sealed class FOModelComponent : BaseDisposable, IEnumerable<ISelectable>
     {
+        private static readonly IReadOnlyList<string> DetailLabels =
+        [
+            "Invisible",
+            "Detail Level 0",
+            "Detail Level 1",
+            "Detail Level 2",
+            "Detail Level 3"
+        ];
         private readonly ITagContainer diContainer;
         private readonly SceneEditor editor;
 
-        private FOModel[] models = Array.Empty<FOModel>();
+        private FOModel[] models = [];
         private int detailLevel = 4; // Detail levels from 1, invisible is 0
 
         public FOModelComponent(ITagContainer diContainer)
@@ -148,14 +156,7 @@ public partial class SceneEditor
             editor.selectableContainers.Add(this);
             editor.fbArea.OnRender += HandleRender;
             editor.OnLoadScene += HandleLoadScene;
-            diContainer.GetTag<MenuBarWindowTag>().AddRadio("View/FOModels", new[]
-            {
-                "Invisible",
-                "Detail Level 0",
-                "Detail Level 1",
-                "Detail Level 2",
-                "Detail Level 3"
-            }, () => ref detailLevel, () => editor.fbArea.IsDirty = true);
+            diContainer.GetTag<MenuBarWindowTag>().AddRadio("View/FOModels", DetailLabels, () => ref detailLevel, () => editor.fbArea.IsDirty = true);
             editor.editor.AddInfoSection("FOModels", HandleInfoSection, false);
         }
 
@@ -170,7 +171,7 @@ public partial class SceneEditor
         {
             foreach (var oldModel in models)
                 oldModel.Dispose();
-            models = Array.Empty<FOModel>();
+            models = [];
             if (editor.scene == null)
                 return;
 

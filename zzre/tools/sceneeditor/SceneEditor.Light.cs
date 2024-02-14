@@ -5,7 +5,6 @@ using System.Linq;
 using System.Numerics;
 using IconFonts;
 using ImGuiNET;
-using System.Runtime.CompilerServices;
 using Veldrid;
 using zzio;
 using zzio.scn;
@@ -20,12 +19,9 @@ namespace zzre.tools;
 
 partial class SceneEditor
 {
-    private class Light : BaseDisposable, ISelectable
+    private sealed class Light : BaseDisposable, ISelectable
     {
-        private const float PointTriggerSize = 0.1f;
         private const float SelectableSize = 0.2f;
-
-        private readonly ITagContainer diContainer;
 
         public Location Location { get; } = new Location();
         public zzio.scn.Light SceneLight { get; }
@@ -44,7 +40,6 @@ partial class SceneEditor
 
         public Light(ITagContainer diContainer, zzio.scn.Light light, int index)
         {
-            this.diContainer = diContainer;
             SceneLight = light;
             Index = index;
 
@@ -63,7 +58,7 @@ partial class SceneEditor
         }
     }
 
-    private class LightComponent : BaseDisposable, IEnumerable<ISelectable>
+    private sealed class LightComponent : BaseDisposable, IEnumerable<ISelectable>
     {
         private static readonly IColor NormalColor = IColor.White;
         private static readonly IColor SelectedColor = IColor.Red;
@@ -73,8 +68,8 @@ partial class SceneEditor
         private readonly IconFont iconFont;
         private readonly SceneEditor editor;
 
-        private Light[] lights = Array.Empty<Light>();
-        private bool wasSelected = false;
+        private Light[] lights = [];
+        private bool wasSelected;
         private float iconSize = 128f;
 
         public LightComponent(ITagContainer diContainer)
@@ -111,7 +106,7 @@ partial class SceneEditor
         {
             foreach (var oldLight in lights)
                 oldLight.Dispose();
-            lights = Array.Empty<Light>();
+            lights = [];
             if (editor.scene == null)
                 return;
 

@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using zzio.script;
 
@@ -26,13 +27,13 @@ public class TestRawInstruction
         Assert.DoesNotThrow(() => new RawInstruction("$.0"));
         Assert.DoesNotThrow(() => new RawInstruction("=.19"));
 
-        Assert.Throws<InvalidInstructionException>(() => new RawInstruction("a."));
-        Assert.Throws<InvalidInstructionException>(() => new RawInstruction(" a.bcd."));
-        Assert.Throws<InvalidInstructionException>(() => new RawInstruction("a.\"asdasd"));
-        Assert.Throws<InvalidInstructionException>(() => new RawInstruction("a.bcd.\"asd\"\""));
-        Assert.Throws<InvalidInstructionException>(() => new RawInstruction("\".\""));
-        Assert.Throws<InvalidInstructionException>(() => new RawInstruction(".."));
-        Assert.Throws<InvalidInstructionException>(() => new RawInstruction("..\"asd"));
+        Assert.Throws<ArgumentException>(() => new RawInstruction("a."));
+        Assert.Throws<ArgumentException>(() => new RawInstruction(" a.bcd."));
+        Assert.Throws<ArgumentException>(() => new RawInstruction("a.\"asdasd"));
+        Assert.Throws<ArgumentException>(() => new RawInstruction("a.bcd.\"asd\"\""));
+        Assert.Throws<ArgumentException>(() => new RawInstruction("\".\""));
+        Assert.Throws<ArgumentException>(() => new RawInstruction(".."));
+        Assert.Throws<ArgumentException>(() => new RawInstruction("..\"asd"));
     }
 
     [Test]

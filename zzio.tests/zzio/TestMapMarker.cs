@@ -10,7 +10,7 @@ public class TestMapMarker
         Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/mapmarker_sample.cfg")
     );
 
-    private void testMarkers(MapMarker[] mapMarkers)
+    private static void testMarkers(MapMarker[] mapMarkers)
     {
         Assert.That(mapMarkers, Is.Not.Null);
         Assert.That(mapMarkers.Length, Is.EqualTo(3));

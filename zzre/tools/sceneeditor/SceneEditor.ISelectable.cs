@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Veldrid;
 using zzio;
 using zzre.imgui;
 using zzre.materials;
@@ -22,7 +21,7 @@ public partial class SceneEditor
         float ViewSize { get; }
     }
 
-    private readonly List<IEnumerable<ISelectable>> selectableContainers = new();
+    private readonly List<IEnumerable<ISelectable>> selectableContainers = [];
     private IEnumerable<ISelectable> Selectables => selectableContainers.SelectMany(c => c);
 
     private ISelectable? _selected;
@@ -49,22 +48,20 @@ public partial class SceneEditor
         OnSelectionManipulate(Selected);
     }
 
-    private class SelectionComponent : BaseDisposable
+    private sealed class SelectionComponent : BaseDisposable
     {
         private const float MinViewDistance = 0.5f;
 
         private readonly SceneEditor editor;
-        private readonly ITagContainer diContainer;
         private readonly Camera camera;
         private readonly DebugLineRenderer boundsRenderer;
 
-        private ISelectable[] lastPotentials = Array.Empty<ISelectable>();
+        private ISelectable[] lastPotentials = [];
         private int lastPotentialI;
 
         public SelectionComponent(ITagContainer diContainer)
         {
             diContainer.AddTag(this);
-            this.diContainer = diContainer;
             editor = diContainer.GetTag<SceneEditor>();
             camera = diContainer.GetTag<Camera>();
             var fbArea = diContainer.GetTag<FramebufferArea>();

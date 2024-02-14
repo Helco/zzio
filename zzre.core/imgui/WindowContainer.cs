@@ -15,22 +15,22 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
 {
     private GraphicsDevice Device { get; }
     private ResourceFactory Factory => Device.ResourceFactory;
-    private readonly List<BaseWindow> windows = new();
-    private readonly List<Fence> onceFences = new();
+    private readonly List<BaseWindow> windows = [];
+    private readonly List<Fence> onceFences = [];
     private readonly CommandList commandList;
     private readonly Fence fence;
 
-    public BaseWindow? FocusedWindow { get; private set; } = null;
+    public BaseWindow? FocusedWindow { get; private set; }
     public int Count => windows.Count;
     public ImGuiRenderer ImGuiRenderer { get; }
     public MenuBar MenuBar { get; } = new();
     public ref bool ShowImGuiDemoWindow => ref showImGuiDemoWindow;
 
-    private bool isInUpdateEnumeration = false;
-    private bool showImGuiDemoWindow = false;
+    private bool isInUpdateEnumeration;
+    private bool showImGuiDemoWindow;
     private readonly OnceAction onceBeforeUpdate = new();
     private readonly OnceAction onceAfterUpdate = new();
-    private BaseWindow? nextFocusedWindow = null;
+    private BaseWindow? nextFocusedWindow;
 
     public event Action OnceBeforeUpdate
     {
@@ -44,7 +44,7 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
         remove => onceAfterUpdate.Next -= value;
     }
 
-    public Func<string, IDisposable>? CreateProfilerSample { get; set; } = null;
+    public Func<string, IDisposable>? CreateProfilerSample { get; set; }
 
     public WindowContainer(SdlWindow window, GraphicsDevice device)
     {
@@ -177,7 +177,7 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
         using (CreateProfilerSample?.Invoke("Windows.Finish"))
         {
             if (onceFences.Count > 0)
-                Device.WaitForFences(onceFences.ToArray(), true, TimeSpan.FromSeconds(10000.0)); // timeout is a workaround
+                Device.WaitForFences([.. onceFences], true, TimeSpan.FromSeconds(10000.0)); // timeout is a workaround
             onceFences.Clear();
         }
         using (CreateProfilerSample?.Invoke("Container"))

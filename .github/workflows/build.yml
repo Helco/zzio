@@ -6,6 +6,10 @@ on:
       runs-on:
         required: true
         type: string
+      warningsAsErrors:
+        required: false
+        default: false
+        type: boolean
     
 defaults:
   run:
@@ -34,6 +38,8 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 8.0.x
+    - name: Setup problem matcher
+      run: echo "::add-matcher::zzio/.github/csc.json"
     - name: Build local dependencies
       if: ${{ steps.cache-local.outputs.cache-hit != 'true' }}
       run: bash get-dependencies.sh
@@ -41,11 +47,11 @@ jobs:
       run: dotnet restore
     - name: Hacky fix to glibc problem with shaderc
       run: cp temp-ci-fix/libshaderc_shared.so ~/.nuget/packages/mlang.msbuild/1.0.0-331cf83/tasks/netstandard2.0/runtimes/linux-x64/native/
-    - name: Debug
-      run: |
-        dotnet build --configuration Debug --no-restore --verbosity normal
-        dotnet test --configuration Debug --no-restore --verbosity normal
-    - name: Release
-      run: |
-        dotnet build --configuration Release --no-restore --verbosity normal
-        dotnet test --configuration Release --no-restore --verbosity normal
+    - name: Debug Build
+      run: dotnet build --configuration Debug --no-restore --verbosity normal ${{ inputs.warningsAsErrors && '-warnaserror' || '' }}
+    - name: Debug Tests
+      run: dotnet test --configuration Debug --no-restore --verbosity normal
+    - name: Release Build
+      run: dotnet build --configuration Release --no-restore --verbosity normal ${{ inputs.warningsAsErrors && '-warnaserror' || '' }}
+    - name: Release Tests
+      run: dotnet test --configuration Release --no-restore --verbosity normal

@@ -7,8 +7,6 @@ using System.Numerics;
 using System.Reflection;
 using DefaultEcs.Serialization;
 using ImGuiNET;
-using Vulkan;
-using zzre.imgui;
 using static ImGuiNET.ImGui;
 
 internal partial class ECSExplorer
@@ -17,7 +15,7 @@ internal partial class ECSExplorer
 
     private abstract class ComponentRenderer : IComparable<ComponentRenderer>
     {
-        public int Priority { get; init; } = 0;
+        public int Priority { get; init; }
 
         public int CompareTo(ComponentRenderer? other)
         {
@@ -26,12 +24,12 @@ internal partial class ECSExplorer
         }
     }
 
-    private class ComponentRenderer<T> : ComponentRenderer
+    private sealed class ComponentRenderer<T> : ComponentRenderer
     {
         public RenderComponentFunc<T>? Render { get; init; }
     }
 
-    private static readonly Dictionary<Type, LazySortedList<ComponentRenderer>> componentRenderers = new();
+    private static readonly Dictionary<Type, LazySortedList<ComponentRenderer>> componentRenderers = [];
 
     public static void AddComponentRenderer<T>(int prio, RenderComponentFunc<T> render)
     {
@@ -55,7 +53,7 @@ internal partial class ECSExplorer
             .FirstOrDefault(predicate!);
     }
 
-    private class EntityContentRenderer : IComponentReader
+    private sealed class EntityContentRenderer : IComponentReader
     {
         public void OnRead<T>(in T component, in DefaultEcs.Entity entity)
         {

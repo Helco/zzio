@@ -162,7 +162,7 @@ public partial class NPCMovementByState : NPCMovementBase
         }
     }
 
-    private void SwitchToWalkingAnimation(DefaultEcs.Entity entity)
+    private static void SwitchToWalkingAnimation(DefaultEcs.Entity entity)
     {
         // there is one NPC (g008s01m) that only has an idle animation
         // to keep the safeguard we only fallback for Walk0 to Idle0

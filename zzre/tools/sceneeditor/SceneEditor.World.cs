@@ -7,7 +7,7 @@ namespace zzre.tools;
 
 public partial class SceneEditor
 {
-    private class WorldComponent : BaseDisposable
+    private sealed class WorldComponent : BaseDisposable
     {
         private readonly ITagContainer diContainer;
         private readonly SceneEditor editor;

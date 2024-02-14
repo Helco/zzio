@@ -1,9 +1,10 @@
-﻿using System;
+﻿using System.CommandLine;
+#if DEBUG
 using System.CommandLine.Invocation;
-using System.CommandLine;
 using Serilog;
 using Silk.NET.SDL;
 using Veldrid;
+#endif
 
 namespace zzre;
 
@@ -15,7 +16,7 @@ partial class Program
         () => true,
         "Whether RenderDoc is to be loaded at start.\nIf RenderDoc loading makes problems set this option to \"false\"");
 
-    private static RenderDoc? RenderDoc = null;
+    private static RenderDoc? RenderDoc;
     private static ILogger RenderDocLogger = null!;
 
     private static void AddGlobalRenderDocOption(RootCommand command) =>

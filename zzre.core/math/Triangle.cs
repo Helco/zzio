@@ -107,7 +107,7 @@ public readonly partial struct Triangle : IRaycastable, IIntersectable
         return result;
     }
 
-    private Vector128<float> CrossProductSse41(Vector128<float> a, Vector128<float> b)
+    private static Vector128<float> CrossProductSse41(Vector128<float> a, Vector128<float> b)
     {
         // based on https://geometrian.com/programming/tutorials/cross-product/index.php method 5
         var tmp0 = Sse.Shuffle(a, a, 0b11001001);

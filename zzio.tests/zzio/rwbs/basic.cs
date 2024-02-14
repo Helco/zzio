@@ -12,7 +12,7 @@ public class TestRWBSBasic
         Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/rwbs_sample.dff")
     );
 
-    private void testSection(Section section)
+    private static void testSection(Section section)
     {
         Assert.That(section, Is.InstanceOf(typeof(RWClump)));
         RWClump clump = (RWClump)section;

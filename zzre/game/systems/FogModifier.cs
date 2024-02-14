@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
@@ -34,7 +33,7 @@ public partial class FogModifier : ISystem<float>, ISystem<CommandList>
             MaxDistance = t.ii4;
         }
     }
-    private Modifier[] modifiers = Array.Empty<Modifier>();
+    private Modifier[] modifiers = [];
     private Misc misc = new();
 
     public bool IsEnabled { get; set; } = true;

@@ -33,6 +33,7 @@ public partial class PuppetActorMovement : AEntitySetSystem<float>
     public override void Dispose()
     {
         base.Dispose();
+        sceneLoadedSubscription.Dispose();
         addedSubscription.Dispose();
         placeToGroundSubscription.Dispose();
         placeToTriggerSubscription.Dispose();

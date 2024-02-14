@@ -1,7 +1,5 @@
 ﻿namespace zzre;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 internal static class DefaultECSExtensions

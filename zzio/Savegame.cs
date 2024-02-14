@@ -16,8 +16,8 @@ public class Savegame
     public int progress;
     public int sceneId = -1;
     public int entryId = -1;
-    public readonly Dictionary<string, List<IGameStateMod>> gameState = new();
-    public readonly List<InventoryCard> inventory = new();
+    public readonly Dictionary<string, List<IGameStateMod>> gameState = [];
+    public readonly List<InventoryCard> inventory = [];
     public uint pixiesHolding;
     public uint pixiesCatched;
     public readonly GlobalVar[] globalVars = GlobalVar.CreateSet();
@@ -26,7 +26,7 @@ public class Savegame
     public void Add(string scene, IGameStateMod mod)
     {
         if (!gameState.TryGetValue(scene, out var sceneMods))
-            gameState.Add(scene, sceneMods = new List<IGameStateMod>());
+            gameState.Add(scene, sceneMods = []);
         sceneMods.Add(mod);
     }
 

@@ -18,18 +18,18 @@ namespace zzio
             public Dataset dataset = new();
             public Vector3 sceneOrigin;
             public string backdropFile = "";
-            public Light[] lights = Array.Empty<Light>();
-            public Model[] models = Array.Empty<Model>();
-            public FOModel[] foModels = Array.Empty<FOModel>();
-            public DynModel[] dynModels = Array.Empty<DynModel>();
-            public Trigger[] triggers = Array.Empty<Trigger>();
-            public Sample2D[] samples2D = Array.Empty<Sample2D>();
-            public Sample3D[] samples3D = Array.Empty<Sample3D>();
-            public SceneEffect[] effects = Array.Empty<SceneEffect>();
-            public VertexModifier[] vertexModifiers = Array.Empty<VertexModifier>();
-            public TextureProperty[] textureProperties = Array.Empty<TextureProperty>();
-            public Behavior[] behaviors = Array.Empty<Behavior>();
-            public SceneItem[] sceneItems = Array.Empty<SceneItem>();
+            public Light[] lights = [];
+            public Model[] models = [];
+            public FOModel[] foModels = [];
+            public DynModel[] dynModels = [];
+            public Trigger[] triggers = [];
+            public Sample2D[] samples2D = [];
+            public Sample3D[] samples3D = [];
+            public SceneEffect[] effects = [];
+            public VertexModifier[] vertexModifiers = [];
+            public TextureProperty[] textureProperties = [];
+            public Behavior[] behaviors = [];
+            public SceneItem[] sceneItems = [];
             public uint ambientSound;
             public uint music;
 
@@ -88,7 +88,7 @@ namespace zzio
                     else
                         throw new InvalidDataException("Invalid scene section \"" + sectionName + "\"");
                 }
-                effects = effectsV1.Concat(effectsV2).ToArray();
+                effects = [.. effectsV1, .. effectsV2];
             }
 
             private static void writeSingle<T>(BinaryWriter writer, T value, string sectionName) where T : ISceneSection

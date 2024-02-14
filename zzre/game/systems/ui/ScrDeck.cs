@@ -2,12 +2,10 @@
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
-using DefaultEcs.System;
 using zzio;
 
 using Tab = zzre.game.components.ui.ScrDeck.Tab;
 using static zzre.game.systems.ui.InGameScreen;
-using Veldrid;
 using Silk.NET.SDL;
 
 namespace zzre.game.systems.ui;
@@ -17,20 +15,20 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     private const int ListRows = 6;
 
     private static readonly UID UIDChooseFairyToSwap = new(0x41912581);
-    private static readonly UID[] UIDSpellSlotNames = new UID[]
-    {
+    private static readonly UID[] UIDSpellSlotNames =
+    [
         new(0x37697321), // First offensive slot
         new(0x8A717321), // First defensive slot
         new(0x0F207721), // Second offensive slot
         new(0x5C577721)  // Second defensive slot
-    };
-    private static readonly UID[] UIDFairyInfoDescriptions = new UID[]
-    {
+    ];
+    private static readonly UID[] UIDFairyInfoDescriptions =
+    [
         new(0x45B032A1), // Current and max HP
         new(0xE58236A1), // Level of your fairy
         new(0xB26B36A1), // XP, current and necessary for next level
         new(0xB26B36A1)
-    };
+    ];
 
     private static readonly components.ui.ElementId IDSliderUp = new(1);
     private static readonly components.ui.ElementId IDSliderDown = new(2);
@@ -42,11 +40,8 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     private static readonly components.ui.ElementId IDTabSupportSpells = new(13);
 
     private static readonly components.ui.ElementId FirstFairySlot = new(20);
-    private static readonly components.ui.ElementId LastFairySlot = new(19 + Inventory.FairySlotCount);
     private static readonly components.ui.ElementId FirstSpellSlot = new(30);
-    private static readonly components.ui.ElementId LastSpellSlot = new(29 + Inventory.FairySlotCount * InventoryFairy.SpellSlotCount);
     private static readonly components.ui.ElementId FirstListCell = new(50);
-    private static readonly components.ui.ElementId LastListCell = new(49 + 6 * 6);
 
     private readonly zzio.db.MappedDB mappedDB;
 
@@ -66,7 +61,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         entity.Set<components.ui.ScrDeck>();
         ref var deck = ref entity.Get<components.ui.ScrDeck>();
         deck.Inventory = inventory;
-        deck.DeckSlotParents = Array.Empty<DefaultEcs.Entity>();
+        deck.DeckSlotParents = [];
 
         CreateBackgrounds(entity, ref deck);
         CreateListControls(entity, ref deck);
@@ -305,7 +300,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             : $"{{104}}{spell.mana}/{dbSpell.MaxMana}";
     }
 
-    private string FormatSummary(Inventory inv, InventoryFairy fairy)
+    private static string FormatSummary(Inventory inv, InventoryFairy fairy)
     {
         var builder = new System.Text.StringBuilder();
         builder.Append(fairy.name);
@@ -359,7 +354,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         var dbSpell = mappedDB.GetSpell(spell.dbUID);
         var mana = dbSpell.Mana == 5 ? "-/-" : $"{spell.mana}/{dbSpell.MaxMana}";
-        return $"{dbSpell.Name}\n{{104}}{mana} {preload.GetSpellPrices(dbSpell)}";
+        return $"{dbSpell.Name}\n{{104}}{mana} {UIPreloader.GetSpellPrices(dbSpell)}";
     }
 
     private void CreateFairyInfos(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
@@ -372,7 +367,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             CreateFairyInfo(entity, ref deck, i);
     }
 
-    private void ResetList(ref components.ui.ScrDeck deck)
+    private static void ResetList(ref components.ui.ScrDeck deck)
     {
         var allEntities = new[]
         {
@@ -383,10 +378,10 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         foreach (var entity in allEntities)
             entity.Dispose();
         deck.ListButtons = deck.ListSummaries = deck.ListUsedMarkers =
-            Array.Empty<DefaultEcs.Entity>();
+            [];
     }
 
-    private Vector2 ListCellPos(int column, int row) =>
+    private static Vector2 ListCellPos(int column, int row) =>
         Mid + new Vector2(322 + column * 42, 70 + row * 43);
 
     private DefaultEcs.Resource.ManagedResource<resources.UITileSheetInfo, rendering.TileSheet> ListTileSheet(in components.ui.ScrDeck deck) => deck.ActiveTab switch

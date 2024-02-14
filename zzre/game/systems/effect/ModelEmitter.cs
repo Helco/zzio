@@ -37,7 +37,7 @@ public sealed class ModelEmitter : BaseCombinerPart<
 
     protected override void HandleAddedComponent(in DefaultEcs.Entity entity, in zzio.effect.parts.ParticleEmitter data)
     {
-        if (data.type != zzio.effect.parts.ParticleType.Model)
+        if (data.particleType != zzio.effect.parts.ParticleType.Model)
             return;
 
         var playback = entity.Get<components.Parent>().Entity.Get<components.effect.CombinerPlayback>();
@@ -112,7 +112,7 @@ public sealed class ModelEmitter : BaseCombinerPart<
         extra.Rotation = random.InLine() * MathF.PI;
     }
 
-    private void UpdateInstance(
+    private static void UpdateInstance(
         ModelInstanceBuffer.InstanceArena instanceArena,
         in components.effect.EmitterState.Particle basic,
         in components.effect.ModelEmitterState.Particle extra)

@@ -6,9 +6,9 @@ namespace zzre.tools;
 
 public partial class EffectEditor
 {
-    private void HandlePart(MovingPlanes data)
+    private static void HandlePart(MovingPlanes data)
     {
-        InputText("Name", ref data.name, 128);
+        data.Name = InputText("Name", data.Name, 128);
         NewLine();
 
         Text("Timing:");

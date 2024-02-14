@@ -15,7 +15,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
     private readonly IDisposable sceneLoadSubscription;
     private readonly IDisposable spawnEffectDisposable;
 
-    public bool AddIndexAsComponent { get; set; } = false; // used for EffectEditor
+    public bool AddIndexAsComponent { get; set; }  // used for EffectEditor
 
     public EffectCombiner(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
@@ -104,7 +104,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(
+    private static void Update(
         in DefaultEcs.Entity entity,
         float elapsedTime,
         ref components.effect.CombinerPlayback playback,

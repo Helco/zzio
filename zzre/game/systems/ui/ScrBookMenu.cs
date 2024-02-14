@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using zzio;
@@ -13,13 +12,13 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
 {
     private readonly MappedDB db;
 
-    private static readonly UID[] UIDStatNames = new UID[]
-    {
+    private static readonly UID[] UIDStatNames =
+    [
         new(0x3D26ACB1), // Hit Points
         new(0xAB46B8B1), // Dexterity
         new(0xB031B8B1), // Jump Ability
         new(0xB6CA5A11)  // Special
-    };
+    ];
     private static readonly UID UIDEvol = new (0x69226721); // Evolution at level
 
     public ScrBookMenu(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
@@ -41,8 +40,8 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
 
         preload.CreateFullBackOverlay(entity);
 
-        book.Fairies = db.Fairies.OrderBy(fairyRow => fairyRow.CardId.EntityId).ToArray();
-        book.FairyButtons = new Dictionary<components.ui.ElementId, FairyRow>();
+        book.Fairies = [.. db.Fairies.OrderBy(fairyRow => fairyRow.CardId.EntityId)];
+        book.FairyButtons = [];
         book.Sidebar = default;
         book.Crosshair = default;
 
@@ -61,7 +60,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         CreateFairyButtons(preload, entity, inventory, ref book);
     }
 
-    private void CreateFairyButtons(UIPreloader preload, in DefaultEcs.Entity entity, Inventory inventory, ref components.ui.ScrBookMenu book)
+    private static void CreateFairyButtons(UIPreloader preload, in DefaultEcs.Entity entity, Inventory inventory, ref components.ui.ScrBookMenu book)
     {
         var fairies = book.Fairies;
         for (int i = 0; i < fairies.Length; i++)
@@ -155,12 +154,12 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
 
         preload.CreateLabel(entity)
             .With(Mid + new Vector2(111, 266 + index*17))
-            .WithText(preload.GetLightsIndicator(value))
+            .WithText(UIPreloader.GetLightsIndicator(value))
             .With(preload.Fnt001)
             .Build();
     }
 
-    private Vector2 FairyButtonPos(int fairyI) {
+    private static Vector2 FairyButtonPos(int fairyI) {
         return new Vector2(226 + 45 * (fairyI % 9), 66 + 45 * (fairyI / 9));
     }
 

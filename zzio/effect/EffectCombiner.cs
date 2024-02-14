@@ -29,15 +29,15 @@ public partial class EffectCombiner
         };
 
     public string description = "";
-    public bool isLooping = false;
+    public bool isLooping;
     public Vector3 upwards, forwards, position;
-    public IEffectPart[] parts = Array.Empty<IEffectPart>();
+    public IEffectPart[] parts = [];
 
     public float Duration => parts.Any() ? parts.Max(p => p.Duration) : 0f;
 
     public void Read(Stream stream)
     {
-        List<IEffectPart> partsList = new();
+        List<IEffectPart> partsList = [];
         using BinaryReader r = new(stream);
 
         if (r.ReadZString() != "[Effect Combiner]")
@@ -47,7 +47,7 @@ public partial class EffectCombiner
         while (shouldReadNext)
         {
             string sectionName = r.ReadZString();
-            if (!sectionName.StartsWith("[") || !sectionName.EndsWith("]"))
+            if (!sectionName.StartsWith('[') || !sectionName.EndsWith(']'))
                 throw new InvalidDataException("Invalid section name format: \"" + sectionName + "\"");
             sectionName = sectionName[1..^1];
 
@@ -82,6 +82,6 @@ public partial class EffectCombiner
             }
         }
 
-        parts = partsList.ToArray();
+        parts = [.. partsList];
     }
 }

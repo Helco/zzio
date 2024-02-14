@@ -39,9 +39,9 @@ public struct AnimationKeyFrame
 [Serializable]
 public class SkeletalAnimation
 {
-    public uint flags = 0; // TODO: Format of flags are still unknown 
-    public float duration = 0.0f;
-    public AnimationKeyFrame[][] boneFrames = Array.Empty<AnimationKeyFrame[]>(); // a set of keyframes for every bone
+    public uint flags; // TODO: Format of flags are still unknown 
+    public float duration;
+    public AnimationKeyFrame[][] boneFrames = []; // a set of keyframes for every bone
 
     public int BoneCount => boneFrames.Length;
 

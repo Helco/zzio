@@ -6,29 +6,27 @@ namespace zzio.effect.parts;
 public class Sparks : IEffectPart
 {
     public EffectPartType Type => EffectPartType.Sparks;
-    public string Name => name;
+    public string Name { get; set; } = nameof(Sparks);
 
     public uint
         phase1 = 1000,
         phase2 = 1000,
-        tileId = 0,
+        tileId,
         tileW = 64,
         tileH = 64;
     public IColor color = new(255, 255, 255, 255);
-    public uint spawnRate = 0;
+    public uint spawnRate;
     public float
-        width = 0,
-        height = 0,
+        width,
+        height,
         minSpawnProgress = 1.0f,
-        startDistance = 0,
-        speed = 0,
+        startDistance,
+        speed,
         maxDistance = 20.0f;
     public bool
-        useSpeed = false,
-        isSpawningMax = false;
-    public string
-        texName = "standard",
-        name = "Sparks";
+        useSpeed,
+        isSpawningMax;
+    public string texName = "standard";
 
     public float Duration => (phase1 + phase2) / 1000f;
 
@@ -48,7 +46,7 @@ public class Sparks : IEffectPart
         tileH = r.ReadUInt32();
         r.BaseStream.Seek(1, SeekOrigin.Current);
         color = IColor.ReadNew(r);
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         r.BaseStream.Seek(3, SeekOrigin.Current);
         minSpawnProgress = r.ReadSingle();
         startDistance = r.ReadSingle();

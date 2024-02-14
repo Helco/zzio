@@ -8,7 +8,7 @@ namespace zzio;
 public class RangeStream : Stream
 {
     private readonly Stream parent;
-    private readonly long start, length;
+    private readonly long length;
     private readonly bool canWrite;
     private readonly bool shouldClose;
     private long left;
@@ -35,7 +35,6 @@ public class RangeStream : Stream
         }
 
         this.parent = parent;
-        start = parent.Position;
         this.length = left = Math.Min(parentLength - parentStart, length);
         this.canWrite = canWrite && parent.CanWrite;
         this.shouldClose = shouldClose;

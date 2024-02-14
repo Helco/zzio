@@ -8,7 +8,7 @@ namespace zzre.rendering;
 
 public class BaseMaterial : BaseDisposable, IMaterial
 {
-    private class BindingSet : BaseDisposable
+    private sealed class BindingSet : BaseDisposable
     {
         private readonly ResourceFactory factory;
         private readonly ResourceLayout layout;
@@ -16,7 +16,7 @@ public class BaseMaterial : BaseDisposable, IMaterial
         private readonly string parentName;
         private ResourceSet? resourceSet;
 
-        public List<BaseBinding> Bindings { get; } = new List<BaseBinding>();
+        public List<BaseBinding> Bindings { get; } = [];
 
         public BindingSet(ResourceFactory factory, ResourceLayout layout, uint index, string parentName)
         {
@@ -89,7 +89,7 @@ public class BaseMaterial : BaseDisposable, IMaterial
     protected class Configurator
     {
         private readonly BaseMaterial parent;
-        private int curSetI = 0;
+        private int curSetI;
 
         public Configurator(BaseMaterial parent)
         {

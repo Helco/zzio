@@ -14,7 +14,7 @@ public partial class BehaviourMagicBridge : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(
+    private static void Update(
         float elapsedTime,
         Location location,
         ref components.behaviour.MagicBridge bridge)

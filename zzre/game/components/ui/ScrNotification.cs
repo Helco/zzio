@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace zzre.game.components.ui;
+﻿namespace zzre.game.components.ui;
 
 public struct ScrNotification
 {

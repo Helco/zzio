@@ -18,7 +18,7 @@ public class TestRow
         5, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 0xc0, 0xff, 0xee
     };
 
-    private void testRow(Row row)
+    private static void testRow(Row row)
     {
         Assert.That(row, Is.Not.Null);
         Assert.That(row.uid, Is.EqualTo(new UID(0xdeadbeef)));

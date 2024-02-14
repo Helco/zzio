@@ -12,12 +12,11 @@ namespace zzre.imgui;
 
 public class OpenFileModal : BaseDisposable
 {
-    private const float FilterColumnWidth = 75.0f;
     private const float FileTreeSize = 400.0f;
 
     private readonly IResourcePool pool;
-    private readonly List<(IResource res, string nameWithId, int depth)> content = new();
-    private readonly HashSet<IResource> openDirectories = new();
+    private readonly List<(IResource res, string nameWithId, int depth)> content = [];
+    private readonly HashSet<IResource> openDirectories = [];
     private string filterText = "";
     private Regex filterRegex = new("");
     private bool isFirstTreeContent = true;
@@ -35,8 +34,8 @@ public class OpenFileModal : BaseDisposable
                 RegexOptions.IgnoreCase);
         }
     }
-    public IResource? SelectedResource { get; private set; } = null;
-    public IResource? InitialSelectedResource { get; set; } = null;
+    public IResource? SelectedResource { get; private set; }
+    public IResource? InitialSelectedResource { get; set; }
     public event Action<IResource> OnOpenedResource = _ => { };
 
     public OpenFileModal(ITagContainer diContainer)
@@ -152,7 +151,7 @@ public class OpenFileModal : BaseDisposable
 
     private void OpenResource(IResource resource, int parentIndex, int depth)
     {
-        string GetNameWithIdFor(IResource resource) =>
+        static string GetNameWithIdFor(IResource resource) =>
             $"{resource.Name}##{resource.Path.ToPOSIXString()}";
 
         if (parentIndex >= 0)

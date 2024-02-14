@@ -74,7 +74,7 @@ public static class StdFairyGroups
     }
 
     private static readonly Group[] AttackGroups =
-    {
+    [
         new(5, Worgot, Blumella),
         new(13, Corgot, Lana),
         new(36, Tinefol, Viteria, Sillia),
@@ -109,14 +109,14 @@ public static class StdFairyGroups
         new(42, Minari),
         new(54, Minari, Megari, Violectra),
         new(54, Lighane, Lighane, Driane, Darbue)
-    };
+    ];
 
     private static readonly Group[] DeckGroups =
-    {
+    [
         new(3, Rasrow, Maulrow, Psyrow, Vesbat, Feez, Pix, Akritar, Boneria),
         new(4, Greez, Stobat, Psyrow, Clum, Ferix, Sirael, Gremor),
         new(5, Fygaery, Jumrock, Psyrow, Turnox, Clumaur, Tinezard, Goop, Greezloc, Fathrael, Gremrock)
-    };
+    ];
 
     public static int GetLevel(Random random, int levelRange)
     {

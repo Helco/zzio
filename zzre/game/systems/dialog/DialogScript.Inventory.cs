@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
-using DefaultEcs.System;
 using zzio;
-using zzio.db;
 
 namespace zzre.game.systems;
 

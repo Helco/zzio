@@ -267,7 +267,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         return intersections;
     }
 
-    private void ApplyControls(
+    private static void ApplyControls(
         float elapsedStepTime,
         ref Vector3 mainVelocity,
         in Vector3 forward,
@@ -297,7 +297,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
             ApplySideControls(elapsedStepTime, ref mainVelocity, new Vector3(-forward.Z, forward.Y, forward.X), parameters, ref state);
     }
 
-    private void ApplySideControls(
+    private static void ApplySideControls(
         float elapsedStepTime,
         ref Vector3 mainVelocity,
         Vector3 axis,
@@ -365,7 +365,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         }
     }
 
-    private void WhirlJump(
+    private static void WhirlJump(
         in components.PhysicParameters parameters,
         ref components.PlayerControls controls,
         ref components.HumanPhysics state)
@@ -379,7 +379,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         // TODO: Play voice samples for whirl jumps
     }
 
-    private void ApplyGravity(
+    private static void ApplyGravity(
         float elapsedTime,
         in components.PhysicParameters parameters,
         ref components.HumanPhysics state)

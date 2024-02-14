@@ -11,8 +11,8 @@ namespace zzre.tools;
 public class OpenDocumentSet
 {
     private readonly ITagContainer diContainer;
-    private readonly HashSet<IDocumentEditor> editors = new();
-    private readonly Dictionary<string, Type> editorTypes = new();
+    private readonly HashSet<IDocumentEditor> editors = [];
+    private readonly Dictionary<string, Type> editorTypes = [];
 
     public OpenDocumentSet(ITagContainer diContainer)
     {
@@ -47,9 +47,7 @@ public class OpenDocumentSet
         >(FilePath path) where TEditor : IDocumentEditor
     {
         var resourcePool = diContainer.GetTag<IResourcePool>();
-        var resource = resourcePool.FindFile(path.ToPOSIXString());
-        if (resource == null)
-            throw new FileNotFoundException($"Could not find resource at {path.ToPOSIXString()}");
+        var resource = resourcePool.FindFile(path.ToPOSIXString()) ?? throw new FileNotFoundException($"Could not find resource at {path.ToPOSIXString()}");
         return OpenWith<TEditor>(resource);
     }
 
@@ -82,9 +80,7 @@ public class OpenDocumentSet
     public IDocumentEditor Open(FilePath path)
     {
         var resourcePool = diContainer.GetTag<IResourcePool>();
-        var resource = resourcePool.FindFile(path.ToPOSIXString());
-        if (resource == null)
-            throw new FileNotFoundException($"Could not find resource at {path.ToPOSIXString()}");
+        var resource = resourcePool.FindFile(path.ToPOSIXString()) ?? throw new FileNotFoundException($"Could not find resource at {path.ToPOSIXString()}");
         return Open(resource);
     }
 
@@ -101,7 +97,7 @@ public class OpenDocumentSet
         return newEditor;
     }
 
-    private static readonly Dictionary<Type, Func<ITagContainer, object>> knownConstructors = new();
+    private static readonly Dictionary<Type, Func<ITagContainer, object>> knownConstructors = [];
     
     private static Func<ITagContainer, TEditor> GetConstructorFor<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEditor>()
@@ -111,10 +107,8 @@ public class OpenDocumentSet
         if (knownConstructors.TryGetValue(type, out var prevCtor))
             return diContainer => (TEditor)prevCtor(diContainer);
 
-        var constructor = type.GetConstructor(new[] { typeof(ITagContainer) });
-        if (constructor == null)
-            throw new InvalidProgramException($"Editor {type} has no compatible constructor");
-        var ctor = knownConstructors[type] = diContainer => constructor.Invoke(new object[] { diContainer });
+        var constructor = type.GetConstructor([typeof(ITagContainer)]) ?? throw new InvalidProgramException($"Editor {type} has no compatible constructor");
+        var ctor = knownConstructors[type] = diContainer => constructor.Invoke([diContainer]);
         return diContainer => (TEditor)ctor(diContainer);
     }
 }

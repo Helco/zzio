@@ -4,7 +4,7 @@ namespace zzre;
 
 public class OnceAction
 {
-    public event Action? Next = null;
+    public event Action? Next;
     public void Invoke()
     {
         Next?.Invoke();
@@ -14,7 +14,7 @@ public class OnceAction
 
 public class OnceAction<T1>
 {
-    public event Action<T1>? Next = null;
+    public event Action<T1>? Next;
     public void Invoke(T1 a)
     {
         Next?.Invoke(a);
@@ -24,7 +24,7 @@ public class OnceAction<T1>
 
 public class OnceAction<T1, T2>
 {
-    public event Action<T1, T2>? Next = null;
+    public event Action<T1, T2>? Next;
     public void Invoke(T1 a, T2 b)
     {
         Next?.Invoke(a, b);
@@ -34,7 +34,7 @@ public class OnceAction<T1, T2>
 
 public class OnceAction<T1, T2, T3>
 {
-    public event Action<T1, T2, T3>? Next = null;
+    public event Action<T1, T2, T3>? Next;
     public void Invoke(T1 a, T2 b, T3 c)
     {
         Next?.Invoke(a, b, c);

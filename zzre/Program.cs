@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Globalization;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using Veldrid;
@@ -10,7 +11,6 @@ using Silk.NET.SDL;
 using Serilog;
 
 using Texture = Veldrid.Texture;
-using Serilog.Core;
 
 namespace zzre;
 
@@ -18,12 +18,12 @@ internal static partial class Program
 {
     private static readonly Option<string[]> OptionPools = new(
         new[] { "--pool", "-p" },
-        () => new[]
-        {
+        () =>
+        [
             // as if run from a directory like zanzarah/zzre or zanzarah/system
             Path.Combine(Environment.CurrentDirectory, "..", "Resources", "DATA_0.PAK"),
             Path.Combine(Environment.CurrentDirectory, "..")
-        },
+        ],
         "Adds a resource pool to use (later pools overwrite previous ones).\nCurrently directories and PAK archives are supported");
 
     private static readonly Option<bool> OptionDebugLayers = new(
@@ -37,7 +37,11 @@ internal static partial class Program
 
     private static void Main(string[] args)
     {
-        System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+        CultureInfo.DefaultThreadCurrentCulture =
+            CultureInfo.DefaultThreadCurrentUICulture =
+            System.Threading.Thread.CurrentThread.CurrentCulture =
+            System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+
         var rootCommand = new RootCommand("zzre - Engine reimplementation and modding tools for Zanzarah");
         rootCommand.AddGlobalOption(OptionPools);
         rootCommand.AddGlobalOption(OptionDebugLayers);
@@ -103,7 +107,7 @@ internal static partial class Program
     {
         var ctx = diContainer.GetTag<InvocationContext>();
         var logger = diContainer.GetLoggerFor<IResourcePool>();
-        var pools = ctx.ParseResult.GetValueForOption(OptionPools) ?? Array.Empty<string>();
+        var pools = ctx.ParseResult.GetValueForOption(OptionPools) ?? [];
         if (!pools.Any())
             logger.Warning("No resource pools selected");
         return pools.Length switch

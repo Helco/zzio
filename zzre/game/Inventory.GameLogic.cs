@@ -125,7 +125,7 @@ public partial class Inventory
         return (uint)(Math.Pow(fairy.xp, levelUpFactor) * MaxLevel / Math.Pow(MaxXP, levelUpFactor));
     }
 
-    private double GetLevelFactor(InventoryFairy fairy) => fairy.level / (double)MaxLevel;
+    private static double GetLevelFactor(InventoryFairy fairy) => fairy.level / (double)MaxLevel;
 
     public void SetSlot(InventoryFairy fairy, int newSlotI)
     {

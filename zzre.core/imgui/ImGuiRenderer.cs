@@ -61,7 +61,7 @@ namespace zzre.imgui
         private Pipeline _pipeline;
         private ResourceSet _mainResourceSet;
         private ResourceSet _fontTextureResourceSet;
-        private IntPtr _fontAtlasID = (IntPtr)1;
+        private readonly IntPtr _fontAtlasID = 1;
 
         private int _windowWidth;
         private int _windowHeight;
@@ -69,11 +69,11 @@ namespace zzre.imgui
 
         // Image trackers
         private readonly Dictionary<TextureView, ResourceSetInfo> _setsByView
-            = new Dictionary<TextureView, ResourceSetInfo>();
+            = [];
         private readonly Dictionary<Texture, TextureView> _autoViewsByTexture
-            = new Dictionary<Texture, TextureView>();
-        private readonly Dictionary<IntPtr, ResourceSetInfo> _viewsById = new Dictionary<IntPtr, ResourceSetInfo>();
-        private readonly List<IDisposable> _ownedResources = new List<IDisposable>();
+            = [];
+        private readonly Dictionary<IntPtr, ResourceSetInfo> _viewsById = [];
+        private readonly List<IDisposable> _ownedResources = [];
         private int _lastAssignedID = 100;
         private bool _frameBegun;
 
@@ -148,13 +148,13 @@ namespace zzre.imgui
             _fragmentShader = factory.CreateShader(new ShaderDescription(ShaderStages.Fragment, fragmentShaderBytes, _gd.BackendType == GraphicsBackend.Vulkan ? "main" : "FS"));
             _fragmentShader.Name = "ImGui.NET Fragment Shader";
 
-            VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
-            {
+            VertexLayoutDescription[] vertexLayouts =
+            [
                 new VertexLayoutDescription(
                     new VertexElementDescription("in_position", VertexElementSemantic.Position, VertexElementFormat.Float2),
                     new VertexElementDescription("in_texCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
                     new VertexElementDescription("in_color", VertexElementSemantic.Color, VertexElementFormat.Byte4_Norm))
-            };
+            ];
 
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("ProjectionMatrixBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
@@ -171,13 +171,12 @@ namespace zzre.imgui
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(
                     vertexLayouts,
-                    new[] { _vertexShader, _fragmentShader },
-                    new[]
-                    {
+                    [_vertexShader, _fragmentShader],
+                    [
                         new SpecializationConstant(0, gd.IsClipSpaceYInverted),
                         new SpecializationConstant(1, _colorSpaceHandling == ColorSpaceHandling.Legacy),
-                    }),
-                new ResourceLayout[] { _layout, _textureLayout },
+                    ]),
+                [_layout, _textureLayout],
                 outputDescription,
                 ResourceBindingModel.Default);
             _pipeline = factory.CreateGraphicsPipeline(ref pd);
@@ -225,7 +224,7 @@ namespace zzre.imgui
         private IntPtr GetNextImGuiBindingID()
         {
             int newID = _lastAssignedID++;
-            return (IntPtr)newID;
+            return newID;
         }
 
         /// <summary>
@@ -424,7 +423,7 @@ namespace zzre.imgui
         }
 
         /// <summary>
-        /// Called at the end of <see cref="Update(float)"/>.
+        /// Called at the end of <see cref="BeginEventUpdate(float)"/>.
         /// This tells ImGui that we are on the next frame.
         /// </summary>
         public void EndEventUpdate()
@@ -447,9 +446,9 @@ namespace zzre.imgui
             io.DeltaTime = deltaSeconds; // DeltaTime is in seconds.
         }
 
-        private bool TryMapKey(KeyCode key, out ImGuiKey result)
+        private static bool TryMapKey(KeyCode key, out ImGuiKey result)
         {
-            ImGuiKey keyToImGuiKeyShortcut(KeyCode keyToConvert, KeyCode startKey1, ImGuiKey startKey2)
+            static ImGuiKey keyToImGuiKeyShortcut(KeyCode keyToConvert, KeyCode startKey1, ImGuiKey startKey2)
             {
                 int changeFromStart1 = (int)keyToConvert - (int)startKey1;
                 return startKey2 + changeFromStart1;

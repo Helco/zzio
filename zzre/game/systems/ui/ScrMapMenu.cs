@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.Resource;
-using zzio.db;
 using zzre.game.resources;
 using KeyCode = Silk.NET.SDL.KeyCode;
 using static zzre.game.systems.ui.InGameScreen;
@@ -12,11 +10,8 @@ namespace zzre.game.systems.ui;
 
 public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.ui.OpenMapMenu>
 {
-    private readonly MappedDB db;
-
     public ScrMapMenu(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
     {
-        db = diContainer.GetTag<MappedDB>();
         OnElementDown += HandleElementDown;
     }
 
@@ -61,7 +56,7 @@ public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.
         StdItemId.MapForest,
         StdItemId.MapMountain
     };
-    private uint CollectMaskBits(Inventory inventory) => MapSectionItems
+    private static uint CollectMaskBits(Inventory inventory) => MapSectionItems
         .Select((item, i) => inventory.Contains(item) ? 1u << i : 0u)
         .Aggregate((a, b) => a | b);
 

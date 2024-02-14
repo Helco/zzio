@@ -15,7 +15,7 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
     /// <value>The platform-dependant path separator</value>
     public static string Separator => Environment.OSVersion.Platform == PlatformID.Win32NT ? "\\" : "/";
 
-    private static readonly char[] separators = new char[] { '/', '\\' };
+    private static readonly char[] separators = ['/', '\\'];
 
     private enum PathType
     {
@@ -34,11 +34,11 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
         IsDirectory = isDirectory;
     }
 
-    private static bool hasDrivePart(IReadOnlyList<string> parts) => parts.Any(p => p.EndsWith(":"));
+    private static bool hasDrivePart(IReadOnlyList<string> parts) => parts.Any(p => p.EndsWith(':'));
 
     private static bool isDirectoryPart(string part)
     {
-        return part == "." || part == ".." || part == "~" || part.EndsWith(":");
+        return part == "." || part == ".." || part == "~" || part.EndsWith(':');
     }
 
     /// <summary>Constructs a new path out of a string</summary>
@@ -109,8 +109,8 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
     /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
     public static bool operator ==(FilePath? pathA, object? pathB)
     {
-        if (ReferenceEquals(pathA, null))
-            return ReferenceEquals(pathB, null);
+        if (pathA is null)
+            return pathB is null;
         return pathA.Equals(pathB);
     }
 
@@ -119,8 +119,8 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
     /// <remarks>Case-sensitivity is dependant of the current platform</remarks>
     public static bool operator !=(FilePath? pathA, object? pathB)
     {
-        if (ReferenceEquals(pathA, null))
-            return !ReferenceEquals(pathB, null);
+        if (pathA is null)
+            return pathB is not null;
         return !pathA.Equals(pathB);
     }
 
@@ -155,7 +155,7 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
                 return new FilePath(Array.Empty<string>(), PathType.Root, true);
             else if (type == PathType.Drive)
             {
-                string drive = Parts.Last(part => part.EndsWith(":"));
+                string drive = Parts.Last(part => part.EndsWith(':'));
                 return new FilePath(new string[] { drive }, PathType.Drive, true);
             }
             else
@@ -207,14 +207,14 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
     {
         get
         {
-            List<string> newParts = new();
+            List<string> newParts = [];
             foreach (string part in Parts)
             {
                 if (part == ".")
                     continue;
                 else if (part == ".." && newParts.Count > 0 && newParts.Last() != "..")
                     newParts.RemoveAt(newParts.Count - 1);
-                else if (part == "~" || part.EndsWith(":"))
+                else if (part == "~" || part.EndsWith(':'))
                 {
                     newParts.Clear();
                     newParts.Add(part);

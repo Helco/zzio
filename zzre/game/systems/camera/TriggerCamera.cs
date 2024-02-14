@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Numerics;
 using System.Linq;
-using DefaultEcs.System;
 using zzio.scn;
 
 namespace zzre.game.systems;

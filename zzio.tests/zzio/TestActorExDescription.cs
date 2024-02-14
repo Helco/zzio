@@ -10,7 +10,7 @@ public class TestActorExDescription
         Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/actorex_sample.aed")
     );
 
-    private void testInstance(ActorExDescription aed)
+    private static void testInstance(ActorExDescription aed)
     {
         Assert.That(aed, Is.Not.Null);
         Assert.That(aed.headBoneID, Is.EqualTo(1337));

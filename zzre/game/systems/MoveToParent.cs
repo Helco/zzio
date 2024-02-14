@@ -1,5 +1,4 @@
-﻿using System;
-using DefaultEcs.System;
+﻿using DefaultEcs.System;
 
 namespace zzre.game.systems;
 
@@ -10,7 +9,7 @@ public partial class MoveToLocation : AEntitySetSystem<float>
     }
 
     [Update]
-    public void Update(
+    public static void Update(
         Location location,
         in components.MoveToLocation move)
     {

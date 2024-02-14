@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
+﻿using System.Numerics;
 using zzio;
 using zzre.rendering;
 
@@ -17,14 +15,14 @@ public struct ColoredVertex
         this.color = color;
     }
 
-    public static uint Stride = sizeof(float) * 3 + sizeof(uint);
+    public static readonly uint Stride = sizeof(float) * 3 + sizeof(uint);
 }
 
 public struct SkinVertex
 {
     public Vector4 weights;
     public byte bone0, bone1, bone2, bone3;
-    public static uint Stride = sizeof(float) * 4 + sizeof(byte) * 4;
+    public static readonly uint Stride = sizeof(float) * 4 + sizeof(byte) * 4;
 }
 
 public class DebugMaterial : MlangMaterial, IStandardTransformMaterial

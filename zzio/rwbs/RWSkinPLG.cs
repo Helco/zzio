@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using zzio;
 
 namespace zzio.rwbs;
 
@@ -33,9 +32,9 @@ public class RWSkinPLG : Section
     public const int BonesPerVertex = 4;
     public override SectionId sectionId => SectionId.SkinPLG;
 
-    public byte[] vertexIndices = Array.Empty<byte>();
-    public float[] vertexWeights = Array.Empty<float>(); // 4 per vertex
-    public Bone[] bones = Array.Empty<Bone>();
+    public byte[] vertexIndices = [];
+    public float[] vertexWeights = []; // 4 per vertex
+    public Bone[] bones = [];
 
     protected override void readBody(Stream stream)
     {

@@ -50,7 +50,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         Rotation(elapsedTime, location, collectable);
     }
 
-    private void Aging(
+    private static void Aging(
         float elapsedTime,
         in DefaultEcs.Entity entity,
         ref components.behaviour.Collectable collectable)
@@ -76,7 +76,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
             : targetPos; // TODO: Fix FPS dep. in collectable lerp
     }
 
-    private void Rotation(
+    private static void Rotation(
         float elapsedTime,
         Location location,
         in components.behaviour.Collectable collectable)
@@ -110,7 +110,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
             ModelNameXXX => (int)random.NextOf(ItemPoolXXX),
             ModelNameYYY => (int)random.NextOf(ItemPoolYYY),
             ModelNameZZZ => (int)random.NextOf(ItemPoolZZZ),
-            _ when clumpInfo.Name.Length > 6 && int.TryParse(clumpInfo.Name.Substring(3, 3), out parsedItemId) => parsedItemId,
+            _ when clumpInfo.Name.Length > 6 && int.TryParse(clumpInfo.Name.AsSpan(3, 3), out parsedItemId) => parsedItemId,
             _ => throw new InvalidOperationException($"Invalid collectable model name: {clumpInfo.Name}")
         };
 
@@ -133,8 +133,8 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         Enumerable.Repeat(StdItemId.HealingHerb, 1)
     }.SelectMany().ToImmutableArray();
 
-    private static readonly ImmutableArray<StdItemId> ItemPoolYYY = new[]
-    {
+    private static readonly ImmutableArray<StdItemId> ItemPoolYYY =
+    [
         StdItemId.SmallHealingPotion,
         StdItemId.SmallHealingPotion,
         StdItemId.SmallHealingPotion,
@@ -145,15 +145,15 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         StdItemId.ManaPotion,
         StdItemId.GarlicDispenser,
         StdItemId.GarlicDispenser
-    }.ToImmutableArray();
+    ];
 
-    private static readonly ImmutableArray<StdItemId> ItemPoolZZZ = new[]
-    {
+    private static readonly ImmutableArray<StdItemId> ItemPoolZZZ =
+    [
         StdItemId.BigHealingPotion,
         StdItemId.BigHealingPotion,
         StdItemId.HealingHerb,
         StdItemId.ManaPotion,
         StdItemId.GarlicDispenser,
         StdItemId.GoldenCarrot
-    }.ToImmutableArray();
+    ];
 }

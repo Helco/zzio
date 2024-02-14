@@ -10,7 +10,6 @@ using Veldrid;
 using zzio;
 using zzio.effect;
 using zzio.effect.parts;
-using zzio.scn;
 using zzio.vfs;
 using zzre.imgui;
 using zzre.materials;
@@ -31,7 +30,6 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private readonly TwoColumnEditorTag editor;
     private readonly Camera camera;
     private readonly OrbitControlsTag controls;
-    private readonly GraphicsDevice device;
     private readonly FramebufferArea fbArea;
     private readonly IResourcePool resourcePool;
     private readonly DebugLineRenderer gridRenderer;
@@ -43,23 +41,21 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private readonly DefaultEcs.World ecsWorld = new();
     private readonly SequentialSystem<float> updateSystems = new();
     private readonly SequentialSystem<CommandList> renderSystems = new();
-    private ECSExplorer? ecsExplorer;
     private bool isPlaying = true;
     private TransformMode transformMode = TransformMode.None;
 
     private EffectCombiner Effect => loadedEffect ?? emptyEffect;
-    private EffectCombiner? loadedEffect = null;
+    private EffectCombiner? loadedEffect;
     private DefaultEcs.Entity effectEntity;
-    private DefaultEcs.Entity[] partEntities = Array.Empty<DefaultEcs.Entity>();
+    private DefaultEcs.Entity[] partEntities = [];
 
     public Window Window { get; }
     public IResource? CurrentResource { get; private set; }
 
-    public EffectEditor(ITagContainer diContainer_)
+    public EffectEditor(ITagContainer parentDiContainer)
     {
-        diContainer = diContainer_.ExtendedWith(ecsWorld);
+        diContainer = parentDiContainer.ExtendedWith(ecsWorld);
         AddDisposable(diContainer);
-        device = diContainer.GetTag<GraphicsDevice>();
         resourcePool = diContainer.GetTag<IResourcePool>();
         gameTime = diContainer.GetTag<GameTime>();
         Window = diContainer.GetTag<WindowContainer>().NewWindow("Effect Editor");
@@ -138,9 +134,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
 
     public void Load(string pathText)
     {
-        var resource = resourcePool.FindFile(pathText);
-        if (resource == null)
-            throw new FileNotFoundException($"Could not find model at {pathText}");
+        var resource = resourcePool.FindFile(pathText) ?? throw new FileNotFoundException($"Could not find model at {pathText}");
         Load(resource);
     }
 
@@ -195,7 +189,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         effectEntity.Dispose();
         foreach (var entity in partEntities)
             entity.Dispose();
-        partEntities = Array.Empty<DefaultEcs.Entity>();
+        partEntities = [];
     }
 
     private void SpawnEffect()
@@ -206,11 +200,14 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
             0, // we do not have the EffectCombiner resource manager, the value here does not matter
             AsEntity: effectEntity,
             Position: Vector3.Zero));
-        partEntities = ecsWorld.GetEntities()
-            .With<game.components.Parent>()
-            .AsEnumerable()
-            .OrderBy(e => e.Get<int>())
-            .ToArray();
+        partEntities =
+        [
+            .. ecsWorld.GetEntities()
+                        .With<game.components.Parent>()
+                        .AsEnumerable()
+                        .OrderBy(e => e.Get<int>())
+,
+        ];
     }
 
     private void ResetEffect()
@@ -368,6 +365,8 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         }
     }
 
+#if DEBUG
+    private ECSExplorer? ecsExplorer;
     private void HandleOpenECSExplorer()
     {
         if (ecsExplorer == null)
@@ -378,6 +377,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         else
             diContainer.GetTag<WindowContainer>().SetNextFocusedWindow(ecsExplorer.Window);
     }
+#endif
 
     public IEnumerable<(string, DefaultEcs.World)> GetWorlds()
     {

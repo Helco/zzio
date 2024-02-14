@@ -20,7 +20,7 @@ namespace zzre.tools;
 
 public partial class SceneEditor
 {
-    private class Trigger : BaseDisposable, ISelectable
+    private sealed class Trigger : BaseDisposable, ISelectable
     {
         private const float PointTriggerSize = 0.1f;
         private const float SelectableSize = 0.2f;
@@ -79,24 +79,22 @@ public partial class SceneEditor
         }
     }
 
-    private class TriggerComponent : BaseDisposable, IEnumerable<ISelectable>
+    private sealed class TriggerComponent : BaseDisposable, IEnumerable<ISelectable>
     {
         private static readonly IColor NormalColor = IColor.White;
         private static readonly IColor SelectedColor = IColor.Red;
 
-        private readonly ITagContainer diContainer;
         private readonly DebugIconRenderer iconRenderer;
         private readonly IconFont iconFont;
         private readonly SceneEditor editor;
 
-        private Trigger[] triggers = Array.Empty<Trigger>();
-        private bool wasSelected = false;
+        private Trigger[] triggers = [];
+        private bool wasSelected;
         private float iconSize = 128f;
 
         public TriggerComponent(ITagContainer diContainer)
         {
             diContainer.AddTag(this);
-            this.diContainer = diContainer;
             editor = diContainer.GetTag<SceneEditor>();
             editor.fbArea.OnRender += HandleRender;
             editor.fbArea.OnResize += HandleResize;
@@ -127,7 +125,7 @@ public partial class SceneEditor
         {
             foreach (var oldTrigger in triggers)
                 oldTrigger.Dispose();
-            triggers = Array.Empty<Trigger>();
+            triggers = [];
             if (editor.scene == null)
                 return;
 

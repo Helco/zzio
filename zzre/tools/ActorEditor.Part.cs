@@ -15,13 +15,15 @@ namespace zzre.tools;
 
 public partial class ActorEditor
 {
-    private class Part : ListDisposable
+    // Unrelated change
+
+    private sealed class Part : ListDisposable
     {
         private readonly ITagContainer diContainer;
         private readonly IAssetLoader<Texture> textureLoader;
         private readonly GameTime gameTime;
         private readonly string modelName; // used as ImGui ID
-        private bool isPlaying = false;
+        private bool isPlaying;
         private int currentAnimationI = -1;
 
         public readonly Location location = new();
@@ -31,7 +33,7 @@ public partial class ActorEditor
         public readonly Skeleton? skeleton;
         public readonly DebugSkeletonRenderer? skeletonRenderer;
         public readonly (AnimationType type, string fileName, SkeletalAnimation ani)[] animations;
-        public (int BoneIdx, Vector3 TargetPos)? singleIK = null;
+        public (int BoneIdx, Vector3 TargetPos)? singleIK;
 
         public Part(ITagContainer diContainer, string modelName, (AnimationType type, string filename)[] animationNames)
         {
@@ -79,9 +81,7 @@ public partial class ActorEditor
             SkeletalAnimation LoadAnimation(string filename)
             {
                 var animationPath = new FilePath("resources/models/actorsex/").Combine(filename);
-                using var contentStream = resourcePool.FindAndOpen(animationPath);
-                if (contentStream == null)
-                    throw new IOException($"Could not open animation at {animationPath.ToPOSIXString()}");
+                using var contentStream = resourcePool.FindAndOpen(animationPath) ?? throw new IOException($"Could not open animation at {animationPath.ToPOSIXString()}");
                 var animation = SkeletalAnimation.ReadNew(contentStream);
                 if (skeleton != null && animation.BoneCount != skeleton.Bones.Count)
                     throw new InvalidDataException($"Animation {filename} is incompatible with actor skeleton {modelName}");

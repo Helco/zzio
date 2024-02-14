@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Numerics;
-using System.Linq;
-using DefaultEcs.System;
 using SubMode = zzre.game.messages.SetCameraMode.SubMode;
 
 namespace zzre.game.systems;
 
-internal class CreatureCamera : BaseCamera
+internal sealed class CreatureCamera : BaseCamera
 {
     private readonly Game game;
     private readonly IDisposable setCameraModeSubscription;
 
-    private DefaultEcs.Entity source, target;
+    private DefaultEcs.Entity source;
     private Location sourceLoc = new();
     private Location targetLoc = new();
     private SubMode mode;
@@ -50,9 +48,9 @@ internal class CreatureCamera : BaseCamera
         (sourceLoc, targetLoc) = majorMode == 10
             ? (playerLocation, npcLocation)
             : (npcLocation, playerLocation);
-        (source, target) = majorMode == 10
-            ? (game.PlayerEntity, message.TargetEntity)
-            : (message.TargetEntity, game.PlayerEntity);
+        source = majorMode == 10
+            ? game.PlayerEntity
+            : message.TargetEntity;
 
         IsEnabled = true;
     }

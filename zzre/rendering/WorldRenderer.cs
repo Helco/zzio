@@ -14,28 +14,25 @@ public class WorldRenderer : BaseDisposable
     private readonly GraphicsDevice graphicsDevice;
     private readonly DeviceBufferRange locationRange;
     private readonly Camera camera;
-    private readonly Texture whiteTexture;
-
     private WorldMesh? worldMesh;
     public WorldMesh? WorldMesh
     {
         get => worldMesh;
         set
         {
-            if (value is null)
-                throw new ArgumentNullException(nameof(value));
+            ArgumentNullException.ThrowIfNull(value);
             worldMesh = value;
             LoadMaterials();
             visibleMeshSections.Clear();
         }
     }
-    public Texture WhiteTexture => whiteTexture;
+    public Texture WhiteTexture { get; }
 
     private Frustum viewFrustum;
-    private ModelMaterial[] materials = Array.Empty<ModelMaterial>();
+    private ModelMaterial[] materials = [];
     public IReadOnlyList<ModelMaterial> Materials => materials;
 
-    private readonly List<WorldMesh.MeshSection> visibleMeshSections = new();
+    private readonly List<WorldMesh.MeshSection> visibleMeshSections = [];
     public IReadOnlyList<WorldMesh.MeshSection> VisibleMeshSections => visibleMeshSections;
 
     public Location Location { get; } = new Location();
@@ -49,9 +46,9 @@ public class WorldRenderer : BaseDisposable
         locationRange = locationBuffer.Add(Location);
 
         graphicsDevice = diContainer.GetTag<GraphicsDevice>();
-        whiteTexture = graphicsDevice.ResourceFactory.CreateTexture(new(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
-        whiteTexture.Name = "White";
-        graphicsDevice.UpdateTexture(whiteTexture, new byte[] { 255, 255, 255, 255 }, 0, 0, 0, 1, 1, 1, 0, 0);
+        WhiteTexture = graphicsDevice.ResourceFactory.CreateTexture(new(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
+        WhiteTexture.Name = "White";
+        graphicsDevice.UpdateTexture(WhiteTexture, new byte[] { 255, 255, 255, 255 }, 0, 0, 0, 1, 1, 1, 0, 0);
     }
 
     protected override void DisposeManaged()
@@ -59,7 +56,7 @@ public class WorldRenderer : BaseDisposable
         base.DisposeManaged();
         diContainer.GetTag<LocationBuffer>().Remove(locationRange);
         DisposeMaterials();
-        whiteTexture.Dispose();
+        WhiteTexture.Dispose();
     }
 
     private void DisposeMaterials()
@@ -67,14 +64,14 @@ public class WorldRenderer : BaseDisposable
         var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
         foreach (var material in materials)
         {
-            if (textureLoader is not CachedAssetLoader<Texture> && material.Texture.Texture != whiteTexture)
+            if (textureLoader is not CachedAssetLoader<Texture> && material.Texture.Texture != WhiteTexture)
             {
                 material.Texture.Texture?.Dispose();
                 material.Sampler.Sampler?.Dispose();
             }
             material.Dispose();
         }
-        materials = Array.Empty<ModelMaterial>();
+        materials = [];
     }
 
     public void LoadMaterials()
@@ -96,7 +93,7 @@ public class WorldRenderer : BaseDisposable
                 (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBase, rwMaterial);
             else
             {
-                material.Texture.Texture = whiteTexture;
+                material.Texture.Texture = WhiteTexture;
                 material.Sampler.Sampler = graphicsDevice.PointSampler;
             }
             material.LinkTransformsTo(camera);

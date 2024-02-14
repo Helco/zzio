@@ -16,7 +16,7 @@ public static class BinaryIOExtension
     }
 
     /// <summary>Reads a fixed-size string</summary>
-    /// <remarks>Zero-bytes will be removed</summary>
+    /// <remarks>Zero-bytes will be removed</remarks>
     public static string ReadSizedString(this BinaryReader reader, int len)
     {
         if (len == 0)

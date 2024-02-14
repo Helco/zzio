@@ -1,5 +1,4 @@
-﻿using System;
-using zzio;
+﻿using zzio;
 using static ImGuiNET.ImGui;
 using static zzre.imgui.ImGuiEx;
 
@@ -7,7 +6,7 @@ namespace zzre.tools;
 
 partial class SceneEditor
 {
-    private class MiscComponent
+    private sealed class MiscComponent
     {
         private readonly ITagContainer diContainer;
         private readonly SceneEditor editor;

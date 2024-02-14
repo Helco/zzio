@@ -121,7 +121,7 @@ public class CLI
         "endIf"
     };
 
-    private static IReadOnlyDictionary<string, char> _commandByLong = null;
+    private static IReadOnlyDictionary<string, char> _commandByLong;
     private static IReadOnlyDictionary<string, char> CommandByLong
     {
         get

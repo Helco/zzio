@@ -38,8 +38,8 @@ public class RWCollision : Section
     public const int SplitCount = -1;
     public override SectionId sectionId => SectionId.CollisionPLG;
 
-    public CollisionSplit[] splits = Array.Empty<CollisionSplit>();
-    public int[] map = Array.Empty<int>();
+    public CollisionSplit[] splits = [];
+    public int[] map = [];
 
     protected override void readBody(Stream stream)
     {

@@ -10,8 +10,6 @@ namespace zzre.game.systems.ui;
 
 public class UIPreloader
 {
-    private const float ButtonTextSpacing = 10f;
-
     public static readonly FColor DefaultOverlayColor = new(0.029999999f, 0.050000001f, 0.029999999f, 0.8f);
 
     internal readonly DefaultEcs.World UIWorld;
@@ -235,12 +233,12 @@ public class UIPreloader
         return button;
     }
 
-    public string GetSpellPrices(SpellRow spellRow) {
+    public static string GetSpellPrices(SpellRow spellRow) {
         var sheet = spellRow.Type == 0 ? 5 : 4;
         return $"{{{sheet}{(int)spellRow.PriceA}}}{{{sheet}{(int)spellRow.PriceB}}}{{{sheet}{(int)spellRow.PriceC}}}";
     }
 
-    public string GetLightsIndicator(int value) {
+    public static string GetLightsIndicator(int value) {
         return string.Concat(Enumerable.Repeat("{1017}", value)) + string.Concat(Enumerable.Repeat("{1018}", 5-value));
     }
 

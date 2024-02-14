@@ -25,6 +25,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cli", "cli", "{78DA8A29-9D9
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "zzre", "zzre", "{1A98F664-A66E-44DF-8E3C-0618671E4AFC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0Common", "0Common", "{FB326360-207F-4978-A266-D19BDB444B50}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		CodeQuality.props = CodeQuality.props
+		NoCodeQuality.props = NoCodeQuality.props
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

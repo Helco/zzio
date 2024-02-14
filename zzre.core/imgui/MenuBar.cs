@@ -7,12 +7,12 @@ namespace zzre.imgui;
 
 public class MenuBar
 {
-    private class MenuBarItem
+    private sealed class MenuBarItem
     {
         public string Name { get; }
         public Action<string>? OnContent { get; }
         public MenuBarItem? Parent { get; }
-        public List<MenuBarItem> Children { get; } = new List<MenuBarItem>();
+        public List<MenuBarItem> Children { get; } = [];
 
         public MenuBarItem(MenuBarItem? parent, string name, Action<string>? onClick)
         {
@@ -32,9 +32,7 @@ public class MenuBar
         var parts = path.Split("/");
         foreach (var part in parts[..^1])
         {
-            var nextParent = curParent.Children.FirstOrDefault(i => i.Name.Equals(part, comp));
-            if (nextParent == null)
-                nextParent = new MenuBarItem(curParent, part, null);
+            var nextParent = curParent.Children.FirstOrDefault(i => i.Name.Equals(part, comp)) ?? new MenuBarItem(curParent, part, null);
             curParent = nextParent;
         }
 
@@ -58,12 +56,12 @@ public class MenuBar
             onChanged?.Invoke();
     });
 
-    public void AddRadio(string path, string[] labels, GetRefValueFunc<int> getValue, Action? onChanged = null) => AddItem(path, name =>
+    public void AddRadio(string path, IReadOnlyList<string> labels, GetRefValueFunc<int> getValue, Action? onChanged = null) => AddItem(path, name =>
     {
         if (!BeginMenu(name))
             return;
         ref int curValue = ref getValue();
-        for (int i = 0; i < labels.Length; i++)
+        for (int i = 0; i < labels.Count; i++)
         {
             if (MenuItem(labels[i], "", curValue == i))
             {
@@ -89,7 +87,7 @@ public class MenuBar
         EndMenuBar();
     }
 
-    private void UpdateItem(MenuBarItem item)
+    private static void UpdateItem(MenuBarItem item)
     {
         if (item.OnContent != null)
         {

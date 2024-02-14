@@ -18,11 +18,11 @@ public class GameTime
     public float TotalElapsed => (float)watch.Elapsed.TotalSeconds;
     public float MaxDelta { get; set; } = 1 / 30f;
     public float Delta => Math.Min(MaxDelta, UnclampedDelta);
-    public float UnclampedDelta { get; private set; } = 0.0f;
-    public int Framerate { get; private set; } = 0;
-    public double FrametimeAvg { get; private set; } = 0f;
-    public double FrametimeSD { get; private set; } = 0f;
-    public bool HasFramerateChanged { get; private set; } = false;
+    public float UnclampedDelta { get; private set; }
+    public int Framerate { get; private set; }
+    public double FrametimeAvg { get; private set; }
+    public double FrametimeSD { get; private set; }
+    public bool HasFramerateChanged { get; private set; }
 
     private TimeSpan TargetFrametime => TimeSpan.FromSeconds(1.0 / TargetFramerate);
     public string FormattedStats => $"FPS: {Framerate} | FT: {FrametimeAvg:F2}ms";

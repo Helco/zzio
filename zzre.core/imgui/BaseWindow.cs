@@ -10,7 +10,7 @@ public abstract class BaseWindow : TagContainer
     public string Title { get; set; }
     public ImGuiWindowFlags Flags { get; set; }
     public abstract bool IsOpen { get; }
-    public bool IsFocused { get; protected set; } = false;
+    public bool IsFocused { get; protected set; }
 
     public event Action OnRender = () => { };
     public event Action OnBeforeContent = () => { };

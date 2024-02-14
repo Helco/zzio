@@ -22,9 +22,7 @@ public interface IAssetLoader<TAsset> where TAsset : class, IDisposable
 
     TAsset Load(FilePath path)
     {
-        var resource = DIContainer.GetTag<IResourcePool>().FindFile(path);
-        if (resource == null)
-            throw new FileNotFoundException($"Could not find asste at \"{path.ToPOSIXString()}\"");
+        var resource = DIContainer.GetTag<IResourcePool>().FindFile(path) ?? throw new FileNotFoundException($"Could not find asste at \"{path.ToPOSIXString()}\"");
         return Load(resource);
     }
 }

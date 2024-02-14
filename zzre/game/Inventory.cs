@@ -13,7 +13,7 @@ using zzio;
 public partial class Inventory : IReadOnlyCollection<InventoryCard>
 {
     private readonly zzio.db.MappedDB mappedDB;
-    private readonly List<InventoryCard?> cards = new();
+    private readonly List<InventoryCard?> cards = [];
     private readonly InventoryFairy?[] fairySlots = new InventoryFairy?[FairySlotCount];
     public int Count { get; private set; }
 
@@ -34,8 +34,7 @@ public partial class Inventory : IReadOnlyCollection<InventoryCard>
         foreach (var card in savegame.inventory)
         {
             var atIndex = card.atIndex;
-            if (atIndex < 0 || atIndex >= cards.Count)
-                throw new ArgumentOutOfRangeException("Save inventory card index is not valid");
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(atIndex, (uint)cards.Count);
             cards[(int)atIndex] = card;
         }
 

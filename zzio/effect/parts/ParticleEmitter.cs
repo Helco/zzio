@@ -28,7 +28,7 @@ public enum ParticleSpawnMode
 public class ParticleEmitter : IEffectPart
 {
     public EffectPartType Type => EffectPartType.ParticleEmitter;
-    public string Name => name;
+    public string Name { get; set; } = "Particle Emitter";
 
     public uint
         phase1 = 1000,
@@ -37,15 +37,15 @@ public class ParticleEmitter : IEffectPart
         spawnRate = 1000,
         tileW = 256,
         tileH = 256,
-        tileId = 0,
+        tileId,
         tileCount = 1,
         tileDuration = 1;
     public ParticleSpawnMode spawnMode = ParticleSpawnMode.Normal;
     public float
         minVel = 1.0f,
         verticalDir = 90.0f,
-        horRadius = 0.0f,
-        verRadius = 0.0f;
+        horRadius,
+        verRadius;
     public ValueRangeAnimation
         life = new(1.0f, 0.0f),
         scale = new(0.2f, 0.0f, 2.0f),
@@ -58,11 +58,9 @@ public class ParticleEmitter : IEffectPart
         gravity,
         gravityMod;
     public bool
-        hasDirection = false;
-    public string
-        name = "Particle Emitter",
-        texName = "standard";
-    public ParticleType type = ParticleType.Particle;
+        hasDirection;
+    public string texName = "standard";
+    public ParticleType particleType = ParticleType.Particle;
     public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
     public float Duration => (phase1 + phase2) / 1000f;
@@ -76,7 +74,7 @@ public class ParticleEmitter : IEffectPart
         phase1 = r.ReadUInt32();
         phase2 = r.ReadUInt32();
         r.BaseStream.Seek(4 * 4 + 32 + 1, SeekOrigin.Current); // many unused variables
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         r.BaseStream.Seek(3, SeekOrigin.Current);
         minProgress = r.ReadUInt32();
         life.value = r.ReadSingle();
@@ -102,7 +100,7 @@ public class ParticleEmitter : IEffectPart
         scale.width = r.ReadSingle();
         gravity = r.ReadVector3();
         gravityMod = r.ReadVector3();
-        type = EnumUtils.intToEnum<ParticleType>(r.ReadInt32());
+        particleType = EnumUtils.intToEnum<ParticleType>(r.ReadInt32());
         texName = r.ReadSizedCString(32);
         tileW = r.ReadUInt32();
         tileH = r.ReadUInt32();

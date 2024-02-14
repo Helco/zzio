@@ -49,7 +49,7 @@ public class DialogLookAt : ISystem<float>
             HandleNPCLookAt(dialogEntity, ShouldNPCLookAt(newValue));
     }
 
-    private bool ShouldPlayerLookAt(components.DialogState state) =>
+    private static bool ShouldPlayerLookAt(components.DialogState state) =>
         ShouldNPCLookAt(state) ||
         state == components.DialogState.NpcWalking;
 
@@ -64,7 +64,7 @@ public class DialogLookAt : ISystem<float>
             game.PlayerEntity.Remove<components.PuppetActorTarget>();
     }
 
-    private bool ShouldNPCLookAt(components.DialogState state) =>
+    private static bool ShouldNPCLookAt(components.DialogState state) =>
         state == components.DialogState.Delay ||
         state == components.DialogState.WaitForSayString ||
         state == components.DialogState.Talk ||

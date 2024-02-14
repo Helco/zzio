@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using DefaultEcs.Resource;
-using StbImageSharp;
 using Veldrid;
 using zzio.vfs;
 using zzre.materials;
@@ -13,7 +12,7 @@ public record struct UITileSheetInfo(string Name, bool IsFont);
 
 public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.IDisposable
 {
-    private readonly Dictionary<TileSheet, UIMaterial> materials = new();
+    private readonly Dictionary<TileSheet, UIMaterial> materials = [];
     private readonly ITagContainer diContainer;
     private readonly UI ui;
     private readonly GraphicsDevice graphicsDevice;

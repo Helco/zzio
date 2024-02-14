@@ -15,7 +15,7 @@ public class FileResourcePool : IResourcePool
         this.basePath = basePath.Absolute;
     }
 
-    private class DirectoryResource : IResource
+    private sealed class DirectoryResource : IResource
     {
         private readonly FileResourcePool pool;
         public FilePath Path { get; }
@@ -43,7 +43,7 @@ public class FileResourcePool : IResourcePool
             .Select(relativePath => new DirectoryResource(pool, this, relativePath));
     }
 
-    private class FileResource : IResource
+    private sealed class FileResource : IResource
     {
         private readonly FileResourcePool pool;
         public FilePath Path { get; }

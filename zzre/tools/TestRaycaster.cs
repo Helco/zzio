@@ -15,31 +15,28 @@ namespace zzre.tools;
 
 public class TestRaycaster : ListDisposable
 {
-    private class RaycastObject
+    private sealed class RaycastObject
     {
         public IRaycastable Geometry { get; set; } = null!;
         public IColor Color { get; init; } = IColor.White;
         public Func<RaycastObject, Vector3, Raycast, IColor> Shader { get; init; } = (_1, _2, _3) => IColor.Black;
     }
 
-    private readonly ITagContainer diContainer;
     private readonly FramebufferArea fbArea;
     private readonly MouseEventArea mouseEventArea;
     private readonly Camera camera;
-    private readonly FlyControlsTag controls;
     private readonly GraphicsDevice device;
     private readonly IReadOnlyList<RaycastObject> objects;
     private readonly RaycastObject rotatingBox;
 
     private IColor[]? pixels;
     private int PixelCount => (int)(fbArea.Framebuffer.Width * fbArea.Framebuffer.Height);
-    private float rotation = 0.0f;
+    private float rotation;
 
     public Window Window { get; }
 
     public TestRaycaster(ITagContainer diContainer)
     {
-        this.diContainer = diContainer;
         device = diContainer.GetTag<GraphicsDevice>();
         Window = diContainer.GetTag<WindowContainer>().NewWindow("Test Raycaster");
         Window.AddTag(this);
@@ -50,7 +47,7 @@ public class TestRaycaster : ListDisposable
         localDiContainer.AddTag(camera = new Camera(localDiContainer));
         fbArea = new FramebufferArea(Window, device);
         mouseEventArea = new MouseEventArea(Window);
-        controls = new FlyControlsTag(Window, camera.Location, localDiContainer);
+        new FlyControlsTag(Window, camera.Location, localDiContainer);
         AddDisposable(camera);
 
         fbArea.OnResize += OnResize;
@@ -162,7 +159,8 @@ public class TestRaycaster : ListDisposable
             0, 0);
     }
 
-    private IColor ShaderSolid(RaycastObject obj, Vector3 _1, Raycast _2) => obj.Color;
+#pragma warning disable IDE0051 // Remove unused private members
+    private static IColor ShaderSolid(RaycastObject obj, Vector3 _1, Raycast _2) => obj.Color;
 
     private IColor ShaderNormal(RaycastObject obj, Vector3 _1, Raycast r) => new(
         (byte)((r.Normal.X + 1f) * 127f),
@@ -170,17 +168,18 @@ public class TestRaycaster : ListDisposable
         (byte)((r.Normal.Z + 1f) * 127f),
         255);
 
-    private IColor ShaderChecker(RaycastObject obj, Vector3 _1, Raycast r)
+    private static IColor ShaderChecker(RaycastObject obj, Vector3 _1, Raycast r)
     {
-        int Check(float p) => Math.Abs(((int)Math.Round(p)) % 2);
+        static int Check(float p) => Math.Abs(((int)Math.Round(p)) % 2);
         return Check(r.Point.X) == Check(r.Point.Z) ? IColor.Red : IColor.Blue;
     }
 
-    private IColor ShaderDistance(RaycastObject obj, Vector3 _1, Raycast r)
+    private static IColor ShaderDistance(RaycastObject obj, Vector3 _1, Raycast r)
     {
         if (r.Distance < 0f)
             return new IColor(255, 0, 255, 255);
         byte d = (byte)Math.Clamp(255.0f - r.Distance, 0, 255f);
         return new IColor(d, d, d, 255);
     }
+#pragma warning restore IDE0051 // Remove unused private members
 }

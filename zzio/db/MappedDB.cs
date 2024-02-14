@@ -8,8 +8,7 @@ namespace zzio.db;
 
 public class MappedDB
 {
-    private readonly Dictionary<ModuleType, Dictionary<UID, Row>> modules =
-        new();
+    private readonly Dictionary<ModuleType, Dictionary<UID, Row>> modules = [];
 
     private readonly ResettableLazy<IReadOnlyDictionary<int, FairyRow>> fairiesByIndex;
     private readonly ResettableLazy<IReadOnlyDictionary<int, ItemRow>> itemsByIndex;
@@ -18,7 +17,7 @@ public class MappedDB
     public MappedDB()
     {
         foreach (var moduleType in Enum.GetValues(typeof(ModuleType)).Cast<ModuleType>())
-            modules.Add(moduleType, new Dictionary<UID, Row>());
+            modules.Add(moduleType, []);
         fairiesByIndex = new ResettableLazy<IReadOnlyDictionary<int, FairyRow>>(
             () => Fairies.ToDictionary(f => f.CardId.EntityId, f => f));
         itemsByIndex = new ResettableLazy<IReadOnlyDictionary<int, ItemRow>>(

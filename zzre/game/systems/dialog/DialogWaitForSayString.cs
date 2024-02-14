@@ -12,7 +12,7 @@ public partial class DialogWaitForSayString : AEntitySetSystem<float>
 
     private readonly IZanzarahContainer zzContainer;
     private readonly IDisposable resetUIDisposable;
-    private bool didClick = false;
+    private bool didClick;
 
     public DialogWaitForSayString(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {

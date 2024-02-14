@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Buffers;
 using System.Numerics;
-using zzio;
-using zzre.materials;
 
 namespace zzre.game.components.effect;
 

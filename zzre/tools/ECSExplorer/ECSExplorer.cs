@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ImGuiNET;
-using zzre.game;
 using zzre.game.components;
 using zzre.imgui;
 
@@ -15,7 +14,7 @@ internal interface IECSWindow
     IEnumerable<(string name, DefaultEcs.World)> GetWorlds();
 }
 
-internal partial class ECSExplorer
+internal sealed partial class ECSExplorer
 {
     private readonly ITagContainer diContainer;
     private readonly IECSWindow ecsWindow;
@@ -54,7 +53,7 @@ internal partial class ECSExplorer
         EndTabBar();
     }
 
-    private void HandleContentFor(DefaultEcs.World world)
+    private static void HandleContentFor(DefaultEcs.World world)
     {
         var entityContentRenderer = new EntityContentRenderer();
 
@@ -103,7 +102,7 @@ internal partial class ECSExplorer
         }
     }
 
-    private class LazySortedList<T> : List<T>
+    private sealed class LazySortedList<T> : List<T>
     {
         private bool isSorted = true;
 

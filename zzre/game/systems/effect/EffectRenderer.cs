@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DefaultEcs.System;
 using Veldrid;
 using zzre.materials;
@@ -13,7 +9,7 @@ namespace zzre.game.systems.effect;
 public class EffectRenderer : AEntityMultiMapSystem<CommandList, EffectMaterial>
 {
     private readonly EffectMesh effectMesh;
-    private readonly RangeCollection indexRanges = new();
+    private readonly RangeCollection indexRanges = [];
     private readonly components.RenderOrder responsibility;
 
     public EffectRenderer(ITagContainer diContainer, components.RenderOrder responsibility) :
@@ -36,7 +32,7 @@ public class EffectRenderer : AEntityMultiMapSystem<CommandList, EffectMaterial>
         indexRanges.MaxRangeValue = effectMesh.IndexCapacity;
         cl.PushDebugGroup($"EffectRenderer {responsibility}");
         effectMesh.Update(cl);
-        cl.SetIndexBuffer(effectMesh.IndexBuffer, effectMesh.IndexFormat);
+        cl.SetIndexBuffer(effectMesh.IndexBuffer, DynamicMesh.IndexFormat);
     }
 
     protected override void Update(CommandList cl, in EffectMaterial key, ReadOnlySpan<DefaultEcs.Entity> entities)

@@ -6,7 +6,6 @@ using System.Numerics;
 using zzio;
 using zzio.rwbs;
 using zzio.vfs;
-using zzre.materials;
 
 namespace zzre.rendering;
 

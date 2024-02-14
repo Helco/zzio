@@ -1,5 +1,4 @@
-﻿using System;
-using DefaultEcs.System;
+﻿using DefaultEcs.System;
 
 namespace zzre.game.systems;
 
@@ -10,7 +9,7 @@ public partial class PuppetActorTarget : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(
+    private static void Update(
         Location myLocation,
         in components.PuppetActorTarget target,
         ref components.PuppetActorMovement movement)

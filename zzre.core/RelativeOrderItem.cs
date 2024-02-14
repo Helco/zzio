@@ -4,8 +4,8 @@ namespace zzre.core;
 
 public class RelativeOrderItem
 {
-    private readonly List<RelativeOrderItem> predecessors = new();
-    private readonly List<RelativeOrderItem> ancessors = new();
+    private readonly List<RelativeOrderItem> predecessors = [];
+    private readonly List<RelativeOrderItem> ancessors = [];
 
     public IReadOnlyCollection<RelativeOrderItem> Predecessors => predecessors;
     public IReadOnlyCollection<RelativeOrderItem> Ancessors => ancessors;

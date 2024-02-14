@@ -95,8 +95,7 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
 
     public Range? AddBestFit(int length)
     {
-        if (length <= 0)
-            throw new ArgumentOutOfRangeException(nameof(length));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
         if (!ranges.Any())
         {
             if (MaxRangeValue < length)
@@ -200,7 +199,7 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
     public IEnumerator<Range> GetEnumerator() => ranges.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ranges.GetEnumerator();
 
-    private class RangeComparer : IComparer<Range>
+    private sealed class RangeComparer : IComparer<Range>
     {
         public int Compare(Range x, Range y) => x.Start.Value - y.Start.Value;
     }

@@ -19,6 +19,10 @@ public class StaticMesh : BaseDisposable, IVertexAttributeContainer
                 return Material - other.Material;
             return IndexOffset - other.IndexOffset;
         }
+        public static bool operator <(SubMesh left, SubMesh right) => left.CompareTo(right) < 0;
+        public static bool operator <=(SubMesh left, SubMesh right) => left.CompareTo(right) <= 0;
+        public static bool operator >(SubMesh left, SubMesh right) => left.CompareTo(right) > 0;
+        public static bool operator >=(SubMesh left, SubMesh right) => left.CompareTo(right) >= 0;
     }
 
     public class VertexAttribute
@@ -30,8 +34,8 @@ public class StaticMesh : BaseDisposable, IVertexAttributeContainer
 
     protected readonly GraphicsDevice graphicsDevice;
     protected readonly ResourceFactory resourceFactory;
-    private readonly List<SubMesh> subMeshes = new();
-    private readonly List<VertexAttribute> attributes = new();
+    private readonly List<SubMesh> subMeshes = [];
+    private readonly List<VertexAttribute> attributes = [];
     private DeviceBuffer? indexBuffer;
 
     public IReadOnlyList<SubMesh> SubMeshes => subMeshes;
@@ -61,8 +65,7 @@ public class StaticMesh : BaseDisposable, IVertexAttributeContainer
 
     private void CheckElementCountOfNewAttribute(string debugName, int elementCount)
     {
-        if (elementCount <= 0)
-            throw new ArgumentOutOfRangeException(nameof(elementCount));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(elementCount);
         if (VertexCount > 0 && VertexCount != elementCount)
             throw new ArgumentException($"Vertex count of attribute {debugName} does not match");
         if (VertexCount == 0)

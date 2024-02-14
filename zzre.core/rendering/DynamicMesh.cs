@@ -59,14 +59,14 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
     private readonly bool dynamic;
     private readonly string meshName;
     private readonly float minGrowFactor;
-    private readonly List<IAttribute> attributes = new();
+    private readonly List<IAttribute> attributes = [];
     private readonly DynamicGraphicsBuffer indexBuffer;
 
     public int VertexCapacity => attributes.FirstOrDefault()?.Buffer.ReservedCapacity ?? 0;
     public int VertexCount => attributes.FirstOrDefault()?.Buffer.Count ?? 0;
     public int IndexCapacity => indexBuffer.ReservedCapacity;
     public int IndexCount => indexBuffer.Count;
-    public IndexFormat IndexFormat => IndexFormat.UInt16;
+    public static IndexFormat IndexFormat => IndexFormat.UInt16;
     public DeviceBuffer IndexBuffer => indexBuffer.Buffer;
 
     public DynamicMesh(ITagContainer diContainer,
@@ -74,8 +74,7 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
         string name = nameof(DynamicMesh),
         float minGrowFactor = 1.5f)
     {
-        if (minGrowFactor <= 1f)
-            throw new ArgumentOutOfRangeException(nameof(minGrowFactor));
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(minGrowFactor, 1f);
         graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         resourceFactory = graphicsDevice.ResourceFactory;
         this.dynamic = dynamic;
@@ -185,8 +184,8 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
 
     public void Preallocate(int vertices, int indices)
     {
-        if (vertices < 0 || indices < 0)
-            throw new ArgumentOutOfRangeException();
+        ArgumentOutOfRangeException.ThrowIfLessThan(vertices, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThan(indices, 0);
         if (vertices > 0)
         {
             if (VertexCount > 0)

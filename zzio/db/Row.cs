@@ -7,7 +7,7 @@ namespace zzio.db;
 public class Row
 {
     public UID uid;
-    public Cell[] cells = Array.Empty<Cell>();
+    public Cell[] cells = [];
 
     public void Read(BinaryReader reader)
     {

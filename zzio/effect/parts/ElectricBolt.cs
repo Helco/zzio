@@ -6,11 +6,11 @@ namespace zzio.effect.parts;
 public class ElectricBolt : IEffectPart
 {
     public EffectPartType Type => EffectPartType.ElectricBolt;
-    public string Name => name;
+    public string Name { get; set; } = "Electric Bolt";
 
     public uint
         phase1 = 1000,
-        phase2 = 0,
+        phase2,
         tileId = 1,
         tileW = 32,
         tileH = 32,
@@ -19,9 +19,7 @@ public class ElectricBolt : IEffectPart
     public float
         branchDist = 1.0f,
         branchWidth = 1.0f;
-    public string
-        texName = "standard",
-        name = "Eletric Bolt";
+    public string texName = "standard";
 
     public float Duration => (phase1 + phase2) / 1000f;
 
@@ -42,7 +40,7 @@ public class ElectricBolt : IEffectPart
         tileCount = r.ReadUInt32();
         r.BaseStream.Seek(4, SeekOrigin.Current);
         color = IColor.ReadNew(r);
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         r.BaseStream.Seek(4, SeekOrigin.Current);
     }
 }

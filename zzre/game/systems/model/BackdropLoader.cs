@@ -49,7 +49,7 @@ public class BackdropLoader : ISystem<float>
 
         int? dynBackdropId = char.IsDigit(backdropName.First())
             ? int.Parse(backdropName[..backdropName.IndexOfAnyNot("0123456789".ToArray())])
-            : null as int?;
+            : null;
         switch(dynBackdropId)
         {
             case 10: CreateStaticBackdrop("fbgsm01p", depthTest: false, depthWrite: false,

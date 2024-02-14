@@ -45,10 +45,10 @@ public class InMemoryResourcePool : IResourcePool
         return newFile;
     }
 
-    private class InMemoryDirectory : IResource
+    private sealed class InMemoryDirectory : IResource
     {
-        public readonly List<InMemoryDirectory> directories = new();
-        public readonly List<InMemoryFile> files = new();
+        public readonly List<InMemoryDirectory> directories = [];
+        public readonly List<InMemoryFile> files = [];
 
         public ResourceType Type => ResourceType.Directory;
         public FilePath Path { get; }
@@ -67,7 +67,7 @@ public class InMemoryResourcePool : IResourcePool
         }
     }
 
-    private class InMemoryFile : IResource
+    private sealed class InMemoryFile : IResource
     {
         public readonly byte[] content;
 
@@ -83,7 +83,7 @@ public class InMemoryResourcePool : IResourcePool
             Path = path;
             Pool = parent.Pool;
             Parent = parent;
-            this.content = content ?? Array.Empty<byte>();
+            this.content = content ?? [];
         }
     }
 }

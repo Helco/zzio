@@ -8,7 +8,7 @@ public class UnknownSection : Section
 {
     private readonly SectionId _sectionId;
     public override SectionId sectionId => _sectionId;
-    public byte[] data = Array.Empty<byte>();
+    public byte[] data = [];
 
     public UnknownSection() : this(SectionId.Unknown) { }
 

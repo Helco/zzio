@@ -6,41 +6,39 @@ namespace zzio.effect.parts;
 public class RandomPlanes : IEffectPart
 {
     public EffectPartType Type => EffectPartType.RandomPlanes;
-    public string Name => name;
+    public string Name { get; set; } = "Random Planes";
 
     public uint
         phase1 = 1000,
         phase2 = 1000,
         spawnRate = 1,
         planeLife = 250,
-        extraPhase = 0,
-        tileId = 0,
+        extraPhase,
+        tileId,
         tileCount = 1,
         tileDuration = 50,
         tileW = 16,
         tileH = 16;
     public IColor color = new(255, 255, 255, 255);
-    public uint amplColor = 0;
+    public uint amplColor;
     public float
         minProgress = 1.0f,
         amplPosX = 1.0f,
         amplPosY = 1.0f,
-        rotationSpeedMult = 0.0f,
-        texShift = 0.0f,
-        scaleSpeedMult = 0.0f,
-        targetSize = 0.0f,
+        rotationSpeedMult,
+        texShift,
+        scaleSpeedMult,
+        targetSize,
         width = 0.1f,
         height = 0.1f,
         minScaleSpeed = 1.0f,
         maxScaleSpeed = 1.0f,
-        yOffset = 0.0f,
-        minPosX = 0.0f;
+        yOffset,
+        minPosX;
     public bool
-        ignorePhases = false,
-        circlesAround = false;
-    public string
-        texName = "standard",
-        name = "Random Planes";
+        ignorePhases,
+        circlesAround;
+    public string texName = "standard";
     public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
     public float Duration => (phase1 + phase2 + planeLife + extraPhase) / 1000f;
@@ -76,7 +74,7 @@ public class RandomPlanes : IEffectPart
         tileW = r.ReadUInt32();
         tileH = r.ReadUInt32();
         color = IColor.ReadNew(r);
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         amplColor = r.ReadUInt32();
         circlesAround = r.ReadBoolean();
         r.BaseStream.Seek(3, SeekOrigin.Current);

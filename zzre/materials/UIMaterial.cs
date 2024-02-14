@@ -1,9 +1,5 @@
-﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.InteropServices;
-using Veldrid;
 using zzio;
 using zzre.rendering;
 

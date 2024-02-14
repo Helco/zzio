@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using zzio;
 using zzio.rwbs;
 
@@ -136,5 +134,5 @@ public abstract partial class TreeCollider : TriangleCollider
         }
     }
 
-    private Plane GetPlane(CollisionSector sector) => new(sector.type.ToNormal(), sector.value);
+    private static Plane GetPlane(CollisionSector sector) => new(sector.type.ToNormal(), sector.value);
 }

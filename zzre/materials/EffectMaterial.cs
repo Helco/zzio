@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Veldrid;
 using zzio;
-using zzio.effect;
 using zzre.rendering;
 
 namespace zzre.materials;

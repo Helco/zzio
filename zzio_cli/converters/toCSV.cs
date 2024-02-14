@@ -32,12 +32,12 @@ public class FBStoCSV : IConverter
         }
     }
 
-    private string escapeString(string str)
+    private static string escapeString(string str)
     {
         return "\"" + str.Replace("\"", "\"\"") + "\"";
     }
 
-    private void writeCells(StreamWriter writer, params object[] args)
+    private static void writeCells(StreamWriter writer, params object[] args)
     {
         writer.WriteLine(string.Join(",", args.Select(arg =>
         {
@@ -47,7 +47,7 @@ public class FBStoCSV : IConverter
         })));
     }
 
-    private void writeTextTable(StreamWriter writer, MappedDB mappedDb)
+    private static void writeTextTable(StreamWriter writer, MappedDB mappedDb)
     {
         writer.WriteLine("# UID, Text, Group, Define");
         foreach (TextRow text in mappedDb.Texts)
@@ -58,7 +58,7 @@ public class FBStoCSV : IConverter
                 text.Define);
     }
 
-    private void writeSpellTable(StreamWriter writer, MappedDB mappedDb)
+    private static void writeSpellTable(StreamWriter writer, MappedDB mappedDb)
     {
         writer.WriteLine(
             "# UID, Name, Type, CardId, PriceA, PriceB, PriceC, " +
@@ -83,7 +83,7 @@ public class FBStoCSV : IConverter
                 spell.Behavior);
     }
 
-    private void writeNpcTable(StreamWriter writer, MappedDB mappedDb)
+    private static void writeNpcTable(StreamWriter writer, MappedDB mappedDb)
     {
         writer.WriteLine(
             "# UID, Name, Script1, Script2, Script3, Script4, Script5, Unknown");
@@ -99,7 +99,7 @@ public class FBStoCSV : IConverter
                 npc.InternalName);
     }
 
-    private void writeItemTable(StreamWriter writer, MappedDB mappedDb)
+    private static void writeItemTable(StreamWriter writer, MappedDB mappedDb)
     {
         writer.WriteLine(
             "# UID, Name, CardId, Info, Special, Script, Unknown");
@@ -114,7 +114,7 @@ public class FBStoCSV : IConverter
                 item.Unknown);
     }
 
-    private void writeFairyTable(StreamWriter writer, MappedDB mappedDb)
+    private static void writeFairyTable(StreamWriter writer, MappedDB mappedDb)
     {
         writer.WriteLine(
             "# UID, Mesh, Name, Class0, CardId, Unknown, Level0, Level1, " +
@@ -153,7 +153,7 @@ public class FBStoCSV : IConverter
                 fairy.WingSound);
     }
 
-    private void writeDialogTable(StreamWriter writer, MappedDB mappedDb)
+    private static void writeDialogTable(StreamWriter writer, MappedDB mappedDb)
     {
         writer.WriteLine("# UID, Text, Npc, Voice");
         foreach (DialogRow dialog in mappedDb.Dialogs)
@@ -164,7 +164,7 @@ public class FBStoCSV : IConverter
                 dialog.Voice);
     }
 
-    private void writeUnknownTable(StreamWriter writer, Table table)
+    private static void writeUnknownTable(StreamWriter writer, Table table)
     {
         foreach (Row row in table.rows.Values)
         {

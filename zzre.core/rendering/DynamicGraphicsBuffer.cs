@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Veldrid;
 using zzio;
@@ -16,12 +15,11 @@ public class DynamicGraphicsBuffer : BaseDisposable
     private readonly float minGrowFactor;
     private readonly RangeCollection dirtyBytes = new(0);
     private readonly RangeCollection usedElements = new(0);
-    private DeviceBuffer? buffer;
     private byte[]? bytes;
     private int sizePerElement;
 
-    public DeviceBuffer? OptionalBuffer => buffer;
-    public DeviceBuffer Buffer => buffer ??
+    public DeviceBuffer? OptionalBuffer { get; private set; }
+    public DeviceBuffer Buffer => OptionalBuffer ??
         throw new InvalidOperationException("Buffer was not created yet");
 
     public int SizePerElement
@@ -31,8 +29,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
         {
             if (Count > 0)
                 throw new InvalidOperationException("Cannot change sizePerElement of a non-empty buffer");
-            if (value <= 0)
-                throw new ArgumentOutOfRangeException(nameof(value));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
             sizePerElement = value;
         }
     }
@@ -53,8 +50,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
         string bufferName = nameof(DynamicGraphicsBuffer),
         float minGrowFactor = 1.5f)
     {
-        if (minGrowFactor <= 1f)
-            throw new ArgumentOutOfRangeException(nameof(minGrowFactor));
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(minGrowFactor, 1f);
         this.device = device;
         this.usage = usage;
         this.bufferName = bufferName;
@@ -64,8 +60,8 @@ public class DynamicGraphicsBuffer : BaseDisposable
     protected override void DisposeManaged()
     {
         base.DisposeManaged();
-        buffer?.Dispose();
-        buffer = null;
+        OptionalBuffer?.Dispose();
+        OptionalBuffer = null;
         bytes = null;
         dirtyBytes.MaxRangeValue = 0;
         Clear();
@@ -138,14 +134,14 @@ public class DynamicGraphicsBuffer : BaseDisposable
 
     public void Update(CommandList cl)
     {
-        if (!dirtyBytes.Any() && (buffer != null || CommittedCapacity == 0))
+        if (!dirtyBytes.Any() && (OptionalBuffer != null || CommittedCapacity == 0))
             return;
         int capacityInBytes = CommittedCapacity * SizePerElement;
-        if ((uint)dirtyBytes.MaxValue > (buffer?.SizeInBytes ?? 0))
+        if ((uint)dirtyBytes.MaxValue > (OptionalBuffer?.SizeInBytes ?? 0))
         {
-            buffer?.Dispose();
-            buffer = device.ResourceFactory.CreateBuffer(new((uint)capacityInBytes, usage));
-            buffer.Name = bufferName;
+            OptionalBuffer?.Dispose();
+            OptionalBuffer = device.ResourceFactory.CreateBuffer(new((uint)capacityInBytes, usage));
+            OptionalBuffer.Name = bufferName;
             dirtyBytes.Clear();
             foreach (var usedElementRange in usedElements)
                 dirtyBytes.Add(AsByteRange(usedElementRange));
@@ -155,7 +151,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
         foreach (var range in dirtyBytes)
         {
             var offset = range.GetOffset(capacityInBytes);
-            cl.UpdateBuffer(buffer, (uint)offset, bytes.AsSpan(range));
+            cl.UpdateBuffer(OptionalBuffer, (uint)offset, bytes.AsSpan(range));
         }
         dirtyBytes.Clear();
     }

@@ -43,7 +43,7 @@ public partial class ButtonTiles : AEntitySetSystem<float>
     }
 
     [Update]
-    private void Update(
+    private static void Update(
         in DefaultEcs.Entity entity,
         in Rect rect,
         in components.ui.Tile[] tiles,

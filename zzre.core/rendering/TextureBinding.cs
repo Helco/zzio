@@ -4,7 +4,7 @@ namespace zzre.rendering;
 
 public class TextureBinding : BaseBinding
 {
-    private BindableResource? resource = null;
+    private BindableResource? resource;
     public override BindableResource? Resource => resource;
 
     public Texture? Texture

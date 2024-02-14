@@ -142,8 +142,8 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             AddTradeButton(parent, ref gambling, i);
     }
 
-    private void StartAnimation(ref components.DialogGambling gambling) => gambling.RowAnimationTimeLeft = rowAnimationDelay;
-    private void EndAnimation(ref components.DialogGambling gambling) => gambling.RowAnimationTimeLeft = null;
+    private static void StartAnimation(ref components.DialogGambling gambling) => gambling.RowAnimationTimeLeft = rowAnimationDelay;
+    private static void EndAnimation(ref components.DialogGambling gambling) => gambling.RowAnimationTimeLeft = null;
     private void TickAnimation(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
     {
         if (gambling.SelectedCards.Count < rows) {
@@ -163,7 +163,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var name = card.Name;
         var spellType = card.Type == 0 ? db.GetText(UIDOffensiveSpell).Text : db.GetText(UIDPassiveSpell).Text;
         var spellClass = preload.GetClassText(card.PriceA);
-        var prices = preload.GetSpellPrices(card);
+        var prices = systems.ui.UIPreloader.GetSpellPrices(card);
 
         if (!zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Contains(card.CardId)) {
             var newSpell = db.GetText(UIDNewSpell).Text.ToUpper(cultureInfo);
@@ -205,14 +205,14 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         }
     }
 
-    private string SpellValues(SpellRow card)
+    private static string SpellValues(SpellRow card)
     {
         var isAttack = card.Type == 0;
 
         var mana = "{104}" + (card.Mana == 5 ? "-/-" : $"{card.MaxMana}/{card.MaxMana}");
-        var level = preload.GetSpellPrices(card);
-        var damage = preload.GetLightsIndicator(card.Damage);
-        var loadup = preload.GetLightsIndicator(card.Loadup);
+        var level = systems.ui.UIPreloader.GetSpellPrices(card);
+        var damage = systems.ui.UIPreloader.GetLightsIndicator(card.Damage);
+        var loadup = systems.ui.UIPreloader.GetLightsIndicator(card.Loadup);
 
         if (isAttack) {
             return $"{mana}\n{level}\n{damage}\n{loadup}";
@@ -348,7 +348,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private void Pay(ref components.DialogGambling gambling)
     {
         var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
-        inventory.RemoveCards(gambling.Currency.CardId, (uint)pricePerRow);
+        inventory.RemoveCards(gambling.Currency.CardId, pricePerRow);
         gambling.CurrencyLabel.Dispose();
         gambling.CurrencyLabel = preload.CreateCurrencyLabel(gambling.Profile, gambling.Currency, inventory);
     }
@@ -359,7 +359,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private List<int?> CloverleafFilter(List<int?> cards) {
         if (!HasCloverleaf()) return cards;
 
-        List<int?> filteredCards = new();
+        List<int?> filteredCards = [];
         foreach (var card in cards)
             if (card != null || random.NextDouble() >= 0.8)
                 filteredCards.Add(card);

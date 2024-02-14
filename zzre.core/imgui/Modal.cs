@@ -16,7 +16,7 @@ public class Modal : BaseWindow
 
     private string uniqueId = $"###{Guid.NewGuid()}";
     private string FullTitle => Title + uniqueId;
-    private bool isOpen = false;
+    private bool isOpen;
     private NextAction nextAction = NextAction.None;
 
     public override bool IsOpen => (isOpen && nextAction != NextAction.Close);

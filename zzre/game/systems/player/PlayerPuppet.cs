@@ -15,7 +15,7 @@ public partial class PlayerPuppet : AEntitySetSystem<float>
     private const float BigFallTime = 0.31f;
     private const float SmallControlLockTime = 0.1f;
     private const float BigControlLockTime = 0.4f;
-    private const float MinFallAnimationTime = 0.3f;
+    //private const float MinFallAnimationTime = 0.3f;
     private const float CameraForwardYFactor = -0.7f;
     private const float NPCComfortZoneSpeed = 0.6f;
     private const string ThudVoiceSampleBase = "resources/AUDIO/SFX/VOICES/AMY/THD00";
@@ -72,7 +72,7 @@ public partial class PlayerPuppet : AEntitySetSystem<float>
         ActorTargetDirection(physics, ref puppetActorMovement);
     }
 
-    private void Animation(
+    private static void Animation(
         float elapsedTime,
         ref components.PlayerPuppet puppet,
         in components.HumanPhysics physics,
@@ -146,7 +146,7 @@ public partial class PlayerPuppet : AEntitySetSystem<float>
         puppet.DidResetPlanarVelocity = true;
     }
 
-    private void Idling(
+    private static void Idling(
         ref components.PlayerPuppet puppet,
         ref components.HumanPhysics physics)
     {

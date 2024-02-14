@@ -17,6 +17,8 @@ public static class TextureAssetLoaderExtensions
     {
         "marker"
     };
+    private static readonly IReadOnlyList<string> TextureExtensions = [".dds", ".bmp"];
+    private static readonly uint[] WhitePixel = [0xFFFFFFFF];
 
     public static int Count(this ColorComponents c) => c switch
     {
@@ -49,7 +51,7 @@ public static class TextureAssetLoaderExtensions
 
     public static FilePath GetTexturePathFromModel(this IAssetLoader<Texture> _, FilePath modelPath)
     {
-        var modelDirPartI = modelPath.Parts.IndexOf(p => p.ToLowerInvariant() == "models");
+        var modelDirPartI = modelPath.Parts.IndexOf(p => p.Equals("models", StringComparison.OrdinalIgnoreCase));
         var context = modelPath.Parts[modelDirPartI + 1];
         return new FilePath("resources/textures").Combine(context);
     }
@@ -99,14 +101,11 @@ public static class TextureAssetLoaderExtensions
         var resourcePool = loader.DIContainer.GetTag<IResourcePool>();
         var texture = basePaths
             .Select(basePath => basePath.Combine(texName))
-            .SelectMany(fullPath => new[] { ".dds", ".bmp" }.Select(ext => fullPath.ToPOSIXString() + ext))
+            .SelectMany(fullPath => TextureExtensions.Select(ext => fullPath.ToPOSIXString() + ext))
             .Select(resourcePool.FindFile)
             .Where(res => res != null)
             .Select(res => loader.TryLoad(res!, out var texture) ? texture : null)
-            .FirstOrDefault(tex => tex != null);
-
-        if (texture == null)
-            throw new InvalidDataException($"Could not load texture {texName}");
+            .FirstOrDefault(tex => tex != null) ?? throw new InvalidDataException($"Could not load texture {texName}");
         texture.Name = texName;
         return texture;
     }
@@ -116,7 +115,7 @@ public static class TextureAssetLoaderExtensions
         var device = loader.DIContainer.GetTag<GraphicsDevice>();
         var texture = device.ResourceFactory.CreateTexture(
             new TextureDescription(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D, TextureSampleCount.Count1));
-        device.UpdateTexture(texture, new[] { 0xFFFFFFFF }, 0, 0, 0, 1, 1, 1, 0, 0);
+        device.UpdateTexture(texture, WhitePixel, 0, 0, 0, 1, 1, 1, 0, 0);
         texture.Name = $"{name} (white)";
         return texture;
     }

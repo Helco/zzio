@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using DefaultEcs.System;
 using Veldrid;
 using zzre.rendering;
 using zzre.materials;
-using zzio.effect.parts;
 
 namespace zzre.game.systems.effect;
 

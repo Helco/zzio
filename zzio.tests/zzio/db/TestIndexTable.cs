@@ -11,7 +11,7 @@ public class TestIndexTable
         Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/indextable.fbs")
     );
 
-    private void testIndexTable(IndexTable table)
+    private static void testIndexTable(IndexTable table)
     {
         Assert.That(table, Is.Not.Null);
         Assert.That(table.ColumnCount, Is.EqualTo(3));

@@ -3,7 +3,7 @@ using zzre.game.systems.ui;
 
 namespace zzre.game.uibuilder;
 
-internal record TooltipTarget : LabelLike<TooltipTarget>
+internal sealed record TooltipTarget : LabelLike<TooltipTarget>
 {
     public TooltipTarget(UIPreloader preload, Entity parent) : base(preload, parent)
     {

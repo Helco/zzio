@@ -17,7 +17,7 @@ namespace zzre.tools;
 
 public partial class SceneEditor
 {
-    private class Model : BaseDisposable, ISelectable
+    private sealed class Model : BaseDisposable, ISelectable
     {
         private readonly ITagContainer diContainer;
         private readonly DeviceBufferRange locationRange;
@@ -53,7 +53,7 @@ public partial class SceneEditor
             mesh = clumpLoader.Load(new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
             if (mesh.IsEmpty)
             {
-                materials = Array.Empty<ModelMaterial>();
+                materials = [];
                 return;
             }
             materials = mesh.Materials.Select(rwMaterial =>
@@ -135,12 +135,12 @@ public partial class SceneEditor
         }
     }
 
-    private class ModelComponent : BaseDisposable, IEnumerable<ISelectable>
+    private sealed class ModelComponent : BaseDisposable, IEnumerable<ISelectable>
     {
         private readonly ITagContainer diContainer;
         private readonly SceneEditor editor;
 
-        private Model[] models = Array.Empty<Model>();
+        private Model[] models = [];
         private bool isVisible = true;
 
         public ModelComponent(ITagContainer diContainer)
@@ -166,7 +166,7 @@ public partial class SceneEditor
         {
             foreach (var oldModel in models)
                 oldModel.Dispose();
-            models = Array.Empty<Model>();
+            models = [];
             if (editor.scene == null)
                 return;
 

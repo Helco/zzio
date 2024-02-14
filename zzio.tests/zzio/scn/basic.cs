@@ -11,7 +11,7 @@ public class TestSceneBasic
         Path.Combine(TestContext.CurrentContext.TestDirectory, "resources/scene_sample.scn")
     );
 
-    private void testScene(Scene scn)
+    private static void testScene(Scene scn)
     {
         Assert.That(scn.ambientSound, Is.EqualTo(12));
 

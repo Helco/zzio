@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace zzre.game.components.effect;
+﻿namespace zzre.game.components.effect;
 
 public struct CombinerPlayback(
     float duration,

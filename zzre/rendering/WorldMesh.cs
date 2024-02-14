@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -8,7 +7,6 @@ using Veldrid;
 using zzio;
 using zzio.rwbs;
 using zzio.vfs;
-using zzre.materials;
 
 namespace zzre.rendering;
 

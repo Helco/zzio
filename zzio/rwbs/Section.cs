@@ -34,7 +34,7 @@ public abstract class Section
         };
 
     public abstract SectionId sectionId { get; }
-    public ListSection? parent = null;
+    public ListSection? parent;
     public uint version;
 
     protected abstract void readBody(Stream stream);

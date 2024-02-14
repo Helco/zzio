@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Buffers;
 using System.Numerics;
-using zzio;
 
 namespace zzre.game.systems.effect;
 
@@ -39,7 +38,7 @@ public sealed class Emitter : BaseCombinerPart<
         Reset(ref entity.Get<components.effect.EmitterState>(), data);
     }
 
-    private void Reset(ref components.effect.EmitterState state, zzio.effect.parts.ParticleEmitter data)
+    private static void Reset(ref components.effect.EmitterState state, zzio.effect.parts.ParticleEmitter data)
     {
         state.CurPhase1 = data.phase1 / 1000f;
         state.CurPhase2 = data.phase2 / 1000f;
@@ -62,7 +61,7 @@ public sealed class Emitter : BaseCombinerPart<
             UpdateParticle(elapsedTime, ref particle);
     }
 
-    private void UpdateSpawning(
+    private static void UpdateSpawning(
         float elapsedTime,
         in components.Parent parent,
         ref components.effect.EmitterState state,
@@ -108,7 +107,7 @@ public sealed class Emitter : BaseCombinerPart<
         state.SpawnProgress -= state.SpawnsLeft;
     }
 
-    private void UpdateParticle(
+    private static void UpdateParticle(
         float elapsedTime,
         ref components.effect.EmitterState.Particle p)
     {

@@ -8,7 +8,7 @@ using TileSheetResource = DefaultEcs.Resource.ManagedResource<zzre.game.resource
 
 namespace zzre.game.uibuilder;
 
-internal record Image : Base<Image>
+internal sealed record Image : Base<Image>
 {
     private components.ui.FullAlignment alignment = components.ui.FullAlignment.TopLeft;
     private string? bitmap;
@@ -40,8 +40,7 @@ internal record Image : Base<Image>
 
     public Image With(TileSheetResource tileSheet, int tileI = 0)
     {
-        if (tileI < 0)
-            throw new ArgumentOutOfRangeException(nameof(tileI));
+        ArgumentOutOfRangeException.ThrowIfNegative(tileI);
         CheckNoMaterial();
         this.tileSheet = tileSheet;
         this.tileI = tileI;
