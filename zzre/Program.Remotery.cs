@@ -1,15 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.CommandLine;
+using RemoteryNET;
+using Serilog.Core;
+using Serilog.Events;
+#if DEBUG
+using System.Collections.Generic;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Text;
-using RemoteryNET;
 using Serilog;
-using Serilog.Core;
-using Serilog.Events;
 using Serilog.Formatting.Display;
 using static RemoteryNET.RemoteryPInvoke;
+#endif
 
 // To make it easier for us the Remotery class and the Remotery bindings package are
 // always available to the application with equal interfaces

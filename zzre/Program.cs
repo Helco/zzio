@@ -18,12 +18,12 @@ internal static partial class Program
 {
     private static readonly Option<string[]> OptionPools = new(
         new[] { "--pool", "-p" },
-        () => new[]
-        {
+        () =>
+        [
             // as if run from a directory like zanzarah/zzre or zanzarah/system
             Path.Combine(Environment.CurrentDirectory, "..", "Resources", "DATA_0.PAK"),
             Path.Combine(Environment.CurrentDirectory, "..")
-        },
+        ],
         "Adds a resource pool to use (later pools overwrite previous ones).\nCurrently directories and PAK archives are supported");
 
     private static readonly Option<bool> OptionDebugLayers = new(

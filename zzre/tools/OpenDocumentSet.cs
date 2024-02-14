@@ -108,7 +108,7 @@ public class OpenDocumentSet
             return diContainer => (TEditor)prevCtor(diContainer);
 
         var constructor = type.GetConstructor([typeof(ITagContainer)]) ?? throw new InvalidProgramException($"Editor {type} has no compatible constructor");
-        var ctor = knownConstructors[type] = diContainer => constructor.Invoke(new object[] { diContainer });
+        var ctor = knownConstructors[type] = diContainer => constructor.Invoke([diContainer]);
         return diContainer => (TEditor)ctor(diContainer);
     }
 }

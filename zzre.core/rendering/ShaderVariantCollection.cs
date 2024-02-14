@@ -103,7 +103,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
             ResourceLayouts = resourceLayouts,
             ShaderSet = new()
             {
-                Shaders = new Shader[] { programs.Vertex, programs.Fragment },
+                Shaders = [programs.Vertex, programs.Fragment],
                 Specializations = [],
                 VertexLayouts = CreateVertexLayouts(variant)
             }

@@ -1,8 +1,10 @@
-﻿using System.CommandLine.Invocation;
-using System.CommandLine;
+﻿using System.CommandLine;
+#if DEBUG
+using System.CommandLine.Invocation;
 using Serilog;
 using Silk.NET.SDL;
 using Veldrid;
+#endif
 
 namespace zzre;
 
