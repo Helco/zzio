@@ -39,7 +39,7 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Setup problem matcher
-      run: echo "::add-matcher::.github/csc.json"
+      run: echo "::add-matcher::zzio/.github/csc.json"
     - name: Build local dependencies
       if: ${{ steps.cache-local.outputs.cache-hit != 'true' }}
       run: bash get-dependencies.sh
