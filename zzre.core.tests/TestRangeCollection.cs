@@ -197,6 +197,36 @@ public class TestRangeCollection
     }
 
     [Test]
+    public void Remove_PartialAtStart()
+    {
+        var coll = new RangeCollection(10)
+        {
+            0..10
+        };
+        Assert.That(coll.Remove(0..5));
+        Assert.That(coll, Is.EqualTo(new[] { 5..10 }));
+    }
+
+    [Test]
+    public void Remove_PartialAtEnd()
+    {
+        var coll = new RangeCollection(10)
+        {
+            0..10
+        };
+        Assert.That(coll.Remove(5..10));
+        Assert.That(coll, Is.EqualTo(new[] { 0..5 }));
+    }
+
+    [Test]
+    public void Remove_Nothing()
+    {
+        var coll = new RangeCollection(10) { 2..7 };
+        Assert.That(coll.Remove(5..5));
+        Assert.That(coll, Is.EqualTo(new[] { 2..7 }));
+    }
+
+    [Test]
     public void Contains_Full()
     {
         var coll = new RangeCollection(5)
@@ -405,11 +435,24 @@ public class TestRangeCollection
         {
             0..2,
             4..6,
-            5..8,
+            7..8,
             9..10
         };
         coll.MergeNearbyRanges(5);
         Assert.That(coll, Is.EqualTo(new[] { 0..10 }));
+    }
+
+    [Test]
+    public void MergeNearbyRanges_MergeNothing()
+    {
+        var coll = new RangeCollection(10)
+        {
+            0..2,
+            5..7,
+            9..10
+        };
+        coll.MergeNearbyRanges(1);
+        Assert.That(coll, Is.EqualTo(new[] { 0..2, 5..7, 9..10}));
     }
 
     [Test]

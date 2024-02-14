@@ -43,6 +43,7 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
     public void Add(Range item)
     {
         var (itemOffset, itemLength) = item.GetOffsetAndLength(MaxRangeValue);
+        ArgumentOutOfRangeException.ThrowIfZero(itemLength);
         var itemEndOffset = itemOffset + itemLength;
         if (ranges.Count == 0 || (itemOffset <= MinValue && itemEndOffset >= MaxValue))
         {
@@ -71,35 +72,54 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
         var removeEnd = remove.End.GetOffset(MaxRangeValue);
         if (ranges.Count == 0)
             return false;
+        if (removeStart == removeEnd)
+            return true;
         if (removeStart <= MinValue && removeEnd >= MaxValue)
         {
             Clear();
             return true;
         }
 
-        var (firstRangeI, endRangeI) = FindIntersections(removeStart..removeEnd);
+        /* Situations
+         *  No intersection. easy.
+         *  Intersecting with:
+         *    * n full ranges
+         *    * 1 partial range at the front
+         *    * 1 partial range at the back
+         *  The partial ranges might be the same, the full ones are not
+         *  If the partial ranges are the same we need a *new* range
+         *  If the partial ranges are not the same we do not need a new one
+         */
+
+        var backupRanges = ranges.ToArray();
+
+        var (firstRangeI, endRangeI) = FindIntersections(remove);
         if (firstRangeI < 0)
             return false;
-        var lastRangeI = endRangeI - 1;
+        int lastRangeI = endRangeI - 1;
 
-        int startValue = ranges[firstRangeI].Start.Value;
-        int endValue = ranges[lastRangeI].End.Value;
-        int firstFullI = startValue >= removeStart ? firstRangeI : firstRangeI + 1;
-        int lastFullI = endValue <= removeEnd ? lastRangeI : lastRangeI - 1;
+        int partialStart = Math.Max(0, removeStart - ranges[firstRangeI].Start.Value);
+        int partialEnd = Math.Max(0, ranges[lastRangeI].End.Value - removeEnd);
+        int firstFullI = partialStart == 0 ? firstRangeI : firstRangeI + 1;
+        int lastFullI = partialEnd == 0 ? lastRangeI : lastRangeI - 1;
+
         if (firstFullI <= lastFullI)
             ranges.RemoveRange(firstFullI, lastFullI - firstFullI + 1);
 
-        // Modify the partial removed ranges
-        if (firstFullI != firstRangeI)
-            ranges[firstRangeI] = startValue..removeStart;
-        if (lastFullI != lastRangeI)
+        if (partialStart > 0 && partialEnd > 0 && firstRangeI == lastRangeI)
         {
-            if (firstRangeI == lastRangeI)
-                ranges.Insert(firstRangeI + 1, removeEnd..endValue);
-            else
-                ranges[firstRangeI + 1] = removeEnd..endValue;
+            var oldRange = ranges[firstRangeI];
+            ranges[firstRangeI] = oldRange.Start..removeStart;
+            ranges.Insert(firstRangeI + 1, removeEnd..oldRange.End);
         }
-
+        else
+        {
+            lastRangeI = firstRangeI + (partialStart > 0 ? 1 : 0);
+            if (partialStart > 0)
+                ranges[firstRangeI] = ranges[firstRangeI].Start..removeStart;
+            if (partialEnd > 0)
+                ranges[lastRangeI] = removeEnd..ranges[lastRangeI].End;
+        }
         return true;
     }
 
@@ -212,7 +232,7 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
     private (int firstI, int endI) FindIntersections(Range search)
     {
         int firstI = FindFirstRangeIndexIntersecting(search);
-        int lastI = FindRangeIndexContaining(search.End.GetOffset(MaxRangeValue), Math.Max(0, firstI));
+        int lastI = FindRangeIndexContaining(search.End.GetOffset(MaxRangeValue) - 1, Math.Max(0, firstI));
         if (firstI >= 0)
             // the search end might land into empty land, but we have at least a single intersection
             return (firstI, lastI < 0 ? ~lastI : lastI + 1);
@@ -237,25 +257,17 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
             return;
 
         int readI = 1, writeI = 0;
-        int mergeStart = -1;
+        int prevArea = Area, prevMin = MinValue, prevMax = MaxValue;
         for (; readI < ranges.Count; readI++)
         {
-            int distance = ranges[readI].Start.GetOffset(MaxRangeValue) - ranges[readI - 1].End.GetOffset(MaxRangeValue);
-            if (distance > maxDistance)
-                ApplyMerge();
-            else if (mergeStart < 0)
-                mergeStart = readI - 1;
+            int distance = ranges[readI].Start.GetOffset(MaxRangeValue) - ranges[writeI].End.GetOffset(MaxRangeValue);
+            if (distance <= maxDistance)
+                ranges[writeI] = ranges[writeI].Start..ranges[readI].End;
+            else
+                ranges[++writeI] = ranges[readI];
         }
-        ApplyMerge();
-        ranges.RemoveRange(writeI, ranges.Count - writeI);
+        ranges.RemoveRange(writeI + 1, ranges.Count - writeI - 1);
 
-        void ApplyMerge()
-        {
-            if (mergeStart < 0)
-                return;
-            ranges[writeI++] = ranges[mergeStart].Start..ranges[readI - 1].End;
-            mergeStart = -1;
-        }
     }
 
     public void Clear() => ranges.Clear();
