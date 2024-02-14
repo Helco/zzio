@@ -7,7 +7,7 @@ namespace zzre.tests;
 public class TestRangeCollection
 {
     [Test]
-    public void AddSimple()
+    public void Add_Simple()
     {
         var coll = new RangeCollection();
         Assert.That(coll, Is.EqualTo(Array.Empty<Range>()));
@@ -19,7 +19,7 @@ public class TestRangeCollection
     }
 
     [Test]
-    public void AddMerge()
+    public void Add_Merge()
     {
         var coll = new RangeCollection
         {
@@ -30,7 +30,19 @@ public class TestRangeCollection
     }
 
     [Test]
-    public void AddMergeOverlapping()
+    public void Add_OutOfOrder()
+    {
+        var coll = new RangeCollection
+        {
+            0..3,
+            10..15,
+            5..8,
+        };
+        Assert.That(coll, Is.EqualTo(new[] { 0..3, 5..8, 10..15 }));
+    }
+
+    [Test]
+    public void Add_MergeOverlapping()
     {
         var coll = new RangeCollection
         {
@@ -41,7 +53,7 @@ public class TestRangeCollection
     }
 
     [Test]
-    public void AddMergeExactFit()
+    public void Add_MergeExactFit()
     {
         var coll = new RangeCollection
         {
@@ -53,7 +65,7 @@ public class TestRangeCollection
     }
 
     [Test]
-    public void AddMergeComplex()
+    public void Add_MergeComplex()
     {
         var coll = new RangeCollection
         {
@@ -67,35 +79,56 @@ public class TestRangeCollection
     }
 
     [Test]
+    public void AddBestFit_Simple()
+    {
+        var coll = new RangeCollection(10) { 0..3 };
+        Assert.That(coll.AddBestFit(4), Is.EqualTo(3..7));
+        Assert.That(coll, Is.EqualTo(new[] { 0..7 }));
+    }
+
+    [Test]
     public void AddBestFit_HoleInTheMiddle()
     {
         var coll = new RangeCollection { 0..3, 7..10 };
-        Assert.That(coll.AddBestFit(2), Is.EqualTo(3..5));
-        Assert.That(coll, Is.EqualTo(new[] { 0..5, 7..10 }));
+        Assert.That(coll.AddBestFit(2), Is.EqualTo(5..7));
+        Assert.That(coll, Is.EqualTo(new[] { 0..3, 5..10 }));
     }
 
     [Test]
     public void AddBestFit_HoleAtStart()
     {
         var coll = new RangeCollection { 7..10 };
-        Assert.That(coll.AddBestFit(3), Is.EqualTo(0..3));
-        Assert.That(coll, Is.EqualTo(new[] { 0..3, 7..10 }));
+        Assert.That(coll.AddBestFit(3), Is.EqualTo(4..7));
+        Assert.That(coll, Is.EqualTo(new[] { 4..10 }));
+    }
+
+    [Test]
+    public void AddBestFit_TooSmallHoleAtStart()
+    {
+        var coll = new RangeCollection(10) { 3..5 };
+        Assert.That(coll.AddBestFit(5), Is.EqualTo(5..10));
+        Assert.That(coll, Is.EqualTo(new[] { 3..10 }));
     }
 
     [Test]
     public void AddBestFit_IgnoresHolesTooSmall()
     {
-        var coll = new RangeCollection { 2..5, 7..10, 15..20 };
-        Assert.That(coll.AddBestFit(4), Is.EqualTo(10..14));
-        Assert.That(coll, Is.EqualTo(new[] { 2..5, 7..14, 15..20 }));
+        var coll = new RangeCollection
+        {
+            2..5,
+            7..10,
+            15..20
+        };
+        Assert.That(coll.AddBestFit(4), Is.EqualTo(11..15));
+        Assert.That(coll, Is.EqualTo(new[] { 2..5, 7..10, 11..20 }));
     }
 
     [Test]
     public void AddBestFit_PrefersBetterFittingHoles()
     {
         var coll = new RangeCollection { 5..10, 13..15 };
-        Assert.That(coll.AddBestFit(2), Is.EqualTo(10..12));
-        Assert.That(coll, Is.EqualTo(new[] { 5..12, 13..15 }));
+        Assert.That(coll.AddBestFit(2), Is.EqualTo(11..13));
+        Assert.That(coll, Is.EqualTo(new[] { 5..10, 11..15 }));
     }
 
     [Test]
@@ -115,7 +148,7 @@ public class TestRangeCollection
     }
 
     [Test]
-    public void RemoveNonExistant()
+    public void Remove_NonExistant()
     {
         var coll = new RangeCollection();
         Assert.That(coll.Remove(0..5), Is.False);
@@ -124,7 +157,7 @@ public class TestRangeCollection
     }
 
     [Test]
-    public void RemoveComplex()
+    public void Remove_Complex()
     {
         var coll = new RangeCollection
         {
@@ -138,6 +171,32 @@ public class TestRangeCollection
     }
 
     [Test]
+    public void Remove_SingleExact()
+    {
+        var coll = new RangeCollection(10)
+        {
+            0..2,
+            4..6,
+            8..10
+        };
+        Assert.That(coll.Remove(4..6));
+        Assert.That(coll, Is.EqualTo(new[] { 0..2, 8..10 }));
+    }
+
+    [Test]
+    public void Remove_Partial()
+    {
+        var coll = new RangeCollection(10)
+        {
+            0..2,
+            4..7,
+            8..10
+        };
+        Assert.That(coll.Remove(5..6));
+        Assert.That(coll, Is.EqualTo(new[] { 0..2, 4..5, 6..7, 8..10 }));
+    }
+
+    [Test]
     public void Contains_Full()
     {
         var coll = new RangeCollection(5)
@@ -146,7 +205,7 @@ public class TestRangeCollection
         };
         Assert.That(coll.Contains(0..5));
     }
-
+    
     [Test]
     public void Contains_FullyContained()
     {
