@@ -19,6 +19,10 @@ public class StaticMesh : BaseDisposable, IVertexAttributeContainer
                 return Material - other.Material;
             return IndexOffset - other.IndexOffset;
         }
+        public static bool operator <(SubMesh left, SubMesh right) => left.CompareTo(right) < 0;
+        public static bool operator <=(SubMesh left, SubMesh right) => left.CompareTo(right) <= 0;
+        public static bool operator >(SubMesh left, SubMesh right) => left.CompareTo(right) > 0;
+        public static bool operator >=(SubMesh left, SubMesh right) => left.CompareTo(right) >= 0;
     }
 
     public class VertexAttribute

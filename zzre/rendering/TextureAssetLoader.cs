@@ -23,7 +23,7 @@ public class TextureAssetLoader : IAssetLoader<Texture>, IAssetLoaderValidation<
 
     public bool TryLoad(IResource resource, [NotNullWhen(true)] out Texture? texture)
     {
-        var extension = resource.Path.Extension?.ToLower();
+        var extension = resource.Path.Extension?.ToLowerInvariant();
         texture = extension switch
         {
             "dds" => TryLoadDDSTexture(resource),

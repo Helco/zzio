@@ -51,7 +51,7 @@ public static class ImGuiEx
         uint maxLength,
         ImGuiInputTextFlags flags,
         ImGuiInputTextCallback? callback,
-        IntPtr user_data)
+        IntPtr userData)
     {
         maxLength = Math.Max(maxLength, (uint)input.Length);
         var labelBytes = Encoding.UTF8.GetBytes(label);
@@ -73,7 +73,7 @@ public static class ImGuiEx
                 maxLength + 1,
                 flags,
                 callback,
-                user_data.ToPointer());
+                userData.ToPointer());
         }
         if (result != 0)
         {

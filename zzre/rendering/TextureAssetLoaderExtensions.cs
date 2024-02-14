@@ -51,7 +51,7 @@ public static class TextureAssetLoaderExtensions
 
     public static FilePath GetTexturePathFromModel(this IAssetLoader<Texture> _, FilePath modelPath)
     {
-        var modelDirPartI = modelPath.Parts.IndexOf(p => p.ToLowerInvariant() == "models");
+        var modelDirPartI = modelPath.Parts.IndexOf(p => p.Equals("models", StringComparison.OrdinalIgnoreCase));
         var context = modelPath.Parts[modelDirPartI + 1];
         return new FilePath("resources/textures").Combine(context);
     }

@@ -110,7 +110,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
             ModelNameXXX => (int)random.NextOf(ItemPoolXXX),
             ModelNameYYY => (int)random.NextOf(ItemPoolYYY),
             ModelNameZZZ => (int)random.NextOf(ItemPoolZZZ),
-            _ when clumpInfo.Name.Length > 6 && int.TryParse(clumpInfo.Name.Substring(3, 3), out parsedItemId) => parsedItemId,
+            _ when clumpInfo.Name.Length > 6 && int.TryParse(clumpInfo.Name.AsSpan(3, 3), out parsedItemId) => parsedItemId,
             _ => throw new InvalidOperationException($"Invalid collectable model name: {clumpInfo.Name}")
         };
 

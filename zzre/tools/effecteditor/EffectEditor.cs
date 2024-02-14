@@ -55,9 +55,9 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     public Window Window { get; }
     public IResource? CurrentResource { get; private set; }
 
-    public EffectEditor(ITagContainer diContainer_)
+    public EffectEditor(ITagContainer parentDiContainer)
     {
-        diContainer = diContainer_.ExtendedWith(ecsWorld);
+        diContainer = parentDiContainer.ExtendedWith(ecsWorld);
         AddDisposable(diContainer);
         device = diContainer.GetTag<GraphicsDevice>();
         resourcePool = diContainer.GetTag<IResourcePool>();
