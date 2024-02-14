@@ -16,4 +16,3 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       runs-on: ${{ matrix.os }}
-      sarif-report: true
