@@ -162,6 +162,7 @@ public class TestRaycaster : ListDisposable
             0, 0);
     }
 
+#pragma warning disable IDE0051 // Remove unused private members
     private static IColor ShaderSolid(RaycastObject obj, Vector3 _1, Raycast _2) => obj.Color;
 
     private IColor ShaderNormal(RaycastObject obj, Vector3 _1, Raycast r) => new(
@@ -183,4 +184,5 @@ public class TestRaycaster : ListDisposable
         byte d = (byte)Math.Clamp(255.0f - r.Distance, 0, 255f);
         return new IColor(d, d, d, 255);
     }
+#pragma warning restore IDE0051 // Remove unused private members
 }
