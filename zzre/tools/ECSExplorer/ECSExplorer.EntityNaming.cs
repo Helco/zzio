@@ -15,7 +15,7 @@ partial class ECSExplorer
 
     private class EntityNamer : IComparable<EntityNamer>
     {
-        public int Priority { get; init; } = 0;
+        public int Priority { get; init; }
         public TryGetEntityNameFunc TryGetEntityName { get; init; } = _ => null;
 
         public int CompareTo(EntityNamer? other)

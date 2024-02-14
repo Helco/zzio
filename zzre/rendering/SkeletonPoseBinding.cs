@@ -10,8 +10,8 @@ public class SkeletonPoseBinding : BaseBinding
     private const uint MaxBoneCount = 128;
 
     private bool isContentDirty = true;
-    private Skeleton? skeleton = null;
-    private DeviceBuffer? poseBuffer = null;
+    private Skeleton? skeleton;
+    private DeviceBuffer? poseBuffer;
     private DeviceBufferRange poseBufferRange;
 
     public Skeleton? Skeleton

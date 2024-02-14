@@ -33,7 +33,7 @@ public class TestRaycaster : ListDisposable
 
     private IColor[]? pixels;
     private int PixelCount => (int)(fbArea.Framebuffer.Width * fbArea.Framebuffer.Height);
-    private float rotation = 0.0f;
+    private float rotation;
 
     public Window Window { get; }
 

@@ -11,21 +11,21 @@ public class Sparks : IEffectPart
     public uint
         phase1 = 1000,
         phase2 = 1000,
-        tileId = 0,
+        tileId,
         tileW = 64,
         tileH = 64;
     public IColor color = new(255, 255, 255, 255);
-    public uint spawnRate = 0;
+    public uint spawnRate;
     public float
-        width = 0,
-        height = 0,
+        width,
+        height,
         minSpawnProgress = 1.0f,
-        startDistance = 0,
-        speed = 0,
+        startDistance,
+        speed,
         maxDistance = 20.0f;
     public bool
-        useSpeed = false,
-        isSpawningMax = false;
+        useSpeed,
+        isSpawningMax;
     public string
         texName = "standard",
         name = "Sparks";

@@ -5,9 +5,9 @@ namespace zzre.rendering;
 
 public class SamplerBinding : BaseBinding
 {
-    private bool ownsSampler = false;
-    private bool isContentDirty = false;
-    private Sampler? sampler = null;
+    private bool ownsSampler;
+    private bool isContentDirty;
+    private Sampler? sampler;
     private SamplerDescription description = SamplerDescription.Point;
 
     public Sampler Sampler

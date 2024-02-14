@@ -7,7 +7,7 @@ public class GatekeeperStream : Stream
 {
     private readonly Stream parent;
     private readonly bool shouldClose;
-    private bool wasClosed = false;
+    private bool wasClosed;
 
     /// <summary>Constructs a new RangeStream</summary>
     /// <param name="parent">The parent stream to read from/write to</param>

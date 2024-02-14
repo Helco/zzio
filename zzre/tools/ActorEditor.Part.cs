@@ -23,7 +23,7 @@ public partial class ActorEditor
         private readonly IAssetLoader<Texture> textureLoader;
         private readonly GameTime gameTime;
         private readonly string modelName; // used as ImGui ID
-        private bool isPlaying = false;
+        private bool isPlaying;
         private int currentAnimationI = -1;
 
         public readonly Location location = new();
@@ -33,7 +33,7 @@ public partial class ActorEditor
         public readonly Skeleton? skeleton;
         public readonly DebugSkeletonRenderer? skeletonRenderer;
         public readonly (AnimationType type, string fileName, SkeletalAnimation ani)[] animations;
-        public (int BoneIdx, Vector3 TargetPos)? singleIK = null;
+        public (int BoneIdx, Vector3 TargetPos)? singleIK;
 
         public Part(ITagContainer diContainer, string modelName, (AnimationType type, string filename)[] animationNames)
         {

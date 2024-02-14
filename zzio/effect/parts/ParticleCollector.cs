@@ -18,12 +18,12 @@ public class ParticleCollector : IEffectPart
     public string Name => name;
 
     public uint
-        maxCount = 0,
+        maxCount,
         tileW = 256,
         tileH = 256,
         tileDuration = 1,
         tileCount = 1,
-        tileId = 0;
+        tileId;
     public IColor color = new(255, 255, 255, 255);
     public ParticleCollectorMode mode = ParticleCollectorMode.Tornado;
     public float

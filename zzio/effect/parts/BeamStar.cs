@@ -30,11 +30,11 @@ public class BeamStar : IEffectPart
     public IColor color = new(255, 255, 255, 255);
     public float
         width = 1.0f,
-        scaleSpeedXY = 0.0f,
+        scaleSpeedXY,
         startTexVEnd = 1.0f,
-        rotationSpeed = 0.0f,
-        texShiftVStart = 0.0f,
-        endTexVEnd = 0.0f;
+        rotationSpeed,
+        texShiftVStart,
+        endTexVEnd;
     public string
         texName = "standard",
         name = "Beam Star";

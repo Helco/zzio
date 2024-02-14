@@ -74,7 +74,7 @@ partial class SceneEditor
         private readonly SceneEditor editor;
 
         private Light[] lights = Array.Empty<Light>();
-        private bool wasSelected = false;
+        private bool wasSelected;
         private float iconSize = 128f;
 
         public LightComponent(ITagContainer diContainer)

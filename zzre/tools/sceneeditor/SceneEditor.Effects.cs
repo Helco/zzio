@@ -102,7 +102,7 @@ partial class SceneEditor
         private readonly SceneEditor editor;
 
         private Effect[] effects = Array.Empty<Effect>();
-        private bool wasSelected = false;
+        private bool wasSelected;
         private float iconSize = 128f;
 
         public EffectComponent(ITagContainer diContainer)

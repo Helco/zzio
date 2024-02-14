@@ -5,7 +5,7 @@ namespace zzre;
 
 public class Location
 {
-    public Location? Parent { get; set; } = null;
+    public Location? Parent { get; set; }
 
     public Vector3 LocalPosition { get; set; } = Vector3.Zero;
     public Vector3 LocalScale { get; set; } = Vector3.One;

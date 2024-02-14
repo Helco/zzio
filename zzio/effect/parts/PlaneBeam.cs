@@ -13,18 +13,18 @@ public class PlaneBeam : IEffectPart
         phase2 = 500,
         planeCount = 10,
         mode = 1, // TODO: Put this in an enum 
-        tileId = 0,
+        tileId,
         tileW = 256,
         tileH = 256;
     public IColor color = new(255, 255, 255, 255);
-    public uint mode2 = 0; // TODO: Also this 
+    public uint mode2; // TODO: Also this 
     public float
         width = 1.0f,
         height = 1.0f,
-        minScale = 0.0f,
-        rotationMod = 0.0f,
-        speed = 0.0f,
-        widthScaleMod = 0.0f;
+        minScale,
+        rotationMod,
+        speed,
+        widthScaleMod;
     public string
         texName = "standard",
         name = "PlaneBeam";

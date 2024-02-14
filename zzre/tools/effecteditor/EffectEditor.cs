@@ -48,7 +48,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private TransformMode transformMode = TransformMode.None;
 
     private EffectCombiner Effect => loadedEffect ?? emptyEffect;
-    private EffectCombiner? loadedEffect = null;
+    private EffectCombiner? loadedEffect;
     private DefaultEcs.Entity effectEntity;
     private DefaultEcs.Entity[] partEntities = Array.Empty<DefaultEcs.Entity>();
 

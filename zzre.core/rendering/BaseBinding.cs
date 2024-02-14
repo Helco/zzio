@@ -5,7 +5,7 @@ namespace zzre.rendering;
 
 public abstract class BaseBinding : BaseDisposable
 {
-    protected bool isBindingDirty = false;
+    protected bool isBindingDirty;
 
     public IMaterial Parent { get; }
     public abstract BindableResource? Resource { get; }

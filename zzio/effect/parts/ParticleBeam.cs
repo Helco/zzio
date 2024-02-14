@@ -20,24 +20,24 @@ public class ParticleBeam : IEffectPart
         phase1 = 1000,
         phase2 = 1000,
         maxCount = 100,
-        tileId = 0,
+        tileId,
         tileCount = 1,
         tileDuration = 1,
         tileW = 32,
         tileH = 32;
     public IColor color = new(255, 255, 255, 255);
-    public uint fadeMode = 0; // TODO: Put this in an enum 
+    public uint fadeMode; // TODO: Put this in an enum 
     public float
         parWidth = 0.1f,
         parHeight = 0.1f,
-        beamWidth = 0.0f,
-        beamHeight = 0.0f,
-        zSpeed = 0.0f,
-        fadeXSpeed = 0.0f,
-        fadeYSpeed = 0.0f,
-        fadeSpeed = 0.0f;
+        beamWidth,
+        beamHeight,
+        zSpeed,
+        fadeXSpeed,
+        fadeYSpeed,
+        fadeSpeed;
     public bool
-        isEqualFade = false;
+        isEqualFade;
     public string
         texName = "standard",
         name = "Particle Beam";

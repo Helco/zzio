@@ -15,11 +15,11 @@ public class LocationBuffer : BaseDisposable
     private readonly WeakReference<Location>?[] locations;
     private readonly bool[] isInverted;
     private readonly Matrix4x4[] matrices;
-    private int nextFreeIndex = 0;
+    private int nextFreeIndex;
     private readonly DeviceBuffer buffer;
 
     public int Capacity => matrices.Length;
-    public int Count { get; private set; } = 0;
+    public int Count { get; private set; }
     public bool IsFull => Capacity == Count;
 
     public LocationBuffer(GraphicsDevice device, int capacity = 1024)

@@ -37,15 +37,15 @@ public class ParticleEmitter : IEffectPart
         spawnRate = 1000,
         tileW = 256,
         tileH = 256,
-        tileId = 0,
+        tileId,
         tileCount = 1,
         tileDuration = 1;
     public ParticleSpawnMode spawnMode = ParticleSpawnMode.Normal;
     public float
         minVel = 1.0f,
         verticalDir = 90.0f,
-        horRadius = 0.0f,
-        verRadius = 0.0f;
+        horRadius,
+        verRadius;
     public ValueRangeAnimation
         life = new(1.0f, 0.0f),
         scale = new(0.2f, 0.0f, 2.0f),
@@ -58,7 +58,7 @@ public class ParticleEmitter : IEffectPart
         gravity,
         gravityMod;
     public bool
-        hasDirection = false;
+        hasDirection;
     public string
         name = "Particle Emitter",
         texName = "standard";

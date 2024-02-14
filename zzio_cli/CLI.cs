@@ -24,10 +24,10 @@ public static class OutputHelper
         }
     }
     private static readonly HandleGuard guard = new();
-    private static FileStream stdoutStream = null;
-    private static FileStream stderrStream = null;
-    private static StreamWriter stdoutWriter = null;
-    private static StreamWriter stderrWriter = null;
+    private static FileStream stdoutStream;
+    private static FileStream stderrStream;
+    private static StreamWriter stdoutWriter;
+    private static StreamWriter stderrWriter;
 
     public static void initialize(ParameterParser args)
     {

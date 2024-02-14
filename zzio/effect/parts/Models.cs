@@ -14,11 +14,11 @@ public class Models : IEffectPart
         phase2 = 1000;
     public IColor color = new(255, 255, 255, 255);
     public float
-        rotationSpeed = 0.0f,
-        texShift = 0.0f,
+        rotationSpeed,
+        texShift,
         minProgress = 1.0f,
         minSize = 11.0f,
-        fflag = 0.0f;
+        fflag;
     public Vector3
         rotationAxis,
         scaleSpeed;
@@ -26,8 +26,8 @@ public class Models : IEffectPart
         modelName = "sphere",
         name = "Model";
     public bool
-        ignoreHead = false,
-        doTexShiftY = false;
+        ignoreHead,
+        doTexShiftY;
     public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
     public float Duration => (phase1 + phase2) / 1000f;

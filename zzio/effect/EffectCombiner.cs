@@ -29,7 +29,7 @@ public partial class EffectCombiner
         };
 
     public string description = "";
-    public bool isLooping = false;
+    public bool isLooping;
     public Vector3 upwards, forwards, position;
     public IEffectPart[] parts = Array.Empty<IEffectPart>();
 

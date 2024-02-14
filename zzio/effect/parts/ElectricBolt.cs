@@ -10,7 +10,7 @@ public class ElectricBolt : IEffectPart
 
     public uint
         phase1 = 1000,
-        phase2 = 0,
+        phase2,
         tileId = 1,
         tileW = 32,
         tileH = 32,

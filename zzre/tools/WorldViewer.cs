@@ -59,11 +59,11 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private int highlightedSectionI = -1;
     private int highlightedSplitI = -1;
     private bool updateViewFrustumCulling = true;
-    private bool renderCulledSections = false;
+    private bool renderCulledSections;
     private IntersectionPrimitive intersectionPrimitive;
     private bool updateIntersectionPrimitive;
     private float intersectionSize = 0.5f;
-    private bool showVertexColors = false;
+    private bool showVertexColors;
 
     public IResource? CurrentResource { get; private set; }
     public Window Window { get; }

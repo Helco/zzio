@@ -35,8 +35,8 @@ public class OpenFileModal : BaseDisposable
                 RegexOptions.IgnoreCase);
         }
     }
-    public IResource? SelectedResource { get; private set; } = null;
-    public IResource? InitialSelectedResource { get; set; } = null;
+    public IResource? SelectedResource { get; private set; }
+    public IResource? InitialSelectedResource { get; set; }
     public event Action<IResource> OnOpenedResource = _ => { };
 
     public OpenFileModal(ITagContainer diContainer)

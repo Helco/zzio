@@ -15,7 +15,7 @@ partial class Program
         () => true,
         "Whether RenderDoc is to be loaded at start.\nIf RenderDoc loading makes problems set this option to \"false\"");
 
-    private static RenderDoc? RenderDoc = null;
+    private static RenderDoc? RenderDoc;
     private static ILogger RenderDocLogger = null!;
 
     private static void AddGlobalRenderDocOption(RootCommand command) =>

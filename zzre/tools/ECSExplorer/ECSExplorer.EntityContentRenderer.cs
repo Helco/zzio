@@ -17,7 +17,7 @@ internal partial class ECSExplorer
 
     private abstract class ComponentRenderer : IComparable<ComponentRenderer>
     {
-        public int Priority { get; init; } = 0;
+        public int Priority { get; init; }
 
         public int CompareTo(ComponentRenderer? other)
         {

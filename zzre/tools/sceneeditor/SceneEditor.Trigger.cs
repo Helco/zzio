@@ -90,7 +90,7 @@ public partial class SceneEditor
         private readonly SceneEditor editor;
 
         private Trigger[] triggers = Array.Empty<Trigger>();
-        private bool wasSelected = false;
+        private bool wasSelected;
         private float iconSize = 128f;
 
         public TriggerComponent(ITagContainer diContainer)

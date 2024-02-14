@@ -22,7 +22,7 @@ public record struct FullAlignment(Alignment Horizontal, Alignment Vertical)
     public Vector2 AsFactor => new(GetAsFactor(Horizontal), GetAsFactor(Vertical));
 
     public static readonly FullAlignment Center = new(Alignment.Center, Alignment.Center);
-    public static readonly FullAlignment TopLeft = default;
+    public static readonly FullAlignment TopLeft;
     public static readonly FullAlignment TopCenter = new(Alignment.Center, Alignment.Min);
     public static readonly FullAlignment TopRight = new(Alignment.Max, Alignment.Min);
 

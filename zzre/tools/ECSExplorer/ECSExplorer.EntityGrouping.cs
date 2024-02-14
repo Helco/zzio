@@ -14,7 +14,7 @@ partial class ECSExplorer
 
     private class EntityGrouper : IComparable<EntityGrouper>
     {
-        public int Priority { get; init; } = 0;
+        public int Priority { get; init; }
         public TryGetEntityGroupFunc TryGetEntityGroup { get; init; } = _ => null;
 
         public int CompareTo(EntityGrouper? other)

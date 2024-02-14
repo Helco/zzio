@@ -35,8 +35,8 @@ public struct AnimalWaypointAI
         public bool Flees { get; init; }
         public bool Crawls { get; init; }
         public bool OrientsToGround { get; init; }
-        public bool FullAnimationCycles { get; init; } = false;
-        public float MaxIdleTime { get; init; } = 0f;
+        public bool FullAnimationCycles { get; init; }
+        public float MaxIdleTime { get; init; }
         public float NormalSpeed { get; init; } = 10f;
 
         public static readonly Configuration Chicken = new()

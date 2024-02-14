@@ -89,7 +89,7 @@ public class BaseMaterial : BaseDisposable, IMaterial
     protected class Configurator
     {
         private readonly BaseMaterial parent;
-        private int curSetI = 0;
+        private int curSetI;
 
         public Configurator(BaseMaterial parent)
         {

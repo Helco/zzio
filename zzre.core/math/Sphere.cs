@@ -10,7 +10,7 @@ public readonly partial struct Sphere : IRaycastable, IIntersectable
     public readonly float Radius;
     public float RadiusSq => Radius * Radius;
 
-    public static Sphere Zero = new();
+    public static Sphere Zero;
 
     public Sphere(float x, float y, float z, float r)
     {

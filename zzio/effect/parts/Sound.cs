@@ -11,10 +11,10 @@ public class Sound : IEffectPart
     public uint
         volume = 100;
     public float
-        minDist = 0.0f,
-        maxDist = 0.0f;
+        minDist,
+        maxDist;
     public bool
-        isDisabled = false;
+        isDisabled;
     public string
         fileName = "standard",
         name = "Sound Effect";

@@ -8,10 +8,10 @@ internal abstract record Base<T> where T : Base<T>
     protected DefaultEcs.Entity parent; // not readonly for nested entities like ButtonLabel
     protected Rect rect;
     protected zzio.IColor color = zzio.IColor.White;
-    protected int renderOrder = 0;
+    protected int renderOrder;
     protected components.ui.UIOffset offset = components.ui.UIOffset.Center;
-    protected zzio.UID? tooltipUID = null;
-    protected components.ui.Fade? fade = null;
+    protected zzio.UID? tooltipUID;
+    protected components.ui.Fade? fade;
     protected components.Visibility visibility = components.Visibility.Visible;
 
     protected bool HasSize => rect.Size.MaxComponent() > 0.00001f;

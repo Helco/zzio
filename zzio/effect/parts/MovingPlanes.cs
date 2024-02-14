@@ -11,28 +11,28 @@ public class MovingPlanes : IEffectPart
     public uint
         phase1 = 1000,
         phase2 = 1000,
-        tileId = 0,
+        tileId,
         tileW = 64,
         tileH = 64;
     public IColor color = new(255, 255, 255, 255);
     public float
         width = 0.1f,
         height = 0.1f,
-        sizeModSpeed = 0.0f,
-        targetSize = 0.0f,
-        rotation = 0.0f,
-        texShift = 0.0f,
+        sizeModSpeed,
+        targetSize,
+        rotation,
+        texShift,
         minProgress = 1.0f,
-        yOffset = 0.0f,
-        xOffset = 0.0f;
+        yOffset,
+        xOffset;
     public string
         texName = "standard",
         name = "Moving Planes";
     public bool
-        manualProgress = false,
-        disableSecondPlane = false,
-        circlesAround = false,
-        useDirection = false;
+        manualProgress,
+        disableSecondPlane,
+        circlesAround,
+        useDirection;
     public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
     public float Duration => (phase1 + phase2) / 1000f;

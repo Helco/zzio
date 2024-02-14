@@ -14,9 +14,9 @@ internal abstract record LabelLike<T> : Base<T> where T : LabelLike<T>
     protected float? lineHeight;
     protected float wrapLines = float.NaN;
     protected bool doFormat = true;
-    protected bool useTotalFontHeight = false;
+    protected bool useTotalFontHeight;
     protected int? segmentsPerAdd;
-    protected bool isBlinking = false;
+    protected bool isBlinking;
     // an unfortunate special case that probably was a bug in Zanzarah.
     // The tile sheet height might not be the default line height and layout 
     // sometimes depend on the former value (e.g. button labels)

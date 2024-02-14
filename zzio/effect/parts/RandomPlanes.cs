@@ -13,31 +13,31 @@ public class RandomPlanes : IEffectPart
         phase2 = 1000,
         spawnRate = 1,
         planeLife = 250,
-        extraPhase = 0,
-        tileId = 0,
+        extraPhase,
+        tileId,
         tileCount = 1,
         tileDuration = 50,
         tileW = 16,
         tileH = 16;
     public IColor color = new(255, 255, 255, 255);
-    public uint amplColor = 0;
+    public uint amplColor;
     public float
         minProgress = 1.0f,
         amplPosX = 1.0f,
         amplPosY = 1.0f,
-        rotationSpeedMult = 0.0f,
-        texShift = 0.0f,
-        scaleSpeedMult = 0.0f,
-        targetSize = 0.0f,
+        rotationSpeedMult,
+        texShift,
+        scaleSpeedMult,
+        targetSize,
         width = 0.1f,
         height = 0.1f,
         minScaleSpeed = 1.0f,
         maxScaleSpeed = 1.0f,
-        yOffset = 0.0f,
-        minPosX = 0.0f;
+        yOffset,
+        minPosX;
     public bool
-        ignorePhases = false,
-        circlesAround = false;
+        ignorePhases,
+        circlesAround;
     public string
         texName = "standard",
         name = "Random Planes";
