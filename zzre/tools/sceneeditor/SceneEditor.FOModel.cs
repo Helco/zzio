@@ -134,6 +134,14 @@ public partial class SceneEditor
 
     private sealed class FOModelComponent : BaseDisposable, IEnumerable<ISelectable>
     {
+        private static readonly IReadOnlyList<string> DetailLabels =
+        [
+            "Invisible",
+            "Detail Level 0",
+            "Detail Level 1",
+            "Detail Level 2",
+            "Detail Level 3"
+        ];
         private readonly ITagContainer diContainer;
         private readonly SceneEditor editor;
 
@@ -148,14 +156,7 @@ public partial class SceneEditor
             editor.selectableContainers.Add(this);
             editor.fbArea.OnRender += HandleRender;
             editor.OnLoadScene += HandleLoadScene;
-            diContainer.GetTag<MenuBarWindowTag>().AddRadio("View/FOModels", new[]
-            {
-                "Invisible",
-                "Detail Level 0",
-                "Detail Level 1",
-                "Detail Level 2",
-                "Detail Level 3"
-            }, () => ref detailLevel, () => editor.fbArea.IsDirty = true);
+            diContainer.GetTag<MenuBarWindowTag>().AddRadio("View/FOModels", DetailLabels, () => ref detailLevel, () => editor.fbArea.IsDirty = true);
             editor.editor.AddInfoSection("FOModels", HandleInfoSection, false);
         }
 

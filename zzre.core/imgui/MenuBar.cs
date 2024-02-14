@@ -58,12 +58,12 @@ public class MenuBar
             onChanged?.Invoke();
     });
 
-    public void AddRadio(string path, string[] labels, GetRefValueFunc<int> getValue, Action? onChanged = null) => AddItem(path, name =>
+    public void AddRadio(string path, IReadOnlyList<string> labels, GetRefValueFunc<int> getValue, Action? onChanged = null) => AddItem(path, name =>
     {
         if (!BeginMenu(name))
             return;
         ref int curValue = ref getValue();
-        for (int i = 0; i < labels.Length; i++)
+        for (int i = 0; i < labels.Count; i++)
         {
             if (MenuItem(labels[i], "", curValue == i))
             {
