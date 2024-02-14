@@ -8,7 +8,7 @@ namespace zzre.rendering;
 
 public class BaseMaterial : BaseDisposable, IMaterial
 {
-    private class BindingSet : BaseDisposable
+    private sealed class BindingSet : BaseDisposable
     {
         private readonly ResourceFactory factory;
         private readonly ResourceLayout layout;

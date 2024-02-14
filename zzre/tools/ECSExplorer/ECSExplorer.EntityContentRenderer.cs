@@ -26,7 +26,7 @@ internal partial class ECSExplorer
         }
     }
 
-    private class ComponentRenderer<T> : ComponentRenderer
+    private sealed class ComponentRenderer<T> : ComponentRenderer
     {
         public RenderComponentFunc<T>? Render { get; init; }
     }
@@ -55,7 +55,7 @@ internal partial class ECSExplorer
             .FirstOrDefault(predicate!);
     }
 
-    private class EntityContentRenderer : IComponentReader
+    private sealed class EntityContentRenderer : IComponentReader
     {
         public void OnRead<T>(in T component, in DefaultEcs.Entity entity)
         {

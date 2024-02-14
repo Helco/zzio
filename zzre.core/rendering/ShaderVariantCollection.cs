@@ -36,7 +36,7 @@ public interface IBuiltPipeline
 
 public class ShaderVariantCollection : zzio.BaseDisposable
 {
-    private class BuiltPrograms
+    private sealed class BuiltPrograms
     {
         public required Shader Vertex { get; init; }
         public required Shader Fragment { get; init; }

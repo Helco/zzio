@@ -6,7 +6,7 @@ using SubMode = zzre.game.messages.SetCameraMode.SubMode;
 
 namespace zzre.game.systems;
 
-internal class CreatureCamera : BaseCamera
+internal sealed class CreatureCamera : BaseCamera
 {
     private readonly Game game;
     private readonly IDisposable setCameraModeSubscription;

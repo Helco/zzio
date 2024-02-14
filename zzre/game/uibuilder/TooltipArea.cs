@@ -3,7 +3,7 @@ using zzre.game.systems.ui;
 
 namespace zzre.game.uibuilder;
 
-internal record TooltipArea : Identified<TooltipArea>
+internal sealed record TooltipArea : Identified<TooltipArea>
 {
     public TooltipArea(UIPreloader preload, Entity parent) : base(preload, parent)
     {

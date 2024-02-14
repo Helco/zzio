@@ -12,7 +12,7 @@ partial class ECSExplorer
     public delegate string? TryGetEntityGroupFunc(DefaultEcs.Entity entity);
     public delegate string? TryGetEntityGroupByComponentFunc<T>(in T component);
 
-    private class EntityGrouper : IComparable<EntityGrouper>
+    private sealed class EntityGrouper : IComparable<EntityGrouper>
     {
         public int Priority { get; init; }
         public TryGetEntityGroupFunc TryGetEntityGroup { get; init; } = _ => null;

@@ -7,7 +7,7 @@ namespace zzre.imgui;
 
 public class MenuBar
 {
-    private class MenuBarItem
+    private sealed class MenuBarItem
     {
         public string Name { get; }
         public Action<string>? OnContent { get; }

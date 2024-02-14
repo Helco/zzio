@@ -17,7 +17,7 @@ public partial class ActorEditor
 {
     // Unrelated change
 
-    private class Part : ListDisposable
+    private sealed class Part : ListDisposable
     {
         private readonly ITagContainer diContainer;
         private readonly IAssetLoader<Texture> textureLoader;

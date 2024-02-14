@@ -4,7 +4,7 @@ using zzre.game.systems.ui;
 
 namespace zzre.game.uibuilder;
 
-internal record ButtonLabel : LabelLike<ButtonLabel>
+internal sealed record ButtonLabel : LabelLike<ButtonLabel>
 {
     private readonly Button parentButton;
 
@@ -29,7 +29,7 @@ internal record ButtonLabel : LabelLike<ButtonLabel>
     internal components.ui.FullAlignment Alignment => textAlign!.Value;
 }
 
-internal record Button : ButtonLike<Button>
+internal sealed record Button : ButtonLike<Button>
 {
     private const float ButtonTextSpacing = 10f;
 

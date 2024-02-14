@@ -20,7 +20,7 @@ namespace zzre.tools;
 
 public partial class SceneEditor
 {
-    private class Trigger : BaseDisposable, ISelectable
+    private sealed class Trigger : BaseDisposable, ISelectable
     {
         private const float PointTriggerSize = 0.1f;
         private const float SelectableSize = 0.2f;
@@ -79,7 +79,7 @@ public partial class SceneEditor
         }
     }
 
-    private class TriggerComponent : BaseDisposable, IEnumerable<ISelectable>
+    private sealed class TriggerComponent : BaseDisposable, IEnumerable<ISelectable>
     {
         private static readonly IColor NormalColor = IColor.White;
         private static readonly IColor SelectedColor = IColor.Red;

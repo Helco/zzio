@@ -4,7 +4,7 @@ using DefaultEcs.Command;
 
 namespace zzre.game.systems.ui;
 
-internal partial class Fade : AEntitySetSystem<float>
+internal sealed partial class Fade : AEntitySetSystem<float>
 {
     private readonly EntityCommandRecorder recorder;
 

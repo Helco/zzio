@@ -7,7 +7,7 @@ namespace zzre.tools;
 
 partial class SceneEditor
 {
-    private class MiscComponent
+    private sealed class MiscComponent
     {
         private readonly ITagContainer diContainer;
         private readonly SceneEditor editor;

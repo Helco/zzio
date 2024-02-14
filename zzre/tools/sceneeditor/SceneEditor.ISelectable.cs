@@ -49,7 +49,7 @@ public partial class SceneEditor
         OnSelectionManipulate(Selected);
     }
 
-    private class SelectionComponent : BaseDisposable
+    private sealed class SelectionComponent : BaseDisposable
     {
         private const float MinViewDistance = 0.5f;
 

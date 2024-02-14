@@ -13,7 +13,7 @@ partial class ECSExplorer
     public delegate string? TryGetEntityNameByComponentFunc<T>(in T component);
     public delegate string? TryGetEntityNameByComponentAndEntityFunc<T>(DefaultEcs.Entity entity, T component);
 
-    private class EntityNamer : IComparable<EntityNamer>
+    private sealed class EntityNamer : IComparable<EntityNamer>
     {
         public int Priority { get; init; }
         public TryGetEntityNameFunc TryGetEntityName { get; init; } = _ => null;

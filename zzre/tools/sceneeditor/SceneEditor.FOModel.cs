@@ -16,7 +16,7 @@ namespace zzre.tools;
 
 public partial class SceneEditor
 {
-    private class FOModel : BaseDisposable, ISelectable
+    private sealed class FOModel : BaseDisposable, ISelectable
     {
         private readonly ITagContainer diContainer;
         private readonly DeviceBufferRange locationRange;
@@ -132,7 +132,7 @@ public partial class SceneEditor
         }
     }
 
-    private class FOModelComponent : BaseDisposable, IEnumerable<ISelectable>
+    private sealed class FOModelComponent : BaseDisposable, IEnumerable<ISelectable>
     {
         private readonly ITagContainer diContainer;
         private readonly SceneEditor editor;

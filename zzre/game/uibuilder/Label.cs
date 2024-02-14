@@ -3,7 +3,7 @@ using zzre.game.systems.ui;
 
 namespace zzre.game.uibuilder;
 
-internal record Label : LabelLike<Label>
+internal sealed record Label : LabelLike<Label>
 {
     public Label(UIPreloader preload, Entity parent) : base(preload, parent)
     {

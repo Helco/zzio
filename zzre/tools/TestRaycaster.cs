@@ -15,7 +15,7 @@ namespace zzre.tools;
 
 public class TestRaycaster : ListDisposable
 {
-    private class RaycastObject
+    private sealed class RaycastObject
     {
         public IRaycastable Geometry { get; set; } = null!;
         public IColor Color { get; init; } = IColor.White;

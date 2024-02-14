@@ -5,7 +5,7 @@ namespace zzre.tools;
 
 public partial class SceneEditor
 {
-    private class DatasetComponent
+    private sealed class DatasetComponent
     {
         private readonly ITagContainer diContainer;
         private readonly SceneEditor editor;

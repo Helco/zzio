@@ -200,7 +200,7 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
     public IEnumerator<Range> GetEnumerator() => ranges.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ranges.GetEnumerator();
 
-    private class RangeComparer : IComparer<Range>
+    private sealed class RangeComparer : IComparer<Range>
     {
         public int Compare(Range x, Range y) => x.Start.Value - y.Start.Value;
     }
