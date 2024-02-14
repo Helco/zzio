@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -42,7 +43,6 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private readonly DefaultEcs.World ecsWorld = new();
     private readonly SequentialSystem<float> updateSystems = new();
     private readonly SequentialSystem<CommandList> renderSystems = new();
-    private ECSExplorer? ecsExplorer;
     private bool isPlaying = true;
     private TransformMode transformMode = TransformMode.None;
 
@@ -366,6 +366,8 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         }
     }
 
+#if DEBUG
+    private ECSExplorer? ecsExplorer;
     private void HandleOpenECSExplorer()
     {
         if (ecsExplorer == null)
@@ -376,6 +378,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         else
             diContainer.GetTag<WindowContainer>().SetNextFocusedWindow(ecsExplorer.Window);
     }
+#endif
 
     public IEnumerable<(string, DefaultEcs.World)> GetWorlds()
     {

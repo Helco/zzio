@@ -145,7 +145,9 @@ public sealed unsafe class Remotery : IDisposable, ILogEventSink
     public Remotery(ITagContainer _0, RemoteryInstance* _1) { }
     public void Dispose() { }
     public void Emit(LogEvent _) { }
+#pragma warning disable CA1822 // Mark members as static
     public IDisposable SampleCPU(string name, rmtSampleFlags flags = default) => NullDisposable.Instance;
+#pragma warning restore CA1822 // Mark members as static
     //public IDisposable SampleGPU(string name, CommandList cl) => NullDisposable.Instance;
 #endif
 }
