@@ -41,9 +41,9 @@ public class EffectRenderer : AEntityMultiMapSystem<CommandList, EffectMaterial>
         var visibilityComponents = World.GetComponents<components.Visibility>();
         foreach (var entity in entities)
         {
-            if (visibilityComponents[entity] == components.Visibility.Invisible)
-                continue;
             var renderIndices = renderIndicesComponents[entity];
+            if (visibilityComponents[entity] == components.Visibility.Invisible || renderIndices == default)
+                continue;
             indexRanges.Add(renderIndices.IndexRange);
         }
     }

@@ -95,7 +95,9 @@ public sealed class ParticleEmitter : BaseCombinerPart<
             UpdateQuad(state, data, basics[i], extras[i], aliveCount++);
         }
 
-        indices = new(state.IndexRange.Sub(0..(aliveCount * 6), effectMesh.IndexCapacity));
+        indices = aliveCount > 0
+            ? new(state.IndexRange.Sub(0..(aliveCount * 6), effectMesh.IndexCapacity))
+            : default;
     }
 
     private void SpawnParticle(

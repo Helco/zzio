@@ -200,6 +200,8 @@ public sealed class RandomPlanes : BaseCombinerPart<
             alivePlanes++;
         }
 
-        indices = new(state.IndexRange.Sub(0..(alivePlanes * 6), effectMesh.IndexCapacity));
+        indices = alivePlanes > 0
+            ? new(state.IndexRange.Sub(0..(alivePlanes * 6), effectMesh.IndexCapacity))
+            : default;
     }
 }
