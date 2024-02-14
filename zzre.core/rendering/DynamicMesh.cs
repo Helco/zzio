@@ -74,8 +74,7 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
         string name = nameof(DynamicMesh),
         float minGrowFactor = 1.5f)
     {
-        if (minGrowFactor <= 1f)
-            throw new ArgumentOutOfRangeException(nameof(minGrowFactor));
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(minGrowFactor, 1f);
         graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         resourceFactory = graphicsDevice.ResourceFactory;
         this.dynamic = dynamic;
@@ -185,8 +184,8 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
 
     public void Preallocate(int vertices, int indices)
     {
-        if (vertices < 0 || indices < 0)
-            throw new ArgumentOutOfRangeException();
+        ArgumentOutOfRangeException.ThrowIfLessThan(vertices, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThan(indices, 0);
         if (vertices > 0)
         {
             if (VertexCount > 0)

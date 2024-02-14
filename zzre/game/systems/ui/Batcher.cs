@@ -103,7 +103,7 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
     private void AddInstance(UIInstance i)
     {
         if (nextInstanceIndex >= maxInstanceCount)
-            throw new IndexOutOfRangeException("Batcher tried to add too many instances");
+            throw new InvalidOperationException("Batcher tried to add too many instances");
         instanceBuffer.AttrPos[nextInstanceIndex] = i.pos;
         instanceBuffer.AttrSize[nextInstanceIndex] = i.size;
         instanceBuffer.AttrColor[nextInstanceIndex] = i.color;

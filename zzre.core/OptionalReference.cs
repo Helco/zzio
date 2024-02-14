@@ -25,7 +25,7 @@ public unsafe ref struct OptionalReference<TValue>
         get
         {
             if (!HasValue)
-                throw new NullReferenceException("Optional reference does not have a value");
+                throw new ArgumentNullException("this", "Optional reference does not have a value");
             return ref value;
         }
     }

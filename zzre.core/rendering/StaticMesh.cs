@@ -61,8 +61,7 @@ public class StaticMesh : BaseDisposable, IVertexAttributeContainer
 
     private void CheckElementCountOfNewAttribute(string debugName, int elementCount)
     {
-        if (elementCount <= 0)
-            throw new ArgumentOutOfRangeException(nameof(elementCount));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(elementCount);
         if (VertexCount > 0 && VertexCount != elementCount)
             throw new ArgumentException($"Vertex count of attribute {debugName} does not match");
         if (VertexCount == 0)

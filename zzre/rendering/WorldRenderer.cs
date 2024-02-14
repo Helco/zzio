@@ -22,8 +22,7 @@ public class WorldRenderer : BaseDisposable
         get => worldMesh;
         set
         {
-            if (value is null)
-                throw new ArgumentNullException(nameof(value));
+            ArgumentNullException.ThrowIfNull(value);
             worldMesh = value;
             LoadMaterials();
             visibleMeshSections.Clear();

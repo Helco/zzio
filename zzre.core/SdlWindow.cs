@@ -160,11 +160,8 @@ public unsafe class SdlWindow : BaseDisposable
         }
     }
 
-    private void CheckPointer()
-    {
-        if (window == null)
-            throw new ObjectDisposedException(nameof(SdlWindow));
-    }
+    private void CheckPointer() =>
+        ObjectDisposedException.ThrowIf(window == null, typeof(SdlWindow));
 
     private void ThrowSdlError(string context)
     {

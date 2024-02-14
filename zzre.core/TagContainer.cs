@@ -49,8 +49,7 @@ public class TagContainer : BaseDisposable, ITagContainer
 
     public ITagContainer AddTag<TTag>(TTag tag) where TTag : class
     {
-        if (tag == null)
-            throw new NullReferenceException();
+        ArgumentNullException.ThrowIfNull(tag);
         if (!tags.TryAdd(typeof(TTag), tag))
             throw new ArgumentException($"A tag of type {typeof(TTag).Name} is already attached", nameof(TTag));
         return this;

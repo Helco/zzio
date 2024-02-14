@@ -150,8 +150,7 @@ public sealed class ModelInstanceBuffer : DynamicMesh
 
         public void Add(ModelInstance i)
         {
-            if (nextIndex < 0)
-                throw new ObjectDisposedException(nameof(InstanceArena));
+            ObjectDisposedException.ThrowIf(nextIndex < 0, typeof(InstanceArena));
             if (nextIndex >= endIndex)
                 throw new InvalidOperationException("Instance range is full");
             buffer.attrWorld[nextIndex] = i.world;

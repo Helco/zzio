@@ -95,8 +95,7 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
 
     public Range? AddBestFit(int length)
     {
-        if (length <= 0)
-            throw new ArgumentOutOfRangeException(nameof(length));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
         if (!ranges.Any())
         {
             if (MaxRangeValue < length)

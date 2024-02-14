@@ -34,8 +34,7 @@ public partial class Inventory : IReadOnlyCollection<InventoryCard>
         foreach (var card in savegame.inventory)
         {
             var atIndex = card.atIndex;
-            if (atIndex < 0 || atIndex >= cards.Count)
-                throw new ArgumentOutOfRangeException("Save inventory card index is not valid");
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(atIndex, (uint)cards.Count);
             cards[(int)atIndex] = card;
         }
 

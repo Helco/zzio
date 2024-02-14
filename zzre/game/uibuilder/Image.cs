@@ -40,8 +40,7 @@ internal sealed record Image : Base<Image>
 
     public Image With(TileSheetResource tileSheet, int tileI = 0)
     {
-        if (tileI < 0)
-            throw new ArgumentOutOfRangeException(nameof(tileI));
+        ArgumentOutOfRangeException.ThrowIfNegative(tileI);
         CheckNoMaterial();
         this.tileSheet = tileSheet;
         this.tileI = tileI;

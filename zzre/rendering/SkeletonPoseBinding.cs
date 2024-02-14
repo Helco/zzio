@@ -7,7 +7,7 @@ namespace zzre.rendering;
 
 public class SkeletonPoseBinding : BaseBinding
 {
-    private const uint MaxBoneCount = 128;
+    private const int MaxBoneCount = 128;
 
     private bool isContentDirty = true;
     private Skeleton? skeleton;
@@ -19,10 +19,8 @@ public class SkeletonPoseBinding : BaseBinding
         get => skeleton;
         set
         {
-            if (value == null)
-                throw new ArgumentNullException(nameof(value));
-            if (value.Bones.Count > MaxBoneCount)
-                throw new ArgumentException($"Too many bones in skeleton ({value.Bones.Count} > {MaxBoneCount})", nameof(value));
+            ArgumentNullException.ThrowIfNull(value);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(value.Bones.Count, MaxBoneCount, nameof(value));
             skeleton = value;
             poseBuffer?.Dispose();
             poseBuffer = Parent.Device.ResourceFactory.CreateBuffer(new BufferDescription(

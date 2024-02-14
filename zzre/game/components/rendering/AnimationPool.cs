@@ -25,7 +25,7 @@ public readonly struct AnimationPool : IReadOnlyCollection<KeyValuePair<Animatio
     public bool Contains(AnimationType type) => animations?[(int)type] != null;
 
     public SkeletalAnimation this[AnimationType type] => animations?[(int)type] ??
-        throw new IndexOutOfRangeException($"Animation pool does not contain animation {type}");
+        throw new KeyNotFoundException($"Animation pool does not contain animation {type}");
 
     public void Add(AnimationType type, SkeletalAnimation animation)
     {

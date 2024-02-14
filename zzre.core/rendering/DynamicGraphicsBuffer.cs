@@ -31,8 +31,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
         {
             if (Count > 0)
                 throw new InvalidOperationException("Cannot change sizePerElement of a non-empty buffer");
-            if (value <= 0)
-                throw new ArgumentOutOfRangeException(nameof(value));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
             sizePerElement = value;
         }
     }
@@ -53,8 +52,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
         string bufferName = nameof(DynamicGraphicsBuffer),
         float minGrowFactor = 1.5f)
     {
-        if (minGrowFactor <= 1f)
-            throw new ArgumentOutOfRangeException(nameof(minGrowFactor));
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(minGrowFactor, 1f);
         this.device = device;
         this.usage = usage;
         this.bufferName = bufferName;
