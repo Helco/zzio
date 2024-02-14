@@ -47,11 +47,11 @@ jobs:
       run: dotnet restore
     - name: Hacky fix to glibc problem with shaderc
       run: cp temp-ci-fix/libshaderc_shared.so ~/.nuget/packages/mlang.msbuild/1.0.0-331cf83/tasks/netstandard2.0/runtimes/linux-x64/native/
-    - name: Debug
-      run: |
-        dotnet build --configuration Debug --no-restore --verbosity normal ${{ inputs.warningsAsErrors && '-warnaserror' || '' }}
-        dotnet test --configuration Debug --no-restore --verbosity normal
-    - name: Release
-      run: |
-        dotnet build --configuration Release --no-restore --verbosity normal
-        dotnet test --configuration Release --no-restore --verbosity normal
+    - name: Debug Build
+      run: dotnet build --configuration Debug --no-restore --verbosity normal ${{ inputs.warningsAsErrors && '-warnaserror' || '' }}
+    - name: Debug Tests
+      run: dotnet test --configuration Debug --no-restore --verbosity normal
+    - name: Release Build
+      run: dotnet build --configuration Release --no-restore --verbosity normal ${{ inputs.warningsAsErrors && '-warnaserror' || '' }}
+    - name: Release Tests
+      run: dotnet test --configuration Release --no-restore --verbosity normal
