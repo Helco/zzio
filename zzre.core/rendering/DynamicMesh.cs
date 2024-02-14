@@ -169,10 +169,17 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
 
     public bool TryGetBufferByMaterialName(string name, [NotNullWhen(true)] out DeviceBuffer? buffer, out uint offset)
     {
-        var attribute = attributes.FirstOrDefault(a => a.Name == name);
-        buffer = attribute?.Buffer.OptionalBuffer;
-        offset = 0u;
-        return buffer != null;
+        foreach (var attribute in attributes)
+        {
+            if (attribute.Name == name)
+            {
+                buffer = attribute.Buffer.Buffer;
+                offset = 0u;
+                return true;
+            }
+        }
+        (buffer, offset) = (null, 0u);
+        return false;
     }
 
     public Attribute<T> AddAttribute<T>(string attributeName) where T : unmanaged

@@ -122,8 +122,16 @@ public class StaticMesh : BaseDisposable, IVertexAttributeContainer
 
     public bool TryGetByMaterialName(string name, [NotNullWhen(true)] out VertexAttribute? attribute)
     {
-        attribute = attributes.FirstOrDefault(a => a.MaterialName == name);
-        return attribute != null;
+        foreach (var curAttribute in attributes)
+        {
+            if (curAttribute.MaterialName == name)
+            {
+                attribute = curAttribute;
+                return true;
+            }
+        }
+        attribute = null;
+        return false;
     }
 
     public VertexAttribute GetByMaterialName(string name) =>

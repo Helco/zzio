@@ -81,9 +81,10 @@ public partial class SceneEditor
                 return;
             materials.First().ApplyAttributes(cl, mesh);
             cl.SetIndexBuffer(mesh.IndexBuffer, mesh.IndexFormat);
-            foreach (var (subMesh, index) in mesh.SubMeshes.Indexed())
+            for (int i = 0; i < mesh.SubMeshes.Count; i++)
             {
-                (materials[index] as IMaterial).Apply(cl);
+                var subMesh = mesh.SubMeshes[i];
+                (materials[i] as IMaterial).Apply(cl);
                 cl.DrawIndexed(
                     indexStart: (uint)subMesh.IndexOffset,
                     indexCount: (uint)subMesh.IndexCount,
@@ -188,8 +189,9 @@ public partial class SceneEditor
 
         private void HandleInfoSection()
         {
-            foreach (var (model, index) in models.Indexed())
+            for (int i = 0; i < models.Length; i++)
             {
+                var model = models[i];
                 var flags =
                     ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick |
                     (model == editor.Selected ? ImGuiTreeNodeFlags.Selected : 0);
@@ -200,7 +202,7 @@ public partial class SceneEditor
                     editor.MoveCameraToSelected();
                 if (!isOpen)
                     continue;
-                PushID(index);
+                PushID(i);
                 model.Content();
                 PopID();
                 TreePop();

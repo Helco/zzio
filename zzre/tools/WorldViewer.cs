@@ -191,16 +191,16 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         if (worldMesh == null)
             throw new InvalidOperationException();
         sectionDepths = new int[worldMesh.Sections.Count];
-        foreach (var (section, index) in worldMesh.Sections.Indexed())
+        for (int i = 0; i < worldMesh.Sections.Count; i++)
         {
             int depth = 0;
-            var curSection = section;
+            var curSection = worldMesh.Sections[i];
             while (curSection.Parent != null)
             {
                 depth++;
                 curSection = curSection.Parent;
             }
-            sectionDepths[index] = depth;
+            sectionDepths[i] = depth;
         }
     }
 
@@ -288,20 +288,21 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         }
 
         int curDepth = 0;
-        foreach (var (section, index) in worldMesh.Sections.Indexed())
+        for (int i = 0; i < worldMesh.Sections.Count; i++)
         {
-            if (curDepth < sectionDepths[index])
+            if (curDepth < sectionDepths[i])
                 continue;
-            while (curDepth > sectionDepths[index])
+            while (curDepth > sectionDepths[i])
             {
                 TreePop();
                 curDepth--;
             }
 
+            var section = worldMesh.Sections[i];
             if (section is WorldMesh.MeshSection meshSection)
-                MeshSectionContent(meshSection, index);
+                MeshSectionContent(meshSection, i);
             else if (section is WorldMesh.PlaneSection planeSection)
-                PlaneSectionContent(planeSection, index);
+                PlaneSectionContent(planeSection, i);
         }
         while (curDepth > 0)
         {

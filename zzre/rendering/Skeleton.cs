@@ -45,28 +45,29 @@ public partial class Skeleton
         var bones = new Location[skin.bones.Length];
         var parents = new int[skin.bones.Length];
         var parentStack = new Stack<int>();
-        foreach (var (bone, index) in skin.bones.Indexed())
+        for (int i = 0; i < bones.Length; i++)
         {
+            var bone = skin.bones[i];
             if (parentStack.Any())
-                parents[index] = parentStack.Peek();
+                parents[i] = parentStack.Peek();
             else
             {
-                parents[index] = -1;
-                roots.Add(index);
+                parents[i] = -1;
+                roots.Add(i);
             }
 
             if (!bone.flags.HasFlag(BoneFlags.IsChildless))
-                parentStack.Push(index);
+                parentStack.Push(i);
             else if (!bone.flags.HasFlag(BoneFlags.HasNextSibling))
             {
                 while (parentStack.Any() &&
                     !skin.bones[parentStack.Pop()].flags.HasFlag(BoneFlags.HasNextSibling)) ;
             }
 
-            bones[index] = new Location
+            bones[i] = new Location
             {
-                Parent = parents[index] < 0 ? Location : bones[parents[index]],
-                WorldToLocal = BindingObjectToBone[index]
+                Parent = parents[i] < 0 ? Location : bones[parents[i]],
+                WorldToLocal = BindingObjectToBone[i]
             };
         }
         Bones = bones;
@@ -77,8 +78,8 @@ public partial class Skeleton
 
     public void ResetToBinding()
     {
-        foreach (var (bone, index) in Bones.Indexed())
-            bone.LocalToWorld = BindingBoneToObject[index] * Location.LocalToWorld;
+        for (int i = 0; i < Bones.Count; i++)
+            Bones[i].LocalToWorld = BindingBoneToObject[i] * Location.LocalToWorld;
     }
 
     public void JumpToAnimation(SkeletalAnimation? nextAnimation, bool loop = true)
@@ -107,12 +108,13 @@ public partial class Skeleton
         if (animators == null)
             return;
 
-        foreach (var (bone, boneI) in Bones.Indexed())
+        for (int i = 0; i < Bones.Count; i++)
         {
             // unfortunately no idea why the conjugate has to be used
-            animators[boneI].AddTime(delta);
-            bone.LocalRotation = Quaternion.Conjugate(animators[boneI].CurRotation);
-            bone.LocalPosition = animators[boneI].CurTranslation;
+            var bone = Bones[i];
+            animators[i].AddTime(delta);
+            bone.LocalRotation = Quaternion.Conjugate(animators[i].CurRotation);
+            bone.LocalPosition = animators[i].CurTranslation;
         }
 
         if (animators.All(a => a.IsFinished))

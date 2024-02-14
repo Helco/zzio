@@ -116,8 +116,10 @@ public class MlangMaterial : BaseDisposable, IMaterial
 
     public void ApplyAttributes(CommandList cl, IVertexAttributeContainer mesh, IVertexAttributeContainer? mesh2 = null, bool requireAll = true)
     {
-        foreach (var (info, index) in Pipeline.ShaderVariant.VertexAttributes.Indexed())
+        var vertexAttributes = Pipeline.ShaderVariant.VertexAttributes;
+        for (int i = 0; i < vertexAttributes.Count; i++)
         {
+            var info = vertexAttributes[i];
             if (!mesh.TryGetBufferByMaterialName(info.Name, out var meshAttribute, out var offset) &&
                 mesh2?.TryGetBufferByMaterialName(info.Name, out meshAttribute, out offset) is not true)
             {
@@ -126,7 +128,7 @@ public class MlangMaterial : BaseDisposable, IMaterial
                 else
                     continue;
             }
-            cl.SetVertexBuffer((uint)index, meshAttribute, offset);
+            cl.SetVertexBuffer((uint)i, meshAttribute, offset);
         }
     }
 }
