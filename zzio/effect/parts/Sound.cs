@@ -6,7 +6,7 @@ namespace zzio.effect.parts;
 public class Sound : IEffectPart
 {
     public EffectPartType Type => EffectPartType.Sound;
-    public string Name => name;
+    public string Name { get; set; } = "Sound Effect";
 
     public uint
         volume = 100;
@@ -15,9 +15,7 @@ public class Sound : IEffectPart
         maxDist;
     public bool
         isDisabled;
-    public string
-        fileName = "standard",
-        name = "Sound Effect";
+    public string fileName = "standard";
 
     public float Duration => 0f;
 
@@ -33,7 +31,7 @@ public class Sound : IEffectPart
         r.BaseStream.Seek(4, SeekOrigin.Current);
         isDisabled = r.ReadBoolean();
         fileName = r.ReadSizedCString(32);
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         r.BaseStream.Seek(3, SeekOrigin.Current);
     }
 }

@@ -6,7 +6,7 @@ namespace zzio.effect.parts;
 public class MovingPlanes : IEffectPart
 {
     public EffectPartType Type => EffectPartType.MovingPlanes;
-    public string Name => name;
+    public string Name { get; set; } = "Moving Planes";
 
     public uint
         phase1 = 1000,
@@ -25,9 +25,7 @@ public class MovingPlanes : IEffectPart
         minProgress = 1.0f,
         yOffset,
         xOffset;
-    public string
-        texName = "standard",
-        name = "Moving Planes";
+    public string texName = "standard";
     public bool
         manualProgress,
         disableSecondPlane,
@@ -57,7 +55,7 @@ public class MovingPlanes : IEffectPart
         tileH = r.ReadUInt32();
         manualProgress = r.ReadBoolean();
         color = IColor.ReadNew(r);
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         r.BaseStream.Seek(3, SeekOrigin.Current);
         minProgress = r.ReadSingle();
         disableSecondPlane = r.ReadBoolean();

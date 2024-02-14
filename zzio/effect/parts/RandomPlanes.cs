@@ -6,7 +6,7 @@ namespace zzio.effect.parts;
 public class RandomPlanes : IEffectPart
 {
     public EffectPartType Type => EffectPartType.RandomPlanes;
-    public string Name => name;
+    public string Name { get; set; } = "Random Planes";
 
     public uint
         phase1 = 1000,
@@ -38,9 +38,7 @@ public class RandomPlanes : IEffectPart
     public bool
         ignorePhases,
         circlesAround;
-    public string
-        texName = "standard",
-        name = "Random Planes";
+    public string texName = "standard";
     public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
     public float Duration => (phase1 + phase2 + planeLife + extraPhase) / 1000f;
@@ -76,7 +74,7 @@ public class RandomPlanes : IEffectPart
         tileW = r.ReadUInt32();
         tileH = r.ReadUInt32();
         color = IColor.ReadNew(r);
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         amplColor = r.ReadUInt32();
         circlesAround = r.ReadBoolean();
         r.BaseStream.Seek(3, SeekOrigin.Current);

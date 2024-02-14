@@ -8,7 +8,7 @@ public partial class EffectEditor
 {
     private static void HandlePart(RandomPlanes data)
     {
-        InputText("Name", ref data.name, 128);
+        data.Name = InputText("Name", data.Name, 128);
         NewLine();
 
         Text("Timing:");

@@ -37,7 +37,7 @@ public sealed class ParticleEmitter : BaseCombinerPart<
 
     protected override void HandleAddedComponent(in DefaultEcs.Entity entity, in zzio.effect.parts.ParticleEmitter data)
     {
-        if (data.type != zzio.effect.parts.ParticleType.Particle)
+        if (data.particleType != zzio.effect.parts.ParticleType.Particle)
             return;
 
         var playback = entity.Get<components.Parent>().Entity.Get<components.effect.CombinerPlayback>();

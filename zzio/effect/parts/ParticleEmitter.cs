@@ -28,7 +28,7 @@ public enum ParticleSpawnMode
 public class ParticleEmitter : IEffectPart
 {
     public EffectPartType Type => EffectPartType.ParticleEmitter;
-    public string Name => name;
+    public string Name { get; set; } = "Particle Emitter";
 
     public uint
         phase1 = 1000,
@@ -59,10 +59,8 @@ public class ParticleEmitter : IEffectPart
         gravityMod;
     public bool
         hasDirection;
-    public string
-        name = "Particle Emitter",
-        texName = "standard";
-    public ParticleType type = ParticleType.Particle;
+    public string texName = "standard";
+    public ParticleType particleType = ParticleType.Particle;
     public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
     public float Duration => (phase1 + phase2) / 1000f;
@@ -76,7 +74,7 @@ public class ParticleEmitter : IEffectPart
         phase1 = r.ReadUInt32();
         phase2 = r.ReadUInt32();
         r.BaseStream.Seek(4 * 4 + 32 + 1, SeekOrigin.Current); // many unused variables
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         r.BaseStream.Seek(3, SeekOrigin.Current);
         minProgress = r.ReadUInt32();
         life.value = r.ReadSingle();
@@ -102,7 +100,7 @@ public class ParticleEmitter : IEffectPart
         scale.width = r.ReadSingle();
         gravity = r.ReadVector3();
         gravityMod = r.ReadVector3();
-        type = EnumUtils.intToEnum<ParticleType>(r.ReadInt32());
+        particleType = EnumUtils.intToEnum<ParticleType>(r.ReadInt32());
         texName = r.ReadSizedCString(32);
         tileW = r.ReadUInt32();
         tileH = r.ReadUInt32();

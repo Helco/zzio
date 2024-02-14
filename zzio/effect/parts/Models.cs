@@ -7,7 +7,7 @@ namespace zzio.effect.parts;
 public class Models : IEffectPart
 {
     public EffectPartType Type => EffectPartType.Models;
-    public string Name => name;
+    public string Name { get; set; } = "Models";
 
     public uint
         phase1 = 1000,
@@ -22,9 +22,7 @@ public class Models : IEffectPart
     public Vector3
         rotationAxis,
         scaleSpeed;
-    public string
-        modelName = "sphere",
-        name = "Model";
+    public string modelName = "sphere";
     public bool
         ignoreHead,
         doTexShiftY;
@@ -47,7 +45,7 @@ public class Models : IEffectPart
         modelName = r.ReadSizedCString(32);
         ignoreHead = r.ReadBoolean();
         color = IColor.ReadNew(r);
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         r.BaseStream.Seek(3, SeekOrigin.Current);
         minProgress = r.ReadSingle();
         minSize = r.ReadSingle();

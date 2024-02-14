@@ -6,7 +6,7 @@ namespace zzio.effect.parts;
 public class PlaneBeam : IEffectPart
 {
     public EffectPartType Type => EffectPartType.PlaneBeam;
-    public string Name => name;
+    public string Name { get; set; } = "Plane Beam";
 
     public uint
         phase1 = 1000,
@@ -25,9 +25,7 @@ public class PlaneBeam : IEffectPart
         rotationMod,
         speed,
         widthScaleMod;
-    public string
-        texName = "standard",
-        name = "PlaneBeam";
+    public string texName = "standard";
     public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
     public float Duration => (phase1 + phase2) / 1000f;
@@ -52,7 +50,7 @@ public class PlaneBeam : IEffectPart
         tileW = r.ReadUInt32();
         tileH = r.ReadUInt32();
         color = IColor.ReadNew(r);
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         renderMode = EnumUtils.intToEnum<EffectPartRenderMode>(r.ReadInt32());
         speed = r.ReadSingle();
         mode2 = r.ReadUInt32();

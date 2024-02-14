@@ -15,7 +15,7 @@ public enum ParticleCollectorMode
 public class ParticleCollector : IEffectPart
 {
     public EffectPartType Type => EffectPartType.ParticleCollector;
-    public string Name => name;
+    public string Name { get; set; } = "Particle Collector";
 
     public uint
         maxCount,
@@ -32,9 +32,7 @@ public class ParticleCollector : IEffectPart
         parWidth = 0.05f,
         parHeight = 0.05f,
         minProgress = 1.0f;
-    public string
-        texName = "standard",
-        name = "Particle Collector";
+    public string texName = "standard";
 
     public float Duration => 1f;
 
@@ -56,7 +54,7 @@ public class ParticleCollector : IEffectPart
         tileCount = r.ReadUInt32();
         tileId = r.ReadUInt32();
         color = IColor.ReadNew(r);
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         mode = EnumUtils.intToEnum<ParticleCollectorMode>(r.ReadInt32());
         minProgress = r.ReadSingle();
         r.BaseStream.Seek(4, SeekOrigin.Current);

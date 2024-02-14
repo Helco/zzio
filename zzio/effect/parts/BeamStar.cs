@@ -22,7 +22,7 @@ public enum BeamStarMode
 public class BeamStar : IEffectPart
 {
     public EffectPartType Type => EffectPartType.BeamStar;
-    public string Name => name;
+    public string Name { get; set; } = "Beam Star";
 
     public uint
         phase1 = 1000,
@@ -35,9 +35,7 @@ public class BeamStar : IEffectPart
         rotationSpeed,
         texShiftVStart,
         endTexVEnd;
-    public string
-        texName = "standard",
-        name = "Beam Star";
+    public string texName = "standard";
     public BeamStarComplexity complexity = BeamStarComplexity.OnePlane;
     public BeamStarMode mode = BeamStarMode.Constant;
     public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
@@ -63,7 +61,7 @@ public class BeamStar : IEffectPart
         texShiftVStart = r.ReadSingle();
         r.BaseStream.Seek(1, SeekOrigin.Current);
         color = IColor.ReadNew(r);
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         r.BaseStream.Seek(3, SeekOrigin.Current);
         endTexVEnd = r.ReadSingle();
         mode = EnumUtils.intToEnum<BeamStarMode>(r.ReadInt32());

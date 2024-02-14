@@ -14,7 +14,7 @@ public enum ParticleBeamMode // TODO: Check if this actually applies...
 public class ParticleBeam : IEffectPart
 {
     public EffectPartType Type => EffectPartType.ParticleBeam;
-    public string Name => name;
+    public string Name { get; set; } = "Particle Beam";
 
     public uint
         phase1 = 1000,
@@ -38,9 +38,7 @@ public class ParticleBeam : IEffectPart
         fadeSpeed;
     public bool
         isEqualFade;
-    public string
-        texName = "standard",
-        name = "Particle Beam";
+    public string texName = "standard";
     public ParticleBeamMode mode = ParticleBeamMode.Tornado;
     public EffectPartRenderMode renderMode = EffectPartRenderMode.AdditiveAlpha;
 
@@ -67,7 +65,7 @@ public class ParticleBeam : IEffectPart
         tileW = r.ReadUInt32();
         tileH = r.ReadUInt32();
         color = IColor.ReadNew(r);
-        name = r.ReadSizedCString(32);
+        Name = r.ReadSizedCString(32);
         mode = EnumUtils.intToEnum<ParticleBeamMode>(r.ReadInt32());
         fadeMode = r.ReadUInt32();
         beamWidth = r.ReadSingle();

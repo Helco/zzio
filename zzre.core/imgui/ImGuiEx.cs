@@ -22,6 +22,12 @@ public static class ImGuiEx
         return ret != 0;
     }
 
+    public static string InputText(string label, string prevValue, uint maxLength)
+    {
+        ImGui.InputText(label, ref prevValue, maxLength);
+        return label;
+    }
+
     // modified heavily from #161
     public static bool InputTextWithHint(
        string label,
