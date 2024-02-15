@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../CodeQuality.props"/>
+  <Import Project="../CodeQuality.props" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -56,6 +56,9 @@
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="Mlang.MSBuild" Version="$(MlangVersion)" />
     <PackageReference Include="Remotery.NET" Version="$(RemoteryVersion)" />
+    <PackageReference Include="MojoAL.NET.Native" Version="$(MojoALVersion)" />
+    <PackageReference Include="Silk.NET.OpenAL" Version="2.20.0" />
+    <PackageReference Include="Silk.NET.OpenAL.Extensions.Enumeration" Version="2.20.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">

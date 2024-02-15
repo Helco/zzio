@@ -15,13 +15,16 @@ mkdir -p nuget-feed
 
 # Why does ImGui use OS-specific downloads again?
 REMOTERY_REPO=https://github.com/Helco/Remotery.NET
+MOJOAL_REPO=https://github.com/Helco/MojoAL.NET
 REMOTERY_TAG=1.21.1
+MOJOAL_TAG=1.1
 CURL_ARGS="-Lo"
 if [[ "$OSTYPE" == "msys" ]]; then
     CURL_ARGS="--ssl-no-revoke -Lo" # oh that's why
 fi
 curl $CURL_ARGS "nuget-feed/Remotery.NET.Native.$REMOTERY_TAG.nupkg" --ssl-no-revoke "$REMOTERY_REPO/releases/download/$REMOTERY_TAG/Remotery.NET.Native.$REMOTERY_TAG.nupkg"
 curl $CURL_ARGS "nuget-feed/Remotery.NET.$REMOTERY_TAG.nupkg" --ssl-no-revoke "$REMOTERY_REPO/releases/download/$REMOTERY_TAG/Remotery.NET.$REMOTERY_TAG.nupkg"
+curl $CURL_ARGS "nuget-feed/MojoAL.NET.Native.$MOJOAL_TAG.nupkg" --ssl-no-revoke "$MOJOAL_REPO/releases/download/$MOJOAL_TAG/MojoAL.NET.Native.$MOJOAL_TAG.0.nupkg"
 
 DefaultEcsHash=`git -C extern/DefaultEcs rev-parse --short HEAD`
 VeldridHash=`git -C extern/Veldrid rev-parse --short HEAD`

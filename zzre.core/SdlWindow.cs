@@ -72,7 +72,7 @@ public unsafe class SdlWindow : BaseDisposable
         this.Height = height;
         window = sdl.CreateWindow(title, Sdl.WindowposUndefined, Sdl.WindowposUndefined, width, height, (uint)flags);
         if (window == null)
-            ThrowSdlError(nameof(Sdl.CreateWindow));
+            sdl.ThrowError(nameof(Sdl.CreateWindow));
         WindowID = sdl.GetWindowID(window);
     }
 
@@ -135,7 +135,7 @@ public unsafe class SdlWindow : BaseDisposable
         SysWMInfo sysWmInfo = default;
         sdl.GetVersion(ref sysWmInfo.Version);
         if (!sdl.GetWindowWMInfo(window, &sysWmInfo))
-            ThrowSdlError(nameof(Sdl.GetWindowWMInfo));
+            sdl.ThrowError(nameof(Sdl.GetWindowWMInfo));
 
         switch (sysWmInfo.Subsystem)
         {
@@ -150,7 +150,7 @@ public unsafe class SdlWindow : BaseDisposable
             case SysWMType.Android:
                 var jniEnv = sdl.AndroidGetJNIEnv();
                 if (jniEnv == null)
-                    ThrowSdlError(nameof(Sdl.AndroidGetJNIEnv));
+                    sdl.ThrowError(nameof(Sdl.AndroidGetJNIEnv));
                 return SwapchainSource.CreateAndroidSurface((nint)sysWmInfo.Info.Android.Surface, (nint)jniEnv);
             default:
                 throw new PlatformNotSupportedException("Cannot create a SwapchainSource for " + sysWmInfo.Subsystem + ".");
@@ -159,13 +159,4 @@ public unsafe class SdlWindow : BaseDisposable
 
     private void CheckPointer() =>
         ObjectDisposedException.ThrowIf(window == null, typeof(SdlWindow));
-
-    private void ThrowSdlError(string context)
-    {
-        var exception = sdl.GetErrorAsException();
-        if (exception == null)
-            throw new SdlException("Unknown SDL error during " + context);
-        else
-            throw exception;
-    }
 }

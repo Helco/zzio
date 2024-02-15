@@ -61,6 +61,7 @@ internal static partial class Program
             .AddTag(CreateLogging(diContainer))
             .AddTag(CreateRemotery(diContainer))
             .AddTag(SdlProvider.SDL.Value);
+        AddOpenALDevice(diContainer);
         LoadRenderDoc(diContainer);
         return diContainer;
     }
@@ -91,7 +92,7 @@ internal static partial class Program
             HasMainSwapchain = true,
             PreferDepthRangeZeroToOne = true,
             PreferStandardClipSpaceYDirection = true,
-            SyncToVerticalBlank = true
+            SyncToVerticalBlank = false
         };
         SwapchainDescription scDesc = new SwapchainDescription(
             window.CreateSwapchainSource(),
