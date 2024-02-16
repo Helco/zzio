@@ -141,7 +141,7 @@ unsafe partial class Program
         var device = alc.OpenDevice(deviceName);
         if (device == null)
         {
-            logger.Error("Device could not be opened ({ErrorCode})", alc.GetError(null));
+            logger.Error("Device {DeviceName} could not be opened ({ErrorCode})", deviceName, alc.GetError(null));
             return;
         }
 
