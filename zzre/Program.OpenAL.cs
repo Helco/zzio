@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Linq;
 using Serilog;
 using Serilog.Events;
 using Silk.NET.Core.Contexts;
@@ -88,12 +89,15 @@ unsafe partial class Program
 
         var userDeviceName = invocationContext.ParseResult.GetValueForOption(OptionSoundDevice);
         var deviceName = alcEnum.GetString(null, GetEnumerationContextString.DefaultDeviceSpecifier);
+        var allDeviceNames = alcEnum.GetStringList(GetEnumerationContextStringList.DeviceSpecifiers).ToArray();
+        if (allDeviceNames.Length == 0)
+            logger.Warning("Did not find any sound device, this will probably fail");
         if (string.IsNullOrWhiteSpace(userDeviceName))
         {
             var outputLevel = userDeviceName is null ? LogEventLevel.Debug : LogEventLevel.Information;
             if (logger.IsEnabled(outputLevel))
             {
-                foreach (var name in alcEnum.GetStringList(GetEnumerationContextStringList.DeviceSpecifiers))
+                foreach (var name in allDeviceNames)
                     logger.Write(outputLevel, name == deviceName ? "Default Device: {Name}" : "Device: {Name}", name);
             }
             if (string.IsNullOrEmpty(deviceName))
@@ -106,7 +110,7 @@ unsafe partial class Program
         {
             userDeviceName = userDeviceName.Trim();
             var candidates = new List<string>();
-            foreach (var name in alcEnum.GetStringList(GetEnumerationContextStringList.DeviceSpecifiers))
+            foreach (var name in allDeviceNames)
             {
                 if (name.Equals(userDeviceName, StringComparison.OrdinalIgnoreCase))
                 {
@@ -121,7 +125,7 @@ unsafe partial class Program
             if (candidates.Count == 0)
             {
                 logger.Error("Could not find device {Name}", userDeviceName);
-                foreach (var name in alcEnum.GetStringList(GetEnumerationContextStringList.DeviceSpecifiers))
+                foreach (var name in allDeviceNames)
                     logger.Information(name == deviceName ? "Default Device: {Name}" : "Device: {Name}", name);
                 System.Threading.Thread.Sleep(100); // well this is a hack, we write asynchronously to console...
                 Environment.Exit(-1); // If the user explicitly requested a device, do not continue if we cannot find any
