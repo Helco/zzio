@@ -1,4 +1,5 @@
-﻿using DefaultEcs.System;
+﻿using System;
+using DefaultEcs.System;
 using Silk.NET.OpenAL;
 
 namespace zzre.game.systems;
@@ -6,7 +7,9 @@ namespace zzre.game.systems;
 public sealed unsafe class SoundContext : ISystem<float>
 {
     private readonly OpenALDevice device;
-    private Context* context;
+    private readonly SwitchBackScope switchBackScope;
+    private Context* context,
+        prevContext = null; // in case we need to switch contexts briefly
     private bool isEnabled;
 
     public bool IsEnabled
@@ -26,11 +29,9 @@ public sealed unsafe class SoundContext : ISystem<float>
 
     public SoundContext(ITagContainer diContainer)
     {
-        if (!diContainer.TryGetTag(out device))
-        {
-            isEnabled = false;
+        switchBackScope = new(this);
+        if (!(isEnabled = diContainer.TryGetTag(out device)))
             return;
-        }
 
         context = device.ALC.CreateContext(device.Device, attributeList: null);
         if (context == null)
@@ -38,9 +39,11 @@ public sealed unsafe class SoundContext : ISystem<float>
             device.Logger.Error("Could not create context");
             isEnabled = false;
         }
-
-        isEnabled = true;
-        diContainer.AddTag(diContainer); // to show other systems that sound is indeed alive
+        else
+        {
+            isEnabled = true;
+            diContainer.AddTag(diContainer); // to show other systems that sound is indeed alive
+        }
     }
 
     public void Dispose()
@@ -56,10 +59,33 @@ public sealed unsafe class SoundContext : ISystem<float>
     {
         if (!isEnabled || context is null)
             return;
-        if (device.ALC.MakeContextCurrent(context))
+        if (!device.ALC.MakeContextCurrent(context))
         {
             device.Logger.Error("Could not make context current");
             isEnabled = false;
+        }
+        device.AL.DistanceModel(DistanceModel.InverseDistanceClamped);
+    }
+
+    // This should only ever be necessary for handling messages
+    public IDisposable? EnsureIsCurrent()
+    {
+        prevContext = device.ALC.GetCurrentContext();
+        return context == prevContext || prevContext == null ? null : switchBackScope;
+    }
+
+    private sealed class SwitchBackScope : IDisposable
+    {
+        private readonly SoundContext parent;
+        public SwitchBackScope(SoundContext parent) => this.parent = parent;
+        public void Dispose()
+        {
+            if (parent.prevContext is null)
+                return;
+            if (parent.prevContext != parent.context &&
+                !parent.device.ALC.MakeContextCurrent(parent.prevContext))
+                parent.device.Logger.Error("Could not switch back current context");
+            parent.prevContext = null;
         }
     }
 }

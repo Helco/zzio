@@ -50,13 +50,24 @@ public class UI : BaseDisposable, ITagContainer
 
         updateSystems = new systems.RecordingSequentialSystem<float>(this);
         updateSystems.Add(
+            // Sound (very early to make the context current)
+            new systems.SoundContext(this),
+            new systems.SoundListener(this),
+            new systems.SoundEmitter(this),
+            new systems.SoundFade(this),
+            new systems.SoundStoppedEmitter(this),
+
             new systems.ui.Cursor(this),
+            
+            // Screens
             new systems.ui.ScrDeck(this),
             new systems.ui.ScrRuneMenu(this),
             new systems.ui.ScrBookMenu(this),
             new systems.ui.ScrMapMenu(this),
             new systems.ui.ScrGotCard(this),
             new systems.ui.ScrNotification(this),
+
+            // UI elements
             new systems.ui.ButtonTiles(this),
             new systems.ui.Slider(this),
             new systems.ui.AnimatedLabel(this),
@@ -64,6 +75,7 @@ public class UI : BaseDisposable, ITagContainer
             new systems.ui.Tooltip(this),
             new systems.ui.CorrectRenderOrder(this),
             new systems.ui.Fade(this),
+
             new systems.Reaper(this),
             new systems.ParentReaper(this));
 

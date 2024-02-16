@@ -62,6 +62,7 @@ public class Game : BaseDisposable, ITagContainer
         AddTag(new resources.EffectMaterial(this));
 
         ecsWorld.SetMaxCapacity<Scene>(1);
+        ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
 
         // create it now for extra priority in the scene loading events
         var worldRenderer = new systems.WorldRendererSystem(this);
@@ -70,13 +71,6 @@ public class Game : BaseDisposable, ITagContainer
         var updateSystems = new systems.RecordingSequentialSystem<float>(this);
         this.updateSystems = updateSystems;
         updateSystems.Add(
-            // Sound (very early to make the context current)
-            new systems.SoundContext(this),
-            new systems.SoundListener(this),
-            new systems.SoundEmitter(this),
-            new systems.SoundFade(this),
-            new systems.SoundStoppedEmitter(this),
-
             new systems.Savegame(this),
             new systems.PlayerSpawner(this),
             new systems.PlayerControls(this),
