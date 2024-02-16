@@ -9,6 +9,7 @@ using Silk.NET.Core.Contexts;
 using Silk.NET.Core.Loader;
 using Silk.NET.OpenAL;
 using Silk.NET.OpenAL.Extensions.Enumeration;
+using Silk.NET.SDL;
 using zzio;
 
 namespace zzre;
@@ -64,10 +65,16 @@ unsafe partial class Program
         () => null,
         "Use a specific sound device (use two quotes \"\" to print a list)");
 
+    private static readonly Option<string?> OptionSoundDriver = new(
+        "--sound-drv",
+        () => null,
+        "Use a specific sound driver (use two quotes \"\" to print a list)");
+
     public static void AddSoundOptions(RootCommand command)
     {
         command.AddGlobalOption(OptionNoSound);
         command.AddGlobalOption(OptionSoundDevice);
+        command.AddGlobalOption(OptionSoundDriver);
     }
 
     public static void AddOpenALDevice(ITagContainer diContainer)
@@ -80,68 +87,13 @@ unsafe partial class Program
             return;
         }
 
-        var (al, alc) = LoadOpenALLibraries();
-        if (!alc.TryGetExtension(null, out Enumeration alcEnum))
-        {
-            logger.Error("ALC_ENUMERATION_EXT is not present");
+        if (!SelectAudioDriver(logger, diContainer))
             return;
-        }
 
-        var userDeviceName = invocationContext.ParseResult.GetValueForOption(OptionSoundDevice);
-        var deviceName = alcEnum.GetString(null, GetEnumerationContextString.DefaultDeviceSpecifier);
-        var allDeviceNames = alcEnum.GetStringList(GetEnumerationContextStringList.DeviceSpecifiers).ToArray();
-        if (allDeviceNames.Length == 0)
-            logger.Warning("Did not find any sound device, this will probably fail");
-        if (string.IsNullOrWhiteSpace(userDeviceName))
-        {
-            var outputLevel = userDeviceName is null ? LogEventLevel.Debug : LogEventLevel.Information;
-            if (logger.IsEnabled(outputLevel))
-            {
-                foreach (var name in allDeviceNames)
-                    logger.Write(outputLevel, name == deviceName ? "Default Device: {Name}" : "Device: {Name}", name);
-            }
-            if (string.IsNullOrEmpty(deviceName))
-            {
-                logger.Error("No default device specifier was returned ({ErrorCode})", alc.GetError(null));
-                return;
-            }
-        }
-        else
-        {
-            userDeviceName = userDeviceName.Trim();
-            var candidates = new List<string>();
-            foreach (var name in allDeviceNames)
-            {
-                if (name.Equals(userDeviceName, StringComparison.OrdinalIgnoreCase))
-                {
-                    candidates.Clear();
-                    candidates.Add(name);
-                    break;
-                }
-                if (name.Contains(userDeviceName, StringComparison.OrdinalIgnoreCase))
-                    candidates.Add(name);
-            }
-
-            if (candidates.Count == 0)
-            {
-                logger.Error("Could not find device {Name}", userDeviceName);
-                foreach (var name in allDeviceNames)
-                    logger.Information(name == deviceName ? "Default Device: {Name}" : "Device: {Name}", name);
-                System.Threading.Thread.Sleep(100); // well this is a hack, we write asynchronously to console...
-                Environment.Exit(-1); // If the user explicitly requested a device, do not continue if we cannot find any
-            }
-            else if (candidates.Count > 1)
-            {
-                logger.Error("Given sound device is ambiguous: {Name}", userDeviceName);
-                foreach (var name in candidates)
-                    logger.Information("Device: {Name}", name);
-                System.Threading.Thread.Sleep(100); 
-                Environment.Exit(-1);
-            }
-            else
-                deviceName = candidates[0];
-        }
-
+        var (al, alc) = LoadOpenALLibraries();
+        var deviceName = SelectAudioDevice(logger, alc, invocationContext);
+        if (deviceName == null)
+            return;
         var device = alc.OpenDevice(deviceName);
         if (device == null)
         {
@@ -180,5 +132,142 @@ unsafe partial class Program
         });
 
         return (al, alc);
+    }
+
+    private static string? SelectAudioDevice(ILogger logger, ALContext alc, InvocationContext invocationContext)
+    {
+        if (!alc.TryGetExtension(null, out Enumeration alcEnum))
+        {
+            logger.Error("ALC_ENUMERATION_EXT is not present");
+            return null;
+        }
+
+        var userDeviceName = invocationContext.ParseResult.GetValueForOption(OptionSoundDevice);
+        var deviceName = alcEnum.GetString(null, GetEnumerationContextString.DefaultDeviceSpecifier);
+        var allDeviceNames = alcEnum.GetStringList(GetEnumerationContextStringList.DeviceSpecifiers).ToArray();
+        if (allDeviceNames.Length == 0)
+            logger.Warning("Did not find any sound device, this will probably fail");
+        if (string.IsNullOrWhiteSpace(userDeviceName))
+        {
+            var outputLevel = userDeviceName is null ? LogEventLevel.Debug : LogEventLevel.Information;
+            if (logger.IsEnabled(outputLevel))
+            {
+                foreach (var name in allDeviceNames)
+                    logger.Write(outputLevel, name == deviceName ? "Default Device: {Name}" : "Device: {Name}", name);
+            }
+            if (string.IsNullOrEmpty(deviceName))
+            {
+                logger.Error("No default device specifier was returned ({ErrorCode})", alc.GetError(null));
+                return null;
+            }
+        }
+        else
+        {
+            userDeviceName = userDeviceName.Trim();
+            var candidates = new List<string>();
+            foreach (var name in allDeviceNames)
+            {
+                if (name.Equals(userDeviceName, StringComparison.OrdinalIgnoreCase))
+                {
+                    candidates.Clear();
+                    candidates.Add(name);
+                    break;
+                }
+                if (name.Contains(userDeviceName, StringComparison.OrdinalIgnoreCase))
+                    candidates.Add(name);
+            }
+
+            if (candidates.Count == 0)
+            {
+                logger.Error("Could not find device {Name}", userDeviceName);
+                foreach (var name in allDeviceNames)
+                    logger.Information(name == deviceName ? "Default Device: {Name}" : "Device: {Name}", name);
+                System.Threading.Thread.Sleep(100); // well this is a hack, we write asynchronously to console...
+                Environment.Exit(-1); // If the user explicitly requested a device, do not continue if we cannot find any
+            }
+            else if (candidates.Count > 1)
+            {
+                logger.Error("Given sound device is ambiguous: {Name}", userDeviceName);
+                foreach (var name in candidates)
+                    logger.Information("Device: {Name}", name);
+                System.Threading.Thread.Sleep(100);
+                Environment.Exit(-1);
+            }
+            else
+                deviceName = candidates[0];
+        }
+        return deviceName;
+    }
+
+    private static bool SelectAudioDriver(ILogger logger, ITagContainer diContainer)
+    {
+        var invocationContext = diContainer.GetTag<InvocationContext>();
+        var userDriverName = invocationContext.ParseResult.GetValueForOption(OptionSoundDriver);
+        if (userDriverName == null)
+            return true;
+        userDriverName.Trim();
+
+        var sdl = diContainer.GetTag<Sdl>();
+        var numAudioDrivers = sdl.GetNumAudioDrivers();
+        if (numAudioDrivers <= 0)
+        {
+            logger.Error("There were no audio drivers found");
+            return false;
+        }
+        var allDriverNames = Enumerable
+            .Range(0, numAudioDrivers)
+            .Select(sdl.GetAudioDriverS)
+            .NotNull()
+            .ToArray();
+
+        bool printAllNames = true;
+        string? selectedDriverName = null;
+        if (!string.IsNullOrEmpty(userDriverName))
+        {
+            var candidates = new List<string>();
+            foreach (var name in allDriverNames)
+            {
+                if (name.Equals(userDriverName, StringComparison.OrdinalIgnoreCase))
+                {
+                    candidates.Clear();
+                    candidates.Add(name);
+                    break;
+                }
+                if (name.Contains(userDriverName, StringComparison.OrdinalIgnoreCase))
+                    candidates.Add(name);
+            }
+
+            if (candidates.Count == 0)
+                logger.Error("Could not find audio driver {Name}", userDriverName);
+            else if (candidates.Count > 1)
+            {
+                logger.Error("Ambiguous audio driver {Name}", userDriverName);
+                foreach (var name in candidates)
+                    logger.Information("Driver: {Name}", name);
+                printAllNames = false;
+            }
+            else
+            {
+                selectedDriverName = candidates[0];
+                printAllNames = false;
+            }
+        }
+
+        if (printAllNames)
+        {
+            foreach (var name in allDriverNames)
+                logger.Information("Driver: {Name}", name);
+        }
+        if (selectedDriverName != null)
+        {
+            if (sdl.AudioInit(selectedDriverName) != 0)
+            {
+                logger.Error("Could not init audio with driver {name}", selectedDriverName);
+                return false;
+            }
+            logger.Information("Selected Driver: {name}", selectedDriverName);
+        }
+
+        return true;
     }
 }
