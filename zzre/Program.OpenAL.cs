@@ -1,6 +1,9 @@
-﻿using System.CommandLine;
+﻿using System;
+using System.Collections.Generic;
+using System.CommandLine;
 using System.CommandLine.Invocation;
 using Serilog;
+using Serilog.Events;
 using Silk.NET.Core.Contexts;
 using Silk.NET.Core.Loader;
 using Silk.NET.OpenAL;
@@ -55,6 +58,17 @@ unsafe partial class Program
         () => false,
         "Whether sound is enabled at all");
 
+    private static readonly Option<string?> OptionSoundDevice = new(
+        "--sound-dev",
+        () => null,
+        "Use a specific sound device (use two quotes \"\" to print a list)");
+
+    public static void AddSoundOptions(RootCommand command)
+    {
+        command.AddGlobalOption(OptionNoSound);
+        command.AddGlobalOption(OptionSoundDevice);
+    }
+
     public static void AddOpenALDevice(ITagContainer diContainer)
     {
         var logger = diContainer.GetLoggerFor<OpenALDevice>();
@@ -72,11 +86,56 @@ unsafe partial class Program
             return;
         }
 
+        var userDeviceName = invocationContext.ParseResult.GetValueForOption(OptionSoundDevice);
         var deviceName = alcEnum.GetString(null, GetEnumerationContextString.DefaultDeviceSpecifier);
-        if (string.IsNullOrEmpty(deviceName))
+        if (string.IsNullOrWhiteSpace(userDeviceName))
         {
-            logger.Error("No default device specifier was returned ({ErrorCode})", alc.GetError(null));
-            return;
+            var outputLevel = userDeviceName is null ? LogEventLevel.Debug : LogEventLevel.Information;
+            if (logger.IsEnabled(outputLevel))
+            {
+                foreach (var name in alcEnum.GetStringList(GetEnumerationContextStringList.DeviceSpecifiers))
+                    logger.Write(outputLevel, name == deviceName ? "Default Device: {Name}" : "Device: {Name}", name);
+            }
+            if (string.IsNullOrEmpty(deviceName))
+            {
+                logger.Error("No default device specifier was returned ({ErrorCode})", alc.GetError(null));
+                return;
+            }
+        }
+        else
+        {
+            userDeviceName = userDeviceName.Trim();
+            var candidates = new List<string>();
+            foreach (var name in alcEnum.GetStringList(GetEnumerationContextStringList.DeviceSpecifiers))
+            {
+                if (name.Equals(userDeviceName, StringComparison.OrdinalIgnoreCase))
+                {
+                    candidates.Clear();
+                    candidates.Add(name);
+                    break;
+                }
+                if (name.Contains(userDeviceName, StringComparison.OrdinalIgnoreCase))
+                    candidates.Add(name);
+            }
+
+            if (candidates.Count == 0)
+            {
+                logger.Error("Could not find device {Name}", userDeviceName);
+                foreach (var name in alcEnum.GetStringList(GetEnumerationContextStringList.DeviceSpecifiers))
+                    logger.Information(name == deviceName ? "Default Device: {Name}" : "Device: {Name}", name);
+                System.Threading.Thread.Sleep(100); // well this is a hack, we write asynchronously to console...
+                Environment.Exit(-1); // If the user explicitly requested a device, do not continue if we cannot find any
+            }
+            else if (candidates.Count > 1)
+            {
+                logger.Error("Given sound device is ambiguous: {Name}", userDeviceName);
+                foreach (var name in candidates)
+                    logger.Information("Device: {Name}", name);
+                System.Threading.Thread.Sleep(100); 
+                Environment.Exit(-1);
+            }
+            else
+                deviceName = candidates[0];
         }
 
         var device = alc.OpenDevice(deviceName);
