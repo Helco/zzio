@@ -92,7 +92,7 @@ internal static partial class Program
             HasMainSwapchain = true,
             PreferDepthRangeZeroToOne = true,
             PreferStandardClipSpaceYDirection = true,
-            SyncToVerticalBlank = false
+            SyncToVerticalBlank = true
         };
         SwapchainDescription scDesc = new SwapchainDescription(
             window.CreateSwapchainSource(),

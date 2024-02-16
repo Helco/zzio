@@ -20,6 +20,7 @@ public sealed class Sound : AResourceManager<string, components.SoundBuffer>
         resourcePool = diContainer.GetTag<IResourcePool>();
         sdl = diContainer.GetTag<Sdl>();
         diContainer.TryGetTag<OpenALDevice>(out device);
+        Manage(diContainer.GetTag<DefaultEcs.World>());
     }
 
     protected override components.SoundBuffer Load(string path)

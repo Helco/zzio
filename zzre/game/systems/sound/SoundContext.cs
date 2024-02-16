@@ -42,7 +42,7 @@ public sealed unsafe class SoundContext : ISystem<float>
         else
         {
             isEnabled = true;
-            diContainer.AddTag(diContainer); // to show other systems that sound is indeed alive
+            diContainer.AddTag(this); // to show other systems that sound is indeed alive
         }
     }
 
@@ -71,7 +71,11 @@ public sealed unsafe class SoundContext : ISystem<float>
     public IDisposable? EnsureIsCurrent()
     {
         prevContext = device.ALC.GetCurrentContext();
-        return context == prevContext || prevContext == null ? null : switchBackScope;
+        if (context == prevContext)
+            return null;
+        if (!device.ALC.MakeContextCurrent(context))
+            device.Logger.Error("Could not ensure current context");
+        return prevContext == null ? null : switchBackScope;
     }
 
     private sealed class SwitchBackScope : IDisposable
