@@ -61,6 +61,7 @@ partial class ECSExplorer
         AddEntityNamerByComponent<ManagedResource<string, ActorExDescription>>(Def + 1,
             e => $"Actor {e.Get<ManagedResource<string, ActorExDescription>>().Info} {e}");
         AddEntityNamerByComponent<ClumpMesh>(Def, e => $"Model {e.Get<ClumpMesh>().Name} {e}");
+        AddEntityNamerByComponent<SoundEmitter>(Def, e => $"{(e.Has<Location>() ? "3D" : "2D")} Sample {e}");
 
         AddEntityNamerByComponent(Low, (in Trigger t) => $"Trigger {t.type} {t.idx}");
 
@@ -93,6 +94,7 @@ partial class ECSExplorer
         const string Animals = "Animals";
         const string Preload = "Preload";
         const string Effects = "Effects";
+        const string Samples = "Samples";
 
         AddEntityGrouperByComponent<NpcRow>(1000, NPCs);
         AddEntityGrouperByComponent<Butterfly>(1000, Animals);
@@ -103,6 +105,7 @@ partial class ECSExplorer
         AddEntityGrouperByComponent<LensFlare>(1000, Effects);
         AddEntityGrouperByComponent<ClumpMesh>(0, Models);
         AddEntityGrouperByComponent<Trigger>(-1, Triggers);
+        AddEntityGrouperByComponent<SoundEmitter>(0, Samples);
 
         AddEntityGrouper(1000, e => e.Has<UIMaterial>() && !e.Has<Rect>() ? Preload : null);
     }
