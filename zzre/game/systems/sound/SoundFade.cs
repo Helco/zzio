@@ -30,5 +30,6 @@ public sealed partial class SoundFade : AEntitySetSystem<float>
         device.AL.SetListenerProperty(Silk.NET.OpenAL.ListenerFloat.Gain, newVolume);
         if (fade.Time >= fade.Length)
             entity.Set<components.Dead>();
+        device.AL.ThrowOnError();
     }
 }

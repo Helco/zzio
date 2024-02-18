@@ -44,6 +44,10 @@ public sealed unsafe class SoundContext : ISystem<float>
             isEnabled = true;
             diContainer.AddTag(this); // to show other systems that sound is indeed alive
         }
+
+        using var _ = EnsureIsCurrent();
+        device.AL.DistanceModel(DistanceModel.InverseDistanceClamped);
+        device.AL.SetListenerProperty(ListenerFloat.Gain, 1f);
     }
 
     public void Dispose()
@@ -64,7 +68,7 @@ public sealed unsafe class SoundContext : ISystem<float>
             device.Logger.Error("Could not make context current");
             isEnabled = false;
         }
-        device.AL.DistanceModel(DistanceModel.InverseDistanceClamped);
+        device.AL.ThrowOnError();
     }
 
     // This should only ever be necessary for handling messages

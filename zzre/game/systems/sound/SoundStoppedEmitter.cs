@@ -20,5 +20,6 @@ public sealed partial class SoundStoppedEmitter : AEntitySetSystem<float>
         device.AL.GetSourceProperty(emitter.SourceId, GetSourceInteger.SourceState, out var state);
         if (state == (int)SourceState.Stopped)
             entity.Set<components.Dead>();
+        device.AL.ThrowOnError();
     }
 }

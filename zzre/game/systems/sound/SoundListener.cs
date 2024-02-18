@@ -1,28 +1,55 @@
-﻿using System.Numerics;
+﻿using System.Linq;
+using System.Numerics;
 using DefaultEcs.System;
 using Silk.NET.OpenAL;
 
 namespace zzre.game.systems;
 
-[With<components.SoundListener>]
-public sealed partial class SoundListener : AEntitySetSystem<float>
+public sealed partial class SoundListener : ISystem<float>
 {
     private readonly OpenALDevice device = null!;
+    private readonly Zanzarah zanzarah;
 
-    public SoundListener(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
+    public bool IsEnabled { get; set; }
+
+    public SoundListener(ITagContainer diContainer)
     {
-        World.SetMaxCapacity<components.SoundListener>(1);
+        zanzarah = diContainer.GetTag<Zanzarah>();
         if (IsEnabled = diContainer.HasTag<SoundContext>())
             device = diContainer.GetTag<OpenALDevice>();
     }
 
-    [Update]
-    private unsafe void Update(Location location)
+    public void Dispose()
     {
-        device.AL.SetListenerProperty(ListenerVector3.Position, location.LocalPosition * -Vector3.UnitZ);
+    }
+
+    public unsafe void Update(float _)
+    {
+        if (!IsEnabled)
+            return;
+
+        Vector3 position = Vector3.Zero, forward = Vector3.UnitZ, up = Vector3.UnitY;
+        if (zanzarah.CurrentGame != null)
+        {
+            var ecsWorld = zanzarah.CurrentGame.GetTag<DefaultEcs.World>();
+            var listenerEntity = ecsWorld
+                .GetEntities()
+                .With<components.SoundListener>()
+                .AsEnumerable()
+                .FirstOrDefault();
+            if (listenerEntity.TryGet<Location>(out var location))
+            {
+                position = location.LocalPosition;
+                forward = location.InnerRight;
+                up = location.InnerUp;
+            }
+        }
+
+        device.AL.SetListenerProperty(ListenerVector3.Position, position * new Vector3(1, 1, -1));
         var orientation = stackalloc Vector3[2];
-        orientation[0] = location.InnerForward * -Vector3.UnitZ;
-        orientation[1] = location.InnerUp * -Vector3.UnitZ;
+        orientation[0] = forward * new Vector3(-1, 1, 1);
+        orientation[1] = up * new Vector3(-1, 1, 1);
         device.AL.SetListenerProperty(ListenerFloatArray.Orientation, (float*)orientation);
+        device.AL.ThrowOnError();
     }
 }

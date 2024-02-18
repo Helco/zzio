@@ -62,6 +62,7 @@ public class Game : BaseDisposable, ITagContainer
         AddTag(new resources.EffectMaterial(this));
 
         ecsWorld.SetMaxCapacity<Scene>(1);
+        ecsWorld.SetMaxCapacity<components.SoundListener>(1);
         ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
 
         // create it now for extra priority in the scene loading events

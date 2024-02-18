@@ -14,6 +14,7 @@ public class UI : BaseDisposable, ITagContainer
     private readonly systems.RecordingSequentialSystem<float> updateSystems;
     private readonly systems.RecordingSequentialSystem<CommandList> renderSystems;
     private readonly GraphicsDevice graphicsDevice;
+    private readonly resources.Sound sound; // as we have to regularly cleanup we keep a direct reference
 
     public DeviceBuffer ProjectionBuffer { get; }
     public Rect LogicalScreen { get; set; }
@@ -42,7 +43,7 @@ public class UI : BaseDisposable, ITagContainer
         AddTag(new resources.UIBitmap(this));
         AddTag(new resources.UITileSheet(this));
         AddTag(new resources.UIRawMaskedBitmap(this));
-        AddTag(new resources.Sound(this));
+        AddTag(sound = new resources.Sound(this));
         AddTag(Preload = new systems.ui.UIPreloader(this));
 
         CursorEntity = World.CreateEntity();
@@ -100,6 +101,7 @@ public class UI : BaseDisposable, ITagContainer
     {
         using var _ = profiler.SampleCPU("UI.Update");
         updateSystems.Update(time.Delta);
+        sound.RegularCleanup();
     }
 
     public void Render(CommandList cl)

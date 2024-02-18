@@ -66,16 +66,23 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         device.AL.SetSourceProperty(sourceId, SourceFloat.Gain, msg.Volume);
         device.AL.SetSourceProperty(sourceId, SourceFloat.ReferenceDistance, msg.RefDistance);
         device.AL.SetSourceProperty(sourceId, SourceFloat.MaxDistance, msg.MaxDistance);
+        device.AL.SetSourceProperty(sourceId, SourceFloat.MinGain, 0f);
+        device.AL.SetSourceProperty(sourceId, SourceFloat.MaxGain, 1f);
+        device.AL.SetSourceProperty(sourceId, SourceFloat.RolloffFactor, is3D ? 1f : 0f);
         device.AL.SetSourceProperty(sourceId, SourceInteger.Buffer, entity.Get<components.SoundBuffer>().Id);
         device.AL.SetSourceProperty(sourceId, SourceBoolean.Looping, msg.Looping);
-        device.AL.SetSourceProperty(sourceId, SourceBoolean.SourceRelative, !is3D);
+        device.AL.SetSourceProperty(sourceId, SourceBoolean.SourceRelative, false);
         if (!is3D)
             device.AL.SetSourceProperty(sourceId, SourceVector3.Position, Vector3.Zero);
         if (msg.Paused)
             device.AL.SourcePause(sourceId);
         else
             device.AL.SourcePlay(sourceId);
-        entity.Set(new components.SoundEmitter(sourceId));
+        entity.Set(new components.SoundEmitter(sourceId, msg.RefDistance, msg.MaxDistance));
+
+        if (is3D)
+            Update(entity.Get<components.SoundEmitter>(), entity.Get<Location>());
+
         device.Logger.Verbose("Spawned emitter for {Sample}", msg.SamplePath);
     }
 
@@ -85,6 +92,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         device.AL.SourceStop(emitter.SourceId);
         device.AL.SetSourceProperty(emitter.SourceId, SourceInteger.Buffer, 0);
         sourcePool.Enqueue(emitter.SourceId);
+        device.AL.ThrowOnError();
     }
 
     [Update]
@@ -92,7 +100,23 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         in components.SoundEmitter emitter,
         Location location)
     {
-        device.AL.SetSourceProperty(emitter.SourceId, SourceVector3.Position, location.LocalPosition * -Vector3.UnitZ);
-        device.AL.SetSourceProperty(emitter.SourceId, SourceVector3.Direction, location.InnerForward * -Vector3.UnitZ);
+        device.AL.GetListenerProperty(ListenerVector3.Position, out var listenerPosition);
+        var myPosition = location.LocalPosition * new Vector3(1, 1, -1);
+        var distToListener = Vector3.Distance(listenerPosition, myPosition);
+        float newRefDistance;
+        if (emitter.MaxDistance >= distToListener)
+        {
+            if (emitter.ReferenceDistance < distToListener)
+                newRefDistance = emitter.ReferenceDistance * (1f - (distToListener - emitter.ReferenceDistance) / (emitter.MaxDistance - emitter.ReferenceDistance));
+            else
+                newRefDistance = emitter.ReferenceDistance;
+        }
+        else
+            newRefDistance = 1.1754944e-38f;
+
+        device.AL.SetSourceProperty(emitter.SourceId, SourceFloat.ReferenceDistance, newRefDistance);
+        device.AL.SetSourceProperty(emitter.SourceId, SourceVector3.Position, myPosition);
+        device.AL.SetSourceProperty(emitter.SourceId, SourceVector3.Direction, location.InnerForward * new Vector3(1, 1, -1));
+        device.AL.ThrowOnError();
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Diagnostics;
 using System.Linq;
 using Serilog;
 using Serilog.Events;
@@ -107,6 +108,7 @@ unsafe partial class Program
             alc.GetContextProperty(device, GetContextString.DeviceSpecifier),
             al.GetStateProperty(StateString.Renderer),
             al.GetStateProperty(StateString.Version));
+        al.ThrowOnError();
     }
 
     private static (AL, ALContext) LoadOpenALLibraries()
@@ -269,5 +271,13 @@ unsafe partial class Program
         }
 
         return true;
+    }
+
+    [Conditional("DEBUG")]
+    public static void ThrowOnError(this AL al)
+    {
+        var error = al.GetError();
+        if (error != AudioError.NoError)
+            throw new InvalidOperationException($"OpenAL returned error {error}");
     }
 }

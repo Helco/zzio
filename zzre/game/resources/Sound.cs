@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using DefaultEcs.Resource;
 using Silk.NET.OpenAL;
 using Silk.NET.SDL;
@@ -13,6 +15,11 @@ public sealed class Sound : AResourceManager<string, components.SoundBuffer>
     private readonly IResourcePool resourcePool;
     private readonly Sdl sdl;
     private readonly OpenALDevice? device;
+    private readonly List<uint> buffersToDelete = new(8);
+    // Unfortunately the order of source cleanup and buffer deletion is important,
+    // alDeleteBuffers will return with InvalidOperation and not delete the buffer
+    // if it is still in use.
+    // so instead we get hacky and delay the actual deletion for a bit
 
     public Sound(ITagContainer diContainer)
     {
@@ -71,11 +78,23 @@ public sealed class Sound : AResourceManager<string, components.SoundBuffer>
 
     protected override void Unload(string info, components.SoundBuffer resource)
     {
-        device?.AL.DeleteBuffer(resource.Id);
+        buffersToDelete.Add(resource.Id);
     }
 
     protected override void OnResourceLoaded(in DefaultEcs.Entity entity, string info, components.SoundBuffer resource)
     {
         entity.Set(resource);
+    }
+
+    public unsafe void RegularCleanup()
+    {
+        if (buffersToDelete.Count == 0 || device == null ||
+            !diContainer.TryGetTag<systems.SoundContext>(out var context))
+            return;
+        using var _ = context.EnsureIsCurrent();
+        var buffersToDeleteSpan = CollectionsMarshal.AsSpan(buffersToDelete);
+        fixed (uint* buffersPtr = buffersToDeleteSpan)
+            device.AL.DeleteBuffers(buffersToDelete.Count, buffersPtr);
+        buffersToDelete.Clear();
     }
 }
