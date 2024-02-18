@@ -18,6 +18,7 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
     private const float MinPlayerAngle = 0.6f;
     private const float GroundDistance = 5f;
 
+    private readonly Random Random = Random.Shared;
     private readonly Game game;
     private readonly IDisposable sceneLoadedSubscription;
     private readonly IDisposable addSubscription;
@@ -57,7 +58,6 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
         Location location,
         ref components.AnimalWaypointAI ai)
     {
-        var random = Random.Shared;
         var playerLocation = game.PlayerEntity.Get<Location>();
         var playerDistanceSqr = Vector3.DistanceSquared(location.GlobalPosition, playerLocation.GlobalPosition);
         var moveDistance = elapsedTime * ai.CurrentSpeed;
@@ -72,15 +72,17 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
                     ai.CurrentState = State.SearchTarget;
                     ai.CurrentSpeed = FleeSpeed;
                     ai.WalkAnimation = AnimationType.Walk1;
-                    // TODO: play sound 43 or 44
+                    World.Publish(new messages.SpawnSample(
+                        $"resources/audio/sfx/specials/_s0{Random.Next(43, 45)}.wav",
+                        Position: location.GlobalPosition));
                     break;
                 }
                 if (ai.CurIdleTime <= ai.Config.MaxIdleTime)
                     break;
                 if (ai.Config.Flees)
                 {
-                    ai.CurIdleTime = random.NextFloat();
-                    var nextAction = random.NextFloat();
+                    ai.CurIdleTime = Random.NextFloat();
+                    var nextAction = Random.NextFloat();
                     if (nextAction > 0.5f)
                     {
                         ai.CurrentState = State.SearchTarget;
@@ -95,7 +97,7 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
                 else
                 {
                     ai.CurrentState = State.SearchTarget;
-                    ai.CurIdleTime = random.NextFloat() * ai.Config.MaxIdleTime;
+                    ai.CurIdleTime = Random.NextFloat() * ai.Config.MaxIdleTime;
                     ai.WalkAnimation = AnimationType.Walk0;
                 }
                 break;
