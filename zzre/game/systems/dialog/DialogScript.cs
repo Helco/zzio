@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Linq;
 using System.Numerics;
+using System.Collections.Generic;
 using DefaultEcs.Command;
 using DefaultEcs.System;
 using zzio;
 using zzio.scn;
 using zzio.db;
+using zzio.vfs;
 
 namespace zzre.game.systems;
 
@@ -42,6 +44,8 @@ public partial class DialogScript : BaseScript<DialogScript>
     private const int LowerLetterboxHeight = 100;
     private const int SegmentsPerAddSay = 8;
 
+    private readonly Random Random = Random.Shared;
+    private readonly IResourcePool resourcePool;
     private readonly MappedDB db;
     private readonly UI ui;
     private readonly Game game;
@@ -59,6 +63,7 @@ public partial class DialogScript : BaseScript<DialogScript>
     public DialogScript(ITagContainer diContainer) : base(diContainer, CreateEntityContainer)
     {
         World.SetMaxCapacity<components.DialogState>(1);
+        resourcePool = diContainer.GetTag<IResourcePool>();
         db = diContainer.GetTag<MappedDB>();
         ui = diContainer.GetTag<UI>();
         game = diContainer.GetTag<Game>();
@@ -147,15 +152,42 @@ public partial class DialogScript : BaseScript<DialogScript>
             dialogEntity.Set(components.DialogState.FadeOut);
     }
 
+    private static readonly FilePath VoiceBasePath = new("resources/audio/speech/");
     private void Say(DefaultEcs.Entity entity, UID uid, bool silent)
     {
         var sayLabel = entity.Get<components.DialogCommonUI>().SayLabel;
         var tileSheet = sayLabel.Get<rendering.TileSheet>();
-        var text = db.GetDialog(uid).Text;
-        text = tileSheet.WrapLines(text, ui.LogicalScreen.Size.X - 60);
+        var textRow = db.GetDialog(uid);
+        var text = tileSheet.WrapLines(textRow.Text, ui.LogicalScreen.Size.X - 60);
         sayLabel.Set(new components.ui.AnimatedLabel(text, SegmentsPerAddSay, isBlinking: !silent));
 
-        // TODO: Play voice sample on say instruction
+        if (silent)
+            return;
+        string? nextSample = textRow.Voice;
+        if (string.IsNullOrWhiteSpace(nextSample))
+        {
+            if (NPCEntity.TryGet<components.ActorParts>(out var actorParts) &&
+                actorParts.Body.TryGet<resources.ClumpInfo>(out var bodyClumpInfo))
+                nextSample = $"{bodyClumpInfo.Name[..^4]}{Random.Next(1, 4)}.wav";
+            else
+                logger.Warning("Tried to play random voice for NPC without body ({Entity})", NPCEntity);
+        }
+        if (string.IsNullOrWhiteSpace(nextSample))
+            return;
+        var voiceSamplePath = VoiceBasePath.Combine(nextSample).ToPOSIXString();
+        if (resourcePool.FindFile(voiceSamplePath) is null)
+        {
+            logger.Warning("Could not find voice sample {VoiceSample}", nextSample);
+            return;
+        }
+
+        if (entity.TryGet<components.DialogVoiceSample>(out var voiceSample) &&
+            voiceSample.Entity.IsAlive)
+            voiceSample.Entity.Dispose();
+        var voiceSampleEntity = ui.World.CreateEntity();
+        voiceSampleEntity.Set(new components.Parent(entity));
+        ui.World.Publish(new messages.SpawnSample(voiceSamplePath, AsEntity: voiceSampleEntity));
+        entity.Set(new components.DialogVoiceSample(voiceSampleEntity));
     }
 
     private void Choice(DefaultEcs.Entity entity, int targetLabel, UID uid)
@@ -422,9 +454,21 @@ public partial class DialogScript : BaseScript<DialogScript>
         return false;
     }
 
+    private static readonly IReadOnlyList<string> SoundSamples =
+    [
+        "resources/audio/sfx/specials/_s022.wav",
+        "resources/audio/sfx/specials/_s029.wav",
+        "resources/audio/sfx/specials/_s030.wav",
+        "resources/audio/sfx/specials/_s032.wav",
+        "resources/audio/sfx/specials/_s021.wav",
+        "resources/audio/sfx/specials/_s023.wav"
+    ];
     private void PlaySound(DefaultEcs.Entity entity, int id)
     {
-        LogUnimplementedInstructionWarning();
+        if (id < 0 || id >= SoundSamples.Count)
+            logger.Error("PlaySound instruction with invalid sample ID {ID}", id);
+        else
+            World.Publish(new messages.SpawnSample(SoundSamples[id]));
     }
 
     private void PlayInArena(DefaultEcs.Entity entity, int arg)
@@ -476,9 +520,11 @@ public partial class DialogScript : BaseScript<DialogScript>
         game.PlayerEntity.Get<components.NonFairyAnimation>().Next = animation;
     }
 
+    private static readonly FilePath AmyVoiceBasePath = new("resources/audio/sfx/voices/amy/");
     private void PlayAmyVoice(string v)
     {
-        LogUnimplementedInstructionWarning();
+        var fullPath = AmyVoiceBasePath.Combine(v + ".wav");
+        World.Publish(new messages.SpawnSample(fullPath.ToPOSIXString()));
     }
 
     private void CreateDynamicModel(DefaultEcs.Entity entity)
@@ -488,6 +534,7 @@ public partial class DialogScript : BaseScript<DialogScript>
 
     private void DeploySound(DefaultEcs.Entity entity, int id, int triggerI)
     {
+        // unused
         LogUnimplementedInstructionWarning();
     }
 }
