@@ -19,7 +19,7 @@ public partial class PlantWiggle : AEntitySetSystem<float>
     private readonly Lazy<Location> playerLocationLazy;
     private readonly Location cameraLocation;
     private readonly GameTime gameTime;
-    private bool didStartSoundThisFrame = false;
+    private bool didStartSoundThisFrame;
 
     public PlantWiggle(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
