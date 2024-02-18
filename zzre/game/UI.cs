@@ -11,7 +11,6 @@ public class UI : BaseDisposable, ITagContainer
     private readonly IZanzarahContainer zzContainer;
     private readonly Remotery profiler;
     private readonly GameTime time;
-    private readonly DefaultEcs.World ecsWorld;
     private readonly systems.RecordingSequentialSystem<float> updateSystems;
     private readonly systems.RecordingSequentialSystem<CommandList> renderSystems;
     private readonly GraphicsDevice graphicsDevice;
@@ -20,6 +19,7 @@ public class UI : BaseDisposable, ITagContainer
     public Rect LogicalScreen { get; set; }
     public DefaultEcs.Entity CursorEntity { get; }
     public systems.ui.UIPreloader Preload { get; }
+    public DefaultEcs.World World { get; }
 
     public UI(ITagContainer diContainer)
     {
@@ -38,14 +38,14 @@ public class UI : BaseDisposable, ITagContainer
         HandleResize();
 
         AddTag(this);
-        AddTag(ecsWorld = new DefaultEcs.World());
+        AddTag(World = new DefaultEcs.World());
         AddTag(new resources.UIBitmap(this));
         AddTag(new resources.UITileSheet(this));
         AddTag(new resources.UIRawMaskedBitmap(this));
         AddTag(new resources.Sound(this));
         AddTag(Preload = new systems.ui.UIPreloader(this));
 
-        CursorEntity = ecsWorld.CreateEntity();
+        CursorEntity = World.CreateEntity();
         CursorEntity.Set<Rect>();
         CursorEntity.Set<components.Visibility>();
 
@@ -93,8 +93,8 @@ public class UI : BaseDisposable, ITagContainer
         zzContainer.OnResize -= HandleResize;
     }
 
-    public void Publish<T>() => ecsWorld.Publish(default(T));
-    public void Publish<T>(in T message) => ecsWorld.Publish(message);
+    public void Publish<T>() => World.Publish(default(T));
+    public void Publish<T>(in T message) => World.Publish(message);
 
     public void Update()
     {

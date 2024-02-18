@@ -45,6 +45,8 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
     private void HandleSpawnSample(in messages.SpawnSample msg)
     {
         var entity = msg.AsEntity ?? World.CreateEntity();
+        if (entity.World != World)
+            throw new ArgumentException("Sample entity has to be created in UI World", nameof(msg));
         entity.Set(ManagedResource<components.SoundBuffer>.Create(msg.SamplePath));
         bool is3D = msg.Position.HasValue || msg.ParentLocation != null;
         if (is3D)
