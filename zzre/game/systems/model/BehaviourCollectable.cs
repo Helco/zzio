@@ -95,7 +95,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
 
         collectable.IsDying = true;
         collectable.Age = 0f;
-        // TODO: Play soundeffect on collectable grab
+        World.Publish(new messages.SpawnSample("resources/audio/sfx/specials/_s020.wav"));
         if (!collectable.IsDynamic)
             game.Publish(new GSModRemoveItem(collectable.ModelId));
         Collect(clumpInfo);
