@@ -156,6 +156,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.DialogGambling(this),
 
             new systems.NonFairyAnimation(this),
+            new systems.AmbientSounds(this),
 
             // Gameflows
             new systems.GotCard(this),
@@ -238,7 +239,7 @@ public class Game : BaseDisposable, ITagContainer
     public void LoadScene(string sceneName, Func<Trigger> findEntryTrigger)
     {
         logger.Information("Load " + sceneName);
-        ecsWorld.Publish(new messages.SceneChanging());
+        ecsWorld.Publish(new messages.SceneChanging(sceneName));
         ecsWorld.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
 
         var resourcePool = GetTag<IResourcePool>();

@@ -78,7 +78,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
             device.AL.SourcePause(sourceId);
         else
             device.AL.SourcePlay(sourceId);
-        entity.Set(new components.SoundEmitter(sourceId, msg.RefDistance, msg.MaxDistance));
+        entity.Set(new components.SoundEmitter(sourceId, msg.Volume, msg.RefDistance, msg.MaxDistance));
 
         if (is3D)
             Update(entity.Get<components.SoundEmitter>(), entity.Get<Location>());
