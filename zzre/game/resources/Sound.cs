@@ -46,10 +46,8 @@ public sealed class Sound : AResourceManager<string, components.SoundBuffer>
 
     private unsafe components.SoundBuffer LoadWave(string path)
     {
-        using var stream = resourcePool.FindAndOpen(path) ??
+        var fileBuffer = resourcePool.FindAndRead(path) ??
             throw new FileNotFoundException("Could not open sound: " + path);
-        var fileBuffer = new byte[stream.Length];
-        stream.ReadExactly(fileBuffer.AsSpan());
         var rwops = sdl.RWFromConstMem(fileBuffer);
 
         AudioSpec audioSpec = default;

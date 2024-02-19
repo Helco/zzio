@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using StbImageSharp;
+using Silk.NET.SDL;
 using Veldrid;
 using zzio;
 using zzio.rwbs;
 using zzio.vfs;
+using PixelFormat = Veldrid.PixelFormat;
+using Texture = Veldrid.Texture;
 
 namespace zzre.rendering;
 
@@ -20,28 +22,11 @@ public static class TextureAssetLoaderExtensions
     private static readonly IReadOnlyList<string> TextureExtensions = [".dds", ".bmp"];
     private static readonly uint[] WhitePixel = [0xFFFFFFFF];
 
-    public static int Count(this ColorComponents c) => c switch
+    public static unsafe Texture ToTexture(this SdlSurfacePtr image, GraphicsDevice gd, bool srgb = false)
     {
-        ColorComponents.Grey => 1,
-        ColorComponents.GreyAlpha => 2,
-        ColorComponents.RedGreenBlue => 3,
-        ColorComponents.RedGreenBlueAlpha => 4,
-        _ => throw new NotImplementedException($"Unimplemented StbImageSharp.ColorComponents: {c}")
-    };
-
-    public static Texture ToTexture(this ImageResult image, GraphicsDevice gd, bool srgb = false)
-    {
-        if (image.BitsPerChannel != 8)
-            throw new NotSupportedException($"Unsupported bits per channel: {image.BitsPerChannel}");
-        var format = image.ColorComponents switch
-        {
-            ColorComponents.Grey => PixelFormat.R8_UNorm,
-            ColorComponents.GreyAlpha => PixelFormat.R8_G8_UNorm,
-            ColorComponents.RedGreenBlue => throw new NotSupportedException("Veldrid does not support 24 bit textures"),
-            ColorComponents.RedGreenBlueAlpha when srgb => PixelFormat.R8_G8_B8_A8_UNorm_SRgb,
-            ColorComponents.RedGreenBlueAlpha when !srgb => PixelFormat.R8_G8_B8_A8_UNorm,
-            _ => throw new NotSupportedException($"Unsupported StbImageSharp.ColorComponents: {image.ColorComponents}")
-        };
+        if (image.Surface->Format->Format != Sdl.PixelformatAbgr8888)
+            throw new ArgumentException($"Unsupported surface format {image.Surface->Format->Format}", nameof(image));
+        var format = srgb ? PixelFormat.R8_G8_B8_A8_UNorm_SRgb : PixelFormat.R8_G8_B8_A8_UNorm;
         var texture = gd.ResourceFactory.CreateTexture(new(
             (uint)image.Width, (uint)image.Height, depth: 1, mipLevels: 1, arrayLayers: 1,
             format, TextureUsage.Sampled, TextureType.Texture2D));

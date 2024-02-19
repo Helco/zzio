@@ -3,7 +3,6 @@ using System.Numerics;
 using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
-using StbImageSharp;
 
 namespace zzre.rendering;
 
@@ -23,9 +22,9 @@ public class TileSheet : IReadOnlyList<Rect>
     public float CharSpacing { get; set; }
     public IList<TileSheet> Alternatives { get; } = new List<TileSheet>();
 
-    public TileSheet(string name, ImageResult image, bool isFont)
+    public unsafe TileSheet(string name, SdlSurfacePtr image, bool isFont)
     {
-        if (image.ColorComponents != ColorComponents.RedGreenBlueAlpha || image.BitsPerChannel != 8)
+        if (image.Surface->Format->Format != Silk.NET.SDL.Sdl.PixelformatAbgr8888)
             throw new ArgumentException("TileSheet can only be initialized with RGBA32 images");
 
         Name = name;
@@ -39,10 +38,11 @@ public class TileSheet : IReadOnlyList<Rect>
         var tileEndXOffset = isFont ? 0 : 1;
         var tiles = new List<Rect>();
         var pixelSizes = new List<Vector2>();
+        var imageData = image.Data;
         for (int tileEndX = 0; tileEndX < image.Width; tileEndX++)
         {
             var dataI = tileEndX * 4;
-            if (image.Data[dataI + 0] == 0 && image.Data[dataI + 1] == 0 && image.Data[dataI + 2] == 0 ||
+            if (imageData[dataI + 0] == 0 && imageData[dataI + 1] == 0 && imageData[dataI + 2] == 0 ||
                 tileEndX == tileStartX)
                 continue;
 

@@ -6,6 +6,29 @@ using unsafe FnRWClose = delegate* unmanaged[Cdecl]<Silk.NET.SDL.RWops*, int>;
 
 namespace zzre;
 
+public unsafe struct SdlSurfacePtr(Sdl sdl, Surface* surface) : IDisposable
+{
+    public Surface* Surface { get; private set; } = surface;
+    public readonly int Width => Surface == null
+        ? throw new ObjectDisposedException(nameof(Surface))
+        : Surface->W;
+    public readonly int Height => Surface == null
+        ? throw new ObjectDisposedException(nameof(Surface))
+        : Surface->H;
+    public readonly ReadOnlySpan<byte> Data => Surface == null
+        ? throw new ObjectDisposedException(nameof(Surface))
+        : new ReadOnlySpan<byte>(Surface->Pixels, Surface->Pitch * Surface->H);
+
+    public void Dispose()
+    {
+        if (Surface != null)
+        {
+            sdl.FreeSurface(Surface);
+            Surface = null;
+        }
+    }
+}
+
 public unsafe static class SdlExtensions
 {
     // I am content with constricting Silk to a single context

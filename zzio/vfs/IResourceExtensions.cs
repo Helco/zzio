@@ -34,4 +34,17 @@ public static class IResourceExtensions
     public static Stream? FindAndOpen(this IResourcePool pool, FilePath path) => FindAndOpen(pool.Root, path);
     public static Stream? FindAndOpen(this IResource res, string pathText) => FindAndOpen(res, new FilePath(pathText));
     public static Stream? FindAndOpen(this IResource res, FilePath path) => FindFile(res, path)?.OpenContent();
+
+    public static byte[]? FindAndRead(this IResourcePool pool, string pathText) => FindAndRead(pool.Root, new FilePath(pathText));
+    public static byte[]? FindAndRead(this IResourcePool pool, FilePath path) => FindAndRead(pool.Root, path);
+    public static byte[]? FindAndRead(this IResource res, string pathText) => FindAndRead(res, new FilePath(pathText));
+    public static byte[]? FindAndRead(this IResource res, FilePath path)
+    {
+        using var stream = FindAndOpen(res, path);
+        if (stream == null)
+            return null;
+        var data = new byte[stream.Length];
+        stream.ReadExactly(data.AsSpan());
+        return data;
+    }
 }

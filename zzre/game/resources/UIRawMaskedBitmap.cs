@@ -1,10 +1,12 @@
 ﻿using System;
 using DefaultEcs.Resource;
+using Silk.NET.SDL;
 using Veldrid;
 using zzio;
 using zzio.vfs;
 using zzre.materials;
 using zzre.rendering;
+using PixelFormat = Veldrid.PixelFormat;
 
 namespace zzre.game.resources;
 
@@ -15,6 +17,7 @@ public class UIRawMaskedBitmap : AResourceManager<RawMaskedBitmapInfo, UIMateria
     private static readonly FilePath BasePath = new("resources/bitmaps");
 
     private readonly ITagContainer diContainer;
+    private readonly Sdl sdl;
     private readonly UI ui;
     private readonly GraphicsDevice graphicsDevice;
     private readonly ResourceFactory resourceFactory;
@@ -23,6 +26,7 @@ public class UIRawMaskedBitmap : AResourceManager<RawMaskedBitmapInfo, UIMateria
     public UIRawMaskedBitmap(ITagContainer diContainer)
     {
         this.diContainer = diContainer;
+        sdl = diContainer.GetTag<Sdl>();
         ui = diContainer.GetTag<UI>();
         graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         resourceFactory = diContainer.GetTag<ResourceFactory>();
@@ -32,7 +36,7 @@ public class UIRawMaskedBitmap : AResourceManager<RawMaskedBitmapInfo, UIMateria
 
     protected override UIMaterial Load(RawMaskedBitmapInfo info)
     {
-        var bitmap = UIBitmap.LoadBitmap(resourcePool, info.colorFile, suffix: "", withAlpha: true) ??
+        using var bitmap = UIBitmap.LoadBitmap(sdl, resourcePool, info.colorFile, suffix: "", withAlpha: true) ??
             throw new System.IO.FileNotFoundException($"Could not open bitmap {info.colorFile}");
         var mainTexture = bitmap.ToTexture(graphicsDevice);
         mainTexture.Name = "UIRawMaskedBitmap " + info.colorFile;

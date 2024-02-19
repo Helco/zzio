@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using DefaultEcs.Resource;
+using Silk.NET.SDL;
 using Veldrid;
 using zzio.vfs;
 using zzre.materials;
 using zzre.rendering;
+using PixelFormat = Veldrid.PixelFormat;
 
 namespace zzre.game.resources;
 
@@ -14,6 +15,7 @@ public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.
 {
     private readonly Dictionary<TileSheet, UIMaterial> materials = [];
     private readonly ITagContainer diContainer;
+    private readonly Sdl sdl;
     private readonly UI ui;
     private readonly GraphicsDevice graphicsDevice;
     private readonly ResourceFactory resourceFactory;
@@ -24,6 +26,7 @@ public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.
     public UITileSheet(ITagContainer diContainer)
     {
         this.diContainer = diContainer;
+        sdl = diContainer.GetTag<Sdl>();
         ui = diContainer.GetTag<UI>();
         graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         resourceFactory = diContainer.GetTag<ResourceFactory>();
@@ -61,7 +64,7 @@ public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.
 
     protected override TileSheet Load(UITileSheetInfo info)
     {
-        var bitmap = UIBitmap.LoadMaskedBitmap(resourcePool, info.Name);
+        using var bitmap = UIBitmap.LoadMaskedBitmap(sdl, resourcePool, info.Name);
         var tileSheet = new TileSheet(info.Name, bitmap, info.IsFont);
 
         var texture = resourceFactory.CreateTexture(
@@ -75,7 +78,7 @@ public class UITileSheet : AResourceManager<UITileSheetInfo, TileSheet>, System.
                 TextureUsage.Sampled,
                 TextureType.Texture2D));
         texture.Name = (info.IsFont ? "UIFont " : "UITileSheet ") + info.Name;
-        graphicsDevice.UpdateTexture(texture, bitmap.Data.AsSpan(bitmap.Width * 4),
+        graphicsDevice.UpdateTexture(texture, bitmap.Data[(bitmap.Width * 4)..],
             0, 0, 0, width: texture.Width, height: texture.Height, depth: 1, mipLevel: 0, arrayLayer: 0);
 
         var material = new UIMaterial(diContainer) { IsFont = info.IsFont };

@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using DefaultEcs.Resource;
-using StbImageSharp;
+using Silk.NET.SDL;
 using Veldrid;
 using zzio;
 using zzio.vfs;
@@ -16,6 +16,7 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
     private static readonly FilePath BasePath = new("resources/bitmaps");
 
     private readonly ITagContainer diContainer;
+    private readonly Sdl sdl;
     private readonly UI ui;
     private readonly GraphicsDevice graphicsDevice;
     private readonly IResourcePool resourcePool;
@@ -23,6 +24,7 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
     public UIBitmap(ITagContainer diContainer)
     {
         this.diContainer = diContainer;
+        sdl = diContainer.GetTag<Sdl>();
         ui = diContainer.GetTag<UI>();
         graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         resourcePool = diContainer.GetTag<IResourcePool>();
@@ -31,7 +33,8 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
 
     protected override materials.UIMaterial Load(string name)
     {
-        var texture = LoadMaskedBitmap(resourcePool, name).ToTexture(graphicsDevice);
+        using var bitmap = LoadMaskedBitmap(sdl, resourcePool, name);
+        var texture = bitmap.ToTexture(graphicsDevice);
         texture.Name = "UIBitmap " + name;
         var material = new materials.UIMaterial(diContainer);
         material.MainTexture.Texture = texture;
@@ -51,37 +54,58 @@ public class UIBitmap : AResourceManager<string, materials.UIMaterial>
         resource.Dispose();
     }
 
-    internal static ImageResult LoadMaskedBitmap(IResourcePool resourcePool, string name)
+    internal static unsafe SdlSurfacePtr LoadMaskedBitmap(Sdl sdl, IResourcePool resourcePool, string name)
     {
         var bitmap =
-            LoadBitmap(resourcePool, name, UnmaskedSuffix, withAlpha: true) ??
-            LoadBitmap(resourcePool, name, ColorSuffix, withAlpha: true) ??
+            LoadBitmap(sdl, resourcePool, name, UnmaskedSuffix, withAlpha: true) ??
+            LoadBitmap(sdl, resourcePool, name, ColorSuffix, withAlpha: true) ??
             throw new System.IO.FileNotFoundException($"Could not open bitmap {name}");
 
-        var maskBitmap = LoadBitmap(resourcePool, name, MaskSuffix, withAlpha: null);
+        using var maskBitmap = LoadBitmap(sdl, resourcePool, name, MaskSuffix, withAlpha: null);
         if (maskBitmap == null)
             return bitmap;
-        if (bitmap.Width != maskBitmap.Width || bitmap.Height != maskBitmap.Height)
+        if (bitmap.Width != maskBitmap?.Width || bitmap.Height != maskBitmap?.Height)
             throw new InvalidDataException("Mask bitmap size does not match color bitmap");
 
-        var maskBpp = maskBitmap.ColorComponents.Count();
+        var maskBpp = maskBitmap.Value.Surface->Format->BytesPerPixel;
+        var bitmapPixels = (byte*)bitmap.Surface->Pixels;
+        var maskBitmapPixels = (byte*)maskBitmap.Value.Surface->Pixels;
         for (int i = 0; i < bitmap.Width * bitmap.Height; i++)
-            bitmap.Data[i * 4 + 3] = maskBitmap.Data[i * maskBpp];
+            bitmapPixels[i * 4 + 3] = maskBitmapPixels[i * maskBpp];
         return bitmap;
     }
 
-    internal static ImageResult? LoadBitmap(IResourcePool resourcePool, string name, string suffix, bool? withAlpha)
+    internal static unsafe SdlSurfacePtr? LoadBitmap(Sdl sdl, IResourcePool resourcePool, string name, string suffix, bool? withAlpha)
     {
         var path = BasePath.Combine(name + suffix);
-        using var stream = resourcePool.FindAndOpen(path);
-        if (stream == null)
+        var fileBuffer = resourcePool.FindAndRead(path);
+        if (fileBuffer == null)
             return null;
-        var result = StbImageSharp.Decoding.BmpDecoder.Decode(stream, withAlpha switch
+        var rwops = sdl.RWFromConstMem(fileBuffer);
+
+        var rawPointer = sdl.LoadBMPRW(rwops, freesrc: 1);
+        if (rawPointer == null)
+            return null;
+
+        var curFormat = rawPointer->Format->Format;
+        uint targetFormat = withAlpha switch
         {
-            null => null,
-            true => ColorComponents.RedGreenBlueAlpha,
-            false => ColorComponents.RedGreenBlue
-        }) ?? throw new System.IO.InvalidDataException($"Could not decode bitmap {name}{suffix}");
-        return result;
+            true => Sdl.PixelformatAbgr8888,
+            false => Sdl.PixelformatBgr888,
+            null when curFormat == Sdl.PixelformatAbgr8888 || curFormat == Sdl.PixelformatBgr888 => curFormat,
+            _ => Sdl.PixelformatAbgr8888
+        };
+        if (rawPointer->Format->Format != targetFormat)
+        {
+            var newPointer = sdl.ConvertSurfaceFormat(rawPointer, targetFormat, flags: 0);
+            sdl.FreeSurface(rawPointer);
+            if (newPointer == null)
+                return null;
+            rawPointer = newPointer;
+        }
+        if (rawPointer->Pitch != rawPointer->W * rawPointer->Format->BytesPerPixel)
+            throw new System.NotSupportedException("ZZIO does not support surface pitch values other than Bpp*Width");
+
+        return new(sdl, rawPointer);
     }
 }

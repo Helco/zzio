@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Silk.NET.SDL;
 using Veldrid;
 using zzio;
 using zzio.vfs;
 using zzre.rendering;
+using PixelFormat = Veldrid.PixelFormat;
+using Texture = Veldrid.Texture;
 
 namespace zzre;
 
@@ -13,12 +16,14 @@ public class TextureAssetLoader : IAssetLoader<Texture>, IAssetLoaderValidation<
     public ITagContainer DIContainer { get; }
     private readonly IResourcePool resourcePool;
     private readonly GraphicsDevice device;
+    private readonly Sdl sdl;
 
     public TextureAssetLoader(ITagContainer diContainer)
     {
         DIContainer = diContainer;
         resourcePool = diContainer.GetTag<IResourcePool>();
         device = diContainer.GetTag<GraphicsDevice>();
+        sdl = diContainer.GetTag<Sdl>();
     }
 
     public bool TryLoad(IResource resource, [NotNullWhen(true)] out Texture? texture)
@@ -35,16 +40,33 @@ public class TextureAssetLoader : IAssetLoader<Texture>, IAssetLoaderValidation<
 
     public void Clear() { }
 
-    private Texture? TryLoadBMPTexture(IResource resource)
+    private unsafe Texture? TryLoadBMPTexture(IResource resource)
     {
         using var textureStream = resource.OpenContent();
         if (textureStream == null)
             return null;
         try
         {
-            var image = StbImageSharp.Decoding.BmpDecoder.Decode(textureStream, StbImageSharp.ColorComponents.RedGreenBlueAlpha);
-            if (image == null)
+            var imageBuffer = new byte[textureStream.Length];
+            textureStream.ReadExactly(imageBuffer.AsSpan());
+            var rwops = sdl.RWFromConstMem(imageBuffer);
+            var rawPointer = sdl.LoadBMPRW(rwops, freesrc: 1);
+            if (rawPointer == null)
                 return null;
+
+            var curFormat = rawPointer->Format->Format;
+            if (rawPointer->Format->Format != Sdl.PixelformatAbgr8888)
+            {
+                var newPointer = sdl.ConvertSurfaceFormat(rawPointer, Sdl.PixelformatAbgr8888, flags: 0);
+                sdl.FreeSurface(rawPointer);
+                if (newPointer == null)
+                    return null;
+                rawPointer = newPointer;
+            }
+            if (rawPointer->Pitch != rawPointer->W * rawPointer->Format->BytesPerPixel)
+                throw new System.NotSupportedException("ZZIO does not support surface pitch values other than Bpp*Width");
+
+            using var image = new SdlSurfacePtr(sdl, rawPointer);
             return image.ToTexture(device);
         }
         catch (Exception)
