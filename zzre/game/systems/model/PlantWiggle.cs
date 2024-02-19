@@ -70,7 +70,9 @@ public partial class PlantWiggle : AEntitySetSystem<float>
                 if (!didStartSoundThisFrame)
                 {
                     didStartSoundThisFrame = true;
-                    World.Publish(new messages.SpawnSample("resources/audio/sfx/specials/_s000.wav"));
+                    World.Publish(new messages.SpawnSample(
+                        "resources/audio/sfx/specials/_s000.wav",
+                        Volume: 0.7f));
                 }
                 wiggle.RemainingTimer = PlayerDuration;
             }

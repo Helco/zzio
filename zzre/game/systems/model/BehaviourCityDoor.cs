@@ -87,7 +87,6 @@ public partial class BehaviourCityDoor : AEntitySetSystem<float>
                 }
                 break;
 
-            // TODO: Play city door open/close sound samples
             case DoorState.StartToOpen:
                 door.State = DoorState.Opening;
                 World.Publish(new messages.SpawnSample("resources/audio/sfx/specials/_s015.wav"));
