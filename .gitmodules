@@ -13,3 +13,6 @@
 [submodule "extern/Mlang"]
 	path = extern/Mlang
 	url = https://github.com/Helco/Mlang
+[submodule "extern/NLayer"]
+	path = extern/NLayer
+	url = https://github.com/TechPizzaDev/NLayer
