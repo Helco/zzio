@@ -33,6 +33,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         }
     }
 
+    private readonly Random Random = Random.Shared;
     private readonly IDisposable sceneLoadedSubscription;
     private readonly IDisposable controlsLockedSubscription;
     private readonly DefaultEcs.EntitySet collidableModels;
@@ -339,6 +340,11 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         controls.Jumps = true;
     }
 
+    private static readonly IReadOnlyList<string> JumpVoiceSamples =
+    [
+        "resources/audio/sfx/voices/amy/jmp00a.wav",
+        "resources/audio/sfx/voices/amy/jmp00b.wav"
+    ];
     private void IntentionalJump(
         in components.PhysicParameters parameters,
         ref components.PlayerControls controls,
@@ -361,11 +367,18 @@ public partial class HumanPhysics : AEntitySetSystem<float>
             state.Velocity *= parameters.SpeedFactorBigJump;
             state.Velocity.Y = parameters.SpeedJump;
 
-            // TODO: Play voice samples for intentional jumps
+            var voiceSample = Random.NextDouble() switch
+            {
+                >= 0.6 => JumpVoiceSamples[0],
+                >= 0.3 => JumpVoiceSamples[1],
+                _ => null
+            };
+            if (voiceSample is not null)
+                World.Publish(new messages.SpawnSample(voiceSample));
         }
     }
 
-    private static void WhirlJump(
+    private void WhirlJump(
         in components.PhysicParameters parameters,
         ref components.PlayerControls controls,
         ref components.HumanPhysics state)
@@ -375,8 +388,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         controls.WhirlJumps = false;
         state.GravityModifier = -1f;
         state.Velocity.Y = parameters.SpeedJump * parameters.SpeedFactorWhirlJump;
-
-        // TODO: Play voice samples for whirl jumps
+        World.Publish(new messages.SpawnSample("resources/audio/sfx/voices/amy/jms00a.wav"));
     }
 
     private static void ApplyGravity(

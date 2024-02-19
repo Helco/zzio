@@ -19,6 +19,7 @@ public partial class PlantWiggle : AEntitySetSystem<float>
     private readonly Lazy<Location> playerLocationLazy;
     private readonly Location cameraLocation;
     private readonly GameTime gameTime;
+    private bool didStartSoundThisFrame;
 
     public PlantWiggle(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
@@ -41,6 +42,11 @@ public partial class PlantWiggle : AEntitySetSystem<float>
         entity.Set(value with { StartRotation = location.LocalRotation });
     }
 
+    protected override void PreUpdate(float _)
+    {
+        didStartSoundThisFrame = false;
+    }
+
     [Update]
     private void Update(
         float elapsedTime,
@@ -61,7 +67,13 @@ public partial class PlantWiggle : AEntitySetSystem<float>
                 wiggle.RemainingTimer = Math.Max(wiggle.RemainingTimer, 0f);
             else if (MathEx.CmpZero(wiggle.RemainingTimer))
             {
-                // TODO: Play plant wiggle sound
+                if (!didStartSoundThisFrame)
+                {
+                    didStartSoundThisFrame = true;
+                    World.Publish(new messages.SpawnSample(
+                        "resources/audio/sfx/specials/_s000.wav",
+                        Volume: 0.7f));
+                }
                 wiggle.RemainingTimer = PlayerDuration;
             }
         }

@@ -11,15 +11,16 @@ public class UI : BaseDisposable, ITagContainer
     private readonly IZanzarahContainer zzContainer;
     private readonly Remotery profiler;
     private readonly GameTime time;
-    private readonly DefaultEcs.World ecsWorld;
     private readonly systems.RecordingSequentialSystem<float> updateSystems;
     private readonly systems.RecordingSequentialSystem<CommandList> renderSystems;
     private readonly GraphicsDevice graphicsDevice;
+    private readonly resources.Sound sound; // as we have to regularly cleanup we keep a direct reference
 
     public DeviceBuffer ProjectionBuffer { get; }
     public Rect LogicalScreen { get; set; }
     public DefaultEcs.Entity CursorEntity { get; }
     public systems.ui.UIPreloader Preload { get; }
+    public DefaultEcs.World World { get; }
 
     public UI(ITagContainer diContainer)
     {
@@ -38,25 +39,37 @@ public class UI : BaseDisposable, ITagContainer
         HandleResize();
 
         AddTag(this);
-        AddTag(ecsWorld = new DefaultEcs.World());
+        AddTag(World = new DefaultEcs.World());
         AddTag(new resources.UIBitmap(this));
         AddTag(new resources.UITileSheet(this));
         AddTag(new resources.UIRawMaskedBitmap(this));
+        AddTag(sound = new resources.Sound(this));
         AddTag(Preload = new systems.ui.UIPreloader(this));
 
-        CursorEntity = ecsWorld.CreateEntity();
+        CursorEntity = World.CreateEntity();
         CursorEntity.Set<Rect>();
         CursorEntity.Set<components.Visibility>();
 
         updateSystems = new systems.RecordingSequentialSystem<float>(this);
         updateSystems.Add(
+            // Sound (very early to make the context current)
+            new systems.SoundContext(this),
+            new systems.SoundListener(this),
+            new systems.SoundEmitter(this),
+            new systems.SoundFade(this),
+            new systems.SoundStoppedEmitter(this),
+
             new systems.ui.Cursor(this),
+            
+            // Screens
             new systems.ui.ScrDeck(this),
             new systems.ui.ScrRuneMenu(this),
             new systems.ui.ScrBookMenu(this),
             new systems.ui.ScrMapMenu(this),
             new systems.ui.ScrGotCard(this),
             new systems.ui.ScrNotification(this),
+
+            // UI elements
             new systems.ui.ButtonTiles(this),
             new systems.ui.Slider(this),
             new systems.ui.AnimatedLabel(this),
@@ -64,6 +77,7 @@ public class UI : BaseDisposable, ITagContainer
             new systems.ui.Tooltip(this),
             new systems.ui.CorrectRenderOrder(this),
             new systems.ui.Fade(this),
+
             new systems.Reaper(this),
             new systems.ParentReaper(this));
 
@@ -80,13 +94,14 @@ public class UI : BaseDisposable, ITagContainer
         zzContainer.OnResize -= HandleResize;
     }
 
-    public void Publish<T>() => ecsWorld.Publish(default(T));
-    public void Publish<T>(in T message) => ecsWorld.Publish(message);
+    public void Publish<T>() => World.Publish(default(T));
+    public void Publish<T>(in T message) => World.Publish(message);
 
     public void Update()
     {
         using var _ = profiler.SampleCPU("UI.Update");
         updateSystems.Update(time.Delta);
+        sound.RegularCleanup();
     }
 
     public void Render(CommandList cl)

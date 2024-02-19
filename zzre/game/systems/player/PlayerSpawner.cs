@@ -67,6 +67,7 @@ public class PlayerSpawner : ISystem<float>
         playerEntity.Set(new Sphere(Vector3.Zero, playerColliderSize));
         playerEntity.Set(new Inventory(diContainer, savegame));
         playerEntity.Set(components.GameFlow.Normal); // TODO: Move GameFlow component to world instead of player entity
+        playerEntity.Get<components.ActorParts>().Body.Set<components.SoundListener>();
         ecsWorld.Set(new components.PlayerEntity(playerEntity));
     }
 

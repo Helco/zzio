@@ -89,7 +89,11 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
         var game = ui.GetTag<Game>();
         game.Publish(new messages.SwitchAnimation(game.PlayerEntity, AnimationType.Joy));
 
-        // TODO: Play sound and set cursor in ScrGotCard
+        game.Publish(new messages.SpawnSample(
+            "resources/audio/sfx/specials/_s001.wav",
+            AsEntity: entity));
+
+        // TODO: Set cursor in ScrGotCard
     }
 
     private void HandleElementDown(DefaultEcs.Entity _, components.ui.ElementId elementId)

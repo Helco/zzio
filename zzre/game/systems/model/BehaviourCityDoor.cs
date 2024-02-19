@@ -55,7 +55,7 @@ public partial class BehaviourCityDoor : AEntitySetSystem<float>
         Location location,
         ref components.behaviour.CityDoor door)
     {
-        bool keepOpen = location.DistanceSquared(playerLocation) < MaxPlayerDistanceSqr;
+        bool keepOpen = playerLocation.DistanceSquared(door.StartPosition) < MaxPlayerDistanceSqr;
 
         // TODO: Add city door unlock behaviour
 
@@ -87,12 +87,13 @@ public partial class BehaviourCityDoor : AEntitySetSystem<float>
                 }
                 break;
 
-            // TODO: Play city door open/close sound samples
             case DoorState.StartToOpen:
                 door.State = DoorState.Opening;
+                World.Publish(new messages.SpawnSample("resources/audio/sfx/specials/_s015.wav"));
                 break;
             case DoorState.StartToClose:
                 door.State = DoorState.Closing;
+                World.Publish(new messages.SpawnSample("resources/audio/sfx/specials/_s016.wav"));
                 break;
         }
 

@@ -15,18 +15,22 @@ mkdir -p nuget-feed
 
 # Why does ImGui use OS-specific downloads again?
 REMOTERY_REPO=https://github.com/Helco/Remotery.NET
+MOJOAL_REPO=https://github.com/Helco/MojoAL.NET
 REMOTERY_TAG=1.21.1
+MOJOAL_TAG=1.1.1
 CURL_ARGS="-Lo"
 if [[ "$OSTYPE" == "msys" ]]; then
     CURL_ARGS="--ssl-no-revoke -Lo" # oh that's why
 fi
 curl $CURL_ARGS "nuget-feed/Remotery.NET.Native.$REMOTERY_TAG.nupkg" --ssl-no-revoke "$REMOTERY_REPO/releases/download/$REMOTERY_TAG/Remotery.NET.Native.$REMOTERY_TAG.nupkg"
 curl $CURL_ARGS "nuget-feed/Remotery.NET.$REMOTERY_TAG.nupkg" --ssl-no-revoke "$REMOTERY_REPO/releases/download/$REMOTERY_TAG/Remotery.NET.$REMOTERY_TAG.nupkg"
+curl $CURL_ARGS "nuget-feed/MojoAL.NET.Native.$MOJOAL_TAG.nupkg" --ssl-no-revoke "$MOJOAL_REPO/releases/download/$MOJOAL_TAG/MojoAL.NET.Native.$MOJOAL_TAG.nupkg"
 
 DefaultEcsHash=`git -C extern/DefaultEcs rev-parse --short HEAD`
 VeldridHash=`git -C extern/Veldrid rev-parse --short HEAD`
 ImGuiNETHash=`git -C extern/ImGui.NET rev-parse --short HEAD`
 MlangHash=`git -C extern/Mlang rev-parse --short HEAD`
+NLayerHash=`git -C extern/NLayer rev-parse --short HEAD`
 Configuration=Release
 ConfigSuffix=
 VeldridHash=notactuallyused
@@ -42,6 +46,7 @@ dotnet pack extern/ImGui.NET/src/ImGuizmo.NET/ImGuizmo.NET.csproj -c $Configurat
 dotnet pack extern/Mlang/Mlang/Mlang.csproj -c $Configuration $CommonFlags --version-suffix $MlangHash
 dotnet pack extern/Mlang/Mlang.Compiler/Mlang.Compiler.csproj -c $Configuration $CommonFlags --version-suffix $MlangHash
 dotnet pack extern/Mlang/Mlang.MSBuild/Mlang.MSBuild.csproj -c $Configuration $CommonFlags --version-suffix $MlangHash
+dotnet pack extern/NLayer/NLayer/NLayer.csproj -c $Configuration $CommonFlags -p:Version=1.15.0-$NLayerHash
 
 # Prevent dirty submodules
 pushd extern/ImGui.NET

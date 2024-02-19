@@ -22,7 +22,7 @@ public partial class NonFairyAnimation : AEntitySetSystem<float>
     }
 
     [Update]
-    private static void Update(
+    private void Update(
         float elapsedTime,
         in components.ActorParts actorParts,
         ref components.NonFairyAnimation animation)
@@ -32,12 +32,13 @@ public partial class NonFairyAnimation : AEntitySetSystem<float>
 
         animation.Timer += elapsedTime;
         if (animation.Next == animation.Current)
-            Maintain(bodySkeleton, pool, ref animation);
+            Maintain(actorParts.Body, bodySkeleton, pool, ref animation);
         else
             Switch(bodySkeleton, pool, ref animation);
     }
 
-    private static void Maintain(
+    private void Maintain(
+        in DefaultEcs.Entity body,
         Skeleton bodySkeleton,
         in components.AnimationPool pool,
         ref components.NonFairyAnimation animation)
@@ -56,7 +57,9 @@ public partial class NonFairyAnimation : AEntitySetSystem<float>
 
             case zzio.AnimationType.Smith when animation.Timer > SmithCycleDuration:
                 animation.Timer = 0f;
-                // TODO: Play sound effect on smithing animation
+                World.Publish(new messages.SpawnSample(
+                    "resources/audio/sfx/specials/_s036.wav",
+                    Position: body.Get<Location>().LocalPosition));
                 bodySkeleton.BlendToAnimation(pool[zzio.AnimationType.Smith], 0f, loop: false);
                 break;
 

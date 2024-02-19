@@ -45,6 +45,7 @@ internal static partial class Program
         var rootCommand = new RootCommand("zzre - Engine reimplementation and modding tools for Zanzarah");
         rootCommand.AddGlobalOption(OptionPools);
         rootCommand.AddGlobalOption(OptionDebugLayers);
+        AddSoundOptions(rootCommand);
         AddLoggingOptions(rootCommand);
         AddGlobalRenderDocOption(rootCommand);
         AddRemoteryOptions(rootCommand);
@@ -61,6 +62,7 @@ internal static partial class Program
             .AddTag(CreateLogging(diContainer))
             .AddTag(CreateRemotery(diContainer))
             .AddTag(SdlProvider.SDL.Value);
+        AddOpenALDevice(diContainer);
         LoadRenderDoc(diContainer);
         return diContainer;
     }

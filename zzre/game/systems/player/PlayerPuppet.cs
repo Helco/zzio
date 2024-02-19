@@ -137,9 +137,10 @@ public partial class PlayerPuppet : AEntitySetSystem<float>
             };
         }
 
-        // TODO: Add voice sample for falls
         // TODO: Add force footstep sound for falls
-        logger.Debug("Player fell, cannot move for {Seconds} and says {VoiceSample}", lockControlsFor, voiceSample);
+        logger.Verbose("Player fell, cannot move for {Seconds} and says {VoiceSample}", lockControlsFor, voiceSample);
+        if (voiceSample is not null)
+            World.Publish(new messages.SpawnSample(voiceSample));
         World.Publish(new messages.LockPlayerControl(lockControlsFor));
 
         physics.Velocity *= Vector3.UnitY;

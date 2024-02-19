@@ -62,6 +62,8 @@ public class Game : BaseDisposable, ITagContainer
         AddTag(new resources.EffectMaterial(this));
 
         ecsWorld.SetMaxCapacity<Scene>(1);
+        ecsWorld.SetMaxCapacity<components.SoundListener>(1);
+        ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
 
         // create it now for extra priority in the scene loading events
         var worldRenderer = new systems.WorldRendererSystem(this);
@@ -107,6 +109,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.effect.ParticleEmitter(this),
             new systems.effect.ModelEmitter(this),
             new systems.effect.BeamStar(this),
+            new systems.effect.Sound(this),
 
             // Animals
             new systems.Animal(this),
@@ -154,6 +157,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.DialogGambling(this),
 
             new systems.NonFairyAnimation(this),
+            new systems.AmbientSounds(this),
 
             // Gameflows
             new systems.GotCard(this),
@@ -236,7 +240,7 @@ public class Game : BaseDisposable, ITagContainer
     public void LoadScene(string sceneName, Func<Trigger> findEntryTrigger)
     {
         logger.Information("Load " + sceneName);
-        ecsWorld.Publish(new messages.SceneChanging());
+        ecsWorld.Publish(new messages.SceneChanging(sceneName));
         ecsWorld.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
 
         var resourcePool = GetTag<IResourcePool>();

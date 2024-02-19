@@ -72,7 +72,7 @@ public partial class UnlockDoor : AEntitySetSystem<float>
                     var location = lockEntity.Get<Location>();
                     World.Publish(new GSModRemoveModel(modelId));
                     World.Publish(new messages.SpawnEffectCombiner(4002, Position: location.GlobalPosition));
-                    // TODO: Play soundeffect on opening lock
+                    World.Publish(new messages.SpawnSample("resources/audio/sfx/specials/_s012.wav"));
                 }
                 break;
             case State.ShowNotification:

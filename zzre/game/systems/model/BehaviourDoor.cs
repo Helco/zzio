@@ -15,13 +15,16 @@ public partial class BehaviourDoor : AEntitySetSystem<float>
 
     private Location PlayerLocation => playerLocationLazy.Value;
     private readonly Game game;
+    private readonly UI ui;
     private readonly Lazy<Location> playerLocationLazy;
     private readonly DefaultEcs.EntitySet locks;
     private readonly IDisposable addedSubscription;
+    private DefaultEcs.Entity openLeftSound, openRightSound, closeLeftSound, closeRightSound;
 
     public BehaviourDoor(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         game = diContainer.GetTag<Game>();
+        ui = diContainer.GetTag<UI>();
         playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         addedSubscription = World.SubscribeEntityComponentAdded<components.behaviour.Door>(HandleComponentAdded);
 
@@ -98,17 +101,28 @@ public partial class BehaviourDoor : AEntitySetSystem<float>
                 }
                 break;
 
-            // TODO: Play door open/close sound samples
             case DoorState.StartToOpen:
                 door.State = DoorState.Opening;
+                PlaySound(ref door.IsRight ? ref openRightSound : ref openLeftSound, "_s006");
                 break;
             case DoorState.StartToClose:
                 door.State = DoorState.Closing;
+                PlaySound(ref door.IsRight ? ref closeRightSound : ref closeLeftSound, "_s007");
                 break;
         }
 
         location.LocalRotation = door.StartRotation *
             Quaternion.CreateFromAxisAngle(Vector3.UnitY, door.CurAngle * MathEx.DegToRad);
+    }
+
+    private void PlaySound(ref DefaultEcs.Entity soundEntity, string sampleName)
+    {
+        if (soundEntity.IsAlive)
+            soundEntity.Dispose();
+        soundEntity = ui.World.CreateEntity();
+        World.Publish(new messages.SpawnSample(
+            $"resources/audio/sfx/specials/{sampleName}.wav",
+            AsEntity: soundEntity));
     }
 
     private DefaultEcs.Entity? FindLockNearTo(Location doorLocation)

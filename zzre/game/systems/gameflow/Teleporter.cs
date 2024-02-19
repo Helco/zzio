@@ -116,8 +116,9 @@ public partial class Teleporter : AEntitySetSystem<float>
                 // GROUP: set effect progress and sound emitter volume
                 break;
             case State.Leaving when timeLeft <= 0f:
-                // GROUP: Fade out music/ambient
                 // GROUP: toggle rootnode HUD
+                var realTargetScene = targetScene < 0 ? World.Get<Scene>().dataset.sceneId : (uint)targetScene;
+                World.Publish(new messages.PlayerLeaving($"sc_{realTargetScene:D4}"));
                 World.Publish(new messages.CreatureSetVisibility(player, false));
                 CreateTeleporterFlash(startDelay: 0);
                 state = State.AmyIsGone;
@@ -144,7 +145,6 @@ public partial class Teleporter : AEntitySetSystem<float>
                 }
                 else
                 {
-                    // GROUP: Fade in new music/ambient
                     game.LoadOverworldScene(targetScene, game.FindEntryTriggerForRune);
                     World.Publish(messages.LockPlayerControl.Forever); // this disables the normal timed entry lock
                 }

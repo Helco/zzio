@@ -85,6 +85,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
             partEntity.Set(components.RenderOrder.LateEffect);
             partEntity.SetSameAs<components.Visibility>(entity);
             partEntity.Set(new components.Parent(entity));
+            partEntity.Set<components.effect.RenderIndices>();
             switch(part)
             {
                 case zzio.effect.parts.BeamStar beamStar: partEntity.Set(beamStar); break;

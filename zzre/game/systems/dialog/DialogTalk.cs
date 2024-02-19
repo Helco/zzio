@@ -165,7 +165,8 @@ public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.
         var dialogEntity = talkEntity.Get<components.DialogTalk>().DialogEntity;
         if (clickedId == IDContinue || clickedId == IDExit)
         {
-            // TODO: Play sound sample on dialog talk button clicked
+            var sampleName = clickedId == IDContinue ? "_g012" : "_g003";
+            World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/{sampleName}.wav"));
             dialogEntity.Set(components.DialogState.NextScriptOp);
         }
         if (clickedId == IDExit)

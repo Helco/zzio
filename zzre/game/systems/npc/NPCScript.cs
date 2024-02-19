@@ -15,6 +15,7 @@ public partial class NPCScript : BaseScript<NPCScript>
 {
     private const float FlyingColliderSize = 0.2f;
     private const float ItemColliderSizeOffset = -0.05f;
+    private static readonly Random Random = Random.Shared;
 
     private readonly IDisposable executeScriptSubscription;
     private readonly IDisposable sceneLoadedSubscription;
@@ -333,9 +334,34 @@ public partial class NPCScript : BaseScript<NPCScript>
         entity.Set(components.NPCState.LookAtTrigger);
     }
 
-    private void PlaySound(DefaultEcs.Entity entity, int soundId)
+    private static readonly (float Chance, string Sample)[] SoundSamples =
+    [
+        // yes. only Pixie samples for NPC playSound
+        (0.3f, "resources/audio/sfx/specials/_s042.wav"),
+        (0.5f, "resources/audio/sfx/specials/_s041.wav"),
+        (0.7f, "resources/audio/sfx/specials/_s040.wav"),
+    ];
+    private void PlaySound(DefaultEcs.Entity entity, int _)
     {
-        LogUnimplementedInstructionWarning();
+        var position = entity.Get<Location>().LocalPosition;
+        var value = Random.NextFloat();
+        string? sample = null;
+        for (int i = 0; i < SoundSamples.Length; i++)
+        {
+            if (value <= SoundSamples[i].Chance)
+            {
+                sample = SoundSamples[i].Sample;
+                break;
+            }
+        }
+        logger.Verbose("PlaySound due to chance {value}: {sample}", value, sample);
+        if (sample == null)
+            return;
+        World.Publish(new messages.SpawnSample(
+            sample,
+            RefDistance: 10f,
+            MaxDistance: 20f,
+            Position: position));
     }
 
     private void StartActorEffect(DefaultEcs.Entity entity, int effectId)
