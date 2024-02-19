@@ -357,7 +357,6 @@ public partial class NPCScript : BaseScript<NPCScript>
         logger.Verbose("PlaySound due to chance {value}: {sample}", value, sample);
         if (sample == null)
             return;
-        logger.Information($"Pixie screams at {entity.Get<Location>().Distance(playerLocation)} distance");
         World.Publish(new messages.SpawnSample(
             sample,
             RefDistance: 10f,

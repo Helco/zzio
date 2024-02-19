@@ -62,7 +62,7 @@ internal sealed class AmbientSounds : ISystem<float>
 
     private void HandleSetAmbient(in messages.SetAmbient msg)
     {
-        //SetNewPermanent(isMusic: true, ref musicEntity, ref lastMusic, StdSceneInfo.GetMusicMode(msg.SceneName));
+        SetNewPermanent(isMusic: true, ref musicEntity, ref lastMusic, StdSceneInfo.GetMusicMode(msg.SceneName));
         SetNewPermanent(isMusic: false, ref ambientEntity, ref lastAmbient, StdSceneInfo.GetAmbientMode(msg.SceneName));
     }
 
@@ -82,7 +82,15 @@ internal sealed class AmbientSounds : ISystem<float>
         {
             if (nextMode == lastMode)
                 return;
-            entity.Dispose();
+            else if (nextMode is not null && nextMode.Value.Id == lastMode?.Id)
+            {
+                ui.World.Publish(new messages.SetEmitterVolume(entity, nextMode.Value.IsQuiet ? QuietVolume : NormalVolume));
+                lastMode = nextMode;
+                return;
+            }
+            else if (!entity.Has<components.SoundFade>())
+                entity.Dispose();
+            entity = default;
         }
         lastMode = nextMode;
         if (nextMode is null)

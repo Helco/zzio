@@ -15,6 +15,7 @@
         <DefaultEcsHash>0e92bb5</DefaultEcsHash>
         <ImguiHash>9b51cce</ImguiHash>
         <MlangHash>331cf83</MlangHash>
+        <NLayerHash>01e1238</NLayerHash>
         <VeldridVersion>4.9.0-$(VeldridHash)</VeldridVersion>
         <VeldridRenderdocVersion>1.0.1-$(VeldridHash)</VeldridRenderdocVersion>
         <DefaultEcsVersion>1.0.0-$(DefaultEcsHash)</DefaultEcsVersion>
@@ -24,6 +25,7 @@
         <MlangVersion>1.0.0-$(MlangHash)</MlangVersion>
         <RemoteryVersion>1.21.1</RemoteryVersion>
         <MojoALVersion>1.1.1</MojoALVersion>
+        <NLayerVersion>1.15.0-$(NLayerHash)</NLayerVersion>
     </PropertyGroup>
 
     <Target Name="GitVersion" />

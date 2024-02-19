@@ -15,6 +15,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
     private readonly Queue<uint> sourcePool = new(InitialSourceCount);
     private readonly IDisposable? spawnEmitterSubscription;
     private readonly IDisposable? emitterRemovedSubscription;
+    private readonly IDisposable? setEmitterVolumeSubscription;
 
     public unsafe SoundEmitter(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
@@ -23,6 +24,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
             return;
         spawnEmitterSubscription = World.Subscribe<messages.SpawnSample>(HandleSpawnSample);
         emitterRemovedSubscription = World.SubscribeEntityComponentRemoved<components.SoundEmitter>(HandleEmitterRemoved);
+        setEmitterVolumeSubscription = World.Subscribe<messages.SetEmitterVolume>(HandleSetEmitterVolume);
 
         using var _ = context.EnsureIsCurrent();
         var sources = stackalloc uint[InitialSourceCount];
@@ -40,6 +42,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         base.Dispose();
         spawnEmitterSubscription?.Dispose();
         emitterRemovedSubscription?.Dispose();
+        setEmitterVolumeSubscription?.Dispose();
     }
 
     private void HandleSpawnSample(in messages.SpawnSample msg)
@@ -93,6 +96,14 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         device.AL.SetSourceProperty(emitter.SourceId, SourceInteger.Buffer, 0);
         sourcePool.Enqueue(emitter.SourceId);
         device.AL.ThrowOnError();
+    }
+
+    private void HandleSetEmitterVolume(in messages.SetEmitterVolume msg)
+    {
+        using var _ = context.EnsureIsCurrent();
+        var emitter = msg.Emitter.Get<components.SoundEmitter>();
+        device.AL.SetSourceProperty(emitter.SourceId, SourceFloat.Gain, msg.Volume);
+        msg.Emitter.Set(emitter with { Volume = msg.Volume });
     }
 
     [Update]

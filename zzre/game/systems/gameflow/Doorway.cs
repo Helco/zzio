@@ -49,8 +49,8 @@ public partial class Doorway : AEntitySetSystem<float>
         targetEntry = (int)trigger.ii2;
         fadeEntity = ui.Preload.CreateStdFlashFade(parent: default);
         World.Publish(messages.LockPlayerControl.Forever);
+        World.Publish(new messages.PlayerLeaving(targetScene));
         // TODO: Add fade off during scene changes
-        // TODO: Fade off music and ambient sounds during scene changes
     }
 
     [WithPredicate]

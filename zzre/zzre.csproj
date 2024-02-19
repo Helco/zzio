@@ -53,10 +53,12 @@
     <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Silk.NET.OpenAL.Extensions.EXT" Version="2.20.0" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="Mlang.MSBuild" Version="$(MlangVersion)" />
     <PackageReference Include="Remotery.NET" Version="$(RemoteryVersion)" />
     <PackageReference Include="MojoAL.NET.Native" Version="$(MojoALVersion)" />
+    <PackageReference Include="NLayer" Version="$(NLayerVersion)" />
     <PackageReference Include="Silk.NET.OpenAL" Version="2.20.0" />
     <PackageReference Include="Silk.NET.OpenAL.Extensions.Enumeration" Version="2.20.0" />
   </ItemGroup>

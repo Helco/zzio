@@ -92,6 +92,12 @@ unsafe partial class Program
             return;
 
         var (al, alc) = LoadOpenALLibraries();
+        if (!al.TryGetExtension<Silk.NET.OpenAL.Extensions.EXT.FloatFormat>(out _))
+        {
+            logger.Error("AL_EXT_FLOAT32 is not present");
+            return;
+        }
+
         var deviceName = SelectAudioDevice(logger, alc, invocationContext);
         if (deviceName == null)
             return;

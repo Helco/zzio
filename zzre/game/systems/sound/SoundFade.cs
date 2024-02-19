@@ -27,7 +27,7 @@ public sealed partial class SoundFade : AEntitySetSystem<float>
         }
         fade.Time += elapsedTime;
         float newVolume = MathEx.Lerp(fade.FromVolume, fade.ToVolume, fade.Time, 0f, fade.Length);
-        device.AL.SetListenerProperty(Silk.NET.OpenAL.ListenerFloat.Gain, newVolume);
+        device.AL.SetSourceProperty(emitter.SourceId, Silk.NET.OpenAL.SourceFloat.Gain, newVolume);
         if (fade.Time >= fade.Length)
             entity.Set<components.Dead>();
         device.AL.ThrowOnError();

@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using DefaultEcs.Resource;
 using Silk.NET.OpenAL;
+using Silk.NET.OpenAL.Extensions.EXT;
 using Silk.NET.SDL;
 using zzio.vfs;
 
@@ -38,6 +39,7 @@ public sealed class Sound : AResourceManager<string, components.SoundBuffer>
         return ext switch
         {
             ".wav" => LoadWave(path),
+            ".mp3" => LoadMP3(path),
             _ => throw new NotSupportedException($"Unsupport sound extension: {ext}")
         };
     }
@@ -67,6 +69,7 @@ public sealed class Sound : AResourceManager<string, components.SoundBuffer>
                 Sdl.AudioS16Lsb when audioSpec.Channels == 2 => BufferFormat.Stereo16,
                 _ => throw new NotSupportedException($"Unsupported audio format {audioSpec.Format}, {audioSpec.Channels} channels")
             }, audioBuf, (int)audioBufLen, audioSpec.Freq);
+            device.AL.ThrowOnError();
             return new(bufferId);
         }
         finally
@@ -74,6 +77,29 @@ public sealed class Sound : AResourceManager<string, components.SoundBuffer>
             if (audioBuf != null)
                 sdl.FreeWAV(audioBuf);
         }
+    }
+
+    private components.SoundBuffer LoadMP3(string path)
+    {
+        using var stream = resourcePool.FindAndOpen(path) ??
+            throw new FileNotFoundException("Could not open sound: " + path);
+        var mpegFile = new NLayer.MpegFile(stream, leaveOpen: true);
+        var format = mpegFile.Channels switch
+        {
+            1 => FloatBufferFormat.Mono,
+            2 => FloatBufferFormat.Stereo,
+            _ => throw new NotSupportedException($"Unsupported MP3 file with {mpegFile.Channels} channels")
+        };
+        var samples = new float[mpegFile.Length ??
+            throw new InvalidDataException("Cannot determine sample count")];
+        int sampleCount = mpegFile.ReadSamples(samples);
+        if (sampleCount != samples.Length)
+            device!.Logger.Warning("Could not read {Intended} samples as intended from MP3 but only {Actual}", samples.Length, sampleCount);
+
+        var bufferId = device!.AL.GenBuffer();
+        device.AL.BufferData(bufferId, format, samples, mpegFile.SampleRate);
+        device.AL.ThrowOnError();
+        return new(bufferId);
     }
 
     protected override void Unload(string info, components.SoundBuffer resource)

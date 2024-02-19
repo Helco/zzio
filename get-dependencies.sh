@@ -30,6 +30,7 @@ DefaultEcsHash=`git -C extern/DefaultEcs rev-parse --short HEAD`
 VeldridHash=`git -C extern/Veldrid rev-parse --short HEAD`
 ImGuiNETHash=`git -C extern/ImGui.NET rev-parse --short HEAD`
 MlangHash=`git -C extern/Mlang rev-parse --short HEAD`
+NLayerHash=`git -C extern/NLayer rev-parse --short HEAD`
 Configuration=Release
 ConfigSuffix=
 VeldridHash=notactuallyused
@@ -45,6 +46,7 @@ dotnet pack extern/ImGui.NET/src/ImGuizmo.NET/ImGuizmo.NET.csproj -c $Configurat
 dotnet pack extern/Mlang/Mlang/Mlang.csproj -c $Configuration $CommonFlags --version-suffix $MlangHash
 dotnet pack extern/Mlang/Mlang.Compiler/Mlang.Compiler.csproj -c $Configuration $CommonFlags --version-suffix $MlangHash
 dotnet pack extern/Mlang/Mlang.MSBuild/Mlang.MSBuild.csproj -c $Configuration $CommonFlags --version-suffix $MlangHash
+dotnet pack extern/NLayer/NLayer/NLayer.csproj -c $Configuration $CommonFlags -p:Version=1.15.0-$NLayerHash
 
 # Prevent dirty submodules
 pushd extern/ImGui.NET
