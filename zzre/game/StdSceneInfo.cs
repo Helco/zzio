@@ -6,7 +6,10 @@ namespace zzre.game;
 public static class StdSceneInfo
 {
     public readonly record struct Map(UID UID, StdItemId Item);
-    public readonly record struct AmbientMode(int Id, bool IsQuiet);
+    public readonly record struct AmbientMode(int Id, bool IsQuiet)
+    {
+        public override string ToString() => Id.ToString() + (IsQuiet ? "-quiet" : "-normal");
+    }
 
     public static Map? GetMapInfo(string sceneName) =>
         mapInfos.TryGetValue(sceneName, out var map) ? map : null;
