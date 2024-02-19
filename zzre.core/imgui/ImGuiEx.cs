@@ -257,6 +257,17 @@ public static class ImGuiEx
         return result;
     }
 
+    public static bool SliderInt(string label, ref uint cur, uint min, uint max)
+    {
+        checked
+        {
+            int curI = (int)cur;
+            var result = ImGui.SliderInt(label, ref curI, (int)min, (int)max);
+            cur = (uint)curI;
+            return result;
+        }
+    }
+
     public static bool InputInt(string label, ref byte cur)
     {
         int curI = cur;

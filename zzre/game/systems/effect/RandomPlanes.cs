@@ -35,7 +35,7 @@ public sealed class RandomPlanes : BaseCombinerPart<
     protected override void HandleAddedComponent(in DefaultEcs.Entity entity, in zzio.effect.parts.RandomPlanes data)
     {
         var playback = entity.Get<components.Parent>().Entity.Get<components.effect.CombinerPlayback>();
-        int maxPlaneCount = (int)(data.planeLife * data.spawnRate / 1000f);
+        int maxPlaneCount = Math.Max(1, (int)(data.planeLife * data.spawnRate / 1000f));
         var planeMemoryOwner = planeMemoryPool.Rent(maxPlaneCount);
         var vertexRange = effectMesh.RentVertices(maxPlaneCount * 4);
         var indexRange = effectMesh.RentQuadIndices(vertexRange);

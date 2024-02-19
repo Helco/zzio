@@ -16,6 +16,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
     private readonly IDisposable? spawnEmitterSubscription;
     private readonly IDisposable? emitterRemovedSubscription;
     private readonly IDisposable? setEmitterVolumeSubscription;
+    private readonly IDisposable? unpauseEmitterSubscription;
 
     public unsafe SoundEmitter(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
@@ -25,6 +26,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         spawnEmitterSubscription = World.Subscribe<messages.SpawnSample>(HandleSpawnSample);
         emitterRemovedSubscription = World.SubscribeEntityComponentRemoved<components.SoundEmitter>(HandleEmitterRemoved);
         setEmitterVolumeSubscription = World.Subscribe<messages.SetEmitterVolume>(HandleSetEmitterVolume);
+        unpauseEmitterSubscription = World.Subscribe<messages.UnpauseEmitter>(HandleUnpauseEmitter);
 
         using var _ = context.EnsureIsCurrent();
         var sources = stackalloc uint[InitialSourceCount];
@@ -43,6 +45,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         spawnEmitterSubscription?.Dispose();
         emitterRemovedSubscription?.Dispose();
         setEmitterVolumeSubscription?.Dispose();
+        unpauseEmitterSubscription?.Dispose();
     }
 
     private void HandleSpawnSample(in messages.SpawnSample msg)
@@ -70,7 +73,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         device.AL.SetSourceProperty(sourceId, SourceFloat.ReferenceDistance, msg.RefDistance);
         device.AL.SetSourceProperty(sourceId, SourceFloat.MaxDistance, msg.MaxDistance);
         device.AL.SetSourceProperty(sourceId, SourceFloat.MinGain, 0f);
-        device.AL.SetSourceProperty(sourceId, SourceFloat.MaxGain, 1f);
+        device.AL.SetSourceProperty(sourceId, SourceFloat.MaxGain, Math.Max(1f, msg.Volume));
         device.AL.SetSourceProperty(sourceId, SourceFloat.RolloffFactor, is3D ? 1f : 0f);
         device.AL.SetSourceProperty(sourceId, SourceInteger.Buffer, entity.Get<components.SoundBuffer>().Id);
         device.AL.SetSourceProperty(sourceId, SourceBoolean.Looping, msg.Looping);
@@ -104,6 +107,13 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         var emitter = msg.Emitter.Get<components.SoundEmitter>();
         device.AL.SetSourceProperty(emitter.SourceId, SourceFloat.Gain, msg.Volume);
         msg.Emitter.Set(emitter with { Volume = msg.Volume });
+    }
+
+    private void HandleUnpauseEmitter(in messages.UnpauseEmitter msg)
+    {
+        using var _ = context.EnsureIsCurrent();
+        var emitter = msg.Emitter.Get<components.SoundEmitter>();
+        device.AL.SourcePlay(emitter.SourceId);
     }
 
     [Update]

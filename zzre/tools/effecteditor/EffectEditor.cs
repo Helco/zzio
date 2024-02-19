@@ -37,6 +37,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private readonly GameTime gameTime;
     private readonly CachedAssetLoader<Texture> textureLoader;
     private readonly CachedAssetLoader<ClumpMesh> clumpLoader;
+    private readonly game.resources.Sound sound;
     private readonly EffectCombiner emptyEffect = new();
     private readonly DefaultEcs.World ecsWorld = new();
     private readonly SequentialSystem<float> updateSystems = new();
@@ -101,15 +102,21 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         diContainer.AddTag(new game.resources.Clump(diContainer));
         diContainer.AddTag(new game.resources.ClumpMaterial(diContainer));
         diContainer.AddTag(new game.resources.EffectMaterial(diContainer));
+        diContainer.AddTag(sound = new game.resources.Sound(diContainer));
 
         updateSystems = new SequentialSystem<float>(
+            new game.systems.SoundContext(diContainer),
+            new game.systems.SoundEmitter(diContainer),
+            new game.systems.SoundStoppedEmitter(diContainer),
+
             new game.systems.effect.EffectCombiner(diContainer) { AddIndexAsComponent = true },
             new game.systems.effect.MovingPlanes(diContainer),
             new game.systems.effect.RandomPlanes(diContainer),
             new game.systems.effect.Emitter(diContainer),
             new game.systems.effect.ParticleEmitter(diContainer),
             new game.systems.effect.ModelEmitter(diContainer),
-            new game.systems.effect.BeamStar(diContainer));
+            new game.systems.effect.BeamStar(diContainer),
+            new game.systems.effect.Sound(diContainer, isUsedInTool: true));
         AddDisposable(updateSystems);
 
         renderSystems = new SequentialSystem<CommandList>(
@@ -173,6 +180,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
                 RandomPlanes rp => () => HandlePart(rp),
                 ParticleEmitter pe => () => HandlePart(pe),
                 BeamStar bs => () => HandlePart(bs),
+                Sound sound => () => HandlePart(sound),
                 _ => () => { } // ignore for now
             }, defaultOpen: false, () => HandlePartPreContent(i));
         }
@@ -254,6 +262,8 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     {
         if (isPlaying && effectEntity.IsAlive)
             updateSystems.Update(gameTime.Delta);
+        sound.RegularCleanup();
+        UpdateSoundListener();
 
         cl.PushDebugGroup(Window.Title);
         camera.Update(cl);
@@ -262,6 +272,20 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         cl.PopDebugGroup();
 
         fbArea.IsDirty = true;
+    }
+
+    private unsafe void UpdateSoundListener()
+    {
+        if (!diContainer.TryGetTag<game.systems.SoundContext>(out var context))
+            return;
+        var device = diContainer.GetTag<OpenALDevice>();
+        using var _ = context.EnsureIsCurrent();
+        var location = camera.Location;
+        device.AL.SetListenerProperty(Silk.NET.OpenAL.ListenerVector3.Position, location.LocalPosition * new Vector3(1, 1, -1));
+        var orientation = stackalloc Vector3[2];
+        orientation[0] = location.InnerRight * new Vector3(1, 1, -1);
+        orientation[1] = location.InnerUp * new Vector3(1, 1, -1);
+        device.AL.SetListenerProperty(Silk.NET.OpenAL.ListenerFloatArray.Orientation, (float*)orientation);
     }
 
     private void HandleInfoContent()
