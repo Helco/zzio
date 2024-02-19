@@ -22,7 +22,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
     private bool moveCamWithDrag;
     private ECSExplorer? ecsExplorer;
     private bool isFirstFrame = true;
-    private bool isMuted = false;
+    private bool isMuted;
 
     private bool MoveCamWithDrag
     {
