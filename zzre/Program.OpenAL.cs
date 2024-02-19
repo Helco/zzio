@@ -151,7 +151,7 @@ unsafe partial class Program
             logger.Warning("Did not find any sound device, this will probably fail");
         if (string.IsNullOrWhiteSpace(userDeviceName))
         {
-            var outputLevel = userDeviceName is null ? LogEventLevel.Debug : LogEventLevel.Information;
+            var outputLevel = userDeviceName is null ? LogEventLevel.Verbose : LogEventLevel.Information;
             if (logger.IsEnabled(outputLevel))
             {
                 foreach (var name in allDeviceNames)

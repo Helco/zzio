@@ -22,6 +22,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
     private bool moveCamWithDrag;
     private ECSExplorer? ecsExplorer;
     private bool isFirstFrame = true;
+    private bool isMuted = false;
 
     private bool MoveCamWithDrag
     {
@@ -39,6 +40,21 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
                 mouseArea.OnMove += InvokeMouseMove;
                 mouseArea.OnDrag -= HandleMouseDrag;
             }
+        }
+    }
+
+    private bool IsMuted
+    {
+        //get => isMuted;
+        set
+        {
+            isMuted = value;
+            if (!Zanzarah.UI.TryGetTag(out game.systems.SoundContext soundContext))
+                return;
+            using var _ = soundContext.EnsureIsCurrent();
+            diContainer.GetTag<OpenALDevice>().AL.SetListenerProperty(
+                Silk.NET.OpenAL.ListenerFloat.Gain,
+                value ? 0f : 1f);
         }
     }
 
@@ -106,9 +122,13 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
 
         var menuBar = new MenuBarWindowTag(Window);
         menuBar.AddCheckbox(
-            "Controls/Move camera by dragging",
+            "Game/Move camera by dragging",
             () => ref moveCamWithDrag,
             () => MoveCamWithDrag = moveCamWithDrag);
+        menuBar.AddCheckbox(
+            "Game/Mute Sounds",
+            () => ref isMuted,
+            () => IsMuted = isMuted);
         menuBar.AddButton("Open scene", HandleOpenScene);
         menuBar.AddButton("Debug/ECS Explorer", HandleOpenECSExplorer);
         menuBar.AddButton("Debug/Teleport to scene", selectSceneModal.Modal.Open);
