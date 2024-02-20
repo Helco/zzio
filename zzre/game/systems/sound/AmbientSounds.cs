@@ -144,7 +144,7 @@ internal sealed class AmbientSounds : ISystem<float>
         for (int i = landscapeEntities.Count; i < landscapeSamples.Count; i++)
             landscapeEntities.Add(default);
         if (landscapeEntities.Count > landscapeSamples.Count)
-            landscapeEntities.RemoveRange(landscapeSamples.Count, landscapeSamples.Count - landscapeEntities.Count);
+            landscapeEntities.RemoveRange(landscapeSamples.Count, landscapeEntities.Count - landscapeSamples.Count);
     }
 
     private static string GetSamplePath(int id, string basePath, string extension) =>
