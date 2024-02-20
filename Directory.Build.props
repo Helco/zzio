@@ -24,7 +24,7 @@
         <ImguizmoVersion>1.61.0-$(ImguiHash)</ImguizmoVersion>
         <MlangVersion>1.0.0-$(MlangHash)</MlangVersion>
         <RemoteryVersion>1.21.1</RemoteryVersion>
-        <MojoALVersion>1.1.1</MojoALVersion>
+        <MojoALVersion>1.1.2</MojoALVersion>
         <NLayerVersion>1.15.0-$(NLayerHash)</NLayerVersion>
     </PropertyGroup>
 

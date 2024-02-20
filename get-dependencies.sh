@@ -17,7 +17,7 @@ mkdir -p nuget-feed
 REMOTERY_REPO=https://github.com/Helco/Remotery.NET
 MOJOAL_REPO=https://github.com/Helco/MojoAL.NET
 REMOTERY_TAG=1.21.1
-MOJOAL_TAG=1.1.1
+MOJOAL_TAG=1.1.2
 CURL_ARGS="-Lo"
 if [[ "$OSTYPE" == "msys" ]]; then
     CURL_ARGS="--ssl-no-revoke -Lo" # oh that's why
