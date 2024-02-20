@@ -17,7 +17,6 @@ instances
 	byte4_norm inColor;
 	float inTexWeight;
 }
-instances if (HasMask) uint inMaskBits;
 
 uniform texture2D mainTexture;
 uniform sampler mainSampler;
