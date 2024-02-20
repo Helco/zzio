@@ -89,9 +89,11 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
         var game = ui.GetTag<Game>();
         game.Publish(new messages.SwitchAnimation(game.PlayerEntity, AnimationType.Joy));
 
+        var sampleEntity = ui.World.CreateEntity(); // create own entity otherwise the finishing sound will close the screen
         game.Publish(new messages.SpawnSample(
             "resources/audio/sfx/specials/_s001.wav",
-            AsEntity: entity));
+            AsEntity: sampleEntity));
+        sampleEntity.Set(new components.Parent(entity));
 
         // TODO: Set cursor in ScrGotCard
     }
