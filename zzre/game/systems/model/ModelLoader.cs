@@ -186,7 +186,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     {
         var clumpMesh = entity.Get<ClumpMesh>();
         var location = entity.Get<Location>();
-        entity.Set(GeometryCollider.CreateFor(clumpMesh.Geometry, location));
+        entity.Set<IIntersectionable>(GeometryCollider.CreateFor(clumpMesh.Geometry, location));
     }
 
     private static void SetPlantWiggle(DefaultEcs.Entity entity, int wiggleAmplitude, float delay)
