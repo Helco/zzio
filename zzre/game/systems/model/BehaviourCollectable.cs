@@ -10,7 +10,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
 {
     private const float AliveRotationSpeed = 50f;
     private const float DyingRotationSpeed = 50f * -4f;
-    private const float BounceSpeed = 0.01f;
+    private const float BounceSpeed = 10f;
     private const float BounceAmplitude = 0.15f;
     private const float BounceOffset = 1.5f;
     private const float MinLerpDistSqr = 0.1f * 0.1f;
@@ -30,6 +30,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
 
     public BehaviourCollectable(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
+        World.SetMaxCapacity<components.behaviour.Collecting>(1);
         game = diContainer.GetTag<Game>();
         playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         mappedDb = diContainer.GetTag<zzio.db.MappedDB>();
@@ -43,7 +44,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         in resources.ClumpInfo clumpInfo,
         ref components.behaviour.Collectable collectable)
     {
-        CheckCollection(location, clumpInfo, ref collectable);
+        CheckCollection(entity, location, clumpInfo, ref collectable);
 
         Aging(elapsedTime, entity, ref collectable);
         DyingMovement(location, collectable);
@@ -72,7 +73,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
             (MathF.Sin(collectable.Age * BounceSpeed) * BounceAmplitude + BounceOffset);
 
         location.LocalPosition = Vector3.DistanceSquared(targetPos, location.LocalPosition) >= MinLerpDistSqr
-            ? Vector3.Lerp(location.LocalPosition, playerLocation.LocalPosition, LerpAmount)
+            ? Vector3.Lerp(location.LocalPosition, targetPos, LerpAmount)
             : targetPos; // TODO: Fix FPS dep. in collectable lerp
     }
 
@@ -86,12 +87,18 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
     }
 
     private void CheckCollection(
+        in DefaultEcs.Entity entity,
         Location location,
         in resources.ClumpInfo clumpInfo,
         ref components.behaviour.Collectable collectable)
     {
         if (collectable.IsDying || location.DistanceSquared(playerLocation) >= MaxPlayerDistanceSqr)
             return;
+
+        if (game.PlayerEntity.TryGet<components.behaviour.Collecting>(out var collecting) &&
+            collecting.Entity.IsAlive)
+            collecting.Entity.Set<components.Dead>();
+        game.PlayerEntity.Set(new components.behaviour.Collecting(entity));
 
         collectable.IsDying = true;
         collectable.Age = 0f;

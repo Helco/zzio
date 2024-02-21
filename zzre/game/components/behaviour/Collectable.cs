@@ -15,3 +15,5 @@ public struct CollectablePhysics
     public Vector3 Velocity;
     public float YVelocity; // Velocity is normalized, this one breaks out of that normalization, blame Funatics
 }
+
+public readonly record struct Collecting(DefaultEcs.Entity Entity);
