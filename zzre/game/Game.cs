@@ -110,6 +110,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.effect.ModelEmitter(this),
             new systems.effect.BeamStar(this),
             new systems.effect.Sound(this),
+            new systems.SceneSamples(this),
 
             // Animals
             new systems.Animal(this),
