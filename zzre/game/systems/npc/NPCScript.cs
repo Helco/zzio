@@ -214,6 +214,7 @@ public partial class NPCScript : BaseScript<NPCScript>
 
     private void StartPrelude(DefaultEcs.Entity entity)
     {
+        World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g002.wav"));
         if (game.PlayerEntity.Get<components.GameFlow>() == components.GameFlow.Normal)
             World.Publish(new messages.StartDialog(entity, components.DialogCause.Trigger));
     }
