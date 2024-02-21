@@ -159,6 +159,10 @@ public partial class DialogScript : BaseScript<DialogScript>
         var tileSheet = sayLabel.Get<rendering.TileSheet>();
         var textRow = db.GetDialog(uid);
         var text = tileSheet.WrapLines(textRow.Text, ui.LogicalScreen.Size.X - 60);
+
+        if (!sayLabel.TryGet<components.ui.AnimatedLabel>())
+            ui.World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g002.wav"));
+
         sayLabel.Set(new components.ui.AnimatedLabel(text, SegmentsPerAddSay, isBlinking: !silent));
 
         if (silent)
