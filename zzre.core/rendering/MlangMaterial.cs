@@ -110,7 +110,7 @@ public class MlangMaterial : BaseDisposable, IMaterial
                     throw new InvalidOperationException($"Binding {bindingInfo.Name} is not set");
                 setDescriptions[bindingInfo.SetIndex].BoundResources[bindingInfo.BindingIndex] = binding.Resource;
             }
-            resourceSets = setDescriptions.Select(Device.ResourceFactory.CreateResourceSet).ToArray();
+            resourceSets = setDescriptions.Select(d => Device.ResourceFactory.CreateResourceSet(d)).ToArray();
         }
         for (int i = 0; i < resourceSets.Length; i++)
             cl.SetGraphicsResourceSet((uint)i, resourceSets[i]);

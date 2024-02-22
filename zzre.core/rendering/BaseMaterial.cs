@@ -48,7 +48,7 @@ public class BaseMaterial : BaseDisposable, IMaterial
                 resourceSet = factory.CreateResourceSet(new ResourceSetDescription()
                 {
                     Layout = layout,
-                    BoundResources = Bindings.Select(b => b.Resource).ToArray()
+                    BoundResources = Bindings.Select(b => b.Resource).ToArray()!
                 });
                 resourceSet.Name = $"{parentName} Set {index}";
             }

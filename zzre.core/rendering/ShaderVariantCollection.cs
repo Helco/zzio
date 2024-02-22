@@ -159,7 +159,7 @@ public class ShaderVariantCollection : zzio.BaseDisposable
             layouts[binding.SetIndex].Elements[binding.BindingIndex] = new(
                 binding.Name, kind, ShaderStages.Fragment | ShaderStages.Vertex);
         }
-        return layouts.Select(Factory.CreateResourceLayout).ToArray();
+        return layouts.Select(l => Factory.CreateResourceLayout(l)).ToArray();
     }
 
     private BlendStateDescription CreateBlendState(PipelineState state) => new()

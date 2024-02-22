@@ -5,7 +5,6 @@ using System.Numerics;
 using Veldrid;
 using zzre.imgui;
 using zzre.rendering;
-using System.Linq;
 using Quaternion = System.Numerics.Quaternion;
 using zzio.vfs;
 using zzio.rwbs;
@@ -154,7 +153,7 @@ public class TestRaycaster : ListDisposable
                 : IColor.Black;
         });
 
-        device.UpdateTexture(fbArea.Framebuffer.ColorTargets.First().Target, pixels, 0, 0, 0,
+        device.UpdateTexture(fbArea.Framebuffer.ColorTargets[0].Target, pixels!, 0, 0, 0,
             fbArea.Framebuffer.Width, fbArea.Framebuffer.Height, 1,
             0, 0);
     }

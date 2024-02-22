@@ -25,7 +25,7 @@ public class UniformBuffer<T> : BaseDisposable where T : unmanaged
         uint alignedSize = (uint)Marshal.SizeOf<T>();
         alignedSize = (alignedSize + 15) / 16 * 16;
         Buffer = factory.CreateBuffer(new BufferDescription(alignedSize, BufferUsage.UniformBuffer |
-            (dynamic ? BufferUsage.Dynamic : default)));
+            (dynamic ? BufferUsage.DynamicWrite : default)));
         Buffer.Name = $"{GetType().Name} {GetHashCode()}";
     }
 
