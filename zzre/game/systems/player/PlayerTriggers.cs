@@ -69,9 +69,15 @@ public class PlayerTriggers : ISystem<float>
     public void Update(float deltaTime)
     {
         EnsureNpcMarker();
+        if (!IsEnabled)
+        {
+            npcMarker.Remove<components.Visibility>();
+            return;
+        }
         if (TryGetTriggerableNPC(out var npc))
         {
-            if (previousNpc != npc) {
+            if (previousNpc != npc)
+            {
                 previousNpc = npc;
                 world.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s002.wav"));
             }
@@ -90,7 +96,9 @@ public class PlayerTriggers : ISystem<float>
             }
             npcMarker.Get<Location>().LocalPosition = npcLocation.LocalPosition + Vector3.UnitY * markerDistance;
             return;
-        } else {
+        }
+        else
+        {
             previousNpc = default;
         }
         npcMarker.Remove<components.Visibility>();
