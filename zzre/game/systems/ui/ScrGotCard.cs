@@ -101,8 +101,11 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
     private void HandleElementDown(DefaultEcs.Entity _, components.ui.ElementId elementId)
     {
         var screenEntity = Set.GetEntities()[0];
-        if (elementId == IDExit)
+        if (elementId == IDExit) {
+            World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g003.wav"));
             screenEntity.Dispose();
+        }
+
     }
 
     protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.ui.ScrGotCard component)
