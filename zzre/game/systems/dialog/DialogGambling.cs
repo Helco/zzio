@@ -398,6 +398,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             gambling.Profile = CreatePrimary(uiEntity, ref gambling);
         }
         else if (clickedId == IDExit) {
+            World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g003.wav"));
             gambling.DialogEntity.Set(components.DialogState.NextScriptOp);
             uiEntity.Dispose();
         }

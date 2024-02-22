@@ -201,6 +201,7 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
             trading.Profile = CreatePrimary(uiEntity, trading);
         }
         else if (clickedId == IDExit) {
+            World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g003.wav"));
             trading.DialogEntity.Set(components.DialogState.NextScriptOp);
             uiEntity.Dispose();
         }
