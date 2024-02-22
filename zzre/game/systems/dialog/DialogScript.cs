@@ -150,8 +150,10 @@ public partial class DialogScript : BaseScript<DialogScript>
     [Update]
     private void Update(in DefaultEcs.Entity entity, ref components.ScriptExecution execution)
     {
-        if (!Continue(entity, ref execution))
+        if (!Continue(entity, ref execution)) {
+            World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g003.wav"));
             dialogEntity.Set(components.DialogState.FadeOut);
+        }
     }
 
     private static readonly FilePath VoiceBasePath = new("resources/audio/speech/");
