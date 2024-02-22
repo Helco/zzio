@@ -42,11 +42,13 @@ public abstract class BaseScript<TLogContext> : AEntitySetSystem<float>
     /// </summary>
     /// <param name="entity">The entity containing the script</param>
     /// <param name="script">The script execution state</param>
-    /// <returns>Whether the script execution stopped</returns>
+    /// <returns>Whether at least one instruction was executed</returns>
     protected bool Continue(in DefaultEcs.Entity entity, ref components.ScriptExecution script)
     {
+        var hasExecutedSomething = false;
         while (!script.HasStopped)
         {
+            hasExecutedSomething = true;
             var instruction = script.Instructions[script.CurrentI];
             var opReturn = ExecuteSystem(entity, ref script, instruction);
             switch (opReturn)
@@ -61,7 +63,7 @@ public abstract class BaseScript<TLogContext> : AEntitySetSystem<float>
 
                 case OpReturn.Stop:
                     script.CurrentI = script.Instructions.Count;
-                    return false;
+                    return true;
 
                 case OpReturn.ConditionalSkip:
                     BaseScript<TLogContext>.ConditionalSkip(ref script);
@@ -75,7 +77,7 @@ public abstract class BaseScript<TLogContext> : AEntitySetSystem<float>
                 default: throw new NotImplementedException($"Unimplemented op return type {opReturn}");
             }
         }
-        return false;
+        return hasExecutedSomething;
     }
 
     private OpReturn ExecuteSystem(in DefaultEcs.Entity entity, ref components.ScriptExecution script, RawInstruction instruction)
