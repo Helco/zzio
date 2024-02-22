@@ -68,8 +68,6 @@ public class PlayerTriggers : ISystem<float>
 
     public void Update(float deltaTime)
     {
-        // TODO: Add sound effect for looking at triggers
-
         EnsureNpcMarker();
         if (TryGetTriggerableNPC(out var npc))
         {
