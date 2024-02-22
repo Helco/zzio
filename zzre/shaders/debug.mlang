@@ -30,7 +30,7 @@ pipeline
 	DepthTest Off;
 	DepthWrite Off;
 	output r8_g8_b8_a8_unorm outColor;
-	output d24_unorm_s8_uint;
+	output D32_Float_S8_UInt;
 }
 
 pipeline if (Topology == Lines)

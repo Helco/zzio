@@ -89,7 +89,7 @@ public class FramebufferArea : BaseDisposable
         targetDepth = Factory.CreateTexture(new TextureDescription(
             (uint)newSize.X, (uint)newSize.Y,
             1, 1, 1,
-            PixelFormat.D24_UNorm_S8_UInt,
+            PixelFormat.D32_Float_S8_UInt,
             TextureUsage.DepthStencil,
             TextureType.Texture2D));
         Framebuffer = Factory.CreateFramebuffer(new FramebufferDescription(targetDepth, targetColor));
