@@ -88,7 +88,7 @@ public partial class Teleporter : AEntitySetSystem<float>
         if (!IsEnabled)
             return;
 
-        World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s009.wav"));
+        World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s009.wav", AsEntity: ui.World.CreateEntity()));
         game.PlayerEntity.Set(components.GameFlow.Teleporter);
         state = State.Initialize;
         targetScene = message.sceneId;
@@ -117,7 +117,7 @@ public partial class Teleporter : AEntitySetSystem<float>
                 // GROUP: set effect progress and sound emitter volume
                 break;
             case State.Leaving when timeLeft <= 0f:
-                World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s010.wav"));
+                World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s010.wav", AsEntity: ui.World.CreateEntity()));
                 // GROUP: toggle rootnode HUD
                 var realTargetScene = targetScene < 0 ? World.Get<Scene>().dataset.sceneId : (uint)targetScene;
                 World.Publish(new messages.PlayerLeaving($"sc_{realTargetScene:D4}"));
@@ -155,7 +155,7 @@ public partial class Teleporter : AEntitySetSystem<float>
                 break;
 
             case State.Arriving when timeLeft <= 0f:
-                World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s011.wav"));
+                World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s011.wav", AsEntity: ui.World.CreateEntity()));
                 fadeEntity = CreateTeleporterFlash(startDelay: 0.3f);
                 state = State.ThereSheIs;
                 break;
