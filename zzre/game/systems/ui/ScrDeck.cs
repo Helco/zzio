@@ -57,6 +57,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         if (!inventory.Contains(StdItemId.FairyBag))
            return;
 
+        World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g006.wav"));
         var entity = World.CreateEntity();
         entity.Set<components.ui.ScrDeck>();
         ref var deck = ref entity.Get<components.ui.ScrDeck>();
