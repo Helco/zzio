@@ -73,7 +73,7 @@ public class PlayerTriggers : ISystem<float>
         {
             if (previousNpc != npc) {
                 previousNpc = npc;
-                world.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g011.wav"));
+                world.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s002.wav"));
             }
             npcMarker.Set(components.Visibility.Visible);
             Location npcLocation;
