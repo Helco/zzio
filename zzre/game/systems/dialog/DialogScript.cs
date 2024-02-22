@@ -89,6 +89,8 @@ public partial class DialogScript : BaseScript<DialogScript>
         if (dialogEntity.IsAlive)
             throw new InvalidOperationException("A dialog is already open");
 
+        World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g002.wav"));
+
         dialogEntity = World.CreateEntity();
         var dialogEntityRecord = RecordDialogEntity();
         dialogEntityRecord.Set(components.DialogState.NextScriptOp);
