@@ -10,8 +10,8 @@ publish
 nuget-feed
 
 # Depending on the launch directory imgui might put its ini file in the source folder
-zzre/imgui.ini
-zzre/zzre.log
+**/imgui.ini
+**/zzre.log
 **/*.user
 **/BuildOutput.sarif
 sarif-output
