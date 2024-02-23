@@ -34,6 +34,7 @@ public partial class Teleporter : AEntitySetSystem<float>
     private State state;
     private float timeLeft;
     private DefaultEcs.Entity fadeEntity;
+    private DefaultEcs.Entity teleportSoundEntity;
 
     public Teleporter(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
@@ -88,7 +89,9 @@ public partial class Teleporter : AEntitySetSystem<float>
         if (!IsEnabled)
             return;
 
-        World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s009.wav", AsEntity: ui.World.CreateEntity()));
+        teleportSoundEntity = ui.World.CreateEntity();
+        World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s009.wav", AsEntity: teleportSoundEntity, Volume: 0f));
+
         game.PlayerEntity.Set(components.GameFlow.Teleporter);
         state = State.Initialize;
         targetScene = message.sceneId;
@@ -114,10 +117,16 @@ public partial class Teleporter : AEntitySetSystem<float>
             
             case State.Leaving when timeLeft > 0f:
                 player.Get<components.NonFairyAnimation>().Next = zzio.AnimationType.Dance;
-                // GROUP: set effect progress and sound emitter volume
+
+                if (teleportSoundEntity.TryGet<components.SoundEmitter>(out var emitter))
+                    ui.World.Publish(new messages.SetEmitterVolume(teleportSoundEntity, (LeavingDuration - timeLeft) / 3));
+
+                // GROUP: set effect progress
                 break;
             case State.Leaving when timeLeft <= 0f:
-                World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s010.wav", AsEntity: ui.World.CreateEntity()));
+                if (teleportSoundEntity.IsAlive)
+                    teleportSoundEntity.Dispose();
+                World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s010.wav"));
                 // GROUP: toggle rootnode HUD
                 var realTargetScene = targetScene < 0 ? World.Get<Scene>().dataset.sceneId : (uint)targetScene;
                 World.Publish(new messages.PlayerLeaving($"sc_{realTargetScene:D4}"));
@@ -155,7 +164,7 @@ public partial class Teleporter : AEntitySetSystem<float>
                 break;
 
             case State.Arriving when timeLeft <= 0f:
-                World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s011.wav", AsEntity: ui.World.CreateEntity()));
+                World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s011.wav"));
                 fadeEntity = CreateTeleporterFlash(startDelay: 0.3f);
                 state = State.ThereSheIs;
                 break;
