@@ -131,7 +131,7 @@ internal static partial class Program
                 logger.Debug("Selected PAK resource pool {PoolName}", poolName);
                 return new PAKResourcePool(new FileStream(path, FileMode.Open, FileAccess.Read));
             case "":
-                logger.Debug("Selected path reosurce pool {PoolName}", poolName);
+                logger.Debug("Selected path resource pool {PoolName}", poolName);
                 return new FileResourcePool(path);
             default:
                 logger.Warning("Ignored resource pool {PoolName} due to unsupported extension {Ext}", poolName, ext);
