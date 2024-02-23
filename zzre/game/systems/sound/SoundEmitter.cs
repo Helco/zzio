@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using DefaultEcs.Resource;
 using DefaultEcs.System;
@@ -42,6 +43,21 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
     public override void Dispose()
     {
         base.Dispose();
+        // DefaultEcs.World does not dispose entities, thus also not remove emitter components
+        // we have to do this ourselves
+        var allEmitters = World
+            .GetEntities()
+            .With<components.SoundEmitter>()
+            .AsEnumerable()
+            .ToArray();
+        foreach (var emitter in allEmitters)
+            emitter.Dispose();
+        
+        // just to be safe: also delete all sources
+        using (context.EnsureIsCurrent())
+            device.AL.DeleteSources(sourcePool.ToArray());
+        sourcePool.Clear();
+        
         spawnEmitterSubscription?.Dispose();
         emitterRemovedSubscription?.Dispose();
         setEmitterVolumeSubscription?.Dispose();

@@ -39,7 +39,7 @@ public class Game : BaseDisposable, ITagContainer
 
     public Game(ITagContainer diContainer, Savegame savegame)
     {
-        tagContainer = new TagContainer().FallbackTo(diContainer);
+        tagContainer = new ExtendedTagContainer(diContainer);
         zzContainer = GetTag<IZanzarahContainer>();
         zzContainer.OnResize += HandleResize;
         logger = diContainer.GetLoggerFor<Game>();

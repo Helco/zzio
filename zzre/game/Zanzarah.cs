@@ -37,7 +37,7 @@ public class Zanzarah : ITagContainer
 
     public Zanzarah(ITagContainer diContainer, IZanzarahContainer zanzarahContainer, Savegame? savegame = null)
     {
-        tagContainer = new TagContainer().FallbackTo(diContainer);
+        tagContainer = new ExtendedTagContainer(diContainer);
         tagContainer.AddTag(this);
         tagContainer.AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(tagContainer));
         tagContainer.AddTag(zanzarahContainer);
