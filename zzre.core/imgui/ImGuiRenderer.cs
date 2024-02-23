@@ -258,15 +258,8 @@ namespace zzre.imgui
         /// <summary>
         /// Retrieves the shader texture binding for the given helper handle.
         /// </summary>
-        public ResourceSet GetImageResourceSet(IntPtr imGuiBinding)
-        {
-            if (!_viewsById.TryGetValue(imGuiBinding, out ResourceSetInfo rsi))
-            {
-                throw new InvalidOperationException("No registered ImGui binding with id " + imGuiBinding.ToString());
-            }
-
-            return rsi.ResourceSet;
-        }
+        private ResourceSet GetImageResourceSet(IntPtr imGuiBinding) =>
+            _viewsById.GetValueOrDefault(imGuiBinding).ResourceSet;
 
         public void ClearCachedImageResources()
         {
@@ -705,7 +698,10 @@ namespace zzre.imgui
                             }
                             else
                             {
-                                cl.SetGraphicsResourceSet(1, GetImageResourceSet(pcmd.TextureId));
+                                var resourceSet = GetImageResourceSet(pcmd.TextureId);
+                                if (resourceSet == null)
+                                    continue;
+                                cl.SetGraphicsResourceSet(1, resourceSet);
                             }
                         }
 
