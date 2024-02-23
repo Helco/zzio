@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Silk.NET.Maths;
 using zzio;
 using zzre.rendering;
 
@@ -28,7 +29,7 @@ public struct ModelFactors
 public struct ModelInstance
 {
     public Matrix4x4 world;
-    public Matrix3x2 texShift;
+    public Matrix3X3<float> texShift;
     public IColor tint;
 }
 
@@ -111,7 +112,7 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
 public sealed class ModelInstanceBuffer : DynamicMesh
 {
     private readonly Attribute<Matrix4x4> attrWorld;
-    private readonly Attribute<Matrix3x2> attrTexShift;
+    private readonly Attribute<Matrix3X3<float>> attrTexShift;
     private readonly Attribute<IColor> attrTint;
 
     public ModelInstanceBuffer(ITagContainer diContainer,
@@ -121,7 +122,7 @@ public sealed class ModelInstanceBuffer : DynamicMesh
         : base(diContainer, dynamic, name)
     {
         attrWorld = AddAttribute<Matrix4x4>("world");
-        attrTexShift = AddAttribute<Matrix3x2>("inTexShift");
+        attrTexShift = AddAttribute<Matrix3X3<float>>("inTexShift");
         attrTint = AddAttribute<IColor>("inTint");
         Preallocate(preallocateInstances, 0);
     }

@@ -93,11 +93,15 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMes
         else
             clumpCounts[^1] = clumpCounts[^1].Increment();
 
+        var m = entity.TryGet<components.TexShift>().GetValueOrDefault(components.TexShift.Default).Matrix;
         instanceArena!.Add(new()
         {
             tint = materialInfo.Color,
             world = location.LocalToWorld,
-            texShift = entity.TryGet<components.TexShift>().GetValueOrDefault(components.TexShift.Default).Matrix
+            texShift = new(
+                m.M11, m.M12, 0f,
+                m.M21, m.M22, 0f,
+                m.M31, m.M32, 1f)
         });
     }
 
