@@ -10,11 +10,8 @@ option HasFog;
 variants exclude if (IsSkinned && (IsInstanced || HasEnvMap || HasTexShift));
 variants exclude if (!IsInstanced && (HasTexShift || HasEnvMap || !DepthWrite || !DepthTest || Blend != IsOpaque)); // we only use opaque materials for non-instanced currently
 
-attributes
-{
-    float3 inPos;
-    byte4_norm inColor;
-}
+attributes float3 inPos;
+attributes if (!IsSkinned) byte4_norm inColor;
 attributes if (HasEnvMap) float3 inNormal;
 attributes if (!HasEnvMap) float2 inUV;
 attributes if (IsSkinned)
