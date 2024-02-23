@@ -89,6 +89,9 @@ public partial class DialogScript : BaseScript<DialogScript>
         if (dialogEntity.IsAlive)
             throw new InvalidOperationException("A dialog is already open");
 
+        if (message.Cause == components.DialogCause.Trigger)
+            World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g002.wav"));
+
         dialogEntity = World.CreateEntity();
         var dialogEntityRecord = RecordDialogEntity();
         dialogEntityRecord.Set(components.DialogState.NextScriptOp);
@@ -148,8 +151,10 @@ public partial class DialogScript : BaseScript<DialogScript>
     [Update]
     private void Update(in DefaultEcs.Entity entity, ref components.ScriptExecution execution)
     {
-        if (!Continue(entity, ref execution))
+        if (!Continue(entity, ref execution)) {
+            World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g003.wav"));
             dialogEntity.Set(components.DialogState.FadeOut);
+        }
     }
 
     private static readonly FilePath VoiceBasePath = new("resources/audio/speech/");
@@ -159,6 +164,7 @@ public partial class DialogScript : BaseScript<DialogScript>
         var tileSheet = sayLabel.Get<rendering.TileSheet>();
         var textRow = db.GetDialog(uid);
         var text = tileSheet.WrapLines(textRow.Text, ui.LogicalScreen.Size.X - 60);
+
         sayLabel.Set(new components.ui.AnimatedLabel(text, SegmentsPerAddSay, isBlinking: !silent));
 
         if (silent)

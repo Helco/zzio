@@ -149,6 +149,11 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         if (gambling.SelectedCards.Count < rows) {
             Pay(ref gambling);
             PullRandomCard(ref gambling);
+            if (gambling.SelectedCards.Last() != null) {
+                World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g011.wav"));
+            } else {
+                World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g012.wav"));
+            }
             AddTrade(parent, ref gambling, gambling.SelectedCards.Count - 1);
             StartAnimation(ref gambling);
         } else {
@@ -304,11 +309,11 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var offset = gambling.BgRect.Center + new Vector2(-180, -130 + 50 * index);
 
         if (card == null) {
-        preload.CreateLabel(entity)
-            .With(offset + new Vector2(40, 16))
-            .WithText(UIDBlank)
-            .With(preload.Fnt000)
-            .Build();
+            preload.CreateLabel(entity)
+                .With(offset + new Vector2(40, 16))
+                .WithText(UIDBlank)
+                .With(preload.Fnt000)
+                .Build();
             return;
         };
 
@@ -377,11 +382,13 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             gambling.Profile = CreateSpellProfile(uiEntity, ref gambling, card);
         }
         else if (clickedId == IDYes) {
+            World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g008.wav"));
             zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Add(gambling.Purchase!.CardId);
             gambling.Profile.Dispose();
             gambling.Profile = CreatePrimary(uiEntity, ref gambling, allowPurchaseButtons: false);
         }
         else if (clickedId == IDNo) {
+            World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g009.wav"));
             gambling.Profile.Dispose();
             gambling.Profile = CreatePrimary(uiEntity, ref gambling);
         }
@@ -391,6 +398,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             gambling.Profile = CreatePrimary(uiEntity, ref gambling);
         }
         else if (clickedId == IDExit) {
+            World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g003.wav"));
             gambling.DialogEntity.Set(components.DialogState.NextScriptOp);
             uiEntity.Dispose();
         }

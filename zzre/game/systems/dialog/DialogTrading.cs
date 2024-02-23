@@ -181,6 +181,8 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
             trading.Profile = CreateItemProfile(uiEntity, trading, card);
         }
         else if (clickedId == IDYes) {
+            World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g008.wav"));
+
             var purchase = trading.Purchase!;
             var price = trading.CardTrades.First(trade => trade.uid == purchase.Uid).price;
 
@@ -192,11 +194,14 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
             trading.Profile = CreatePrimary(uiEntity, trading);
         }
         else if (clickedId == IDNo) {
+            World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g009.wav"));
+
             trading.Profile.Dispose();
-            trading.Purchase = null;;
+            trading.Purchase = null;
             trading.Profile = CreatePrimary(uiEntity, trading);
         }
         else if (clickedId == IDExit) {
+            World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g003.wav"));
             trading.DialogEntity.Set(components.DialogState.NextScriptOp);
             uiEntity.Dispose();
         }

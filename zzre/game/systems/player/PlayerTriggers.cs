@@ -22,6 +22,7 @@ public class PlayerTriggers : ISystem<float>
     private readonly Location cameraLocation;
     private readonly IDisposable sceneChangingDisposable;
     private DefaultEcs.Entity npcMarker;
+    private DefaultEcs.Entity previousNpc;
 
     public bool IsEnabled { get; set; } = true;
     public bool IsMarkerActive => npcMarker.Has<components.Visibility>();
@@ -67,11 +68,19 @@ public class PlayerTriggers : ISystem<float>
 
     public void Update(float deltaTime)
     {
-        // TODO: Add sound effect for looking at triggers
-
         EnsureNpcMarker();
+        if (!IsEnabled)
+        {
+            npcMarker.Remove<components.Visibility>();
+            return;
+        }
         if (TryGetTriggerableNPC(out var npc))
         {
+            if (previousNpc != npc)
+            {
+                previousNpc = npc;
+                world.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s002.wav"));
+            }
             npcMarker.Set(components.Visibility.Visible);
             Location npcLocation;
             float markerDistance;
@@ -87,6 +96,10 @@ public class PlayerTriggers : ISystem<float>
             }
             npcMarker.Get<Location>().LocalPosition = npcLocation.LocalPosition + Vector3.UnitY * markerDistance;
             return;
+        }
+        else
+        {
+            previousNpc = default;
         }
         npcMarker.Remove<components.Visibility>();
 
