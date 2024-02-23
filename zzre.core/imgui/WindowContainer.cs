@@ -50,7 +50,7 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
     {
         Device = device;
 
-        var fb = device.MainSwapchain.Framebuffer;
+        var fb = device.MainSwapchain!.Framebuffer;
         ImGuiRenderer = new(device, fb.OutputDescription, (int)fb.Width, (int)fb.Height, ColorSpaceHandling.Legacy, callNewFrame: false);
         ImGuizmoNET.ImGuizmo.SetImGuiContext(ImGui.GetCurrentContext());
         ImGuizmoNET.ImGuizmo.AllowAxisFlip(false);
@@ -186,7 +186,7 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
                 Device.WaitForFence(fence);
             fence.Reset();
             commandList.Begin();
-            commandList.SetFramebuffer(Device.MainSwapchain.Framebuffer);
+            commandList.SetFramebuffer(Device.MainSwapchain!.Framebuffer);
             commandList.ClearColorTarget(0, RgbaFloat.Cyan);
             ImGuiRenderer.Render(Device, commandList);
             commandList.End();

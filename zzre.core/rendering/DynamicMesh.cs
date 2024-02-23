@@ -28,7 +28,7 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
         {
             Name = name;
             buffer = new(device,
-                BufferUsage.VertexBuffer | (dynamic ? BufferUsage.Dynamic : default),
+                BufferUsage.VertexBuffer | (dynamic ? BufferUsage.DynamicWrite : default),
                 $"{meshName} {name}",
                 minGrowFactor)
             {
@@ -82,7 +82,7 @@ public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
         this.minGrowFactor = minGrowFactor;
 
         indexBuffer = new(graphicsDevice,
-            BufferUsage.IndexBuffer | (dynamic ? BufferUsage.Dynamic : default),
+            BufferUsage.IndexBuffer | (dynamic ? BufferUsage.DynamicWrite : default),
             name + " Indices",
             minGrowFactor)
         {

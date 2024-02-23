@@ -10,11 +10,8 @@ option HasFog;
 variants exclude if (IsSkinned && (IsInstanced || HasEnvMap || HasTexShift));
 variants exclude if (!IsInstanced && (HasTexShift || HasEnvMap || !DepthWrite || !DepthTest || Blend != IsOpaque)); // we only use opaque materials for non-instanced currently
 
-attributes
-{
-    float3 inPos;
-    byte4_norm inColor;
-}
+attributes float3 inPos;
+attributes if (!IsSkinned) byte4_norm inColor;
 attributes if (HasEnvMap) float3 inNormal;
 attributes if (!HasEnvMap) float2 inUV;
 attributes if (IsSkinned)
@@ -24,7 +21,7 @@ attributes if (IsSkinned)
 }
 
 instances mat4 world;
-instances if (HasTexShift) mat3x2 inTexShift;
+instances if (HasTexShift) mat3 inTexShift;
 instances byte4_norm inTint;
 
 varying
@@ -130,7 +127,7 @@ vertex
     else
         uv = inUV;
     if (HasTexShift)
-        uv = inTexShift * vec3(uv, 1);
+        uv = vec3(inTexShift * vec3(uv, 1)).xy;
 	varUV = uv;
 
     if (IsSkinned)

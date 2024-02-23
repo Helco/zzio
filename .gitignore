@@ -15,3 +15,4 @@ nuget-feed
 **/*.user
 **/BuildOutput.sarif
 sarif-output
+**/.DS_Store

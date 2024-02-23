@@ -151,7 +151,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
         foreach (var range in dirtyBytes)
         {
             var offset = range.GetOffset(capacityInBytes);
-            cl.UpdateBuffer(OptionalBuffer, (uint)offset, bytes.AsSpan(range));
+            cl.UpdateBuffer(OptionalBuffer!, (uint)offset, bytes.AsSpan(range));
         }
         dirtyBytes.Clear();
     }

@@ -48,12 +48,12 @@ public class FramebufferArea : BaseDisposable
     protected override void DisposeManaged()
     {
         base.DisposeManaged();
+        if (bindingHandle != IntPtr.Zero)
+            ImGuiRenderer.RemoveImGuiBinding(targetColor);
         WindowContainer.OnceBeforeUpdate += () =>
         {
-            // Delay disposal so we do not attempt to render the ImGui commands
-            // with the framebuffer texture already disposed
-            if (bindingHandle != IntPtr.Zero)
-                ImGuiRenderer.RemoveImGuiBinding(targetColor);
+            // Delay disposal so we do not attempt to dispose resources
+            // that are still in-flight
             bindingHandle = IntPtr.Zero;
             targetColor.Dispose();
             targetDepth.Dispose();

@@ -11,7 +11,7 @@
     <!-- Common Dependency versioning -->
     <PropertyGroup>
         <RestoreSources>$(RestoreSources);../nuget-feed;https://api.nuget.org/v3/index.json</RestoreSources>
-        <VeldridHash>g603c7f2521</VeldridHash>
+        <VeldridHash>g9c18bddece</VeldridHash>
         <DefaultEcsHash>0e92bb5</DefaultEcsHash>
         <ImguiHash>9b51cce</ImguiHash>
         <MlangHash>331cf83</MlangHash>

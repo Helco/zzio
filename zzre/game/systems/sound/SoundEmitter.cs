@@ -55,7 +55,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         
         // just to be safe: also delete all sources
         using (context.EnsureIsCurrent())
-            device.AL.DeleteSources(sourcePool.ToArray());
+            device.AL.DeleteSources([.. sourcePool]);
         sourcePool.Clear();
         
         spawnEmitterSubscription?.Dispose();

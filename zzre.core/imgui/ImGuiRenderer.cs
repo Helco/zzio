@@ -133,12 +133,12 @@ namespace zzre.imgui
             _gd = gd;
             _colorSpaceHandling = colorSpaceHandling;
             ResourceFactory factory = gd.ResourceFactory;
-            _vertexBuffer = factory.CreateBuffer(new BufferDescription(10000, BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+            _vertexBuffer = factory.CreateBuffer(new BufferDescription(10000, BufferUsage.VertexBuffer | BufferUsage.DynamicWrite));
             _vertexBuffer.Name = "ImGui.NET Vertex Buffer";
-            _indexBuffer = factory.CreateBuffer(new BufferDescription(2000, BufferUsage.IndexBuffer | BufferUsage.Dynamic));
+            _indexBuffer = factory.CreateBuffer(new BufferDescription(2000, BufferUsage.IndexBuffer | BufferUsage.DynamicWrite));
             _indexBuffer.Name = "ImGui.NET Index Buffer";
 
-            _projMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _projMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             _projMatrixBuffer.Name = "ImGui.NET Projection Buffer";
 
             byte[] vertexShaderBytes = GetEmbeddedResourceBytes("imgui-vertex");
@@ -179,7 +179,7 @@ namespace zzre.imgui
                 [_layout, _textureLayout],
                 outputDescription,
                 ResourceBindingModel.Default);
-            _pipeline = factory.CreateGraphicsPipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(pd);
             _pipeline.Name = "ImGui.NET Pipeline";
 
             _mainResourceSet = factory.CreateResourceSet(new ResourceSetDescription(_layout,
@@ -258,15 +258,8 @@ namespace zzre.imgui
         /// <summary>
         /// Retrieves the shader texture binding for the given helper handle.
         /// </summary>
-        public ResourceSet GetImageResourceSet(IntPtr imGuiBinding)
-        {
-            if (!_viewsById.TryGetValue(imGuiBinding, out ResourceSetInfo rsi))
-            {
-                throw new InvalidOperationException("No registered ImGui binding with id " + imGuiBinding.ToString());
-            }
-
-            return rsi.ResourceSet;
-        }
+        private ResourceSet GetImageResourceSet(IntPtr imGuiBinding) =>
+            _viewsById.GetValueOrDefault(imGuiBinding).ResourceSet;
 
         public void ClearCachedImageResources()
         {
@@ -628,7 +621,7 @@ namespace zzre.imgui
             if (totalVBSize > _vertexBuffer.SizeInBytes)
             {
                 _vertexBuffer.Dispose();
-                _vertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalVBSize * 1.5f), BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+                _vertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalVBSize * 1.5f), BufferUsage.VertexBuffer | BufferUsage.DynamicWrite));
                 _vertexBuffer.Name = $"ImGui.NET Vertex Buffer";
             }
 
@@ -636,7 +629,7 @@ namespace zzre.imgui
             if (totalIBSize > _indexBuffer.SizeInBytes)
             {
                 _indexBuffer.Dispose();
-                _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.Dynamic));
+                _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.DynamicWrite));
                 _indexBuffer.Name = $"ImGui.NET Index Buffer";
             }
 
@@ -705,7 +698,10 @@ namespace zzre.imgui
                             }
                             else
                             {
-                                cl.SetGraphicsResourceSet(1, GetImageResourceSet(pcmd.TextureId));
+                                var resourceSet = GetImageResourceSet(pcmd.TextureId);
+                                if (resourceSet == null)
+                                    continue;
+                                cl.SetGraphicsResourceSet(1, resourceSet);
                             }
                         }
 
