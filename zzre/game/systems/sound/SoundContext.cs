@@ -54,9 +54,12 @@ public sealed unsafe class SoundContext : ISystem<float>
     {
         if (context == null)
             return;
+        if (device.ALC.GetCurrentContext() == context)
+            device.ALC.MakeContextCurrent(null);
         device.ALC.DestroyContext(context);
         context = null;
         isEnabled = false;
+        device.Logger.Debug("Disposing SoundContext");
     }
 
     public void Update(float _)

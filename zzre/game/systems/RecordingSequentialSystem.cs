@@ -25,7 +25,8 @@ public class RecordingSequentialSystem<T> : ISystem<T>
 
     public void Dispose()
     {
-        foreach (var system in Systems.OfType<IDisposable>())
+        // small heurisitic with the reversing should prevent some bugs
+        foreach (var system in Systems.Reverse())
             system.Dispose();
         recorder.Dispose();
     }
