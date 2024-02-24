@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TerraFX.Interop.Vulkan;
 
 namespace zzre;
 
@@ -22,6 +21,8 @@ internal interface IAsset : IDisposable
     Guid ID { get; }
     AssetState State { get; }
     Task LoadTask { get; }
+    AssetLoadPriority Priority { get; set; }
+    Action<AssetHandle>? ApplyAction { get; set; }
 
     void StartLoading();
     void Complete();
@@ -29,21 +30,21 @@ internal interface IAsset : IDisposable
     void DelRef();
 }
 
-public abstract class AssetBase<TValue> : IAsset where TValue : class
+public abstract class Asset : IAsset
 {
     private readonly TaskCompletionSource completionSource = new();
     private AssetHandle[] secondaryAssets = [];
-    private TValue? value;
     private int refCount;
 
     private IAssetRegistry InternalRegistry => Registry;
     public AssetRegistry Registry { get; }
     public Guid ID { get; }
     public AssetState State { get; private set; }
-    public TValue? Value => State == AssetState.Loaded ? value : null;
     Task IAsset.LoadTask => completionSource.Task;
+    AssetLoadPriority IAsset.Priority { get; set; }
+    Action<AssetHandle>? IAsset.ApplyAction { get; set; }
 
-    public AssetBase(AssetRegistry registry, Guid id)
+    public Asset(AssetRegistry registry, Guid id)
     {
         Registry = registry;
         ID = id;
@@ -54,13 +55,11 @@ public abstract class AssetBase<TValue> : IAsset where TValue : class
         if (State != AssetState.Error)
             State = AssetState.Disposed;
 
+        Unload();
+
         foreach (var handle in secondaryAssets)
             handle.Dispose();
         secondaryAssets = [];
-
-        if (value != null)
-            Unload();
-        value = null;
     }
 
     void IAsset.StartLoading()
@@ -93,18 +92,22 @@ public abstract class AssetBase<TValue> : IAsset where TValue : class
         }
         if (oldRefCount == 1) // we just hit zero
         {
-            (this as IAsset).Dispose();
-            InternalRegistry.QueueRemoveAsset(this).AsTask().Wait();
+            lock (this)
+            {
+                (this as IAsset).Dispose();
+                InternalRegistry.QueueRemoveAsset(this).AsTask().WaitAndRethrow();
+            }
         }
     }
 
     private async Task PrivateLoad()
     {
+        var ct = Registry.Cancellation;
         try
         {
-            IEnumerable<AssetHandle> secondaryAssetSet;
-            (value, secondaryAssetSet) = await Load();
+            var secondaryAssetSet = await Load();
             secondaryAssets = secondaryAssetSet.ToArray();
+            ct.ThrowIfCancellationRequested();
 
             if (secondaryAssets.Length > 0)
             {
@@ -115,6 +118,7 @@ public abstract class AssetBase<TValue> : IAsset where TValue : class
                 await InternalRegistry.WaitAsyncAll(secondaryAssets);
             }
 
+            ct.ThrowIfCancellationRequested();
             await InternalRegistry.QueueApplyAsset(this);
             completionSource.SetResult();
         }
@@ -129,6 +133,8 @@ public abstract class AssetBase<TValue> : IAsset where TValue : class
         }
     }
 
-    protected abstract ValueTask<(TValue value, IEnumerable<AssetHandle> secondaryAssets)> Load();
+    protected abstract ValueTask<IEnumerable<AssetHandle>> Load();
     protected abstract void Unload();
+
+    public override string ToString() => $"Asset {ID}";
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace zzre;
 
-public class AssetHandleScope(AssetRegistry registry) : IDisposable
+public class AssetHandleScope(AssetRegistry registry) : IAssetHandleScope
 {
     private readonly List<AssetHandle> handlesToDispose = new(64);
     private bool delayDisposals;
@@ -29,15 +29,17 @@ public class AssetHandleScope(AssetRegistry registry) : IDisposable
         AssetLoadPriority priority,
         delegate* managed<AssetHandle, ref readonly TApplyContext, void> applyFnptr,
         in TApplyContext applyContext)
+        where TInfo : IEquatable<TInfo>
     {
         var handle = registry.Load(info, priority, applyFnptr, applyContext);
         return new(this, handle.AssetID);
     }
 
-    public AssetHandle Load<TInfo, TApplyContext>(
+    public AssetHandle Load<TInfo>(
         in TInfo info,
         AssetLoadPriority priority,
         Action<AssetHandle> applyAction)
+        where TInfo : IEquatable<TInfo>
     {
         var handle = registry.Load(info, priority, applyAction);
         return new(this, handle.AssetID);
