@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -18,7 +19,7 @@ internal interface IAssetRegistry : IAssetHandleScope
     TAsset GetLoadedAsset<TAsset>(Guid assetId);
 }
 
-public class AssetRegistry : IAssetRegistry
+public partial class AssetRegistry(ITagContainer diContainer) : IAssetRegistry
 {
     private static readonly int MaxLowPriorityAssetsPerFrame = Math.Max(1, Environment.ProcessorCount / 4);
     private static readonly BoundedChannelOptions ChannelOptions = new(128)
@@ -56,15 +57,27 @@ public class AssetRegistry : IAssetRegistry
         cancellationSource.Dispose();
     }
 
-    public void RegisterAssetType<TInfo>(Func<AssetRegistry, Guid, TInfo, Asset> constructor)
+    public void RegisterAssetType<TInfo>(Func<ITagContainer, Guid, TInfo, Asset> constructor)
         where TInfo : IEquatable<TInfo>
     {
         EnsureMainThread();
         Cancellation.ThrowIfCancellationRequested();
         Func<Guid, IAsset> assetConstructor = id =>
-            constructor(this, id, AssetInfoRegistry<TInfo>.ToInfo(id));
+            constructor(diContainer, id, AssetInfoRegistry<TInfo>.ToInfo(id));
         if (!assetConstructors.TryAdd(typeof(TInfo), assetConstructor))
             throw new ArgumentException("Asset type is already registered", nameof(TInfo));
+    }
+
+    public void RegisterAssetType<
+        TInfo,
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TAsset>()
+        where TInfo : IEquatable<TInfo>
+        where TAsset : Asset
+    {
+        var ctorInfo =
+            typeof(TAsset).GetConstructor([typeof(ITagContainer), typeof(Guid), typeof(TInfo)])
+            ?? throw new ArgumentException("Could not find standard constructor", nameof(TAsset));
+        RegisterAssetType<TInfo>((registry, guid, info) => (TAsset)ctorInfo.Invoke([registry, guid, info]));
     }
 
     private IAsset GetOrCreateAsset<TInfo>(in TInfo info)
@@ -152,7 +165,7 @@ public class AssetRegistry : IAssetRegistry
 
             case AssetState.Queued or AssetState.Loading or AssetState.LoadingSecondary:
                 if (applyAction is not null)
-                    asset.ApplyAction = asset.ApplyAction == null ? applyAction : asset.ApplyAction + applyAction;
+                    asset.ApplyAction.Next += applyAction;
                 if (asset.State == AssetState.Queued)
                     StartLoading(asset, priority);
                 return handle;
@@ -175,7 +188,10 @@ public class AssetRegistry : IAssetRegistry
         switch (priority)
         {
             case AssetLoadPriority.Synchronous:
+                if (!asset.ApplyAction.IsEmpty && !IsMainThread)
+                    throw new InvalidOperationException("Cannot load assets with Apply functions synchronously");
                 asset.Complete();
+                asset.ApplyAction.Invoke(new(this, asset.ID));
                 break;
             case AssetLoadPriority.High:
                 asset.StartLoading();
@@ -208,7 +224,7 @@ public class AssetRegistry : IAssetRegistry
     {
         if (!asset.LoadTask.IsCompleted)
             throw new InvalidOperationException("Cannot apply assets that are not (internally) loaded");
-        asset.ApplyAction?.Invoke(new(this, asset.ID));
+        asset.ApplyAction.Invoke(new(this, asset.ID));
     }
 
     public void ApplyAssets()
@@ -292,6 +308,7 @@ public class AssetRegistry : IAssetRegistry
                     throw new InvalidOperationException("Asset was marked erroneous but did not contain an exception");
                 default:
                     asset.Complete();
+                    asset.ApplyAction.Invoke(new(this, assetId));
                     return (TAsset)asset;
             }
         }

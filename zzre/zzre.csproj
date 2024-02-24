@@ -64,11 +64,6 @@
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <PackageReference Include="Veldrid.RenderDoc" Version="$(VeldridRenderdocVersion)" />
-    <PackageReference Include="DefaultEcs" Version="$(DefaultEcsSafeVersion)" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(Configuration)'!='Debug'">
-    <PackageReference Include="DefaultEcs" Version="$(DefaultEcsVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Remotery)' == 'true'">

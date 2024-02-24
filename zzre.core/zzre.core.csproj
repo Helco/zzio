@@ -33,6 +33,14 @@
     <PackageReference Include="Mlang" Version="$(MlangVersion)" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(Configuration)'=='Debug'">
+    <PackageReference Include="DefaultEcs" Version="$(DefaultEcsSafeVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)'!='Debug'">
+    <PackageReference Include="DefaultEcs" Version="$(DefaultEcsVersion)" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\zzio\zzio.csproj" />
   </ItemGroup>

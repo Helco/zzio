@@ -82,6 +82,7 @@ internal static partial class Program
                 ?? throw new InvalidDataException("Shader set is not compiled into zzre")))
             .AddTag(new GameTime())
             .AddTag(CreateResourcePool(diContainer))
+            .AddTag(CreateAssetRegistry(diContainer))
             .AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(diContainer));
     }
 
@@ -137,6 +138,13 @@ internal static partial class Program
                 logger.Warning("Ignored resource pool {PoolName} due to unsupported extension {Ext}", poolName, ext);
                 return new InMemoryResourcePool();
         }
+    }
+
+    private static AssetRegistry CreateAssetRegistry(ITagContainer diContainer)
+    {
+        var registry = new AssetRegistry(diContainer);
+        ClumpAsset.RegisterAt(registry);
+        return registry;
     }
 
     private static void CommonCleanup(ITagContainer diContainer)

@@ -22,7 +22,7 @@ internal interface IAsset : IDisposable
     AssetState State { get; }
     Task LoadTask { get; }
     AssetLoadPriority Priority { get; set; }
-    Action<AssetHandle>? ApplyAction { get; set; }
+    OnceAction<AssetHandle> ApplyAction { get; }
 
     void StartLoading();
     void Complete();
@@ -32,6 +32,7 @@ internal interface IAsset : IDisposable
 
 public abstract class Asset : IAsset
 {
+    protected readonly ITagContainer diContainer;
     private readonly TaskCompletionSource completionSource = new();
     private AssetHandle[] secondaryAssets = [];
     private int refCount;
@@ -42,11 +43,12 @@ public abstract class Asset : IAsset
     public AssetState State { get; private set; }
     Task IAsset.LoadTask => completionSource.Task;
     AssetLoadPriority IAsset.Priority { get; set; }
-    Action<AssetHandle>? IAsset.ApplyAction { get; set; }
+    OnceAction<AssetHandle> IAsset.ApplyAction { get; } = new();
 
-    public Asset(AssetRegistry registry, Guid id)
+    public Asset(ITagContainer diContainer, Guid id)
     {
-        Registry = registry;
+        this.diContainer = diContainer;
+        Registry = diContainer.GetTag<AssetRegistry>();
         ID = id;
     }
 
@@ -75,7 +77,32 @@ public abstract class Asset : IAsset
 
     void IAsset.Complete()
     {
+        lock (this)
+        {
+            switch (State)
+            {
+                case AssetState.Loaded: return;
 
+                case AssetState.Loading:
+                case AssetState.LoadingSecondary:
+                    completionSource.Task.WaitAndRethrow();
+                    return;
+
+                case AssetState.Queued:
+                    State = AssetState.Loading;
+                    PrivateLoad().WaitAndRethrow();
+                    return;
+
+                case AssetState.Disposed:
+                    throw new ObjectDisposedException(ToString());
+                case AssetState.Error:
+                    completionSource.Task.WaitAndRethrow();
+                    throw new InvalidOperationException("Asset was marked erroneous but does not contain exception");
+
+                default:
+                    throw new NotImplementedException($"Unimplemented asset state {State}");
+            }
+        }
     }
 
     void IAsset.AddRef() => Interlocked.Increment(ref refCount);
@@ -102,6 +129,9 @@ public abstract class Asset : IAsset
 
     private async Task PrivateLoad()
     {
+        if (State != AssetState.Loading)
+            throw new InvalidOperationException("Asset.PrivateLoad was called during an unexpected state");
+
         var ct = Registry.Cancellation;
         try
         {
@@ -119,8 +149,9 @@ public abstract class Asset : IAsset
             }
 
             ct.ThrowIfCancellationRequested();
-            await InternalRegistry.QueueApplyAsset(this);
+            State = AssetState.Loaded;
             completionSource.SetResult();
+            await InternalRegistry.QueueApplyAsset(this);
         }
         catch (Exception ex)
         {

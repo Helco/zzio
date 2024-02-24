@@ -15,6 +15,7 @@ public class BackdropLoader : ISystem<float>
     private readonly ILogger logger;
     private readonly Camera camera;
     private readonly DefaultEcs.World ecsWorld;
+    private readonly IAssetHandleScope assetScope;
     private readonly IDisposable sceneLoadSubscription;
 
     public bool IsEnabled { get; set; } = true;
@@ -24,6 +25,7 @@ public class BackdropLoader : ISystem<float>
         logger = diContainer.GetLoggerFor<BackdropLoader>();
         camera = diContainer.GetTag<Camera>();
         ecsWorld = diContainer.GetTag<DefaultEcs.World>();
+        assetScope = diContainer.GetTag<IAssetHandleScope>();
         sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
     }
 
@@ -83,7 +85,9 @@ public class BackdropLoader : ISystem<float>
             LocalRotation = rotation ?? Quaternion.Identity
         });
         entity.Set(new components.MoveToLocation(camera.Location, RelativePosition: Vector3.Zero));
-        entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Backdrop(name + ".dff")));
+        //entity.Set(assetScope.Load(ClumpAsset.Info.Backdrop(name), AssetLoadPriority.Synchronous, &ApplyClumpAsset, entity));
+        assetScope.LoadClump(entity, ClumpAsset.Info.Backdrop(name), AssetLoadPriority.Synchronous);
+        //entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Backdrop(name + ".dff")));
         entity.Set(components.Visibility.Visible);
         entity.Set(components.RenderOrder.Backdrop);
         entity.Set(new components.ClumpMaterialInfo()
