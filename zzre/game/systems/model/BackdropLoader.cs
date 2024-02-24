@@ -52,15 +52,30 @@ public class BackdropLoader : ISystem<float>
             : null;
         switch(dynBackdropId)
         {
-            case 10: CreateStaticBackdrop("fbgsm01p", depthTest: false, depthWrite: false,
-                rotation: Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathF.PI / -2));
+            case 2: // Forest
+                CreateStaticBackdrop("ebg01h", depthTest: false, depthWrite: false);
+                break;
+            case 3: // Horizon
+                CreateStaticBackdrop("sbg01m", hasFog: false);
+                CreateStaticBackdrop("sbg02m", hasFog: false);
+                break;
+            case 5: // Swamp
+                CreateStaticBackdrop("bgsm01p", depthTest: false, depthWrite: false,
+                    rotation: Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathF.PI / -2));
+                break;
+            case 7: // Mountain1
+                CreateStaticBackdrop("msk01f", depthTest: false, depthWrite: false, hasFog: false);
+                break;
+            case 10: // Garden
+                CreateStaticBackdrop("fbgsm01p", depthTest: false, depthWrite: false,
+                    rotation: Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathF.PI / -2));
                 break;
             case null: CreateStaticBackdrop(backdropName); break;
             default: logger.Warning("Unsupported dynamic backdrop {Name}", backdropName); break;
         }
     }
 
-    private DefaultEcs.Entity CreateStaticBackdrop(string name, bool depthTest = true, bool depthWrite = true, Quaternion? rotation = null)
+    private DefaultEcs.Entity CreateStaticBackdrop(string name, bool depthTest = true, bool depthWrite = true, bool hasFog = true, Quaternion? rotation = null)
     {
         var entity = ecsWorld.CreateEntity();
         entity.Set(new Location()
@@ -79,7 +94,8 @@ public class BackdropLoader : ISystem<float>
         var materialInfo = new resources.ClumpMaterialInfo(zzio.scn.FOModelRenderType.Solid, rwMaterial: null!)
         {
             DepthTest = depthTest,
-            DepthWrite = depthWrite
+            DepthWrite = depthWrite,
+            HasFog = hasFog
         };
         var clumpMesh = entity.Get<ClumpMesh>();
         entity.Set(new List<materials.ModelMaterial>(clumpMesh.Materials.Count));
