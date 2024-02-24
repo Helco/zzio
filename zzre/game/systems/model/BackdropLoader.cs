@@ -56,7 +56,7 @@ public class BackdropLoader : ISystem<float>
                 CreateStaticBackdrop("ebg01h", depthTest: false, depthWrite: false);
                 break;
             case 3: // Horizon
-                CreateStaticBackdrop("sbg01m", hasFog: false);
+                CreateStaticBackdrop("sbg01m", hasFog: false).Set(new components.behaviour.Rotate(Vector3.UnitY, 1f));
                 CreateStaticBackdrop("sbg02m", hasFog: false);
                 break;
             case 5: // Swamp
