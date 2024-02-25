@@ -214,13 +214,11 @@ public class UIPreloader
             .WithText($"{GetDBText(UIDYouHave)} {{{3000 + currency.CardId.EntityId}}}x{inventory.CountCards(currency.CardId)}")
             .Build();
 
-    private const float ButtonOffsetY = -50f;
-    private const float RepeatButtonOffsetY = -40f;
-    public DefaultEcs.Entity CreateSingleDialogButton(DefaultEcs.Entity entity, UID textUID, components.ui.ElementId elementId, Rect bgRect, int offset = 0)
+    public DefaultEcs.Entity CreateSingleDialogButton(DefaultEcs.Entity entity, UID textUID, components.ui.ElementId elementId, Rect bgRect, float buttonOffsetY = -50f)
     {
         var button = CreateButton(entity)
             .With(elementId)
-            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y + ButtonOffsetY + RepeatButtonOffsetY * offset))
+            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y + buttonOffsetY))
             .With(new components.ui.ButtonTiles(0, 1))
             .With(components.ui.FullAlignment.TopCenter)
             .With(Btn000)

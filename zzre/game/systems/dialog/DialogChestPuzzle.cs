@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Numerics;
 using zzio;
 using zzio.db;
@@ -8,14 +7,18 @@ namespace zzre.game.systems;
 
 public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuzzle, messages.DialogChestPuzzle>
 {
-    private static readonly components.ui.ElementId IDExit = new(1000);
+    private static readonly components.ui.ElementId IDCancel = new(1000);
 
-    private static readonly UID UIDExit = new(0xF7DFDC21);
+    private static readonly UID UIDCancel = new(0xD45B15B1);
+    private static readonly UID UIDBoxOfTricks = new(0x6588C491);
 
+    private readonly MappedDB db;
     private readonly IDisposable resetUISubscription;
 
     public DialogChestPuzzle(ITagContainer diContainer) : base(diContainer, BlockFlags.None)
     {
+        db = diContainer.GetTag<MappedDB>();
+
         resetUISubscription = World.Subscribe<messages.DialogResetUI>(HandleResetUI);
         OnElementDown += HandleElementDown;
     }
@@ -54,7 +57,13 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         entity.Set(new components.Parent(parent));
 
         preload.CreateDialogBackground(entity, animateOverlay: true, out var bgRect);
-        preload.CreateSingleDialogButton(entity, UIDExit, IDExit, bgRect);
+        preload.CreateSingleDialogButton(entity, UIDCancel, IDCancel, bgRect, buttonOffsetY: -45f);
+
+        preload.CreateLabel(entity)
+            .With(bgRect.Min + new Vector2(20, 20))
+            .With(preload.Fnt001)
+            .WithText(db.GetText(UIDBoxOfTricks).Text)
+            .Build();
 
         return entity;
     }
@@ -64,7 +73,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         var uiEntity = Set.GetEntities()[0];
         ref var puzzle = ref uiEntity.Get<components.DialogChestPuzzle>();
 
-        if (clickedId == IDExit) {
+        if (clickedId == IDCancel) {
             World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g003.wav"));
             puzzle.DialogEntity.Set(components.DialogState.NextScriptOp);
             uiEntity.Dispose();

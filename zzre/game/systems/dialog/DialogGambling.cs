@@ -132,7 +132,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     private void AddBottomButtons(DefaultEcs.Entity parent, ref components.DialogGambling gambling)
     {
         if (CanAfford(ref gambling))
-            preload.CreateSingleDialogButton(parent, UIDRepeat, IDRepeat, gambling.BgRect, offset: 1);
+            preload.CreateSingleDialogButton(parent, UIDRepeat, IDRepeat, gambling.BgRect, buttonOffsetY: -90f);
         preload.CreateSingleDialogButton(parent, UIDExit, IDExit, gambling.BgRect);
     }
 
