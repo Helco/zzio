@@ -155,7 +155,8 @@ public class UIPreloader
     public void CreateDialogBackground(
         DefaultEcs.Entity parent,
         bool animateOverlay,
-        out Rect backgroundRect)
+        out Rect backgroundRect,
+        float opacity = 0.8f)
     {
         var image = CreateImage(parent)
             .WithBitmap("std000")
@@ -164,20 +165,21 @@ public class UIPreloader
             .Build();
         backgroundRect = image.Get<Rect>();
 
-        CreateBackOverlay(parent, animateOverlay, backgroundRect);
+        CreateBackOverlay(parent, animateOverlay, opacity, backgroundRect);
     }
 
     public void CreateBackOverlay(
         DefaultEcs.Entity parent,
         bool animateOverlay,
+        float opacity,
         Rect backgroundRect)
     {
         var overlay = CreateImage(parent)
-            .With(DefaultOverlayColor with { a = animateOverlay ? 0f : 0.8f })
+            .With(DefaultOverlayColor with { a = animateOverlay ? 0f : opacity })
             .With(backgroundRect)
             .WithRenderOrder(2);
         if (animateOverlay)
-            overlay.With(components.ui.Fade.SingleIn(0.8f));
+            overlay.With(components.ui.Fade.SingleIn(0.8f, opacity));
         overlay.Build();
     }
 

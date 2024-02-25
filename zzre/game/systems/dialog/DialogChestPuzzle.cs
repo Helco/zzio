@@ -60,8 +60,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
-        preload.CreateDialogBackground(entity, animateOverlay: true, out var bgRect);
-        preload.CreateDialogBackground(entity, animateOverlay: true, out var _);
+        preload.CreateDialogBackground(entity, animateOverlay: true, out var bgRect, opacity: 1f);
         preload.CreateSingleDialogButton(entity, UIDCancel, IDCancel, bgRect, buttonOffsetY: -45f);
         preload.CreateSingleDialogButton(entity, UIDCancel, IDWin, bgRect, buttonOffsetY: -85f);
 
