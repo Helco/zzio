@@ -16,7 +16,7 @@ public sealed class SamplerAsset : Asset
     public Sampler Sampler => sampler ??
         throw new InvalidOperationException("Asset was not yet loaded");
 
-    public SamplerAsset(AssetRegistry registry, Guid assetId, SamplerDescription info) : base(registry, assetId)
+    public SamplerAsset(IAssetRegistry registry, Guid assetId, SamplerDescription info) : base(registry, assetId)
     {
         this.info = info;
     }

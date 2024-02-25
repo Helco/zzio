@@ -41,7 +41,7 @@ public sealed class ClumpMaterialAsset : Asset
     public ModelMaterial Material => material ??
         throw new InvalidOperationException("Asset was not yet loaded");
 
-    public ClumpMaterialAsset(AssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
+    public ClumpMaterialAsset(IAssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
     {
         this.info = info;
     }

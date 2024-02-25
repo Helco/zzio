@@ -23,7 +23,7 @@ public struct AssetHandle : IDisposable
     public AssetHandle(AssetHandleScope handleScope, Guid assetId)
     {
         this.handleScope = handleScope;
-        registryInternal = handleScope.Registry;
+        registryInternal = (handleScope as IAssetRegistry).InternalRegistry;
         AssetID = assetId;
     }
 

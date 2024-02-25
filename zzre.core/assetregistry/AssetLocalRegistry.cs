@@ -9,6 +9,7 @@ public sealed class AssetLocalRegistry : IAssetRegistry
     private readonly AssetHandleScope localScope = new(null!); // the scope will not be used to load, null is a canary value for this
     private bool disposedValue;
 
+    IAssetRegistryInternal IAssetRegistry.InternalRegistry => localRegistry;
     public ITagContainer DIContainer => localRegistry.DIContainer;
 
     public bool DelayDisposals
@@ -24,7 +25,7 @@ public sealed class AssetLocalRegistry : IAssetRegistry
         globalRegistry = diContainer.GetTag<IAssetRegistry>();
         if (globalRegistry is not AssetRegistry { IsLocalRegistry: false })
             throw new ArgumentException("Registry given to local registry is not a global registry");
-        localRegistry = new AssetRegistry(debugName, diContainer, isLocalRegistry: true);
+        localRegistry = new AssetRegistry(debugName, diContainer, this);
     }
 
     private IAssetRegistry RegistryFor<TInfo>() where TInfo : IEquatable<TInfo> =>

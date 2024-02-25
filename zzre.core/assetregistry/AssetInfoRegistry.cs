@@ -26,7 +26,7 @@ public static class AssetInfoRegistry<TInfo> where TInfo : IEquatable<TInfo>
     public static void Register<TAsset>(bool isLocal = false) where TAsset : Asset
     {
         var ctorInfo =
-            typeof(TAsset).GetConstructor([typeof(AssetRegistry), typeof(Guid), typeof(TInfo)])
+            typeof(TAsset).GetConstructor([typeof(IAssetRegistry), typeof(Guid), typeof(TInfo)])
             ?? throw new ArgumentException("Could not find standard constructor", nameof(TAsset));
         Register(typeof(TAsset).Name, (IAssetRegistry registry, Guid guid, in TInfo info) =>
             (TAsset)ctorInfo.Invoke([registry, guid, info]), isLocal);
@@ -35,7 +35,7 @@ public static class AssetInfoRegistry<TInfo> where TInfo : IEquatable<TInfo>
     public static void RegisterLocal(string name, AssetConstructor constructor) => Register(name, constructor, isLocal: true);
     public static void RegisterLocal<TAsset>() where TAsset : Asset => Register<TAsset>(isLocal: true);
 
-    internal static Asset Construct(AssetRegistry registry, Guid assetId, in TInfo info)
+    internal static Asset Construct(IAssetRegistry registry, Guid assetId, in TInfo info)
     {
         EnsureRegistered();
         return constructor!(registry, assetId, info);

@@ -10,15 +10,6 @@ using Serilog;
 
 namespace zzre;
 
-internal interface IAssetRegistryInternal : IAssetRegistry
-{
-    ValueTask QueueRemoveAsset(IAsset asset);
-    ValueTask QueueApplyAsset(IAsset asset);
-    Task WaitAsyncAll(AssetHandle[] assets);
-    bool IsLoaded(Guid assetId);
-    TAsset GetLoadedAsset<TAsset>(Guid assetId);
-}
-
 public sealed partial class AssetRegistry : IAssetRegistryInternal
 {
     private static readonly int MaxLowPriorityAssetsPerFrame = Math.Max(1, Environment.ProcessorCount / 4);
@@ -40,21 +31,21 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
     private AssetRegistryStats stats;
 
     private bool IsMainThread => mainThreadId == Environment.CurrentManagedThreadId;
-    internal CancellationToken Cancellation => cancellationSource.Token;
-    internal bool IsLocalRegistry { get; }
+    internal bool IsLocalRegistry => ApparentRegistry != this;
+    internal IAssetRegistry ApparentRegistry;
     public ITagContainer DIContainer { get; }
     public AssetRegistryStats Stats => stats;
 
-    public AssetRegistry(string debugName, ITagContainer diContainer) : this(debugName, diContainer, isLocalRegistry: false) { }
+    public AssetRegistry(string debugName, ITagContainer diContainer) : this(debugName, diContainer, null) { }
 
-    internal AssetRegistry(string debugName, ITagContainer diContainer, bool isLocalRegistry)
+    internal AssetRegistry(string debugName, ITagContainer diContainer, IAssetRegistry? apparentRegistry)
     {
         DIContainer = diContainer;
+        ApparentRegistry = apparentRegistry ?? this;
         if (string.IsNullOrEmpty(debugName))
             logger = diContainer.GetLoggerFor<AssetRegistry>();
         else
             logger = diContainer.GetTag<ILogger>().For($"{nameof(AssetRegistry)}-{debugName}");
-        IsLocalRegistry = isLocalRegistry;
     }
 
     public void Dispose()
@@ -87,7 +78,7 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
             {
                 logger.Verbose("New {Type} asset {Info} ({ID})", AssetInfoRegistry<TInfo>.Name, info, guid);
                 stats.OnAssetCreated();
-                asset = AssetInfoRegistry<TInfo>.Construct(this, guid, in info);
+                asset = AssetInfoRegistry<TInfo>.Construct(ApparentRegistry, guid, in info);
                 assets[guid] = asset;
                 return asset;
             }
@@ -134,7 +125,7 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
     public AssetHandle Load<TInfo>(
         in TInfo info,
         AssetLoadPriority priority,
-        Action<AssetHandle>? applyAction = null)
+        Action<AssetHandle>? applyAction)
         where TInfo : IEquatable<TInfo>
     {
         var asset = GetOrCreateAsset(in info);
@@ -245,6 +236,10 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
             }
         }
     }
+
+    private CancellationToken Cancellation => cancellationSource.Token;
+    CancellationToken IAssetRegistryInternal.Cancellation => cancellationSource.Token;
+    bool IAssetRegistryInternal.IsLocalRegistry => IsLocalRegistry;
 
     ValueTask IAssetRegistryInternal.QueueRemoveAsset(IAsset asset)
     {

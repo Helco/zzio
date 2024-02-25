@@ -3,12 +3,13 @@ using System.Collections.Generic;
 
 namespace zzre;
 
-public sealed class AssetHandleScope(AssetRegistry registry) : IAssetRegistry
+public sealed class AssetHandleScope(IAssetRegistry registry) : IAssetRegistry
 {
     private readonly List<AssetHandle> handlesToDispose = new(64);
     private bool delayDisposals;
 
-    public AssetRegistry Registry => registry;
+    IAssetRegistryInternal IAssetRegistry.InternalRegistry => Registry.InternalRegistry;
+    public IAssetRegistry Registry => registry;
     public AssetRegistryStats Stats => registry.Stats;
     public ITagContainer DIContainer => Registry.DIContainer;
     public bool DelayDisposals

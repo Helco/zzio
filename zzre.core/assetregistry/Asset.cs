@@ -41,17 +41,18 @@ public abstract class Asset : IAsset
     private AssetHandle[] secondaryAssets = [];
     private int refCount;
 
-    private IAssetRegistryInternal InternalRegistry => Registry;
-    public AssetRegistry Registry { get; }
+    private IAssetRegistryInternal InternalRegistry { get; }
+    public IAssetRegistry Registry { get; }
     public Guid ID { get; }
     public AssetState State { get; private set; }
     Task IAsset.LoadTask => completionSource.Task;
     AssetLoadPriority IAsset.Priority { get; set; }
     OnceAction<AssetHandle> IAsset.ApplyAction { get; } = new();
 
-    public Asset(AssetRegistry registry, Guid id)
+    public Asset(IAssetRegistry registry, Guid id)
     {
         Registry = registry;
+        InternalRegistry = registry.InternalRegistry;
         diContainer = registry.DIContainer;
         ID = id;
     }
@@ -75,7 +76,7 @@ public abstract class Asset : IAsset
             if (State != AssetState.Queued)
                 return;
             State = AssetState.Loading;
-            Task.Run(PrivateLoad, Registry.Cancellation);
+            Task.Run(PrivateLoad, InternalRegistry.Cancellation);
         }
     }
 
@@ -136,12 +137,12 @@ public abstract class Asset : IAsset
         if (State != AssetState.Loading)
             throw new InvalidOperationException("Asset.PrivateLoad was called during an unexpected state");
 
-        var ct = Registry.Cancellation;
+        var ct = InternalRegistry.Cancellation;
         try
         {
             var secondaryAssetSet = await Load();
             secondaryAssets = secondaryAssetSet.ToArray();
-            EnsureSameRegistry(secondaryAssets);
+            EnsureLocality(secondaryAssets);
             ct.ThrowIfCancellationRequested();
 
             if (secondaryAssets.Length > 0 && NeedsSecondaryAssets)
@@ -170,11 +171,11 @@ public abstract class Asset : IAsset
     }
 
     [Conditional("DEBUG")]
-    private void EnsureSameRegistry(AssetHandle[] secondaryAssets)
+    private void EnsureLocality(AssetHandle[] secondaryAssets)
     {
         foreach (var secondary in secondaryAssets)
-            if (secondary.Registry != Registry)
-                throw new InvalidOperationException("Secondary assets have to loaded in the same registry as the primary asset");
+            if (!InternalRegistry.IsLocalRegistry && secondary.registryInternal.IsLocalRegistry)
+                throw new InvalidOperationException("Global assets cannot load local assets as secondary ones");
     }
 
     protected virtual bool NeedsSecondaryAssets { get; } = true;

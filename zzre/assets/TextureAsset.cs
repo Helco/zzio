@@ -28,7 +28,7 @@ public sealed class TextureAsset : Asset
     public Texture Texture => texture ??
         throw new InvalidOperationException("Asset was not yet loaded");
 
-    public TextureAsset(AssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
+    public TextureAsset(IAssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
     {
         path = info.FullPath;
     }

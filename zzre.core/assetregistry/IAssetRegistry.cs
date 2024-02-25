@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading.Tasks;
+using System.Threading;
 namespace zzre;
 
 public enum AssetLoadPriority
@@ -10,6 +12,7 @@ public enum AssetLoadPriority
 
 public interface IAssetRegistry : IDisposable
 {
+    internal IAssetRegistryInternal InternalRegistry { get; }
     ITagContainer DIContainer { get; }
     AssetRegistryStats Stats { get; }
 
@@ -29,4 +32,18 @@ public interface IAssetRegistry : IDisposable
     void Unload(AssetHandle handle);
 
     void ApplyAssets();
+}
+
+internal interface IAssetRegistryInternal : IAssetRegistry
+{
+    IAssetRegistryInternal IAssetRegistry.InternalRegistry => this;
+
+    bool IsLocalRegistry { get; }
+    CancellationToken Cancellation { get; }
+
+    ValueTask QueueRemoveAsset(IAsset asset);
+    ValueTask QueueApplyAsset(IAsset asset);
+    Task WaitAsyncAll(AssetHandle[] assets);
+    bool IsLoaded(Guid assetId);
+    TAsset GetLoadedAsset<TAsset>(Guid assetId);
 }
