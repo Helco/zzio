@@ -8,6 +8,7 @@ namespace zzre.game.systems;
 public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuzzle, messages.DialogChestPuzzle>
 {
     private static readonly components.ui.ElementId IDCancel = new(1000);
+    private static readonly components.ui.ElementId IDWin = new(1001);
 
     private static readonly UID UIDCancel = new(0xD45B15B1);
     private static readonly UID UIDBoxOfTricks = new(0x6588C491);
@@ -45,6 +46,8 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
 
         uiEntity.Set(new components.DialogChestPuzzle{
             DialogEntity = message.DialogEntity,
+            Size = message.Size,
+            LabelExit = message.LabelExit,
         });
         ref var puzzle = ref uiEntity.Get<components.DialogChestPuzzle>();
 
@@ -58,6 +61,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
 
         preload.CreateDialogBackground(entity, animateOverlay: true, out var bgRect);
         preload.CreateSingleDialogButton(entity, UIDCancel, IDCancel, bgRect, buttonOffsetY: -45f);
+        preload.CreateSingleDialogButton(entity, UIDCancel, IDWin, bgRect, buttonOffsetY: -85f);
 
         preload.CreateLabel(entity)
             .With(bgRect.Min + new Vector2(20, 20))
@@ -72,9 +76,17 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
     {
         var uiEntity = Set.GetEntities()[0];
         ref var puzzle = ref uiEntity.Get<components.DialogChestPuzzle>();
+        ref var script = ref puzzle.DialogEntity.Get<components.ScriptExecution>();
 
-        if (clickedId == IDCancel) {
+        if (clickedId == IDCancel)
+        {
             World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g003.wav"));
+            puzzle.DialogEntity.Set(components.DialogState.NextScriptOp);
+            uiEntity.Dispose();
+        }
+        else if (clickedId == IDWin)
+        {
+            script.CurrentI = script.LabelTargets[puzzle.LabelExit];
             puzzle.DialogEntity.Set(components.DialogState.NextScriptOp);
             uiEntity.Dispose();
         }
