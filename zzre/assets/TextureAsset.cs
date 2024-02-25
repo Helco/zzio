@@ -35,7 +35,6 @@ public sealed class TextureAsset : Asset
 
     protected override ValueTask<IEnumerable<AssetHandle>> Load()
     {
-        Console.WriteLine("Load from " + Environment.CurrentManagedThreadId);
         var resourcePool = diContainer.GetTag<IResourcePool>();
         using var textureStream = resourcePool.FindAndOpen(path) ??
             throw new FileNotFoundException($"Could not open texture {path}");
