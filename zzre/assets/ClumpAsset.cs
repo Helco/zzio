@@ -48,6 +48,8 @@ public sealed class ClumpAsset : Asset
         mesh?.Dispose();
         mesh = null;
     }
+
+    public override string ToString() => $"Clump {info.Name} ({info.Directory})";
 }
 
 public static unsafe partial class AssetExtensions

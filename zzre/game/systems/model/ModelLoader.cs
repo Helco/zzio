@@ -158,7 +158,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         {
             Color = color with { a = AlphaFromRenderType(renderType) }
         });
-        assetRegistry.LoadModel(entity, modelName, AssetLoadPriority.Synchronous, material);
+        assetRegistry.LoadModel(entity, modelName, AssetLoadPriority.Synchronous, material, StandardTextureKind.White);
     }
 
     private void HandleCreateItem(in messages.CreateItem msg)

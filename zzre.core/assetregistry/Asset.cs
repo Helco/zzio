@@ -181,5 +181,5 @@ public abstract class Asset : IAsset
     protected abstract ValueTask<IEnumerable<AssetHandle>> Load();
     protected abstract void Unload();
 
-    public override string ToString() => $"Asset {ID}";
+    public override string ToString() => $"{GetType().Name} {ID}";
 }

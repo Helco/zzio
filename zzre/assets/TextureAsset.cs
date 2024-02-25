@@ -35,6 +35,7 @@ public sealed class TextureAsset : Asset
 
     protected override ValueTask<IEnumerable<AssetHandle>> Load()
     {
+        Console.WriteLine("Load from " + Environment.CurrentManagedThreadId);
         var resourcePool = diContainer.GetTag<IResourcePool>();
         using var textureStream = resourcePool.FindAndOpen(path) ??
             throw new FileNotFoundException($"Could not open texture {path}");
@@ -130,6 +131,8 @@ public sealed class TextureAsset : Asset
         texture?.Dispose();
         texture = null;
     }
+
+    public override string ToString() => $"Texture {path.Parts[^1]} ({path.Parts[^2]})";
 }
 
 public static unsafe partial class AssetExtensions
