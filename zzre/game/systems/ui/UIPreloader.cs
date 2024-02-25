@@ -38,7 +38,8 @@ public class UIPreloader
         Log000,
         Cls000,
         Cls001,
-        Map000;
+        Map000,
+        Swt000;
 
     private static readonly UID UIDYouHave = new(0x070EE421);
 
@@ -70,6 +71,7 @@ public class UIPreloader
         Cls000 = Preload(out var tsCls000, "cls000", isFont: false);
         Cls001 = Preload(out var tsCls001, "cls001", isFont: false);
         Map000 = Preload(out var tsMap000, "map000", isFont: false);
+        Swt000 = Preload(out var tsSwt000, "swt000", isFont: false);
 
         tsFnt000.Alternatives.Add(tsFnt001);
         tsFnt000.Alternatives.Add(tsFnt002);

@@ -16,6 +16,8 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
     private readonly MappedDB db;
     private readonly IDisposable resetUISubscription;
 
+    private readonly int boardSize = 3;
+
     public DialogChestPuzzle(ITagContainer diContainer) : base(diContainer, BlockFlags.None)
     {
         db = diContainer.GetTag<MappedDB>();
@@ -52,6 +54,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         ref var puzzle = ref uiEntity.Get<components.DialogChestPuzzle>();
 
         CreatePrimary(uiEntity, ref puzzle);
+        CreateBoard(uiEntity, ref puzzle);
     }
 
     private DefaultEcs.Entity CreatePrimary(DefaultEcs.Entity parent, ref components.DialogChestPuzzle puzzle)
@@ -60,6 +63,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         entity.Set(new components.Parent(parent));
 
         preload.CreateDialogBackground(entity, animateOverlay: true, out var bgRect);
+        preload.CreateDialogBackground(entity, animateOverlay: true, out var _);
         preload.CreateSingleDialogButton(entity, UIDCancel, IDCancel, bgRect, buttonOffsetY: -45f);
         preload.CreateSingleDialogButton(entity, UIDCancel, IDWin, bgRect, buttonOffsetY: -85f);
 
@@ -69,14 +73,45 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
             .WithText(db.GetText(UIDBoxOfTricks).Text)
             .Build();
 
+        preload.CreateLabel(entity)
+            .With(bgRect.Min + new Vector2(25, 120))
+            .With(preload.Fnt000)
+            .WithText($"Attempts: 0\nMin. Tries: 9999")
+            .WithLineHeight(14)
+            .Build();
+
         return entity;
     }
 
+    private Vector2 boardOrigin = new(-70, -70);
+    private DefaultEcs.Entity CreateBoard(DefaultEcs.Entity parent, ref components.DialogChestPuzzle puzzle)
+    {
+        var entity = World.CreateEntity();
+        entity.Set(new components.Parent(parent));
+
+        for (int row = 0; row < boardSize; row++)
+        {
+            for (int col = 0; col < boardSize; col++)
+            {
+                var IDCell = new components.ui.ElementId(row * boardSize + col);
+                preload.CreateButton(entity)
+                    .With(IDCell)
+                    .With(boardOrigin + new Vector2(46 * col, 46 * row))
+                    .With(new components.ui.ButtonTiles(1))
+                    .With(preload.Swt000)
+                    .Build();
+            }
+        }
+
+        return entity;
+    }
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId clickedId)
     {
         var uiEntity = Set.GetEntities()[0];
         ref var puzzle = ref uiEntity.Get<components.DialogChestPuzzle>();
         ref var script = ref puzzle.DialogEntity.Get<components.ScriptExecution>();
+
+        Console.WriteLine(clickedId);
 
         if (clickedId == IDCancel)
         {
