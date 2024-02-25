@@ -49,10 +49,10 @@ public abstract class Asset : IAsset
     AssetLoadPriority IAsset.Priority { get; set; }
     OnceAction<AssetHandle> IAsset.ApplyAction { get; } = new();
 
-    public Asset(ITagContainer diContainer, Guid id)
+    public Asset(AssetRegistry registry, Guid id)
     {
-        this.diContainer = diContainer;
-        Registry = diContainer.GetTag<AssetRegistry>();
+        Registry = registry;
+        diContainer = registry.DIContainer;
         ID = id;
     }
 

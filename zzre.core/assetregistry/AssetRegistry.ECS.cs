@@ -31,7 +31,7 @@ partial class AssetRegistry
             .With<AssetHandle[]>()
             .AsEnumerable();
         var assetHandleArrays = world.GetComponents<AssetHandle[]>();
-        foreach (var entity in assetHandleEntities)
+        foreach (var entity in assetHandleArrayEntities)
         {
             foreach (var handle in assetHandleArrays[entity])
                 handle.Dispose();

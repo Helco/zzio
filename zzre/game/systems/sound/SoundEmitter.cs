@@ -43,6 +43,9 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
     public override void Dispose()
     {
         base.Dispose();
+        if (!IsEnabled)
+            return;
+
         // DefaultEcs.World does not dispose entities, thus also not remove emitter components
         // we have to do this ourselves
         var allEmitters = World

@@ -28,12 +28,17 @@ public sealed class TextureAsset : Asset
     public Texture Texture => texture ??
         throw new InvalidOperationException("Asset was not yet loaded");
 
-    public TextureAsset(ITagContainer diContainer, Guid assetId, Info info) : base(diContainer, assetId)
+    public TextureAsset(AssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
     {
         path = info.FullPath;
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override async ValueTask<IEnumerable<AssetHandle>> Load()
+    {
+        await Task.Delay(3000);
+        return await Loads();
+    }
+    private ValueTask<IEnumerable<AssetHandle>> Loads()
     {
         var resourcePool = diContainer.GetTag<IResourcePool>();
         using var textureStream = resourcePool.FindAndOpen(path) ??

@@ -49,7 +49,7 @@ public class Game : BaseDisposable, ITagContainer
 
         AddTag(this);
         AddTag(savegame);
-        AddTag(assetRegistry = new AssetLocalRegistry("Game", tagContainer));
+        AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("Game", tagContainer));
         AddTag(ecsWorld = new DefaultEcs.World());
         AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
         AddTag(new ModelInstanceBuffer(diContainer, 512)); // TODO: ModelRenderer should use central ModelInstanceBuffer
@@ -214,9 +214,12 @@ public class Game : BaseDisposable, ITagContainer
 
     protected override void DisposeManaged()
     {
+        assetRegistry.DelayDisposals = false;
+        tagContainer.RemoveTag<IAssetRegistry>(dispose: false); // remove all entities first, then destroy registry
         updateSystems.Dispose();
         renderSystems.Dispose();
         tagContainer.Dispose();
+        assetRegistry.Dispose();
         zzContainer.OnResize -= HandleResize;
     }
 
@@ -232,6 +235,7 @@ public class Game : BaseDisposable, ITagContainer
     public void Update()
     {
         using var _ = profiler.SampleCPU("Game.Update");
+        assetRegistry.ApplyAssets();
         onceUpdate.Invoke();
         updateSystems.Update(time.Delta);
     }
@@ -239,6 +243,7 @@ public class Game : BaseDisposable, ITagContainer
     public void Render(CommandList cl)
     {
         using var _ = profiler.SampleCPU("Game.Render");
+        assetRegistry.ApplyAssets();
         camera.Update(cl);
         syncedLocation.Update(cl);
         cl.ClearColorTarget(0, clearColor);

@@ -32,7 +32,7 @@ public sealed class ClumpAsset : Asset
     public ClumpMesh Mesh => mesh ??
         throw new InvalidOperationException("Asset was not yet loaded");
 
-    public ClumpAsset(ITagContainer diContainer, Guid assetId, Info info) : base(diContainer, assetId)
+    public ClumpAsset(AssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
     {
         this.info = info;
     }

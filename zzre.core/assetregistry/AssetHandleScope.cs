@@ -51,7 +51,7 @@ public sealed class AssetHandleScope(AssetRegistry registry) : IAssetRegistry
         if (DelayDisposals)
             handlesToDispose.Add(new(handle.registryInternal, this, handle.AssetID));
         else
-            handle.Dispose();
+            handle.registryInternal.Unload(handle);
     }
 
     public void ApplyAssets() { } // it is just a scope

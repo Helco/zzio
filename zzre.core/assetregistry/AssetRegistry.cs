@@ -68,6 +68,7 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
         assetsToApply.Writer.Complete();
         assetsToStart.Writer.Complete();
         cancellationSource.Dispose();
+        logger.Verbose("Finished disposing registry");
     }
 
     private IAsset GetOrCreateAsset<TInfo>(in TInfo info)
@@ -83,7 +84,7 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
             if (!assets.TryGetValue(guid, out var asset) || asset.State is AssetState.Disposed)
             {
                 logger.Verbose("New {Type} asset {Info} ({ID})", AssetInfoRegistry<TInfo>.Name, info, guid);
-                asset = AssetInfoRegistry<TInfo>.Construct(DIContainer, guid, in info);
+                asset = AssetInfoRegistry<TInfo>.Construct(this, guid, in info);
                 assets[guid] = asset;
                 return asset;
             }
@@ -199,6 +200,8 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
 
     public void Unload(AssetHandle handle)
     {
+        if (handle.Registry != this)
+            throw new ArgumentException("Tried to unload asset at wrong registry");
         lock (assets)
         {
             if (assets.TryGetValue(handle.AssetID, out var asset))
