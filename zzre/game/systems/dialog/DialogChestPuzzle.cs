@@ -16,8 +16,6 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
     private readonly MappedDB db;
     private readonly IDisposable resetUISubscription;
 
-    private readonly int boardSize = 3;
-
     public DialogChestPuzzle(ITagContainer diContainer) : base(diContainer, BlockFlags.None)
     {
         db = diContainer.GetTag<MappedDB>();
@@ -48,7 +46,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
 
         uiEntity.Set(new components.DialogChestPuzzle{
             DialogEntity = message.DialogEntity,
-            Size = message.Size,
+            Size = message.Size + 2,
             LabelExit = message.LabelExit,
         });
         ref var puzzle = ref uiEntity.Get<components.DialogChestPuzzle>();
@@ -77,26 +75,27 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
             .With(bgRect.Min + new Vector2(25, 120))
             .With(preload.Fnt000)
             .WithText($"Attempts: 0\nMin. Tries: 9999")
-            .WithLineHeight(14)
+            .WithLineHeight(15)
             .Build();
 
         return entity;
     }
 
-    private Vector2 boardOrigin = new(-70, -70);
     private DefaultEcs.Entity CreateBoard(DefaultEcs.Entity parent, ref components.DialogChestPuzzle puzzle)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
-        for (int row = 0; row < boardSize; row++)
+        var offset = new Vector2(-1, -1) + new Vector2(-23, -23) * puzzle.Size;
+
+        for (int row = 0; row < puzzle.Size; row++)
         {
-            for (int col = 0; col < boardSize; col++)
+            for (int col = 0; col < puzzle.Size; col++)
             {
-                var IDCell = new components.ui.ElementId(row * boardSize + col);
+                var IDCell = new components.ui.ElementId(row * puzzle.Size + col);
                 preload.CreateButton(entity)
                     .With(IDCell)
-                    .With(boardOrigin + new Vector2(46 * col, 46 * row))
+                    .With(offset + new Vector2(46 * col, 46 * row))
                     .With(new components.ui.ButtonTiles(1))
                     .With(preload.Swt000)
                     .Build();
