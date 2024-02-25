@@ -27,6 +27,7 @@ public class Game : BaseDisposable, ITagContainer
     private readonly ISystem<CommandList> renderSystems;
     private readonly systems.SyncedLocation syncedLocation;
     private RgbaFloat clearColor = RgbaFloat.Black;
+    private AssetRegistryStats assetStatsBeforeLoading;
 
     public DefaultEcs.Entity PlayerEntity => // Placeholder during transition
         ecsWorld.GetEntities().With<components.PlayerPuppet>().AsEnumerable().First();
@@ -62,12 +63,6 @@ public class Game : BaseDisposable, ITagContainer
         AddTag(new resources.SkeletalAnimation(this));
         AddTag(new resources.EffectCombiner(this));
         AddTag(new resources.EffectMaterial(this));
-
-        ecsWorld.SetMaxCapacity<Scene>(1);
-        ecsWorld.SetMaxCapacity<components.SoundListener>(1);
-        ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
-        AssetRegistry.SubscribeAt(ecsWorld);
-        assetRegistry.DelayDisposals = true;
 
         // create it now for extra priority in the scene loading events
         var worldRenderer = new systems.WorldRendererSystem(this);
@@ -199,15 +194,13 @@ public class Game : BaseDisposable, ITagContainer
             new systems.effect.EffectRenderer(this, components.RenderOrder.LateEffect),
             new systems.effect.EffectModelRenderer(this, components.RenderOrder.LateEffect));
 
-        var worldLocation = new Location();
-        camera.Location.Parent = worldLocation;
-        //camera.Location.LocalPosition = -worldBuffers.Origin;
-        ecsWorld.Set(worldLocation);
-        ecsWorld.Subscribe((in messages.SceneLoaded _) =>
-        {
-            assetRegistry.DelayDisposals = false;
-            assetRegistry.DelayDisposals = true;
-        });
+        ecsWorld.SetMaxCapacity<Scene>(1);
+        ecsWorld.SetMaxCapacity<components.SoundListener>(1);
+        ecsWorld.Set(new Location()); // world location
+        ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
+        ecsWorld.Subscribe<messages.SceneLoaded>(DisposeUnusedAssets);
+        AssetRegistry.SubscribeAt(ecsWorld);
+        assetRegistry.DelayDisposals = true;
 
         onceUpdate.Next += () => LoadOverworldScene(savegame.sceneId, () => FindEntryTrigger(savegame.entryId));
     }
@@ -256,6 +249,7 @@ public class Game : BaseDisposable, ITagContainer
     public void LoadScene(string sceneName, Func<Trigger> findEntryTrigger)
     {
         logger.Information("Load " + sceneName);
+        assetStatsBeforeLoading = assetRegistry.Stats;
         ecsWorld.Publish(new messages.SceneChanging(sceneName));
         ecsWorld.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
 
@@ -299,6 +293,19 @@ public class Game : BaseDisposable, ITagContainer
         TryFindTrigger(TriggerType.RuneTarget) ??
         TryFindTrigger(TriggerType.SingleplayerStartpoint) ??
         throw new System.IO.InvalidDataException($"Scene does not have suitable entry trigger for rune teleporting");
+
+    private void DisposeUnusedAssets(in messages.SceneLoaded _)
+    {
+        var assetStatsBeforeRemoving = assetRegistry.Stats;
+        assetRegistry.DelayDisposals = false;
+        assetRegistry.DelayDisposals = true;
+        var assetStatsAfterLoading = assetRegistry.Stats;
+        var removalDiff = assetStatsAfterLoading - assetStatsBeforeRemoving;
+        var totalDiff = assetStatsAfterLoading - assetStatsBeforeLoading;
+        var asyncCreated = totalDiff.Loaded - totalDiff.Created;
+
+        logger.Debug("Asset stats: New-{New} Async-{Async} Disposed-{Disposed}", totalDiff.Created, asyncCreated, removalDiff.Removed);
+    }
 
     public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);
     public TTag GetTag<TTag>() where TTag : class => tagContainer.GetTag<TTag>();

@@ -17,6 +17,8 @@ public sealed class AssetLocalRegistry : IAssetRegistry
         set => localScope.DelayDisposals = value;
     }
 
+    public AssetRegistryStats Stats => globalRegistry.Stats + localRegistry.Stats;
+
     public AssetLocalRegistry(string debugName, ITagContainer diContainer)
     {
         globalRegistry = diContainer.GetTag<IAssetRegistry>();

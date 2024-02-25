@@ -37,11 +37,13 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
     private readonly Channel<IAsset> assetsToRemove = Channel.CreateBounded<IAsset>(ChannelOptions);
     private readonly Channel<IAsset> assetsToApply = Channel.CreateBounded<IAsset>(ChannelOptions);
     private readonly Channel<IAsset> assetsToStart = Channel.CreateBounded<IAsset>(ChannelOptions);
+    private AssetRegistryStats stats;
 
     private bool IsMainThread => mainThreadId == Environment.CurrentManagedThreadId;
     internal CancellationToken Cancellation => cancellationSource.Token;
     internal bool IsLocalRegistry { get; }
     public ITagContainer DIContainer { get; }
+    public AssetRegistryStats Stats => stats;
 
     public AssetRegistry(string debugName, ITagContainer diContainer) : this(debugName, diContainer, isLocalRegistry: false) { }
 
@@ -84,6 +86,7 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
             if (!assets.TryGetValue(guid, out var asset) || asset.State is AssetState.Disposed)
             {
                 logger.Verbose("New {Type} asset {Info} ({ID})", AssetInfoRegistry<TInfo>.Name, info, guid);
+                stats.OnAssetCreated();
                 asset = AssetInfoRegistry<TInfo>.Construct(this, guid, in info);
                 assets[guid] = asset;
                 return asset;
@@ -245,6 +248,7 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
 
     ValueTask IAssetRegistryInternal.QueueRemoveAsset(IAsset asset)
     {
+        stats.OnAssetRemoved();
         if (IsMainThread)
         {
             RemoveAsset(asset);
@@ -256,6 +260,7 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
 
     ValueTask IAssetRegistryInternal.QueueApplyAsset(IAsset asset)
     {
+        stats.OnAssetLoaded();
         if (IsMainThread)
         {
             ApplyAsset(asset);

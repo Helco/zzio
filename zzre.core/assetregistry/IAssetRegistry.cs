@@ -11,6 +11,7 @@ public enum AssetLoadPriority
 public interface IAssetRegistry : IDisposable
 {
     ITagContainer DIContainer { get; }
+    AssetRegistryStats Stats { get; }
 
     unsafe AssetHandle Load<TInfo, TApplyContext>(
         in TInfo info,

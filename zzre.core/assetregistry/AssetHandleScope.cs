@@ -9,6 +9,7 @@ public sealed class AssetHandleScope(AssetRegistry registry) : IAssetRegistry
     private bool delayDisposals;
 
     public AssetRegistry Registry => registry;
+    public AssetRegistryStats Stats => registry.Stats;
     public ITagContainer DIContainer => Registry.DIContainer;
     public bool DelayDisposals
     {
