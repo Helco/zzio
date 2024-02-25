@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -140,9 +141,10 @@ public abstract class Asset : IAsset
         {
             var secondaryAssetSet = await Load();
             secondaryAssets = secondaryAssetSet.ToArray();
+            EnsureSameRegistry(secondaryAssets);
             ct.ThrowIfCancellationRequested();
 
-            if (secondaryAssets.Length > 0)
+            if (secondaryAssets.Length > 0 && NeedsSecondaryAssets)
             {
                 lock (this)
                 {
@@ -167,6 +169,15 @@ public abstract class Asset : IAsset
         }
     }
 
+    [Conditional("DEBUG")]
+    private void EnsureSameRegistry(AssetHandle[] secondaryAssets)
+    {
+        foreach (var secondary in secondaryAssets)
+            if (secondary.Registry != Registry)
+                throw new InvalidOperationException("Secondary assets have to loaded in the same registry as the primary asset");
+    }
+
+    protected virtual bool NeedsSecondaryAssets { get; } = true;
     protected abstract ValueTask<IEnumerable<AssetHandle>> Load();
     protected abstract void Unload();
 

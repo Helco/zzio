@@ -20,7 +20,8 @@ public sealed class ClumpMaterialAsset : Asset
     public readonly record struct Info(
         string textureName,
         SamplerDescription sampler,
-        MaterialVariant config);
+        MaterialVariant config,
+        StandardTextureKind? texturePlaceholder = null);
 
     public readonly record struct MaterialVariant(
         ModelMaterial.BlendMode BlendMode = ModelMaterial.BlendMode.Opaque,
@@ -45,6 +46,8 @@ public sealed class ClumpMaterialAsset : Asset
         this.info = info;
     }
 
+    protected override bool NeedsSecondaryAssets => false;
+
     protected override ValueTask<IEnumerable<AssetHandle>> Load()
     {
         material = new ModelMaterial(diContainer)
@@ -61,8 +64,17 @@ public sealed class ClumpMaterialAsset : Asset
 
         var camera = diContainer.GetTag<Camera>();
         var samplerHandle = Registry.LoadSampler(info.sampler);
-        var textureHandle = Registry.LoadTexture(TextureBasePaths, info.textureName, AssetLoadPriority.Synchronous);
-        material.Texture.Texture = textureHandle.Get().Texture;
+        AssetHandle textureHandle;
+        if (info.texturePlaceholder == null)
+        {
+            textureHandle = Registry.LoadTexture(TextureBasePaths, info.textureName, AssetLoadPriority.Synchronous);
+            material.Texture.Texture = textureHandle.Get<TextureAsset>().Texture;
+        }
+        else
+        {
+            material.Texture.Texture = diContainer.GetTag<StandardTextures>().ByKind(info.texturePlaceholder.Value);
+            textureHandle = Registry.LoadTexture(TextureBasePaths, info.textureName, AssetLoadPriority.High, material);
+        }
         material.Sampler.Sampler = samplerHandle.Get().Sampler;
         material.Projection.BufferRange = camera.ProjectionRange;
         material.View.BufferRange = camera.ViewRange;

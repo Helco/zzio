@@ -95,7 +95,7 @@ public class BackdropLoader : ISystem<float>
         {
             Color = IColor.White
         });
-        assetRegistry.LoadBackdrop(entity, name, AssetLoadPriority.Synchronous, materialVariant);
+        assetRegistry.LoadBackdrop(entity, name, AssetLoadPriority.Synchronous, materialVariant, StandardTextureKind.Clear);
 
         return entity;
     }

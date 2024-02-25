@@ -23,6 +23,12 @@ public struct IColor
         a = (byte)(c >> 24 & 0xff);
     }
 
+    public readonly uint Raw =>
+        ((uint)r << 0) |
+        ((uint)g << 8) |
+        ((uint)b << 16) |
+        ((uint)a << 24);
+
     public static IColor ReadNew(BinaryReader r)
     {
         IColor c;

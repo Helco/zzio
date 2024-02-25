@@ -16,3 +16,8 @@ public interface IMaterial : IDisposable
     void ApplyPipeline(CommandList cl) => cl.SetPipeline(Pipeline.Pipeline);
     void ApplyBindings(CommandList cl);
 }
+
+public interface ITexturedMaterial : IMaterial
+{
+    TextureBinding Texture { get; }
+}

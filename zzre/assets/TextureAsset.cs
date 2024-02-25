@@ -132,14 +132,15 @@ public sealed class TextureAsset : Asset
     }
 }
 
-public static partial class AssetExtensions
+public static unsafe partial class AssetExtensions
 {
     private static readonly IReadOnlyList<string> TextureExtensions = [".dds", ".bmp"];
 
     public static AssetHandle<TextureAsset> LoadTexture(this IAssetRegistry registry,
         IReadOnlyList<FilePath> texturePaths,
         string textureName,
-        AssetLoadPriority priority)
+        AssetLoadPriority priority,
+        ITexturedMaterial? material = null)
     {
         var resourcePool = registry.DIContainer.GetTag<IResourcePool>();
         foreach (var texturePath in texturePaths)
@@ -148,7 +149,7 @@ public static partial class AssetExtensions
             {
                 var path = texturePath.Combine(textureName + extension);
                 if (resourcePool.FindFile(path) is not null)
-                    return registry.LoadTexture(path, priority);
+                    return registry.LoadTexture(path, priority, material);
             }
         }
         throw new FileNotFoundException($"Could not find any texture \"{textureName}\"");
@@ -156,6 +157,14 @@ public static partial class AssetExtensions
 
     public static AssetHandle<TextureAsset> LoadTexture(this IAssetRegistry registry,
         FilePath fullPath,
-        AssetLoadPriority priority) =>
-        registry.Load(new TextureAsset.Info(fullPath), priority).As<TextureAsset>();
+        AssetLoadPriority priority,
+        ITexturedMaterial? material = null) => material is null
+        ? registry.Load(new TextureAsset.Info(fullPath), priority).As<TextureAsset>()
+        : registry.Load(new TextureAsset.Info(fullPath), priority, &ApplyTextureToMaterial, material).As<TextureAsset>();
+
+    private static void ApplyTextureToMaterial(AssetHandle handle, ref readonly ITexturedMaterial material)
+    {
+        var texture = handle.Get<TextureAsset>().Texture;
+        material.Texture.Texture = texture;
+    }
 }

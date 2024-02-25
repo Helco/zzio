@@ -77,6 +77,7 @@ internal static partial class Program
         diContainer
             .AddTag(graphicsDevice)
             .AddTag(graphicsDevice.ResourceFactory)
+            .AddTag(new StandardTextures(diContainer))
             .AddTag(new ShaderVariantCollection(graphicsDevice,
                 typeof(Program).Assembly.GetManifestResourceStream("shaders.mlss")
                 ?? throw new InvalidDataException("Shader set is not compiled into zzre")))

@@ -56,31 +56,35 @@ public static unsafe partial class AssetExtensions
         DefaultEcs.Entity entity,
         string modelName,
         AssetLoadPriority priority,
-        ClumpMaterialAsset.MaterialVariant? variant = null) =>
-        registry.LoadClump(entity, ClumpAsset.Info.Backdrop(modelName), priority, variant);
+        ClumpMaterialAsset.MaterialVariant? variant = null,
+        StandardTextureKind? texturePlaceholder = null) =>
+        registry.LoadClump(entity, ClumpAsset.Info.Backdrop(modelName), priority, variant, texturePlaceholder);
 
     public static AssetHandle<ClumpAsset> LoadModel(this IAssetRegistry registry,
         DefaultEcs.Entity entity,
         string modelName,
         AssetLoadPriority priority,
-        ClumpMaterialAsset.MaterialVariant? variant = null) =>
-        registry.LoadClump(entity, ClumpAsset.Info.Model(modelName), priority, variant);
+        ClumpMaterialAsset.MaterialVariant? variant = null,
+        StandardTextureKind? texturePlaceholder = null) =>
+        registry.LoadClump(entity, ClumpAsset.Info.Model(modelName), priority, variant, texturePlaceholder);
 
     public static AssetHandle<ClumpAsset> LoadActorClump(this IAssetRegistry registry,
         DefaultEcs.Entity entity,
         string modelName,
         AssetLoadPriority priority,
-        ClumpMaterialAsset.MaterialVariant? variant = null) =>
-        registry.LoadClump(entity, ClumpAsset.Info.Actor(modelName), priority, variant);
+        ClumpMaterialAsset.MaterialVariant? variant = null,
+        StandardTextureKind? texturePlaceholder = null) =>
+        registry.LoadClump(entity, ClumpAsset.Info.Actor(modelName), priority, variant, texturePlaceholder);
 
     public static AssetHandle<ClumpAsset> LoadClump(this IAssetRegistry registry,
         DefaultEcs.Entity entity,
         ClumpAsset.Info info,
         AssetLoadPriority priority,
-        ClumpMaterialAsset.MaterialVariant? variant = null)
+        ClumpMaterialAsset.MaterialVariant? variant = null,
+        StandardTextureKind? texturePlaceholder = null)
     {
         var handle = variant.HasValue
-            ? registry.Load(info, priority, &ApplyClumpToEntityWithMaterials, (registry, entity, variant.Value))
+            ? registry.Load(info, priority, &ApplyClumpToEntityWithMaterials, (registry, entity, variant.Value, texturePlaceholder))
             : registry.Load(info, priority, &ApplyClumpToEntity, entity);
         entity.Set(handle);
         return handle.As<ClumpAsset>();
@@ -93,9 +97,9 @@ public static unsafe partial class AssetExtensions
     }
 
     private static void ApplyClumpToEntityWithMaterials(AssetHandle handle,
-        ref readonly (IAssetRegistry, DefaultEcs.Entity, ClumpMaterialAsset.MaterialVariant) context)
+        ref readonly (IAssetRegistry, DefaultEcs.Entity, ClumpMaterialAsset.MaterialVariant, StandardTextureKind?) context)
     {
-        var (registry, entity, materialConfig) = context;
+        var (registry, entity, materialConfig, placeholder) = context;
         var clumpMesh = handle.Get<ClumpAsset>().Mesh;
         entity.Set(clumpMesh);
 
@@ -117,7 +121,7 @@ public static unsafe partial class AssetExtensions
             };
 
             handles[i] = registry.Load(
-                new ClumpMaterialAsset.Info(rwTextureName.value, samplerDescription, materialConfig),
+                new ClumpMaterialAsset.Info(rwTextureName.value, samplerDescription, materialConfig, placeholder),
                 AssetLoadPriority.Synchronous);
             materials.Add(handles[i].Get<ClumpMaterialAsset>().Material);
         }
