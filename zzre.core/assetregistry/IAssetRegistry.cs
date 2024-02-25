@@ -1,5 +1,4 @@
 ﻿using System;
-
 namespace zzre;
 
 public enum AssetLoadPriority
@@ -9,8 +8,10 @@ public enum AssetLoadPriority
     Low
 }
 
-public interface IAssetHandleScope : IDisposable
+public interface IAssetRegistry : IDisposable
 {
+    ITagContainer DIContainer { get; }
+
     unsafe AssetHandle Load<TInfo, TApplyContext>(
         in TInfo info,
         AssetLoadPriority priority,
@@ -21,8 +22,10 @@ public interface IAssetHandleScope : IDisposable
     AssetHandle Load<TInfo>(
         in TInfo info,
         AssetLoadPriority priority,
-        Action<AssetHandle> applyAction)
+        Action<AssetHandle>? applyAction = null)
         where TInfo : IEquatable<TInfo>;
 
     void Unload(AssetHandle handle);
+
+    void ApplyAssets();
 }

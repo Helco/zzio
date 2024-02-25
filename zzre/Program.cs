@@ -142,8 +142,11 @@ internal static partial class Program
 
     private static AssetRegistry CreateAssetRegistry(ITagContainer diContainer)
     {
-        var registry = new AssetRegistry(diContainer);
-        ClumpAsset.RegisterAt(registry);
+        var registry = new AssetRegistry("", diContainer);
+        SamplerAsset.Register();
+        TextureAsset.Register();
+        ClumpMaterialAsset.Register();
+        ClumpAsset.Register();
         return registry;
     }
 

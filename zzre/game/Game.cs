@@ -16,6 +16,7 @@ public class Game : BaseDisposable, ITagContainer
 {
     private readonly ITagContainer tagContainer;
     private readonly IZanzarahContainer zzContainer;
+    private readonly AssetLocalRegistry assetRegistry;
     private readonly ILogger logger;
     private readonly Remotery profiler;
     private readonly GameTime time;
@@ -48,11 +49,12 @@ public class Game : BaseDisposable, ITagContainer
 
         AddTag(this);
         AddTag(savegame);
+        AddTag(assetRegistry = new AssetLocalRegistry("Game", tagContainer));
         AddTag(ecsWorld = new DefaultEcs.World());
         AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
         AddTag(new ModelInstanceBuffer(diContainer, 512)); // TODO: ModelRenderer should use central ModelInstanceBuffer
         AddTag(new EffectMesh(this, 4096, 8192));
-        AddTag(camera = new Camera(this));
+        diContainer.AddTag(camera = new Camera(this)); // TODO: Remove Camera hack
 
         AddTag(new resources.Clump(this));
         AddTag(new resources.ClumpMaterial(this));
@@ -65,6 +67,7 @@ public class Game : BaseDisposable, ITagContainer
         ecsWorld.SetMaxCapacity<components.SoundListener>(1);
         ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
         AssetRegistry.SubscribeAt(ecsWorld);
+        assetRegistry.DelayDisposals = true;
 
         // create it now for extra priority in the scene loading events
         var worldRenderer = new systems.WorldRendererSystem(this);
@@ -200,6 +203,11 @@ public class Game : BaseDisposable, ITagContainer
         camera.Location.Parent = worldLocation;
         //camera.Location.LocalPosition = -worldBuffers.Origin;
         ecsWorld.Set(worldLocation);
+        ecsWorld.Subscribe((in messages.SceneLoaded _) =>
+        {
+            assetRegistry.DelayDisposals = false;
+            assetRegistry.DelayDisposals = true;
+        });
 
         onceUpdate.Next += () => LoadOverworldScene(savegame.sceneId, () => FindEntryTrigger(savegame.entryId));
     }

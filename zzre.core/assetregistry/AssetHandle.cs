@@ -5,22 +5,31 @@ namespace zzre;
 public struct AssetHandle : IDisposable
 {
     private readonly AssetHandleScope? handleScope;
-    private readonly IAssetRegistry registry;
+    internal readonly IAssetRegistryInternal registryInternal;
     private bool wasDisposed;
 
+    public readonly IAssetRegistry Registry => registryInternal;
     public readonly Guid AssetID { get; }
-    public readonly bool IsLoaded => registry.IsLoaded(AssetID);
+    public readonly bool IsLoaded => registryInternal.IsLoaded(AssetID);
+
+    public AssetHandle(IAssetRegistry registry, AssetHandleScope handleScope, Guid assetId)
+    {
+        this.handleScope = handleScope;
+        this.registryInternal = registry as IAssetRegistryInternal ??
+            throw new ArgumentException("Cannot create asset handles from registry decorators", nameof(registry));
+        AssetID = assetId;
+    }
 
     public AssetHandle(AssetHandleScope handleScope, Guid assetId)
     {
         this.handleScope = handleScope;
-        registry = handleScope.Registry;
+        registryInternal = handleScope.Registry;
         AssetID = assetId;
     }
 
     public AssetHandle(AssetRegistry registry, Guid assetId)
     {
-        this.registry = registry;
+        registryInternal = registry;
         AssetID = assetId;
     }
 
@@ -30,15 +39,15 @@ public struct AssetHandle : IDisposable
             return;
         wasDisposed = true;
         if (handleScope is null)
-            registry.Unload(this);
+            registryInternal.Unload(this);
         else
             handleScope.Unload(this);
     }
 
     public readonly TValue Get<TValue>() where TValue : Asset => 
-        registry.GetLoadedAsset<TValue>(AssetID);
+        registryInternal.GetLoadedAsset<TValue>(AssetID);
 
-    public readonly AssetHandle<TValue> As<TValue>() where TValue : Asset => this;
+    public readonly AssetHandle<TValue> As<TValue>() where TValue : Asset => (AssetHandle<TValue>)this;
 
     public readonly override string ToString() => $"AssetHandle {AssetID}";
 }
@@ -47,7 +56,7 @@ public struct AssetHandle<TValue> : IDisposable where TValue : Asset
 {
     private AssetHandle inner;
 
-    public static implicit operator AssetHandle<TValue>(AssetHandle handle) => new() { inner = handle };
+    public static explicit operator AssetHandle<TValue>(AssetHandle handle) => new() { inner = handle };
     public static implicit operator AssetHandle(AssetHandle<TValue> handle) => handle.inner;
     public void Dispose() => inner.Dispose();
     public readonly TValue Get() => inner.Get<TValue>();

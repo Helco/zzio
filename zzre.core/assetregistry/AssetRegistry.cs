@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace zzre;
 
-internal interface IAssetRegistry : IAssetHandleScope
+internal interface IAssetRegistryInternal : IAssetRegistry
 {
     ValueTask QueueRemoveAsset(IAsset asset);
     ValueTask QueueApplyAsset(IAsset asset);
@@ -19,7 +19,7 @@ internal interface IAssetRegistry : IAssetHandleScope
     TAsset GetLoadedAsset<TAsset>(Guid assetId);
 }
 
-public partial class AssetRegistry(ITagContainer diContainer) : IAssetRegistry
+public sealed partial class AssetRegistry : IAssetRegistryInternal
 {
     private static readonly int MaxLowPriorityAssetsPerFrame = Math.Max(1, Environment.ProcessorCount / 4);
     private static readonly BoundedChannelOptions ChannelOptions = new(128)
@@ -30,8 +30,8 @@ public partial class AssetRegistry(ITagContainer diContainer) : IAssetRegistry
         SingleWriter = false
     };
 
+    private readonly ILogger logger;
     private readonly int mainThreadId = Environment.CurrentManagedThreadId;
-    private readonly Dictionary<Type, Func<Guid, IAsset>> assetConstructors = [];
     private readonly Dictionary<Guid, IAsset> assets = [];
     private readonly CancellationTokenSource cancellationSource = new();
     private readonly Channel<IAsset> assetsToRemove = Channel.CreateBounded<IAsset>(ChannelOptions);
@@ -40,6 +40,20 @@ public partial class AssetRegistry(ITagContainer diContainer) : IAssetRegistry
 
     private bool IsMainThread => mainThreadId == Environment.CurrentManagedThreadId;
     internal CancellationToken Cancellation => cancellationSource.Token;
+    internal bool IsLocalRegistry { get; }
+    public ITagContainer DIContainer { get; }
+
+    public AssetRegistry(string debugName, ITagContainer diContainer) : this(debugName, diContainer, isLocalRegistry: false) { }
+
+    internal AssetRegistry(string debugName, ITagContainer diContainer, bool isLocalRegistry)
+    {
+        DIContainer = diContainer;
+        if (string.IsNullOrEmpty(debugName))
+            logger = diContainer.GetLoggerFor<AssetRegistry>();
+        else
+            logger = diContainer.GetTag<ILogger>().For($"{nameof(AssetRegistry)}-{debugName}");
+        IsLocalRegistry = isLocalRegistry;
+    }
 
     public void Dispose()
     {
@@ -50,46 +64,26 @@ public partial class AssetRegistry(ITagContainer diContainer) : IAssetRegistry
             .Select(a => a.LoadTask))
             .Wait(10000);
         assets.Clear();
-        assetConstructors.Clear();
         assetsToRemove.Writer.Complete();
         assetsToApply.Writer.Complete();
         assetsToStart.Writer.Complete();
         cancellationSource.Dispose();
     }
 
-    public void RegisterAssetType<TInfo>(Func<ITagContainer, Guid, TInfo, Asset> constructor)
-        where TInfo : IEquatable<TInfo>
-    {
-        EnsureMainThread();
-        Cancellation.ThrowIfCancellationRequested();
-        Func<Guid, IAsset> assetConstructor = id =>
-            constructor(diContainer, id, AssetInfoRegistry<TInfo>.ToInfo(id));
-        if (!assetConstructors.TryAdd(typeof(TInfo), assetConstructor))
-            throw new ArgumentException("Asset type is already registered", nameof(TInfo));
-    }
-
-    public void RegisterAssetType<
-        TInfo,
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TAsset>()
-        where TInfo : IEquatable<TInfo>
-        where TAsset : Asset
-    {
-        var ctorInfo =
-            typeof(TAsset).GetConstructor([typeof(ITagContainer), typeof(Guid), typeof(TInfo)])
-            ?? throw new ArgumentException("Could not find standard constructor", nameof(TAsset));
-        RegisterAssetType<TInfo>((registry, guid, info) => (TAsset)ctorInfo.Invoke([registry, guid, info]));
-    }
-
     private IAsset GetOrCreateAsset<TInfo>(in TInfo info)
         where TInfo :  IEquatable<TInfo>
     {
         Cancellation.ThrowIfCancellationRequested();
+        if (AssetInfoRegistry<TInfo>.IsLocal && !IsLocalRegistry)
+            throw new InvalidOperationException("Cannot retrieve or create local assets in a global asset registry");
+
         var guid = AssetInfoRegistry<TInfo>.ToGuid(info);
         lock(assets)
         {
             if (!assets.TryGetValue(guid, out var asset) || asset.State is AssetState.Disposed)
             {
-                asset = assetConstructors[typeof(TInfo)].Invoke(guid);
+                logger.Verbose("New {Type} asset {Info} ({ID})", AssetInfoRegistry<TInfo>.Name, info, guid);
+                asset = AssetInfoRegistry<TInfo>.Construct(DIContainer, guid, in info);
                 assets[guid] = asset;
                 return asset;
             }
@@ -110,7 +104,7 @@ public partial class AssetRegistry(ITagContainer diContainer) : IAssetRegistry
         in TApplyContext applyContext)
         where TInfo : IEquatable<TInfo>
     {
-        var asset = GetOrCreateAsset(info);
+        var asset = GetOrCreateAsset(in info);
         lock (asset)
         {
             if (asset is { State: AssetState.Loaded } && IsMainThread)
@@ -139,7 +133,7 @@ public partial class AssetRegistry(ITagContainer diContainer) : IAssetRegistry
         Action<AssetHandle>? applyAction = null)
         where TInfo : IEquatable<TInfo>
     {
-        var asset = GetOrCreateAsset(info);
+        var asset = GetOrCreateAsset(in info);
         lock (asset)
         {
             if (asset is { State: AssetState.Loaded } && IsMainThread)
@@ -218,6 +212,7 @@ public partial class AssetRegistry(ITagContainer diContainer) : IAssetRegistry
             throw new InvalidOperationException($"Unexpected asset state for removal: {asset.State}");
         lock (assets)
             assets.Remove(asset.ID);
+        logger.Verbose("Remove asset {Type} {ID}", asset.GetType().Name, asset.ID);
     }
 
     private void ApplyAsset(IAsset asset)
@@ -245,7 +240,7 @@ public partial class AssetRegistry(ITagContainer diContainer) : IAssetRegistry
         }
     }
 
-    ValueTask IAssetRegistry.QueueRemoveAsset(IAsset asset)
+    ValueTask IAssetRegistryInternal.QueueRemoveAsset(IAsset asset)
     {
         if (IsMainThread)
         {
@@ -256,7 +251,7 @@ public partial class AssetRegistry(ITagContainer diContainer) : IAssetRegistry
             return assetsToRemove.Writer.WriteAsync(asset, Cancellation);
     }
 
-    ValueTask IAssetRegistry.QueueApplyAsset(IAsset asset)
+    ValueTask IAssetRegistryInternal.QueueApplyAsset(IAsset asset)
     {
         if (IsMainThread)
         {
@@ -267,15 +262,20 @@ public partial class AssetRegistry(ITagContainer diContainer) : IAssetRegistry
             return assetsToApply.Writer.WriteAsync(asset, Cancellation);
     }
 
-    Task IAssetRegistry.WaitAsyncAll(AssetHandle[] secondaryHandles)
+    Task IAssetRegistryInternal.WaitAsyncAll(AssetHandle[] secondaryHandles)
     {
         lock (assets)
         {
+            foreach (var handle in secondaryHandles)
+            {
+                if (assets.TryGetValue(handle.AssetID, out var asset))
+                    asset.StartLoading();
+            }
             return Task.WhenAll(secondaryHandles.Select(h => assets[h.AssetID].LoadTask));
         }
     }
 
-    bool IAssetRegistry.IsLoaded(Guid assetId)
+    bool IAssetRegistryInternal.IsLoaded(Guid assetId)
     {
         EnsureMainThread();
         IAsset? asset;
@@ -287,7 +287,7 @@ public partial class AssetRegistry(ITagContainer diContainer) : IAssetRegistry
             return asset.State == AssetState.Loaded;
     }
 
-    TAsset IAssetRegistry.GetLoadedAsset<TAsset>(Guid assetId)
+    TAsset IAssetRegistryInternal.GetLoadedAsset<TAsset>(Guid assetId)
     {
         EnsureMainThread();
         IAsset? asset;

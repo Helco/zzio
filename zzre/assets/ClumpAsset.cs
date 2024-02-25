@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+using Veldrid;
 using zzio;
+using zzio.rwbs;
 using zzre.rendering;
 
 namespace zzre;
@@ -22,8 +23,8 @@ public sealed class ClumpAsset : Asset
         public FilePath FullPath => BasePath.Combine(Directory, Name + ".dff");
     }
 
-    public static void RegisterAt(AssetRegistry registry) =>
-        registry.RegisterAssetType<Info, ClumpAsset>();
+    public static void Register() =>
+        AssetInfoRegistry<Info>.Register<ClumpAsset>();
 
     private readonly Info info;
     private ClumpMesh? mesh;
@@ -39,7 +40,7 @@ public sealed class ClumpAsset : Asset
     protected override ValueTask<IEnumerable<AssetHandle>> Load()
     {
         mesh = new ClumpMesh(diContainer, info.FullPath);
-        return ValueTask.FromResult(Enumerable.Empty<AssetHandle>());
+        return NoSecondaryAssets;
     }
 
     protected override void Unload()
@@ -51,14 +52,38 @@ public sealed class ClumpAsset : Asset
 
 public static unsafe partial class AssetExtensions
 {
-    public static AssetHandle LoadClump(this IAssetHandleScope assetScope,
+    public static AssetHandle<ClumpAsset> LoadBackdrop(this IAssetRegistry registry,
+        DefaultEcs.Entity entity,
+        string modelName,
+        AssetLoadPriority priority,
+        ClumpMaterialAsset.MaterialVariant? variant = null) =>
+        registry.LoadClump(entity, ClumpAsset.Info.Backdrop(modelName), priority, variant);
+
+    public static AssetHandle<ClumpAsset> LoadModel(this IAssetRegistry registry,
+        DefaultEcs.Entity entity,
+        string modelName,
+        AssetLoadPriority priority,
+        ClumpMaterialAsset.MaterialVariant? variant = null) =>
+        registry.LoadClump(entity, ClumpAsset.Info.Model(modelName), priority, variant);
+
+    public static AssetHandle<ClumpAsset> LoadActorClump(this IAssetRegistry registry,
+        DefaultEcs.Entity entity,
+        string modelName,
+        AssetLoadPriority priority,
+        ClumpMaterialAsset.MaterialVariant? variant = null) =>
+        registry.LoadClump(entity, ClumpAsset.Info.Actor(modelName), priority, variant);
+
+    public static AssetHandle<ClumpAsset> LoadClump(this IAssetRegistry registry,
         DefaultEcs.Entity entity,
         ClumpAsset.Info info,
-        AssetLoadPriority priority)
+        AssetLoadPriority priority,
+        ClumpMaterialAsset.MaterialVariant? variant = null)
     {
-        var handle = assetScope.Load(info, priority, &ApplyClumpToEntity, entity);
+        var handle = variant.HasValue
+            ? registry.Load(info, priority, &ApplyClumpToEntityWithMaterials, (registry, entity, variant.Value))
+            : registry.Load(info, priority, &ApplyClumpToEntity, entity);
         entity.Set(handle);
-        return handle;
+        return handle.As<ClumpAsset>();
     }
 
     private static void ApplyClumpToEntity(AssetHandle handle, ref readonly DefaultEcs.Entity entity)
@@ -66,4 +91,64 @@ public static unsafe partial class AssetExtensions
         var asset = handle.Get<ClumpAsset>();
         entity.Set(asset.Mesh);
     }
+
+    private static void ApplyClumpToEntityWithMaterials(AssetHandle handle,
+        ref readonly (IAssetRegistry, DefaultEcs.Entity, ClumpMaterialAsset.MaterialVariant) context)
+    {
+        var (registry, entity, materialConfig) = context;
+        var clumpMesh = handle.Get<ClumpAsset>().Mesh;
+        entity.Set(clumpMesh);
+
+        var materials = new List<materials.ModelMaterial>(clumpMesh.Materials.Count);
+        var handles = new AssetHandle[clumpMesh.Materials.Count];
+        for (int i = 0; i < handles.Length; i++)
+        {
+            var rwMaterial = clumpMesh.Materials[i];
+            var rwTexture = (RWTexture)rwMaterial.FindChildById(SectionId.Texture, true)!;
+            var rwTextureName = (RWString)rwTexture.FindChildById(SectionId.String, true)!;
+            var addressModeU = ConvertAddressMode(rwTexture.uAddressingMode);
+            var samplerDescription = new SamplerDescription()
+            {
+                AddressModeU = addressModeU,
+                AddressModeV = ConvertAddressMode(rwTexture.vAddressingMode, addressModeU),
+                Filter = ConvertFilterMode(rwTexture.filterMode),
+                MinimumLod = 0,
+                MaximumLod = 1000 // this should be VK_LOD_CLAMP_NONE
+            };
+
+            handles[i] = registry.Load(
+                new ClumpMaterialAsset.Info(rwTextureName.value, samplerDescription, materialConfig),
+                AssetLoadPriority.Synchronous);
+            materials.Add(handles[i].Get<ClumpMaterialAsset>().Material);
+        }
+        entity.Set(handles);
+        entity.Set(materials);
+    }
+
+    private static SamplerAddressMode ConvertAddressMode(TextureAddressingMode mode, SamplerAddressMode? altMode = null) => mode switch
+    {
+        TextureAddressingMode.Wrap => SamplerAddressMode.Wrap,
+        TextureAddressingMode.Mirror => SamplerAddressMode.Mirror,
+        TextureAddressingMode.Clamp => SamplerAddressMode.Clamp,
+        TextureAddressingMode.Border => SamplerAddressMode.Border,
+
+        TextureAddressingMode.NATextureAddress => altMode ?? throw new NotImplementedException(),
+        TextureAddressingMode.Unknown => throw new NotImplementedException(),
+        _ => throw new NotImplementedException(),
+    };
+
+
+    private static SamplerFilter ConvertFilterMode(TextureFilterMode mode) => mode switch
+    {
+        TextureFilterMode.Nearest => SamplerFilter.MinPoint_MagPoint_MipPoint,
+        TextureFilterMode.Linear => SamplerFilter.MinLinear_MagLinear_MipPoint,
+        TextureFilterMode.MipNearest => SamplerFilter.MinPoint_MagPoint_MipPoint,
+        TextureFilterMode.MipLinear => SamplerFilter.MinLinear_MagLinear_MipPoint,
+        TextureFilterMode.LinearMipNearest => SamplerFilter.MinPoint_MagPoint_MipLinear,
+        TextureFilterMode.LinearMipLinear => SamplerFilter.MinLinear_MagLinear_MipLinear,
+
+        TextureFilterMode.NAFilterMode => throw new NotImplementedException(),
+        TextureFilterMode.Unknown => throw new NotImplementedException(),
+        _ => throw new NotImplementedException(),
+    };
 }

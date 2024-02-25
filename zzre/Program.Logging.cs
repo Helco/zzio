@@ -85,11 +85,4 @@ partial class Program
             !string.IsNullOrWhiteSpace(source) &&
             Enum.TryParse(levelString, ignoreCase: true, out level);
     }
-
-    // Let's not log the entire namespace chain, the class name should suffice
-    public static ILogger For<T>(this ILogger parent) =>
-        parent.ForContext("SourceContext", typeof(T).Name);
-
-    public static ILogger GetLoggerFor<T>(this ITagContainer diContainer) =>
-        diContainer.GetTag<ILogger>().For<T>();
 }

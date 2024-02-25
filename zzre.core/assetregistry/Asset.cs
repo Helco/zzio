@@ -32,12 +32,15 @@ internal interface IAsset : IDisposable
 
 public abstract class Asset : IAsset
 {
+    protected static ValueTask<IEnumerable<AssetHandle>> NoSecondaryAssets =>
+        ValueTask.FromResult(Enumerable.Empty<AssetHandle>());
+
     protected readonly ITagContainer diContainer;
     private readonly TaskCompletionSource completionSource = new();
     private AssetHandle[] secondaryAssets = [];
     private int refCount;
 
-    private IAssetRegistry InternalRegistry => Registry;
+    private IAssetRegistryInternal InternalRegistry => Registry;
     public AssetRegistry Registry { get; }
     public Guid ID { get; }
     public AssetState State { get; private set; }

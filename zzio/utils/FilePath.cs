@@ -135,11 +135,12 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
 
     public override int GetHashCode()
     {
-        // simple hash combine with XOR and some random constants
-        int hash = 0;
-        foreach (string part in Normalized.Parts)
-            hash = hash << 2 ^ part.ToLowerInvariant().GetHashCode();
-        hash = hash << 2 ^ (int)type * 0x3fa5bde0;
+        var normalized = Normalized;
+        if (normalized.Parts.Count == 0)
+            return 0;
+        var hash = normalized.Parts[0].GetHashCode();
+        for (int i = 1; i < normalized.Parts.Count; i++)
+            hash = HashCode.Combine(hash, normalized.Parts[i]);
         return hash;
     }
 
@@ -356,6 +357,19 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
                 return null;
             return Parts.Last()[(extensionMarker + 1)..];
         }
+    }
+
+    public FilePath WithExtension(string newExtension)
+    {
+        if (IsDirectory || Parts.Count == 0)
+            throw new InvalidOperationException("Path is a directory or has no parts");
+        int extensionMarker = Parts.Last().LastIndexOf('.');
+        var newParts = Parts.ToArray();
+        if (extensionMarker < 0)
+            newParts[^1] += "." + newExtension;
+        else
+            newParts[^1] = newParts[..(extensionMarker + 1)] + newExtension;
+        return new FilePath(newParts, type, isDirectory: false);
     }
 
     /// <summary>Returns this path as windows path string ('\' as separator)</summary>

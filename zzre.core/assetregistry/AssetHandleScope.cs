@@ -3,22 +3,23 @@ using System.Collections.Generic;
 
 namespace zzre;
 
-public class AssetHandleScope(AssetRegistry registry) : IAssetHandleScope
+public sealed class AssetHandleScope(AssetRegistry registry) : IAssetRegistry
 {
     private readonly List<AssetHandle> handlesToDispose = new(64);
     private bool delayDisposals;
 
     public AssetRegistry Registry => registry;
+    public ITagContainer DIContainer => Registry.DIContainer;
     public bool DelayDisposals
     {
         get => delayDisposals;
         set
         {
             delayDisposals = value;
-            if (value)
+            if (!value)
             {
                 foreach (var handle in handlesToDispose)
-                    handle.Dispose();
+                    handle.registryInternal.Unload(handle);
                 handlesToDispose.Clear();
             }
         }
@@ -38,7 +39,7 @@ public class AssetHandleScope(AssetRegistry registry) : IAssetHandleScope
     public AssetHandle Load<TInfo>(
         in TInfo info,
         AssetLoadPriority priority,
-        Action<AssetHandle> applyAction)
+        Action<AssetHandle>? applyAction = null)
         where TInfo : IEquatable<TInfo>
     {
         var handle = registry.Load(info, priority, applyAction);
@@ -48,10 +49,12 @@ public class AssetHandleScope(AssetRegistry registry) : IAssetHandleScope
     public void Unload(AssetHandle handle)
     {
         if (DelayDisposals)
-            handlesToDispose.Add(handle);
+            handlesToDispose.Add(new(handle.registryInternal, this, handle.AssetID));
         else
             handle.Dispose();
     }
+
+    public void ApplyAssets() { } // it is just a scope
 
     public void Dispose()
     {
