@@ -8,11 +8,13 @@ using DefaultEcs.System;
 using Serilog;
 using zzio;
 using zzio.scn;
+using zzre.materials;
 using zzre.rendering;
 
 public class ModelLoader : BaseDisposable, ISystem<float>
 {
     private readonly ILogger logger;
+    private readonly IAssetRegistry assetRegistry;
     private readonly DefaultEcs.World ecsWorld;
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
@@ -26,6 +28,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     public ModelLoader(ITagContainer diContainer)
     {
         logger = diContainer.GetLoggerFor<ModelLoader>();
+        assetRegistry = diContainer.GetTag<IAssetRegistry>();
         ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
@@ -78,13 +81,11 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 LocalRotation = model.rot.ToZZRotation()
             });
 
-            entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model(model.filename + ".dff")));
+            var renderType = model.isVisualOnly ? FOModelRenderType.Solid : null as FOModelRenderType?;
+            LoadModelAndMaterials(entity, model.filename, model.color, renderType);
             if (HasEmptyMesh(entity))
                 throw new InvalidOperationException("Model has an empty model, maybe we can ignore them but let's have a look whether they are used somehow");
 
-            var renderType = model.isVisualOnly ? FOModelRenderType.Solid : null as FOModelRenderType?;
-
-            LoadMaterialsFor(entity, renderType, model.color, model.surfaceProps);
             SetCollider(entity);
             if (behaviors.TryGetValue(model.idx, out var behaviour))
             {
@@ -114,14 +115,13 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 LocalRotation = foModel.rot.ToZZRotation()
             });
 
-            entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model(foModel.filename + ".dff")));
+            LoadModelAndMaterials(entity, foModel.filename, foModel.color, foModel.renderType);
             if (HasEmptyMesh(entity))
             {
                 entity.Dispose(); // I am fine with ignoring empty FOModels
                 continue;
             }
 
-            LoadMaterialsFor(entity, foModel.renderType, foModel.color, foModel.surfaceProps);
             SetCollider(entity);
             SetPlantWiggle(entity, foModel.wiggleAmpl, plantWiggleDelay);
 
@@ -129,6 +129,36 @@ public class ModelLoader : BaseDisposable, ISystem<float>
 
             plantWiggleDelay++;
         }
+    }
+
+    private void LoadModelAndMaterials(DefaultEcs.Entity entity, string modelName, IColor color, FOModelRenderType? renderType)
+    {
+        ClumpMaterialAsset.MaterialVariant material = renderType switch
+        {
+            null => new(ModelMaterial.BlendMode.Opaque),
+            FOModelRenderType.EarlySolid or FOModelRenderType.LateSolid or FOModelRenderType.Solid =>
+                new(ModelMaterial.BlendMode.Alpha),
+            FOModelRenderType.EarlyAdditive or FOModelRenderType.Additive =>
+                new(ModelMaterial.BlendMode.AdditiveAlpha, HasFog: false),
+            FOModelRenderType.LateAdditive =>
+                new(ModelMaterial.BlendMode.AdditiveAlpha, HasFog: false, DepthWrite: false),
+            FOModelRenderType.EnvMap32 or
+            FOModelRenderType.EnvMap64 or
+            FOModelRenderType.EnvMap96 or
+            FOModelRenderType.EnvMap128 or
+            FOModelRenderType.EnvMap196 or
+            FOModelRenderType.EnvMap255 =>
+                new(ModelMaterial.BlendMode.Alpha, HasEnvMap: true, DepthWrite: false),
+            _ => throw new NotSupportedException($"Unsupported render type: {renderType}")
+        };
+
+        entity.Set(components.Visibility.Visible);
+        entity.Set(RenderOrderFromRenderType(renderType));
+        entity.Set(new components.ClumpMaterialInfo()
+        {
+            Color = color with { a = AlphaFromRenderType(renderType) }
+        });
+        assetRegistry.LoadModel(entity, modelName, AssetLoadPriority.Synchronous, material);
     }
 
     private void HandleCreateItem(in messages.CreateItem msg)
@@ -146,14 +176,14 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 LocalRotation = Vector3.UnitX.ToZZRotation()
             });
             entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model($"itm{msg.ItemId:D3}.dff")));
-            LoadMaterialsFor(entity, FOModelRenderType.Solid, IColor.White, new(1f, 1f, 1f));
+            LoadMaterialsFor(entity, FOModelRenderType.Solid, IColor.White);
             SetCollider(entity);
             SetBehaviour(entity, BehaviourType.CollectablePhysics, uint.MaxValue);
         }
     }
 
     // Used by e.g. NPCTrigger
-    internal static void LoadMaterialsFor(DefaultEcs.Entity entity, FOModelRenderType? renderType, IColor color, SurfaceProperties surfaceProps)
+    internal static void LoadMaterialsFor(DefaultEcs.Entity entity, FOModelRenderType? renderType, IColor color)
     {
         var clumpMesh = entity.Get<ClumpMesh>();
         entity.Set(components.Visibility.Visible);
@@ -161,8 +191,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         entity.Set(renderType);
         entity.Set(new components.ClumpMaterialInfo()
         {
-            Color = color with { a = AlphaFromRenderType(renderType) },
-            SurfaceProperties = surfaceProps
+            Color = color with { a = AlphaFromRenderType(renderType) }
         });
         entity.Set(new List<materials.ModelMaterial>(clumpMesh.Materials.Count));
 

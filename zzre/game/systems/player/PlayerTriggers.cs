@@ -135,8 +135,7 @@ public class PlayerTriggers : ISystem<float>
         npcMarker.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model("marker.dff")));
         ModelLoader.LoadMaterialsFor(npcMarker,
             zzio.scn.FOModelRenderType.Solid,
-            zzio.IColor.Green,
-            new zzio.SurfaceProperties(1f, 1f, 1f));
+            zzio.IColor.Green);
         var materials = npcMarker.Get<List<materials.ModelMaterial>>();
         materials.First().Factors.Ref.vertexColorFactor = 1f;
         // TODO: Fix NPC Marker has vertex color turned off
