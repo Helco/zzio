@@ -33,12 +33,7 @@ public sealed class TextureAsset : Asset
         path = info.FullPath;
     }
 
-    protected override async ValueTask<IEnumerable<AssetHandle>> Load()
-    {
-        await Task.Delay(3000);
-        return await Loads();
-    }
-    private ValueTask<IEnumerable<AssetHandle>> Loads()
+    protected override ValueTask<IEnumerable<AssetHandle>> Load()
     {
         var resourcePool = diContainer.GetTag<IResourcePool>();
         using var textureStream = resourcePool.FindAndOpen(path) ??

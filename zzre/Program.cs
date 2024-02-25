@@ -131,7 +131,7 @@ internal static partial class Program
         {
             case ".pak":
                 logger.Debug("Selected PAK resource pool {PoolName}", poolName);
-                return new PAKResourcePool(new FileStream(path, FileMode.Open, FileAccess.Read));
+                return new PAKParallelResourcePool(path);
             case "":
                 logger.Debug("Selected path resource pool {PoolName}", poolName);
                 return new FileResourcePool(path);
