@@ -118,13 +118,13 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         return entity;
     }
 
-    private readonly (int row, int col)[] flipped = new[] {
+    private readonly (int row, int col)[] flipped = [
         (0, 0),
         (-1, 0),
         (0, -1),
         (1, 0),
         (0, 1)
-    };
+    ];
 
     private void UpdateBoard(DefaultEcs.Entity parent, ref components.DialogChestPuzzle puzzle, int cellId)
     {
