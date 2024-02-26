@@ -511,7 +511,7 @@ public partial class DialogScript : BaseScript<DialogScript>
     {
         switch (subGameType) {
             case SubGameType.ChestPuzzle:
-                World.Publish(new messages.DialogChestPuzzle(entity, size, labelExit));
+                World.Publish(new messages.DialogChestPuzzle(entity, size + 2, labelExit));
                 break;
             case SubGameType.ElfGame:
                 LogUnimplementedInstructionWarning();

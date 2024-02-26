@@ -14,6 +14,8 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
     private static readonly UID UIDCancel = new(0xD45B15B1);
     private static readonly UID UIDNext = new(0xCABAD411);
 
+    private static readonly UID UIDAttempts = new(0x7B48CC11);
+    private static readonly UID UIDMinTries = new(0xEE63D011);
     private static readonly UID UIDBoxOfTricks = new(0x6588C491);
     private static readonly UID UIDChestOpened = new(0xF798C91);
 
@@ -48,21 +50,18 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         var uiEntity = World.CreateEntity();
         uiEntity.Set(new components.Parent(message.DialogEntity));
 
-        var size = message.Size + 2;
-
         preload.CreateDialogBackground(uiEntity, animateOverlay: true, out var bgRect, opacity: 1f);
 
         uiEntity.Set(new components.DialogChestPuzzle{
             DialogEntity = message.DialogEntity,
-            Size = size,
+            Size = message.Size,
             LabelExit = message.LabelExit,
             NumAttempts = 0,
             MinTries = 9999,
-            BoardState = InitBoardState(size),
+            BoardState = InitBoardState(message.Size),
             BgRect = bgRect
         });
         ref var puzzle = ref uiEntity.Get<components.DialogChestPuzzle>();
-
 
         preload.CreateLabel(uiEntity)
             .With(puzzle.BgRect.Min + new Vector2(20, 20))
@@ -91,7 +90,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         preload.CreateLabel(entity)
             .With(puzzle.BgRect.Min + new Vector2(25, 120))
             .With(preload.Fnt000)
-            .WithText($"Attempts: {puzzle.NumAttempts}\nMin. Tries: {puzzle.MinTries}")
+            .WithText($"{db.GetText(UIDAttempts).Text}: {puzzle.NumAttempts}\n{db.GetText(UIDMinTries).Text}: {puzzle.MinTries}")
             .WithLineHeight(15)
             .Build();
 
@@ -162,7 +161,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s022.wav"));
 
         preload.CreateLabel(parent)
-            .With(new Vector2(0, -100))
+            .With(new Vector2(0, -126))
             .With(components.ui.FullAlignment.Center)
             .With(preload.Fnt001)
             .WithText(db.GetText(UIDChestOpened).Text)
