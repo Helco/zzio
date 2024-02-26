@@ -20,11 +20,13 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
     private static readonly UID UIDChestOpened = new(0xF798C91);
 
     private readonly MappedDB db;
+    private readonly zzio.Savegame savegame;
     private readonly IDisposable resetUISubscription;
 
     public DialogChestPuzzle(ITagContainer diContainer) : base(diContainer, BlockFlags.None)
     {
         db = diContainer.GetTag<MappedDB>();
+        savegame = diContainer.GetTag<zzio.Savegame>();
 
         resetUISubscription = World.Subscribe<messages.DialogResetUI>(HandleResetUI);
         OnElementDown += HandleElementDown;
@@ -57,7 +59,6 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
             Size = message.Size,
             LabelExit = message.LabelExit,
             NumAttempts = 0,
-            MinTries = 9999,
             BoardState = InitBoardState(message.Size),
             BgRect = bgRect
         });
@@ -90,7 +91,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         preload.CreateLabel(entity)
             .With(puzzle.BgRect.Min + new Vector2(25, 120))
             .With(preload.Fnt000)
-            .WithText($"{db.GetText(UIDAttempts).Text}: {puzzle.NumAttempts}\n{db.GetText(UIDMinTries).Text}: {puzzle.MinTries}")
+            .WithText($"{db.GetText(UIDAttempts).Text}: {puzzle.NumAttempts}\n{db.GetText(UIDMinTries).Text}: {savegame.switchGameMinMoves}")
             .WithLineHeight(15)
             .Build();
 
@@ -170,8 +171,8 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
             .WithText(db.GetText(UIDChestOpened).Text)
             .Build();
 
-        if (puzzle.NumAttempts < puzzle.MinTries)
-            puzzle.MinTries = puzzle.NumAttempts;
+        if (savegame.switchGameMinMoves > puzzle.NumAttempts)
+            savegame.switchGameMinMoves = puzzle.NumAttempts;
 
         puzzle.LockBoard = true;
 

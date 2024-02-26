@@ -6,8 +6,7 @@ public struct DialogChestPuzzle
     public DefaultEcs.Entity DialogEntity;
     public int Size;
     public int LabelExit;
-    public int NumAttempts;
-    public int MinTries;
+    public uint NumAttempts;
     public bool[] BoardState;
     public bool LockBoard;
     public Rect BgRect;
