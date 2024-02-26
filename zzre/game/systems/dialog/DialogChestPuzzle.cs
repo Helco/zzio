@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Numerics;
 using zzio;
 using zzio.db;
@@ -8,10 +9,13 @@ namespace zzre.game.systems;
 public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuzzle, messages.DialogChestPuzzle>
 {
     private static readonly components.ui.ElementId IDCancel = new(1000);
-    private static readonly components.ui.ElementId IDWin = new(1001);
+    private static readonly components.ui.ElementId IDNext = new(1001);
 
     private static readonly UID UIDCancel = new(0xD45B15B1);
+    private static readonly UID UIDNext = new(0xCABAD411);
+
     private static readonly UID UIDBoxOfTricks = new(0x6588C491);
+    private static readonly UID UIDChestOpened = new(0xF798C91);
 
     private readonly MappedDB db;
     private readonly IDisposable resetUISubscription;
@@ -46,18 +50,29 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
 
         var size = message.Size + 2;
 
+        preload.CreateDialogBackground(uiEntity, animateOverlay: true, out var bgRect, opacity: 1f);
+
         uiEntity.Set(new components.DialogChestPuzzle{
             DialogEntity = message.DialogEntity,
             Size = size,
             LabelExit = message.LabelExit,
-            Attempts = 0,
+            NumAttempts = 0,
             MinTries = 9999,
-            BoardState = InitBoardState(size)
+            BoardState = InitBoardState(size),
+            BgRect = bgRect
         });
         ref var puzzle = ref uiEntity.Get<components.DialogChestPuzzle>();
 
-        CreatePrimary(uiEntity, ref puzzle);
+
+        preload.CreateLabel(uiEntity)
+            .With(puzzle.BgRect.Min + new Vector2(20, 20))
+            .With(preload.Fnt001)
+            .WithText(db.GetText(UIDBoxOfTricks).Text)
+            .Build();
+
         puzzle.Board = CreateBoard(uiEntity, ref puzzle);
+        puzzle.Attempts = CreateAttempts(uiEntity, ref puzzle);
+        puzzle.Action = preload.CreateSingleDialogButton(uiEntity, UIDCancel, IDCancel, puzzle.BgRect, buttonOffsetY: -45f);
     }
 
     private static bool[] InitBoardState(int size)
@@ -68,25 +83,15 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         return board;
     }
 
-    private DefaultEcs.Entity CreatePrimary(DefaultEcs.Entity parent, ref components.DialogChestPuzzle puzzle)
+    private DefaultEcs.Entity CreateAttempts(DefaultEcs.Entity parent, ref components.DialogChestPuzzle puzzle)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
-        preload.CreateDialogBackground(entity, animateOverlay: true, out var bgRect, opacity: 1f);
-        preload.CreateSingleDialogButton(entity, UIDCancel, IDCancel, bgRect, buttonOffsetY: -45f);
-        preload.CreateSingleDialogButton(entity, UIDCancel, IDWin, bgRect, buttonOffsetY: -85f);
-
         preload.CreateLabel(entity)
-            .With(bgRect.Min + new Vector2(20, 20))
-            .With(preload.Fnt001)
-            .WithText(db.GetText(UIDBoxOfTricks).Text)
-            .Build();
-
-        preload.CreateLabel(entity)
-            .With(bgRect.Min + new Vector2(25, 120))
+            .With(puzzle.BgRect.Min + new Vector2(25, 120))
             .With(preload.Fnt000)
-            .WithText($"Attempts: {puzzle.Attempts}\nMin. Tries: {puzzle.MinTries}")
+            .WithText($"Attempts: {puzzle.NumAttempts}\nMin. Tries: {puzzle.MinTries}")
             .WithLineHeight(15)
             .Build();
 
@@ -128,14 +133,13 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
 
     private void UpdateBoard(DefaultEcs.Entity parent, ref components.DialogChestPuzzle puzzle, int cellId)
     {
+        puzzle.NumAttempts += 1;
+
         int row = cellId / puzzle.Size;
         int col = cellId % puzzle.Size;
 
-        Console.WriteLine($"{row}, {col}");
-
         foreach (var coord in flipped)
         {
-            Console.WriteLine(coord);
             if (coord.row + row < puzzle.Size && coord.row + row >= 0 &&
                 coord.col + col < puzzle.Size && coord.col + col >= 0)
             {
@@ -144,8 +148,33 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
             }
         }
 
+        if (puzzle.BoardState.All(x => x) || puzzle.BoardState.All(x => !x))
+            Succeed(parent, ref puzzle);
+
         puzzle.Board.Dispose();
         puzzle.Board = CreateBoard(parent, ref puzzle);
+        puzzle.Attempts.Dispose();
+        puzzle.Attempts = CreateAttempts(parent, ref puzzle);
+    }
+
+    private void Succeed(DefaultEcs.Entity parent, ref components.DialogChestPuzzle puzzle)
+    {
+        World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s022.wav"));
+
+        preload.CreateLabel(parent)
+            .With(new Vector2(0, -100))
+            .With(components.ui.FullAlignment.Center)
+            .With(preload.Fnt001)
+            .WithText(db.GetText(UIDChestOpened).Text)
+            .Build();
+
+        if (puzzle.NumAttempts < puzzle.MinTries)
+            puzzle.MinTries = puzzle.NumAttempts;
+
+        puzzle.LockBoard = true;
+
+        puzzle.Action.Dispose();
+        puzzle.Action = preload.CreateSingleDialogButton(parent, UIDNext, IDNext, puzzle.BgRect, buttonOffsetY: -45f);
     }
 
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId clickedId)
@@ -154,9 +183,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         ref var puzzle = ref uiEntity.Get<components.DialogChestPuzzle>();
         ref var script = ref puzzle.DialogEntity.Get<components.ScriptExecution>();
 
-        Console.WriteLine(clickedId);
-
-        if (clickedId.InRange(new components.ui.ElementId(0), new components.ui.ElementId(puzzle.Size * puzzle.Size), out var cellId)) {
+        if (!puzzle.LockBoard && clickedId.InRange(new components.ui.ElementId(0), new components.ui.ElementId(puzzle.Size * puzzle.Size), out var cellId)) {
             UpdateBoard(uiEntity, ref puzzle, cellId);
         }
         else if (clickedId == IDCancel)
@@ -165,7 +192,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
             puzzle.DialogEntity.Set(components.DialogState.NextScriptOp);
             uiEntity.Dispose();
         }
-        else if (clickedId == IDWin)
+        else if (clickedId == IDNext)
         {
             script.CurrentI = script.LabelTargets[puzzle.LabelExit];
             puzzle.DialogEntity.Set(components.DialogState.NextScriptOp);
