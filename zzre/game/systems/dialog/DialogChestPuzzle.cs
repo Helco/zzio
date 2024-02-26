@@ -110,12 +110,13 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
             {
                 var cell = row * puzzle.Size + col;
                 var IDCell = new components.ui.ElementId(cell);
-                preload.CreateButton(entity)
+                var button = preload.CreateButton(entity)
                     .With(IDCell)
                     .With(offset + new Vector2(46 * col, 46 * row))
                     .With(new components.ui.ButtonTiles(puzzle.BoardState[cell] ? 1 : 2))
                     .With(preload.Swt000)
                     .Build();
+                button.Set(button.Get<Rect>().GrownBy(new Vector2(1, 1))); // No gaps
             }
         }
 
