@@ -55,7 +55,8 @@ public partial class Cursor : AEntitySetSystem<float>, ISystem<float>
             if (!entity.Has<components.ui.Hovered>())
             {
                 entity.Set<components.ui.Hovered>();
-                World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g000.wav"));
+                if (!entity.Has<components.ui.Silent>())
+                    World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g000.wav"));
             }
             hoveredElement = new(entity, elementId);
         }

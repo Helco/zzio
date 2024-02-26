@@ -117,6 +117,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
                     .With(preload.Swt000)
                     .Build();
                 button.Set(button.Get<Rect>().GrownBy(new Vector2(1, 1))); // No gaps
+                button.Set(new components.ui.Silent());
             }
         }
 
@@ -134,6 +135,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
     private void UpdateBoard(DefaultEcs.Entity parent, ref components.DialogChestPuzzle puzzle, int cellId)
     {
         puzzle.NumAttempts += 1;
+        World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g000.wav"));
 
         int row = cellId / puzzle.Size;
         int col = cellId % puzzle.Size;
