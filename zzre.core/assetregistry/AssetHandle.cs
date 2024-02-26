@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace zzre;
 
@@ -10,7 +11,14 @@ public struct AssetHandle : IDisposable
 
     public readonly IAssetRegistry Registry => registryInternal;
     public readonly Guid AssetID { get; }
-    public readonly bool IsLoaded => registryInternal.IsLoaded(AssetID);
+    public readonly bool IsLoaded
+    {
+        get
+        {
+            CheckDisposed();
+            return registryInternal.IsLoaded(AssetID);
+        }
+    }
 
     public AssetHandle(IAssetRegistry registry, AssetHandleScope handleScope, Guid assetId)
     {
@@ -44,22 +52,55 @@ public struct AssetHandle : IDisposable
             handleScope.Unload(this);
     }
 
-    public readonly TValue Get<TValue>() where TValue : Asset => 
-        registryInternal.GetLoadedAsset<TValue>(AssetID);
+    [Conditional("DEBUG")]
+    private readonly void CheckDisposed() =>
+        ObjectDisposedException.ThrowIf(wasDisposed, this);
 
-    public readonly AssetHandle<TValue> As<TValue>() where TValue : Asset => (AssetHandle<TValue>)this;
+    public readonly TValue Get<TValue>() where TValue : Asset
+    {
+        CheckDisposed();
+        return registryInternal.GetLoadedAsset<TValue>(AssetID);
+    }
+
+    public readonly AssetHandle<TValue> As<TValue>() where TValue : Asset
+    {
+        CheckDisposed();
+        return (AssetHandle<TValue>)this;
+    }
+
+    public unsafe readonly void Apply<TApplyContext>(
+        delegate* managed<AssetHandle, ref readonly TApplyContext, void> applyFnptr,
+        in TApplyContext applyContext)
+    {
+        CheckDisposed();
+        registryInternal.AddApplyAction(this, applyFnptr, in applyContext);
+    }
+
+    public readonly void Apply<TApplyContext>(
+        IAssetRegistry.ApplyWithContextAction<TApplyContext> applyAction,
+        in TApplyContext applyContext)
+    {
+        CheckDisposed();
+        registryInternal.AddApplyAction(this, applyAction, in applyContext);
+    }
+
+    public readonly void Apply(Action<AssetHandle> applyAction)
+    {
+        CheckDisposed();
+        registryInternal.AddApplyAction(this, applyAction);
+    }
 
     public readonly override string ToString() => $"AssetHandle {AssetID}";
 }
 
 public struct AssetHandle<TValue> : IDisposable where TValue : Asset
 {
-    private AssetHandle inner;
+    public AssetHandle Inner { get; private init; }
 
-    public static explicit operator AssetHandle<TValue>(AssetHandle handle) => new() { inner = handle };
-    public static implicit operator AssetHandle(AssetHandle<TValue> handle) => handle.inner;
-    public void Dispose() => inner.Dispose();
-    public readonly TValue Get() => inner.Get<TValue>();
+    public static explicit operator AssetHandle<TValue>(AssetHandle handle) => new() { Inner = handle };
+    public static implicit operator AssetHandle(AssetHandle<TValue> handle) => handle.Inner;
+    public void Dispose() => Inner.Dispose();
+    public readonly TValue Get() => Inner.Get<TValue>();
 
-    public readonly override string ToString() => $"AssetHandle<{typeof(TValue).Name}> {inner.AssetID}";
+    public readonly override string ToString() => $"AssetHandle<{typeof(TValue).Name}> {Inner.AssetID}";
 }

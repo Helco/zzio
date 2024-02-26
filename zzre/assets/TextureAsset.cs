@@ -14,6 +14,9 @@ namespace zzre;
 
 public sealed class TextureAsset : Asset
 {
+    // a special texture that Funatics never gave us, we can just use a single whtie pixel
+    public static readonly FilePath MarkerPath = new("marker");
+
     public readonly record struct Info(FilePath FullPath)
     {
         public Info(string fullPath) : this(new FilePath(fullPath)) { }
@@ -35,6 +38,12 @@ public sealed class TextureAsset : Asset
 
     protected override ValueTask<IEnumerable<AssetHandle>> Load()
     {
+        if (path == MarkerPath)
+        {
+            texture = diContainer.GetTag<StandardTextures>().White;
+            return NoSecondaryAssets;
+        }
+
         var resourcePool = diContainer.GetTag<IResourcePool>();
         using var textureStream = resourcePool.FindAndOpen(path) ??
             throw new FileNotFoundException($"Could not open texture {path}");
@@ -127,7 +136,8 @@ public sealed class TextureAsset : Asset
 
     protected override void Unload()
     {
-        texture?.Dispose();
+        if (path != MarkerPath)
+            texture?.Dispose();
         texture = null;
     }
 
@@ -144,6 +154,9 @@ public static unsafe partial class AssetExtensions
         AssetLoadPriority priority,
         ITexturedMaterial? material = null)
     {
+        if (TextureAsset.MarkerPath.Parts[0] == textureName)
+            return registry.LoadTexture(TextureAsset.MarkerPath, AssetLoadPriority.Synchronous, material);
+
         var resourcePool = registry.DIContainer.GetTag<IResourcePool>();
         foreach (var texturePath in texturePaths)
         {

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using DefaultEcs.Resource;
 using DefaultEcs.System;
+using zzio;
 using zzre.rendering;
 
 namespace zzre.game.systems;
@@ -132,12 +133,10 @@ public class PlayerTriggers : ISystem<float>
         npcMarker = world.CreateEntity();
         npcMarker.Set(new Location());
         npcMarker.Set(new components.behaviour.Rotate(Vector3.UnitY, 90f));
-        npcMarker.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model("marker.dff")));
-        ModelLoader.LoadMaterialsFor(npcMarker,
-            zzio.scn.FOModelRenderType.Solid,
-            zzio.IColor.Green);
-        var materials = npcMarker.Get<List<materials.ModelMaterial>>();
-        materials.First().Factors.Ref.vertexColorFactor = 1f;
-        // TODO: Fix NPC Marker has vertex color turned off
+        world.Publish(new messages.LoadModel(
+            AsEntity: npcMarker,
+            ModelName: "marker",
+            Color: IColor.Green,
+            RenderType: zzio.scn.FOModelRenderType.Solid));
     }
 }

@@ -12,6 +12,8 @@ public enum AssetLoadPriority
 
 public interface IAssetRegistry : IDisposable
 {
+    public delegate void ApplyWithContextAction<TApplyContext>(AssetHandle handle, in TApplyContext context);
+
     internal IAssetRegistryInternal InternalRegistry { get; }
     ITagContainer DIContainer { get; }
     AssetRegistryStats Stats { get; }
@@ -40,6 +42,17 @@ internal interface IAssetRegistryInternal : IAssetRegistry
 
     bool IsLocalRegistry { get; }
     CancellationToken Cancellation { get; }
+
+    unsafe void AddApplyAction<TApplyContext>(AssetHandle asset,
+        delegate* managed<AssetHandle, ref readonly TApplyContext, void> applyFnptr,
+        in TApplyContext applyContext);
+
+    void AddApplyAction<TApplyContext>(AssetHandle asset,
+        ApplyWithContextAction<TApplyContext> applyAction,
+        in TApplyContext applyContext);
+
+    void AddApplyAction(AssetHandle asset,
+        Action<AssetHandle> applyAction);
 
     ValueTask QueueRemoveAsset(IAsset asset);
     ValueTask QueueApplyAsset(IAsset asset);

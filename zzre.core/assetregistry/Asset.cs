@@ -29,6 +29,7 @@ internal interface IAsset : IDisposable
     void Complete();
     void AddRef();
     void DelRef();
+    void ThrowIfError(); // assumes that the load task has already completed with an error
 }
 
 public abstract class Asset : IAsset
@@ -101,8 +102,8 @@ public abstract class Asset : IAsset
                 case AssetState.Disposed:
                     throw new ObjectDisposedException(ToString());
                 case AssetState.Error:
-                    completionSource.Task.WaitAndRethrow();
-                    throw new InvalidOperationException("Asset was marked erroneous but does not contain exception");
+                    (this as IAsset).ThrowIfError();
+                    return;
 
                 default:
                     throw new NotImplementedException($"Unimplemented asset state {State}");
@@ -167,6 +168,15 @@ public abstract class Asset : IAsset
                 completionSource.SetException(ex);
                 (this as IDisposable).Dispose();
             }
+        }
+    }
+
+    void IAsset.ThrowIfError()
+    {
+        if (State == AssetState.Error)
+        {
+            completionSource.Task.WaitAndRethrow();
+            throw new InvalidOperationException("Asset was marked erroneous but does not contain exception");
         }
     }
 

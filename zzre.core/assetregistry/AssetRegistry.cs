@@ -12,11 +12,10 @@ namespace zzre;
 
 public sealed partial class AssetRegistry : IAssetRegistryInternal
 {
-    private static readonly int MaxLowPriorityAssetsPerFrame = Math.Max(1, Environment.ProcessorCount / 4);
-    private static readonly BoundedChannelOptions ChannelOptions = new(128)
+    private static readonly int MaxLowPriorityAssetsPerFrame = Math.Max(1, Environment.ProcessorCount);
+    private static readonly UnboundedChannelOptions ChannelOptions = new()
     {
         AllowSynchronousContinuations = true,
-        FullMode = BoundedChannelFullMode.Wait,
         SingleReader = true,
         SingleWriter = false
     };
@@ -25,9 +24,9 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
     private readonly int mainThreadId = Environment.CurrentManagedThreadId;
     private readonly Dictionary<Guid, IAsset> assets = [];
     private readonly CancellationTokenSource cancellationSource = new();
-    private readonly Channel<IAsset> assetsToRemove = Channel.CreateBounded<IAsset>(ChannelOptions);
-    private readonly Channel<IAsset> assetsToApply = Channel.CreateBounded<IAsset>(ChannelOptions);
-    private readonly Channel<IAsset> assetsToStart = Channel.CreateBounded<IAsset>(ChannelOptions);
+    private readonly Channel<IAsset> assetsToRemove = Channel.CreateUnbounded<IAsset>(ChannelOptions);
+    private readonly Channel<IAsset> assetsToApply = Channel.CreateUnbounded<IAsset>(ChannelOptions);
+    private readonly Channel<IAsset> assetsToStart = Channel.CreateUnbounded<IAsset>(ChannelOptions);
     private AssetRegistryStats stats;
 
     private bool IsMainThread => mainThreadId == Environment.CurrentManagedThreadId;
@@ -82,13 +81,8 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
                 assets[guid] = asset;
                 return asset;
             }
-            else if (asset.State is AssetState.Error)
-            {
-                asset.LoadTask.WaitAndRethrow();
-                throw new InvalidOperationException("Asset was marked as erroneous but does not contain an exception");
-            }
-            else
-                return asset;
+            asset.ThrowIfError();
+            return asset;
         }
     }
 
@@ -241,6 +235,81 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
     CancellationToken IAssetRegistryInternal.Cancellation => cancellationSource.Token;
     bool IAssetRegistryInternal.IsLocalRegistry => IsLocalRegistry;
 
+    private IAsset? TryGetForApplying(AssetHandle handle)
+    {
+        lock(assets)
+        {
+            var asset = assets.GetValueOrDefault(handle.AssetID);
+            if (asset is not null)
+            {
+                asset.ThrowIfError();
+                if (asset.State == AssetState.Disposed)
+                    asset = null;
+            }
+            return asset;
+        }
+    }
+
+    unsafe void IAssetRegistryInternal.AddApplyAction<TApplyContext>(AssetHandle handle,
+        delegate* managed<AssetHandle, ref readonly TApplyContext, void> applyFnptr,
+        in TApplyContext applyContext)
+    {
+        var asset = TryGetForApplying(handle);
+        if (asset is null)
+            return;
+        lock(asset)
+        {
+            if (asset.State == AssetState.Loaded && IsMainThread)
+                applyFnptr(handle, in applyContext);
+            else
+            {
+                asset.ApplyAction.Next += ConvertFnptr(applyFnptr, in applyContext);
+                if (asset.State == AssetState.Loaded)
+                    assetsToApply.Writer.WriteAsync(asset, Cancellation).AsTask().Wait();
+            }
+        }
+    }
+
+    void IAssetRegistryInternal.AddApplyAction<TApplyContext>(AssetHandle handle,
+        IAssetRegistry.ApplyWithContextAction<TApplyContext> applyAction,
+        in TApplyContext applyContext)
+    {
+        var asset = TryGetForApplying(handle);
+        if (asset is null)
+            return;
+        lock (asset)
+        {
+            if (asset.State == AssetState.Loaded && IsMainThread)
+                applyAction(handle, in applyContext);
+            else
+            {
+                var applyContextCopy = applyContext;
+                asset.ApplyAction.Next += handle => applyAction(handle, in applyContextCopy);
+                if (asset.State == AssetState.Loaded)
+                    assetsToApply.Writer.WriteAsync(asset, Cancellation).AsTask().Wait();
+            }
+        }
+    }
+
+    void IAssetRegistryInternal.AddApplyAction(AssetHandle handle,
+        Action<AssetHandle> applyAction)
+    {
+        var asset = TryGetForApplying(handle);
+        if (asset is null)
+            return;
+        lock (asset)
+        {
+            if (asset.State == AssetState.Loaded && IsMainThread)
+                applyAction(handle);
+            else
+            {
+                asset.ApplyAction.Next += applyAction;
+                if (asset.State == AssetState.Loaded)
+                    assetsToApply.Writer.WriteAsync(asset, Cancellation).AsTask().Wait();
+            }
+        }
+    }
+
     ValueTask IAssetRegistryInternal.QueueRemoveAsset(IAsset asset)
     {
         stats.OnAssetRemoved();
@@ -302,13 +371,11 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
             throw new InvalidOperationException($"Asset is not of type {typeof(TAsset).Name}");
         lock(asset)
         {
+            asset.ThrowIfError();
             switch(asset.State)
             {
                 case AssetState.Disposed:
                     throw new ObjectDisposedException(asset.ToString());
-                case AssetState.Error:
-                    asset.LoadTask.WaitAndRethrow();
-                    throw new InvalidOperationException("Asset was marked erroneous but did not contain an exception");
                 default:
                     asset.Complete();
                     asset.ApplyAction.Invoke(new(this, assetId));

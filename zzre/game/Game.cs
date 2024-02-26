@@ -28,6 +28,7 @@ public class Game : BaseDisposable, ITagContainer
     private readonly systems.SyncedLocation syncedLocation;
     private RgbaFloat clearColor = RgbaFloat.Black;
     private AssetRegistryStats assetStatsBeforeLoading;
+    private float timeBeforeLoading;
 
     public DefaultEcs.Entity PlayerEntity => // Placeholder during transition
         ecsWorld.GetEntities().With<components.PlayerPuppet>().AsEnumerable().First();
@@ -249,6 +250,7 @@ public class Game : BaseDisposable, ITagContainer
     public void LoadScene(string sceneName, Func<Trigger> findEntryTrigger)
     {
         logger.Information("Load " + sceneName);
+        timeBeforeLoading = time.TotalElapsed;
         assetStatsBeforeLoading = assetRegistry.Stats;
         ecsWorld.Publish(new messages.SceneChanging(sceneName));
         ecsWorld.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
@@ -302,9 +304,10 @@ public class Game : BaseDisposable, ITagContainer
         var assetStatsAfterLoading = assetRegistry.Stats;
         var removalDiff = assetStatsAfterLoading - assetStatsBeforeRemoving;
         var totalDiff = assetStatsAfterLoading - assetStatsBeforeLoading;
-        var asyncCreated = totalDiff.Loaded - totalDiff.Created;
+        var asyncCreated = totalDiff.Created - totalDiff.Loaded;
+        float timeAfterLoading = time.TotalElapsed - timeBeforeLoading;
 
-        logger.Debug("Asset stats: New-{New} Async-{Async} Disposed-{Disposed}", totalDiff.Created, asyncCreated, removalDiff.Removed);
+        logger.Debug("Asset stats: New-{New} Async-{Async} Disposed-{Disposed} in {Time}sec", totalDiff.Created, asyncCreated, removalDiff.Removed, timeAfterLoading);
     }
 
     public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);
