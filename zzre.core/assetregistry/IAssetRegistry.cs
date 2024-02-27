@@ -31,8 +31,6 @@ public interface IAssetRegistry : IDisposable
         Action<AssetHandle>? applyAction = null)
         where TInfo : IEquatable<TInfo>;
 
-    void Unload(AssetHandle handle);
-
     void ApplyAssets();
 }
 
@@ -54,6 +52,7 @@ internal interface IAssetRegistryInternal : IAssetRegistry
     void AddApplyAction(AssetHandle asset,
         Action<AssetHandle> applyAction);
 
+    void DisposeHandle(AssetHandle handle);
     ValueTask QueueRemoveAsset(IAsset asset);
     ValueTask QueueApplyAsset(IAsset asset);
     Task WaitAsyncAll(AssetHandle[] assets);

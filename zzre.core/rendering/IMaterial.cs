@@ -7,6 +7,7 @@ public interface IMaterial : IDisposable
 {
     GraphicsDevice Device { get; }
     IBuiltPipeline Pipeline { get; }
+    bool WasDisposed { get; }
 
     void Apply(CommandList cl)
     {

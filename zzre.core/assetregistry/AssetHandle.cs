@@ -47,9 +47,9 @@ public struct AssetHandle : IDisposable
             return;
         wasDisposed = true;
         if (handleScope is null)
-            registryInternal.Unload(this);
+            registryInternal.DisposeHandle(this);
         else
-            handleScope.Unload(this);
+            handleScope.DisposeHandle(this);
     }
 
     [Conditional("DEBUG")]

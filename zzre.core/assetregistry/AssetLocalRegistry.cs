@@ -54,8 +54,8 @@ public sealed class AssetLocalRegistry : IAssetRegistry
         return new(registry, localScope, handle.AssetID);
     }
 
-    public void Unload(AssetHandle handle) =>
-        localScope.Unload(handle);
+    public void DisposeHandle(AssetHandle handle) =>
+        localScope.DisposeHandle(handle);
 
     public void ApplyAssets() => localRegistry.ApplyAssets();
 

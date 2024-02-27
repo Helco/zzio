@@ -162,12 +162,16 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
 
     private static void ApplyModelAfterLoading(AssetHandle handle, ref readonly DefaultEcs.Entity entity)
     {
+        if (!entity.IsAlive)
+            return;
         if (HasEmptyMesh(entity))
             entity.Dispose(); // I am fine with ignoring empty FOModels
         else
+        {
             SetCollider(entity);
-        if (entity.Has<components.Collidable>())
-            SetIntersectionable(entity);
+            if (entity.Has<components.Collidable>())
+                SetIntersectionable(entity);
+        }
     }
 
     private void HandleCreateItem(in messages.CreateItem msg)

@@ -180,6 +180,7 @@ public static unsafe partial class AssetExtensions
     private static void ApplyTextureToMaterial(AssetHandle handle, ref readonly ITexturedMaterial material)
     {
         var texture = handle.Get<TextureAsset>().Texture;
-        material.Texture.Texture = texture;
+        if (!material.WasDisposed)
+            material.Texture.Texture = texture;
     }
 }

@@ -5,7 +5,7 @@ namespace zzio;
 // see https://docs.microsoft.com/de-de/visualstudio/code-quality/ca1063?view=vs-2019
 public class BaseDisposable : IDisposable
 {
-    private bool isDisposed;
+    public bool WasDisposed { get; private set; }
 
     ~BaseDisposable() => Dispose(false);
     public void Dispose()
@@ -16,9 +16,9 @@ public class BaseDisposable : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if (isDisposed)
+        if (WasDisposed)
             return;
-        isDisposed = true;
+        WasDisposed = true;
         if (disposing)
             DisposeManaged();
         DisposeNative();

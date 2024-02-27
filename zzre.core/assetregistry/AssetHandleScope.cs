@@ -21,7 +21,7 @@ public sealed class AssetHandleScope(IAssetRegistry registry) : IAssetRegistry
             if (!value)
             {
                 foreach (var handle in handlesToDispose)
-                    handle.registryInternal.Unload(handle);
+                    handle.registryInternal.DisposeHandle(handle);
                 handlesToDispose.Clear();
             }
         }
@@ -48,12 +48,12 @@ public sealed class AssetHandleScope(IAssetRegistry registry) : IAssetRegistry
         return new(this, handle.AssetID);
     }
 
-    public void Unload(AssetHandle handle)
+    public void DisposeHandle(AssetHandle handle)
     {
         if (DelayDisposals)
             handlesToDispose.Add(new(handle.registryInternal, this, handle.AssetID));
         else
-            handle.registryInternal.Unload(handle);
+            handle.registryInternal.DisposeHandle(handle);
     }
 
     public void ApplyAssets() { } // it is just a scope

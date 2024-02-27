@@ -94,6 +94,8 @@ public static unsafe partial class AssetExtensions
 
     private static void ApplyClumpToEntity(AssetHandle handle, ref readonly DefaultEcs.Entity entity)
     {
+        if (!entity.IsAlive)
+            return;
         var asset = handle.Get<ClumpAsset>();
         entity.Set(asset.Mesh);
     }
@@ -102,6 +104,8 @@ public static unsafe partial class AssetExtensions
         ref readonly (IAssetRegistry, DefaultEcs.Entity, ClumpMaterialAsset.MaterialVariant, StandardTextureKind?) context)
     {
         var (registry, entity, materialConfig, placeholder) = context;
+        if (!entity.IsAlive)
+            return;
         var clumpMesh = handle.Get<ClumpAsset>().Mesh;
         entity.Set(clumpMesh);
 

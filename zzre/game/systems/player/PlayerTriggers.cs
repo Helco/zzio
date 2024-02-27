@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using DefaultEcs.Resource;
 using DefaultEcs.System;
 using zzio;
-using zzre.rendering;
 
 namespace zzre.game.systems;
 

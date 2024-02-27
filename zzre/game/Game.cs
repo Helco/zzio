@@ -307,7 +307,8 @@ public class Game : BaseDisposable, ITagContainer
         var asyncCreated = totalDiff.Created - totalDiff.Loaded;
         float timeAfterLoading = time.TotalElapsed - timeBeforeLoading;
 
-        logger.Debug("Asset stats: New-{New} Async-{Async} Disposed-{Disposed} in {Time}sec", totalDiff.Created, asyncCreated, removalDiff.Removed, timeAfterLoading);
+        logger.Debug("Asset stats: New-{New} Async-{Async} Disposed-{Disposed} in {Time}sec, Total-{Total}",
+            totalDiff.Created, asyncCreated, removalDiff.Removed, timeAfterLoading, assetStatsAfterLoading.Total);
     }
 
     public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);

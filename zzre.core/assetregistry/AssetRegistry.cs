@@ -186,17 +186,6 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
         }
     }
 
-    public void Unload(AssetHandle handle)
-    {
-        if (handle.Registry != this)
-            throw new ArgumentException("Tried to unload asset at wrong registry");
-        lock (assets)
-        {
-            if (assets.TryGetValue(handle.AssetID, out var asset))
-                asset.DelRef();
-        }
-    }
-
     private void RemoveAsset(IAsset asset)
     {
         if (asset.State is not (AssetState.Disposed or AssetState.Error))
@@ -234,6 +223,17 @@ public sealed partial class AssetRegistry : IAssetRegistryInternal
     private CancellationToken Cancellation => cancellationSource.Token;
     CancellationToken IAssetRegistryInternal.Cancellation => cancellationSource.Token;
     bool IAssetRegistryInternal.IsLocalRegistry => IsLocalRegistry;
+
+    void IAssetRegistryInternal.DisposeHandle(AssetHandle handle)
+    {
+        if (handle.Registry != this)
+            throw new ArgumentException("Tried to unload asset at wrong registry");
+        lock (assets)
+        {
+            if (assets.TryGetValue(handle.AssetID, out var asset))
+                asset.DelRef();
+        }
+    }
 
     private IAsset? TryGetForApplying(AssetHandle handle)
     {
