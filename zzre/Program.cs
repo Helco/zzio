@@ -11,6 +11,7 @@ using Silk.NET.SDL;
 using Serilog;
 
 using Texture = Veldrid.Texture;
+using zzre.tools;
 
 namespace zzre;
 
@@ -143,7 +144,10 @@ internal static partial class Program
 
     private static AssetRegistry CreateAssetRegistry(ITagContainer diContainer)
     {
+        var registryList = new AssetRegistryList();
+        diContainer.AddTag(registryList);
         var registry = new AssetRegistry("", diContainer);
+        registryList.Register("Global", registry);
         SamplerAsset.Register();
         TextureAsset.Register();
         ClumpMaterialAsset.Register();

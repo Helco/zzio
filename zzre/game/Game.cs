@@ -56,7 +56,9 @@ public class Game : BaseDisposable, ITagContainer
         AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
         AddTag(new ModelInstanceBuffer(diContainer, 512)); // TODO: ModelRenderer should use central ModelInstanceBuffer
         AddTag(new EffectMesh(this, 4096, 8192));
-        diContainer.AddTag(camera = new Camera(this)); // TODO: Remove Camera hack
+        AddTag(camera = new Camera(this));
+        if (TryGetTag(out tools.AssetRegistryList assetRegistryList))
+            assetRegistryList.Register("Game", assetRegistry);
 
         AddTag(new resources.Clump(this));
         AddTag(new resources.ClumpMaterial(this));

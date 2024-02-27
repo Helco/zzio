@@ -1,13 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace zzre;
 
-public sealed class AssetLocalRegistry : IAssetRegistry
+public sealed class AssetLocalRegistry : zzio.BaseDisposable, IAssetRegistryDebug
 {
     private readonly IAssetRegistry globalRegistry;
     private readonly AssetRegistry localRegistry;
     private readonly AssetHandleScope localScope = new(null!); // the scope will not be used to load, null is a canary value for this
-    private bool disposedValue;
 
     IAssetRegistryInternal IAssetRegistry.InternalRegistry => localRegistry;
     public ITagContainer DIContainer => localRegistry.DIContainer;
@@ -23,7 +23,7 @@ public sealed class AssetLocalRegistry : IAssetRegistry
     public AssetLocalRegistry(string debugName, ITagContainer diContainer)
     {
         globalRegistry = diContainer.GetTag<IAssetRegistry>();
-        if (globalRegistry is not AssetRegistry { IsLocalRegistry: false })
+        if (globalRegistry is not IAssetRegistryInternal { IsLocalRegistry: false })
             throw new ArgumentException("Registry given to local registry is not a global registry");
         localRegistry = new AssetRegistry(debugName, diContainer, this);
     }
@@ -54,28 +54,14 @@ public sealed class AssetLocalRegistry : IAssetRegistry
         return new(registry, localScope, handle.AssetID);
     }
 
-    public void DisposeHandle(AssetHandle handle) =>
-        localScope.DisposeHandle(handle);
-
     public void ApplyAssets() => localRegistry.ApplyAssets();
 
-    private void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
-            {
-                localScope?.Dispose();
-                localRegistry?.Dispose();
-            }
-            disposedValue = true;
-        }
-    }
+    void IAssetRegistryDebug.CopyDebugInfo(List<IAssetRegistryDebug.AssetInfo> assetInfos) =>
+        (localRegistry as IAssetRegistryDebug).CopyDebugInfo(assetInfos);
 
-    public void Dispose()
+    protected override void DisposeManaged()
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
+        localScope?.Dispose();
+        localRegistry?.Dispose();
     }
 }

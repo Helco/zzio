@@ -48,7 +48,7 @@ public sealed class AssetHandleScope(IAssetRegistry registry) : IAssetRegistry
         return new(this, handle.AssetID);
     }
 
-    public void DisposeHandle(AssetHandle handle)
+    internal void DisposeHandle(AssetHandle handle)
     {
         if (DelayDisposals)
             handlesToDispose.Add(new(handle.registryInternal, this, handle.AssetID));

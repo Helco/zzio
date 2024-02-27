@@ -23,6 +23,7 @@ internal interface IAsset : IDisposable
     AssetState State { get; }
     Task LoadTask { get; }
     AssetLoadPriority Priority { get; set; }
+    int RefCount { get; }
     OnceAction<AssetHandle> ApplyAction { get; }
 
     void StartLoading();
@@ -47,6 +48,7 @@ public abstract class Asset : IAsset
     public Guid ID { get; }
     public AssetState State { get; private set; }
     Task IAsset.LoadTask => completionSource.Task;
+    int IAsset.RefCount => refCount;
     AssetLoadPriority IAsset.Priority { get; set; }
     OnceAction<AssetHandle> IAsset.ApplyAction { get; } = new();
 

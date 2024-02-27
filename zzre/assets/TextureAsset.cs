@@ -141,7 +141,9 @@ public sealed class TextureAsset : Asset
         texture = null;
     }
 
-    public override string ToString() => $"Texture {path.Parts[^1]} ({path.Parts[^2]})";
+    public override string ToString() => path.Parts.Count > 1
+        ? $"Texture {path.Parts[^1]} ({path.Parts[^2]})"
+        : $"Texture {path.ToPOSIXString()}";
 }
 
 public static unsafe partial class AssetExtensions

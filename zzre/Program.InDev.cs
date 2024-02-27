@@ -15,8 +15,18 @@ internal partial class Program
 {
     private static readonly Option<bool> OptionInDevLaunchGame = new Option<bool>(
         "--launch-game",
-        () => true,
+        () => false,
         "Launches a game window upon start");
+
+    private static readonly Option<bool> OptionInDevLaunchAssetExplorer = new Option<bool>(
+        "--launch-asset-explorer",
+        () => false,
+        "Launches the asset explorer upon start");
+
+    private static readonly Option<bool> OptionInDevLaunchECSExplorer = new Option<bool>(
+        "--launch-ecs-explorer",
+        () => false,
+        "Launches the ECS explorer upon start");
 
     private static readonly Option<string> OptionInDevSavegame = new(
         "--savegame",
@@ -47,6 +57,8 @@ internal partial class Program
         var command = new Command("indev",
             "This starts an environment intended for development of zzre with a game window and access to all viewers and Dear ImGui debug windows");
         command.AddOption(OptionInDevLaunchGame);
+        command.AddOption(OptionInDevLaunchECSExplorer);
+        command.AddOption(OptionInDevLaunchAssetExplorer);
         command.AddOption(OptionInDevSavegame);
         command.AddOption(OptionInDevScene);
         command.AddOption(OptionInDevEntry);
@@ -95,6 +107,7 @@ internal partial class Program
         };
 
         InDevLaunchGame(diContainer, ctx);
+        InDevLaunchTools(diContainer, ctx);
         InDevOpenResources(diContainer, ctx);
 
         var time = diContainer.GetTag<GameTime>();
@@ -166,7 +179,16 @@ internal partial class Program
         if (entryId.HasValue)
             savegame.entryId = entryId.Value;
 
-        new ZanzarahWindow(diContainer, savegame);
+        var zzWindow = new ZanzarahWindow(diContainer, savegame);
+
+        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchECSExplorer))
+            zzWindow.OpenECSExplorer();
+    }
+
+    private static void InDevLaunchTools(ITagContainer diContainer, InvocationContext ctx)
+    {
+        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchAssetExplorer))
+            AssetExplorer.Open(diContainer);            
     }
 
     private static void InDevOpenResources(ITagContainer diContainer, InvocationContext ctx)

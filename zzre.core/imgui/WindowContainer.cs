@@ -194,7 +194,14 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
         }
     }
 
-    public void RemoveWindow(BaseWindow window) => windows.Remove(window);
+    public void RemoveWindow(BaseWindow window)
+    {
+        if (isInUpdateEnumeration)
+            OnceAfterUpdate += () => windows.Remove(window);
+        else
+            windows.Remove(window);
+    }
+
     public void AddFenceOnce(Fence fence) => onceFences.Add(fence);
     public BaseWindow? WithTag<TTag>() where TTag : class => windows.FirstOrDefault(w => w.HasTag<TTag>());
     public IEnumerable<BaseWindow> AllWithTag<TTag>() where TTag : class => windows.Where(w => w.HasTag<TTag>());
