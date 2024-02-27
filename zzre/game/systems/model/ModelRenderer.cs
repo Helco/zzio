@@ -9,7 +9,7 @@ using zzre.materials;
 namespace zzre.game.systems;
 
 [With(typeof(components.Visibility))]
-public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, ClumpMesh>
+public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, AssetHandle>
 {
     private struct ClumpCount
     {

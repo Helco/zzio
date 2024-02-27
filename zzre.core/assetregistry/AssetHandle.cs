@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace zzre;
 
-public struct AssetHandle : IDisposable
+public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
 {
     private readonly AssetHandleScope? handleScope;
     internal readonly IAssetRegistryInternal registryInternal;
@@ -91,16 +91,31 @@ public struct AssetHandle : IDisposable
     }
 
     public readonly override string ToString() => $"AssetHandle {AssetID}";
+
+    public override readonly bool Equals(object? obj) => obj is AssetHandle handle && Equals(handle);
+    public readonly bool Equals(AssetHandle other) => AssetID.Equals(other.AssetID);
+    public override readonly int GetHashCode() => HashCode.Combine(AssetID);
+    public static bool operator ==(AssetHandle left, AssetHandle right) => left.Equals(right);
+    public static bool operator !=(AssetHandle left, AssetHandle right) => !(left == right);
 }
 
-public struct AssetHandle<TValue> : IDisposable where TValue : Asset
+public struct AssetHandle<TValue> : IDisposable, IEquatable<AssetHandle<TValue>>, IEquatable<AssetHandle>
+    where TValue : Asset
 {
     public AssetHandle Inner { get; private init; }
 
     public static explicit operator AssetHandle<TValue>(AssetHandle handle) => new() { Inner = handle };
     public static implicit operator AssetHandle(AssetHandle<TValue> handle) => handle.Inner;
+
     public void Dispose() => Inner.Dispose();
     public readonly TValue Get() => Inner.Get<TValue>();
 
     public readonly override string ToString() => $"AssetHandle<{typeof(TValue).Name}> {Inner.AssetID}";
+
+    public static bool operator ==(AssetHandle<TValue> left, AssetHandle<TValue> right) => left.Equals(right);
+    public static bool operator !=(AssetHandle<TValue> left, AssetHandle<TValue> right) => !(left == right);
+    public override readonly bool Equals(object? obj) => obj is AssetHandle<TValue> handle && Equals(handle);
+    public readonly bool Equals(AssetHandle<TValue> other) => Inner.AssetID.Equals(other.Inner.AssetID);
+    public readonly bool Equals(AssetHandle other) => Inner.AssetID.Equals(other.AssetID);
+    public override readonly int GetHashCode() => HashCode.Combine(Inner);
 }
