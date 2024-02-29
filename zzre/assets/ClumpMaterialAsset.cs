@@ -26,7 +26,7 @@ public sealed class ClumpMaterialAsset : ModelMaterialAsset
         StandardTextureKind? texturePlaceholder = null);
 
     public static void Register() =>
-        AssetInfoRegistry<Info>.RegisterLocal<ClumpMaterialAsset>();
+        AssetInfoRegistry<Info>.Register<ClumpMaterialAsset>(AssetLocality.Context);
 
     public readonly record struct MaterialVariant(
         ModelMaterial.BlendMode BlendMode = ModelMaterial.BlendMode.Opaque,

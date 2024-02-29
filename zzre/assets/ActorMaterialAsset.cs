@@ -27,7 +27,7 @@ public sealed class ActorMaterialAsset : ModelMaterialAsset
         StandardTextureKind? texturePlaceholder = null);
 
     public static void Register() =>
-        AssetInfoRegistry<Info>.RegisterLocal<ActorMaterialAsset>();
+        AssetInfoRegistry<Info>.Register<ActorMaterialAsset>(AssetLocality.SingleUsage);
 
     private readonly IColor color;
     private readonly bool isSkinned;

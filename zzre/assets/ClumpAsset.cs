@@ -23,7 +23,7 @@ public sealed class ClumpAsset : Asset
     }
 
     public static void Register() =>
-        AssetInfoRegistry<Info>.Register<ClumpAsset>();
+        AssetInfoRegistry<Info>.Register<ClumpAsset>(AssetLocality.Global);
 
     private readonly Info info;
     private ClumpMesh? mesh;

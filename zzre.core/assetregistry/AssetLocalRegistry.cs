@@ -29,7 +29,7 @@ public sealed class AssetLocalRegistry : zzio.BaseDisposable, IAssetRegistryDebu
     }
 
     private IAssetRegistry RegistryFor<TInfo>() where TInfo : IEquatable<TInfo> =>
-        AssetInfoRegistry<TInfo>.IsLocal ? localRegistry : globalRegistry;
+        AssetInfoRegistry<TInfo>.Locality == AssetLocality.Global ? globalRegistry : localRegistry;
 
     public unsafe AssetHandle Load<TInfo, TApplyContext>(
         in TInfo info,

@@ -67,7 +67,7 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         where TInfo :  IEquatable<TInfo>
     {
         Cancellation.ThrowIfCancellationRequested();
-        if (AssetInfoRegistry<TInfo>.IsLocal && apparentRegistry == this)
+        if (AssetInfoRegistry<TInfo>.Locality is not AssetLocality.Global && apparentRegistry == this)
             throw new InvalidOperationException("Cannot retrieve or create local assets in a global asset registry");
 
         var guid = AssetInfoRegistry<TInfo>.ToGuid(info);

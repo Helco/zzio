@@ -19,7 +19,7 @@ public sealed class TextureAsset : Asset
     }
 
     public static void Register() =>
-        AssetInfoRegistry<Info>.Register<TextureAsset>();
+        AssetInfoRegistry<Info>.Register<TextureAsset>(AssetLocality.Global);
 
     private readonly FilePath path;
     private Texture? texture;

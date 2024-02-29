@@ -8,7 +8,7 @@ namespace zzre;
 public sealed class SamplerAsset : Asset
 {
     public static void Register() =>
-        AssetInfoRegistry<SamplerDescription>.Register<SamplerAsset>();
+        AssetInfoRegistry<SamplerDescription>.Register<SamplerAsset>(AssetLocality.Global);
 
     private readonly SamplerDescription info;
     private Sampler? sampler;

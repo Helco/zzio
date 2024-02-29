@@ -17,7 +17,7 @@ public sealed class AnimationAsset : Asset
     }
 
     public static void Register() =>
-        AssetInfoRegistry<Info>.Register<AnimationAsset>();
+        AssetInfoRegistry<Info>.Register<AnimationAsset>(AssetLocality.Global);
 
     private readonly Info info;
     private SkeletalAnimation? animation;

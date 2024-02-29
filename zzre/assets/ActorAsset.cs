@@ -17,7 +17,7 @@ public sealed class ActorAsset : Asset
     }
 
     public static void Register() =>
-        AssetInfoRegistry<Info>.Register<ActorAsset>();
+        AssetInfoRegistry<Info>.Register<ActorAsset>(AssetLocality.Global);
 
     private readonly Info info;
     private ActorExDescription? description;
