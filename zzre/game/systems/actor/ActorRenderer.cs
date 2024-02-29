@@ -13,13 +13,6 @@ namespace zzre.game.systems;
 [With(typeof(components.ActorPart))]
 public partial class ActorRenderer : AEntitySetSystem<CommandList>
 {
-    private static readonly FilePath[] BaseTexturePaths =
-    [
-        new("resources/textures/actorsex"),
-        new("resources/textures/models"),
-        new("resources/textures/worlds")
-    ];
-
     private readonly ITagContainer diContainer;
     private readonly IAssetRegistry assetRegistry;
     private readonly GraphicsDevice graphicsDevice;
@@ -177,22 +170,17 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
 
     private void LoadActorPartMaterials(DefaultEcs.Entity entity, ClumpMesh mesh)
     {
-        var modelVariant = new ClumpMaterialAsset.MaterialVariant(
-            IsSkinned: mesh.Skin is not null,
-            IsInstanced: false,
-            HasTexShift: false);
         var materials = new ModelMaterial[mesh.Materials.Count];
         var handles = new AssetHandle[materials.Length];
         for (int i = 0; i < handles.Length; i++)
         {
-            var materialHandle = assetRegistry.LoadClumpMaterial(mesh.Materials[i], modelVariant, StandardTextureKind.White);
+            entity.TryGet(out Skeleton skeleton);
+            var materialHandle = assetRegistry.LoadActorMaterial(mesh.Materials[i], isSkinned: skeleton is not null);
             handles[i] = materialHandle;
             var material = materials[i] = materialHandle.Get().Material;
             material.World.BufferRange = entity.Get<components.SyncedLocation>().BufferRange;
             material.Factors.Buffer = modelFactors.Buffer;
-            material.FogParams.Buffer = fogParams.Buffer;
-            material.Tint.Ref = mesh.Materials[i].color;
-            if (entity.TryGet(out Skeleton skeleton))
+            if (skeleton is not null)
                 material.Pose.Skeleton = skeleton;
         }
         entity.Set(materials);

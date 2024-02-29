@@ -18,6 +18,11 @@ internal partial class Program
         () => false,
         "Launches a game window upon start");
 
+    private static readonly Option<bool> OptionInDevLaunchGameMuted = new Option<bool>(
+        "--launch-game-muted",
+        () => false,
+        "Launches the game window muted");
+
     private static readonly Option<bool> OptionInDevLaunchAssetExplorer = new Option<bool>(
         "--launch-asset-explorer",
         () => false,
@@ -57,6 +62,7 @@ internal partial class Program
         var command = new Command("indev",
             "This starts an environment intended for development of zzre with a game window and access to all viewers and Dear ImGui debug windows");
         command.AddOption(OptionInDevLaunchGame);
+        command.AddOption(OptionInDevLaunchGameMuted);
         command.AddOption(OptionInDevLaunchECSExplorer);
         command.AddOption(OptionInDevLaunchAssetExplorer);
         command.AddOption(OptionInDevSavegame);
@@ -183,6 +189,8 @@ internal partial class Program
 
         if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchECSExplorer))
             zzWindow.OpenECSExplorer();
+        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchGameMuted))
+            zzWindow.IsMuted = true;
     }
 
     private static void InDevLaunchTools(ITagContainer diContainer, InvocationContext ctx)

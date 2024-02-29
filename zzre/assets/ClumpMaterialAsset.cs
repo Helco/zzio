@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Veldrid;
 using zzio;
 using zzio.rwbs;
@@ -10,19 +9,15 @@ using static zzre.ClumpMaterialAsset;
 
 namespace zzre;
 
-public sealed class ClumpMaterialAsset : Asset
+public sealed class ClumpMaterialAsset : ModelMaterialAsset
 {
-    private static readonly FilePath[] TextureBasePaths =
+    private static readonly FilePath[] ClumpTextureBasePaths =
     [
         new FilePath("resources/textures/models"),
         new FilePath("resources/textures/worlds"),
-        new FilePath("resources/textures/backdrops"),
-        new FilePath("resources/textures/actorsex"),
-        new FilePath("resources/textures/effects"),
-        new FilePath("resources/textures/misc")
+        new FilePath("resources/textures/backdrops")
     ];
-
-    private const string UseStandardTexture = "marker"; // Funatics never gave us this texture :(
+    protected override IReadOnlyList<FilePath> TextureBasePaths => ClumpTextureBasePaths;
 
     public readonly record struct Info(
         string? textureName,
@@ -30,71 +25,36 @@ public sealed class ClumpMaterialAsset : Asset
         MaterialVariant config,
         StandardTextureKind? texturePlaceholder = null);
 
+    public static void Register() =>
+        AssetInfoRegistry<Info>.RegisterLocal<ClumpMaterialAsset>();
+
     public readonly record struct MaterialVariant(
         ModelMaterial.BlendMode BlendMode = ModelMaterial.BlendMode.Opaque,
-        bool IsInstanced = true,
-        bool IsSkinned = false,
         bool DepthWrite = true,
         bool DepthTest = true,
         bool HasEnvMap = false,
         bool HasTexShift = true,
         bool HasFog = true);
 
-    public static void Register() =>
-        AssetInfoRegistry<Info>.RegisterLocal<ClumpMaterialAsset>();
+    private readonly MaterialVariant materialVariant;
 
-    private readonly Info info;
-    private ModelMaterial? material;
-
-    public ModelMaterial Material => material ??
-        throw new InvalidOperationException("Asset was not yet loaded");
-
-    public ClumpMaterialAsset(IAssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
+    public ClumpMaterialAsset(IAssetRegistry registry, Guid assetId, Info info)
+        : base(registry, assetId, info.textureName, info.sampler, info.texturePlaceholder)
     {
-        if (info.textureName is null && info.texturePlaceholder is null)
-            throw new ArgumentException("ClumpMaterialAsset cannot be loaded without a texture name and placeholder");
-        this.info = info;
+        materialVariant = info.config;
     }
 
-    protected override bool NeedsSecondaryAssets => false;
-
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override void SetMaterialVariant(ModelMaterial material)
     {
-        material = new ModelMaterial(diContainer)
-        {
-            IsInstanced = info.config.IsInstanced,
-            IsSkinned = info.config.IsSkinned,
-            Blend = info.config.BlendMode,
-            DepthWrite = info.config.DepthWrite,
-            DepthTest = info.config.DepthTest,
-            HasEnvMap = info.config.HasEnvMap,
-            HasTexShift = info.config.HasTexShift,
-            HasFog = info.config.HasFog,
-        };
+        Material.IsInstanced = true;
+        Material.IsSkinned = false;
+        Material.Blend = materialVariant.BlendMode;
+        Material.DepthWrite = materialVariant.DepthWrite;
+        Material.DepthTest = materialVariant.DepthTest;
+        Material.HasEnvMap = materialVariant.HasEnvMap;
+        Material.HasTexShift = materialVariant.HasTexShift;
+        Material.HasFog = materialVariant.HasFog;
 
-        var camera = diContainer.GetTag<Camera>();
-        var standardTextures = diContainer.GetTag<StandardTextures>();
-        var samplerHandle = Registry.LoadSampler(info.sampler);
-        AssetHandle? textureHandle;
-        if (info.textureName == UseStandardTexture) 
-        {
-            textureHandle = null;
-            material.Texture.Texture = standardTextures.ByKind(info.texturePlaceholder ?? StandardTextureKind.White);
-        }
-        else if (info.texturePlaceholder == null)
-        {
-            textureHandle = Registry.LoadTexture(TextureBasePaths, info.textureName!, AssetLoadPriority.Synchronous);
-            material.Texture.Texture = textureHandle.Value.Get<TextureAsset>().Texture;
-        }
-        else
-        {
-            material.Texture.Texture = standardTextures.ByKind(info.texturePlaceholder.Value);
-            textureHandle = info.textureName is null ? null
-                : Registry.LoadTexture(TextureBasePaths, info.textureName, AssetLoadPriority.High, material);
-        }
-        material.Sampler.Sampler = samplerHandle.Get().Sampler;
-        material.Projection.BufferRange = camera.ProjectionRange;
-        material.View.BufferRange = camera.ViewRange;
         material.Factors.Ref = new()
         {
             textureFactor = 1f,
@@ -102,18 +62,8 @@ public sealed class ClumpMaterialAsset : Asset
             tintFactor = 1f,
             alphaReference = 0.082352944f
         };
-        if (info.config.HasFog && diContainer.TryGetTag<UniformBuffer<FogParams>>(out var fogParams))
+        if (materialVariant.HasFog && diContainer.TryGetTag<UniformBuffer<FogParams>>(out var fogParams))
             material.FogParams.Buffer = fogParams.Buffer;
-
-        return textureHandle is null
-            ? ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerHandle ])
-            : ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerHandle, textureHandle.Value ]);
-    }
-
-    protected override void Unload()
-    {
-        material?.Dispose();
-        material = null;
     }
 }
 
@@ -150,46 +100,4 @@ partial class AssetExtensions
             AssetLoadPriority.Synchronous)
             .As<ClumpMaterialAsset>();
     }
-
-    private static SamplerDescription GetSamplerDescription(RWTexture? rwTexture)
-    {
-        if (rwTexture is null)
-            return SamplerDescription.Point;
-        var addressModeU = ConvertAddressMode(rwTexture.uAddressingMode);
-        return new()
-        {
-            AddressModeU = addressModeU,
-            AddressModeV = ConvertAddressMode(rwTexture.vAddressingMode, addressModeU),
-            Filter = ConvertFilterMode(rwTexture.filterMode),
-            MinimumLod = 0,
-            MaximumLod = 1000 // this should be VK_LOD_CLAMP_NONE
-        };
-    }
-
-    private static SamplerAddressMode ConvertAddressMode(TextureAddressingMode mode, SamplerAddressMode? altMode = null) => mode switch
-    {
-        TextureAddressingMode.Wrap => SamplerAddressMode.Wrap,
-        TextureAddressingMode.Mirror => SamplerAddressMode.Mirror,
-        TextureAddressingMode.Clamp => SamplerAddressMode.Clamp,
-        TextureAddressingMode.Border => SamplerAddressMode.Border,
-
-        TextureAddressingMode.NATextureAddress => altMode ?? throw new NotImplementedException(),
-        TextureAddressingMode.Unknown => throw new NotImplementedException(),
-        _ => throw new NotImplementedException(),
-    };
-
-
-    private static SamplerFilter ConvertFilterMode(TextureFilterMode mode) => mode switch
-    {
-        TextureFilterMode.Nearest => SamplerFilter.MinPoint_MagPoint_MipPoint,
-        TextureFilterMode.Linear => SamplerFilter.MinLinear_MagLinear_MipPoint,
-        TextureFilterMode.MipNearest => SamplerFilter.MinPoint_MagPoint_MipPoint,
-        TextureFilterMode.MipLinear => SamplerFilter.MinLinear_MagLinear_MipPoint,
-        TextureFilterMode.LinearMipNearest => SamplerFilter.MinPoint_MagPoint_MipLinear,
-        TextureFilterMode.LinearMipLinear => SamplerFilter.MinLinear_MagLinear_MipLinear,
-
-        TextureFilterMode.NAFilterMode => throw new NotImplementedException(),
-        TextureFilterMode.Unknown => throw new NotImplementedException(),
-        _ => throw new NotImplementedException(),
-    };
 }

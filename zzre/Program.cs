@@ -152,6 +152,7 @@ internal static partial class Program
         TextureAsset.Register();
         ClumpMaterialAsset.Register();
         ClumpAsset.Register();
+        ActorMaterialAsset.Register();
         ActorAsset.Register();
         AnimationAsset.Register();
         return registry;

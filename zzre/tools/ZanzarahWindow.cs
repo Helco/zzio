@@ -43,7 +43,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
         }
     }
 
-    private bool IsMuted
+    public bool IsMuted
     {
         //get => isMuted;
         set
