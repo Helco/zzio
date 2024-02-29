@@ -162,10 +162,17 @@ internal static partial class Program
     {
         diContainer.GetTag<ILogger>().Information("Cleanup");
 
-        // dispose graphics device last, otherwise Vulkan will crash
+        // dispose graphics device and sdl last, otherwise Vulkan or OpenAL will crash
+        // we should find a better solution for disposal order
         diContainer.TryGetTag(out GraphicsDevice graphicsDevice);
+        diContainer.TryGetTag(out Sdl sdl);
+        diContainer.TryGetTag(out OpenALDevice openALDevice);
         diContainer.RemoveTag<GraphicsDevice>(dispose: false);
+        diContainer.RemoveTag<Sdl>(dispose: false);
+        diContainer.RemoveTag<OpenALDevice>(dispose: false);
         diContainer.Dispose();
         graphicsDevice?.Dispose();
+        openALDevice?.Dispose();
+        sdl?.Dispose();
     }
 }
