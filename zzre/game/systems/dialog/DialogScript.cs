@@ -173,8 +173,8 @@ public partial class DialogScript : BaseScript<DialogScript>
         if (string.IsNullOrWhiteSpace(nextSample))
         {
             if (NPCEntity.TryGet<components.ActorParts>(out var actorParts) &&
-                actorParts.Body.TryGet<resources.ClumpInfo>(out var bodyClumpInfo))
-                nextSample = $"{bodyClumpInfo.Name[..^4]}{Random.Next(1, 4)}.wav";
+                actorParts.Body.TryGet<AssetHandle<ClumpAsset>>(out var bodyHandle))
+                nextSample = $"{bodyHandle.Get().Name[..^4]}{Random.Next(1, 4)}.wav";
             else
                 logger.Warning("Tried to play random voice for NPC without body ({Entity})", NPCEntity);
         }

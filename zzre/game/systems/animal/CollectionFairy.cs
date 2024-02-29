@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Numerics;
-using DefaultEcs.Resource;
 using DefaultEcs.System;
 using zzio;
 using zzio.db;
@@ -94,8 +93,11 @@ public partial class CollectionFairy : AEntitySetSystem<float>
                 LocalPosition = trigger.pos
             });
             entity.Set(invFairy);
-            entity.Set(ManagedResource<ActorExDescription>.Create(dbRow.Mesh));
             entity.Set(components.CollectionFairy.Random);
+            World.Publish(new messages.LoadActor(
+                AsEntity: entity,
+                ActorName: dbRow.Mesh,
+                AssetLoadPriority.Synchronous));
 
             var actorParts = entity.Get<components.ActorParts>();
             actorParts.Body.Get<Location>().Parent = entity.Get<Location>();

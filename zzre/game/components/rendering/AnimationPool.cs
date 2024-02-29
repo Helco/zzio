@@ -1,45 +1,37 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using zzio;
 
 namespace zzre.game.components;
 
-public readonly struct AnimationPool : IReadOnlyCollection<KeyValuePair<AnimationType, SkeletalAnimation>>
+public struct AnimationPool : IEnumerable<KeyValuePair<AnimationType, SkeletalAnimation>>
 {
-    private static readonly int AnimationCount = Enum
-        .GetValues<AnimationType>()
-        .Select(v => (int)v)
-        .Max() + 1;
-
-    private readonly SkeletalAnimation?[] animations;
-
-    private AnimationPool(AnimationType type, SkeletalAnimation animation)
+    [InlineArray((int)AnimationType.@Count)]
+    private struct Animations
     {
-        animations = new SkeletalAnimation[AnimationCount];
-        Add(type, animation);
+        public SkeletalAnimation? _;
     }
-    public static AnimationPool CreateWith(AnimationType type, SkeletalAnimation animation) => new(type, animation);
+    private Animations animations;
 
-    public bool Contains(AnimationType type) => animations?[(int)type] != null;
+    public bool Contains(AnimationType type) => animations[(int)type] != null;
 
-    public SkeletalAnimation this[AnimationType type] => animations?[(int)type] ??
+    public SkeletalAnimation this[AnimationType type] => animations[(int)type] ??
         throw new KeyNotFoundException($"Animation pool does not contain animation {type}");
 
     public void Add(AnimationType type, SkeletalAnimation animation)
     {
-        if (animations == null)
-            throw new InvalidOperationException("Invalid animation pool cannot be modified");
         // Here was a check to see whether animations were overridden, but the original chr01.aed would not load...
         animations[(int)type] = animation;
     }
 
-    private IEnumerable<KeyValuePair<AnimationType, SkeletalAnimation>> AsEnumerable => animations
-        .Select((anim, i) => new KeyValuePair<AnimationType, SkeletalAnimation>((AnimationType)i, anim!))
-        .Where(t => t.Value != null);
-
-    public int Count => AsEnumerable.Count();
-    public IEnumerator<KeyValuePair<AnimationType, SkeletalAnimation>> GetEnumerator() => AsEnumerable.GetEnumerator();
+    public IEnumerator<KeyValuePair<AnimationType, SkeletalAnimation>> GetEnumerator()
+    {
+        for (int i = 0; i < (int)AnimationType.@Count; i++)
+        {
+            if (animations[i] != null)
+                yield return new((AnimationType)i, animations[i]!);
+        }
+    }
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

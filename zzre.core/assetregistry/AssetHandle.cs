@@ -5,6 +5,8 @@ namespace zzre;
 
 public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
 {
+    public static readonly AssetHandle Invalid = new(registry: null!, Guid.Empty) { wasDisposed = true };
+
     private readonly AssetHandleScope? handleScope;
     internal readonly IAssetRegistryInternal registryInternal;
     private bool wasDisposed;
@@ -20,7 +22,7 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
         }
     }
 
-    public AssetHandle(IAssetRegistry registry, AssetHandleScope handleScope, Guid assetId)
+    internal AssetHandle(IAssetRegistry registry, AssetHandleScope handleScope, Guid assetId)
     {
         this.handleScope = handleScope;
         this.registryInternal = registry as IAssetRegistryInternal ??
@@ -28,14 +30,14 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
         AssetID = assetId;
     }
 
-    public AssetHandle(AssetHandleScope handleScope, Guid assetId)
+    internal AssetHandle(AssetHandleScope handleScope, Guid assetId)
     {
         this.handleScope = handleScope;
         registryInternal = (handleScope as IAssetRegistry).InternalRegistry;
         AssetID = assetId;
     }
 
-    public AssetHandle(AssetRegistry registry, Guid assetId)
+    internal AssetHandle(AssetRegistry registry, Guid assetId)
     {
         registryInternal = registry;
         AssetID = assetId;
@@ -54,7 +56,7 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
 
     [Conditional("DEBUG")]
     private readonly void CheckDisposed() =>
-        ObjectDisposedException.ThrowIf(wasDisposed, this);
+        ObjectDisposedException.ThrowIf(wasDisposed || AssetID == Guid.Empty, this);
 
     public readonly TValue Get<TValue>() where TValue : Asset
     {
@@ -102,6 +104,8 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
 public struct AssetHandle<TValue> : IDisposable, IEquatable<AssetHandle<TValue>>, IEquatable<AssetHandle>
     where TValue : Asset
 {
+    public static readonly AssetHandle<TValue> Invalid = new() { Inner = AssetHandle.Invalid };
+
     public AssetHandle Inner { get; private init; }
 
     public static explicit operator AssetHandle<TValue>(AssetHandle handle) => new() { Inner = handle };

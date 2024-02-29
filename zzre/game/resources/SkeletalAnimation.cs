@@ -26,9 +26,8 @@ public class SkeletalAnimation : AResourceManager<(AnimationType type, string fi
 
     protected override void OnResourceLoaded(in DefaultEcs.Entity entity, (AnimationType type, string fileName) info, zzio.SkeletalAnimation resource)
     {
+        throw new System.NotSupportedException();
         if (entity.Has<components.AnimationPool>())
             entity.Get<components.AnimationPool>().Add(info.type, resource);
-        else
-            entity.Set(components.AnimationPool.CreateWith(info.type, resource));
     }
 }

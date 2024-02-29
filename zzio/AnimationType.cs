@@ -44,7 +44,9 @@ public enum AnimationType
     Stop,
     ThudGround2,
     PixieFlounder,
-    JumpHigh
+    JumpHigh,
+
+    @Count
 }
 
 public static class AnimationTypeExtension

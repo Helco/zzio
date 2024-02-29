@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Veldrid;
 using zzio;
-using zzio.rwbs;
 using zzre.rendering;
 
 namespace zzre;
@@ -20,7 +18,8 @@ public sealed class ClumpAsset : Asset
         public static Info Actor(string name) => new("actorsex", name);
         public static Info Backdrop(string name) => new("backdrops", name);
 
-        public FilePath FullPath => BasePath.Combine(Directory, Name + ".dff");
+        public FilePath FullPath => BasePath.Combine(Directory,
+            Name.EndsWith(".dff", StringComparison.OrdinalIgnoreCase) ? Name : Name + ".dff");
     }
 
     public static void Register() =>
@@ -29,6 +28,7 @@ public sealed class ClumpAsset : Asset
     private readonly Info info;
     private ClumpMesh? mesh;
 
+    public string Name => info.Name;
     public ClumpMesh Mesh => mesh ??
         throw new InvalidOperationException("Asset was not yet loaded");
 
@@ -70,14 +70,6 @@ public static unsafe partial class AssetExtensions
         StandardTextureKind? texturePlaceholder = null) =>
         registry.LoadClump(entity, ClumpAsset.Info.Model(modelName), priority, variant, texturePlaceholder);
 
-    public static AssetHandle<ClumpAsset> LoadActorClump(this IAssetRegistry registry,
-        DefaultEcs.Entity entity,
-        string modelName,
-        AssetLoadPriority priority,
-        ClumpMaterialAsset.MaterialVariant? variant = null,
-        StandardTextureKind? texturePlaceholder = null) =>
-        registry.LoadClump(entity, ClumpAsset.Info.Actor(modelName), priority, variant, texturePlaceholder);
-
     public static AssetHandle<ClumpAsset> LoadClump(this IAssetRegistry registry,
         DefaultEcs.Entity entity,
         ClumpAsset.Info info,
@@ -113,52 +105,11 @@ public static unsafe partial class AssetExtensions
         var handles = new AssetHandle[clumpMesh.Materials.Count];
         for (int i = 0; i < handles.Length; i++)
         {
-            var rwMaterial = clumpMesh.Materials[i];
-            var rwTexture = (RWTexture)rwMaterial.FindChildById(SectionId.Texture, true)!;
-            var rwTextureName = (RWString)rwTexture.FindChildById(SectionId.String, true)!;
-            var addressModeU = ConvertAddressMode(rwTexture.uAddressingMode);
-            var samplerDescription = new SamplerDescription()
-            {
-                AddressModeU = addressModeU,
-                AddressModeV = ConvertAddressMode(rwTexture.vAddressingMode, addressModeU),
-                Filter = ConvertFilterMode(rwTexture.filterMode),
-                MinimumLod = 0,
-                MaximumLod = 1000 // this should be VK_LOD_CLAMP_NONE
-            };
-
-            handles[i] = registry.Load(
-                new ClumpMaterialAsset.Info(rwTextureName.value, samplerDescription, materialConfig, placeholder),
-                AssetLoadPriority.Synchronous);
-            materials.Add(handles[i].Get<ClumpMaterialAsset>().Material);
+            var materialHandle = registry.LoadClumpMaterial(clumpMesh.Materials[i], materialConfig, placeholder);
+            handles[i] = materialHandle;
+            materials.Add(materialHandle.Get().Material);
         }
         entity.Set(handles);
         entity.Set(materials);
     }
-
-    private static SamplerAddressMode ConvertAddressMode(TextureAddressingMode mode, SamplerAddressMode? altMode = null) => mode switch
-    {
-        TextureAddressingMode.Wrap => SamplerAddressMode.Wrap,
-        TextureAddressingMode.Mirror => SamplerAddressMode.Mirror,
-        TextureAddressingMode.Clamp => SamplerAddressMode.Clamp,
-        TextureAddressingMode.Border => SamplerAddressMode.Border,
-
-        TextureAddressingMode.NATextureAddress => altMode ?? throw new NotImplementedException(),
-        TextureAddressingMode.Unknown => throw new NotImplementedException(),
-        _ => throw new NotImplementedException(),
-    };
-
-
-    private static SamplerFilter ConvertFilterMode(TextureFilterMode mode) => mode switch
-    {
-        TextureFilterMode.Nearest => SamplerFilter.MinPoint_MagPoint_MipPoint,
-        TextureFilterMode.Linear => SamplerFilter.MinLinear_MagLinear_MipPoint,
-        TextureFilterMode.MipNearest => SamplerFilter.MinPoint_MagPoint_MipPoint,
-        TextureFilterMode.MipLinear => SamplerFilter.MinLinear_MagLinear_MipPoint,
-        TextureFilterMode.LinearMipNearest => SamplerFilter.MinPoint_MagPoint_MipLinear,
-        TextureFilterMode.LinearMipLinear => SamplerFilter.MinLinear_MagLinear_MipLinear,
-
-        TextureFilterMode.NAFilterMode => throw new NotImplementedException(),
-        TextureFilterMode.Unknown => throw new NotImplementedException(),
-        _ => throw new NotImplementedException(),
-    };
 }
