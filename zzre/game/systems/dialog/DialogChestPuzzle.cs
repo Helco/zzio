@@ -71,7 +71,12 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
             .Build();
 
         puzzle.Board = CreateBoard(uiEntity, ref puzzle);
-        puzzle.Attempts = CreateAttempts(uiEntity, ref puzzle);
+        puzzle.Attempts = preload.CreateLabel(uiEntity)
+            .With(puzzle.BgRect.Min + new Vector2(25, 120))
+            .With(preload.Fnt000)
+            .WithText(FormatAttempts(ref puzzle))
+            .WithLineHeight(15)
+            .Build();
         puzzle.Action = preload.CreateSingleDialogButton(uiEntity, UIDCancel, IDCancel, puzzle.BgRect, buttonOffsetY: -45f);
     }
 
@@ -83,20 +88,8 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         return board;
     }
 
-    private DefaultEcs.Entity CreateAttempts(DefaultEcs.Entity parent, ref components.DialogChestPuzzle puzzle)
-    {
-        var entity = World.CreateEntity();
-        entity.Set(new components.Parent(parent));
-
-        preload.CreateLabel(entity)
-            .With(puzzle.BgRect.Min + new Vector2(25, 120))
-            .With(preload.Fnt000)
-            .WithText($"{db.GetText(UIDAttempts).Text}: {puzzle.NumAttempts}\n{db.GetText(UIDMinTries).Text}: {savegame.switchGameMinMoves}")
-            .WithLineHeight(15)
-            .Build();
-
-        return entity;
-    }
+    private string FormatAttempts(ref components.DialogChestPuzzle puzzle) =>
+        $"{db.GetText(UIDAttempts).Text}: {puzzle.NumAttempts}\n{db.GetText(UIDMinTries).Text}: {savegame.switchGameMinMoves}";
 
     private DefaultEcs.Entity CreateBoard(DefaultEcs.Entity parent, ref components.DialogChestPuzzle puzzle)
     {
@@ -156,8 +149,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
 
         puzzle.Board.Dispose();
         puzzle.Board = CreateBoard(parent, ref puzzle);
-        puzzle.Attempts.Dispose();
-        puzzle.Attempts = CreateAttempts(parent, ref puzzle);
+        puzzle.Attempts.Set(new components.ui.Label(FormatAttempts(ref puzzle)));
     }
 
     private void Succeed(DefaultEcs.Entity parent, ref components.DialogChestPuzzle puzzle)
