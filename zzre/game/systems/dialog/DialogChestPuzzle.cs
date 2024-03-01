@@ -118,7 +118,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         return entity;
     }
 
-    private readonly (int row, int col)[] flipped = [
+    private static readonly (int row, int col)[] flipped = [
         (0, 0),
         (-1, 0),
         (0, -1),
@@ -172,13 +172,15 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         puzzle.Action = preload.CreateSingleDialogButton(parent, UIDNext, IDNext, puzzle.BgRect, buttonOffsetY: -45f);
     }
 
+    private static readonly components.ui.ElementId FirstCellId = new(0);
+
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId clickedId)
     {
         var uiEntity = Set.GetEntities()[0];
         ref var puzzle = ref uiEntity.Get<components.DialogChestPuzzle>();
         ref var script = ref puzzle.DialogEntity.Get<components.ScriptExecution>();
 
-        if (!puzzle.LockBoard && clickedId.InRange(new components.ui.ElementId(0), new components.ui.ElementId(puzzle.Size * puzzle.Size), out var cellId)) {
+        if (!puzzle.LockBoard && clickedId.InRange(FirstCellId, FirstCellId + puzzle.Size*puzzle.Size, out var cellId)) {
             UpdateBoard(uiEntity, ref puzzle, cellId);
         }
         else if (clickedId == IDCancel)
