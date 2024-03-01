@@ -74,7 +74,13 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         in ClumpMesh clumpMesh,
         in ModelMaterial[] materials)
     {
-        cl.PushDebugGroup("Unknown Actor"); // TODO: Fix debug group names for actors
+        var actorName =
+            entity.TryGet(out components.Parent parent) &&
+            parent.Entity.TryGet(out AssetHandle handle)
+            ? handle.Get<ActorAsset>().Name
+            : "Unknown actor";
+
+        cl.PushDebugGroup(actorName);
         materials.First().ApplyAttributes(cl, clumpMesh);
         cl.SetIndexBuffer(clumpMesh.IndexBuffer, clumpMesh.IndexFormat);
         foreach (var subMesh in clumpMesh.SubMeshes)

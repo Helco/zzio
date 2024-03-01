@@ -24,6 +24,7 @@ public sealed class ActorAsset : Asset
     private AssetHandle<AnimationAsset>[] bodyAnimations = [];
     private AssetHandle<AnimationAsset>[] wingsAnimations = [];
 
+    public string Name => info.Name;
     public ActorExDescription Description => description ??
         throw new InvalidOperationException("Asset was not yet loaded");
 

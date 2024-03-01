@@ -58,9 +58,8 @@ partial class ECSExplorer
         AddEntityNamerByComponent<FairyRow>(High, e => $"Fairy \"{e.Get<FairyRow>().Name}\" {e}");
         AddEntityNamerByComponent<ActorPart>(High, e => $"ActorPart {e}");
 
-        // TODO: Fix ECS explorer namer for actors
-        AddEntityNamerByComponent<ManagedResource<string, ActorExDescription>>(Def + 1,
-            e => $"Actor {e.Get<ManagedResource<string, ActorExDescription>>().Info} {e}");
+        AddEntityNamerByComponent<ActorParts>(Def + 1,
+            e => $"Actor {e.Get<AssetHandle>().Get<ActorAsset>().Name} {e}");
         AddEntityNamerByComponent<ClumpMesh>(Def, e => $"Model {e.Get<ClumpMesh>().Name} {e}");
         AddEntityNamerByComponent<SoundEmitter>(Def, e => $"{(e.Has<Location>() ? "3D" : "2D")} Sample {e}");
 
