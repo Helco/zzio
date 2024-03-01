@@ -158,7 +158,7 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         part.Set<components.SyncedLocation>();
         part.Set<components.Visibility>();
         part.Set<components.ActorPart>();
-        part.Set(new components.AnimationPool()); // do not use default to keep the parametereless constructor call
+        part.Set<components.AnimationPool>();
         part.Set(new components.Parent(parent));
         part.Set(clumpHandle);
         part.Set(clumpAsset.Mesh);
