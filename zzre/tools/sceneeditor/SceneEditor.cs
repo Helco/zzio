@@ -20,6 +20,8 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     private readonly LocationBuffer locationBuffer;
     private readonly DebugLineRenderer gridRenderer;
     private readonly Camera camera;
+    private readonly AssetLocalRegistry assetRegistry;
+    private readonly DefaultEcs.World ecsWorld;
 
     private event Action OnLoadScene = () => { };
 
@@ -39,6 +41,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         var onceAction = new OnceAction();
         Window.AddTag(onceAction);
         Window.OnContent += onceAction.Invoke;
+
         locationBuffer = new LocationBuffer(diContainer.GetTag<GraphicsDevice>());
         AddDisposable(locationBuffer);
         var menuBar = new MenuBarWindowTag(Window);
@@ -65,11 +68,15 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         fbArea.OnRender += gridRenderer.Render;
 
         localDiContainer = diContainer
-            .FallbackTo(Window)
-            .ExtendedWith(this, Window, gridRenderer, locationBuffer)
-            .AddTag<IAssetLoader<Texture>>(new CachedAssetLoader<Texture>(diContainer.GetTag<IAssetLoader<Texture>>()))
-            .AddTag<IAssetLoader<ClumpMesh>>(new CachedClumpMeshLoader(diContainer))
+           .FallbackTo(Window)
+           .ExtendedWith(this, Window, gridRenderer, locationBuffer);
+        AddDisposable(localDiContainer);
+        localDiContainer
+            .AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("SceneEditor", localDiContainer))
+            .AddTag(ecsWorld = new DefaultEcs.World())
             .AddTag(camera);
+        AssetRegistry.SubscribeAt(localDiContainer.GetTag<DefaultEcs.World>());
+        assetRegistry.DelayDisposals = false;
         new MiscComponent(localDiContainer);
         new DatasetComponent(localDiContainer);
         new WorldComponent(localDiContainer);
@@ -81,6 +88,13 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         new Sample3DComponent(localDiContainer);
         new SelectionComponent(localDiContainer);
         diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
+    }
+
+    protected override void DisposeManaged()
+    {
+        localDiContainer.RemoveTag<IAssetRegistry>(dispose: false);
+        base.DisposeManaged();
+        assetRegistry.Dispose();
     }
 
     public void Load(string pathText)
@@ -97,8 +111,6 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         if (resource.Equals(CurrentResource))
             return;
         CurrentResource = null;
-        localDiContainer.GetTag<IAssetLoader<Texture>>().Clear();
-        localDiContainer.GetTag<IAssetLoader<ClumpMesh>>().Clear();
 
         using var contentStream = resource.OpenContent() ?? throw new IOException($"Could not open scene at {resource.Path.ToPOSIXString()}");
         scene = new Scene();
@@ -108,7 +120,9 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         controls.ResetView();
         fbArea.IsDirty = true;
         Window.Title = $"Scene Editor - {resource.Path.ToPOSIXString()}";
+        ecsWorld.Publish(new game.messages.SceneLoaded(scene, Savegame: null!));
         OnLoadScene();
+        assetRegistry.ApplyAssets();
     }
 
     private void HandleResize() => camera.Aspect = fbArea.Ratio;

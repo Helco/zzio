@@ -34,7 +34,7 @@ public sealed class WorldMaterialAsset : ModelMaterialAsset
         Material.IsSkinned = false;
         Material.Blend = ModelMaterial.BlendMode.Opaque;
         Material.HasTexShift = false;
-        Material.HasFog = true;
+        Material.HasFog = diContainer.TryGetTag<UniformBuffer<FogParams>>(out var fogParams);
 
         material.Factors.Ref = new()
         {
@@ -43,7 +43,7 @@ public sealed class WorldMaterialAsset : ModelMaterialAsset
             tintFactor = 1f,
             alphaReference = 0.6f
         };
-        if (diContainer.TryGetTag<UniformBuffer<FogParams>>(out var fogParams))
+        if (fogParams is not null)
             material.FogParams.Buffer = fogParams.Buffer;
     }
 }

@@ -142,7 +142,7 @@ internal static partial class Program
         }
     }
 
-    private static AssetRegistry CreateAssetRegistry(ITagContainer diContainer)
+    private static IAssetRegistry CreateAssetRegistry(ITagContainer diContainer)
     {
         var registryList = new AssetRegistryList();
         diContainer.AddTag(registryList);

@@ -12,6 +12,7 @@ using zzre.rendering;
 using ImGuiNET;
 using static ImGuiNET.ImGui;
 using static zzre.imgui.ImGuiEx;
+using zzio.rwbs;
 
 namespace zzre.tools;
 
@@ -22,7 +23,9 @@ public partial class SceneEditor
         private readonly ITagContainer diContainer;
         private readonly DeviceBufferRange locationRange;
         private readonly ClumpMesh mesh;
+        private readonly AssetHandle<ClumpAsset> meshHandle;
         private readonly ModelMaterial[] materials;
+        private readonly List<AssetHandle> materialHandles = [];
 
         public Location Location { get; } = new Location();
         public zzio.scn.Model SceneModel { get; }
@@ -49,8 +52,9 @@ public partial class SceneEditor
             Location.LocalPosition = sceneModel.pos;
             Location.LocalRotation = sceneModel.rot.ToZZRotation();
 
-            var clumpLoader = diContainer.GetTag<IAssetLoader<ClumpMesh>>();
-            mesh = clumpLoader.Load(new FilePath("resources/models/models").Combine(sceneModel.filename + ".dff"));
+            var assetRegistry = diContainer.GetTag<IAssetRegistry>();
+            meshHandle = assetRegistry.Load(ClumpAsset.Info.Model(sceneModel.filename), AssetLoadPriority.Synchronous).As<ClumpAsset>();
+            mesh = meshHandle.Get().Mesh;
             if (mesh.IsEmpty)
             {
                 materials = [];
@@ -58,8 +62,16 @@ public partial class SceneEditor
             }
             materials = mesh.Materials.Select(rwMaterial =>
             {
+
                 var material = new ModelMaterial(diContainer);
-                (material.Texture.Texture, material.Sampler.Sampler) = textureLoader.LoadTexture(textureBasePaths, rwMaterial);
+                var rwTexture = (RWTexture)rwMaterial.FindChildById(SectionId.Texture, true)!;
+                var rwTextureName = (RWString)rwTexture.FindChildById(SectionId.String, true)!;
+                var textureHandle = assetRegistry.LoadTexture(textureBasePaths, rwTextureName.value, AssetLoadPriority.Synchronous, material);
+                var samplerHandle = assetRegistry.LoadSampler(SamplerDescription.Linear);
+                materialHandles.Add(textureHandle);
+                materialHandles.Add(samplerHandle);
+                material.Texture.Texture = textureHandle.Get().Texture;
+                material.Sampler.Sampler = samplerHandle.Get().Sampler;
                 material.LinkTransformsTo(camera);
                 material.World.BufferRange = locationRange;
                 material.Factors.Ref = ModelFactors.Default;
@@ -73,9 +85,11 @@ public partial class SceneEditor
         {
             base.DisposeManaged();
             diContainer.GetTag<LocationBuffer>().Remove(locationRange);
-            mesh.Dispose();
+            meshHandle.Dispose();
             foreach (var material in materials)
                 material.Dispose();
+            foreach (var handle in materialHandles)
+                handle.Dispose();
         }
 
         public void Render(CommandList cl)

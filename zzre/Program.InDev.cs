@@ -117,7 +117,7 @@ internal partial class Program
         InDevOpenResources(diContainer, ctx);
 
         var time = diContainer.GetTag<GameTime>();
-        var assetRegistry = diContainer.GetTag<AssetRegistry>();
+        var assetRegistry = diContainer.GetTag<IAssetRegistry>();
         var remotery = diContainer.GetTag<Remotery>();
         windowContainer.CreateProfilerSample = n => remotery.SampleCPU(n);
         while (window.IsOpen)
