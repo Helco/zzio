@@ -8,13 +8,7 @@ namespace zzre;
 
 public sealed class WorldAsset : Asset
 {
-    private static readonly FilePath BasePath = new("resources/worlds");
-
-    public readonly record struct Info(string WorldName)
-    {
-        public FilePath FullPath => BasePath.Combine(
-            WorldName.EndsWith(".bsp", StringComparison.OrdinalIgnoreCase) ? WorldName : WorldName + ".bsp");
-    }
+    public readonly record struct Info(FilePath FullPath);
 
     public static void Register() =>
         AssetInfoRegistry<Info>.Register<WorldAsset>(AssetLocality.Global);
@@ -42,13 +36,13 @@ public sealed class WorldAsset : Asset
         mesh = null;
     }
 
-    public override string ToString() => $"World {info.WorldName}";
+    public override string ToString() => $"World {info.FullPath.Parts[^1]}";
 }
 
 public static unsafe partial class AssetExtensions
 {
     public static AssetHandle<WorldAsset> LoadWorld(this IAssetRegistry registry,
-        string worldName,
+        FilePath path,
         AssetLoadPriority priority) =>
-        registry.Load(new WorldAsset.Info(worldName), priority).As<WorldAsset>();
+        registry.Load(new WorldAsset.Info(path), priority).As<WorldAsset>();
 }

@@ -12,6 +12,8 @@ namespace zzre.game.systems;
 
 public class WorldRendererSystem : ISystem<CommandList>
 {
+    private static readonly FilePath BasePath = new("resources/worlds");
+
     public enum CullingMode
     {
         None,
@@ -27,6 +29,7 @@ public class WorldRendererSystem : ISystem<CommandList>
     private readonly IDisposable sceneLoadedSubscription;
     private readonly List<AssetHandle<WorldMaterialAsset>> materialAssetHandles = [];
     private readonly List<ModelMaterial> materials = [];
+    private readonly List<WorldMesh.MeshSection> visibleMeshSections = [];
     private readonly List<StaticMesh.SubMesh> visibleSubMeshes = [];
     private readonly Queue<WorldMesh.BaseSection> visibilityQueue = []; // declared here to reduce memory allocations
     private readonly DeviceBufferRange locationRange;
@@ -38,6 +41,8 @@ public class WorldRendererSystem : ISystem<CommandList>
     public Location Location { get; } = new();
     public CullingMode Culling { get; set; } = CullingMode.FrustumCulling;
     public Frustum ViewFrustum => viewFrustum;
+    internal IReadOnlyList<ModelMaterial> Materials => materials;
+    internal IReadOnlyList<WorldMesh.MeshSection> VisibleMeshSections => visibleMeshSections;
 
     public WorldRendererSystem(ITagContainer diContainer)
     {
@@ -72,13 +77,16 @@ public class WorldRendererSystem : ISystem<CommandList>
         worldMesh = null;
     }
 
-    private void HandleSceneLoaded(in messages.SceneLoaded message)
+    private void HandleSceneLoaded(in messages.SceneLoaded message) =>
+        LoadWorld(BasePath.Combine(message.Scene.misc.worldFile + ".bsp"));
+
+    internal void LoadWorld(FilePath path)
     {
         DisposeWorld();
 
-        var scene = message.Scene;
-        worldAssetHandle = assetRegistry.LoadWorld(scene.misc.worldFile, AssetLoadPriority.Synchronous);
+        worldAssetHandle = assetRegistry.LoadWorld(path, AssetLoadPriority.Synchronous);
         worldMesh = worldAssetHandle.Get().Mesh;
+        visibleMeshSections.EnsureCapacity(worldMesh.Sections.Count(s => s is WorldMesh.MeshSection));
         visibleSubMeshes.EnsureCapacity(worldMesh.SubMeshes.Count);
         visibilityQueue.EnsureCapacity(worldMesh.Sections.Count);
 
@@ -140,6 +148,7 @@ public class WorldRendererSystem : ISystem<CommandList>
         if (worldMesh is null)
             return;
         viewFrustum.Projection = camera.View * camera.Projection;
+        visibleMeshSections.Clear();
         visibleSubMeshes.Clear();
         visibilityQueue.Clear();
 
@@ -149,6 +158,7 @@ public class WorldRendererSystem : ISystem<CommandList>
             var section = visibilityQueue.Dequeue();
             if (section is WorldMesh.MeshSection meshSection)
             {
+                visibleMeshSections.Add(meshSection);
                 visibleSubMeshes.AddRange(worldMesh.GetSubMeshes(meshSection.SubMeshSection));
                 continue;
             }
@@ -173,5 +183,7 @@ public class WorldRendererSystem : ISystem<CommandList>
         visibleSubMeshes.Clear();
         visibleSubMeshes.AddRange(worldMesh.GetSubMeshes());
         visibleSubMeshes.Sort(StaticMesh.CompareByMaterial);
+        visibleMeshSections.Clear();
+        visibleMeshSections.AddRange(worldMesh.Sections.OfType<WorldMesh.MeshSection>());
     }
 }
