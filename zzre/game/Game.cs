@@ -22,6 +22,7 @@ public class Game : BaseDisposable, ITagContainer
     private readonly GameTime time;
     private readonly DefaultEcs.World ecsWorld;
     private readonly Camera camera;
+    private readonly UI ui;
     private readonly OnceAction onceUpdate = new();
     private readonly ISystem<float> updateSystems;
     private readonly ISystem<CommandList> renderSystems;
@@ -46,8 +47,9 @@ public class Game : BaseDisposable, ITagContainer
         zzContainer = GetTag<IZanzarahContainer>();
         zzContainer.OnResize += HandleResize;
         logger = diContainer.GetLoggerFor<Game>();
-        profiler = diContainer.GetTag<Remotery>();
+        profiler = GetTag<Remotery>();
         time = GetTag<GameTime>();
+        ui = GetTag<UI>();
 
         AddTag(this);
         AddTag(savegame);
@@ -303,6 +305,7 @@ public class Game : BaseDisposable, ITagContainer
         var assetStatsBeforeRemoving = assetRegistry.Stats;
         assetRegistry.DelayDisposals = false;
         assetRegistry.DelayDisposals = true;
+        ui.DisposeUnusedAssets();
         var assetStatsAfterLoading = assetRegistry.Stats;
         var removalDiff = assetStatsAfterLoading - assetStatsBeforeRemoving;
         var totalDiff = assetStatsAfterLoading - assetStatsBeforeLoading;

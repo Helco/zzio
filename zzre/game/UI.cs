@@ -51,8 +51,8 @@ public class UI : BaseDisposable, ITagContainer
         if (TryGetTag(out tools.AssetRegistryList assetRegistryList))
             assetRegistryList.Register("UI", assetRegistry);
         AssetRegistry.SubscribeAt(World);
-        assetRegistry.DelayDisposals = false;
-        // we keep most UI assets alive using UIPreloader all the time anyway
+        assetRegistry.DelayDisposals = true;
+        // we still use DelayDisposal in UI to prevent mostly sound samples to be freed
 
         CursorEntity = World.CreateEntity();
         CursorEntity.Set<Rect>();
@@ -121,6 +121,12 @@ public class UI : BaseDisposable, ITagContainer
         using var _ = profiler.SampleCPU("UI.Render");
         assetRegistry.ApplyAssets();
         renderSystems.Update(cl);
+    }
+
+    public void DisposeUnusedAssets()
+    {
+        assetRegistry.DelayDisposals = false;
+        assetRegistry.DelayDisposals = true;
     }
 
     private void HandleResize()

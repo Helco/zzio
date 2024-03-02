@@ -5,7 +5,9 @@ namespace zzre;
 
 public sealed class AssetHandleScope(IAssetRegistry registry) : IAssetRegistry
 {
-    private readonly List<AssetHandle> handlesToDispose = new(64);
+    // we use a dictionary to keep handles to the same asset from piling up 
+    // wasting memory and cycles at disposal time
+    private readonly Dictionary<Guid, IAssetRegistryInternal> handlesToDispose = new(128);
     private bool delayDisposals;
 
     IAssetRegistryInternal IAssetRegistry.InternalRegistry => Registry.InternalRegistry;
@@ -20,8 +22,8 @@ public sealed class AssetHandleScope(IAssetRegistry registry) : IAssetRegistry
             delayDisposals = value;
             if (!value)
             {
-                foreach (var handle in handlesToDispose)
-                    handle.registryInternal.DisposeHandle(handle);
+                foreach (var (assetId, registryInternal) in handlesToDispose)
+                    registryInternal.DisposeHandle(new(registryInternal, this, assetId));
                 handlesToDispose.Clear();
             }
         }
@@ -50,9 +52,8 @@ public sealed class AssetHandleScope(IAssetRegistry registry) : IAssetRegistry
 
     internal void DisposeHandle(AssetHandle handle)
     {
-        if (DelayDisposals)
-            handlesToDispose.Add(new(handle.registryInternal, this, handle.AssetID));
-        else
+        if (!DelayDisposals ||
+            !handlesToDispose.TryAdd(handle.AssetID, handle.registryInternal))
             handle.registryInternal.DisposeHandle(handle);
     }
 
