@@ -34,7 +34,19 @@ public sealed class ClumpMaterialAsset : ModelMaterialAsset
         bool DepthTest = true,
         bool HasEnvMap = false,
         bool HasTexShift = true,
-        bool HasFog = true);
+        bool HasFog = true)
+    {
+        public MaterialVariant(zzio.effect.EffectPartRenderMode renderMode, bool depthTest)
+            : this(BlendFromRenderMode(renderMode), DepthWrite: false, depthTest, HasTexShift: false) { }
+
+        private static ModelMaterial.BlendMode BlendFromRenderMode(zzio.effect.EffectPartRenderMode renderMode) => renderMode switch
+        {
+            zzio.effect.EffectPartRenderMode.Additive => ModelMaterial.BlendMode.Additive,
+            zzio.effect.EffectPartRenderMode.AdditiveAlpha => ModelMaterial.BlendMode.AdditiveAlpha,
+            zzio.effect.EffectPartRenderMode.NormalBlend => ModelMaterial.BlendMode.Alpha,
+            _ => throw new NotSupportedException($"Unsupported effect part render mode: {renderMode}")
+        };
+    }
 
     private readonly MaterialVariant materialVariant;
 

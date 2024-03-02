@@ -43,7 +43,7 @@ public abstract class ModelMaterialAsset : Asset
 
         var camera = diContainer.GetTag<Camera>();
         var samplerHandle = Registry.LoadSampler(sampler);
-        var textureHandle = LoadTexture(material);
+        var textureHandle = LoadTexture();
         material.Sampler.Sampler = samplerHandle.Get().Sampler;
         material.Projection.BufferRange = camera.ProjectionRange;
         material.View.BufferRange = camera.ViewRange;
@@ -53,8 +53,10 @@ public abstract class ModelMaterialAsset : Asset
             : ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerHandle, textureHandle.Value ]);
     }
 
-    private AssetHandle? LoadTexture(ModelMaterial material)
+    private AssetHandle? LoadTexture()
     {
+        if (material is null)
+            return null;
         var standardTextures = diContainer.GetTag<StandardTextures>();
         if (textureName == UseStandardTexture)
         {

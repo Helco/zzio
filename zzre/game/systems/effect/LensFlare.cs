@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using DefaultEcs.Resource;
 using DefaultEcs.System;
 using Serilog;
 using zzio.rwbs;
@@ -14,11 +13,11 @@ namespace zzre.game.systems.effect;
 public partial class LensFlare : AEntitySetSystem<float>
 {
     private const float CanonicalRatio = 1024f / 768f;
-    private static readonly resources.EffectMaterialInfo MaterialInfo = new(
-        DepthTest: false,
+    private static readonly EffectMaterialAsset.Info MaterialInfo = new(
+        TextureName: "lsf000t",
         EffectMaterial.BillboardMode.LensFlare,
         EffectMaterial.BlendMode.AdditiveAlpha,
-        TextureName: "lsf000t",
+        DepthTest: false,
         AlphaReference: 0.0196078f,
         HasFog: false);
 
@@ -68,6 +67,7 @@ public partial class LensFlare : AEntitySetSystem<float>
     private readonly ILogger logger;
     private readonly Camera camera;
     private readonly IZanzarahContainer zzContainer;
+    private readonly IAssetRegistry assetRegistry;
     private readonly EffectMesh effectMesh;
     private readonly IDisposable sceneChangingDisposable;
     private readonly IDisposable sceneLoadedDisposable;
@@ -81,6 +81,7 @@ public partial class LensFlare : AEntitySetSystem<float>
         logger = diContainer.GetTag<ILogger>();
         camera = diContainer.GetTag<Camera>();
         zzContainer = diContainer.GetTag<IZanzarahContainer>();
+        assetRegistry = diContainer.GetTag<IAssetRegistry>();
         effectMesh = diContainer.GetTag<EffectMesh>();
         zzContainer.OnResize += HandleResize;
         sceneChangingDisposable = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
@@ -127,7 +128,7 @@ public partial class LensFlare : AEntitySetSystem<float>
             {
                 LocalPosition = trigger.pos
             });
-            entity.Set(ManagedResource<EffectMaterial>.Create(MaterialInfo));
+            assetRegistry.LoadEffectMaterial(entity, MaterialInfo);
             var vertexRange = effectMesh.RentVertices(4 * FlareInfos[(int)trigger.ii1].Count);
             var indexRange = effectMesh.RentQuadIndices(vertexRange);
             entity.Set(new components.effect.RenderIndices(indexRange));

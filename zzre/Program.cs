@@ -157,6 +157,7 @@ internal static partial class Program
         AnimationAsset.Register();
         WorldMaterialAsset.Register();
         WorldAsset.Register();
+        EffectMaterialAsset.Register();
         return registry;
     }
 

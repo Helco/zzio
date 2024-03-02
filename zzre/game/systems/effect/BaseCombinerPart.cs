@@ -9,6 +9,7 @@ public abstract partial class BaseCombinerPart<TData, TState> : AEntityMultiMapS
     where TState : struct
 {
     protected readonly EffectMesh effectMesh;
+    protected readonly IAssetRegistry assetRegistry;
     private readonly IDisposable addDisposable;
     private readonly IDisposable removeDisposable;
 
@@ -16,6 +17,7 @@ public abstract partial class BaseCombinerPart<TData, TState> : AEntityMultiMapS
         base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         effectMesh = diContainer.GetTag<EffectMesh>();
+        assetRegistry = diContainer.GetTag<IAssetRegistry>();
         addDisposable = World.SubscribeEntityComponentAdded<TData>(HandleAddedComponent);
         removeDisposable = World.SubscribeEntityComponentRemoved<TState>(HandleRemovedComponent);
     }
