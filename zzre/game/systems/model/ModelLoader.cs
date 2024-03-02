@@ -83,10 +83,17 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
                 LocalRotation = model.rot.ToZZRotation()
             });
 
-            bool hasBehavior;
-            if (hasBehavior = behaviors.TryGetValue(model.idx, out var behaviour))
+            bool hasBehavior = behaviors.TryGetValue(model.idx, out var behaviour);
+            var renderType = model.isVisualOnly ? FOModelRenderType.Solid : null as FOModelRenderType?;
+            var priority = hasBehavior
+                ? AssetLoadPriority.Synchronous
+                : AssetLoadPriority.High;
+            LoadModel(entity, model.filename, model.color, renderType, priority);
+
+            if (hasBehavior)
             {
                 SetBehaviour(entity, behaviour, model.idx);
+                SetIntersectionable(entity);
                 if (model.wiggleAmpl > 0)
                 {
                     model.wiggleAmpl = 0;
@@ -94,12 +101,6 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
                 }
             }
             SetPlantWiggle(entity, model.wiggleAmpl, plantWiggleDelay);
-
-            var renderType = model.isVisualOnly ? FOModelRenderType.Solid : null as FOModelRenderType?;
-            var priority = entity.Has<components.Collidable>() || hasBehavior
-                ? AssetLoadPriority.Synchronous
-                : AssetLoadPriority.High;
-            LoadModel(entity, model.filename, model.color, renderType, priority);
 
             plantWiggleDelay++;
         }
@@ -167,11 +168,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
         if (HasEmptyMesh(entity))
             entity.Dispose(); // I am fine with ignoring empty FOModels
         else
-        {
             SetCollider(entity);
-            if (entity.Has<components.Collidable>())
-                SetIntersectionable(entity);
-        }
     }
 
     private void HandleCreateItem(in messages.CreateItem msg)
@@ -206,6 +203,11 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
 
     private static void SetIntersectionable(DefaultEcs.Entity entity)
     {
+        if (!entity.Has<components.Collidable>())
+            return;
+        // Only scene models with behaviors can be collidable
+        // ClumpMeshes for models with behavior are loaded synchronously
+        // therefore we always have the ClumpMesh already at this point
         var clumpMesh = entity.Get<ClumpMesh>();
         var location = entity.Get<Location>();
         entity.Set<IIntersectionable>(GeometryCollider.CreateFor(clumpMesh.Geometry, location));
