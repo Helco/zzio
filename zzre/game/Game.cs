@@ -62,13 +62,6 @@ public class Game : BaseDisposable, ITagContainer
         if (TryGetTag(out tools.AssetRegistryList assetRegistryList))
             assetRegistryList.Register("Game", assetRegistry);
 
-        AddTag(new resources.Clump(this));
-        AddTag(new resources.ClumpMaterial(this));
-        AddTag(new resources.Actor(this));
-        AddTag(new resources.SkeletalAnimation(this));
-        AddTag(new resources.EffectCombiner(this));
-        AddTag(new resources.EffectMaterial(this));
-
         // create it now for extra priority in the scene loading events
         var worldRenderer = new systems.WorldRendererSystem(this);
         var fogModifier = new systems.FogModifier(this);

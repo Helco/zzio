@@ -37,7 +37,6 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private readonly GameTime gameTime;
     private readonly CachedAssetLoader<Texture> textureLoader;
     private readonly CachedAssetLoader<ClumpMesh> clumpLoader;
-    private readonly game.resources.Sound sound;
     private readonly EffectCombiner emptyEffect = new();
     private readonly DefaultEcs.World ecsWorld = new();
     private readonly SequentialSystem<float> updateSystems = new();
@@ -98,11 +97,6 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         AddDisposable(clumpLoader = new CachedClumpMeshLoader(diContainer));
         diContainer.AddTag<IAssetLoader<Texture>>(textureLoader);
         diContainer.AddTag<IAssetLoader<ClumpMesh>>(clumpLoader);
-
-        diContainer.AddTag(new game.resources.Clump(diContainer));
-        diContainer.AddTag(new game.resources.ClumpMaterial(diContainer));
-        diContainer.AddTag(new game.resources.EffectMaterial(diContainer));
-        diContainer.AddTag(sound = new game.resources.Sound(diContainer));
 
         updateSystems = new SequentialSystem<float>(
             new game.systems.SoundContext(diContainer),
@@ -262,7 +256,6 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     {
         if (isPlaying && effectEntity.IsAlive)
             updateSystems.Update(gameTime.Delta);
-        sound.RegularCleanup();
         UpdateSoundListener();
 
         cl.PushDebugGroup(Window.Title);
