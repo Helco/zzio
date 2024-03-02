@@ -133,9 +133,9 @@ public partial class DialogScript : BaseScript<DialogScript>
         return letterboxEntity;
     }
 
-    private DefaultEcs.Entity CreateSayLabel() => ui.Preload.CreateLabel(dialogEntity)
+    private DefaultEcs.Entity CreateSayLabel() => ui.Builder.CreateLabel(dialogEntity)
         .With(new Vector2(25, ui.LogicalScreen.Size.Y - 90))
-        .With(ui.Preload.Fnt003)
+        .With(UIPreloadAsset.Fnt003)
         .With(components.ui.UIOffset.ScreenUpperLeft);
 
     private void HandleDialogStateRemoved(in DefaultEcs.Entity _, in components.DialogState __)

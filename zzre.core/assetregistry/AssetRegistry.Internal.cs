@@ -121,7 +121,7 @@ partial class AssetRegistry
             return assetsToApply.Writer.WriteAsync(asset, Cancellation);
     }
 
-    Task IAssetRegistryInternal.WaitAsyncAll(AssetHandle[] secondaryHandles)
+    Task IAssetRegistry.WaitAsyncAll(AssetHandle[] secondaryHandles)
     {
         lock (assets)
         {
@@ -148,7 +148,6 @@ partial class AssetRegistry
 
     TAsset IAssetRegistryInternal.GetLoadedAsset<TAsset>(Guid assetId)
     {
-        EnsureMainThread();
         IAsset? asset;
         lock (assets)
             asset = assets.GetValueOrDefault(assetId);
@@ -163,7 +162,11 @@ partial class AssetRegistry
             {
                 case AssetState.Disposed:
                     throw new ObjectDisposedException(asset.ToString());
+                case AssetState.Loaded:
+                    return (TAsset)asset;
                 default:
+                    if (!IsMainThread)
+                        throw new InvalidOperationException("Cannot synchronously wait for assets to load on secondary threads");
                     asset.Complete();
                     asset.ApplyAction.Invoke(new(this, assetId));
                     return (TAsset)asset;

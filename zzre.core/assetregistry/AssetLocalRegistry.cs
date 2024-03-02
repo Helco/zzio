@@ -19,6 +19,7 @@ public sealed class AssetLocalRegistry : zzio.BaseDisposable, IAssetRegistryDebu
     }
 
     public AssetRegistryStats Stats => globalRegistry.Stats + localRegistry.Stats;
+    public AssetRegistryStats LocalStats => localRegistry.Stats;
 
     public AssetLocalRegistry(string debugName, ITagContainer diContainer)
     {

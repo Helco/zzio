@@ -1,11 +1,10 @@
 ﻿using DefaultEcs;
-using zzre.game.systems.ui;
 
 namespace zzre.game.uibuilder;
 
 internal sealed record TooltipArea : Identified<TooltipArea>
 {
-    public TooltipArea(UIPreloader preload, Entity parent) : base(preload, parent)
+    public TooltipArea(UIBuilder preload, Entity parent) : base(preload, parent)
     {
     }
 

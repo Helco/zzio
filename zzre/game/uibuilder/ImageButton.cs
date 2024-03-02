@@ -1,11 +1,10 @@
 ﻿using DefaultEcs;
-using zzre.game.systems.ui;
 
 namespace zzre.game.uibuilder;
 
 internal sealed record ImageButton : ButtonLike<ImageButton>
 {
-    public ImageButton(UIPreloader preload, Entity parent) : base(preload, parent)
+    public ImageButton(UIBuilder preload, Entity parent) : base(preload, parent)
     {
     }
 

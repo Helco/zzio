@@ -23,13 +23,13 @@ public static class InGameScreen
         new(IDOpenMap,       PosX: 511, TileI: 18, TooltipUID: new(0xC51E6991), StdItemId.MapFairyGarden)
     ];
 
-    public static void CreateTopButtons(UIPreloader preload, in DefaultEcs.Entity parent, Inventory inventory, components.ui.ElementId curTab)
+    public static void CreateTopButtons(UIBuilder preload, in DefaultEcs.Entity parent, Inventory inventory, components.ui.ElementId curTab)
     {
         preload.CreateButton(parent)
             .With(IDClose)
             .With(Mid + new Vector2(606, 3))
             .With(new components.ui.ButtonTiles(24, 25))
-            .With(preload.Btn002)
+            .With(UIPreloadAsset.Btn002)
             .WithTooltip(0xAD3AACA1)
             .Build();
 
@@ -37,7 +37,7 @@ public static class InGameScreen
             .With(IDSaveGame)
             .With(Mid + new Vector2(384, 3))
             .With(new components.ui.ButtonTiles(26, 27))
-            .With(preload.Btn002)
+            .With(UIPreloadAsset.Btn002)
             .WithTooltip(0x7113B8A1)
             .Build();
 
@@ -49,7 +49,7 @@ public static class InGameScreen
                 .With(tab.Id)
                 .With(Mid + new Vector2(tab.PosX, 3))
                 .With(new components.ui.ButtonTiles(tab.TileI, tab.TileI + 1, tab.TileI + 2))
-                .With(preload.Btn002)
+                .With(UIPreloadAsset.Btn002)
                 .WithTooltip(tab.TooltipUID)
                 .Build();
 

@@ -105,21 +105,21 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             .With(IDSliderUp)
             .With(Mid + new Vector2(592, 73))
             .With(new components.ui.ButtonTiles(16, 17))
-            .With(preload.Btn001)
+            .With(UIPreloadAsset.Btn001)
             .Build();
 
         preload.CreateButton(entity)
             .With(IDSliderDown)
             .With(Mid + new Vector2(592, 291))
             .With(new components.ui.ButtonTiles(18, 19))
-            .With(preload.Btn001)
+            .With(UIPreloadAsset.Btn001)
             .Build();
 
         deck.ListSlider = preload.CreateButton(entity)
             .With(IDSlider)
             .With(Rect.FromTopLeftSize(Mid + new Vector2(590, 110), new Vector2(40, 182)))
             .With(new components.ui.ButtonTiles(14, 15))
-            .With(preload.Btn001);
+            .With(UIPreloadAsset.Btn001);
         deck.ListSlider.Set(components.ui.Slider.Vertical);
 
         deck.ListTabs = new DefaultEcs.Entity[4];
@@ -129,35 +129,35 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             .With(IDTabFairies)
             .With(tabButtonRect.OffsettedBy(0, 79))
             .With(new components.ui.ButtonTiles(0, 1, 2))
-            .With(preload.Btn002)
+            .With(UIPreloadAsset.Btn002)
             .WithTooltip(0x7DB4EEB1);
 
         deck.ListTabs[(int)Tab.Items - 1] = preload.CreateButton(entity)
             .With(IDTabItems)
             .With(tabButtonRect.OffsettedBy(0, 123))
             .With(new components.ui.ButtonTiles(3, 4, 5))
-            .With(preload.Btn002)
+            .With(UIPreloadAsset.Btn002)
             .WithTooltip(0x93530331);
 
         deck.ListTabs[(int)Tab.AttackSpells - 1] = preload.CreateButton(entity)
             .With(IDTabAttackSpells)
             .With(tabButtonRect.OffsettedBy(0, 167))
             .With(new components.ui.ButtonTiles(6, 7, 8))
-            .With(preload.Btn002)
+            .With(UIPreloadAsset.Btn002)
             .WithTooltip(0xB5E80331);
 
         deck.ListTabs[(int)Tab.SupportSpells - 1] = preload.CreateButton(entity)
             .With(IDTabSupportSpells)
             .With(tabButtonRect.OffsettedBy(0, 211))
             .With(new components.ui.ButtonTiles(9, 10, 11))
-            .With(preload.Btn002)
+            .With(UIPreloadAsset.Btn002)
             .WithTooltip(0x9D0DAD11);
 
         preload.CreateButton(entity)
             .With(IDSwitchListMode)
             .With(tabButtonRect.Min + new Vector2(15, 261))
             .With(new components.ui.ButtonTiles(28, 29))
-            .With(preload.Btn002)
+            .With(UIPreloadAsset.Btn002)
             .WithTooltip(0xA086B911)
             .Build();
 
@@ -174,7 +174,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
                 .With(FirstFairySlot + i)
                 .With(Mid + new Vector2(31, 60 + 79 * i))
                 .With(new components.ui.ButtonTiles(fairyI))
-                .With(preload.Wiz000)
+                .With(UIPreloadAsset.Wiz000)
                 .WithTooltip(UIDChooseFairyToSwap)
                 .Build();
         }
@@ -221,7 +221,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
                     .With(nextElementId)
                     .With(DeckSlotPos(fairyI, spellI))
                     .With(new components.ui.ButtonTiles(spell?.cardId.EntityId ?? -1))
-                    .With(preload.Spl000)
+                    .With(UIPreloadAsset.Spl000)
                     .WithTooltip(UIDSpellSlotNames[spellI])
                     .Build();
                 nextElementId += 1;
@@ -245,7 +245,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         entity.Set(components.ui.UIOffset.Center);
         entity.Set(new components.ui.RenderOrder(renderOrder));
         entity.Set(IColor.White);
-        entity.Set(isAttack ? preload.Cls001 : preload.Cls000);
+        entity.Set(isAttack ? UIPreloadAsset.Cls001 : UIPreloadAsset.Cls000);
 
         var tileSize = entity.Get<rendering.TileSheet>().GetPixelSize(0);
         entity.Set(Rect.FromTopLeftSize(pos, tileSize * 3));
@@ -280,14 +280,14 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
                 continue;
             preload.CreateLabel(slotParent)
                 .With(DeckSlotPos(fairyI, slotI) + new Vector2(0, 44))
-                .With(preload.Fnt002)
+                .With(UIPreloadAsset.Fnt002)
                 .WithText(FormatManaAmount(spell))
                 .Build();
         }
 
         preload.CreateLabel(slotParent)
             .With(DeckSlotPos(fairyI, 0))
-            .With(preload.Fnt002)
+            .With(UIPreloadAsset.Fnt002)
             .WithText(FormatSummary(deck.Inventory, fairy))
             .Build();
 
@@ -355,7 +355,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         var dbSpell = mappedDB.GetSpell(spell.dbUID);
         var mana = dbSpell.Mana == 5 ? "-/-" : $"{spell.mana}/{dbSpell.MaxMana}";
-        return $"{dbSpell.Name}\n{{104}}{mana} {UIPreloader.GetSpellPrices(dbSpell)}";
+        return $"{dbSpell.Name}\n{{104}}{mana} {UIBuilder.GetSpellPrices(dbSpell)}";
     }
 
     private void CreateFairyInfos(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
@@ -385,13 +385,13 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     private static Vector2 ListCellPos(int column, int row) =>
         Mid + new Vector2(322 + column * 42, 70 + row * 43);
 
-    private DefaultEcs.Resource.ManagedResource<resources.UITileSheetInfo, rendering.TileSheet> ListTileSheet(in components.ui.ScrDeck deck) => deck.ActiveTab switch
+    private static UITileSheetAsset.Info ListTileSheet(in components.ui.ScrDeck deck) => deck.ActiveTab switch
     {
-        Tab.Fairies => preload.Wiz000,
-        Tab.Items => preload.Itm000,
-        Tab.SupportSpells => preload.Spl000,
-        Tab.AttackSpells => preload.Spl000,
-        _ => preload.Wiz000
+        Tab.Fairies => UIPreloadAsset.Wiz000,
+        Tab.Items => UIPreloadAsset.Itm000,
+        Tab.SupportSpells => UIPreloadAsset.Spl000,
+        Tab.AttackSpells => UIPreloadAsset.Spl000,
+        _ => UIPreloadAsset.Wiz000
     };
 
     private void CreateListCells(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, int columns, int rows = ListRows)
@@ -412,7 +412,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
                 deck.ListUsedMarkers[i] = preload.CreateImage(entity)
                     .With(ListCellPos(x, y))
-                    .With(preload.Inf000, 16)
+                    .With(UIPreloadAsset.Inf000, 16)
                     .WithRenderOrder(-1)
                     .Invisible();
             }
@@ -429,7 +429,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         {
             deck.ListSummaries[i % ListRows] = preload.CreateLabel(entity)
                 .With(ListCellPos(column: 0, row: i) + summaryOffset)
-                .With(preload.Fnt002);
+                .With(UIPreloadAsset.Fnt002);
         }
     }
 

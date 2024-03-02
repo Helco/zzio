@@ -23,12 +23,14 @@ public partial class Label : AEntitySetSystem<float>
         RegexOptions.Compiled);
 
     private readonly EntityCommandRecorder recorder;
+    private readonly IAssetRegistry assetRegistry;
     private readonly IDisposable addedSubscription;
     private readonly IDisposable changedSubscription;
 
     public Label(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         recorder = diContainer.GetTag<EntityCommandRecorder>();
+        assetRegistry = diContainer.GetTag<IAssetRegistry>();
         addedSubscription = World.SubscribeEntityComponentAdded<components.ui.Label>(SetLabelNeedsTiling);
         changedSubscription = World.SubscribeEntityComponentChanged<components.ui.Label>(SetLabelNeedsTiling);
     }
@@ -107,7 +109,7 @@ public partial class Label : AEntitySetSystem<float>
         entity.Set<components.ui.SubLabel>();
         entity.Set(tiles.Select(t => t.tile).ToArray());
         entity.Set(new components.Parent(parent));
-        entity.Set(ManagedResource<TileSheet>.Create(new resources.UITileSheetInfo(tiles.Key.Name, tiles.Key.IsFont)));
+        assetRegistry.LoadUITileSheet(entity, new(tiles.Key.Name, tiles.Key.IsFont));
     }
 
     private static IReadOnlyList<(TileSheet tileSheet, components.ui.Tile tile)> FormatToTiles(in Rect rect, TileSheet rootTileSheet, string text, float lineHeight)

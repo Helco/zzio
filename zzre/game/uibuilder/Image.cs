@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Numerics;
 using DefaultEcs;
-using DefaultEcs.Resource;
-using zzre.game.systems.ui;
-
-using TileSheetResource = DefaultEcs.Resource.ManagedResource<zzre.game.resources.UITileSheetInfo, zzre.rendering.TileSheet>;
 
 namespace zzre.game.uibuilder;
 
@@ -12,10 +8,10 @@ internal sealed record Image : Base<Image>
 {
     private components.ui.FullAlignment alignment = components.ui.FullAlignment.TopLeft;
     private string? bitmap;
-    private TileSheetResource? tileSheet;
+    private UITileSheetAsset.Info? tileSheet;
     private int tileI = -1;
 
-    public Image(UIPreloader preload, Entity parent) : base(preload, parent)
+    public Image(UIBuilder preload, Entity parent) : base(preload, parent)
     {
     }
 
@@ -38,7 +34,7 @@ internal sealed record Image : Base<Image>
         return this;
     }
 
-    public Image With(TileSheetResource tileSheet, int tileI = 0)
+    public Image With(UITileSheetAsset.Info tileSheet, int tileI = 0)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(tileI);
         CheckNoMaterial();
@@ -48,13 +44,14 @@ internal sealed record Image : Base<Image>
     }
 
     public Image With(zzio.CardId cardId) =>
-        With(preload.GetTileSheetByCardType(cardId.Type), cardId.EntityId);
+        With(UIBuilder.GetTileSheetByCardType(cardId.Type), cardId.EntityId);
 
     public static implicit operator Entity(Image builder) => builder.Build();
 
     public Entity Build()
     {
         var entity = BuildBase();
+        var assetRegistry = preload.UI.GetTag<IAssetRegistry>();
 
         Vector2 size;
         if (bitmap == null && tileSheet == null)
@@ -64,14 +61,13 @@ internal sealed record Image : Base<Image>
         }
         else if (bitmap != null)
         {
-            entity.Set(ManagedResource<materials.UIMaterial>.Create(bitmap));
-            var texture = entity.Get<materials.UIMaterial>().MainTexture.Texture!;
-            size = new(texture.Width, texture.Height);
+            var handle = assetRegistry.LoadUIBitmap(entity, bitmap);
+            size = handle.Get().Size;
         }
         else // if (tileSheet != null)
         {
-            entity.Set(tileSheet!.Value);
-            size = entity.Get<rendering.TileSheet>().GetPixelSize(tileI);
+            var handle = assetRegistry.LoadUITileSheet(entity, tileSheet!.Value);
+            size = handle.Get().TileSheet.GetPixelSize(tileI);
         }
         AlignToSize(entity, size, alignment);
         entity.Set(new components.ui.Tile[] { new(tileI, rect) });

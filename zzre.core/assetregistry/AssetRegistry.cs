@@ -172,7 +172,7 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         {
             case AssetLoadPriority.Synchronous:
                 if (!asset.ApplyAction.IsEmpty && !IsMainThread)
-                    throw new InvalidOperationException("Cannot load assets with Apply functions synchronously");
+                    throw new InvalidOperationException("Cannot load assets with Apply functions synchronously on secondary threads");
                 asset.Complete();
                 asset.ApplyAction.Invoke(new(this, asset.ID));
                 break;

@@ -67,7 +67,7 @@ internal sealed class AssetExplorer
         BeginTabBar("Registries", ImGuiTabBarFlags.None);
         foreach (var (name, registry) in registries)
         {
-            if (BeginTabItem($"{name} ({registry.Stats.Total})###{name}"))
+            if (BeginTabItem($"{name} ({registry.LocalStats.Total})###{name}"))
             {
                 HandleContentFor(registry);
                 EndTabItem();

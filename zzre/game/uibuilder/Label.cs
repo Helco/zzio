@@ -1,11 +1,10 @@
 ﻿using DefaultEcs;
-using zzre.game.systems.ui;
 
 namespace zzre.game.uibuilder;
 
 internal sealed record Label : LabelLike<Label>
 {
-    public Label(UIPreloader preload, Entity parent) : base(preload, parent)
+    public Label(UIBuilder preload, Entity parent) : base(preload, parent)
     {
     }
 

@@ -4,7 +4,7 @@ namespace zzre.game.uibuilder;
 
 internal abstract record Base<T> where T : Base<T>
 {
-    protected readonly systems.ui.UIPreloader preload;
+    protected readonly UIBuilder preload;
     protected DefaultEcs.Entity parent; // not readonly for nested entities like ButtonLabel
     protected Rect rect;
     protected zzio.IColor color = zzio.IColor.White;
@@ -16,7 +16,7 @@ internal abstract record Base<T> where T : Base<T>
 
     protected bool HasSize => rect.Size.MaxComponent() > 0.00001f;
 
-    public Base(systems.ui.UIPreloader preload, DefaultEcs.Entity parent)
+    public Base(UIBuilder preload, DefaultEcs.Entity parent)
     {
         this.parent = parent;
         this.preload = preload;

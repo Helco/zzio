@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using DefaultEcs.Resource;
-using zzre.game.resources;
 using KeyCode = Silk.NET.SDL.KeyCode;
 using static zzre.game.systems.ui.InGameScreen;
 
@@ -10,8 +8,11 @@ namespace zzre.game.systems.ui;
 
 public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.ui.OpenMapMenu>
 {
+    private readonly IAssetRegistry assetRegistry;
+
     public ScrMapMenu(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
     {
+        assetRegistry = diContainer.GetTag<IAssetRegistry>();
         OnElementDown += HandleElementDown;
     }
 
@@ -32,10 +33,8 @@ public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.
             .With(new Rect(-320, -240, 640, 480))
             .WithRenderOrder(1)
             .Build();
-        mapEntity.Set(ManagedResource<materials.UIMaterial>.Create(
-            new RawMaskedBitmapInfo(colorFile: "map001t.bmp", maskFile: "map001m.raw")));
-        var mapMaterial = mapEntity.Get<materials.UIMaterial>();
-        mapMaterial.MaskBits.Value = CollectMaskBits(inventory);
+        var mapHandle = assetRegistry.LoadUIBitmap(mapEntity, "map001", hasRawMask: true);
+        mapHandle.Get().Material.MaskBits.Value = CollectMaskBits(inventory);
 
         preload.CreateTooltipTarget(entity)
             .With(new Vector2(-320 + 11, -240 + 11))

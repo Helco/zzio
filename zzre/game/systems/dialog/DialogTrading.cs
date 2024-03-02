@@ -80,24 +80,24 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
 
         preload.CreateLabel(entity)
             .With(bgRect.Min + new Vector2(30, 22))
-            .With(preload.Fnt001)
+            .With(UIPreloadAsset.Fnt001)
             .WithText(db.GetText(UIDItemProfile).Text)
             .Build();
 
         preload.CreateImage(entity)
             .With(bgRect.Center + new Vector2(-20, -100))
-            .With(preload.Itm000, card.CardId.EntityId)
+            .With(UIPreloadAsset.Itm000, card.CardId.EntityId)
             .Build();
 
         preload.CreateLabel(entity)
             .With(bgRect.Center + new Vector2(-72, -40))
-            .With(preload.Fnt001)
+            .With(UIPreloadAsset.Fnt001)
             .WithText(card.Name)
             .Build();
 
         preload.CreateLabel(entity)
             .With(bgRect.Min + new Vector2(50, 250))
-            .With(preload.Fnt000)
+            .With(UIPreloadAsset.Fnt000)
             .WithText(card.Info)
             .WithLineHeight(14)
             .WithLineWrap(bgRect.Size.X - 100)
@@ -106,7 +106,7 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
 
         preload.CreateLabel(entity)
             .With(new Vector2(bgRect.Center.X - 76, bgRect.Max.Y - 46))
-            .With(preload.Fnt002)
+            .With(UIPreloadAsset.Fnt002)
             .WithText(db.GetText(UIDPurchaseItem).Text)
             .Build();
 
@@ -114,14 +114,14 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
             .With(IDYes)
             .With(new Vector2(bgRect.Center.X + 20, bgRect.Max.Y - 65))
             .With(new components.ui.ButtonTiles(5, 6))
-            .With(preload.Btn000)
+            .With(UIPreloadAsset.Btn000)
             .Build();
 
         preload.CreateButton(entity)
             .With(IDNo)
             .With(new Vector2(bgRect.Center.X + 56, bgRect.Max.Y - 65))
             .With(new components.ui.ButtonTiles(7, 8))
-            .With(preload.Btn000)
+            .With(UIPreloadAsset.Btn000)
             .Build();
 
         return entity;
@@ -137,19 +137,19 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
 
         preload.CreateImage(entity)
             .With(offset)
-            .With(preload.Itm000, card.CardId.EntityId)
+            .With(UIPreloadAsset.Itm000, card.CardId.EntityId)
             .Build();
 
         preload.CreateLabel(entity)
             .With(offset + new Vector2(50, 16))
             .WithText(card.Name)
-            .With(preload.Fnt002)
+            .With(UIPreloadAsset.Fnt002)
             .Build();
 
         preload.CreateLabel(entity)
             .With(offset + new Vector2(325, 12))
             .WithText($"{{0*x}}{price}")
-            .With(preload.Fnt000)
+            .With(UIPreloadAsset.Fnt000)
             .Build();
 
         var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
@@ -158,12 +158,12 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
                 .With(purchase)
                 .With(offset + new Vector2(365, 0))
                 .With(new components.ui.ButtonTiles(20, 21))
-                .With(preload.Btn001)
+                .With(UIPreloadAsset.Btn001)
                 .Build();
         } else {
             preload.CreateImage(entity)
                 .With(offset + new Vector2(365, 0))
-                .With(preload.Btn001, 22)
+                .With(UIPreloadAsset.Btn001, 22)
                 .Build();
         }
 

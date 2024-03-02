@@ -130,6 +130,11 @@ dotnet_diagnostic.ca1860.severity = none
 # Rule: Prevent behavioral change caused by built-in operators of IntPtr/UIntPtr
 # Reason: Good. Unintended overflow should throw
 dotnet_diagnostic.ca2020.severity = none
+
+# Rule: Names of members should differ by more than case
+# Reason: The pattern of private variable and public property is not just an exception
+dotnet_diagnostic.ca1708.severity = none
+
 dotnet_style_namespace_match_folder = true:suggestion
 dotnet_style_readonly_field = true:suggestion
 dotnet_style_predefined_type_for_locals_parameters_members = true:silent
@@ -150,7 +155,6 @@ dotnet_diagnostic.CA1510.severity = warning
 dotnet_diagnostic.CA1511.severity = warning
 dotnet_diagnostic.CA1512.severity = warning
 dotnet_diagnostic.CA1513.severity = warning
-dotnet_diagnostic.CA1708.severity = warning
 dotnet_diagnostic.CA1822.severity = warning
 dotnet_diagnostic.CA1821.severity = error
 dotnet_diagnostic.CA1827.severity = warning

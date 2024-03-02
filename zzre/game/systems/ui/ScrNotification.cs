@@ -34,7 +34,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
 
         var screenSize = ui.LogicalScreen.Size;
         component.MainOverlay = preload.CreateImage(entity)
-            .With(UIPreloader.DefaultOverlayColor)
+            .With(UIBuilder.DefaultOverlayColor)
             .With(components.ui.FullAlignment.Center)
             .With(Rect.FromTopLeftSize(new(0, YOffset), new(screenSize.X, OverlayHeight)))
             .With(components.ui.Fade.SingleIn(1f))
@@ -60,7 +60,7 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
         component.TextLabel = preload.CreateLabel(entity)
             .With(components.ui.FullAlignment.TopCenter)
             .With(new Vector2(45, YOffset - 12))
-            .With(message.SmallFont ? preload.Fnt000 : preload.Fnt001)
+            .With(message.SmallFont ? UIPreloadAsset.Fnt000 : UIPreloadAsset.Fnt001)
             .WithText(message.Texts.First())
             .WithAnimation(2)
             .WithRenderOrder(RenderOrder)
@@ -84,9 +84,9 @@ public partial class ScrNotification : BaseScreen<components.ui.ScrNotification,
                 .With(components.ui.FullAlignment.Center)
                 .With(new Vector2(0, YOffset))
                 .With(new components.ui.ButtonTiles(17, 18))
-                .With(preload.Btn000)
+                .With(UIPreloadAsset.Btn000)
                 .WithLabel()
-                    .With(preload.Fnt000)
+                    .With(UIPreloadAsset.Fnt000)
                     .WithText(message.Button)
                 .WithRenderOrder(RenderOrder)
                 .Build();

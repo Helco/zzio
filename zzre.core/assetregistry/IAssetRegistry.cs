@@ -17,6 +17,7 @@ public interface IAssetRegistry : IDisposable
     internal IAssetRegistryInternal InternalRegistry { get; }
     ITagContainer DIContainer { get; }
     AssetRegistryStats Stats { get; }
+    AssetRegistryStats LocalStats => Stats;
 
     unsafe AssetHandle Load<TInfo, TApplyContext>(
         in TInfo info,
@@ -32,6 +33,7 @@ public interface IAssetRegistry : IDisposable
         where TInfo : IEquatable<TInfo>;
 
     void ApplyAssets();
+    Task WaitAsyncAll(AssetHandle[] assets) => InternalRegistry.WaitAsyncAll(assets);
 }
 
 internal interface IAssetRegistryInternal : IAssetRegistry
@@ -55,7 +57,6 @@ internal interface IAssetRegistryInternal : IAssetRegistry
     void DisposeHandle(AssetHandle handle);
     ValueTask QueueRemoveAsset(IAsset asset);
     ValueTask QueueApplyAsset(IAsset asset);
-    Task WaitAsyncAll(AssetHandle[] assets);
     bool IsLoaded(Guid assetId);
     TAsset GetLoadedAsset<TAsset>(Guid assetId);
 }

@@ -113,7 +113,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     {
         preload.CreateLabel(parent)
             .With(gambling.BgRect.Center + new Vector2(0, -3))
-            .With(preload.Fnt000)
+            .With(UIPreloadAsset.Fnt000)
             .WithText(UIDCannotAfford)
             .With(components.ui.FullAlignment.Center)
             .Build();
@@ -168,7 +168,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var name = card.Name;
         var spellType = card.Type == 0 ? db.GetText(UIDOffensiveSpell).Text : db.GetText(UIDPassiveSpell).Text;
         var spellClass = preload.GetClassText(card.PriceA);
-        var prices = systems.ui.UIPreloader.GetSpellPrices(card);
+        var prices = UIBuilder.GetSpellPrices(card);
 
         if (!zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Contains(card.CardId)) {
             var newSpell = db.GetText(UIDNewSpell).Text.ToUpper(cultureInfo);
@@ -215,9 +215,9 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var isAttack = card.Type == 0;
 
         var mana = "{104}" + (card.Mana == 5 ? "-/-" : $"{card.MaxMana}/{card.MaxMana}");
-        var level = systems.ui.UIPreloader.GetSpellPrices(card);
-        var damage = systems.ui.UIPreloader.GetLightsIndicator(card.Damage);
-        var loadup = systems.ui.UIPreloader.GetLightsIndicator(card.Loadup);
+        var level = UIBuilder.GetSpellPrices(card);
+        var damage = UIBuilder.GetLightsIndicator(card.Damage);
+        var loadup = UIBuilder.GetLightsIndicator(card.Loadup);
 
         if (isAttack) {
             return $"{mana}\n{level}\n{damage}\n{loadup}";
@@ -235,7 +235,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         preload.CreateLabel(entity)
             .With(gambling.BgRect.Min + new Vector2(30, 22))
-            .With(preload.Fnt001)
+            .With(UIPreloadAsset.Fnt001)
             .WithText(UIDSpellProfile)
             .Build();
 
@@ -246,27 +246,27 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         preload.CreateLabel(entity)
             .With(gambling.BgRect.Min + new Vector2(140, 83 + (isAttack ? 0 : 28)))
-            .With(preload.Fnt003)
+            .With(UIPreloadAsset.Fnt003)
             .WithText(card.Name)
             .Build();
 
         preload.CreateLabel(entity)
             .With(gambling.BgRect.Min + new Vector2(90, 136 + (isAttack ? 0 : 28)))
-            .With(preload.Fnt002)
+            .With(UIPreloadAsset.Fnt002)
             .WithLineHeight(28)
             .WithText(SpellStats(card))
             .Build();
 
         preload.CreateLabel(entity)
             .With(gambling.BgRect.Min + new Vector2(180, 192 + (isAttack ? 0 : 28)))
-            .With(preload.Fnt002)
+            .With(UIPreloadAsset.Fnt002)
             .WithLineHeight(28)
             .WithText(SpellValues(card))
             .Build();
 
         preload.CreateLabel(entity)
             .With(gambling.BgRect.Min + new Vector2(90, isAttack ? 300 : 272))
-            .With(preload.Fnt000)
+            .With(UIPreloadAsset.Fnt000)
             .WithText(card.Info)
             .WithLineHeight(22)
             .WithLineWrap(gambling.BgRect.Size.X - 100)
@@ -275,7 +275,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
 
         preload.CreateLabel(entity)
             .With(new Vector2(gambling.BgRect.Center.X - 135, gambling.BgRect.Max.Y - 46))
-            .With(preload.Fnt002)
+            .With(UIPreloadAsset.Fnt002)
             .WithText(UIDTakeIt)
             .Build();
 
@@ -283,14 +283,14 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .With(IDYes)
             .With(new Vector2(gambling.BgRect.Center.X - 50, gambling.BgRect.Max.Y - 60))
             .With(new components.ui.ButtonTiles(5, 6))
-            .With(preload.Btn000)
+            .With(UIPreloadAsset.Btn000)
             .Build();
 
         preload.CreateButton(entity)
             .With(IDNo)
             .With(new Vector2(gambling.BgRect.Center.X, gambling.BgRect.Max.Y - 60))
             .With(new components.ui.ButtonTiles(7, 8))
-            .With(preload.Btn000)
+            .With(UIPreloadAsset.Btn000)
             .Build();
 
         return entity;
@@ -312,7 +312,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             preload.CreateLabel(entity)
                 .With(offset + new Vector2(40, 16))
                 .WithText(UIDBlank)
-                .With(preload.Fnt000)
+                .With(UIPreloadAsset.Fnt000)
                 .Build();
             return;
         };
@@ -326,7 +326,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .With(offset + new Vector2(49, 7))
             .WithLineHeight(13)
             .WithText(GetSpellLabel(card))
-            .With(preload.Fnt002)
+            .With(UIPreloadAsset.Fnt002)
             .Build();
     }
 
@@ -341,7 +341,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
             .With(purchase)
             .With(offset + new Vector2(370, -1))
             .With(new components.ui.ButtonTiles(20, 21))
-            .With(preload.Btn001)
+            .With(UIPreloadAsset.Btn001)
             .Build();
 
         gambling.CardPurchaseButtons[purchase] = card;

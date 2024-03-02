@@ -9,6 +9,7 @@ public class UI : BaseDisposable, ITagContainer
 {
     private readonly ITagContainer tagContainer;
     private readonly IZanzarahContainer zzContainer;
+    private readonly AssetLocalRegistry assetRegistry;
     private readonly Remotery profiler;
     private readonly GameTime time;
     private readonly systems.RecordingSequentialSystem<float> updateSystems;
@@ -19,7 +20,7 @@ public class UI : BaseDisposable, ITagContainer
     public DeviceBuffer ProjectionBuffer { get; }
     public Rect LogicalScreen { get; set; }
     public DefaultEcs.Entity CursorEntity { get; }
-    public systems.ui.UIPreloader Preload { get; }
+    public UIBuilder Builder { get; }
     public DefaultEcs.World World { get; }
 
     public UI(ITagContainer diContainer)
@@ -39,12 +40,19 @@ public class UI : BaseDisposable, ITagContainer
         HandleResize();
 
         AddTag(this);
+        AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("UI", tagContainer));
         AddTag(World = new DefaultEcs.World());
         AddTag(new resources.UIBitmap(this));
         AddTag(new resources.UITileSheet(this));
         AddTag(new resources.UIRawMaskedBitmap(this));
         AddTag(sound = new resources.Sound(this));
-        AddTag(Preload = new systems.ui.UIPreloader(this));
+        AddTag(Builder = new UIBuilder(this));
+
+        if (TryGetTag(out tools.AssetRegistryList assetRegistryList))
+            assetRegistryList.Register("UI", assetRegistry);
+        AssetRegistry.SubscribeAt(World);
+        assetRegistry.DelayDisposals = false;
+        // we keep most UI assets alive using UIPreloader all the time anyway
 
         CursorEntity = World.CreateEntity();
         CursorEntity.Set<Rect>();
@@ -88,9 +96,12 @@ public class UI : BaseDisposable, ITagContainer
 
     protected override void DisposeManaged()
     {
+        assetRegistry.DelayDisposals = false;
+        tagContainer.RemoveTag<IAssetRegistry>(dispose: false);
         updateSystems.Dispose();
         renderSystems.Dispose();
         tagContainer.Dispose();
+        assetRegistry.Dispose();
         zzContainer.OnResize -= HandleResize;
     }
 
@@ -100,6 +111,7 @@ public class UI : BaseDisposable, ITagContainer
     public void Update()
     {
         using var _ = profiler.SampleCPU("UI.Update");
+        assetRegistry.ApplyAssets();
         updateSystems.Update(time.Delta);
         sound.RegularCleanup();
     }
@@ -107,6 +119,7 @@ public class UI : BaseDisposable, ITagContainer
     public void Render(CommandList cl)
     {
         using var _ = profiler.SampleCPU("UI.Render");
+        assetRegistry.ApplyAssets();
         renderSystems.Update(cl);
     }
 

@@ -1,13 +1,12 @@
 ﻿using DefaultEcs;
-using zzre.game.systems.ui;
 
 namespace zzre.game.uibuilder;
 
 internal sealed record TooltipTarget : LabelLike<TooltipTarget>
 {
-    public TooltipTarget(UIPreloader preload, Entity parent) : base(preload, parent)
+    public TooltipTarget(UIBuilder preload, Entity parent) : base(preload, parent)
     {
-        font = preload.Fnt002;
+        font = UIPreloadAsset.Fnt002;
     }
 
     public static implicit operator Entity(TooltipTarget builder) => builder.Build();

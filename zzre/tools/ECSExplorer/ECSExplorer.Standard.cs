@@ -65,8 +65,8 @@ partial class ECSExplorer
 
         AddEntityNamerByComponent(Low, (in Trigger t) => $"Trigger {t.type} {t.idx}");
 
-        AddEntityNamer(High, e => e.Has<Rect>() || !e.TryGet<ManagedResource<UITileSheetInfo, TileSheet>>(out var res) ? null
-            : $"Preload {(res.Info.IsFont ? "font" : "tilesheet")} {res.Info.Name}");
+        AddEntityNamer(High, e => e.Has<Rect>() || !e.TryGet<TileSheet>(out var res) ? null
+            : $"Preload {(res.IsFont ? "font" : "tilesheet")} {res.Name}");
         AddEntityNamer(Def, e => e.Has<Rect>() || !e.TryGet<ManagedResource<string, UIMaterial>>(out var res) ? null : $"Preload bitmap {res.Info}");
         AddEntityNamerByComponent<ButtonTiles>(High, e => $"Button #{e.TryGet<ElementId>().GetValueOrDefault(default).Value} {e}");
         AddEntityNamerByComponent<TooltipTarget>(High, e => $"Tooltip Target {e}");
