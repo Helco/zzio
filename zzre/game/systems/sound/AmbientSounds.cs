@@ -134,7 +134,12 @@ internal sealed class AmbientSounds : ISystem<float>
         for (int i = 0; i < landscapeEntities.Count; i++)
         {
             if (landscapeEntities[i].IsAlive)
-                landscapeEntities[i].Set(components.SoundFade.Out(1f, LandscapeFadeLength, LandscapeFadeDelay));
+            {
+                if (landscapeEntities[i].Has<components.SoundEmitter>())
+                    landscapeEntities[i].Set(components.SoundFade.Out(1f, LandscapeFadeLength, LandscapeFadeDelay));
+                else // otherwise the sound was never loaded
+                    landscapeEntities[i].Dispose();
+            }
             landscapeEntities[i] = default;
         }
         landscapeSamples = GetLandscapeSamples(msg.Scene.ambientSound, out landscapeChance);
@@ -174,7 +179,8 @@ internal sealed class AmbientSounds : ISystem<float>
                 RefDistance: 5f,
                 MaxDistance: 20f,
                 Position: position,
-                AsEntity: landscapeEntities[i]));
+                AsEntity: landscapeEntities[i],
+                Priority: AssetLoadPriority.Low));
             logger.Verbose("Spawned landscape sample {Sample} at relative {Position}", landscapeSamples[i], relativePosition);
             return;
         }

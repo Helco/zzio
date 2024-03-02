@@ -67,7 +67,8 @@ public sealed partial class SceneSamples : ISystem<float>
                 Volume: sample.volume / 100f,
                 Looping: sample.loopCount == 0,
                 AsEntity: entity,
-                Position: sample.pos));
+                Position: sample.pos,
+                Priority: AssetLoadPriority.Low));
             samples.Add(entity);
         }
     }
