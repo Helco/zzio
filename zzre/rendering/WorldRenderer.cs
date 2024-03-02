@@ -8,6 +8,8 @@ using zzio;
 
 namespace zzre.rendering;
 
+// TODO: Remove in favor of WorldRendererSystem
+
 public class WorldRenderer : BaseDisposable
 {
     private readonly ITagContainer diContainer;
@@ -141,7 +143,7 @@ public class WorldRenderer : BaseDisposable
 
         cl.PushDebugGroup(nameof(WorldRenderer));
         var visibleSubMeshes = sections
-            .SelectMany(m => worldMesh.GetSubMeshes(m.SubMeshSection))
+            .SelectMany(m => worldMesh.GetSubMeshesLEGACY(m.SubMeshSection))
             .GroupBy(s => s.Material);
         bool didSetBuffers = false;
         foreach (var group in visibleSubMeshes)

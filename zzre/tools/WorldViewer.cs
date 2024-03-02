@@ -333,7 +333,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
                 return;
             Text($"Vertices: {section.VertexCount}");
             Text($"Triangles: {section.TriangleCount}");
-            Text($"SubMeshes: {worldMesh.GetSubMeshes(section.SubMeshSection).Count()}");
+            Text($"SubMeshes: {worldMesh.GetSubMeshesLEGACY(section.SubMeshSection).Count()}");
         }
 
         void PlaneSectionContent(WorldMesh.PlaneSection section, int index)

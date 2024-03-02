@@ -155,6 +155,8 @@ internal static partial class Program
         ActorMaterialAsset.Register();
         ActorAsset.Register();
         AnimationAsset.Register();
+        WorldMaterialAsset.Register();
+        WorldAsset.Register();
         return registry;
     }
 

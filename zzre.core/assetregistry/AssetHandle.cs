@@ -49,7 +49,7 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
             return;
         wasDisposed = true;
         if (handleScope is null)
-            registryInternal.DisposeHandle(this);
+            registryInternal?.DisposeHandle(this);
         else
             handleScope.DisposeHandle(this);
     }
