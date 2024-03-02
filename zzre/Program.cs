@@ -158,6 +158,7 @@ internal static partial class Program
         WorldMaterialAsset.Register();
         WorldAsset.Register();
         EffectMaterialAsset.Register();
+        EffectCombinerAsset.Register();
         UIBitmapAsset.Register();
         UITileSheetAsset.Register();
         UIPreloadAsset.Register();

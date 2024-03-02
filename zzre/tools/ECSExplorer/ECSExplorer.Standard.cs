@@ -1,7 +1,6 @@
 ﻿using System;
 using zzre.game.components;
 using zzre.game.components.ui;
-using zzre.game.resources;
 using zzre.materials;
 using zzre.rendering;
 using zzio;
