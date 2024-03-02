@@ -162,6 +162,7 @@ internal static partial class Program
         UIBitmapAsset.Register();
         UITileSheetAsset.Register();
         UIPreloadAsset.Register();
+        SoundAsset.Register();
         return registry;
     }
 

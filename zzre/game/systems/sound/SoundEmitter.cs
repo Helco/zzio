@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using DefaultEcs.Resource;
 using DefaultEcs.System;
 using Silk.NET.OpenAL;
 
@@ -11,6 +10,7 @@ namespace zzre.game.systems;
 public sealed partial class SoundEmitter : AEntitySetSystem<float>
 {
     private const int InitialSourceCount = 16;
+    private readonly IAssetRegistry assetRegistry;
     private readonly OpenALDevice device;
     private readonly SoundContext context;
     private readonly Queue<uint> sourcePool = new(InitialSourceCount);
@@ -21,6 +21,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
 
     public unsafe SoundEmitter(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
+        assetRegistry = diContainer.GetTag<IAssetRegistry>();
         diContainer.TryGetTag(out device);
         if (!(IsEnabled = diContainer.TryGetTag(out context)))
             return;
@@ -72,7 +73,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         var entity = msg.AsEntity ?? World.CreateEntity();
         if (entity.World != World)
             throw new ArgumentException("Sample entity has to be created in UI World", nameof(msg));
-        entity.Set(ManagedResource<components.SoundBuffer>.Create(msg.SamplePath));
+        assetRegistry.LoadSound(entity, new zzio.FilePath(msg.SamplePath), AssetLoadPriority.Synchronous);
         bool is3D = msg.Position.HasValue || msg.ParentLocation != null;
         if (is3D)
         {
@@ -103,6 +104,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
             device.AL.SourcePause(sourceId);
         else
             device.AL.SourcePlay(sourceId);
+        device.AL.ThrowOnError();
         entity.Set(new components.SoundEmitter(sourceId, msg.Volume, msg.RefDistance, msg.MaxDistance));
 
         if (is3D)
@@ -114,6 +116,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
     private void HandleEmitterRemoved(in DefaultEcs.Entity entity, in components.SoundEmitter emitter)
     {
         using var _ = context.EnsureIsCurrent();
+        device.AL.ThrowOnError();
         device.AL.SourceStop(emitter.SourceId);
         device.AL.SetSourceProperty(emitter.SourceId, SourceInteger.Buffer, 0);
         sourcePool.Enqueue(emitter.SourceId);

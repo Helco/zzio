@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using DefaultEcs.System;
 using Silk.NET.OpenAL;
 
@@ -8,6 +10,7 @@ public sealed unsafe class SoundContext : ISystem<float>
 {
     private readonly OpenALDevice device;
     private readonly SwitchBackScope switchBackScope;
+    private readonly List<uint> deferredBufferDisposals = new(32);
     private Context* context,
         prevContext = null; // in case we need to switch contexts briefly
     private bool isEnabled;
@@ -54,6 +57,11 @@ public sealed unsafe class SoundContext : ISystem<float>
     {
         if (context == null)
             return;
+        if (deferredBufferDisposals.Count > 0)
+        {
+            using var _ = EnsureIsCurrent();
+            DisposeDeferredBuffers();
+        }
         if (device.ALC.GetCurrentContext() == context)
             device.ALC.MakeContextCurrent(null);
         device.ALC.DestroyContext(context);
@@ -71,6 +79,7 @@ public sealed unsafe class SoundContext : ISystem<float>
             device.Logger.Error("Could not make context current");
             isEnabled = false;
         }
+        DisposeDeferredBuffers();
         device.AL.ThrowOnError();
     }
 
@@ -83,6 +92,27 @@ public sealed unsafe class SoundContext : ISystem<float>
         if (!device.ALC.MakeContextCurrent(context))
             device.Logger.Error("Could not ensure current context");
         return prevContext == null ? null : switchBackScope;
+    }
+
+    public void AddBufferDisposal(uint bufferId)
+    {
+        lock(deferredBufferDisposals)
+            deferredBufferDisposals.Add(bufferId);
+    }
+
+    // make sure the context is current before calling this
+    private void DisposeDeferredBuffers()
+    {
+        lock (deferredBufferDisposals)
+        {
+            if (deferredBufferDisposals.Count > 0)
+            {
+                var buffers = CollectionsMarshal.AsSpan(deferredBufferDisposals);
+                fixed (uint* bufferPtr = buffers)
+                    device.AL.DeleteBuffers(buffers.Length, bufferPtr);
+                deferredBufferDisposals.Clear();
+            }
+        }
     }
 
     private sealed class SwitchBackScope : IDisposable
