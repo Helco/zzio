@@ -55,6 +55,8 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
             .Where(a => a.State is AssetState.Loading or AssetState.LoadingSecondary)
             .Select(a => a.LoadTask))
             .Wait(10000);
+        foreach (var asset in assets.Values)
+            asset.Dispose();
         assets.Clear();
         assetsToRemove.Writer.Complete();
         assetsToApply.Writer.Complete();
