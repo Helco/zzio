@@ -13,14 +13,13 @@ using static ImGuiNET.ImGui;
 
 namespace zzre.tools;
 
-public partial class ActorEditor
+partial class ActorEditor
 {
-    // Unrelated change
+    private static readonly FilePath TextureBasePath = new("resources/textures/actorsex/");
 
     private sealed class Part : ListDisposable
     {
         private readonly ITagContainer diContainer;
-        private readonly IAssetLoader<Texture> textureLoader;
         private readonly GameTime gameTime;
         private readonly string modelName; // used as ImGui ID
         private bool isPlaying;
@@ -39,14 +38,14 @@ public partial class ActorEditor
         {
             this.diContainer = diContainer;
             this.modelName = modelName;
-            textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
             gameTime = diContainer.GetTag<GameTime>();
             var resourcePool = diContainer.GetTag<IResourcePool>();
+            var assetRegistry = diContainer.GetTag<IAssetRegistry>();
             var modelPath = new FilePath("resources/models/actorsex/").Combine(modelName);
-            var texturePath = textureLoader.GetTexturePathFromModel(modelPath);
 
-            mesh = new ClumpMesh(diContainer, modelPath);
-            AddDisposable(mesh);
+            var meshHandle = assetRegistry.Load(new ClumpAsset.Info(modelPath), AssetLoadPriority.Synchronous);
+            AddDisposable(meshHandle);
+            mesh = meshHandle.Get<ClumpAsset>().Mesh;
 
             locationBufferRange = diContainer.GetTag<LocationBuffer>().Add(location);
             var camera = diContainer.GetTag<Camera>();
@@ -68,7 +67,15 @@ public partial class ActorEditor
             foreach (var (rwMaterial, index) in mesh.Materials.Indexed())
             {
                 var material = materials[index] = new ModelMaterial(diContainer) { IsSkinned = skeleton != null };
-                (material.Texture.Texture, material.Sampler.Sampler) = TryLoadTexture(texturePath, rwMaterial);
+                var rwTexture = (RWTexture)rwMaterial.FindChildById(SectionId.Texture, true)!;
+                var rwTextureName = (RWString)rwTexture.FindChildById(SectionId.String, true)!;
+                var textureHandle = assetRegistry.TryLoadTexture([TextureBasePath], rwTextureName.value,
+                    AssetLoadPriority.Synchronous, material, StandardTextureKind.Error);
+                var samplerHandle = assetRegistry.LoadSampler(SamplerDescription.Linear);
+                if (textureHandle.HasValue)
+                    AddDisposable(textureHandle.Value);
+                AddDisposable(samplerHandle);
+                material.Sampler.Sampler = samplerHandle.Get().Sampler;
                 material.Factors.Ref = ModelFactors.Default;
                 material.Factors.Ref.vertexColorFactor = 0.0f;
                 material.Tint.Ref = rwMaterial.color;
@@ -90,31 +97,6 @@ public partial class ActorEditor
             animations = animationNames.Select(t => (t.type, t.filename, LoadAnimation(t.filename))).ToArray();
             skeleton?.ResetToBinding();
         }
-
-        private (Texture, Sampler) TryLoadTexture(FilePath texturePath, RWMaterial rwMaterial)
-        {
-            try
-            {
-                return textureLoader.LoadTexture(texturePath, rwMaterial);
-            }
-            catch (Exception e) when (e is InvalidOperationException or InvalidDataException)
-            {
-                var device = diContainer.GetTag<GraphicsDevice>();
-                var texture = device.ResourceFactory.CreateTexture(new(2, 2, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
-                device.UpdateTexture(texture, new byte[]
-                {
-                0xff, 0x00, 0xff, 0xff,
-                0xff, 0xff, 0xff, 0xff,
-                0x00, 0x00, 0x00, 0xff,
-                0xff, 0x00, 0xff, 0xff
-                }, 0, 0, 0, 2, 2, 1, 0, 0);
-                texture.Name =
-                    ((rwMaterial.FindChildById(SectionId.String, true) as RWString)?.value
-                    ?? "<unknown>") + " (Missing)";
-                return (texture, device.PointSampler);
-            }
-        }
-
 
         protected override void DisposeManaged()
         {
