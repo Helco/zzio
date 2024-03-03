@@ -36,6 +36,7 @@ using Silk.NET.SDL;
 
 using Texture = Veldrid.Texture;
 using PixelFormat = Veldrid.PixelFormat;
+using System.Linq;
 
 namespace zzre.imgui
 {
@@ -68,11 +69,8 @@ namespace zzre.imgui
         private Vector2 _scaleFactor = Vector2.One;
 
         // Image trackers
-        private readonly Dictionary<TextureView, ResourceSetInfo> _setsByView
-            = [];
-        private readonly Dictionary<Texture, TextureView> _autoViewsByTexture
-            = [];
-        private readonly Dictionary<IntPtr, ResourceSetInfo> _viewsById = [];
+        private readonly Dictionary<Texture, ResourceSetInfo> _setsByTexture = [];
+        private readonly Dictionary<IntPtr, ResourceSetInfo> _setsById = [];
         private readonly List<IDisposable> _ownedResources = [];
         private int _lastAssignedID = 100;
         private bool _frameBegun;
@@ -190,37 +188,6 @@ namespace zzre.imgui
             RecreateFontDeviceTexture(gd);
         }
 
-        /// <summary>
-        /// Gets or creates a handle for a texture to be drawn with ImGui.
-        /// Pass the returned handle to Image() or ImageButton().
-        /// </summary>
-        public IntPtr GetOrCreateImGuiBinding(ResourceFactory factory, TextureView textureView)
-        {
-            if (!_setsByView.TryGetValue(textureView, out ResourceSetInfo rsi))
-            {
-                ResourceSet resourceSet = factory.CreateResourceSet(new ResourceSetDescription(_textureLayout, textureView));
-                resourceSet.Name = $"ImGui.NET {textureView.Name} Resource Set";
-                rsi = new ResourceSetInfo(GetNextImGuiBindingID(), resourceSet);
-
-                _setsByView.Add(textureView, rsi);
-                _viewsById.Add(rsi.ImGuiBinding, rsi);
-                _ownedResources.Add(resourceSet);
-            }
-
-            return rsi.ImGuiBinding;
-        }
-
-        public void RemoveImGuiBinding(TextureView textureView)
-        {
-            if (_setsByView.TryGetValue(textureView, out ResourceSetInfo rsi))
-            {
-                _setsByView.Remove(textureView);
-                _viewsById.Remove(rsi.ImGuiBinding);
-                _ownedResources.Remove(rsi.ResourceSet);
-                rsi.ResourceSet.Dispose();
-            }
-        }
-
         private IntPtr GetNextImGuiBindingID()
         {
             int newID = _lastAssignedID++;
@@ -231,48 +198,86 @@ namespace zzre.imgui
         /// Gets or creates a handle for a texture to be drawn with ImGui.
         /// Pass the returned handle to Image() or ImageButton().
         /// </summary>
-        public IntPtr GetOrCreateImGuiBinding(ResourceFactory factory, Texture texture)
+        public IntPtr CreateImGuiBinding(Texture texture)
         {
-            if (!_autoViewsByTexture.TryGetValue(texture, out TextureView textureView))
+            if (!_setsByTexture.TryGetValue(texture, out ResourceSetInfo rsi))
             {
-                textureView = factory.CreateTextureView(texture);
-                textureView.Name = $"ImGui.NET {texture.Name} View";
-                _autoViewsByTexture.Add(texture, textureView);
-                _ownedResources.Add(textureView);
+                ResourceSet resourceSet = _gd.ResourceFactory.CreateResourceSet(new ResourceSetDescription(_textureLayout, texture));
+                resourceSet.Name = $"ImGui.NET {texture.Name} Resource Set";
+                rsi = new(GetNextImGuiBindingID(), texture, resourceSet);
+                _setsByTexture.Add(texture, rsi);
+                _setsById.Add(rsi.ImGuiBinding, rsi);
+                _ownedResources.Add(resourceSet);
             }
 
-            return GetOrCreateImGuiBinding(factory, textureView);
+            rsi.RefCount++;
+            return rsi.ImGuiBinding;
         }
 
         public void RemoveImGuiBinding(Texture texture)
         {
-            if (_autoViewsByTexture.TryGetValue(texture, out TextureView textureView))
+            if (_setsByTexture.TryGetValue(texture, out ResourceSetInfo rsi))
+                RemoveImGuiBinding(rsi.ImGuiBinding);
+        }
+
+        public void RemoveImGuiBinding(IntPtr binding)
+        {
+            if (_setsById.TryGetValue(binding, out ResourceSetInfo rsi))
             {
-                _autoViewsByTexture.Remove(texture);
-                _ownedResources.Remove(textureView);
-                textureView.Dispose();
-                RemoveImGuiBinding(textureView);
+                rsi.RefCount--;
+                if (rsi.RefCount > 0)
+                    return;
+
+                _setsByTexture.Remove(rsi.Texture);
+                _setsById.Remove(rsi.ImGuiBinding);
+                _ownedResources.Remove(rsi.ResourceSet);
+                rsi.ResourceSet.Dispose();
             }
+        }
+
+        public void UpdateImGuiBinding(ref IntPtr binding, Texture texture)
+        {
+            if (binding == IntPtr.Zero)
+            {
+                binding = CreateImGuiBinding(texture);
+                return;
+            }
+            if (_setsById.TryGetValue(binding, out var rsi))
+            {
+                if (rsi.Texture == texture)
+                    return;
+                RemoveImGuiBinding(binding);
+            }
+            binding = CreateImGuiBinding(texture);
         }
 
         /// <summary>
         /// Retrieves the shader texture binding for the given helper handle.
         /// </summary>
-        private ResourceSet GetImageResourceSet(IntPtr imGuiBinding) =>
-            _viewsById.GetValueOrDefault(imGuiBinding).ResourceSet;
-
-        public void ClearCachedImageResources()
+        private ResourceSet GetImageResourceSet(IntPtr imGuiBinding)
         {
-            foreach (IDisposable resource in _ownedResources)
+            var rsi = _setsById.GetValueOrDefault(imGuiBinding);
+            if (rsi == null)
+                return null;
+            if (rsi.Texture.IsDisposed)
             {
-                resource.Dispose();
+                _setsById.Remove(rsi.ImGuiBinding);
+                _setsByTexture.Remove(rsi.Texture);
+                _ownedResources.Remove(rsi.ResourceSet);
+                rsi.ResourceSet.Dispose();
+                return null;
             }
+            return rsi.ResourceSet;
+        }
 
-            _ownedResources.Clear();
-            _setsByView.Clear();
-            _viewsById.Clear();
-            _autoViewsByTexture.Clear();
-            _lastAssignedID = 100;
+        private void CleanupDisposedTextureBindings()
+        {
+            var disposedBindings = _setsById.Values
+                .Where(rsi => rsi.Texture.IsDisposed)
+                .Select(rsi => rsi.ImGuiBinding)
+                .ToArray();
+            foreach (var binding in disposedBindings)
+                GetImageResourceSet(binding);
         }
 
         private byte[] GetEmbeddedResourceBytes(string resourceName)
@@ -356,6 +361,7 @@ namespace zzre.imgui
                 ImGui.Render();
             }
 
+            CleanupDisposedTextureBindings();
             SetPerFrameImGuiData(deltaSeconds);
             ImGui.GetIO().MouseWheel = 0f;
         }
@@ -746,16 +752,9 @@ namespace zzre.imgui
             }
         }
 
-        private struct ResourceSetInfo
+        private sealed record class ResourceSetInfo(IntPtr ImGuiBinding, Texture Texture, ResourceSet ResourceSet)
         {
-            public readonly IntPtr ImGuiBinding;
-            public readonly ResourceSet ResourceSet;
-
-            public ResourceSetInfo(IntPtr imGuiBinding, ResourceSet resourceSet)
-            {
-                ImGuiBinding = imGuiBinding;
-                ResourceSet = resourceSet;
-            }
+            public int RefCount;
         }
     }
 }
