@@ -10,6 +10,7 @@ using Serilog;
 
 namespace zzre;
 
+/// <summary>A global asset registry to facilitate loading, retrieval and disposal of assets</summary>
 public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryInternal
 {
     private static readonly int MaxLowPriorityAssetsPerFrame = Math.Max(1, Environment.ProcessorCount);
@@ -22,6 +23,7 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
 
     private readonly ILogger logger;
     private readonly int mainThreadId = Environment.CurrentManagedThreadId;
+    /// <summary>The apparent registry is the interface given to assets, it will differ for local registries</summary>s
     private readonly IAssetRegistry apparentRegistry;
     private readonly Dictionary<Guid, IAsset> assets = [];
     private readonly CancellationTokenSource cancellationSource = new();
@@ -32,9 +34,14 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
 
     private CancellationToken Cancellation => cancellationSource.Token;
     private bool IsMainThread => mainThreadId == Environment.CurrentManagedThreadId;
+    /// <inheritdoc/>
     public ITagContainer DIContainer { get; }
+    /// <inheritdoc/>
     public AssetRegistryStats Stats => stats;
 
+    /// <summary>Constructs a global asset registry</summary>
+    /// <param name="debugName">A name for debugging purposes (used in logs)</param>
+    /// <param name="diContainer">The <see cref="ITagContainer"/> given to this registry for loading the asset contents</param>
     public AssetRegistry(string debugName, ITagContainer diContainer) : this(debugName, diContainer, null) { }
 
     internal AssetRegistry(string debugName, ITagContainer diContainer, IAssetRegistry? apparentRegistry)
@@ -88,6 +95,7 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         }
     }
 
+    /// <inheritdoc/>
     public unsafe AssetHandle Load<TInfo, TApplyContext>(
         in TInfo info,
         AssetLoadPriority priority,
@@ -118,6 +126,7 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         return handle => fnptr(handle, in contextCopy);
     }
 
+    /// <inheritdoc/>
     public AssetHandle Load<TInfo>(
         in TInfo info,
         AssetLoadPriority priority,
@@ -204,6 +213,7 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         asset.ApplyAction.Invoke(new(this, asset.ID));
     }
 
+    /// <inheritdoc/>
     public void ApplyAssets()
     {
         EnsureMainThread();

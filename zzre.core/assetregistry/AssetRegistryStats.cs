@@ -3,6 +3,9 @@ using System.Threading;
 
 namespace zzre;
 
+/// <summary>
+/// A snapshot of mostly monotonous counters of an <see cref="IAssetRegistry"/>
+/// </summary>
 public struct AssetRegistryStats
 {
     private int created;
@@ -10,9 +13,14 @@ public struct AssetRegistryStats
     private int removed;
     private int total;
 
+    /// <summary>The number of assets created</summary>
     public int Created => created;
+    /// <summary>The number of assets that finished loading</summary>
     public int Loaded => loaded;
+    /// <summary>The number of assets removed from the registry</summary>
     public int Removed => removed;
+    /// <summary>The number of currently registered assets</summary>
+    /// <remarks>This counter is not monotonous</remarks>
     public int Total => total;
 
     internal void OnAssetCreated()

@@ -2,6 +2,10 @@
 
 partial class AssetRegistry
 {
+    /// <summary>
+    /// Adds watchers to automatically dispose <see cref="AssetHandle"/> components when they are removed from an entity or the world is disposed
+    /// </summary>
+    /// <param name="world">The world to register at</param>
     public static void SubscribeAt(DefaultEcs.World world)
     {
         world.SubscribeEntityComponentRemoved<AssetHandle>(HandleAssetHandleRemoved);

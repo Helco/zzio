@@ -39,13 +39,6 @@ public class TestFallbackTagContainer
     }
 
     [Test]
-    public void HasOverwrittenTagFromParent()
-    {
-        Assert.That(container.HasTag<SubTag2Of1>());
-        Assert.That(container.GetTag<Tag1>(), Is.SameAs(container.GetTag<SubTag2Of1>()));
-    }
-
-    [Test]
     public void GetTagsTakesFromBoth()
     {
         var tags = container.GetTags<Tag1>();

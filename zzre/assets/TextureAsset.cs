@@ -78,8 +78,7 @@ public sealed class TextureAsset : Asset
     {
         using var image = Pfim.Dds.Create(stream, new Pfim.PfimConfig());
 
-        var textureFormat = TryConvertPixelFormat(image.Format);
-        if (textureFormat == null)
+        var textureFormat = TryConvertPixelFormat(image.Format) ??
             throw new NotSupportedException($"Unsupported DDS format {image.Format}");
 
         var graphicsDevice = diContainer.GetTag<GraphicsDevice>();
@@ -88,7 +87,7 @@ public sealed class TextureAsset : Asset
             height: (uint)image.Height,
             mipLevels: (uint)image.MipMaps.Length + 1,
             arrayLayers: 1,
-            textureFormat.Value,
+            textureFormat,
             TextureUsage.Sampled));
 
         fixed (void* dataBytePtr = image.Data)

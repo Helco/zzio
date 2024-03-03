@@ -3,16 +3,23 @@ using System.Diagnostics;
 
 namespace zzre;
 
+/// <summary>An untyped handle to an asset</summary>
+/// <remarks>Keeping a handle to the asset keeps the asset alive</remarks>
 public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
 {
+    /// <summary>An invalid handle that is not tied to any registry nor asset</summary>
+    /// <remarks>Only disposing this handle is an allowed action</remarks>
     public static readonly AssetHandle Invalid = new(registry: null!, Guid.Empty) { wasDisposed = true };
 
-    private readonly AssetHandleScope? handleScope;
     internal readonly IAssetRegistryInternal registryInternal;
+    private readonly AssetHandleScope? handleScope;
     private bool wasDisposed;
 
+    /// <summary>The <see cref="IAssetRegistry"/> the asset was loaded at</summary>
     public readonly IAssetRegistry Registry => registryInternal;
+    /// <summary>The unique ID of the asset</summary>
     public readonly Guid AssetID { get; }
+    /// <summary>Checks whether this asset is marked as <see cref="AssetState.Loaded"/></summary>
     public readonly bool IsLoaded
     {
         get
@@ -43,6 +50,8 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
         AssetID = assetId;
     }
 
+    /// <summary>Disposes the stake on the asset this handle is tied to</summary>
+    /// <remarks>*May* trigger disposal of the asset and related secondary assets</remarks>
     public void Dispose()
     {
         if (wasDisposed)
@@ -58,18 +67,31 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
     private readonly void CheckDisposed() =>
         ObjectDisposedException.ThrowIf(wasDisposed || AssetID == Guid.Empty, this);
 
+    /// <summary>Returns a loaded asset instance</summary>
+    /// <remarks>The asset has to be marked as <see cref="AssetState.Loaded"/>, otherwise it will try to synchronously wait for loading completion</remarks>
+    /// <typeparam name="TValue">The actual type of the asset instance</typeparam>
+    /// <returns>The asset instance</returns>
     public readonly TValue Get<TValue>() where TValue : Asset
     {
         CheckDisposed();
         return registryInternal.GetLoadedAsset<TValue>(AssetID);
     }
 
+    /// <summary>Returns this handle as a typed asset handle</summary>
+    /// <remarks>This method does not check the actual type of the asset and will always succeed (given the handle was not disposed)</remarks>
+    /// <typeparam name="TValue">The asset type to be used</typeparam>
+    /// <returns>The typed asset handle</returns>
     public readonly AssetHandle<TValue> As<TValue>() where TValue : Asset
     {
         CheckDisposed();
         return (AssetHandle<TValue>)this;
     }
 
+    /// <summary>Adds an apply action to the asset</summary>
+    /// <remarks>Depending on whether the asset is already loaded the action will be called immediately or only stored for later execution</remarks>
+    /// <typeparam name="TApplyContext">The type of the apply context given to the apply action</typeparam>
+    /// <param name="applyFnptr">The function pointer to call as apply action</param>
+    /// <param name="applyContext">The apply context given to the apply action</param>
     public unsafe readonly void Apply<TApplyContext>(
         delegate* managed<AssetHandle, ref readonly TApplyContext, void> applyFnptr,
         in TApplyContext applyContext)
@@ -78,6 +100,11 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
         registryInternal.AddApplyAction(this, applyFnptr, in applyContext);
     }
 
+    /// <summary>Adds an apply action to the asset</summary>
+    /// <remarks>Depending on whether the asset is already loaded the action will be called immediately or only stored for later execution</remarks>
+    /// <typeparam name="TApplyContext">The type of the apply context given to the apply action</typeparam>
+    /// <param name="applyAction">The delegate to call as apply action</param>
+    /// <param name="applyContext">The apply context given to the apply action</param>
     public readonly void Apply<TApplyContext>(
         IAssetRegistry.ApplyWithContextAction<TApplyContext> applyAction,
         in TApplyContext applyContext)
@@ -86,6 +113,9 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
         registryInternal.AddApplyAction(this, applyAction, in applyContext);
     }
 
+    /// <summary>Adds an apply action to the asset</summary>
+    /// <remarks>Depending on whether the asset is already loaded the action will be called immediately or only stored for later execution</remarks>
+    /// <param name="applyAction">The delegate to call as apply action</param>
     public readonly void Apply(Action<AssetHandle> applyAction)
     {
         CheckDisposed();
@@ -101,17 +131,24 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
     public static bool operator !=(AssetHandle left, AssetHandle right) => !(left == right);
 }
 
+/// <summary>A typed asset handle for convenience</summary>
+/// <remarks>The actual type is only checked upon retrieval of the instance</remarks>
+/// <typeparam name="TValue">The type of the asset instance</typeparam>
 public struct AssetHandle<TValue> : IDisposable, IEquatable<AssetHandle<TValue>>, IEquatable<AssetHandle>
     where TValue : Asset
 {
+    /// <inheritdoc cref="AssetHandle.Invalid"/>
     public static readonly AssetHandle<TValue> Invalid = new() { Inner = AssetHandle.Invalid };
 
+    /// <summary>The untyped <see cref="AssetHandle"/></summary>
     public AssetHandle Inner { get; private init; }
 
     public static explicit operator AssetHandle<TValue>(AssetHandle handle) => new() { Inner = handle };
     public static implicit operator AssetHandle(AssetHandle<TValue> handle) => handle.Inner;
 
+    /// <inheritdoc cref="AssetHandle.Dispose"/>
     public void Dispose() => Inner.Dispose();
+    /// <inheritdoc cref="AssetHandle.Get"/>
     public readonly TValue Get() => Inner.Get<TValue>();
 
     public readonly override string ToString() => $"AssetHandle<{typeof(TValue).Name}> {Inner.AssetID}";
