@@ -32,7 +32,8 @@ public sealed class Sound : BaseCombinerPart<
             Volume: data.volume / 100f,
             Paused: true,
             AsEntity: emitter,
-            ParentLocation: parentLocation));
+            ParentLocation: parentLocation,
+            Priority: AssetLoadPriority.High));
         entity.Set(new components.effect.SoundState(emitter));
     }
 
@@ -44,7 +45,9 @@ public sealed class Sound : BaseCombinerPart<
         in zzio.effect.parts.Sound data,
         ref components.effect.RenderIndices indices)
     {
-        if (!state.DidStart && parent.Entity.Get<components.effect.CombinerPlayback>().CurProgress > 0f)
+        if (!state.DidStart &&
+            parent.Entity.Get<components.effect.CombinerPlayback>().CurProgress > 0f &&
+            state.Emitter.Has<components.SoundEmitter>()) // to check whether the sound has loaded
         {
             world.Publish(new messages.UnpauseEmitter(state.Emitter));
             state.DidStart = true;
