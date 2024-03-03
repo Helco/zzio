@@ -70,7 +70,7 @@ public sealed class TextureAsset : Asset
             throw new NotSupportedException("ZZIO does not support surface pitch values other than Bpp*Width");
 
         using var image = new SdlSurfacePtr(sdl, rawPointer);
-        return image.ToTexture(graphicsDevice);
+        return image.ToTexture(graphicsDevice, "UNSET NAME");
     }
 
     private unsafe Texture? LoadFromDDS(Stream stream)

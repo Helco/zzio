@@ -7,11 +7,9 @@ using System.CommandLine.Invocation;
 using Veldrid;
 using zzio.vfs;
 using zzre.rendering;
+using zzre.tools;
 using Silk.NET.SDL;
 using Serilog;
-
-using Texture = Veldrid.Texture;
-using zzre.tools;
 
 namespace zzre;
 
@@ -84,8 +82,7 @@ internal static partial class Program
                 ?? throw new InvalidDataException("Shader set is not compiled into zzre")))
             .AddTag(new GameTime())
             .AddTag(CreateResourcePool(diContainer))
-            .AddTag(CreateAssetRegistry(diContainer))
-            .AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(diContainer));
+            .AddTag(CreateAssetRegistry(diContainer));
     }
 
     private static GraphicsDevice CreateGraphicsDevice(SdlWindow window, InvocationContext ctx)

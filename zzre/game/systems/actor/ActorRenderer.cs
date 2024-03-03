@@ -18,7 +18,6 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     private readonly GraphicsDevice graphicsDevice;
     private readonly Camera camera;
     private readonly Texture whiteTexture;
-    private readonly IAssetLoader<Texture> textureLoader;
     private readonly UniformBuffer<ModelFactors> modelFactors;
     private readonly UniformBuffer<FogParams> fogParams; // this is not owned by us!
     private readonly IDisposable sceneLoadedSubscription;
@@ -30,7 +29,6 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         this.diContainer = diContainer;
         assetRegistry = diContainer.GetTag<IAssetRegistry>();
         camera = diContainer.GetTag<Camera>();
-        textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
         fogParams = diContainer.GetTag<UniformBuffer<FogParams>>();
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         loadActorSubscription = World.Subscribe<messages.LoadActor>(HandleLoadActor);

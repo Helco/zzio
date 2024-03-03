@@ -10,7 +10,6 @@ using zzio.vfs;
 using zzre.game;
 using zzre.materials;
 using PixelFormat = Veldrid.PixelFormat;
-using Texture = Veldrid.Texture;
 
 namespace zzre;
 
@@ -52,8 +51,9 @@ public class UIBitmapAsset : Asset
 
     protected override ValueTask<IEnumerable<AssetHandle>> Load()
     {
+        var graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         using var bitmap = LoadMaskedBitmap(info.Name);
-        var texture = ToTexture(bitmap, DebugName);
+        var texture = bitmap.ToTexture(graphicsDevice, DebugName);
         var samplerAsset = Registry.LoadSampler(SamplerDescription.Linear);
         material = new UIMaterial(diContainer)
         {
@@ -66,7 +66,6 @@ public class UIBitmapAsset : Asset
 
         if (info.HasRawMask)
         {
-            var graphicsDevice = diContainer.GetTag<GraphicsDevice>();
             var mask = LoadRawMask(bitmap.Width, bitmap.Height);
             var maskTexture = graphicsDevice.ResourceFactory.CreateTexture(new(
                 (uint)bitmap.Width, (uint)bitmap.Height, depth: 1,
@@ -138,20 +137,6 @@ public class UIBitmapAsset : Asset
             throw new NotSupportedException("ZZIO does not support surface pitch values other than Bpp*Width");
 
         return new(sdl, rawPointer);
-    }
-
-    private unsafe Texture ToTexture(SdlSurfacePtr image, string name, bool srgb = false)
-    {
-        var gd = diContainer.GetTag<GraphicsDevice>();
-        if (image.Surface->Format->Format != Sdl.PixelformatAbgr8888)
-            throw new ArgumentException($"Unsupported surface format {image.Surface->Format->Format}", nameof(image));
-        var format = srgb ? PixelFormat.R8_G8_B8_A8_UNorm_SRgb : PixelFormat.R8_G8_B8_A8_UNorm;
-        var texture = gd.ResourceFactory.CreateTexture(new(
-            (uint)image.Width, (uint)image.Height, depth: 1, mipLevels: 1, arrayLayers: 1,
-            format, TextureUsage.Sampled, TextureType.Texture2D));
-        texture.Name = name;
-        gd.UpdateTexture(texture, image.Data, 0, 0, 0, (uint)image.Width, (uint)image.Height, depth: 1, mipLevel: 0, arrayLayer: 0);
-        return texture;
     }
 
     private byte[] LoadRawMask(int width, int height)

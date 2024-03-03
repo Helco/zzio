@@ -39,7 +39,6 @@ public partial class SceneEditor
         public Model(ITagContainer diContainer, zzio.scn.Model sceneModel, Behavior? sceneBehavior)
         {
             this.diContainer = diContainer;
-            var textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
             var textureBasePaths = new[]
             {
                 new FilePath("resources/textures/models"),

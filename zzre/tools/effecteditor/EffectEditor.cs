@@ -35,8 +35,6 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private readonly DebugLineRenderer gridRenderer;
     private readonly OpenFileModal openFileModal;
     private readonly GameTime gameTime;
-    private readonly CachedAssetLoader<Texture> textureLoader;
-    private readonly CachedAssetLoader<ClumpMesh> clumpLoader;
     private readonly EffectCombiner emptyEffect = new();
     private readonly DefaultEcs.World ecsWorld = new();
     private readonly SequentialSystem<float> updateSystems = new();
@@ -93,11 +91,6 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         gridRenderer.AddGrid();
         AddDisposable(gridRenderer);
 
-        AddDisposable(textureLoader = new CachedAssetLoader<Texture>(new TextureAssetLoader(diContainer)));
-        AddDisposable(clumpLoader = new CachedClumpMeshLoader(diContainer));
-        diContainer.AddTag<IAssetLoader<Texture>>(textureLoader);
-        diContainer.AddTag<IAssetLoader<ClumpMesh>>(clumpLoader);
-
         updateSystems = new SequentialSystem<float>(
             new game.systems.SoundContext(diContainer),
             new game.systems.SoundEmitter(diContainer),
@@ -148,8 +141,6 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
             return;
         CurrentResource = null;
         KillEffect();
-        textureLoader.Clear();
-        clumpLoader.Clear();
         transformMode = TransformMode.None;
 
         using (var stream = resource.OpenContent())
