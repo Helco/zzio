@@ -13,14 +13,14 @@ partial class Program
 #if DEBUG
     private static readonly Option<bool> OptionRenderDoc = new(
         "--renderdoc",
-        () => true,
-        "Whether RenderDoc is to be loaded at start.\nIf RenderDoc loading makes problems set this option to \"false\"");
+        () => false,
+        "Whether RenderDoc is to be loaded at start.");
 
     private static RenderDoc? RenderDoc;
     private static ILogger RenderDocLogger = null!;
 
     private static void AddGlobalRenderDocOption(RootCommand command) =>
-        command.Add(OptionRenderDoc);
+        command.AddGlobalOption(OptionRenderDoc);
 
     private static void LoadRenderDoc(ITagContainer diContainer)
     {
