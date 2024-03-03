@@ -37,6 +37,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private readonly GameTime gameTime;
     private readonly EffectCombiner emptyEffect = new();
     private readonly DefaultEcs.World ecsWorld = new();
+    private readonly AssetLocalRegistry assetRegistry;
     private readonly SequentialSystem<float> updateSystems = new();
     private readonly SequentialSystem<CommandList> renderSystems = new();
     private bool isPlaying = true;
@@ -82,6 +83,9 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         diContainer.AddTag(new EffectMesh(diContainer, 1024, 2048));
         diContainer.AddTag(new ModelInstanceBuffer(diContainer, 128));
         diContainer.AddTag(camera = new Camera(diContainer));
+        diContainer.AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("EffectEditor", diContainer));
+        AssetRegistry.SubscribeAt(ecsWorld);
+        assetRegistry.DelayDisposals = false;
         controls = new OrbitControlsTag(Window, camera.Location, diContainer);
         AddDisposable(controls);
 
@@ -139,19 +143,12 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     {
         if (resource.Equals(CurrentResource))
             return;
-        CurrentResource = null;
+        CurrentResource = resource;
         KillEffect();
         transformMode = TransformMode.None;
 
-        using (var stream = resource.OpenContent())
-        {
-            if (stream == null)
-                throw new FileNotFoundException($"Failed to open {resource.Path}");
-            loadedEffect = new();
-            loadedEffect.Read(stream);
-        }
-
         SpawnEffect();
+        loadedEffect = effectEntity.Get<EffectCombiner>();
         isPlaying = true;
 
         editor.ClearInfoSections();
@@ -188,9 +185,8 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private void SpawnEffect()
     {
         effectEntity = ecsWorld.CreateEntity();
-        effectEntity.Set(loadedEffect);
         ecsWorld.Publish(new game.messages.SpawnEffectCombiner(
-            0, // we do not have the EffectCombiner resource manager, the value here does not matter
+            CurrentResource!.Path,
             AsEntity: effectEntity,
             Position: Vector3.Zero));
         partEntities =
@@ -199,7 +195,6 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
                         .With<game.components.Parent>()
                         .AsEnumerable()
                         .OrderBy(e => e.Get<int>())
-,
         ];
     }
 
@@ -245,6 +240,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
 
     private void HandleRender(CommandList cl)
     {
+        assetRegistry.ApplyAssets();
         if (isPlaying && effectEntity.IsAlive)
             updateSystems.Update(gameTime.Delta);
         UpdateSoundListener();

@@ -65,7 +65,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
     private void HandleSpawnEffect(in messages.SpawnEffectCombiner msg)
     {
         var entity = msg.AsEntity ?? World.CreateEntity();
-        assetRegistry.LoadEffectCombiner(entity, msg.EffectFilename, AssetLoadPriority.Synchronous);
+        assetRegistry.LoadEffectCombiner(entity, msg.FullPath, AssetLoadPriority.Synchronous);
         var effect = entity.Get<zzio.effect.EffectCombiner>();
         entity.Set(new components.effect.CombinerPlayback(
             duration: effect.isLooping ? float.PositiveInfinity : effect.Duration,

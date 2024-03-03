@@ -152,7 +152,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         localDiContainer
             .AddTag(ecsWorld = new DefaultEcs.World())
             .AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("WorldViewer", localDiContainer));
-        AssetRegistry.SubscribeAt(localDiContainer.GetTag<DefaultEcs.World>());
+        AssetRegistry.SubscribeAt(ecsWorld);
         assetRegistry.DelayDisposals = false;
         worldRenderer = new(localDiContainer);
         AddDisposable(worldRenderer);
