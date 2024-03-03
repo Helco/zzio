@@ -10,16 +10,18 @@ public sealed class ClumpAsset : Asset
 {
     private static readonly FilePath BasePath = new("resources/models/");
 
-    public readonly record struct Info(
-        string Directory,
-        string Name)
+    public readonly record struct Info(FilePath FullPath)
     {
         public static Info Model(string name) => new("models", name);
         public static Info Actor(string name) => new("actorsex", name);
         public static Info Backdrop(string name) => new("backdrops", name);
 
-        public FilePath FullPath => BasePath.Combine(Directory,
-            Name.EndsWith(".dff", StringComparison.OrdinalIgnoreCase) ? Name : Name + ".dff");
+        public Info(string directory, string name) : this(BasePath.Combine(directory,
+            name.EndsWith(".dff", StringComparison.OrdinalIgnoreCase) ? name : name + ".dff"))
+        { }
+
+        public string Directory => FullPath.Parts[^2];
+        public string Name => FullPath.Parts[^1];
     }
 
     public static void Register() =>

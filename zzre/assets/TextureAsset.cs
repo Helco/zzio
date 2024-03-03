@@ -139,11 +139,12 @@ public static unsafe partial class AssetExtensions
 {
     private static readonly IReadOnlyList<string> TextureExtensions = [".dds", ".bmp"];
 
-    public static AssetHandle<TextureAsset> LoadTexture(this IAssetRegistry registry,
+    public static AssetHandle<TextureAsset>? TryLoadTexture(this IAssetRegistry registry,
         IReadOnlyList<FilePath> texturePaths,
         string textureName,
         AssetLoadPriority priority,
-        ITexturedMaterial? material = null)
+        ITexturedMaterial? material = null,
+        StandardTextureKind? placeholder = null)
     {
         var resourcePool = registry.DIContainer.GetTag<IResourcePool>();
         foreach (var texturePath in texturePaths)
@@ -155,8 +156,18 @@ public static unsafe partial class AssetExtensions
                     return registry.LoadTexture(path, priority, material);
             }
         }
-        throw new FileNotFoundException($"Could not find any texture \"{textureName}\"");
+        if (material != null && placeholder != null)
+            material.Texture.Texture = registry.DIContainer.GetTag<StandardTextures>().ByKind(placeholder.Value);
+        return null;
     }
+
+    public static AssetHandle<TextureAsset> LoadTexture(this IAssetRegistry registry,
+        IReadOnlyList<FilePath> texturePaths,
+        string textureName,
+        AssetLoadPriority priority,
+        ITexturedMaterial? material = null) =>
+        registry.TryLoadTexture(texturePaths, textureName, priority, material) ??
+        throw new FileNotFoundException($"Could not find any texture \"{textureName}\"");
 
     public static AssetHandle<TextureAsset> LoadTexture(this IAssetRegistry registry,
         FilePath fullPath,
