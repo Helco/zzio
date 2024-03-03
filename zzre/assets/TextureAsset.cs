@@ -43,10 +43,11 @@ public sealed class TextureAsset : Asset
             "bmp" => LoadFromBMP(textureStream),
             _ => throw new NotSupportedException($"Unsupported texture extension: {path.Extension}")
         };
+        texture.Name = path.Parts[^1];
         return NoSecondaryAssets;
     }
 
-    private unsafe Texture? LoadFromBMP(Stream textureStream)
+    private unsafe Texture LoadFromBMP(Stream textureStream)
     {
         var sdl = diContainer.GetTag<Sdl>();
         var graphicsDevice = diContainer.GetTag<GraphicsDevice>();
@@ -55,7 +56,7 @@ public sealed class TextureAsset : Asset
         var rwops = sdl.RWFromConstMem(imageBuffer);
         var rawPointer = sdl.LoadBMPRW(rwops, freesrc: 1);
         if (rawPointer == null)
-            return null;
+            throw new InvalidDataException("Failed to load BMP");
 
         var curFormat = rawPointer->Format->Format;
         if (rawPointer->Format->Format != Sdl.PixelformatAbgr8888)
@@ -63,7 +64,7 @@ public sealed class TextureAsset : Asset
             var newPointer = sdl.ConvertSurfaceFormat(rawPointer, Sdl.PixelformatAbgr8888, flags: 0);
             sdl.FreeSurface(rawPointer);
             if (newPointer == null)
-                return null;
+                throw new InvalidOperationException("Failed to convert SDL surface to RGBA");
             rawPointer = newPointer;
         }
         if (rawPointer->Pitch != rawPointer->W * rawPointer->Format->BytesPerPixel)
@@ -73,13 +74,13 @@ public sealed class TextureAsset : Asset
         return image.ToTexture(graphicsDevice, "UNSET NAME");
     }
 
-    private unsafe Texture? LoadFromDDS(Stream stream)
+    private unsafe Texture LoadFromDDS(Stream stream)
     {
         using var image = Pfim.Dds.Create(stream, new Pfim.PfimConfig());
 
         var textureFormat = TryConvertPixelFormat(image.Format);
         if (textureFormat == null)
-            return null; // TODO: Support converting Pfim image formats to RGBA32
+            throw new NotSupportedException($"Unsupported DDS format {image.Format}");
 
         var graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         var texture = graphicsDevice.ResourceFactory.CreateTexture(TextureDescription.Texture2D(

@@ -18,6 +18,7 @@ public abstract class ModelMaterialAsset : Asset
     private readonly StandardTextureKind? texturePlaceholder;
     private ModelMaterial? material;
 
+    public string DebugName { get; protected set; }
     public ModelMaterial Material => material ??
         throw new InvalidOperationException("Asset was not yet loaded");
 
@@ -32,6 +33,7 @@ public abstract class ModelMaterialAsset : Asset
         this.textureName = textureName;
         this.sampler = sampler;
         this.texturePlaceholder = texturePlaceholder;
+        DebugName = $"{GetType().Name} {textureName ?? texturePlaceholder?.ToString()}";
     }
 
     protected override bool NeedsSecondaryAssets => false;
@@ -39,6 +41,7 @@ public abstract class ModelMaterialAsset : Asset
     protected override ValueTask<IEnumerable<AssetHandle>> Load()
     {
         material = new ModelMaterial(diContainer);
+        material.DebugName = DebugName;
         SetMaterialVariant(material);
 
         var camera = diContainer.GetTag<Camera>();
@@ -82,6 +85,8 @@ public abstract class ModelMaterialAsset : Asset
         material?.Dispose();
         material = null;
     }
+
+    public override string ToString() => DebugName;
 
     protected abstract IReadOnlyList<FilePath> TextureBasePaths { get; }
     protected abstract void SetMaterialVariant(ModelMaterial material);
