@@ -19,9 +19,9 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
     private const float MaxDyingAge = 1.5f;
     private const int MinGoldAmount = 3;
     private const int MaxGoldAmount = 10; // exclusive
-    private const string ModelNameXXX = "itmxxx";
-    private const string ModelNameYYY = "itmyyy";
-    private const string ModelNameZZZ = "itmzzz";
+    private const string ModelNameXXX = "itmxxx.dff";
+    private const string ModelNameYYY = "itmyyy.dff";
+    private const string ModelNameZZZ = "itmzzz.dff";
 
     private Location playerLocation => playerLocationLazy.Value;
     private readonly Game game;

@@ -66,14 +66,14 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
 
         preload.CreateLabel(uiEntity)
             .With(puzzle.BgRect.Min + new Vector2(20, 20))
-            .With(preload.Fnt001)
+            .With(UIPreloadAsset.Fnt001)
             .WithText(db.GetText(UIDBoxOfTricks).Text)
             .Build();
 
         CreateBoard(uiEntity, ref puzzle);
         puzzle.Attempts = preload.CreateLabel(uiEntity)
             .With(puzzle.BgRect.Min + new Vector2(25, 120))
-            .With(preload.Fnt000)
+            .With(UIPreloadAsset.Fnt000)
             .WithText(FormatAttempts(ref puzzle))
             .WithLineHeight(15)
             .Build();
@@ -100,7 +100,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
                     .With(IDCell)
                     .With(offset + new Vector2(46 * col, 46 * row))
                     .With(new components.ui.ButtonTiles(1, Active: 2))
-                    .With(preload.Swt000)
+                    .With(UIPreloadAsset.Swt000)
                     .Build();
                 button.Set(button.Get<Rect>().GrownBy(new Vector2(1, 1))); // No gaps
                 button.Set(new components.ui.Silent());
@@ -154,7 +154,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
         preload.CreateLabel(parent)
             .With(new Vector2(0, -126))
             .With(components.ui.FullAlignment.Center)
-            .With(preload.Fnt001)
+            .With(UIPreloadAsset.Fnt001)
             .WithText(db.GetText(UIDChestOpened).Text)
             .Build();
 

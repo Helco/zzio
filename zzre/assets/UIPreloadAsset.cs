@@ -37,7 +37,8 @@ public sealed class UIPreloadAsset : Asset
         Log000 = new("log000", IsFont: false),
         Cls000 = new("cls000", IsFont: false),
         Cls001 = new("cls001", IsFont: false),
-        Map000 = new("map000", IsFont: false);
+        Map000 = new("map000", IsFont: false),
+        Swt000 = new("swt000", IsFont: false);
 
     public readonly record struct Info;
 
@@ -51,28 +52,29 @@ public sealed class UIPreloadAsset : Asset
     {
         AssetHandle[] allAssets =
         [
-            Preload(out var btn000, "btn000", isFont: false),
-            Preload(out var btn001, "btn001", isFont: false),
-            Preload(out var btn002, "btn002", isFont: false),
-            Preload(out var sld000, "sld000", isFont: false),
-            Preload(out var tit000, "tit000", isFont: false),
-            Preload(out var cur000, "cur000", isFont: false),
-            Preload(out var dnd000, "dnd000", isFont: false),
-            Preload(out var wiz000, "wiz000", isFont: false),
-            Preload(out var itm000, "itm000", isFont: false),
-            Preload(out var spl000, "spl000", isFont: false),
-            Preload(out var lne000, "lne000", isFont: false),
-            Preload(out var fnt000, "fnt000", isFont: true, lineHeight: 14f, charSpacing: 1f),
-            Preload(out var fnt001, "fnt001", isFont: true, charSpacing: 1f),
-            Preload(out var fnt002, "fnt002", isFont: true, lineHeight: 17f, charSpacing: 1f, lineOffset: 2f),
-            Preload(out var fnt003, "fnt003", isFont: true, lineHeight: 14f, charSpacing: 1f),
-            Preload(out var fnt004, "fnt004", isFont: true, lineHeight: 14f, charSpacing: 1f),
-            Preload(out var fsp000, "fsp000", isFont: true),
-            Preload(out var inf000, "inf000", isFont: false),
-            Preload(out var log000, "log000", isFont: false),
-            Preload(out var cls000, "cls000", isFont: false),
-            Preload(out var cls001, "cls001", isFont: false),
-            Preload(out var map000, "map000", isFont: false)
+            Preload(out var btn000, Btn000),
+            Preload(out var btn001, Btn001),
+            Preload(out var btn002, Btn002),
+            Preload(out var sld000, Sld000),
+            Preload(out var tit000, Tit000),
+            Preload(out var cur000, Cur000),
+            Preload(out var dnd000, Dnd000),
+            Preload(out var wiz000, Wiz000),
+            Preload(out var itm000, Itm000),
+            Preload(out var spl000, Spl000),
+            Preload(out var lne000, Lne000),
+            Preload(out var fnt000, Fnt000, lineHeight: 14f, charSpacing: 1f),
+            Preload(out var fnt001, Fnt001, charSpacing: 1f),
+            Preload(out var fnt002, Fnt002, lineHeight: 17f, charSpacing: 1f, lineOffset: 2f),
+            Preload(out var fnt003, Fnt003, lineHeight: 14f, charSpacing: 1f),
+            Preload(out var fnt004, Fnt004, lineHeight: 14f, charSpacing: 1f),
+            Preload(out var fsp000, Fsp000),
+            Preload(out var inf000, Inf000),
+            Preload(out var log000, Log000),
+            Preload(out var cls000, Cls000),
+            Preload(out var cls001, Cls001),
+            Preload(out var map000, Map000),
+            Preload(out var swt000, Swt000)
         ];
 
         await Registry.WaitAsyncAll([fnt000, fnt001, fnt002, fnt003]);
@@ -118,15 +120,15 @@ public sealed class UIPreloadAsset : Asset
     protected override void Unload()
     { } // we only have secondary assets
 
-    private unsafe AssetHandle Preload(out AssetHandle<UITileSheetAsset> handle, string name, bool isFont,
+    private unsafe AssetHandle Preload(out AssetHandle<UITileSheetAsset> handle, UITileSheetAsset.Info info,
         float? lineHeight = null,
         float? lineOffset = null,
         float? charSpacing = null)
     {
         var applyConfig = (lineHeight ?? lineOffset ?? charSpacing) is not null;
         return handle = (applyConfig
-            ? Registry.Load(new UITileSheetAsset.Info(name, isFont), AssetLoadPriority.High, &ApplyFontConfig, (lineHeight, lineOffset, charSpacing))
-            : Registry.Load(new UITileSheetAsset.Info(name, isFont), AssetLoadPriority.High))
+            ? Registry.Load(info, AssetLoadPriority.High, &ApplyFontConfig, (lineHeight, lineOffset, charSpacing))
+            : Registry.Load(info, AssetLoadPriority.High))
             .As<UITileSheetAsset>();
     }
 
