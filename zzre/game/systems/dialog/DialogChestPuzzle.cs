@@ -59,7 +59,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
             Size = message.Size,
             LabelExit = message.LabelExit,
             NumAttempts = 0,
-            BoardState = InitBoardState(message.Size),
+            Cells = new DefaultEcs.Entity[message.Size*message.Size],
             BgRect = bgRect
         });
         ref var puzzle = ref uiEntity.Get<components.DialogChestPuzzle>();
@@ -70,7 +70,7 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
             .WithText(db.GetText(UIDBoxOfTricks).Text)
             .Build();
 
-        puzzle.Board = CreateBoard(uiEntity, ref puzzle);
+        CreateBoard(uiEntity, ref puzzle);
         puzzle.Attempts = preload.CreateLabel(uiEntity)
             .With(puzzle.BgRect.Min + new Vector2(25, 120))
             .With(preload.Fnt000)
@@ -78,14 +78,6 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
             .WithLineHeight(15)
             .Build();
         puzzle.Action = preload.CreateSingleDialogButton(uiEntity, UIDCancel, IDCancel, puzzle.BgRect, buttonOffsetY: -45f);
-    }
-
-    private static bool[] InitBoardState(int size)
-    {
-        var board = new bool[size*size];
-        for (int i = 0; i < size*size; i++)
-            board[i] = Convert.ToBoolean(i % 2);
-        return board;
     }
 
     private string FormatAttempts(ref components.DialogChestPuzzle puzzle) =>
@@ -107,11 +99,13 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
                 var button = preload.CreateButton(entity)
                     .With(IDCell)
                     .With(offset + new Vector2(46 * col, 46 * row))
-                    .With(new components.ui.ButtonTiles(puzzle.BoardState[cell] ? 1 : 2))
+                    .With(new components.ui.ButtonTiles(1, Active: 2))
                     .With(preload.Swt000)
                     .Build();
                 button.Set(button.Get<Rect>().GrownBy(new Vector2(1, 1))); // No gaps
                 button.Set(new components.ui.Silent());
+                if (cell % 2 == 0) button.Set(new components.ui.Active());
+                puzzle.Cells[cell] = button;
             }
         }
 
@@ -140,15 +134,16 @@ public partial class DialogChestPuzzle : ui.BaseScreen<components.DialogChestPuz
                 coord.col + col < puzzle.Size && coord.col + col >= 0)
             {
                 var cell = (coord.row + row) * puzzle.Size + (coord.col + col);
-                puzzle.BoardState[cell] = !puzzle.BoardState[cell];
+                if (puzzle.Cells[cell].TryGet<components.ui.Active>(out var _))
+                    puzzle.Cells[cell].Remove<components.ui.Active>();
+                else
+                    puzzle.Cells[cell].Set(new components.ui.Active());
             }
         }
 
-        if (puzzle.BoardState.All(x => x) || puzzle.BoardState.All(x => !x))
+        if (puzzle.Cells.All(x => x.Has<components.ui.Active>()) || puzzle.Cells.All(x => !x.Has<components.ui.Active>()))
             Succeed(parent, ref puzzle);
 
-        puzzle.Board.Dispose();
-        puzzle.Board = CreateBoard(parent, ref puzzle);
         puzzle.Attempts.Set(new components.ui.Label(FormatAttempts(ref puzzle)));
     }
 
