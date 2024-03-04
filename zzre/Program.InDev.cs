@@ -98,7 +98,7 @@ internal partial class Program
         windowContainer.MenuBar.AddButton("Tools/World Viewer", () => new WorldViewer(diContainer));
         windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
-        windowContainer.MenuBar.AddButton("Launch Game", () => InDevLaunchGame(diContainer, ctx));
+        windowContainer.MenuBar.AddButton("Launch Game", () => InDevLaunchGame(diContainer, ctx, always: true));
         windowContainer.MenuBar.AddButton("ImGui Demo", () => windowContainer.ShowImGuiDemoWindow = true);
 
         openDocumentSet.AddEditorType<ModelViewer>("dff");
@@ -112,7 +112,7 @@ internal partial class Program
             graphicsDevice.ResizeMainWindow((uint)w, (uint)h);
         };
 
-        InDevLaunchGame(diContainer, ctx);
+        InDevLaunchGame(diContainer, ctx, always: false);
         InDevLaunchTools(diContainer, ctx);
         InDevOpenResources(diContainer, ctx);
 
@@ -164,10 +164,10 @@ internal partial class Program
         return (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
     }
 
-    private static void InDevLaunchGame(ITagContainer diContainer, InvocationContext ctx)
+    private static void InDevLaunchGame(ITagContainer diContainer, InvocationContext ctx, bool always)
     {
         var shouldLaunch = ctx.ParseResult.GetValueForOption(OptionInDevLaunchGame);
-        if (!shouldLaunch)
+        if (!shouldLaunch && !always)
             return;
 
         var savegame = new Savegame() { sceneId = 2800 };
