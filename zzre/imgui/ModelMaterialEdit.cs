@@ -16,7 +16,6 @@ public class ModelMaterialEdit : BaseDisposable
     private const float TexturePreviewSize = 5.0f;
     private const float TextureHoverSizeFactor = 0.4f;
 
-    private readonly ResourceFactory resourceFactory;
     private readonly ImGuiRenderer imGuiRenderer;
     private IReadOnlyList<ModelMaterial> materials = Array.Empty<ModelMaterial>();
     private IntPtr[] textureBindings = [];
@@ -46,7 +45,6 @@ public class ModelMaterialEdit : BaseDisposable
         window.AddTag(this);
         onceAction = window.GetTag<OnceAction>();
         imGuiRenderer = window.Container.ImGuiRenderer;
-        resourceFactory = diContainer.GetTag<GraphicsDevice>().ResourceFactory;
     }
 
     protected override void DisposeManaged()
