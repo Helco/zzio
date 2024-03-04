@@ -8,9 +8,9 @@ public record struct Fade(
     float OutDuration,
     float CurrentTime = 0f)
 {
-    public static Fade SingleIn(float duration) => new(
+    public static Fade SingleIn(float duration, float to = 0.8f) => new(
         From: 0f,
-        To: 0.8f,
+        To: to,
         StartDelay: 0f,
         InDuration: duration,
         SustainDelay: float.PositiveInfinity,

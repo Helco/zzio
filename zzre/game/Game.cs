@@ -156,6 +156,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.DialogChoice(this),
             new systems.DialogTrading(this),
             new systems.DialogGambling(this),
+            new systems.DialogChestPuzzle(this),
 
             new systems.NonFairyAnimation(this),
             new systems.AmbientSounds(this),

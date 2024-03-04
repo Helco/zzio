@@ -38,7 +38,8 @@ public class UIPreloader
         Log000,
         Cls000,
         Cls001,
-        Map000;
+        Map000,
+        Swt000;
 
     private static readonly UID UIDYouHave = new(0x070EE421);
 
@@ -70,6 +71,7 @@ public class UIPreloader
         Cls000 = Preload(out var tsCls000, "cls000", isFont: false);
         Cls001 = Preload(out var tsCls001, "cls001", isFont: false);
         Map000 = Preload(out var tsMap000, "map000", isFont: false);
+        Swt000 = Preload(out var tsSwt000, "swt000", isFont: false);
 
         tsFnt000.Alternatives.Add(tsFnt001);
         tsFnt000.Alternatives.Add(tsFnt002);
@@ -153,7 +155,8 @@ public class UIPreloader
     public void CreateDialogBackground(
         DefaultEcs.Entity parent,
         bool animateOverlay,
-        out Rect backgroundRect)
+        out Rect backgroundRect,
+        float opacity = 0.8f)
     {
         var image = CreateImage(parent)
             .WithBitmap("std000")
@@ -162,20 +165,21 @@ public class UIPreloader
             .Build();
         backgroundRect = image.Get<Rect>();
 
-        CreateBackOverlay(parent, animateOverlay, backgroundRect);
+        CreateBackOverlay(parent, animateOverlay, opacity, backgroundRect);
     }
 
     public void CreateBackOverlay(
         DefaultEcs.Entity parent,
         bool animateOverlay,
+        float opacity,
         Rect backgroundRect)
     {
         var overlay = CreateImage(parent)
-            .With(DefaultOverlayColor with { a = animateOverlay ? 0f : 0.8f })
+            .With(DefaultOverlayColor with { a = animateOverlay ? 0f : opacity })
             .With(backgroundRect)
             .WithRenderOrder(2);
         if (animateOverlay)
-            overlay.With(components.ui.Fade.SingleIn(0.8f));
+            overlay.With(components.ui.Fade.SingleIn(0.8f, opacity));
         overlay.Build();
     }
 
@@ -214,13 +218,11 @@ public class UIPreloader
             .WithText($"{GetDBText(UIDYouHave)} {{{3000 + currency.CardId.EntityId}}}x{inventory.CountCards(currency.CardId)}")
             .Build();
 
-    private const float ButtonOffsetY = -50f;
-    private const float RepeatButtonOffsetY = -40f;
-    public DefaultEcs.Entity CreateSingleDialogButton(DefaultEcs.Entity entity, UID textUID, components.ui.ElementId elementId, Rect bgRect, int offset = 0)
+    public DefaultEcs.Entity CreateSingleDialogButton(DefaultEcs.Entity entity, UID textUID, components.ui.ElementId elementId, Rect bgRect, float buttonOffsetY = -50f)
     {
         var button = CreateButton(entity)
             .With(elementId)
-            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y + ButtonOffsetY + RepeatButtonOffsetY * offset))
+            .With(new Vector2(bgRect.Center.X, bgRect.Max.Y + buttonOffsetY))
             .With(new components.ui.ButtonTiles(0, 1))
             .With(components.ui.FullAlignment.TopCenter)
             .With(Btn000)

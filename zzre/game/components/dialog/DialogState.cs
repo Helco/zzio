@@ -9,6 +9,7 @@ public enum DialogState
     Choice,
     Trading,
     Gambling,
+    ChestPuzzle,
     PreFightWild,
     PreFightNpc,
     NpcWalking,

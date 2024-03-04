@@ -509,7 +509,16 @@ public partial class DialogScript : BaseScript<DialogScript>
 
     private void SubGame(DefaultEcs.Entity entity, SubGameType subGameType, int size, int labelExit)
     {
-        LogUnimplementedInstructionWarning();
+        switch (subGameType) {
+            case SubGameType.ChestPuzzle:
+                World.Publish(new messages.DialogChestPuzzle(entity, size + 2, labelExit));
+                break;
+            case SubGameType.ElfGame:
+                LogUnimplementedInstructionWarning();
+                break;
+            default:
+                throw new NotSupportedException($"Unsupported SubGameType: {subGameType}");
+        };
     }
 
     private void PlayAnimation(DefaultEcs.Entity entity, AnimationType animation)
