@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace zzio;
 
@@ -23,6 +24,10 @@ public class BaseDisposable : IDisposable
             DisposeManaged();
         DisposeNative();
     }
+
+    [Conditional("DEBUG")]
+    protected void ThrowIfDisposed() =>
+        ObjectDisposedException.ThrowIf(WasDisposed, GetType());
 
     protected virtual void DisposeManaged() { }
     protected virtual void DisposeNative() { }

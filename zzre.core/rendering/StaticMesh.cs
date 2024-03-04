@@ -135,6 +135,7 @@ public class StaticMesh : BaseDisposable, IVertexAttributeContainer
 
     public bool TryGetByMaterialName(string name, [NotNullWhen(true)] out VertexAttribute? attribute)
     {
+        ThrowIfDisposed();
         foreach (var curAttribute in attributes)
         {
             if (curAttribute.MaterialName == name)
@@ -239,6 +240,7 @@ public class StaticMesh : BaseDisposable, IVertexAttributeContainer
 
     public Range GetSubMeshRange(int? section = null, int? material = null)
     {
+        ThrowIfDisposed();
         if (section is null && material is not null)
             throw new ArgumentException($"Cannot get submesh range for material filter without section filter");
             
