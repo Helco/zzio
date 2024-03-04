@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using DefaultEcs.Resource;
 using DefaultEcs.System;
 using Silk.NET.OpenAL;
 
@@ -11,6 +10,7 @@ namespace zzre.game.systems;
 public sealed partial class SoundEmitter : AEntitySetSystem<float>
 {
     private const int InitialSourceCount = 16;
+    private readonly IAssetRegistry assetRegistry;
     private readonly OpenALDevice device;
     private readonly SoundContext context;
     private readonly Queue<uint> sourcePool = new(InitialSourceCount);
@@ -21,6 +21,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
 
     public unsafe SoundEmitter(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
+        assetRegistry = diContainer.GetTag<IAssetRegistry>();
         diContainer.TryGetTag(out device);
         if (!(IsEnabled = diContainer.TryGetTag(out context)))
             return;
@@ -43,6 +44,9 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
     public override void Dispose()
     {
         base.Dispose();
+        if (!IsEnabled)
+            return;
+
         // DefaultEcs.World does not dispose entities, thus also not remove emitter components
         // we have to do this ourselves
         var allEmitters = World
@@ -64,14 +68,12 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         unpauseEmitterSubscription?.Dispose();
     }
 
-    private void HandleSpawnSample(in messages.SpawnSample msg)
+    private unsafe void HandleSpawnSample(in messages.SpawnSample msg)
     {
         var entity = msg.AsEntity ?? World.CreateEntity();
         if (entity.World != World)
             throw new ArgumentException("Sample entity has to be created in UI World", nameof(msg));
-        entity.Set(ManagedResource<components.SoundBuffer>.Create(msg.SamplePath));
-        bool is3D = msg.Position.HasValue || msg.ParentLocation != null;
-        if (is3D)
+        if (msg.Position.HasValue || msg.ParentLocation != null)
         {
             entity.Set(new Location()
             {
@@ -79,19 +81,32 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
                 Parent = msg.ParentLocation
             });
         }
+        var handle = assetRegistry.LoadSound(entity, new zzio.FilePath(msg.SamplePath), msg.Priority);
+        handle.Inner.Apply(&ApplySpawnSample, (this, entity, msg));
+    }
 
+    private static void ApplySpawnSample(AssetHandle handle,
+        ref readonly (SoundEmitter, DefaultEcs.Entity, messages.SpawnSample) apply)
+    {
+        var (thiz, entity, msg) = apply;
+        if (!entity.IsAlive)
+            return;
+
+        var context = thiz.context;
+        var device = thiz.device;
         using var _ = context.EnsureIsCurrent();
-        if (!sourcePool.TryDequeue(out var sourceId))
+        if (!thiz.sourcePool.TryDequeue(out var sourceId))
             sourceId = device.AL.GenSource();
         if (sourceId == 0)
             throw new InvalidOperationException("Source was not generated");
+        bool is3D = msg.Position.HasValue || msg.ParentLocation != null;
         device.AL.SetSourceProperty(sourceId, SourceFloat.Gain, msg.Volume);
         device.AL.SetSourceProperty(sourceId, SourceFloat.ReferenceDistance, msg.RefDistance);
         device.AL.SetSourceProperty(sourceId, SourceFloat.MaxDistance, msg.MaxDistance);
         device.AL.SetSourceProperty(sourceId, SourceFloat.MinGain, 0f);
         device.AL.SetSourceProperty(sourceId, SourceFloat.MaxGain, Math.Max(1f, msg.Volume));
         device.AL.SetSourceProperty(sourceId, SourceFloat.RolloffFactor, is3D ? 1f : 0f);
-        device.AL.SetSourceProperty(sourceId, SourceInteger.Buffer, entity.Get<components.SoundBuffer>().Id);
+        device.AL.SetSourceProperty(sourceId, SourceInteger.Buffer, handle.Get<SoundAsset>().Buffer);
         device.AL.SetSourceProperty(sourceId, SourceBoolean.Looping, msg.Looping);
         device.AL.SetSourceProperty(sourceId, SourceBoolean.SourceRelative, false);
         if (!is3D)
@@ -100,10 +115,10 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
             device.AL.SourcePause(sourceId);
         else
             device.AL.SourcePlay(sourceId);
+        device.AL.ThrowOnError();
         entity.Set(new components.SoundEmitter(sourceId, msg.Volume, msg.RefDistance, msg.MaxDistance));
-
         if (is3D)
-            Update(entity.Get<components.SoundEmitter>(), entity.Get<Location>());
+            thiz.Update(entity.Get<components.SoundEmitter>(), entity.Get<Location>());
 
         device.Logger.Verbose("Spawned emitter for {Sample}", msg.SamplePath);
     }
@@ -111,6 +126,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
     private void HandleEmitterRemoved(in DefaultEcs.Entity entity, in components.SoundEmitter emitter)
     {
         using var _ = context.EnsureIsCurrent();
+        device.AL.ThrowOnError();
         device.AL.SourceStop(emitter.SourceId);
         device.AL.SetSourceProperty(emitter.SourceId, SourceInteger.Buffer, 0);
         sourcePool.Enqueue(emitter.SourceId);

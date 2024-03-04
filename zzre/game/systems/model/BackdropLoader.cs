@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using DefaultEcs.System;
-using DefaultEcs.Resource;
 using zzre.rendering;
 using System.Numerics;
 using zzio;
@@ -15,6 +13,7 @@ public class BackdropLoader : ISystem<float>
     private readonly ILogger logger;
     private readonly Camera camera;
     private readonly DefaultEcs.World ecsWorld;
+    private readonly IAssetRegistry assetRegistry;
     private readonly IDisposable sceneLoadSubscription;
 
     public bool IsEnabled { get; set; } = true;
@@ -24,6 +23,7 @@ public class BackdropLoader : ISystem<float>
         logger = diContainer.GetLoggerFor<BackdropLoader>();
         camera = diContainer.GetTag<Camera>();
         ecsWorld = diContainer.GetTag<DefaultEcs.World>();
+        assetRegistry = diContainer.GetTag<IAssetRegistry>();
         sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
     }
 
@@ -77,31 +77,25 @@ public class BackdropLoader : ISystem<float>
 
     private DefaultEcs.Entity CreateStaticBackdrop(string name, bool depthTest = true, bool depthWrite = true, bool hasFog = true, Quaternion? rotation = null)
     {
+        var materialVariant = new ClumpMaterialAsset.MaterialVariant(
+            materials.ModelMaterial.BlendMode.Alpha,
+            DepthTest: depthTest,
+            DepthWrite: depthWrite,
+            HasFog: hasFog);
+
         var entity = ecsWorld.CreateEntity();
         entity.Set(new Location()
         {
             LocalRotation = rotation ?? Quaternion.Identity
         });
         entity.Set(new components.MoveToLocation(camera.Location, RelativePosition: Vector3.Zero));
-        entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Backdrop(name + ".dff")));
         entity.Set(components.Visibility.Visible);
         entity.Set(components.RenderOrder.Backdrop);
         entity.Set(new components.ClumpMaterialInfo()
         {
             Color = IColor.White
         });
-
-        var materialInfo = new resources.ClumpMaterialInfo(zzio.scn.FOModelRenderType.Solid, rwMaterial: null!)
-        {
-            DepthTest = depthTest,
-            DepthWrite = depthWrite,
-            HasFog = hasFog
-        };
-        var clumpMesh = entity.Get<ClumpMesh>();
-        entity.Set(new List<materials.ModelMaterial>(clumpMesh.Materials.Count));
-        entity.Set(ManagedResource<materials.ModelMaterial>.Create(clumpMesh.Materials
-            .Select(rwMaterial => materialInfo with { RWMaterial = rwMaterial })
-            .ToArray()));
+        assetRegistry.LoadBackdrop(entity, name, AssetLoadPriority.Synchronous, materialVariant, StandardTextureKind.Clear);
 
         return entity;
     }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Numerics;
-using DefaultEcs.Resource;
 using DefaultEcs.System;
 using Serilog;
 using zzio;
@@ -11,6 +10,7 @@ namespace zzre.game.systems.effect;
 public partial class EffectCombiner : AEntitySetSystem<float>
 {
     private readonly ILogger logger;
+    private readonly IAssetRegistry assetRegistry;
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
     private readonly IDisposable spawnEffectDisposable;
@@ -20,6 +20,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
     public EffectCombiner(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         logger = diContainer.GetLoggerFor<EffectCombiner>();
+        assetRegistry = diContainer.GetTag<IAssetRegistry>();
         sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         spawnEffectDisposable = World.Subscribe<messages.SpawnEffectCombiner>(HandleSpawnEffect);
@@ -64,12 +65,12 @@ public partial class EffectCombiner : AEntitySetSystem<float>
     private void HandleSpawnEffect(in messages.SpawnEffectCombiner msg)
     {
         var entity = msg.AsEntity ?? World.CreateEntity();
-        entity.Set(components.Visibility.Visible);
-        entity.Set(ManagedResource<zzio.effect.EffectCombiner>.Create(msg.EffectFilename));
+        assetRegistry.LoadEffectCombiner(entity, msg.FullPath, AssetLoadPriority.Synchronous);
         var effect = entity.Get<zzio.effect.EffectCombiner>();
         entity.Set(new components.effect.CombinerPlayback(
             duration: effect.isLooping ? float.PositiveInfinity : effect.Duration,
             depthTest: msg.DepthTest));
+        entity.Set(components.Visibility.Visible);
         entity.Set(new Location()
         {
             LocalPosition = msg.Position ?? effect.position,

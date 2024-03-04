@@ -137,7 +137,7 @@ public partial class Teleporter : AEntitySetSystem<float>
                 break;
 
             case State.AmyIsGone when timeLeft <= 0f:
-                fadeEntity = ui.Preload.CreateStdFlashFade(parent: default);
+                fadeEntity = ui.Builder.CreateStdFlashFade(parent: default);
                 state = State.FadeOff;
                 break;
 
@@ -191,7 +191,7 @@ public partial class Teleporter : AEntitySetSystem<float>
         !fadeEntity.TryGet<components.ui.Fade>(out var flashFade) || flashFade.IsFadedIn;
 
     private DefaultEcs.Entity CreateTeleporterFlash(float startDelay) =>
-        ui.Preload.CreateFullFlashFade(parent: default, zzio.IColor.White, new components.ui.Fade(
+        ui.Builder.CreateFullFlashFade(parent: default, zzio.IColor.White, new components.ui.Fade(
             From: 0f, To: 1f,
             startDelay,
             InDuration: 0.1f,

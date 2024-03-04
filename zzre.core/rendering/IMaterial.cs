@@ -7,6 +7,7 @@ public interface IMaterial : IDisposable
 {
     GraphicsDevice Device { get; }
     IBuiltPipeline Pipeline { get; }
+    bool WasDisposed { get; }
 
     void Apply(CommandList cl)
     {
@@ -15,4 +16,9 @@ public interface IMaterial : IDisposable
     }
     void ApplyPipeline(CommandList cl) => cl.SetPipeline(Pipeline.Pipeline);
     void ApplyBindings(CommandList cl);
+}
+
+public interface ITexturedMaterial : IMaterial
+{
+    TextureBinding Texture { get; }
 }

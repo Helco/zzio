@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Numerics;
-using DefaultEcs.Resource;
 using zzre.materials;
 using zzio;
 
@@ -35,11 +34,11 @@ public sealed class MovingPlanes : BaseCombinerPart<
         var billboardMode = data.circlesAround || data.useDirection
             ? EffectMaterial.BillboardMode.None
             : EffectMaterial.BillboardMode.View;
-        entity.Set(ManagedResource<EffectMaterial>.Create(new resources.EffectMaterialInfo(
-            playback.DepthTest,
+        assetRegistry.LoadEffectMaterial(entity,
+            data.texName,
             billboardMode,
             data.renderMode,
-            data.texName)));
+            playback.DepthTest);
         entity.Set(new components.effect.RenderIndices(indexRange));
     }
 

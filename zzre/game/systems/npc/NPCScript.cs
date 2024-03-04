@@ -2,7 +2,6 @@
 using System;
 using System.Numerics;
 using DefaultEcs.System;
-using DefaultEcs.Resource;
 using DefaultEcs.Command;
 using System.Linq;
 using zzio.scn;
@@ -67,7 +66,7 @@ public partial class NPCScript : BaseScript<NPCScript>
         Continue(entity, ref execution);
     }
 
-    private static void SetModel(DefaultEcs.Entity entity, string name)
+    private void SetModel(DefaultEcs.Entity entity, string name)
     {
         if (entity.TryGet<components.ActorParts>(out var oldActorParts))
         {
@@ -75,7 +74,10 @@ public partial class NPCScript : BaseScript<NPCScript>
             oldActorParts.Wings?.Dispose();
         }
 
-        entity.Set(ManagedResource<ActorExDescription>.Create(name));
+        World.Publish(new messages.LoadActor(
+            AsEntity: entity,
+            ActorName: name,
+            AssetLoadPriority.Synchronous));
 
         var actorParts = entity.Get<components.ActorParts>();
         var bodyClump = actorParts.Body.Get<ClumpMesh>();

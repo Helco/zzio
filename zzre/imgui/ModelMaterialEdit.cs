@@ -16,7 +16,6 @@ public class ModelMaterialEdit : BaseDisposable
     private const float TexturePreviewSize = 5.0f;
     private const float TextureHoverSizeFactor = 0.4f;
 
-    private readonly ResourceFactory resourceFactory;
     private readonly ImGuiRenderer imGuiRenderer;
     private IReadOnlyList<ModelMaterial> materials = Array.Empty<ModelMaterial>();
     private IntPtr[] textureBindings = [];
@@ -29,17 +28,15 @@ public class ModelMaterialEdit : BaseDisposable
         get => materials;
         set
         {
-            var oldMaterials = materials.ToArray();
+            var oldBindings = textureBindings.ToArray();
             onceAction.Next += () => // delay removing ImGui bindings so they are still alive for last the last render
             {
-                foreach (var oldMaterial in materials)
-                    imGuiRenderer.RemoveImGuiBinding(oldMaterial.Texture.Texture);
+                foreach (var binding in oldBindings)
+                    imGuiRenderer.RemoveImGuiBinding(binding);
             };
 
             materials = value;
-            textureBindings = materials.Select(
-                material => imGuiRenderer.GetOrCreateImGuiBinding(resourceFactory, material.Texture.Texture)
-            ).ToArray();
+            textureBindings = new nint[materials.Count];
         }
     }
 
@@ -48,13 +45,13 @@ public class ModelMaterialEdit : BaseDisposable
         window.AddTag(this);
         onceAction = window.GetTag<OnceAction>();
         imGuiRenderer = window.Container.ImGuiRenderer;
-        resourceFactory = diContainer.GetTag<GraphicsDevice>().ResourceFactory;
     }
 
     protected override void DisposeManaged()
     {
         base.DisposeManaged();
-        Materials = Array.Empty<ModelMaterial>();
+        foreach (var material in materials)
+            imGuiRenderer.RemoveImGuiBinding(material.Texture.Texture);
     }
 
     public bool Content()
@@ -99,7 +96,7 @@ public class ModelMaterialEdit : BaseDisposable
                 continue;
             var color = material.Tint.Value;
             ColorEdit4("Color", ref color, ImGuiColorEditFlags.NoPicker | ImGuiColorEditFlags.Float);
-            TexturePreview(materials[index].Texture.Texture, textureBindings[index]);
+            TexturePreview(materials[index].Texture.Texture, ref textureBindings[index]);
 
             TreePop();
         }
@@ -107,10 +104,11 @@ public class ModelMaterialEdit : BaseDisposable
         return didChange;
     }
 
-    private static void TexturePreview(Texture? texture, IntPtr binding)
+    private void TexturePreview(Texture? texture, ref IntPtr binding)
     {
         if (texture == null)
             return;
+        imGuiRenderer.UpdateImGuiBinding(ref binding, texture);
         Columns(2, null, false);
         var previewTexSize = GetTextLineHeight() * TexturePreviewSize;
         SetColumnWidth(0, previewTexSize + GetStyle().FramePadding.X * 3);

@@ -12,6 +12,7 @@ using zzre.debug;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
+using zzre.game.systems;
 using KeyCode = Silk.NET.SDL.KeyCode;
 using static ImGuiNET.ImGui;
 
@@ -31,7 +32,9 @@ public class WorldViewer : ListDisposable, IDocumentEditor
 
     private const byte DebugPlaneAlpha = 0xA0;
 
-    private readonly ITagContainer diContainer;
+    private readonly ITagContainer localDiContainer;
+    private readonly DefaultEcs.World ecsWorld;
+    private readonly AssetLocalRegistry assetRegistry;
     private readonly TwoColumnEditorTag editor;
     private readonly FlyControlsTag controls;
     private readonly FramebufferArea fbArea;
@@ -43,12 +46,9 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private readonly DebugPlaneRenderer planeRenderer;
     private readonly DebugLineRenderer frustumRenderer;
     private readonly DebugLineRenderer triangleRenderer;
-    private readonly WorldRenderer worldRenderer;
+    private readonly WorldRendererSystem worldRenderer;
     private readonly Camera camera;
     private readonly LocationBuffer locationBuffer;
-
-    private Frustum viewFrustum => worldRenderer.ViewFrustum;
-    private IReadOnlyList<ModelMaterial> materials => worldRenderer.Materials;
 
     private readonly UniformBuffer<Matrix4x4> worldTransform;
     private WorldMesh? worldMesh;
@@ -58,8 +58,6 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private int[] sectionDepths = [];
     private int highlightedSectionI = -1;
     private int highlightedSplitI = -1;
-    private bool updateViewFrustumCulling = true;
-    private bool renderCulledSections;
     private IntersectionPrimitive intersectionPrimitive;
     private bool updateIntersectionPrimitive;
     private float intersectionSize = 0.5f;
@@ -70,7 +68,6 @@ public class WorldViewer : ListDisposable, IDocumentEditor
 
     public WorldViewer(ITagContainer diContainer)
     {
-        this.diContainer = diContainer;
         resourcePool = diContainer.GetTag<IResourcePool>();
         Window = diContainer.GetTag<WindowContainer>().NewWindow("World Viewer");
         Window.AddTag(this);
@@ -150,8 +147,22 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         rayRenderer.Material.LinkTransformsTo(world: worldTransform);
         AddDisposable(rayRenderer);
 
-        worldRenderer = new WorldRenderer(diContainer.ExtendedWith(camera, locationBuffer));
+        localDiContainer = diContainer.ExtendedWith(camera, locationBuffer);
+        AddDisposable(localDiContainer);
+        localDiContainer
+            .AddTag(ecsWorld = new DefaultEcs.World())
+            .AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("WorldViewer", localDiContainer));
+        AssetRegistry.SubscribeAt(ecsWorld);
+        assetRegistry.DelayDisposals = false;
+        worldRenderer = new(localDiContainer);
         AddDisposable(worldRenderer);
+    }
+
+    protected override void DisposeManaged()
+    {
+        localDiContainer.RemoveTag<IAssetRegistry>(dispose: false);
+        base.DisposeManaged();
+        assetRegistry.Dispose();
     }
 
     public void Load(string pathText)
@@ -170,14 +181,13 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         CurrentResource = null;
         showVertexColors = false;
 
-        worldMesh = new WorldMesh(diContainer, resource);
-        AddDisposable(worldMesh);
-        worldRenderer.WorldMesh = worldMesh;
-        modelMaterialEdit.Materials = materials;
+        worldRenderer.LoadWorld(resource.Path);
+        worldMesh = ecsWorld.Get<WorldMesh>();
+        worldCollider = ecsWorld.Get<WorldCollider>();
+        modelMaterialEdit.Materials = worldRenderer.Materials;
 
         CurrentResource = resource;
         UpdateSectionDepths();
-        worldCollider = new WorldCollider(worldMesh.World);
         HighlightSection(-1);
         controls.ResetView();
         camera.Location.LocalPosition = -worldMesh.Origin;
@@ -209,15 +219,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         if (worldMesh == null)
             return;
 
-        if (updateViewFrustumCulling)
-        {
-            worldRenderer.UpdateVisibility();
-        }
-
-        if (renderCulledSections)
-            worldRenderer.RenderForceAll(cl);
-        else
-            worldRenderer.Render(cl);
+        worldRenderer.Update(cl);
 
         if (highlightedSectionI >= 0)
         {
@@ -225,7 +227,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
             planeRenderer.Render(cl);
         }
 
-        if (!updateViewFrustumCulling)
+        if (worldRenderer.Culling == WorldRendererSystem.CullingMode.Frozen)
             frustumRenderer.Render(cl);
 
         triangleRenderer.Render(cl);
@@ -250,11 +252,14 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     {
         if (showVertexColors)
         {
-            foreach (var material in materials)
-                material.Texture.Texture = worldRenderer.WhiteTexture;
+            var stdTextures = localDiContainer.GetTag<StandardTextures>();
+            foreach (var material in worldRenderer.Materials)
+                material.Texture.Texture = stdTextures.White;
         }
         else
-            worldRenderer.LoadMaterials();
+        {
+
+        }
         fbArea.IsDirty = true;
     }
 
@@ -333,7 +338,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
                 return;
             Text($"Vertices: {section.VertexCount}");
             Text($"Triangles: {section.TriangleCount}");
-            Text($"SubMeshes: {worldMesh.GetSubMeshes(section.SubMeshSection).Count()}");
+            Text($"SubMeshes: {worldMesh.GetSubMeshesLEGACY(section.SubMeshSection).Count()}");
         }
 
         void PlaneSectionContent(WorldMesh.PlaneSection section, int index)
@@ -457,14 +462,14 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         Text($"Visible triangles: {visibleTriangleCount}/{worldMesh?.TriangleCount ?? 0}");
         NewLine();
 
-        bool didChange = false;
-        didChange |= Checkbox("Update ViewFrustum", ref updateViewFrustumCulling);
-        didChange |= Checkbox("Render culled sections", ref renderCulledSections);
+        var culling = worldRenderer.Culling;
+        bool didChange = ImGuiEx.EnumRadioButtonGroup(ref culling);
+        worldRenderer.Culling = culling;
 
         if (didChange)
         {
             frustumRenderer.Clear();
-            frustumRenderer.AddHexahedron(viewFrustum.Corners, IColor.White);
+            frustumRenderer.AddHexahedron(worldRenderer.ViewFrustum.Corners, IColor.White);
             fbArea.IsDirty = true;
         }
     }

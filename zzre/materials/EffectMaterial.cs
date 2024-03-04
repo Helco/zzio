@@ -19,7 +19,7 @@ public struct EffectFactors
     };
 }
 
-public class EffectMaterial : MlangMaterial
+public class EffectMaterial : MlangMaterial, ITexturedMaterial
 {
     public enum BillboardMode : uint
     {

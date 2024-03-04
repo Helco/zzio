@@ -133,9 +133,9 @@ public partial class DialogScript : BaseScript<DialogScript>
         return letterboxEntity;
     }
 
-    private DefaultEcs.Entity CreateSayLabel() => ui.Preload.CreateLabel(dialogEntity)
+    private DefaultEcs.Entity CreateSayLabel() => ui.Builder.CreateLabel(dialogEntity)
         .With(new Vector2(25, ui.LogicalScreen.Size.Y - 90))
-        .With(ui.Preload.Fnt003)
+        .With(UIPreloadAsset.Fnt003)
         .With(components.ui.UIOffset.ScreenUpperLeft);
 
     private void HandleDialogStateRemoved(in DefaultEcs.Entity _, in components.DialogState __)
@@ -173,8 +173,8 @@ public partial class DialogScript : BaseScript<DialogScript>
         if (string.IsNullOrWhiteSpace(nextSample))
         {
             if (NPCEntity.TryGet<components.ActorParts>(out var actorParts) &&
-                actorParts.Body.TryGet<resources.ClumpInfo>(out var bodyClumpInfo))
-                nextSample = $"{bodyClumpInfo.Name[..^4]}{Random.Next(1, 4)}.wav";
+                actorParts.Body.TryGet<AssetHandle<ClumpAsset>>(out var bodyHandle))
+                nextSample = $"{bodyHandle.Get().Name[..^4]}{Random.Next(1, 4)}.wav";
             else
                 logger.Warning("Tried to play random voice for NPC without body ({Entity})", NPCEntity);
         }

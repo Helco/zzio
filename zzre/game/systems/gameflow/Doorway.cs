@@ -47,7 +47,7 @@ public partial class Doorway : AEntitySetSystem<float>
         World.Get<components.PlayerEntity>().Entity.Set(components.GameFlow.Doorway);
         targetScene = $"sc_{trigger.ii3:D4}";
         targetEntry = (int)trigger.ii2;
-        fadeEntity = ui.Preload.CreateStdFlashFade(parent: default);
+        fadeEntity = ui.Builder.CreateStdFlashFade(parent: default);
         World.Publish(messages.LockPlayerControl.Forever);
         World.Publish(new messages.PlayerLeaving(targetScene));
         // TODO: Add fade off during scene changes

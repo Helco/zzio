@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using DefaultEcs.Resource;
 using zzre.materials;
-using zzre.rendering;
 
 namespace zzre.game.systems.effect;
 
@@ -48,19 +44,11 @@ public sealed class ModelEmitter : BaseCombinerPart<
             maxParticleCount));
         entity.Set(modelInstanceBuffer.RentVertices(maxParticleCount));
 
-        entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model(data.texName + ".dff")));
-        var clumpMesh = entity.Get<ClumpMesh>();
-        if (clumpMesh.IsEmpty)
-            throw new InvalidOperationException("ModelEmitter has an empty model");
-
-        entity.Set(new List<ModelMaterial>(clumpMesh.Materials.Count));
-        var renderMode = data.renderMode;
-        entity.Set(ManagedResource<ModelMaterial>.Create(clumpMesh.Materials
-            .Select(rwMaterial => new resources.ClumpMaterialInfo(
-                rwMaterial,
-                renderMode,
-                depthTest: playback.DepthTest))
-            .ToArray()));
+        assetRegistry.LoadModel(entity,
+            data.texName,
+            AssetLoadPriority.Low,
+            new(data.renderMode, playback.DepthTest),
+            StandardTextureKind.Clear);
         entity.Set<components.effect.RenderIndices>();
     }
 

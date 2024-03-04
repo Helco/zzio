@@ -56,14 +56,14 @@ public partial class DialogChoice : ui.BaseScreen<components.DialogChoice, messa
             .With(IDFirstChoice + buttonI)
             .With(new Vector2(40, sayLabelPosY + sayLabelHeight + 23 + 18 * buttonI))
             .With(new components.ui.ButtonTiles(4, 3))
-            .With(preload.Fsp000)
+            .With(UIPreloadAsset.Fsp000)
             .With(components.ui.UIOffset.ScreenUpperLeft)
             .Build();
         ref var buttonRect = ref buttonEntity.Get<Rect>();
 
         var labelEntity = preload.CreateLabel(uiEntity)
             .With(new Vector2(buttonRect.Max.X + 10f, buttonRect.Center.Y))
-            .With(preload.Fnt003)
+            .With(UIPreloadAsset.Fnt003)
             .With(components.ui.UIOffset.ScreenUpperLeft)
             .With(components.ui.FullAlignment.CenterLeft)
             .WithText(message.UID)

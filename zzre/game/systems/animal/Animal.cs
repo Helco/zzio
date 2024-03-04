@@ -1,7 +1,6 @@
 ﻿namespace zzre.game.systems;
 using System;
 using System.Linq;
-using DefaultEcs.Resource;
 using DefaultEcs.System;
 using zzio;
 using zzio.scn;
@@ -69,7 +68,10 @@ public class Animal : BaseDisposable, ISystem<float>
             var actorFile = ChooseActorFile(type);
             if (actorFile != null)
             {
-                entity.Set(ManagedResource<ActorExDescription>.Create(actorFile));
+                ecsWorld.Publish(new messages.LoadActor(
+                    AsEntity: entity,
+                    ActorName: actorFile,
+                    AssetLoadPriority.Synchronous));
                 var body = entity.Get<components.ActorParts>().Body;
                 body.Get<Location>().Parent = location;
                 body.Get<Skeleton>().JumpToAnimation(

@@ -25,7 +25,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private readonly OrbitControlsTag controls;
     private readonly GraphicsDevice device;
     private readonly FramebufferArea fbArea;
-    private readonly IAssetLoader<Texture> textureLoader;
+    private readonly IAssetRegistry assetRegistry; // we only load global assets, no local registry required
     private readonly IResourcePool resourcePool;
     private readonly DebugLineRenderer gridRenderer;
     private readonly DebugLineRenderer triangleRenderer;
@@ -34,6 +34,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private readonly OpenFileModal openFileModal;
     private readonly ModelMaterialEdit modelMaterialEdit;
     private readonly LocationBuffer locationBuffer;
+    private readonly List<AssetHandle> assetHandles = [];
 
     private ClumpMesh? mesh;
     private GeometryTreeCollider? collider;
@@ -45,16 +46,15 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     public Window Window { get; }
     public IResource? CurrentResource { get; private set; }
 
-    public ModelViewer(ITagContainer diContainer)
+    public ModelViewer(ITagContainer parentDiContainer)
     {
-        this.diContainer = diContainer;
-        device = diContainer.GetTag<GraphicsDevice>();
-        resourcePool = diContainer.GetTag<IResourcePool>();
-        textureLoader = diContainer.GetTag<IAssetLoader<Texture>>();
-        Window = diContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
+        device = parentDiContainer.GetTag<GraphicsDevice>();
+        assetRegistry = parentDiContainer.GetTag<IAssetRegistry>();
+        resourcePool = parentDiContainer.GetTag<IResourcePool>();
+        Window = parentDiContainer.GetTag<WindowContainer>().NewWindow("Model Viewer");
         Window.InitialBounds = new Rect(float.NaN, float.NaN, 1100.0f, 600.0f);
         Window.AddTag(this);
-        editor = new TwoColumnEditorTag(Window, diContainer);
+        editor = new TwoColumnEditorTag(Window, parentDiContainer);
         var onceAction = new OnceAction();
         Window.AddTag(onceAction);
         Window.OnContent += onceAction.Invoke;
@@ -64,6 +64,8 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         fbArea = Window.GetTag<FramebufferArea>();
         fbArea.OnResize += HandleResize;
         fbArea.OnRender += HandleRender;
+        diContainer = parentDiContainer.ExtendedWith(Window);
+        AddDisposable(diContainer);
         modelMaterialEdit = new ModelMaterialEdit(Window, diContainer);
         diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
 
@@ -77,11 +79,9 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         locationBuffer = new LocationBuffer(device);
         AddDisposable(locationBuffer);
 
-        var localDiContainer = diContainer.ExtendedWith(locationBuffer);
-        camera = new Camera(localDiContainer);
-        AddDisposable(camera);
+        diContainer.AddTag(camera = new Camera(diContainer));
 
-        controls = new OrbitControlsTag(Window, camera.Location, localDiContainer);
+        controls = new OrbitControlsTag(Window, camera.Location, diContainer);
         AddDisposable(controls);
 
         gridRenderer = new DebugLineRenderer(diContainer);
@@ -111,6 +111,19 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         editor.AddInfoSection("Collision", HandleCollisionContent);
     }
 
+    protected override void DisposeManaged()
+    {
+        DisposeAssets();
+        base.DisposeManaged();
+    }
+
+    private void DisposeAssets()
+    {
+        foreach (var handle in assetHandles)
+            handle.Dispose();
+        assetHandles.Clear();
+    }
+
     public void Load(string pathText)
     {
         var resource = resourcePool.FindFile(pathText) ?? throw new FileNotFoundException($"Could not find model at {pathText}");
@@ -125,25 +138,34 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         if (resource.Equals(CurrentResource))
             return;
         CurrentResource = null;
+        DisposeAssets();
         var texturePaths = new[]
         {
-            textureLoader.GetTexturePathFromModel(resource.Path),
+            new FilePath("resources/textures/" + resource.Path.Parts[^2]),
             new FilePath("resources/textures/models"),
             new FilePath("resources/textures/worlds"),
             new FilePath("resources/textures/backdrops"),
         };
 
         normalRenderer.Clear();
-        // TODO: ModelViewer should dispose meshes and materials after loading a different model
 
-        mesh = new ClumpMesh(diContainer, resource);
-        AddDisposable(mesh);
+        var meshHandle = assetRegistry.Load(new ClumpAsset.Info(resource.Path), AssetLoadPriority.Synchronous);
+        assetHandles.Add(meshHandle);
+        mesh = meshHandle.Get<ClumpAsset>().Mesh;
 
         materials = new ModelMaterial[mesh.Materials.Count];
         foreach (var (rwMaterial, index) in mesh.Materials.Indexed())
         {
             var material = materials[index] = new ModelMaterial(diContainer);
-            (material.Texture.Texture, material.Sampler.Sampler) = TryLoadTexture(texturePaths, rwMaterial);
+            var rwTexture = (RWTexture)rwMaterial.FindChildById(SectionId.Texture, true)!;
+            var rwTextureName = (RWString)rwTexture.FindChildById(SectionId.String, true)!;
+            var textureHandle = assetRegistry.TryLoadTexture(texturePaths, rwTextureName.value,
+                AssetLoadPriority.Synchronous, material, StandardTextureKind.Error);
+            var samplerHandle = assetRegistry.LoadSampler(SamplerDescription.Linear);
+            if (textureHandle.HasValue)
+                assetHandles.Add(textureHandle.Value);
+            assetHandles.Add(samplerHandle);
+            material.Sampler.Sampler = samplerHandle.Get().Sampler;
             material.LinkTransformsTo(camera);
             material.World.Ref = Matrix4x4.Identity;
             material.Factors.Ref = ModelFactors.Default with
@@ -172,29 +194,6 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         fbArea.IsDirty = true;
         CurrentResource = resource;
         Window.Title = $"Model Viewer - {resource.Path.ToPOSIXString()}";
-    }
-
-    private (Texture, Sampler) TryLoadTexture(FilePath[] texturePaths, RWMaterial rwMaterial)
-    {
-        try
-        {
-            return textureLoader.LoadTexture(texturePaths, rwMaterial);
-        }
-        catch(Exception e) when (e is InvalidOperationException or InvalidDataException)
-        {
-            var texture = device.ResourceFactory.CreateTexture(new(2, 2, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
-            device.UpdateTexture(texture, new byte[]
-            {
-                0xff, 0x00, 0xff, 0xff,
-                0xff, 0xff, 0xff, 0xff,
-                0x00, 0x00, 0x00, 0xff,
-                0xff, 0x00, 0xff, 0xff
-            }, 0, 0, 0, 2, 2, 1, 0, 0);
-            texture.Name =
-                ((rwMaterial.FindChildById(SectionId.String, true) as RWString)?.value
-                ?? "<unknown>") + " (Missing)";
-            return (texture, device.PointSampler);
-        }
     }
 
     private void HandleResize() => camera.Aspect = fbArea.Ratio;

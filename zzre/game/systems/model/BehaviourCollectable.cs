@@ -41,7 +41,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         float elapsedTime,
         in DefaultEcs.Entity entity,
         Location location,
-        in resources.ClumpInfo clumpInfo,
+        in ClumpAsset.Info clumpInfo,
         ref components.behaviour.Collectable collectable)
     {
         CheckCollection(entity, location, clumpInfo, ref collectable);
@@ -89,7 +89,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
     private void CheckCollection(
         in DefaultEcs.Entity entity,
         Location location,
-        in resources.ClumpInfo clumpInfo,
+        in ClumpAsset.Info clumpInfo,
         ref components.behaviour.Collectable collectable)
     {
         if (collectable.IsDying || location.DistanceSquared(playerLocation) >= MaxPlayerDistanceSqr)
@@ -108,7 +108,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         Collect(clumpInfo);
     }
 
-    private void Collect(in resources.ClumpInfo clumpInfo)
+    private void Collect(in ClumpAsset.Info clumpInfo)
     {
         var random = Random.Shared;
         int parsedItemId = -1;
@@ -117,7 +117,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
             ModelNameXXX => (int)random.NextOf(ItemPoolXXX),
             ModelNameYYY => (int)random.NextOf(ItemPoolYYY),
             ModelNameZZZ => (int)random.NextOf(ItemPoolZZZ),
-            _ when clumpInfo.Name.Length > 6 && int.TryParse(clumpInfo.Name.AsSpan(3, 3), out parsedItemId) => parsedItemId,
+            _ when clumpInfo.Name.Length >= 6 && int.TryParse(clumpInfo.Name.AsSpan(3, 3), out parsedItemId) => parsedItemId,
             _ => throw new InvalidOperationException($"Invalid collectable model name: {clumpInfo.Name}")
         };
 

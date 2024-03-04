@@ -7,10 +7,9 @@ using System.CommandLine.Invocation;
 using Veldrid;
 using zzio.vfs;
 using zzre.rendering;
+using zzre.tools;
 using Silk.NET.SDL;
 using Serilog;
-
-using Texture = Veldrid.Texture;
 
 namespace zzre;
 
@@ -77,12 +76,13 @@ internal static partial class Program
         diContainer
             .AddTag(graphicsDevice)
             .AddTag(graphicsDevice.ResourceFactory)
+            .AddTag(new StandardTextures(diContainer))
             .AddTag(new ShaderVariantCollection(graphicsDevice,
                 typeof(Program).Assembly.GetManifestResourceStream("shaders.mlss")
                 ?? throw new InvalidDataException("Shader set is not compiled into zzre")))
             .AddTag(new GameTime())
             .AddTag(CreateResourcePool(diContainer))
-            .AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(diContainer));
+            .AddTag(CreateAssetRegistry(diContainer));
     }
 
     private static GraphicsDevice CreateGraphicsDevice(SdlWindow window, InvocationContext ctx)
@@ -129,7 +129,7 @@ internal static partial class Program
         {
             case ".pak":
                 logger.Debug("Selected PAK resource pool {PoolName}", poolName);
-                return new PAKResourcePool(new FileStream(path, FileMode.Open, FileAccess.Read));
+                return new PAKParallelResourcePool(path);
             case "":
                 logger.Debug("Selected path resource pool {PoolName}", poolName);
                 return new FileResourcePool(path);
@@ -139,14 +139,45 @@ internal static partial class Program
         }
     }
 
+    private static IAssetRegistry CreateAssetRegistry(ITagContainer diContainer)
+    {
+        var registryList = new AssetRegistryList();
+        diContainer.AddTag(registryList);
+        var registry = new AssetRegistry("", diContainer);
+        registryList.Register("Global", registry);
+        SamplerAsset.Register();
+        TextureAsset.Register();
+        ClumpMaterialAsset.Register();
+        ClumpAsset.Register();
+        ActorMaterialAsset.Register();
+        ActorAsset.Register();
+        AnimationAsset.Register();
+        WorldMaterialAsset.Register();
+        WorldAsset.Register();
+        EffectMaterialAsset.Register();
+        EffectCombinerAsset.Register();
+        UIBitmapAsset.Register();
+        UITileSheetAsset.Register();
+        UIPreloadAsset.Register();
+        SoundAsset.Register();
+        return registry;
+    }
+
     private static void CommonCleanup(ITagContainer diContainer)
     {
         diContainer.GetTag<ILogger>().Information("Cleanup");
 
-        // dispose graphics device last, otherwise Vulkan will crash
+        // dispose graphics device and sdl last, otherwise Vulkan or OpenAL will crash
+        // we should find a better solution for disposal order
         diContainer.TryGetTag(out GraphicsDevice graphicsDevice);
+        diContainer.TryGetTag(out Sdl sdl);
+        diContainer.TryGetTag(out OpenALDevice openALDevice);
         diContainer.RemoveTag<GraphicsDevice>(dispose: false);
+        diContainer.RemoveTag<Sdl>(dispose: false);
+        diContainer.RemoveTag<OpenALDevice>(dispose: false);
         diContainer.Dispose();
         graphicsDevice?.Dispose();
+        openALDevice?.Dispose();
+        sdl?.Dispose();
     }
 }

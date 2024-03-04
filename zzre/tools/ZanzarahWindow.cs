@@ -43,7 +43,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
         }
     }
 
-    private bool IsMuted
+    public bool IsMuted
     {
         //get => isMuted;
         set
@@ -130,7 +130,8 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
             () => ref isMuted,
             () => IsMuted = isMuted);
         menuBar.AddButton("Open scene", HandleOpenScene);
-        menuBar.AddButton("Debug/ECS Explorer", HandleOpenECSExplorer);
+        menuBar.AddButton("Debug/ECS Explorer", OpenECSExplorer);
+        menuBar.AddButton("Debug/Asset Explorer", () => AssetExplorer.Open(diContainer));
         menuBar.AddButton("Debug/Teleport to scene", selectSceneModal.Modal.Open);
 
         Window.OnContent += HandleContent;
@@ -193,7 +194,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
         diContainer.GetTag<OpenDocumentSet>().OpenWith<SceneEditor>(sceneResource);
     }
 
-    private void HandleOpenECSExplorer()
+    public void OpenECSExplorer()
     {
         if (ecsExplorer == null)
         {

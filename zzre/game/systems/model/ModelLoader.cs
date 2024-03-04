@@ -3,19 +3,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using DefaultEcs.Resource;
 using DefaultEcs.System;
 using Serilog;
 using zzio;
 using zzio.scn;
+using zzre.materials;
 using zzre.rendering;
 
-public class ModelLoader : BaseDisposable, ISystem<float>
+public sealed class ModelLoader : BaseDisposable, ISystem<float>
 {
     private readonly ILogger logger;
+    private readonly IAssetRegistry assetRegistry;
     private readonly DefaultEcs.World ecsWorld;
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
+    private readonly IDisposable loadModelSubscription;
     private readonly IDisposable createItemSubscription;
     private readonly IDisposable removeModelSubscription;
     // note: we do not react to GSModRemoveItem, removing the visual model is done by BehaviourCollectable at the *correct* time
@@ -26,9 +28,11 @@ public class ModelLoader : BaseDisposable, ISystem<float>
     public ModelLoader(ITagContainer diContainer)
     {
         logger = diContainer.GetLoggerFor<ModelLoader>();
+        assetRegistry = diContainer.GetTag<IAssetRegistry>();
         ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
+        loadModelSubscription = ecsWorld.Subscribe<messages.LoadModel>(HandleLoadModel);
         createItemSubscription = ecsWorld.Subscribe<messages.CreateItem>(HandleCreateItem);
         removeModelSubscription = ecsWorld.Subscribe<GSModRemoveModel>(HandleRemoveModel);
     }
@@ -38,6 +42,7 @@ public class ModelLoader : BaseDisposable, ISystem<float>
         base.DisposeManaged();
         sceneLoadSubscription.Dispose();
         sceneChangingSubscription.Dispose();
+        loadModelSubscription.Dispose();
         createItemSubscription.Dispose();
         removeModelSubscription.Dispose();
     }
@@ -78,17 +83,17 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 LocalRotation = model.rot.ToZZRotation()
             });
 
-            entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model(model.filename + ".dff")));
-            if (HasEmptyMesh(entity))
-                throw new InvalidOperationException("Model has an empty model, maybe we can ignore them but let's have a look whether they are used somehow");
-
+            bool hasBehavior = behaviors.TryGetValue(model.idx, out var behaviour);
             var renderType = model.isVisualOnly ? FOModelRenderType.Solid : null as FOModelRenderType?;
+            var priority = hasBehavior
+                ? AssetLoadPriority.Synchronous
+                : AssetLoadPriority.High;
+            LoadModel(entity, model.filename, model.color, renderType, priority);
 
-            LoadMaterialsFor(entity, renderType, model.color, model.surfaceProps);
-            SetCollider(entity);
-            if (behaviors.TryGetValue(model.idx, out var behaviour))
+            if (hasBehavior)
             {
                 SetBehaviour(entity, behaviour, model.idx);
+                SetIntersectionable(entity);
                 if (model.wiggleAmpl > 0)
                 {
                     model.wiggleAmpl = 0;
@@ -96,8 +101,6 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 }
             }
             SetPlantWiggle(entity, model.wiggleAmpl, plantWiggleDelay);
-            if (entity.Has<components.Collidable>())
-                SetIntersectionable(entity);
 
             plantWiggleDelay++;
         }
@@ -113,22 +116,59 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 LocalPosition = foModel.pos,
                 LocalRotation = foModel.rot.ToZZRotation()
             });
-
-            entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model(foModel.filename + ".dff")));
-            if (HasEmptyMesh(entity))
-            {
-                entity.Dispose(); // I am fine with ignoring empty FOModels
-                continue;
-            }
-
-            LoadMaterialsFor(entity, foModel.renderType, foModel.color, foModel.surfaceProps);
-            SetCollider(entity);
             SetPlantWiggle(entity, foModel.wiggleAmpl, plantWiggleDelay);
+
+            LoadModel(entity, foModel.filename, foModel.color, foModel.renderType, AssetLoadPriority.Low);
 
             // TODO: Add FOModel distance fading
 
             plantWiggleDelay++;
         }
+    }
+
+    private void HandleLoadModel(in messages.LoadModel msg) =>
+        LoadModel(msg.AsEntity, msg.ModelName, msg.Color, msg.RenderType, msg.Priority);
+
+    private unsafe void LoadModel(DefaultEcs.Entity entity, string modelName, IColor color, FOModelRenderType? renderType, AssetLoadPriority priority = AssetLoadPriority.Synchronous)
+    {
+        ClumpMaterialAsset.MaterialVariant material = renderType switch
+        {
+            null => new(ModelMaterial.BlendMode.Opaque),
+            FOModelRenderType.EarlySolid or FOModelRenderType.LateSolid or FOModelRenderType.Solid =>
+                new(ModelMaterial.BlendMode.Alpha),
+            FOModelRenderType.EarlyAdditive or FOModelRenderType.Additive =>
+                new(ModelMaterial.BlendMode.AdditiveAlpha, HasFog: false),
+            FOModelRenderType.LateAdditive =>
+                new(ModelMaterial.BlendMode.AdditiveAlpha, HasFog: false, DepthWrite: false),
+            FOModelRenderType.EnvMap32 or
+            FOModelRenderType.EnvMap64 or
+            FOModelRenderType.EnvMap96 or
+            FOModelRenderType.EnvMap128 or
+            FOModelRenderType.EnvMap196 or
+            FOModelRenderType.EnvMap255 =>
+                new(ModelMaterial.BlendMode.Alpha, HasEnvMap: true, DepthWrite: false),
+            _ => throw new NotSupportedException($"Unsupported render type: {renderType}")
+        };
+
+        entity.Set(components.Visibility.Visible);
+        entity.Set(RenderOrderFromRenderType(renderType));
+        entity.Set(new components.ClumpMaterialInfo()
+        {
+            Color = color with { a = AlphaFromRenderType(renderType) }
+        });
+        entity.Set(ClumpAsset.Info.Model(modelName));
+        var handle = assetRegistry.LoadModel(entity, modelName, priority, material, StandardTextureKind.White);
+        handle.Inner.Apply(&ApplyModelAfterLoading, entity);
+    }
+
+    private static void ApplyModelAfterLoading(AssetHandle handle, ref readonly DefaultEcs.Entity entity)
+    {
+        if (!entity.IsAlive)
+            return;
+        if (HasEmptyMesh(entity))
+            entity.Dispose(); // I am fine with ignoring empty FOModels
+        else
+            SetCollider(entity);
     }
 
     private void HandleCreateItem(in messages.CreateItem msg)
@@ -145,30 +185,9 @@ public class ModelLoader : BaseDisposable, ISystem<float>
                 LocalPosition = msg.Position,
                 LocalRotation = Vector3.UnitX.ToZZRotation()
             });
-            entity.Set(ManagedResource<ClumpMesh>.Create(resources.ClumpInfo.Model($"itm{msg.ItemId:D3}.dff")));
-            LoadMaterialsFor(entity, FOModelRenderType.Solid, IColor.White, new(1f, 1f, 1f));
-            SetCollider(entity);
             SetBehaviour(entity, BehaviourType.CollectablePhysics, uint.MaxValue);
+            LoadModel(entity, $"itm{msg.ItemId:D3}", IColor.White, FOModelRenderType.Solid, AssetLoadPriority.Synchronous);
         }
-    }
-
-    // Used by e.g. NPCTrigger
-    internal static void LoadMaterialsFor(DefaultEcs.Entity entity, FOModelRenderType? renderType, IColor color, SurfaceProperties surfaceProps)
-    {
-        var clumpMesh = entity.Get<ClumpMesh>();
-        entity.Set(components.Visibility.Visible);
-        entity.Set(RenderOrderFromRenderType(renderType));
-        entity.Set(renderType);
-        entity.Set(new components.ClumpMaterialInfo()
-        {
-            Color = color with { a = AlphaFromRenderType(renderType) },
-            SurfaceProperties = surfaceProps
-        });
-        entity.Set(new List<materials.ModelMaterial>(clumpMesh.Materials.Count));
-
-        entity.Set(ManagedResource<materials.ModelMaterial>.Create(clumpMesh.Materials
-            .Select(rwMaterial => new resources.ClumpMaterialInfo(renderType, rwMaterial))
-            .ToArray()));
     }
 
     private static bool HasEmptyMesh(DefaultEcs.Entity entity) =>
@@ -184,6 +203,11 @@ public class ModelLoader : BaseDisposable, ISystem<float>
 
     private static void SetIntersectionable(DefaultEcs.Entity entity)
     {
+        if (!entity.Has<components.Collidable>())
+            return;
+        // Only scene models with behaviors can be collidable
+        // ClumpMeshes for models with behavior are loaded synchronously
+        // therefore we always have the ClumpMesh already at this point
         var clumpMesh = entity.Get<ClumpMesh>();
         var location = entity.Get<Location>();
         entity.Set<IIntersectionable>(GeometryCollider.CreateFor(clumpMesh.Geometry, location));

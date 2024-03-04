@@ -94,7 +94,7 @@ public partial class ScrRuneMenu : BaseScreen<components.ui.ScrRuneMenu, message
                     ? components.ui.FullAlignment.CenterRight
                     : components.ui.FullAlignment.CenterLeft)
                 .WithText(text)
-                .With(preload.Fnt000)
+                .With(UIPreloadAsset.Fnt000)
                 .Build();
             runeButton.Set(info.elementId);
 

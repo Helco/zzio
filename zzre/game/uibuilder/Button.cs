@@ -1,5 +1,4 @@
 ﻿using DefaultEcs;
-using zzre.game.systems.ui;
 
 namespace zzre.game.uibuilder;
 
@@ -7,7 +6,7 @@ internal sealed record ButtonLabel : LabelLike<ButtonLabel>
 {
     private readonly Button parentButton;
 
-    public ButtonLabel(UIPreloader preload, Entity parent, Button parentButton) : base(preload, parent)
+    public ButtonLabel(UIBuilder preload, Entity parent, Button parentButton) : base(preload, parent)
     {
         this.parentButton = parentButton;
         textAlign = components.ui.FullAlignment.Center;
@@ -34,7 +33,7 @@ internal sealed record Button : ButtonLike<Button>
 
     private ButtonLabel? label;
 
-    public Button(UIPreloader preload, Entity parent) : base(preload, parent)
+    public Button(UIBuilder preload, Entity parent) : base(preload, parent)
     {
     }
 

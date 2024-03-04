@@ -24,7 +24,7 @@ public class TagContainer : BaseDisposable, ITagContainer
         tag = default!;
         object? tagBase = default;
         if (!tags.TryGetValue(typeof(TTag), out tagBase))
-            tagBase = tags.FirstOrDefault(p => typeof(TTag).IsAssignableFrom(p.Value.GetType())).Value;
+            return false;
         if (tagBase == null)
             return false;
 

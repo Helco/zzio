@@ -15,8 +15,23 @@ internal partial class Program
 {
     private static readonly Option<bool> OptionInDevLaunchGame = new Option<bool>(
         "--launch-game",
-        () => true,
+        () => false,
         "Launches a game window upon start");
+
+    private static readonly Option<bool> OptionInDevLaunchGameMuted = new Option<bool>(
+        "--launch-game-muted",
+        () => false,
+        "Launches the game window muted");
+
+    private static readonly Option<bool> OptionInDevLaunchAssetExplorer = new Option<bool>(
+        "--launch-asset-explorer",
+        () => false,
+        "Launches the asset explorer upon start");
+
+    private static readonly Option<bool> OptionInDevLaunchECSExplorer = new Option<bool>(
+        "--launch-ecs-explorer",
+        () => false,
+        "Launches the ECS explorer upon start");
 
     private static readonly Option<string> OptionInDevSavegame = new(
         "--savegame",
@@ -47,6 +62,9 @@ internal partial class Program
         var command = new Command("indev",
             "This starts an environment intended for development of zzre with a game window and access to all viewers and Dear ImGui debug windows");
         command.AddOption(OptionInDevLaunchGame);
+        command.AddOption(OptionInDevLaunchGameMuted);
+        command.AddOption(OptionInDevLaunchECSExplorer);
+        command.AddOption(OptionInDevLaunchAssetExplorer);
         command.AddOption(OptionInDevSavegame);
         command.AddOption(OptionInDevScene);
         command.AddOption(OptionInDevEntry);
@@ -80,7 +98,7 @@ internal partial class Program
         windowContainer.MenuBar.AddButton("Tools/World Viewer", () => new WorldViewer(diContainer));
         windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
-        windowContainer.MenuBar.AddButton("Launch Game", () => InDevLaunchGame(diContainer, ctx));
+        windowContainer.MenuBar.AddButton("Launch Game", () => InDevLaunchGame(diContainer, ctx, always: true));
         windowContainer.MenuBar.AddButton("ImGui Demo", () => windowContainer.ShowImGuiDemoWindow = true);
 
         openDocumentSet.AddEditorType<ModelViewer>("dff");
@@ -94,10 +112,12 @@ internal partial class Program
             graphicsDevice.ResizeMainWindow((uint)w, (uint)h);
         };
 
-        InDevLaunchGame(diContainer, ctx);
+        InDevLaunchGame(diContainer, ctx, always: false);
+        InDevLaunchTools(diContainer, ctx);
         InDevOpenResources(diContainer, ctx);
 
         var time = diContainer.GetTag<GameTime>();
+        var assetRegistry = diContainer.GetTag<IAssetRegistry>();
         var remotery = diContainer.GetTag<Remotery>();
         windowContainer.CreateProfilerSample = n => remotery.SampleCPU(n);
         while (window.IsOpen)
@@ -107,13 +127,16 @@ internal partial class Program
             if (time.HasFramerateChanged)
                 window.Title = $"Zanzarah | {graphicsDevice.BackendType} | {time.FormattedStats}";
 
+            assetRegistry.ApplyAssets();
             using (remotery.SampleCPU("WindowContainer.Render"))
             {
                 windowContainer.Render();
                 using (remotery.SampleCPU("SwapBuffers"))
                     graphicsDevice.SwapBuffers();
             }
+
             sdl.PumpEvents();
+            assetRegistry.ApplyAssets();
             windowContainer.BeginEventUpdate(time);
             Event ev = default;
             while (window.IsOpen && sdl.PollEvent(ref ev) != 0)
@@ -141,10 +164,10 @@ internal partial class Program
         return (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
     }
 
-    private static void InDevLaunchGame(ITagContainer diContainer, InvocationContext ctx)
+    private static void InDevLaunchGame(ITagContainer diContainer, InvocationContext ctx, bool always)
     {
         var shouldLaunch = ctx.ParseResult.GetValueForOption(OptionInDevLaunchGame);
-        if (!shouldLaunch)
+        if (!shouldLaunch && !always)
             return;
 
         var savegame = new Savegame() { sceneId = 2800 };
@@ -162,7 +185,18 @@ internal partial class Program
         if (entryId.HasValue)
             savegame.entryId = entryId.Value;
 
-        new ZanzarahWindow(diContainer, savegame);
+        var zzWindow = new ZanzarahWindow(diContainer, savegame);
+
+        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchECSExplorer))
+            zzWindow.OpenECSExplorer();
+        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchGameMuted))
+            zzWindow.IsMuted = true;
+    }
+
+    private static void InDevLaunchTools(ITagContainer diContainer, InvocationContext ctx)
+    {
+        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchAssetExplorer))
+            AssetExplorer.Open(diContainer);            
     }
 
     private static void InDevOpenResources(ITagContainer diContainer, InvocationContext ctx)

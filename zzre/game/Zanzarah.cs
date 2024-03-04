@@ -4,7 +4,6 @@ using System.Numerics;
 using Veldrid;
 using zzio;
 using zzio.vfs;
-using zzre.rendering;
 using KeyCode = Silk.NET.SDL.KeyCode;
 
 namespace zzre.game;
@@ -39,7 +38,6 @@ public class Zanzarah : ITagContainer
     {
         tagContainer = new ExtendedTagContainer(diContainer);
         tagContainer.AddTag(this);
-        tagContainer.AddTag<IAssetLoader<Texture>>(new TextureAssetLoader(tagContainer));
         tagContainer.AddTag(zanzarahContainer);
         tagContainer.AddTag(LoadDatabase());
         tagContainer.AddTag(UI = new UI(this));

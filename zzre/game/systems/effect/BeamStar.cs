@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Numerics;
-using DefaultEcs.Resource;
 using zzre.materials;
 using zzio;
 using zzio.effect.parts;
@@ -30,11 +29,11 @@ public sealed class BeamStar : BaseCombinerPart<
             indexRange));
         Reset(ref entity.Get<components.effect.BeamStarState>(), data);
 
-        entity.Set(ManagedResource<EffectMaterial>.Create(new resources.EffectMaterialInfo(
-            playback.DepthTest,
+        assetRegistry.LoadEffectMaterial(entity,
+            data.texName,
             EffectMaterial.BillboardMode.None,
             data.renderMode,
-            data.texName)));
+            playback.DepthTest);
         entity.Set(new components.effect.RenderIndices(indexRange));
     }
 

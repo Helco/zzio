@@ -94,7 +94,7 @@ public class FramebufferArea : BaseDisposable
             TextureType.Texture2D));
         Framebuffer = Factory.CreateFramebuffer(new FramebufferDescription(targetDepth, targetColor));
 
-        bindingHandle = ImGuiRenderer.GetOrCreateImGuiBinding(Factory, targetColor);
+        bindingHandle = ImGuiRenderer.CreateImGuiBinding(targetColor);
         IsDirty = true;
         OnResize();
     }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Buffers;
 using System.Numerics;
-using DefaultEcs.Resource;
 using zzre.materials;
 using zzio;
 
@@ -49,11 +48,11 @@ public sealed class RandomPlanes : BaseCombinerPart<
         var billboardMode = data.circlesAround
             ? EffectMaterial.BillboardMode.None
             : EffectMaterial.BillboardMode.View;
-        entity.Set(ManagedResource<EffectMaterial>.Create(new resources.EffectMaterialInfo(
-            playback.DepthTest,
+        assetRegistry.LoadEffectMaterial(entity,
+            data.texName,
             billboardMode,
             data.renderMode,
-            data.texName)));
+            playback.DepthTest);
         entity.Set(new components.effect.RenderIndices(default));
     }
 

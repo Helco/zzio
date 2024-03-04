@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Numerics;
-using DefaultEcs.Resource;
 using DefaultEcs.System;
 
 namespace zzre.game.systems;
@@ -68,7 +67,6 @@ public partial class OverworldFairySpawner : AEntitySetSystem<float>
         });
         fairy.Set(invFairy);
         fairy.Set(dbRow);
-        fairy.Set(ManagedResource<zzio.ActorExDescription>.Create(dbRow.Mesh));
         fairy.Set<components.FairyHoverStart>();
         fairy.Set<components.FairyHoverOffset>();
         fairy.Set(components.FairyHoverBehind.Normal);
@@ -81,6 +79,10 @@ public partial class OverworldFairySpawner : AEntitySetSystem<float>
             TargetDirection = Vector3.UnitX, // does not usually affects overworld fairies
             Current = zzio.AnimationType.PixieFlounder // something not used by fairies
         });
+        World.Publish(new messages.LoadActor(
+            AsEntity: fairy,
+            ActorName: dbRow.Mesh,
+            AssetLoadPriority.Synchronous));
 
         var actorParts = fairy.Get<components.ActorParts>();
         actorParts.Body.Get<Location>().Parent = fairy.Get<Location>();

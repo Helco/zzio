@@ -1,15 +1,12 @@
 ﻿using System.Numerics;
 using DefaultEcs;
-using zzre.game.systems.ui;
-
-using TileSheetResource = DefaultEcs.Resource.ManagedResource<zzre.game.resources.UITileSheetInfo, zzre.rendering.TileSheet>;
 
 namespace zzre.game.uibuilder;
 
 internal abstract record LabelLike<T> : Base<T> where T : LabelLike<T>
 {
     protected string text = "";
-    protected TileSheetResource? font;
+    protected UITileSheetAsset.Info? font;
     protected components.ui.FullAlignment? textAlign;
     protected float? lineHeight;
     protected float wrapLines = float.NaN;
@@ -21,7 +18,7 @@ internal abstract record LabelLike<T> : Base<T> where T : LabelLike<T>
     // The tile sheet height might not be the default line height and layout 
     // sometimes depend on the former value (e.g. button labels)
 
-    protected LabelLike(UIPreloader preload, Entity parent) : base(preload, parent)
+    protected LabelLike(UIBuilder preload, Entity parent) : base(preload, parent)
     {
     }
 
@@ -39,7 +36,7 @@ internal abstract record LabelLike<T> : Base<T> where T : LabelLike<T>
 
     public T WithText(uint rawUID) => WithText(new zzio.UID(rawUID));
 
-    public T With(TileSheetResource font)
+    public T With(UITileSheetAsset.Info font)
     {
         this.font = font;
         return (T)this;
@@ -81,8 +78,9 @@ internal abstract record LabelLike<T> : Base<T> where T : LabelLike<T>
         if (font == null)
             throw new System.InvalidOperationException("Font was not set on label-like UI element");
         var entity = base.BuildBase();
-        entity.Set(font.Value);
-        var tileSheet = entity.Get<rendering.TileSheet>();
+        var assetRegistry = preload.UI.GetTag<IAssetRegistry>();
+        var tileSheetHandle = assetRegistry.LoadUITileSheet(entity, font.Value);
+        var tileSheet = tileSheetHandle.Get().TileSheet;
 
         if (lineHeight == null && useTotalFontHeight)
             lineHeight = tileSheet.TotalSize.Y;

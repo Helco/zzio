@@ -1,7 +1,6 @@
 ﻿using System;
 using zzre.game.components;
 using zzre.game.components.ui;
-using zzre.game.resources;
 using zzre.materials;
 using zzre.rendering;
 using zzio;
@@ -58,15 +57,15 @@ partial class ECSExplorer
         AddEntityNamerByComponent<FairyRow>(High, e => $"Fairy \"{e.Get<FairyRow>().Name}\" {e}");
         AddEntityNamerByComponent<ActorPart>(High, e => $"ActorPart {e}");
 
-        AddEntityNamerByComponent<ManagedResource<string, ActorExDescription>>(Def + 1,
-            e => $"Actor {e.Get<ManagedResource<string, ActorExDescription>>().Info} {e}");
+        AddEntityNamerByComponent<ActorParts>(Def + 1,
+            e => $"Actor {e.Get<AssetHandle>().Get<ActorAsset>().Name} {e}");
         AddEntityNamerByComponent<ClumpMesh>(Def, e => $"Model {e.Get<ClumpMesh>().Name} {e}");
         AddEntityNamerByComponent<SoundEmitter>(Def, e => $"{(e.Has<Location>() ? "3D" : "2D")} Sample {e}");
 
         AddEntityNamerByComponent(Low, (in Trigger t) => $"Trigger {t.type} {t.idx}");
 
-        AddEntityNamer(High, e => e.Has<Rect>() || !e.TryGet<ManagedResource<UITileSheetInfo, TileSheet>>(out var res) ? null
-            : $"Preload {(res.Info.IsFont ? "font" : "tilesheet")} {res.Info.Name}");
+        AddEntityNamer(High, e => e.Has<Rect>() || !e.TryGet<TileSheet>(out var res) ? null
+            : $"Preload {(res.IsFont ? "font" : "tilesheet")} {res.Name}");
         AddEntityNamer(Def, e => e.Has<Rect>() || !e.TryGet<ManagedResource<string, UIMaterial>>(out var res) ? null : $"Preload bitmap {res.Info}");
         AddEntityNamerByComponent<ButtonTiles>(High, e => $"Button #{e.TryGet<ElementId>().GetValueOrDefault(default).Value} {e}");
         AddEntityNamerByComponent<TooltipTarget>(High, e => $"Tooltip Target {e}");

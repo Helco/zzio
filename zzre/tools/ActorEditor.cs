@@ -21,7 +21,6 @@ public partial class ActorEditor : ListDisposable, IDocumentEditor
     }
 
     private readonly ITagContainer diContainer;
-    private readonly ITagContainer localDiContainer;
     private readonly TwoColumnEditorTag editor;
     private readonly Camera camera;
     private readonly OrbitControlsTag controls;
@@ -41,9 +40,9 @@ public partial class ActorEditor : ListDisposable, IDocumentEditor
     public Window Window { get; }
     public IResource? CurrentResource { get; private set; }
 
-    public ActorEditor(ITagContainer diContainer)
+    public ActorEditor(ITagContainer parentDiContainer)
     {
-        this.diContainer = diContainer;
+        diContainer = new ExtendedTagContainer(parentDiContainer);
         device = diContainer.GetTag<GraphicsDevice>();
         resourcePool = diContainer.GetTag<IResourcePool>();
         Window = diContainer.GetTag<WindowContainer>().NewWindow("Actor Editor");
@@ -69,19 +68,19 @@ public partial class ActorEditor : ListDisposable, IDocumentEditor
 
         locationBuffer = new LocationBuffer(device);
         AddDisposable(locationBuffer);
-        localDiContainer = diContainer.ExtendedWith(locationBuffer);
-        camera = new Camera(localDiContainer);
+        diContainer = diContainer.ExtendedWith(locationBuffer);
+        camera = new Camera(diContainer);
         AddDisposable(camera);
-        controls = new OrbitControlsTag(Window, camera.Location, localDiContainer);
+        controls = new OrbitControlsTag(Window, camera.Location, diContainer);
         AddDisposable(controls);
-        localDiContainer.AddTag(camera);
+        diContainer.AddTag(camera);
 
         gridRenderer = new DebugLineRenderer(diContainer);
         gridRenderer.Material.LinkTransformsTo(camera);
         gridRenderer.Material.World.Ref = Matrix4x4.Identity;
         gridRenderer.AddGrid();
         AddDisposable(gridRenderer);
-        localDiContainer.AddTag<IStandardTransformMaterial>(gridRenderer.Material);
+        diContainer.AddTag<IStandardTransformMaterial>(gridRenderer.Material);
 
         editor.AddInfoSection("Info", HandleInfoContent);
         editor.AddInfoSection("Animation Playback", HandlePlaybackContent);
@@ -90,6 +89,13 @@ public partial class ActorEditor : ListDisposable, IDocumentEditor
         editor.AddInfoSection("Body skeleton", () => HandlePartContent(false, () => body?.skeletonRenderer?.Content() ?? false), false);
         editor.AddInfoSection("Wings skeleton", () => HandlePartContent(true, () => wings?.skeletonRenderer?.Content() ?? false), false);
         editor.AddInfoSection("Head IK", HandleHeadIKContent, false);
+    }
+
+    protected override void DisposeManaged()
+    {
+        body?.Dispose();
+        wings?.Dispose();
+        base.DisposeManaged();
     }
 
     public void Load(string pathText)
@@ -106,16 +112,19 @@ public partial class ActorEditor : ListDisposable, IDocumentEditor
         if (resource.Equals(CurrentResource))
             return;
         CurrentResource = null;
+        body?.Dispose();
+        wings?.Dispose();
+        body = wings = null;
 
         using var contentStream = resource.OpenContent() ?? throw new IOException($"Could not open actor at {resource.Path.ToPOSIXString()}");
         description = ActorExDescription.ReadNew(contentStream);
 
-        body = new Part(localDiContainer, description.body.model, description.body.animations);
+        body = new Part(diContainer, description.body.model, description.body.animations);
         body.location.Parent = actorLocation;
         wings = null;
         if (description.HasWings)
         {
-            wings = new Part(localDiContainer, description.wings.model, description.wings.animations);
+            wings = new Part(diContainer, description.wings.model, description.wings.animations);
             wings.location.Parent = body.skeleton!.Bones[description.attachWingsToBone];
         }
 

@@ -62,7 +62,7 @@ public struct FogParams
         Exponential(color, density, exp: 2f);
 }
 
-public class ModelMaterial : MlangMaterial, IStandardTransformMaterial
+public class ModelMaterial : MlangMaterial, IStandardTransformMaterial, ITexturedMaterial
 {
     public enum BlendMode : uint
     {

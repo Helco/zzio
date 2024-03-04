@@ -53,7 +53,10 @@ public class PlayerSpawner : ISystem<float>
             Parent = ecsWorld.Get<Location>(),
             LocalPosition = new Vector3(216f, 40.5f, 219f)
         });
-        playerEntity.Set(DefaultEcs.Resource.ManagedResource<zzio.ActorExDescription>.Create("chr01"));
+        ecsWorld.Publish(new messages.LoadActor(
+            AsEntity: playerEntity,
+            ActorName: "chr01",
+            AssetLoadPriority.Synchronous));
         playerEntity.Set(components.Visibility.Visible);
         playerEntity.Set<components.PlayerControls>();
         playerEntity.Set<components.PlayerPuppet>();

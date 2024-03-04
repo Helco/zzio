@@ -75,7 +75,7 @@ public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.
 
         var entity = preload.CreateLabel(parent)
             .With(Vector2.Zero)
-            .With(preload.Fnt003)
+            .With(UIPreloadAsset.Fnt003)
             .WithText(text)
             .WithLineHeight(TalkLineHeight)
             .WithLineWrap(MaxTextWidth)
@@ -99,7 +99,7 @@ public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.
         if (!npcEntity.TryGet<components.ActorParts>(out var actorParts))
             return null;
 
-        var npcModelName = actorParts.Body.Get<resources.ClumpInfo>().Name
+        var npcModelName = actorParts.Body.Get<AssetHandle<ClumpAsset>>().Get().Name
             .Replace(".dff", "", StringComparison.OrdinalIgnoreCase);
         var hasFace = resourcePool.FindFile($"{BaseFacePath}{npcModelName}.bmp") != null;
 
@@ -121,7 +121,7 @@ public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.
 
         var entity = preload.CreateLabel(parent)
             .WithText(npcName)
-            .With(preload.Fnt001)
+            .With(UIPreloadAsset.Fnt001)
             .Build();
         var tileSheet = entity.Get<rendering.TileSheet>();
         ref var rect = ref entity.Get<Rect>();
@@ -142,9 +142,9 @@ public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.
             .With(new Vector2(bgRect.Center.X + YesNoButtonOffsetX, bgRect.Max.Y + ButtonOffsetY))
             .With(new components.ui.ButtonTiles(0, 1))
             .With(components.ui.FullAlignment.TopRight)
-            .With(preload.Btn000)
+            .With(UIPreloadAsset.Btn000)
             .WithLabel()
-            .With(preload.Fnt000)
+            .With(UIPreloadAsset.Fnt000)
             .WithText(0xB2153621)
             .Build();
 
@@ -152,9 +152,9 @@ public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.
             .With(IDNo)
             .With(new Vector2(bgRect.Center.X + YesNoButtonOffsetX, bgRect.Max.Y + ButtonOffsetY))
             .With(new components.ui.ButtonTiles(0, 1))
-            .With(preload.Btn000)
+            .With(UIPreloadAsset.Btn000)
             .WithLabel()
-            .With(preload.Fnt000)
+            .With(UIPreloadAsset.Fnt000)
             .WithText(0x2F5B3621)
             .Build();
     }

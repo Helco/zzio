@@ -1,5 +1,4 @@
 ﻿using DefaultEcs;
-using zzre.game.systems.ui;
 
 namespace zzre.game.uibuilder;
 
@@ -7,7 +6,7 @@ internal abstract record Identified<T> : Base<T> where T : Identified<T>
 {
     protected components.ui.ElementId? elementId;
 
-    protected Identified(UIPreloader preload, Entity parent) : base(preload, parent)
+    protected Identified(UIBuilder preload, Entity parent) : base(preload, parent)
     {
     }
 

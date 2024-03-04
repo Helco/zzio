@@ -16,16 +16,20 @@ public class Game : BaseDisposable, ITagContainer
 {
     private readonly ITagContainer tagContainer;
     private readonly IZanzarahContainer zzContainer;
+    private readonly AssetLocalRegistry assetRegistry;
     private readonly ILogger logger;
     private readonly Remotery profiler;
     private readonly GameTime time;
     private readonly DefaultEcs.World ecsWorld;
     private readonly Camera camera;
+    private readonly UI ui;
     private readonly OnceAction onceUpdate = new();
     private readonly ISystem<float> updateSystems;
     private readonly ISystem<CommandList> renderSystems;
     private readonly systems.SyncedLocation syncedLocation;
     private RgbaFloat clearColor = RgbaFloat.Black;
+    private AssetRegistryStats assetStatsBeforeLoading;
+    private float timeBeforeLoading;
 
     public DefaultEcs.Entity PlayerEntity => // Placeholder during transition
         ecsWorld.GetEntities().With<components.PlayerPuppet>().AsEnumerable().First();
@@ -43,27 +47,20 @@ public class Game : BaseDisposable, ITagContainer
         zzContainer = GetTag<IZanzarahContainer>();
         zzContainer.OnResize += HandleResize;
         logger = diContainer.GetLoggerFor<Game>();
-        profiler = diContainer.GetTag<Remotery>();
+        profiler = GetTag<Remotery>();
         time = GetTag<GameTime>();
+        ui = GetTag<UI>();
 
         AddTag(this);
         AddTag(savegame);
+        AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("Game", tagContainer));
         AddTag(ecsWorld = new DefaultEcs.World());
         AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
         AddTag(new ModelInstanceBuffer(diContainer, 512)); // TODO: ModelRenderer should use central ModelInstanceBuffer
         AddTag(new EffectMesh(this, 4096, 8192));
         AddTag(camera = new Camera(this));
-
-        AddTag(new resources.Clump(this));
-        AddTag(new resources.ClumpMaterial(this));
-        AddTag(new resources.Actor(this));
-        AddTag(new resources.SkeletalAnimation(this));
-        AddTag(new resources.EffectCombiner(this));
-        AddTag(new resources.EffectMaterial(this));
-
-        ecsWorld.SetMaxCapacity<Scene>(1);
-        ecsWorld.SetMaxCapacity<components.SoundListener>(1);
-        ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
+        if (TryGetTag(out tools.AssetRegistryList assetRegistryList))
+            assetRegistryList.Register("Game", assetRegistry);
 
         // create it now for extra priority in the scene loading events
         var worldRenderer = new systems.WorldRendererSystem(this);
@@ -195,19 +192,25 @@ public class Game : BaseDisposable, ITagContainer
             new systems.effect.EffectRenderer(this, components.RenderOrder.LateEffect),
             new systems.effect.EffectModelRenderer(this, components.RenderOrder.LateEffect));
 
-        var worldLocation = new Location();
-        camera.Location.Parent = worldLocation;
-        //camera.Location.LocalPosition = -worldBuffers.Origin;
-        ecsWorld.Set(worldLocation);
+        ecsWorld.SetMaxCapacity<Scene>(1);
+        ecsWorld.SetMaxCapacity<components.SoundListener>(1);
+        ecsWorld.Set(new Location()); // world location
+        ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
+        ecsWorld.Subscribe<messages.SceneLoaded>(DisposeUnusedAssets);
+        AssetRegistry.SubscribeAt(ecsWorld);
+        assetRegistry.DelayDisposals = true;
 
         onceUpdate.Next += () => LoadOverworldScene(savegame.sceneId, () => FindEntryTrigger(savegame.entryId));
     }
 
     protected override void DisposeManaged()
     {
+        assetRegistry.DelayDisposals = false;
+        tagContainer.RemoveTag<IAssetRegistry>(dispose: false); // remove all entities first, then destroy registry
         updateSystems.Dispose();
         renderSystems.Dispose();
         tagContainer.Dispose();
+        assetRegistry.Dispose();
         zzContainer.OnResize -= HandleResize;
     }
 
@@ -223,6 +226,7 @@ public class Game : BaseDisposable, ITagContainer
     public void Update()
     {
         using var _ = profiler.SampleCPU("Game.Update");
+        assetRegistry.ApplyAssets();
         onceUpdate.Invoke();
         updateSystems.Update(time.Delta);
     }
@@ -230,6 +234,7 @@ public class Game : BaseDisposable, ITagContainer
     public void Render(CommandList cl)
     {
         using var _ = profiler.SampleCPU("Game.Render");
+        assetRegistry.ApplyAssets();
         camera.Update(cl);
         syncedLocation.Update(cl);
         cl.ClearColorTarget(0, clearColor);
@@ -242,6 +247,8 @@ public class Game : BaseDisposable, ITagContainer
     public void LoadScene(string sceneName, Func<Trigger> findEntryTrigger)
     {
         logger.Information("Load " + sceneName);
+        timeBeforeLoading = time.TotalElapsed;
+        assetStatsBeforeLoading = assetRegistry.Stats;
         ecsWorld.Publish(new messages.SceneChanging(sceneName));
         ecsWorld.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
 
@@ -285,6 +292,22 @@ public class Game : BaseDisposable, ITagContainer
         TryFindTrigger(TriggerType.RuneTarget) ??
         TryFindTrigger(TriggerType.SingleplayerStartpoint) ??
         throw new System.IO.InvalidDataException($"Scene does not have suitable entry trigger for rune teleporting");
+
+    private void DisposeUnusedAssets(in messages.SceneLoaded _)
+    {
+        var assetStatsBeforeRemoving = assetRegistry.Stats;
+        assetRegistry.DelayDisposals = false;
+        assetRegistry.DelayDisposals = true;
+        ui.DisposeUnusedAssets();
+        var assetStatsAfterLoading = assetRegistry.Stats;
+        var removalDiff = assetStatsAfterLoading - assetStatsBeforeRemoving;
+        var totalDiff = assetStatsAfterLoading - assetStatsBeforeLoading;
+        var asyncCreated = totalDiff.Created - totalDiff.Loaded;
+        float timeAfterLoading = time.TotalElapsed - timeBeforeLoading;
+
+        logger.Debug("Asset stats: New-{New} Async-{Async} Disposed-{Disposed} in {Time}sec, Total-{Total}",
+            totalDiff.Created, asyncCreated, removalDiff.Removed, timeAfterLoading, assetStatsAfterLoading.Total);
+    }
 
     public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);
     public TTag GetTag<TTag>() where TTag : class => tagContainer.GetTag<TTag>();

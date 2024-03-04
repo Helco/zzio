@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Buffers;
 using System.Numerics;
-using DefaultEcs.Resource;
 using zzio;
 using zzre.materials;
 
@@ -51,11 +50,11 @@ public sealed class ParticleEmitter : BaseCombinerPart<
             vertexRange,
             indexRange));
 
-        entity.Set(ManagedResource<EffectMaterial>.Create(new resources.EffectMaterialInfo(
-            playback.DepthTest,
+        assetRegistry.LoadEffectMaterial(entity,
+            data.texName,
             EffectMaterial.BillboardMode.View,
             data.renderMode,
-            data.texName)));
+            playback.DepthTest);
         entity.Set(new components.effect.RenderIndices(default));
     }
 

@@ -50,15 +50,15 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
             .With(new Vector2(bgRect.Center.X, bgRect.Max.Y - 50))
             .With(new components.ui.ButtonTiles(0, 1))
             .With(components.ui.FullAlignment.TopCenter)
-            .With(preload.Btn000)
+            .With(UIPreloadAsset.Btn000)
             .WithLabel()
-            .With(preload.Fnt000)
+            .With(UIPreloadAsset.Fnt000)
             .WithText(db.GetText(ExitButtonUID).Text)
             .Build();
 
         preload.CreateLabel(entity)
             .With(bgRect.Min + new Vector2(50, 50))
-            .With(preload.Fnt001)
+            .With(UIPreloadAsset.Fnt001)
             .WithText(YouGotLabelUID)
             .Build();
 
@@ -70,7 +70,7 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
 
         preload.CreateLabel(entity)
             .With(new Vector2(0, bgRect.Min.Y + 170))
-            .With(preload.Fnt003)
+            .With(UIPreloadAsset.Fnt003)
             .With(components.ui.FullAlignment.TopCenter)
             .WithText(message.Amount <= 1
                 ? cardName
@@ -79,7 +79,7 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
 
         preload.CreateLabel(entity)
             .With(bgRect.Min + new Vector2(50, 250))
-            .With(preload.Fnt000)
+            .With(UIPreloadAsset.Fnt000)
             .WithText(cardInfo)
             .WithLineHeight(15)
             .WithLineWrap(bgRect.Size.X - 100)

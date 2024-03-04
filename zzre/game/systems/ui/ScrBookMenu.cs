@@ -60,7 +60,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         CreateFairyButtons(preload, entity, inventory, ref book);
     }
 
-    private static void CreateFairyButtons(UIPreloader preload, in DefaultEcs.Entity entity, Inventory inventory, ref components.ui.ScrBookMenu book)
+    private static void CreateFairyButtons(UIBuilder preload, in DefaultEcs.Entity entity, Inventory inventory, ref components.ui.ScrBookMenu book)
     {
         var fairies = book.Fairies;
         for (int i = 0; i < fairies.Length; i++)
@@ -72,7 +72,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
                     .With(element)
                     .With(Mid + FairyButtonPos(i))
                     .With(new components.ui.ButtonTiles(fairies[i].CardId.EntityId))
-                    .With(preload.Wiz000)
+                    .With(UIPreloadAsset.Wiz000)
                     .Build();
                 book.FairyButtons.Add(element, fairies[i]);
 
@@ -81,7 +81,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
                 if (inventory.Fairies.Any(c => fairies[i].CardId == c.cardId && c.isInUse)) {
                     preload.CreateImage(entity)
                         .With(Mid + FairyButtonPos(i))
-                        .With(preload.Inf000, 16)
+                        .With(UIPreloadAsset.Inf000, 16)
                         .WithRenderOrder(-1)
                         .Build();
                 }
@@ -89,7 +89,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         }
     }
 
-    private DefaultEcs.Entity CreateSidebar(UIPreloader preload, in DefaultEcs.Entity parent, FairyRow fairyRow, ref components.ui.ScrBookMenu book)
+    private DefaultEcs.Entity CreateSidebar(UIBuilder preload, in DefaultEcs.Entity parent, FairyRow fairyRow, ref components.ui.ScrBookMenu book)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
@@ -101,31 +101,31 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
             .With(element)
             .With(Mid + new Vector2(160, 218))
             .With(new components.ui.ButtonTiles(fairyRow.CardId.EntityId))
-            .With(preload.Wiz000)
+            .With(UIPreloadAsset.Wiz000)
             .Build();
 
         preload.CreateLabel(entity)
             .With(Mid + new Vector2(21, 57))
             .WithText($"#{fairyI} {fairyRow.Name}")
-            .With(preload.Fnt000)
+            .With(UIPreloadAsset.Fnt000)
             .Build();
 
         preload.CreateImage(entity)
             .With(Mid + new Vector2(22, 81))
-            .With(preload.Cls000, (int)fairyRow.Class0)
+            .With(UIPreloadAsset.Cls000, (int)fairyRow.Class0)
             .Build();
 
         preload.CreateLabel(entity)
             .With(Mid + new Vector2(36, 80))
             .WithText(preload.GetClassText(fairyRow.Class0))
-            .With(preload.Fnt002)
+            .With(UIPreloadAsset.Fnt002)
             .Build();
 
         if (fairyRow.EvolVar != -1)
             preload.CreateLabel(entity)
                 .With(Mid + new Vector2(22, 246))
                 .WithText($"{db.GetText(UIDEvol).Text} {fairyRow.EvolVar}")
-                .With(preload.Fnt002)
+                .With(UIPreloadAsset.Fnt002)
                 .Build();
 
         CreateStat(preload, entity, 0, Math.Min(500, fairyRow.MHP) / 100);
@@ -137,25 +137,25 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         preload.CreateLabel(entity)
             .With(Mid + new Vector2(21, 346))
             .WithText(fairyRow.Info)
-            .With(preload.Fnt002)
+            .With(UIPreloadAsset.Fnt002)
             .WithLineWrap(MaxTextWidth)
             .Build();
 
         return entity;
     }
 
-    private void CreateStat(UIPreloader preload, in DefaultEcs.Entity entity, int index, int value)
+    private void CreateStat(UIBuilder preload, in DefaultEcs.Entity entity, int index, int value)
     {
         preload.CreateLabel(entity)
             .With(Mid + new Vector2(21, 271 + index*17))
             .WithText(db.GetText(UIDStatNames[index]).Text)
-            .With(preload.Fnt002)
+            .With(UIPreloadAsset.Fnt002)
             .Build();
 
         preload.CreateLabel(entity)
             .With(Mid + new Vector2(111, 266 + index*17))
-            .WithText(UIPreloader.GetLightsIndicator(value))
-            .With(preload.Fnt001)
+            .WithText(UIBuilder.GetLightsIndicator(value))
+            .With(UIPreloadAsset.Fnt001)
             .Build();
     }
 
@@ -180,7 +180,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
             book.Crosshair.Dispose();
             book.Crosshair = preload.CreateImage(entity)
                 .With(Mid + new Vector2(-2, -2) + FairyButtonPos(book.Fairies.IndexOf(fairyRow)))
-                .With(preload.Dnd000, 0)
+                .With(UIPreloadAsset.Dnd000, 0)
                 .WithRenderOrder(-2)
                 .Build();
         }

@@ -1,18 +1,15 @@
 ﻿using System;
 using DefaultEcs;
-using zzre.game.systems.ui;
-
-using TileSheetResource = DefaultEcs.Resource.ManagedResource<zzre.game.resources.UITileSheetInfo, zzre.rendering.TileSheet>;
 
 namespace zzre.game.uibuilder;
 
 internal abstract record ButtonLike<T> : Identified<T> where T : ButtonLike<T>
 {
     protected components.ui.ButtonTiles? buttonTiles;
-    protected TileSheetResource? tileSheet;
+    protected UITileSheetAsset.Info? tileSheet;
     protected components.ui.FullAlignment btnAlign;
 
-    protected ButtonLike(UIPreloader preload, Entity parent) : base(preload, parent)
+    protected ButtonLike(UIBuilder preload, Entity parent) : base(preload, parent)
     {
     }
 
@@ -22,7 +19,7 @@ internal abstract record ButtonLike<T> : Identified<T> where T : ButtonLike<T>
         return (T)this;
     }
 
-    public T With(TileSheetResource tileSheet)
+    public T With(UITileSheetAsset.Info tileSheet)
     {
         if (this.tileSheet != null)
             throw new InvalidCastException("Tile sheet was already set on button-like UI element");
@@ -43,8 +40,9 @@ internal abstract record ButtonLike<T> : Identified<T> where T : ButtonLike<T>
         if (!tileSheet.HasValue)
             throw new InvalidOperationException("Button-like UI element has no tile sheet");
         var entity = base.BuildBase();
+        var assetRegistry = preload.UI.GetTag<IAssetRegistry>();
+        assetRegistry.LoadUITileSheet(entity, tileSheet.Value);
         entity.Set(btnAlign);
-        entity.Set(tileSheet.Value);
         entity.Set(buttonTiles.Value);
         return entity;
     }
