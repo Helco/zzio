@@ -74,6 +74,8 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
                     .With(new components.ui.ButtonTiles(fairies[i].CardId.EntityId))
                     .With(UIPreloadAsset.Wiz000)
                     .Build();
+                button.Set(button.Get<Rect>().GrownBy(new Vector2(5, 5))); // No gaps
+                button.Set(new components.ui.Silent());
                 book.FairyButtons.Add(element, fairies[i]);
 
                 // In the original engine, only the first fairy is checked for isInUse
