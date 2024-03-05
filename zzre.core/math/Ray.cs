@@ -132,6 +132,8 @@ public readonly struct Ray
 
     public Raycast? Cast(Triangle triangle, WorldTriangleId? triangleId = null)
     {
+        if (triangle.IsDegenerated)
+            return null;
         var cast = Cast(triangle.Plane);
         if (cast == null)
             return null;
