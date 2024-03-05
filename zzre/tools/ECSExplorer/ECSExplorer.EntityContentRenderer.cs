@@ -140,7 +140,10 @@ internal partial class ECSExplorer
                 if (!TreeNodeEx(name, default))
                     return;
                 foreach (var prop in properties)
-                    GenericField(prop.Name, prop.GetValue(value));
+                {
+                    if (prop.GetMethod?.GetParameters().Length == 0)
+                        GenericField(prop.Name, prop.GetValue(value));
+                }
                 foreach (var subField in fields)
                     GenericField(subField.Name, subField.GetValue(value));
             }
