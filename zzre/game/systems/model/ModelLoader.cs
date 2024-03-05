@@ -298,8 +298,8 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
             case BehaviourType.DoorCopper: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: StdItemId.KeyOfPixieGuard)); break;
             case BehaviourType.DoorPlating: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: null)); break;
             case BehaviourType.DoorGlass: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: StdItemId.TownsHallKey)); break;
-            case BehaviourType.LockedMetalDoor: entity.Set(new components.behaviour.Door(isRight: false, speed: 190f, keyItemId: null)); break;
-            case BehaviourType.LockedWoodenDoor: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: null)); break;
+            case BehaviourType.LockedMetalDoor: entity.Set(new components.behaviour.Door(isRight: false, speed: 190f, keyItemId: null, isLocked: true)); break;
+            case BehaviourType.LockedWoodenDoor: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: null, isLocked: true)); break;
             case BehaviourType.SimpleDoorLeft: entity.Set(new components.behaviour.Door(isRight: true, speed: 190f, keyItemId: null)); break;
             case BehaviourType.SimpleDoorRight: entity.Set(new components.behaviour.Door(isRight: true, speed: -190f, keyItemId: null)); break;
             case BehaviourType.MetalDoorLeft: entity.Set(new components.behaviour.Door(isRight: false, speed: -190f, keyItemId: null)); break;

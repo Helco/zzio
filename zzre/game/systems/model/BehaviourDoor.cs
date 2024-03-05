@@ -44,7 +44,7 @@ public partial class BehaviourDoor : AEntitySetSystem<float>
     private void HandleComponentAdded(in DefaultEcs.Entity entity, in components.behaviour.Door door)
     {
         var location = entity.Get<Location>();
-        entity.Set(new components.behaviour.Door(door.IsRight, door.Speed, door.KeyItemId, location.LocalRotation));
+        entity.Set(new components.behaviour.Door(door.IsRight, door.Speed, door.KeyItemId, location.LocalRotation, door.IsLocked));
         entity.Set<components.Collidable>();
     }
 

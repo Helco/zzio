@@ -22,7 +22,7 @@ public struct Door
     public float CurAngle;
     public bool IsLocked;
 
-    public Door(bool isRight, float speed, StdItemId? keyItemId, Quaternion startRotation = default)
+    public Door(bool isRight, float speed, StdItemId? keyItemId, Quaternion startRotation = default, bool? isLocked = null)
     {
         IsRight = isRight;
         Speed = speed;
@@ -30,6 +30,6 @@ public struct Door
         StartRotation = startRotation;
         State = default;
         CurAngle = default;
-        IsLocked = keyItemId != null;
+        IsLocked = isLocked ?? keyItemId != null;
     }
 }
