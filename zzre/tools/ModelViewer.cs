@@ -19,6 +19,14 @@ public class ModelViewer : ListDisposable, IDocumentEditor
 {
     private const byte DebugPlaneAlpha = 0xA0;
 
+    private enum CoarseCollisionMode
+    {
+        None,
+        BoundingBox,
+        BoundingSphere,
+        Both
+    }
+
     private readonly ITagContainer diContainer;
     private readonly TwoColumnEditorTag editor;
     private readonly Camera camera;
@@ -30,6 +38,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private readonly DebugLineRenderer gridRenderer;
     private readonly DebugLineRenderer triangleRenderer;
     private readonly DebugLineRenderer normalRenderer;
+    private readonly DebugLineRenderer boundingRenderer;
     private readonly DebugPlaneRenderer planeRenderer;
     private readonly OpenFileModal openFileModal;
     private readonly ModelMaterialEdit modelMaterialEdit;
@@ -42,6 +51,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private DebugSkeletonRenderer? skeletonRenderer;
     private int highlightedSplitI = -1;
     private bool showNormals;
+    private CoarseCollisionMode coarseCollisionMode;
 
     public Window Window { get; }
     public IResource? CurrentResource { get; private set; }
@@ -100,6 +110,11 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         normalRenderer.Material.World.Ref = Matrix4x4.Identity;
         AddDisposable(normalRenderer);
 
+        boundingRenderer = new DebugLineRenderer(diContainer);
+        boundingRenderer.Material.LinkTransformsTo(camera);
+        boundingRenderer.Material.World.Ref = Matrix4x4.Identity;
+        AddDisposable(boundingRenderer);
+
         planeRenderer = new DebugPlaneRenderer(diContainer);
         planeRenderer.Material.LinkTransformsTo(camera);
         planeRenderer.Material.World.Ref = Matrix4x4.Identity;
@@ -148,6 +163,8 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         };
 
         normalRenderer.Clear();
+        boundingRenderer.Clear();
+        coarseCollisionMode = default;
 
         var meshHandle = assetRegistry.Load(new ClumpAsset.Info(resource.Path), AssetLoadPriority.Synchronous);
         assetHandles.Add(meshHandle);
@@ -228,6 +245,8 @@ public class ModelViewer : ListDisposable, IDocumentEditor
                 GenerateNormals();
             normalRenderer.Render(cl);
         }
+        if (coarseCollisionMode != default)
+            boundingRenderer.Render(cl);
     }
 
     private void GenerateNormals()
@@ -347,6 +366,22 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         planeRenderer.Planes = planes;
     }
 
+    private void HandleCoarseCollisionContent()
+    {
+        if (mesh is null)
+            return;
+        var hasChanged = ImGuiEx.EnumCombo("Show coarse collision", ref coarseCollisionMode);
+        ImGui.NewLine();
+        if (!hasChanged)
+            return;
+        boundingRenderer.Clear();
+        if (coarseCollisionMode is CoarseCollisionMode.BoundingBox or CoarseCollisionMode.Both)
+            boundingRenderer.AddBox(mesh.BoundingBox, IColor.Blue);
+        if (coarseCollisionMode is CoarseCollisionMode.BoundingSphere or CoarseCollisionMode.Both)
+            boundingRenderer.AddDiamondSphere(mesh.BoundingSphere, IColor.Red);
+        fbArea.IsDirty = true;
+    }
+
     private void HandleCollisionContent()
     {
         if (mesh == null)
@@ -354,7 +389,8 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             ImGui.Text("No model loaded");
             return;
         }
-        else if (collider == null)
+        HandleCoarseCollisionContent();
+        if (collider == null)
         {
             ImGui.Text("No collision in model");
             return;

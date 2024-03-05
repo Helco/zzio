@@ -23,6 +23,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private enum IntersectionPrimitive
     {
         None,
+        Ray,
         Box,
         OrientedBox,
         Sphere,
@@ -62,6 +63,9 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private bool updateIntersectionPrimitive;
     private float intersectionSize = 0.5f;
     private bool showVertexColors;
+    private bool setRaycastToCamera;
+    private Vector3 raycastStart;
+    private Vector3 raycastDir;
 
     public IResource? CurrentResource { get; private set; }
     public Window Window { get; }
@@ -528,24 +532,42 @@ public class WorldViewer : ListDisposable, IDocumentEditor
             return;
         }
 
-        if (Button("Shoot ray"))
-            ShootRay();
-
         Spacing();
         Text("Intersections");
         var shouldUpdate = ImGuiEx.EnumCombo("Primitive", ref intersectionPrimitive);
-        shouldUpdate |= SliderFloat("Size", ref intersectionSize, 0.01f, 20f);
+        if (intersectionPrimitive is IntersectionPrimitive.Ray)
+        {
+            shouldUpdate |= Checkbox("Set to camera", ref setRaycastToCamera);
+            BeginDisabled(setRaycastToCamera);
+            shouldUpdate |= DragFloat3("Start", ref raycastStart);
+            shouldUpdate |= DragFloat3("Direction", ref raycastDir);
+            EndDisabled();
+        }
+        else
+        {
+            shouldUpdate |= SliderFloat("Size", ref intersectionSize, 0.01f, 20f);
+        }
         shouldUpdate |= Checkbox("Update location", ref updateIntersectionPrimitive);
-        if (shouldUpdate)
-            UpdateIntersectionPrimitive();
+        if (updateIntersectionPrimitive || shouldUpdate)
+        {
+            if (intersectionPrimitive == IntersectionPrimitive.Ray)
+                ShootRay();
+            else
+                UpdateIntersectionPrimitive();
+        }
     }
 
     private void ShootRay()
     {
         if (worldCollider == null)
             return;
+        if (setRaycastToCamera)
+        {
+            raycastStart = camera.Location.GlobalPosition;
+            raycastDir = -camera.Location.GlobalForward;
+        }
 
-        var ray = new Ray(camera.Location.GlobalPosition, -camera.Location.GlobalForward);
+        var ray = new Ray(raycastStart, raycastDir);
         var cast = worldCollider.Cast(ray);
         rayRenderer.Clear();
         rayRenderer.Add(IColor.Green, ray.Start, ray.Start + ray.Direction * (cast?.Distance ?? 100f));
