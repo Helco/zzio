@@ -83,6 +83,7 @@ public class Game : BaseDisposable, ITagContainer
             new systems.ModelLoader(this),
             new systems.BackdropLoader(this),
             new systems.PlantWiggle(this),
+            new systems.DistanceAlphaFade(this),
             new systems.BehaviourSwing(this),
             new systems.BehaviourRotate(this),
             new systems.BehaviourUVShift(this),

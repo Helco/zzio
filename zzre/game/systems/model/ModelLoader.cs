@@ -119,8 +119,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
             SetPlantWiggle(entity, foModel.wiggleAmpl, plantWiggleDelay);
 
             LoadModel(entity, foModel.filename, foModel.color, foModel.renderType, AssetLoadPriority.Low);
-
-            // TODO: Add FOModel distance fading
+            SetDistanceAlphaFade(entity, foModel);
 
             plantWiggleDelay++;
         }
@@ -152,10 +151,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
 
         entity.Set(components.Visibility.Visible);
         entity.Set(RenderOrderFromRenderType(renderType));
-        entity.Set(new components.ClumpMaterialInfo()
-        {
-            Color = color with { a = AlphaFromRenderType(renderType) }
-        });
+        entity.Set(color with { a = AlphaFromRenderType(renderType) });
         entity.Set(ClumpAsset.Info.Model(modelName));
         var handle = assetRegistry.LoadModel(entity, modelName, priority, material, StandardTextureKind.White);
         handle.Inner.Apply(&ApplyModelAfterLoading, entity);
@@ -223,6 +219,12 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
             Amplitude = WiggleAmplitudes[wiggleAmplitude],
             Delay = delay
         });
+    }
+
+    private static void SetDistanceAlphaFade(DefaultEcs.Entity entity, FOModel foModel)
+    {
+        var baseAlpha = entity.Get<IColor>().a / 255f;
+        entity.Set(new components.DistanceAlphaFade(baseAlpha, foModel.fadeOutMin, foModel.fadeOutMax));
     }
 
     private static components.RenderOrder RenderOrderFromRenderType(FOModelRenderType? type) => type switch

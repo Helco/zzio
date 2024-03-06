@@ -91,10 +91,7 @@ public class BackdropLoader : ISystem<float>
         entity.Set(new components.MoveToLocation(camera.Location, RelativePosition: Vector3.Zero));
         entity.Set(components.Visibility.Visible);
         entity.Set(components.RenderOrder.Backdrop);
-        entity.Set(new components.ClumpMaterialInfo()
-        {
-            Color = IColor.White
-        });
+        entity.Set(IColor.White);
         assetRegistry.LoadBackdrop(entity, name, AssetLoadPriority.Synchronous, materialVariant, StandardTextureKind.Clear);
 
         return entity;

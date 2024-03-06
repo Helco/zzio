@@ -5,6 +5,7 @@ using DefaultEcs.System;
 using Veldrid;
 using zzre.rendering;
 using zzre.materials;
+using zzio;
 
 namespace zzre.game.systems;
 
@@ -86,8 +87,11 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, AssetHan
         in ClumpMesh clumpMesh,
         List<ModelMaterial> materials,
         Location location,
-        in components.ClumpMaterialInfo materialInfo)
+        IColor color)
     {
+        if (color.a == 0)
+            return;
+
         if (clumpCounts.LastOrDefault().Clump != clumpMesh)
             clumpCounts.Add(new(clumpMesh, materials));
         else
@@ -96,7 +100,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, AssetHan
         var m = entity.TryGet<components.TexShift>().GetValueOrDefault(components.TexShift.Default).Matrix;
         instanceArena!.Add(new()
         {
-            tint = materialInfo.Color,
+            tint = color,
             world = location.LocalToWorld,
             texShift = new(
                 m.M11, m.M12, 0f,

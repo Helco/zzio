@@ -105,6 +105,12 @@ internal partial class ECSExplorer
             NameColumn();
             InputInt("", ref tmpInt);
         }
+        else if (value is byte tmpByte)
+        {
+            NameColumn();
+            int tmptmpInt = tmpByte;
+            InputInt("", ref tmptmpInt);
+        }
         else if (value is Vector2 tmpVec2)
         {
             NameColumn();
