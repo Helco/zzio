@@ -55,6 +55,7 @@ public sealed class SoundAsset : Asset
         var resourcePool = diContainer.GetTag<IResourcePool>();
         var fileBuffer = resourcePool.FindAndRead(info.FullPath) ??
             throw new FileNotFoundException("Could not open sound: " + info.FullPath);
+        FixTruncatedWave(ref fileBuffer);
         var rwops = sdl.RWFromConstMem(fileBuffer);
 
         AudioSpec audioSpec = default;
@@ -82,6 +83,57 @@ public sealed class SoundAsset : Asset
             if (audioBuf != null)
                 sdl.FreeWAV(audioBuf);
         }
+    }
+
+    private const int RIFFSizeWithFormatChunk = 0x24;
+    private const uint FourCCRIFF = 0x46464952u;
+    private const uint FourCCWAVE = 0x45564157u;
+    private const uint FourCCfmt = 0x20746D66u;
+    private const uint FourCCfact = 0x74636166;
+    private const uint FourCCdata = 0x61746164;
+    private void FixTruncatedWave(ref byte[] original)
+    {
+        /* Some of the ADPCM encoded wave files in Zanzarah have truncated data blocks meaning
+         * the data chunk size does not adhere to the reported alignment and the file might
+         * be too small.
+         * SDL reacts by dropping the last chunk of audio data.
+         * We instead round the block size up to the next alignment and grow the buffer with zeros.
+         * Also we delete the fact chunk
+         */
+
+        if (original.Length < RIFFSizeWithFormatChunk)
+            throw new InvalidDataException("WAVE file is too small");
+        if (BitConverter.ToUInt32(original, 0) != FourCCRIFF ||
+            BitConverter.ToUInt32(original, 8) != FourCCWAVE ||
+            BitConverter.ToUInt32(original, 12) != FourCCfmt)
+            throw new InvalidDataException("Given buffer can not be recognized as a wav file");
+        if (BitConverter.ToUInt16(original, 0x14) != 17)
+            return; // We have only heard ADPCM encoded sounds that are cut off
+        int blockAlign = BitConverter.ToUInt16(original, 0x20);
+
+        int endOfFmtChunk = 20 + BitConverter.ToInt32(original, 16);
+        int curBlock = endOfFmtChunk;
+        if (BitConverter.ToUInt32(original, curBlock) == FourCCfact)
+            curBlock += 8 + BitConverter.ToInt32(original, curBlock + 4);
+
+        if (curBlock + 8 >= original.Length)
+            throw new InvalidDataException("WAVE file is too small to contain data chunk");
+        if (BitConverter.ToUInt32(original, curBlock) != FourCCdata)
+            throw new InvalidDataException("Did not find data chunk in WAVE file");
+
+        int dataSize = BitConverter.ToInt32(original, curBlock + 4);
+        if (dataSize % blockAlign == 0)
+            return;
+
+        int newDataSize = (dataSize + blockAlign * 2);
+        newDataSize -= newDataSize % blockAlign;
+        BitConverter.GetBytes(newDataSize).CopyTo(original, curBlock + 4);
+
+        int newBufferSize = curBlock + 8 + newDataSize;
+        if (newBufferSize > original.Length)
+            Array.Resize(ref original, newBufferSize);
+
+        diContainer.GetLoggerFor<SoundAsset>().Verbose("Fixed truncated WAVE file (adding {Bytes} bytes): {Path}", newDataSize - dataSize, info.FullPath);
     }
 
     private void LoadMP3(OpenALDevice device)
