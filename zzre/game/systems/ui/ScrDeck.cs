@@ -43,10 +43,12 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     private static readonly components.ui.ElementId FirstSpellSlot = new(30);
     private static readonly components.ui.ElementId FirstListCell = new(50);
 
+    private readonly IAssetRegistry assetRegistry;
     private readonly zzio.db.MappedDB mappedDB;
 
     public ScrDeck(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
     {
+        assetRegistry = diContainer.GetTag<IAssetRegistry>();
         mappedDB = diContainer.GetTag<zzio.db.MappedDB>();
         OnElementDown += HandleElementDown;
     }
@@ -245,7 +247,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         entity.Set(components.ui.UIOffset.Center);
         entity.Set(new components.ui.RenderOrder(renderOrder));
         entity.Set(IColor.White);
-        entity.Set(isAttack ? UIPreloadAsset.Cls001 : UIPreloadAsset.Cls000);
+        assetRegistry.LoadUITileSheet(entity, isAttack ? UIPreloadAsset.Cls001 : UIPreloadAsset.Cls000);
 
         var tileSize = entity.Get<rendering.TileSheet>().GetPixelSize(0);
         entity.Set(Rect.FromTopLeftSize(pos, tileSize * 3));
