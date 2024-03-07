@@ -78,7 +78,7 @@ pipeline if (DepthTest)
 
 pipeline if (Blend == IsAlphaBlend)
 {
-    blend SrcAlpha + InvSrcAlpha;
+    blend SrcAlpha + InvSrcAlpha One + One;
 }
 
 pipeline if (Blend == IsAdditiveBlend)
