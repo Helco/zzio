@@ -4,6 +4,7 @@ using System.Linq;
 using System.Globalization;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Threading.Tasks;
 using Veldrid;
 using zzio.vfs;
 using zzre.rendering;
@@ -165,7 +166,8 @@ internal static partial class Program
 
     private static void CommonCleanup(ITagContainer diContainer)
     {
-        diContainer.GetTag<ILogger>().Information("Cleanup");
+        var logger = diContainer.GetTag<ILogger>();
+        logger.Information("Cleanup started...");
 
         // dispose graphics device and sdl last, otherwise Vulkan or OpenAL will crash
         // we should find a better solution for disposal order
@@ -179,7 +181,13 @@ internal static partial class Program
         diContainer.RemoveTag<Sdl>(dispose: false);
         diContainer.RemoveTag<OpenALDevice>(dispose: false);
         diContainer.Dispose();
-        graphicsDevice?.Dispose();
+
+        // Currently Linux Vulkan will block on disposal if VSync is activated
+        // As we are disposing anyway we can just try and ignore if this fails
+        // we tried hard enough to exit cleanly
+        if (!Task.Run(() => graphicsDevice?.Dispose()).Wait(1000))
+            logger.Warning("Timeout trying to dispose GraphicsDevice");
+
         openALDevice?.Dispose();
         sdl?.Dispose();
     }
