@@ -172,6 +172,9 @@ internal static partial class Program
         diContainer.TryGetTag(out GraphicsDevice graphicsDevice);
         diContainer.TryGetTag(out Sdl sdl);
         diContainer.TryGetTag(out OpenALDevice openALDevice);
+
+        graphicsDevice.WaitForIdle(); // otherwise Vulkan Validation is not happy about us destroying textures
+
         diContainer.RemoveTag<GraphicsDevice>(dispose: false);
         diContainer.RemoveTag<Sdl>(dispose: false);
         diContainer.RemoveTag<OpenALDevice>(dispose: false);

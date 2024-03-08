@@ -97,6 +97,7 @@ public class UI : BaseDisposable, ITagContainer
         renderSystems.Dispose();
         tagContainer.Dispose();
         assetRegistry.Dispose();
+        ProjectionBuffer.Dispose();
         zzContainer.OnResize -= HandleResize;
     }
 

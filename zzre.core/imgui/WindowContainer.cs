@@ -74,6 +74,9 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
         base.DisposeManaged();
         foreach (var window in this.ToArray())
             window.Dispose();
+        onceBeforeUpdate.Invoke();
+        onceAfterUpdate.Invoke(); // Window Tags like FramebufferArea will defer disposal
+
         ImGuiRenderer.Dispose();
         commandList.Dispose();
         if (!fence.Signaled)
