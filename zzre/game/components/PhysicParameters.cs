@@ -4,6 +4,7 @@ public readonly struct PhysicParameters
 {
     // some of these were hardcoded into the engine, some were modifiable but never were actually modified
 
+    /// <summary>The base speed when walking backwards</summary>
     public float SpeedBackward { get; init; }
     public float SpeedForward { get; init; }
     public float SpeedSide { get; init; }

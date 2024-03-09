@@ -44,6 +44,7 @@ internal static partial class Program
         var rootCommand = new RootCommand("zzre - Engine reimplementation and modding tools for Zanzarah");
         rootCommand.AddGlobalOption(OptionPools);
         rootCommand.AddGlobalOption(OptionDebugLayers);
+        AddConfigurationOptions(rootCommand);
         AddSoundOptions(rootCommand);
         AddLoggingOptions(rootCommand);
         AddGlobalRenderDocOption(rootCommand);
@@ -82,6 +83,7 @@ internal static partial class Program
                 ?? throw new InvalidDataException("Shader set is not compiled into zzre")))
             .AddTag(new GameTime())
             .AddTag(CreateResourcePool(diContainer))
+            .AddTag(CreateConfiguration(diContainer))
             .AddTag(CreateAssetRegistry(diContainer));
     }
 

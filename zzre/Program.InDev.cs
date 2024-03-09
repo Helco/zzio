@@ -117,6 +117,7 @@ internal partial class Program
         InDevOpenResources(diContainer, ctx);
 
         var time = diContainer.GetTag<GameTime>();
+        var configuration = diContainer.GetTag<Configuration>();
         var assetRegistry = diContainer.GetTag<IAssetRegistry>();
         var remotery = diContainer.GetTag<Remotery>();
         windowContainer.CreateProfilerSample = n => remotery.SampleCPU(n);
@@ -136,6 +137,7 @@ internal partial class Program
             }
 
             sdl.PumpEvents();
+            configuration.ApplyChanges();
             assetRegistry.ApplyAssets();
             windowContainer.BeginEventUpdate(time);
             Event ev = default;
