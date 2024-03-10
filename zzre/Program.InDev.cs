@@ -118,8 +118,8 @@ internal partial class Program
             graphicsDevice.ResizeMainWindow((uint)w, (uint)h);
         };
 
-        InDevLaunchGame(diContainer, ctx, always: false);
         InDevLaunchTools(diContainer, ctx);
+        InDevLaunchGame(diContainer, ctx, always: false);
         InDevOpenResources(diContainer, ctx);
 
         var time = diContainer.GetTag<GameTime>();

@@ -27,7 +27,6 @@ public class ConfigSourceGenerator : IIncrementalGenerator
         public required string Namespace { get; init; }
         public required TypeCategory TypeCategory { get; init; }
         public required string TypeName { get; init; }
-        public required bool HasMetadata { get; init; }
     }
 
     public record Section
@@ -90,7 +89,6 @@ public class ConfigSourceGenerator : IIncrementalGenerator
                 .Substring("global::".Length),
             Namespace = namespaceName,
             LocalKey = localKey,
-            HasMetadata = attribute.NamedArguments.Any(kv => kv.Key == "Description"),
             TypeCategory = typeCategory,
             TypeName = typeName,
         };
@@ -181,27 +179,22 @@ public class ConfigSourceGenerator : IIncrementalGenerator
         source.AppendLine($"partial class {classes.Last()} : IConfigurationSection {{");
 
         // Static constructor
-        if (section.Variables.Any(v => v.HasMetadata))
+        source.AppendLine($"    static {classes.Last()}()");
+        source.AppendLine("    {");
+        i = -1;
+        foreach (var variable in section.Variables)
         {
-            source.AppendLine($"    static {classes.Last()}");
-            source.AppendLine("    {");
-            i = -1;
-            foreach (var variable in section.Variables)
-            {
-                i++;
-                if (!variable.HasMetadata)
-                    continue;
-                source.Append("        zzre.Configuration.RegisterMetadataField(ConfigurationKeys[");
-                source.Append(i);
-                source.Append("], typeof(");
-                source.Append(classes.Last());
-                source.Append("), nameof(");
-                source.Append(variable.FieldName);
-                source.AppendLine("));");
-            }
-            source.AppendLine("    }");
-            source.AppendLine();
+            i++;
+            source.Append("        zzre.Configuration.RegisterMetadataField(ConfigurationKeys[");
+            source.Append(i);
+            source.Append("], typeof(");
+            source.Append(classes.Last());
+            source.Append("), nameof(");
+            source.Append(variable.FieldName);
+            source.AppendLine("));");
         }
+        source.AppendLine("    }");
+        source.AppendLine();
 
         // Configuration Section/Keys
         source.Append("    private const string ConfigurationSection = \"zzre.\" + nameof(");

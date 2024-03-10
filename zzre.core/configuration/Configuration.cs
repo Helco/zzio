@@ -37,7 +37,7 @@ public sealed partial class Configuration
     public IReadOnlyCollection<string> Keys => keyMapping.Keys;
     public int KeyVersion { get; private set; }
 
-    public Configuration() => sources = [overwriteSource];
+    public Configuration() => sources = [defaultSource, overwriteSource];
 
     public void AddSource(IConfigurationSource source)
     {
@@ -92,7 +92,7 @@ public sealed partial class Configuration
         keysHaveChanged = false;
     }
 
-    private void SetValuesFor(IConfigurationSection instance)
+    private void SetValuesFor(IConfigurationSection instance, bool setAsDefault = false)
     {
         if (instance.Keys is IReadOnlyList<string> keyList)
         {
@@ -100,6 +100,8 @@ public sealed partial class Configuration
             {
                 if (TryGetValue(keyList[i], out var value))
                     instance[keyList[i]] = value;
+                else if (setAsDefault)
+                    defaultSource[keyList[i]] = instance[keyList[i]];
             }
         }
         else
@@ -108,6 +110,8 @@ public sealed partial class Configuration
             {
                 if (TryGetValue(key, out var value))
                     instance[key] = value;
+                else if (setAsDefault)
+                    defaultSource[key] = instance[key];
             }
         }
     }
@@ -140,13 +144,13 @@ public sealed partial class Configuration
         }    
     }
 
-    public IDisposable Bind<TSection>(TSection instance, Action? onChange = null)
+    public IConfigurationBinding Bind<TSection>(TSection instance, Action? onChange = null)
         where TSection : class, IConfigurationSection
     {
         if (!bindings.TryGetValue(instance, out var boundSection))
         {
             bindings.Add(instance, boundSection = new(this, instance));
-            SetValuesFor(instance);
+            SetValuesFor(instance, setAsDefault: true);
         }
         if (onChange is not null)
             boundSection.OnChange += onChange;

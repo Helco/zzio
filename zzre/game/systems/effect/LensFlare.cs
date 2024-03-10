@@ -77,6 +77,7 @@ public partial class LensFlare : AEntitySetSystem<float>
     private readonly IZanzarahContainer zzContainer;
     private readonly IAssetRegistry assetRegistry;
     private readonly EffectMesh effectMesh;
+    private readonly IDisposable configDisposable;
     private readonly IDisposable sceneChangingDisposable;
     private readonly IDisposable sceneLoadedDisposable;
     private readonly IDisposable componentRemovedDisposable;
@@ -92,6 +93,7 @@ public partial class LensFlare : AEntitySetSystem<float>
         assetRegistry = diContainer.GetTag<IAssetRegistry>();
         effectMesh = diContainer.GetTag<EffectMesh>();
         zzContainer.OnResize += HandleResize;
+        configDisposable = diContainer.GetConfigFor(this);
         sceneChangingDisposable = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadedDisposable = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         componentRemovedDisposable = World.SubscribeEntityComponentRemoved<components.effect.LensFlare>(HandleComponentRemoved);

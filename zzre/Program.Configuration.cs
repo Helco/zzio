@@ -28,9 +28,9 @@ partial class Program
         if (!invocationCtx.ParseResult.GetValueForOption(NoZanzarahConfig))
         {
             // TODO: Add game config
-            LoadVarConfig(diContainer, config, "System/ai.cfg", "zanzarah");
-            LoadVarConfig(diContainer, config, "System/net.cfg", "zanzarah");
-            LoadVarConfig(diContainer, config, "System/wizform.cfg", "zanzarah");
+            LoadVarConfig(diContainer, config, "System/ai.cfg", "zanzarah.ai");
+            LoadVarConfig(diContainer, config, "System/net.cfg", "zanzarah.net");
+            LoadVarConfig(diContainer, config, "System/wizform.cfg", "zanzarah.wizform");
         }
         else
             logger.Debug("Loading of Zanzarah standard config files disabled by command line");
@@ -54,4 +54,8 @@ partial class Program
             diContainer.GetLoggerFor<Configuration>().Error("VarConfig {Path}: {Error}", path, e.Message);
         }
     }
+
+    public static IConfigurationBinding GetConfigFor<TSection>(this ITagContainer diContainer, TSection instance)
+        where TSection : class, IConfigurationSection
+        => diContainer.GetTag<Configuration>().Bind(instance);
 }

@@ -96,8 +96,6 @@ internal sealed class ConfigExplorer
         for (int i = 0; i < sortedKeys.Count; i++)
         {
             var tokenizer = new StringTokenizer(sortedKeys[i], ['.']).GetEnumerator();
-            for (int j = 0; j < curDepth; j++)
-                tokenizer.MoveNext();
 
             var (pop, push) = hierarchy[i];
             targetDepth -= pop;
@@ -106,6 +104,8 @@ internal sealed class ConfigExplorer
                 TreePop();
                 curDepth--;
             }
+            for (int j = 0; j < curDepth; j++)
+                tokenizer.MoveNext();
             if (push > 0)
             {
                 targetDepth += push;
