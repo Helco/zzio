@@ -104,6 +104,7 @@ public partial class LensFlare : AEntitySetSystem<float>
     {
         base.Dispose();
         zzContainer.OnResize -= HandleResize;
+        configDisposable.Dispose();
         sceneChangingDisposable.Dispose();
         sceneLoadedDisposable.Dispose();
         componentRemovedDisposable.Dispose();
