@@ -132,6 +132,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
         menuBar.AddButton("Open scene", HandleOpenScene);
         menuBar.AddButton("Debug/ECS Explorer", OpenECSExplorer);
         menuBar.AddButton("Debug/Asset Explorer", () => AssetExplorer.Open(diContainer));
+        menuBar.AddButton("Debug/Config Explorer", () => ConfigExplorer.Open(diContainer));
         menuBar.AddButton("Debug/Teleport to scene", selectSceneModal.Modal.Open);
 
         Window.OnContent += HandleContent;

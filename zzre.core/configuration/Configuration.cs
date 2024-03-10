@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace zzre;
 
@@ -25,13 +26,16 @@ public interface IConfigurationBinding : IDisposable
     void NotifyChanges();
 }
 
-public sealed class Configuration
+public sealed partial class Configuration
 {
-    private readonly InMemoryConfigurationSource overwriteSource = new("Overwritten");
+    private readonly InMemoryConfigurationSource overwriteSource = new("Application");
     private readonly List<IConfigurationSource> sources;
     private readonly Dictionary<IConfigurationSection, BoundSection> bindings = new();
     private readonly Dictionary<string, IConfigurationSource> keyMapping = new();
     private bool keysHaveChanged;
+
+    public IReadOnlyCollection<string> Keys => keyMapping.Keys;
+    public int KeyVersion { get; private set; }
 
     public Configuration() => sources = [overwriteSource];
 
@@ -44,6 +48,7 @@ public sealed class Configuration
     public void SetValue(string key, string value) => overwriteSource[key] = new(value);
     public void SetValue(string key, double value) => overwriteSource[key] = new(value);
     public void ResetValue(string key) => overwriteSource.Remove(key);
+    public bool IsOverwritten(string key) => overwriteSource.Keys.Contains(key);
 
     public void ApplyChanges()
     {
@@ -69,6 +74,7 @@ public sealed class Configuration
 
     private void UpdateKeyMapping()
     {
+        KeyVersion++;
         keyMapping.Clear();
         for (int i = sources.Count - 1; i >= 0; i--)
         {
@@ -120,7 +126,7 @@ public sealed class Configuration
         }
     }
 
-    private bool TryGetValue(string key, out ConfigurationValue value)
+    public bool TryGetValue(string key, out ConfigurationValue value)
     {
         if (keyMapping.TryGetValue(key, out var source))
         {

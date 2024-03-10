@@ -33,6 +33,11 @@ internal partial class Program
         () => false,
         "Launches the ECS explorer upon start");
 
+    private static readonly Option<bool> OptionInDevLaunchConfigExplorer = new Option<bool>(
+        "--launch-config-explorer",
+        () => false,
+        "Launches the config explorer upon start");
+
     private static readonly Option<string> OptionInDevSavegame = new(
         "--savegame",
         "The path of the savegame to load (in the mounted resource pools)\nLeave empty to use a new, empty savegame");
@@ -65,6 +70,7 @@ internal partial class Program
         command.AddOption(OptionInDevLaunchGameMuted);
         command.AddOption(OptionInDevLaunchECSExplorer);
         command.AddOption(OptionInDevLaunchAssetExplorer);
+        command.AddOption(OptionInDevLaunchConfigExplorer);
         command.AddOption(OptionInDevSavegame);
         command.AddOption(OptionInDevScene);
         command.AddOption(OptionInDevEntry);
@@ -198,7 +204,9 @@ internal partial class Program
     private static void InDevLaunchTools(ITagContainer diContainer, InvocationContext ctx)
     {
         if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchAssetExplorer))
-            AssetExplorer.Open(diContainer);            
+            AssetExplorer.Open(diContainer);
+        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchConfigExplorer))
+            ConfigExplorer.Open(diContainer);
     }
 
     private static void InDevOpenResources(ITagContainer diContainer, InvocationContext ctx)

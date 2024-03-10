@@ -21,13 +21,21 @@ public partial class LensFlare : AEntitySetSystem<float>
         AlphaReference: 0.0196078f,
         HasFog: false);
 
-    private const float PrimarySizeFactor = 0.7f;
-    private const float PrimaryAngleFactor = 4f;
-    private const float DistanceAlphaFactor = 1 / 30f;
-    private const float AngleAlphaMin = 0.75f;
-    private const float AngleAlphaMax = 0.9f;
-    private const float AngleAlphaFactor = 20 / 3f;
-    private const float AlphaSpeed = 2f;
+    [Configuration]
+    private float PrimarySizeFactor = 0.7f;
+    [Configuration]
+    private float PrimaryAngleFactor = 4f;
+    [Configuration]
+    private float DistanceAlphaFactor = 1 / 30f;
+    [Configuration]
+    private float AngleAlphaMin = 0.75f;
+    [Configuration]
+    private float AngleAlphaMax = 0.9f;
+    [Configuration]
+    private float AngleAlphaFactor = 20 / 3f;
+    [Configuration]
+    private float AlphaSpeed = 2f;
+
     private readonly record struct Flare(float OffsetFactor, float Size, int TileI);
     private static readonly IReadOnlyList<IReadOnlyList<Flare>> FlareInfos = new IReadOnlyList<Flare>[]
     {
