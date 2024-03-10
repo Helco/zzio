@@ -21,19 +21,19 @@ public partial class LensFlare : AEntitySetSystem<float>
         AlphaReference: 0.0196078f,
         HasFog: false);
 
-    [Configuration]
+    [Configuration(Description = "Changes the size of the first flare")]
     private float PrimarySizeFactor = 0.7f;
-    [Configuration]
+    [Configuration(Description = "How fast the first flare is rotating")]
     private float PrimaryAngleFactor = 4f;
-    [Configuration]
+    [Configuration(Description = "For flarse 3-6 how fast alpha diminishes with camera distance")]
     private float DistanceAlphaFactor = 1 / 30f;
-    [Configuration]
+    [Configuration(Description = "Cosine of angle where flares start to be visible", Min = -1, Max = 1)]
     private float AngleAlphaMin = 0.75f;
-    [Configuration]
+    [Configuration(Description = "Cosine of angle where flares are most visible", Min = -1, Max = 1)]
     private float AngleAlphaMax = 0.9f;
-    [Configuration]
+    [Configuration(Description = "How fast alpha diminishes with camera angle")]
     private float AngleAlphaFactor = 20 / 3f;
-    [Configuration]
+    [Configuration(Description = "How fast alpha changes over time")]
     private float AlphaSpeed = 2f;
 
     private readonly record struct Flare(float OffsetFactor, float Size, int TileI);

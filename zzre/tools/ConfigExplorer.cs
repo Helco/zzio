@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using IconFonts;
 using ImGuiNET;
 using Microsoft.Extensions.Primitives;
@@ -106,9 +107,9 @@ internal sealed class ConfigExplorer
             }
             for (int j = 0; j < curDepth; j++)
                 tokenizer.MoveNext();
-            if (push > 0)
+            targetDepth += push;
+            if (push > 0 && curDepth + push == targetDepth)
             {
-                targetDepth += push;
                 for (int j = 0; j < push; j++)
                 {
                     tokenizer.MoveNext();
@@ -136,6 +137,7 @@ internal sealed class ConfigExplorer
         EndTable();
     }
 
+    private const float DragSpeed = 0.05f;
     private unsafe void VariableRow(StringSegment segment, string key)
     {
         bool isSelected = selectedKey == key;
@@ -145,11 +147,31 @@ internal sealed class ConfigExplorer
             ImGuiSelectableFlags.AllowDoubleClick);
         if (isSelected)
             selectedKey = key;
+        var metadata = Configuration.TryGetMetadata(key);
+        if (metadata is not null && (
+            !string.IsNullOrEmpty(metadata.Description) ||
+            double.IsFinite(metadata.Min) && double.IsFinite(metadata.Max)))
+        {
+            var tooltip = new StringBuilder();
+            if (!string.IsNullOrEmpty(metadata.Description))
+                tooltip.Append(metadata.Description);
+            if (double.IsFinite(metadata.Min))
+            {
+                if (tooltip.Length > 0)
+                    tooltip.AppendLine();
+                tooltip.Append("Min: ");
+                tooltip.Append(metadata.Min);
+                tooltip.AppendLine();
+                tooltip.Append("Max: ");
+                tooltip.Append(metadata.Max);
+            }
+            SetItemTooltip(tooltip.ToString());
+        }
         TableNextColumn();
         PushID(key);
 
         BeginDisabled(!configuration.IsOverwritten(key));
-        if (SmallButton(ForkAwesome.History))
+        if (Button(ForkAwesome.History))
         {
             configuration.ResetValue(key);
             return; // to prevent us from using an outdate key mapping
@@ -162,7 +184,6 @@ internal sealed class ConfigExplorer
             Text("???");
         else if (value.IsNumeric)
         {
-            var metadata = Configuration.TryGetMetadata(key);
             if (metadata is { IsInteger: true })
             {
                 long numeric = checked((long)value.Numeric);
@@ -171,10 +192,10 @@ internal sealed class ConfigExplorer
                 {
                     long min = (long)metadata.Min;
                     long max = (long)metadata.Max;
-                    changed = DragScalar("", ImGuiDataType.S64, (nint)(&numeric), 1f, (nint)(&min), (nint)(&max));
+                    changed = DragScalar("", ImGuiDataType.S64, (nint)(&numeric), DragSpeed, (nint)(&min), (nint)(&max));
                 }
                 else
-                    changed = DragScalar("", ImGuiDataType.S64, (nint)(&numeric));
+                    changed = DragScalar("", ImGuiDataType.S64, (nint)(&numeric), DragSpeed);
                 if (changed)
                     configuration.SetValue(key, numeric);
             }
@@ -186,10 +207,10 @@ internal sealed class ConfigExplorer
                 {
                     double min = metadata.Min;
                     double max = metadata.Max;
-                    changed = DragScalar("", ImGuiDataType.Double, (nint)(&numeric), 1f, (nint)(&min), (nint)(&max));
+                    changed = DragScalar("", ImGuiDataType.Double, (nint)(&numeric), DragSpeed, (nint)(&min), (nint)(&max));
                 }
                 else
-                    changed = DragScalar("", ImGuiDataType.Double, (nint)(&numeric));
+                    changed = DragScalar("", ImGuiDataType.Double, (nint)(&numeric), DragSpeed);
                 if (changed)
                     configuration.SetValue(key, numeric);
             }
