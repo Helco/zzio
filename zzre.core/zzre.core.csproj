@@ -43,6 +43,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\zzio\zzio.csproj" />
+    <ProjectReference Include="..\zzre.sourcegen\zzre.sourcegen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

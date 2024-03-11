@@ -27,12 +27,14 @@ public class ConfigSourceGenerator : IIncrementalGenerator
         public required string Namespace { get; init; }
         public required TypeCategory TypeCategory { get; init; }
         public required string TypeName { get; init; }
+        public required bool HasConfigurationSection { get; init; }
     }
 
     public record Section
     {
         public string ClassFullName => Variables.First().ClassFullName;
         public string Namespace => Variables.First().Namespace;
+        public bool HasConfigurationSection => Variables.First().HasConfigurationSection;
         public required ImmutableEnumerable<Variable> Variables { get; init; }
     }
 
@@ -91,6 +93,7 @@ public class ConfigSourceGenerator : IIncrementalGenerator
             LocalKey = localKey,
             TypeCategory = typeCategory,
             TypeName = typeName,
+            HasConfigurationSection = context.TargetSymbol.ContainingType.MemberNames.Contains("ConfigurationSection")
         };
     }
 
@@ -197,9 +200,12 @@ public class ConfigSourceGenerator : IIncrementalGenerator
         source.AppendLine();
 
         // Configuration Section/Keys
-        source.Append("    private const string ConfigurationSection = \"zzre.\" + nameof(");
-        source.Append(classes.Last());
-        source.AppendLine(");");
+        if (!section.HasConfigurationSection)
+        {
+            source.Append("    private const string ConfigurationSection = \"zzre.\" + nameof(");
+            source.Append(classes.Last());
+            source.AppendLine(");");
+        }
         source.AppendLine("    private static readonly string[] ConfigurationKeys =");
         source.AppendLine("    [");
         foreach (var variable in section.Variables)

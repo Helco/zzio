@@ -5,10 +5,27 @@ namespace zzre;
 public sealed class InMemoryConfigurationSource(string name) : IConfigurationSource
 {
     private readonly Dictionary<string, ConfigurationValue> variables = new();
+    private bool keysHaveChanged, valuesHaveChanged;
 
     public string Name => name;
-    public bool KeysHaveChanged { get; private set; }
-    public bool ValuesHaveChanged { get; private set; }
+    public bool KeysHaveChanged
+    {
+        get
+        {
+            var prev = keysHaveChanged;
+            keysHaveChanged = false;
+            return prev;
+        }
+    }
+    public bool ValuesHaveChanged
+    {
+        get
+        {
+            var prev = valuesHaveChanged;
+            valuesHaveChanged = false;
+            return prev;
+        }
+    }
     public IEnumerable<string> Keys => variables.Keys;
 
     public ConfigurationValue this[string key]
@@ -16,14 +33,14 @@ public sealed class InMemoryConfigurationSource(string name) : IConfigurationSou
         get => variables[key];
         set
         {
-            ValuesHaveChanged = true;
+            valuesHaveChanged = true;
             if (variables.TryAdd(key, value))
-                KeysHaveChanged = true;
+                keysHaveChanged = true;
             else
                 variables[key] = value;
         }
     }
 
     public void Remove(string key) =>
-        KeysHaveChanged |= variables.Remove(key);
+        keysHaveChanged |= variables.Remove(key);
 }

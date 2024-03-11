@@ -46,6 +46,8 @@ public sealed class GameConfig
     public const float MaxGamma = 2f;
     public const float MinMouseSpeed = 0.1f;
     public const float MaxMouseSpeed = 3f;
+    public const int MinMouseSmoothing = 1;
+    public const int MaxMouseSmoothing = 8;
 
     public enum Resolution
     {

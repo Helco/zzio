@@ -25,9 +25,10 @@ partial class Program
         var logger = diContainer.GetLoggerFor<Configuration>();
 
         var config = new Configuration();
+        config.AddSource(GameConfigSource.Default);
         if (!invocationCtx.ParseResult.GetValueForOption(NoZanzarahConfig))
         {
-            // TODO: Add game config
+            LoadGameConfig(diContainer, config, "Configs/game.cfg");
             LoadVarConfig(diContainer, config, "System/ai.cfg", "zanzarah.ai");
             LoadVarConfig(diContainer, config, "System/net.cfg", "zanzarah.net");
             LoadVarConfig(diContainer, config, "System/wizform.cfg", "zanzarah.wizform");
@@ -37,6 +38,21 @@ partial class Program
 
         config.ApplyChanges();
         return config;
+    }
+
+    private static void LoadGameConfig(ITagContainer diContainer, Configuration config, string path)
+    {
+        try
+        {
+            var resourcePool = diContainer.GetTag<IResourcePool>();
+            using var stream = resourcePool.FindAndOpen(path) ?? throw new FileNotFoundException();
+            var gameConfig = GameConfig.ReadNew(stream);
+            config.AddSource(GameConfigSource.Create(gameConfig));
+        }
+        catch(Exception e)
+        {
+            diContainer.GetLoggerFor<Configuration>().Error("GameConfig {Path}: {Error}", path, e.Message);
+        }
     }
 
     private static void LoadVarConfig(ITagContainer diContainer, Configuration config, string path, string section)
