@@ -44,7 +44,7 @@ public class TestVarConfig
     public void write()
     {
         MemoryStream readStream = new(sampleData, false);
-        VarConfig cfg = VarConfig.ReadNew(readStream);
+        VarConfig cfg = VarConfig.ReadNew(readStream); 
 
         MemoryStream writeStream = new();
         cfg.Write(writeStream);

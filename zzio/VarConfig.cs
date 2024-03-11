@@ -39,7 +39,7 @@ public struct VarConfigValue
 }
 
 [Serializable]
-public class VarConfig
+public sealed class VarConfig
 {
     private const byte XOR_KEY = 0x75;
 
