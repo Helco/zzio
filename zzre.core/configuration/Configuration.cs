@@ -121,13 +121,20 @@ public sealed partial class Configuration
         if (instance.Keys is IReadOnlyList<string> keyList)
         {
             for (int i = 0; i < keyList.Count; i++)
-                overwriteSource[keyList[i]] = instance[keyList[i]];
+                OverwriteValue(keyList[i], instance[keyList[i]]);
         }
         else
         {
             foreach (var key in instance.Keys)
-                overwriteSource[key] = instance[key];
+                OverwriteValue(key, instance[key]);
         }
+    }
+
+    private void OverwriteValue(string key, ConfigurationValue value)
+    {
+        if (!IsOverwritten(key) && TryGetValue(key, out var prevValue) && prevValue == value)
+            return;
+        overwriteSource[key] = value;
     }
 
     public bool TryGetValue(string key, out ConfigurationValue value)

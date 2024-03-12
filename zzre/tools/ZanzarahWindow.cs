@@ -18,11 +18,12 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
     private readonly OpenFileModal selectSceneModal;
     private readonly HashSet<KeyCode> keysDown = [];
     private readonly HashSet<MouseButton> buttonsDown = [];
+    private readonly IConfigurationBinding gameConfigBinding;
+    private readonly GameConfigSection gameConfig = new();
     private Action<Vector2>? onMouseMove;
     private bool moveCamWithDrag;
     private ECSExplorer? ecsExplorer;
     private bool isFirstFrame = true;
-    private bool isMuted;
 
     private bool MoveCamWithDrag
     {
@@ -40,21 +41,6 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
                 mouseArea.OnMove += InvokeMouseMove;
                 mouseArea.OnDrag -= HandleMouseDrag;
             }
-        }
-    }
-
-    public bool IsMuted
-    {
-        //get => isMuted;
-        set
-        {
-            isMuted = value;
-            if (!Zanzarah.UI.TryGetTag(out game.systems.SoundContext soundContext))
-                return;
-            using var _ = soundContext.EnsureIsCurrent();
-            diContainer.GetTag<OpenALDevice>().AL.SetListenerProperty(
-                Silk.NET.OpenAL.ListenerFloat.Gain,
-                value ? 0f : 1f);
         }
     }
 
@@ -113,6 +99,9 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
         Zanzarah = new Zanzarah(diContainer, this, savegame);
         Window.AddTag(Zanzarah);
 
+        gameConfigBinding = diContainer.GetConfigFor(gameConfig);
+        Window.AddTag(gameConfigBinding);
+
         selectSceneModal = new(diContainer)
         {
             Filter = "sc_*.scn",
@@ -125,10 +114,14 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
             "Game/Move camera by dragging",
             () => ref moveCamWithDrag,
             () => MoveCamWithDrag = moveCamWithDrag);
-        menuBar.AddCheckbox(
-            "Game/Mute Sounds",
-            () => ref isMuted,
-            () => IsMuted = isMuted);
+        menuBar.AddSlider(
+            "Game/Sound Volume", 0, 100,
+            () => ref gameConfig.SoundVolume,
+            gameConfigBinding.NotifyChanges);
+        menuBar.AddSlider(
+            "Game/Music Volume", 0, 100,
+            () => ref gameConfig.MusicVolume,
+            gameConfigBinding.NotifyChanges);
         menuBar.AddButton("Open scene", HandleOpenScene);
         menuBar.AddButton("Debug/ECS Explorer", OpenECSExplorer);
         menuBar.AddButton("Debug/Asset Explorer", () => AssetExplorer.Open(diContainer));

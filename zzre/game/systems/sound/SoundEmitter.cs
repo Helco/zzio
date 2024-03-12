@@ -7,27 +7,27 @@ using Silk.NET.OpenAL;
 
 namespace zzre.game.systems;
 
-public sealed partial class SoundEmitter : AEntitySetSystem<float>
+public sealed partial class SoundEmitter : AComponentSystem<float, components.SoundEmitter>
 {
     private const int InitialSourceCount = 16;
     private readonly IAssetRegistry assetRegistry;
     private readonly OpenALDevice device;
     private readonly SoundContext context;
+    private readonly GameConfigSection gameConfig;
     private readonly Queue<uint> sourcePool = new(InitialSourceCount);
     private readonly IDisposable? spawnEmitterSubscription;
     private readonly IDisposable? emitterRemovedSubscription;
-    private readonly IDisposable? setEmitterVolumeSubscription;
     private readonly IDisposable? unpauseEmitterSubscription;
 
-    public unsafe SoundEmitter(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
+    public unsafe SoundEmitter(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>())
     {
         assetRegistry = diContainer.GetTag<IAssetRegistry>();
         diContainer.TryGetTag(out device);
+        gameConfig = diContainer.GetTag<GameConfigSection>();
         if (!(IsEnabled = diContainer.TryGetTag(out context)))
             return;
         spawnEmitterSubscription = World.Subscribe<messages.SpawnSample>(HandleSpawnSample);
         emitterRemovedSubscription = World.SubscribeEntityComponentRemoved<components.SoundEmitter>(HandleEmitterRemoved);
-        setEmitterVolumeSubscription = World.Subscribe<messages.SetEmitterVolume>(HandleSetEmitterVolume);
         unpauseEmitterSubscription = World.Subscribe<messages.UnpauseEmitter>(HandleUnpauseEmitter);
 
         using var _ = context.EnsureIsCurrent();
@@ -64,7 +64,6 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         
         spawnEmitterSubscription?.Dispose();
         emitterRemovedSubscription?.Dispose();
-        setEmitterVolumeSubscription?.Dispose();
         unpauseEmitterSubscription?.Dispose();
     }
 
@@ -100,11 +99,11 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         if (sourceId == 0)
             throw new InvalidOperationException("Source was not generated");
         bool is3D = msg.Position.HasValue || msg.ParentLocation != null;
-        device.AL.SetSourceProperty(sourceId, SourceFloat.Gain, msg.Volume);
+        device.AL.SetSourceProperty(sourceId, SourceFloat.Gain, msg.Volume * thiz.gameConfig.SoundVolumeFactor);
         device.AL.SetSourceProperty(sourceId, SourceFloat.ReferenceDistance, msg.RefDistance);
         device.AL.SetSourceProperty(sourceId, SourceFloat.MaxDistance, msg.MaxDistance);
         device.AL.SetSourceProperty(sourceId, SourceFloat.MinGain, 0f);
-        device.AL.SetSourceProperty(sourceId, SourceFloat.MaxGain, Math.Max(1f, msg.Volume));
+        device.AL.SetSourceProperty(sourceId, SourceFloat.MaxGain, 1f);
         device.AL.SetSourceProperty(sourceId, SourceFloat.RolloffFactor, is3D ? 1f : 0f);
         device.AL.SetSourceProperty(sourceId, SourceInteger.Buffer, handle.Get<SoundAsset>().Buffer);
         device.AL.SetSourceProperty(sourceId, SourceBoolean.Looping, msg.Looping);
@@ -116,9 +115,7 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         else
             device.AL.SourcePlay(sourceId);
         device.AL.ThrowOnError();
-        entity.Set(new components.SoundEmitter(sourceId, msg.Volume, msg.RefDistance, msg.MaxDistance));
-        if (is3D)
-            thiz.Update(entity.Get<components.SoundEmitter>(), entity.Get<Location>());
+        entity.Set(new components.SoundEmitter(sourceId, msg.Volume, msg.RefDistance, msg.MaxDistance, msg.IsMusic));
 
         device.Logger.Verbose("Spawned emitter for {Sample}", msg.SamplePath);
     }
@@ -133,14 +130,6 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         device.AL.ThrowOnError();
     }
 
-    private void HandleSetEmitterVolume(in messages.SetEmitterVolume msg)
-    {
-        using var _ = context.EnsureIsCurrent();
-        var emitter = msg.Emitter.Get<components.SoundEmitter>();
-        device.AL.SetSourceProperty(emitter.SourceId, SourceFloat.Gain, msg.Volume);
-        msg.Emitter.Set(emitter with { Volume = msg.Volume });
-    }
-
     private void HandleUnpauseEmitter(in messages.UnpauseEmitter msg)
     {
         using var _ = context.EnsureIsCurrent();
@@ -148,28 +137,10 @@ public sealed partial class SoundEmitter : AEntitySetSystem<float>
         device.AL.SourcePlay(emitter.SourceId);
     }
 
-    [Update]
-    private void Update(
-        in components.SoundEmitter emitter,
-        Location location)
+    protected override void Update(float elapsedTime, ref components.SoundEmitter emitter)
     {
-        device.AL.GetListenerProperty(ListenerVector3.Position, out var listenerPosition);
-        var myPosition = location.LocalPosition * new Vector3(1, 1, -1);
-        var distToListener = Vector3.Distance(listenerPosition, myPosition);
-        float newRefDistance;
-        if (emitter.MaxDistance >= distToListener)
-        {
-            if (emitter.ReferenceDistance < distToListener)
-                newRefDistance = emitter.ReferenceDistance * (1f - (distToListener - emitter.ReferenceDistance) / (emitter.MaxDistance - emitter.ReferenceDistance));
-            else
-                newRefDistance = emitter.ReferenceDistance;
-        }
-        else
-            newRefDistance = 1.1754944e-38f;
-
-        device.AL.SetSourceProperty(emitter.SourceId, SourceFloat.ReferenceDistance, newRefDistance);
-        device.AL.SetSourceProperty(emitter.SourceId, SourceVector3.Position, myPosition);
-        device.AL.SetSourceProperty(emitter.SourceId, SourceVector3.Direction, location.InnerForward * new Vector3(1, 1, -1));
+        device.AL.SetSourceProperty(emitter.SourceId, SourceFloat.Gain, emitter.Volume *
+            (emitter.IsMusic ? gameConfig.MusicVolumeFactor : gameConfig.SoundVolumeFactor));
         device.AL.ThrowOnError();
     }
 }

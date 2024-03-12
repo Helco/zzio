@@ -118,8 +118,9 @@ public partial class Teleporter : AEntitySetSystem<float>
             case State.Leaving when timeLeft > 0f:
                 player.Get<components.NonFairyAnimation>().Next = zzio.AnimationType.Dance;
 
-                if (teleportSoundEntity.TryGet<components.SoundEmitter>(out var emitter))
-                    ui.World.Publish(new messages.SetEmitterVolume(teleportSoundEntity, (LeavingDuration - timeLeft) / 3));
+                var teleportEmitter = teleportSoundEntity.TryGet<components.SoundEmitter>();
+                if (teleportEmitter.HasValue)
+                    teleportEmitter.Value.Volume = (LeavingDuration - timeLeft) / 3;
 
                 // GROUP: set effect progress
                 break;

@@ -35,6 +35,18 @@ public sealed partial class GameConfigSection
     [Configuration(Description = "Whether the vertical mouse axis is inverted", IsInteger = true, Min = 0, Max = 1)]
     public bool MouseInvertY;
 
+    public float MusicVolumeFactor
+    {
+        get => MusicVolume * 0.01f;
+        set => MusicVolume = (int)(value * 100f);
+    }
+
+    public float SoundVolumeFactor
+    {
+        get => SoundVolume * 0.01f;
+        set => SoundVolume = (int)(value * 100f);
+    }
+
     public GameConfigSection(GameConfig? config = null)
     {
         config ??= new();

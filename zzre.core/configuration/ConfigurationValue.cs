@@ -2,7 +2,7 @@
 
 namespace zzre;
 
-public readonly struct ConfigurationValue
+public readonly struct ConfigurationValue : IEquatable<ConfigurationValue>
 {
 #pragma warning disable CA1720 // Identifier contains type name
     private readonly double numeric;
@@ -34,5 +34,11 @@ public readonly struct ConfigurationValue
         this.@string = @string;
         numeric = double.NaN;
     }
+
+    public bool Equals(ConfigurationValue other) => numeric == other.numeric && @string == other.@string;
+    public override bool Equals(object? obj) => obj is ConfigurationValue value && Equals(value);
+    public override int GetHashCode() => HashCode.Combine(numeric, @string);
+    public static bool operator ==(ConfigurationValue left, ConfigurationValue right) => left.Equals(right);
+    public static bool operator !=(ConfigurationValue left, ConfigurationValue right) => !(left == right);
 #pragma warning restore CA1720
 }

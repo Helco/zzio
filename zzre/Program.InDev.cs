@@ -198,7 +198,11 @@ internal partial class Program
         if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchECSExplorer))
             zzWindow.OpenECSExplorer();
         if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchGameMuted))
-            zzWindow.IsMuted = true;
+        {
+            var config = diContainer.GetTag<Configuration>();
+            config.SetValue("zanzarah.game.SoundVolume", 0f);
+            config.SetValue("zanzarah.game.MusicVolume", 0f);
+        }
     }
 
     private static void InDevLaunchTools(ITagContainer diContainer, InvocationContext ctx)
