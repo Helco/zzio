@@ -67,7 +67,10 @@ public sealed class WorldCollider : BaseGeometryCollider
                 return null;
         }
 
-        return RaycastSection(rootSection, ray, minDist: 0f, maxLength, prevHit: null);
+        var fine = RaycastSection(rootSection, ray, minDist: 0f, maxLength, prevHit: null);
+        if (fine is not null && fine.Value.Distance > maxLength)
+            return null;
+        return fine;
     }
 
     private Raycast? RaycastSection(Section section, Ray ray, float minDist, float maxDist, Raycast? prevHit)
