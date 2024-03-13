@@ -14,6 +14,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
 {
     private readonly ILogger logger;
     private readonly IAssetRegistry assetRegistry;
+    private readonly GameConfigSection gameConfig;
     private readonly DefaultEcs.World ecsWorld;
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
@@ -29,6 +30,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
     {
         logger = diContainer.GetLoggerFor<ModelLoader>();
         assetRegistry = diContainer.GetTag<IAssetRegistry>();
+        gameConfig = diContainer.GetTag<GameConfigSection>();
         ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         sceneChangingSubscription = ecsWorld.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadSubscription = ecsWorld.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
@@ -107,7 +109,8 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
 
         foreach (var foModel in message.Scene.foModels)
         {
-            // TODO: Add FOModel filter by render detail
+            if (foModel.worldDetailLevel > (int)gameConfig.WorldQuality)
+                continue;
 
             var entity = ecsWorld.CreateEntity();
             entity.Set(new Location()

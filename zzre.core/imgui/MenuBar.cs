@@ -78,6 +78,12 @@ public class MenuBar
             onChanged?.Invoke();
     });
 
+    public void AddSlider(string path, int minVal, int maxVal, GetRefValueFunc<int> getValue, Action? onChanged = null) => AddItem(path, name =>
+    {
+        if (SliderInt(name, ref getValue(), minVal, maxVal))
+            onChanged?.Invoke();
+    });
+
     public void Update()
     {
         if (!BeginMenuBar())

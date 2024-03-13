@@ -58,8 +58,9 @@ public class UI : BaseDisposable, ITagContainer
             // Sound (very early to make the context current)
             new systems.SoundContext(this),
             new systems.SoundListener(this),
-            new systems.SoundEmitter(this),
             new systems.SoundFade(this),
+            new systems.SoundEmitter(this),
+            new systems.SoundEmitter3D(this),
             new systems.SoundStoppedEmitter(this),
 
             new systems.ui.Cursor(this),

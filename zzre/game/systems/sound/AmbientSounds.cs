@@ -103,7 +103,7 @@ internal sealed class AmbientSounds : ISystem<float>
                 return;
             else if (nextMode is not null && nextMode.Value.Id == lastMode?.Id)
             {
-                ui.World.Publish(new messages.SetEmitterVolume(entity, nextMode.Value.IsQuiet ? QuietVolume : NormalVolume));
+                entity.Get<components.SoundEmitter>().Volume = nextMode.Value.IsQuiet ? QuietVolume : NormalVolume;
                 lastMode = nextMode;
                 return;
             }
@@ -118,13 +118,13 @@ internal sealed class AmbientSounds : ISystem<float>
         var samplePath = GetSamplePath(nextMode.Value.Id,
             isMusic ? MusicBasePath : AmbientBasePath,
             isMusic ? MusicExtension : AmbientExtension);
-        var volume = nextMode.Value.IsQuiet ? QuietVolume : NormalVolume;
 
         entity = ui.World.CreateEntity();
         ui.World.Publish(new messages.SpawnSample(
             samplePath,
-            Volume: volume,
+            Volume: nextMode.Value.IsQuiet ? QuietVolume : NormalVolume,
             Looping: true,
+            IsMusic: isMusic,
             AsEntity: entity));
     }
 

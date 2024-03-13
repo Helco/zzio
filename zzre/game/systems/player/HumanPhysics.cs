@@ -34,6 +34,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
     }
 
     private readonly Random Random = Random.Shared;
+    private readonly IDisposable configDisposable;
     private readonly IDisposable sceneLoadedSubscription;
     private readonly IDisposable controlsLockedSubscription;
     private readonly DefaultEcs.EntitySet collidableModels;
@@ -44,6 +45,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
     public HumanPhysics(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         World.SetMaxCapacity<components.HumanPhysics>(1);
+        configDisposable = diContainer.GetConfigFor(this);
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         controlsLockedSubscription = World.Subscribe<messages.LockPlayerControl>(HandleControlsLocked);
 
@@ -63,6 +65,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
     public override void Dispose()
     {
         base.Dispose();
+        configDisposable.Dispose();
         sceneLoadedSubscription.Dispose();
         controlsLockedSubscription.Dispose();
         collidableModels.Dispose();
@@ -90,11 +93,10 @@ public partial class HumanPhysics : AEntitySetSystem<float>
     [Update]
     private void Update(float elapsedTime,
         Location location,
-        in components.PhysicParameters parameters,
         ref components.HumanPhysics state,
         ref components.PlayerControls controls)
     {
-        if (elapsedTime > parameters.MaxElapsedTime)
+        if (elapsedTime > MaxElapsedTime)
         {
             state.State = AnimationState.Idle;
             return;
@@ -112,20 +114,20 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         var elapsedStepTime = elapsedTime / stepCount;
         var newPos = location.LocalPosition;
         for (int i = 0; i < stepCount; i++)
-            newPos = MicroStep(elapsedStepTime, quarterColliderSize, newPos, location.InnerForward, parameters, controls, ref state, ref collision);
+            newPos = MicroStep(elapsedStepTime, quarterColliderSize, newPos, location.InnerForward, controls, ref state, ref collision);
 
         if (state.HitCeiling && state.Velocity.Y > 0f)
             state.Velocity.Y = 0f;
 
-        ForcedJump(newPos, parameters, ref controls, ref state, collision);
-        IntentionalJump(parameters, ref controls, ref state);
-        WhirlJump(parameters, ref controls, ref state);
+        ForcedJump(newPos, ref controls, ref state, collision);
+        IntentionalJump(ref controls, ref state);
+        WhirlJump(ref controls, ref state);
         // TODO: Add human physics water handling
 
         if (!state.HitFloor)
             state.State = state.Velocity.Y <= 0f ? AnimationState.Fall : AnimationState.Jump;
 
-        ApplyGravity(elapsedTime, parameters, ref state);
+        ApplyGravity(elapsedTime, ref state);
 
         state.SpeedModifier = oldSpeedModifier;
         location.LocalPosition = newPos;
@@ -136,29 +138,28 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         float quarterColliderSize,
         in Vector3 oldPos,
         in Vector3 forward,
-        in components.PhysicParameters parameters,
         in components.PlayerControls controls,
         ref components.HumanPhysics state,
         ref Collision collision)
     {
         var newPos = oldPos + state.Velocity * elapsedStepTime;
 
-        newPos = WorldAndModelCollision(quarterColliderSize, quarterColliderSize, newPos, parameters, ref state, ref collision);
-        newPos = WorldAndModelCollision(-quarterColliderSize, quarterColliderSize, newPos, parameters, ref state, ref collision);
-        newPos = CreatureCollision(newPos, parameters);
+        newPos = WorldAndModelCollision(quarterColliderSize, quarterColliderSize, newPos, ref state, ref collision);
+        newPos = WorldAndModelCollision(-quarterColliderSize, quarterColliderSize, newPos, ref state, ref collision);
+        newPos = CreatureCollision(newPos);
 
         var velocityAngle = Vector3.Dot(state.Velocity, forward);
         var mainVelocity = forward * velocityAngle;
         var slipVelocity = state.Velocity - mainVelocity;
 
-        ApplyControls(elapsedStepTime, ref mainVelocity, forward, parameters, controls, ref state, in collision);
-        if (state.SpeedModifier < parameters.MinRunSpeed && state.State == AnimationState.Run)
+        ApplyControls(elapsedStepTime, ref mainVelocity, forward, controls, ref state, in collision);
+        if (state.SpeedModifier < MinRunSpeed && state.State == AnimationState.Run)
             state.State = AnimationState.Walk;
 
-        if (parameters.UseWorldForces)
+        if (UseWorldForces)
         {
-            mainVelocity *= MathF.Pow(parameters.MoveFriction, elapsedStepTime);
-            slipVelocity *= MathF.Pow(parameters.SlipFriction, elapsedStepTime);
+            mainVelocity *= MathF.Pow(MoveFriction, elapsedStepTime);
+            slipVelocity *= MathF.Pow(SlipFriction, elapsedStepTime);
         }
         state.Velocity = mainVelocity + slipVelocity;
         return newPos;
@@ -168,7 +169,6 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         float colliderOffset,
         float colliderRadius,
         Vector3 newPos,
-        in components.PhysicParameters parameters,
         ref components.HumanPhysics state,
         ref Collision collision)
     {
@@ -189,11 +189,11 @@ public partial class HumanPhysics : AEntitySetSystem<float>
             collision.dirToPlayer.Y = Math.Max(0f, collision.dirToPlayer.Y);
         }
         collision.dirToPlayer = MathEx.SafeNormalize(collision.dirToPlayer);
-        state.HitFloor |= collision.dirToPlayer.Y > parameters.MinFloorYDir;
+        state.HitFloor |= collision.dirToPlayer.Y > MinFloorYDir;
 
-        if (parameters.PreserveVelocityAtCollision)
+        if (PreserveVelocityAtCollision)
         {
-            if (collision.dirToPlayer.Y > parameters.MaxCollisionYDir)
+            if (collision.dirToPlayer.Y > MaxCollisionYDir)
                 collision.dirToPlayer = Vector3.UnitY;
             else
             {
@@ -205,7 +205,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         var collisionDistance = Vector3.Distance(collision.point, newPos);
         newPos += collision.dirToPlayer * (colliderRadius - collisionDistance);
 
-        if (!parameters.PreserveVelocityAtCollision)
+        if (!PreserveVelocityAtCollision)
         {
             var impactAngle = Vector3.Dot(state.Velocity, collision.dirToPlayer);
             if (impactAngle < 0f)
@@ -215,34 +215,30 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         return newPos - colliderOffset * Vector3.UnitY;
     }
 
-    private Vector3 CreatureCollision(
-        Vector3 newPos,
-        in components.PhysicParameters parameters)
+    private Vector3 CreatureCollision(Vector3 newPos)
     {
-        var intersection = FindCreatureIntersection(newPos, parameters);
+        var intersection = FindCreatureIntersection(newPos);
         if (intersection == null)
             return newPos;
 
         var collisionToPlayer = Vector3.Normalize(newPos - intersection.Value);
-        return intersection.Value + collisionToPlayer * parameters.CreatureRadius;
+        return intersection.Value + collisionToPlayer * CreatureRadius;
     }
 
-    private Vector3? FindCreatureIntersection(
-        Vector3 playerPos,
-        in components.PhysicParameters parameters)
+    private Vector3? FindCreatureIntersection(Vector3 playerPos)
     {
         // basically a axis-aligned capsule intersection test
         // which is degenerated to a cylinder...
 
         Vector3? bestPos = default;
-        float bestDistanceSqr = parameters.CreatureRadius * parameters.CreatureRadius;
+        float bestDistanceSqr = CreatureRadius * CreatureRadius;
         foreach (var creature in collidableCreatures.GetEntities())
         {
             var comparePos = creature.Get<Location>().LocalPosition;
             if (creature.TryGet<components.NPCType>() == components.NPCType.PlantBlocker)
-                comparePos += Vector3.Normalize(playerPos - comparePos) * parameters.PlantBlockerAddRadius;
+                comparePos += Vector3.Normalize(playerPos - comparePos) * PlantBlockerAddRadius;
 
-            if (Math.Abs(comparePos.Y - playerPos.Y) < parameters.CreatureHalfHeight)
+            if (Math.Abs(comparePos.Y - playerPos.Y) < CreatureHalfHeight)
                 comparePos.Y = playerPos.Y;
 
             var currentDistance = Vector3.DistanceSquared(comparePos, playerPos);
@@ -268,18 +264,17 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         return intersections;
     }
 
-    private static void ApplyControls(
+    private void ApplyControls(
         float elapsedStepTime,
         ref Vector3 mainVelocity,
         in Vector3 forward,
-        in components.PhysicParameters parameters,
         in components.PlayerControls controls,
         ref components.HumanPhysics state,
         in Collision collision)
     {
         var foreAftMove = elapsedStepTime * state.SpeedModifier * (
-            controls.GoesBackward ? parameters.SpeedBackward
-            : controls.GoesForward ? parameters.SpeedForward
+            controls.GoesBackward ? SpeedBackward
+            : controls.GoesForward ? SpeedForward
             : 0f);
         if (controls.GoesForward || controls.GoesBackward)
         {
@@ -289,38 +284,36 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         if (state.HitFloor && !MathEx.Cmp(collision.dirToPlayer.Y, 1f) && state.State == AnimationState.Run)
         {
             state.State = AnimationState.Walk;
-            state.SpeedModifier *= parameters.SpeedFallFactor;
+            state.SpeedModifier *= SpeedFallFactor;
         }
 
         if (controls.GoesRight)
-            ApplySideControls(elapsedStepTime, ref mainVelocity, new Vector3(forward.Z, forward.Y, -forward.X), parameters, ref state);
+            ApplySideControls(elapsedStepTime, ref mainVelocity, new Vector3(forward.Z, forward.Y, -forward.X), ref state);
         else if (controls.GoesLeft)
-            ApplySideControls(elapsedStepTime, ref mainVelocity, new Vector3(-forward.Z, forward.Y, forward.X), parameters, ref state);
+            ApplySideControls(elapsedStepTime, ref mainVelocity, new Vector3(-forward.Z, forward.Y, forward.X), ref state);
     }
 
-    private static void ApplySideControls(
+    private void ApplySideControls(
         float elapsedStepTime,
         ref Vector3 mainVelocity,
         Vector3 axis,
-        in components.PhysicParameters parameters,
         ref components.HumanPhysics state)
     {
         state.State = AnimationState.Run;
         var controlAngle = Vector3.Dot(state.Velocity, axis);
-        if (Math.Abs(controlAngle) < parameters.MaxSideControlAngle)
-            mainVelocity -= axis * elapsedStepTime * parameters.SpeedSide * state.SpeedModifier;
+        if (Math.Abs(controlAngle) < MaxSideControlAngle)
+            mainVelocity -= axis * elapsedStepTime * SpeedSide * state.SpeedModifier;
     }
 
     private void ForcedJump(
         in Vector3 pos,
-        in components.PhysicParameters parameters,
         ref components.PlayerControls controls,
         ref components.HumanPhysics state,
         in Collision collision)
     {
         // yes obnoxiously preconditions are in place to stop forced jumps, it will still happen
         var horizontalVelocity = state.Velocity * new Vector3(1f, 0f, 1f);
-        if (horizontalVelocity.LengthSquared() >= MathF.Pow(parameters.MaxForcedJumpSpeed, 2f)
+        if (horizontalVelocity.LengthSquared() >= MathF.Pow(MaxForcedJumpSpeed, 2f)
             || controls.GoesAnywhere
             || controls.Jumps
             || controls.WhirlJumps
@@ -334,9 +327,9 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         var jumpDir = pos - collision.point;
         jumpDir.Y = 0.001f;
         jumpDir = Vector3.Normalize(jumpDir);
-        state.Velocity.X = jumpDir.X * parameters.SpeedForcedJump;
-        state.Velocity.Z = jumpDir.Z * parameters.SpeedForcedJump;
-        state.SpeedModifier = parameters.SpeedFactorForcedJump;
+        state.Velocity.X = jumpDir.X * SpeedForcedJump;
+        state.Velocity.Z = jumpDir.Z * SpeedForcedJump;
+        state.SpeedModifier = SpeedFactorForcedJump;
         controls.Jumps = true;
     }
 
@@ -346,26 +339,25 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         "resources/audio/sfx/voices/amy/jmp00b.wav"
     ];
     private void IntentionalJump(
-        in components.PhysicParameters parameters,
         ref components.PlayerControls controls,
         ref components.HumanPhysics state)
     {
         if (!controls.Jumps
             || isInterior
-            || (!state.HitFloor && !parameters.CanJumpWithoutFloor))
+            || (!state.HitFloor && !CanJumpWithoutFloor))
             return;
 
         controls.Jumps = false;
         state.HitFloor = false;
-        if (state.SpeedModifier < parameters.MinRunSpeed)
+        if (state.SpeedModifier < MinRunSpeed)
         {
-            state.Velocity *= parameters.SpeedFactorSmallJump;
-            state.Velocity.Y = parameters.SpeedJump * parameters.SpeedFactorSmallJump;
+            state.Velocity *= SpeedFactorSmallJump;
+            state.Velocity.Y = SpeedJump * SpeedFactorSmallJump;
         }
         else
         {
-            state.Velocity *= parameters.SpeedFactorBigJump;
-            state.Velocity.Y = parameters.SpeedJump;
+            state.Velocity *= SpeedFactorBigJump;
+            state.Velocity.Y = SpeedJump;
 
             var voiceSample = Random.NextDouble() switch
             {
@@ -379,7 +371,6 @@ public partial class HumanPhysics : AEntitySetSystem<float>
     }
 
     private void WhirlJump(
-        in components.PhysicParameters parameters,
         ref components.PlayerControls controls,
         ref components.HumanPhysics state)
     {
@@ -387,16 +378,15 @@ public partial class HumanPhysics : AEntitySetSystem<float>
             return;
         controls.WhirlJumps = false;
         state.GravityModifier = -1f;
-        state.Velocity.Y = parameters.SpeedJump * parameters.SpeedFactorWhirlJump;
+        state.Velocity.Y = SpeedJump * SpeedFactorWhirlJump;
         World.Publish(new messages.SpawnSample("resources/audio/sfx/voices/amy/jms00a.wav"));
     }
 
-    private static void ApplyGravity(
+    private void ApplyGravity(
         float elapsedTime,
-        in components.PhysicParameters parameters,
         ref components.HumanPhysics state)
     {
-        if (!parameters.UseWorldForces)
+        if (!UseWorldForces)
             return;
         if (state.HitFloor)
         {
@@ -405,11 +395,11 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         }
 
         if (state.GravityModifier <= 0f)
-            state.Velocity.Y -= elapsedTime * parameters.Gravity * parameters.WhirlJumpGravityFactor;
+            state.Velocity.Y -= elapsedTime * Gravity * WhirlJumpGravityFactor;
         else
         {
-            state.Velocity.Y -= elapsedTime * parameters.Gravity * state.GravityModifier;
-            state.GravityModifier += elapsedTime * parameters.GravityModifierSpeed;
+            state.Velocity.Y -= elapsedTime * Gravity * state.GravityModifier;
+            state.GravityModifier += elapsedTime * GravityModifierSpeed;
         }
     }
 }

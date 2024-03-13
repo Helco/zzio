@@ -33,6 +33,11 @@ internal partial class Program
         () => false,
         "Launches the ECS explorer upon start");
 
+    private static readonly Option<bool> OptionInDevLaunchConfigExplorer = new Option<bool>(
+        "--launch-config-explorer",
+        () => false,
+        "Launches the config explorer upon start");
+
     private static readonly Option<string> OptionInDevSavegame = new(
         "--savegame",
         "The path of the savegame to load (in the mounted resource pools)\nLeave empty to use a new, empty savegame");
@@ -65,6 +70,7 @@ internal partial class Program
         command.AddOption(OptionInDevLaunchGameMuted);
         command.AddOption(OptionInDevLaunchECSExplorer);
         command.AddOption(OptionInDevLaunchAssetExplorer);
+        command.AddOption(OptionInDevLaunchConfigExplorer);
         command.AddOption(OptionInDevSavegame);
         command.AddOption(OptionInDevScene);
         command.AddOption(OptionInDevEntry);
@@ -112,11 +118,12 @@ internal partial class Program
             graphicsDevice.ResizeMainWindow((uint)w, (uint)h);
         };
 
-        InDevLaunchGame(diContainer, ctx, always: false);
         InDevLaunchTools(diContainer, ctx);
+        InDevLaunchGame(diContainer, ctx, always: false);
         InDevOpenResources(diContainer, ctx);
 
         var time = diContainer.GetTag<GameTime>();
+        var configuration = diContainer.GetTag<Configuration>();
         var assetRegistry = diContainer.GetTag<IAssetRegistry>();
         var remotery = diContainer.GetTag<Remotery>();
         windowContainer.CreateProfilerSample = n => remotery.SampleCPU(n);
@@ -136,6 +143,7 @@ internal partial class Program
             }
 
             sdl.PumpEvents();
+            configuration.ApplyChanges();
             assetRegistry.ApplyAssets();
             windowContainer.BeginEventUpdate(time);
             Event ev = default;
@@ -190,13 +198,19 @@ internal partial class Program
         if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchECSExplorer))
             zzWindow.OpenECSExplorer();
         if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchGameMuted))
-            zzWindow.IsMuted = true;
+        {
+            var config = diContainer.GetTag<Configuration>();
+            config.SetValue("zanzarah.game.SoundVolume", 0f);
+            config.SetValue("zanzarah.game.MusicVolume", 0f);
+        }
     }
 
     private static void InDevLaunchTools(ITagContainer diContainer, InvocationContext ctx)
     {
         if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchAssetExplorer))
-            AssetExplorer.Open(diContainer);            
+            AssetExplorer.Open(diContainer);
+        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchConfigExplorer))
+            ConfigExplorer.Open(diContainer);
     }
 
     private static void InDevOpenResources(ITagContainer diContainer, InvocationContext ctx)

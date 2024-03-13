@@ -30,17 +30,22 @@ public class Zanzarah : ITagContainer
     private const int MaxDatabaseModule = (int)(zzio.db.ModuleType.Dialog + 1); // module filenames are one-based
     private readonly ITagContainer tagContainer;
     private readonly Remotery profiler;
+    private readonly IDisposable gameConfigDisposable;
 
     public Game? CurrentGame { get; private set; }
     public UI UI { get; }
 
     public Zanzarah(ITagContainer diContainer, IZanzarahContainer zanzarahContainer, Savegame? savegame = null)
     {
+        var gameConfig = new GameConfigSection();
+        gameConfigDisposable = diContainer.GetConfigFor(gameConfig);
         tagContainer = new ExtendedTagContainer(diContainer);
-        tagContainer.AddTag(this);
-        tagContainer.AddTag(zanzarahContainer);
-        tagContainer.AddTag(LoadDatabase());
-        tagContainer.AddTag(UI = new UI(this));
+        tagContainer
+            .AddTag(this)
+            .AddTag(zanzarahContainer)
+            .AddTag(gameConfig)
+            .AddTag(LoadDatabase())
+            .AddTag(UI = new UI(this));
         profiler = diContainer.GetTag<Remotery>();
 
         // If savegame is null we should probably start the intro and main menu. But this is not implemented yet
@@ -80,7 +85,12 @@ public class Zanzarah : ITagContainer
         return mappedDb;
     }
 
-    public void Dispose() => tagContainer.Dispose();
+    public void Dispose()
+    {
+        tagContainer.Dispose();
+        gameConfigDisposable.Dispose();
+    }
+
     public ITagContainer AddTag<TTag>(TTag tag) where TTag : class => tagContainer.AddTag(tag);
     public TTag GetTag<TTag>() where TTag : class => tagContainer.GetTag<TTag>();
     public IEnumerable<TTag> GetTags<TTag>() where TTag : class => tagContainer.GetTags<TTag>();
