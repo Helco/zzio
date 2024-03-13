@@ -11,6 +11,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
 {
     private readonly ILogger logger;
     private readonly IAssetRegistry assetRegistry;
+    private readonly GameConfigSection gameConfig;
     private readonly IDisposable sceneChangingSubscription;
     private readonly IDisposable sceneLoadSubscription;
     private readonly IDisposable spawnEffectDisposable;
@@ -21,6 +22,7 @@ public partial class EffectCombiner : AEntitySetSystem<float>
     {
         logger = diContainer.GetLoggerFor<EffectCombiner>();
         assetRegistry = diContainer.GetTag<IAssetRegistry>();
+        gameConfig = diContainer.GetTag<GameConfigSection>();
         sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         spawnEffectDisposable = World.Subscribe<messages.SpawnEffectCombiner>(HandleSpawnEffect);
@@ -43,7 +45,9 @@ public partial class EffectCombiner : AEntitySetSystem<float>
 
         foreach (var sceneEffect in message.Scene.effects.Where(e => e.type is zzio.scn.SceneEffectType.Combiner))
         {
-            // TODO: Respect min quality level for scene effect combiners
+            if (sceneEffect.param > (int)gameConfig.EffectQuality)
+                continue;
+
             var entity = World.CreateEntity();
             HandleSpawnEffect(new(
                 sceneEffect.effectFile,
