@@ -2,6 +2,7 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using Serilog;
 using zzio;
 using zzio.vfs;
 
@@ -9,14 +10,20 @@ namespace zzre;
 
 partial class Program
 {
-    private static readonly Option<bool> NoZanzarahConfig = new(
+    private static readonly Option<bool> OptionNoZanzarahConfig = new(
         "--no-zanzarah-config",
         () => false,
         "Prevents the loading of standard zanzarah config files (game.cfg, ai.cfg, net.cfg, wizform.cfg)");
 
+    private static readonly Option<string[]> OptionSingleConfigs = new(
+        new[] { "-c", "--config" },
+        () => [],
+        "Sets a single configuration value in the form <name>=<value>");
+
     private static void AddConfigurationOptions(Command command)
     {
-        command.AddGlobalOption(NoZanzarahConfig);
+        command.AddGlobalOption(OptionNoZanzarahConfig);
+        command.AddGlobalOption(OptionSingleConfigs);
     }
 
     private static Configuration CreateConfiguration(ITagContainer diContainer)
@@ -26,7 +33,7 @@ partial class Program
 
         var config = new Configuration();
         config.AddSource(GameConfigSource.Default);
-        if (!invocationCtx.ParseResult.GetValueForOption(NoZanzarahConfig))
+        if (!invocationCtx.ParseResult.GetValueForOption(OptionNoZanzarahConfig))
         {
             LoadGameConfig(diContainer, config, "Configs/game.cfg");
             LoadVarConfig(diContainer, config, "System/ai.cfg", "zanzarah.ai");
@@ -35,6 +42,10 @@ partial class Program
         }
         else
             logger.Debug("Loading of Zanzarah standard config files disabled by command line");
+
+        var singleConfigs = invocationCtx.ParseResult.GetValueForOption(OptionSingleConfigs) ?? [];
+        foreach (var singleConfig in singleConfigs)
+            AddSingleConfig(logger, config, singleConfig);
 
         config.ApplyChanges();
         return config;
@@ -69,6 +80,25 @@ partial class Program
         {
             diContainer.GetLoggerFor<Configuration>().Error("VarConfig {Path}: {Error}", path, e.Message);
         }
+    }
+
+    private static void AddSingleConfig(ILogger logger, Configuration config, string spec)
+    {
+        var parts = spec.Split('=');
+        if (parts.Length == 2)
+        {
+            parts[0] = parts[0].Trim();
+            parts[1] = parts[1].Trim();
+            if (parts[0].Length > 0 && parts[1].Length > 0)
+            {
+                if (double.TryParse(parts[1], out var numeric))
+                    config.SetValue(parts[0], numeric);
+                else
+                    config.SetValue(parts[0], parts[1]);
+                return;
+            }
+        }
+        logger.Warning("Did not understand single config spec: {Spec}", spec);
     }
 
     public static IConfigurationBinding GetConfigFor<TSection>(this ITagContainer diContainer, TSection instance)
