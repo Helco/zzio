@@ -9,7 +9,7 @@ using zzio.scn;
 public partial class Doorway : AEntitySetSystem<float>
 {
     private readonly UI ui;
-    private readonly Game game;
+    private readonly OverworldGame game;
     private readonly MappedDB db;
     private readonly IDisposable doorwayTriggerDisposable;
     private readonly IDisposable enteredDisposable;
@@ -22,7 +22,7 @@ public partial class Doorway : AEntitySetSystem<float>
     public Doorway(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         ui = diContainer.GetTag<UI>();
-        game = diContainer.GetTag<Game>();
+        game = diContainer.GetTag<OverworldGame>();
         db = diContainer.GetTag<MappedDB>();
         doorwayTriggerDisposable = World.SubscribeEntityComponentAdded<components.ActiveTrigger>(HandleActiveTrigger);
         enteredDisposable = World.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);

@@ -32,7 +32,9 @@ public class Zanzarah : ITagContainer
     private readonly Remotery profiler;
     private readonly IDisposable gameConfigDisposable;
 
-    public Game? CurrentGame { get; private set; }
+    public OverworldGame? OverworldGame { get; private set; }
+    public BattleGame? BattleGame { get; private set; }
+    public Game? CurrentGame => BattleGame as Game ?? OverworldGame;
     public UI UI { get; }
 
     public Zanzarah(ITagContainer diContainer, IZanzarahContainer zanzarahContainer, Savegame? savegame = null)
@@ -49,8 +51,7 @@ public class Zanzarah : ITagContainer
         profiler = diContainer.GetTag<Remotery>();
 
         // If savegame is null we should probably start the intro and main menu. But this is not implemented yet
-        CurrentGame = new Game(this, savegame ?? new());
-        tagContainer.AddTag(CurrentGame);
+        OverworldGame = new OverworldGame(this, savegame ?? new());
     }
 
     public void Update()

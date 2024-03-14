@@ -24,7 +24,7 @@ public partial class Teleporter : AEntitySetSystem<float>
     private const float ArrivingDuration = 1f;
     private const float FinalWaitDuration = 4f;
 
-    private readonly Game game;
+    private readonly OverworldGame game;
     private readonly UI ui;
     private readonly IDisposable triggerDisposable;
     private readonly IDisposable teleportDisposable;
@@ -38,7 +38,7 @@ public partial class Teleporter : AEntitySetSystem<float>
 
     public Teleporter(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
-        game = diContainer.GetTag<Game>();
+        game = diContainer.GetTag<OverworldGame>();
         ui = diContainer.GetTag<UI>();
         triggerDisposable = World.SubscribeEntityComponentAdded<components.ActiveTrigger>(HandleActiveTrigger);
         teleportDisposable = World.Subscribe<messages.Teleport>(HandleTeleport);

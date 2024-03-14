@@ -201,8 +201,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
 
     private void TeleportToScene(IResource resource)
     {
-        // this should probably check if we even are in the Overworld
-        var game = Zanzarah.CurrentGame;
+        var game = Zanzarah.OverworldGame;
         if (game == null)
             return;
         game.LoadScene(resource.Name.Replace(".scn", ""), () => game.FindEntryTrigger(-1));
@@ -211,7 +210,9 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
     public IEnumerable<(string, DefaultEcs.World)> GetWorlds()
     {
         yield return ("UI", Zanzarah.UI.GetTag<DefaultEcs.World>());
-        if (Zanzarah.CurrentGame != null)
-            yield return ("Overworld", Zanzarah.CurrentGame.GetTag<DefaultEcs.World>());
+        if (Zanzarah.OverworldGame != null)
+            yield return ("Overworld", Zanzarah.OverworldGame.GetTag<DefaultEcs.World>());
+        if (Zanzarah.BattleGame != null)
+            yield return ("Battle", Zanzarah.BattleGame.GetTag<DefaultEcs.World>());
     }
 }
