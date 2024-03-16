@@ -82,11 +82,18 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
 
     public Window Window { get; }
     public Zanzarah Zanzarah { get; }
+    public ITagContainer DIContainer => diContainer;
     public Framebuffer Framebuffer => fbArea.Framebuffer;
     public Vector2 MousePos => mouseArea.MousePosition;
     public bool IsMouseCaptured { get; set; }
 
     public ZanzarahWindow(ITagContainer diContainer, Savegame? savegame = null)
+        : this(diContainer, c => Zanzarah.StartInOverworld(c, savegame)) { }
+
+    internal ZanzarahWindow(ITagContainer diContainer, TestBattleConfig battleConfig)
+        : this(diContainer, c => Zanzarah.StartInTestBattle(c, battleConfig)) { }
+
+    private ZanzarahWindow(ITagContainer diContainer, Func<IZanzarahContainer, Zanzarah> constructZanzarah)
     {
         GlobalWindowIndex++;
         this.diContainer = diContainer;
@@ -96,7 +103,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
 
         fbArea = new FramebufferArea(Window, diContainer.GetTag<GraphicsDevice>());
         mouseArea = new MouseEventArea(Window);
-        Zanzarah = new Zanzarah(diContainer, this, savegame);
+        Zanzarah = constructZanzarah(this);
         Window.AddTag(Zanzarah);
 
         gameConfigBinding = diContainer.GetConfigFor(gameConfig);
@@ -126,7 +133,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
         menuBar.AddButton("Debug/ECS Explorer", OpenECSExplorer);
         menuBar.AddButton("Debug/Asset Explorer", () => AssetExplorer.Open(diContainer));
         menuBar.AddButton("Debug/Config Explorer", () => ConfigExplorer.Open(diContainer));
-        menuBar.AddButton("Debug/Teleport to scene", selectSceneModal.Modal.Open);
+        menuBar.AddButton("Debug/Teleport to scene", selectSceneModal.Modal.Open, () => Zanzarah.CurrentGame is OverworldGame);
 
         Window.OnContent += HandleContent;
         fbArea.OnRender += Zanzarah.Render;

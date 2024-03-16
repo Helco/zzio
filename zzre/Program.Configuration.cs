@@ -5,6 +5,7 @@ using System.IO;
 using Serilog;
 using zzio;
 using zzio.vfs;
+using zzre.game;
 
 namespace zzre;
 
@@ -33,6 +34,7 @@ partial class Program
 
         var config = new Configuration();
         config.AddSource(GameConfigSource.Default);
+        config.AddSource(new ConfigurationSectionAsSource("Default TestBattle", new TestBattleConfig()));
         if (!invocationCtx.ParseResult.GetValueForOption(OptionNoZanzarahConfig))
         {
             LoadGameConfig(diContainer, config, "Configs/game.cfg");

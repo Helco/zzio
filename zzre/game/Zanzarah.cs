@@ -10,6 +10,7 @@ namespace zzre.game;
 
 public interface IZanzarahContainer
 {
+    ITagContainer DIContainer { get; }
     Framebuffer Framebuffer { get; }
     Vector2 MousePos { get; }
     bool IsMouseCaptured { get; set; }
@@ -37,8 +38,9 @@ public class Zanzarah : ITagContainer
     public Game? CurrentGame => BattleGame as Game ?? OverworldGame;
     public UI UI { get; }
 
-    public Zanzarah(ITagContainer diContainer, IZanzarahContainer zanzarahContainer, Savegame? savegame = null)
+    private Zanzarah(IZanzarahContainer zanzarahContainer, Savegame? savegame = null)
     {
+        var diContainer = zanzarahContainer.DIContainer;
         var gameConfig = new GameConfigSection();
         gameConfigDisposable = diContainer.GetConfigFor(gameConfig);
         tagContainer = new ExtendedTagContainer(diContainer);
@@ -49,9 +51,28 @@ public class Zanzarah : ITagContainer
             .AddTag(LoadDatabase())
             .AddTag(UI = new UI(this));
         profiler = diContainer.GetTag<Remotery>();
+    }
 
-        // If savegame is null we should probably start the intro and main menu. But this is not implemented yet
-        OverworldGame = new OverworldGame(this, savegame ?? new());
+    public static Zanzarah StartInOverworld(IZanzarahContainer container, Savegame? savegame = null)
+    {
+        var zz = new Zanzarah(container, savegame);
+        zz.OverworldGame = new OverworldGame(zz, savegame ?? new());
+        return zz;
+    }
+
+    public static Zanzarah StartInTestBattle(IZanzarahContainer container, messages.StartBattle battle)
+    {
+        var zz = new Zanzarah(container, battle.Savegame);
+        zz.BattleGame = new BattleGame(zz, battle);
+        return zz;
+    }
+
+    internal static Zanzarah StartInTestBattle(IZanzarahContainer container, TestBattleConfig battleConfig)
+    {
+        var zz = new Zanzarah(container, null);
+        var db = zz.GetTag<zzio.db.MappedDB>();
+        zz.BattleGame = new BattleGame(zz, battleConfig.ConvertToTestBattle(db));
+        return zz;
     }
 
     public void Update()
@@ -88,6 +109,10 @@ public class Zanzarah : ITagContainer
 
     public void Dispose()
     {
+        BattleGame?.Dispose();
+        BattleGame = null;
+        OverworldGame?.Dispose();
+        OverworldGame = null;
         tagContainer.Dispose();
         gameConfigDisposable.Dispose();
     }

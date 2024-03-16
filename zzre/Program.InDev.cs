@@ -8,6 +8,7 @@ using zzre.tools;
 using zzre.rendering;
 using zzio;
 using zzio.vfs;
+using zzre.game;
 
 namespace zzre;
 
@@ -17,6 +18,11 @@ internal partial class Program
         "--launch-game",
         () => false,
         "Launches a game window upon start");
+
+    private static readonly Option<bool> OptionInDevLaunchDuel = new Option<bool>(
+        "--launch-test-battle",
+        () => false,
+        "Launches a game window with the test duel (ignores savegame) upon start");
 
     private static readonly Option<bool> OptionInDevLaunchGameMuted = new Option<bool>(
         "--launch-game-muted",
@@ -67,6 +73,7 @@ internal partial class Program
         var command = new Command("indev",
             "This starts an environment intended for development of zzre with a game window and access to all viewers and Dear ImGui debug windows");
         command.AddOption(OptionInDevLaunchGame);
+        command.AddOption(OptionInDevLaunchDuel);
         command.AddOption(OptionInDevLaunchGameMuted);
         command.AddOption(OptionInDevLaunchECSExplorer);
         command.AddOption(OptionInDevLaunchAssetExplorer);
@@ -104,7 +111,8 @@ internal partial class Program
         windowContainer.MenuBar.AddButton("Tools/World Viewer", () => new WorldViewer(diContainer));
         windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
-        windowContainer.MenuBar.AddButton("Launch Game", () => InDevLaunchGame(diContainer, ctx, always: true));
+        windowContainer.MenuBar.AddButton("Launch Game/Overworld", () => InDevLaunchOverworldGame(diContainer));
+        windowContainer.MenuBar.AddButton("Launch Game/Test Battle", () => InDevLaunchBattleGame(diContainer));
         windowContainer.MenuBar.AddButton("ImGui Demo", () => windowContainer.ShowImGuiDemoWindow = true);
 
         openDocumentSet.AddEditorType<ModelViewer>("dff");
@@ -119,7 +127,16 @@ internal partial class Program
         };
 
         InDevLaunchTools(diContainer, ctx);
-        InDevLaunchGame(diContainer, ctx, always: false);
+        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchGameMuted))
+        {
+            var config = diContainer.GetTag<Configuration>();
+            config.SetValue("zanzarah.game.SoundVolume", 0f);
+            config.SetValue("zanzarah.game.MusicVolume", 0f);
+        }
+        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchGame))
+            InDevLaunchOverworldGame(diContainer);
+        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchDuel))
+            InDevLaunchBattleGame(diContainer);
         InDevOpenResources(diContainer, ctx);
 
         var time = diContainer.GetTag<GameTime>();
@@ -172,12 +189,9 @@ internal partial class Program
         return (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
     }
 
-    private static void InDevLaunchGame(ITagContainer diContainer, InvocationContext ctx, bool always)
+    private static void InDevLaunchOverworldGame(ITagContainer diContainer)
     {
-        var shouldLaunch = ctx.ParseResult.GetValueForOption(OptionInDevLaunchGame);
-        if (!shouldLaunch && !always)
-            return;
-
+        var ctx = diContainer.GetTag<InvocationContext>();
         var savegame = new Savegame() { sceneId = 2800 };
         var savegamePath = ctx.ParseResult.GetValueForOption(OptionInDevSavegame);
         if (!string.IsNullOrWhiteSpace(savegamePath))
@@ -194,15 +208,19 @@ internal partial class Program
             savegame.entryId = entryId.Value;
 
         var zzWindow = new ZanzarahWindow(diContainer, savegame);
-
         if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchECSExplorer))
             zzWindow.OpenECSExplorer();
-        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchGameMuted))
-        {
-            var config = diContainer.GetTag<Configuration>();
-            config.SetValue("zanzarah.game.SoundVolume", 0f);
-            config.SetValue("zanzarah.game.MusicVolume", 0f);
-        }
+    }
+
+    private static void InDevLaunchBattleGame(ITagContainer diContainer)
+    {
+        var ctx = diContainer.GetTag<InvocationContext>();
+        var testBattleConfig = new TestBattleConfig();
+        using var configBinding = diContainer.GetConfigFor(testBattleConfig);
+
+        var zzWindow = new ZanzarahWindow(diContainer, testBattleConfig);
+        if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchECSExplorer))
+            zzWindow.OpenECSExplorer();
     }
 
     private static void InDevLaunchTools(ITagContainer diContainer, InvocationContext ctx)

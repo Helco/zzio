@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using DefaultEcs.System;
 using Serilog;
@@ -111,7 +110,9 @@ public abstract class Game : BaseDisposable, ITagContainer
         renderSystems.Update(cl);
     }
 
-    public void LoadScene(string sceneName, Func<Trigger> findEntryTrigger)
+    // keeping this protected to allow specializations to add necessary behavior
+    // (e.g. PlayerEntered message in OverworldGame)
+    protected void LoadScene(string sceneName)
     {
         logger.Information("Load " + sceneName);
         timeBeforeLoading = time.TotalElapsed;
@@ -129,7 +130,6 @@ public abstract class Game : BaseDisposable, ITagContainer
         clearColor = (scene.misc.clearColor.ToFColor() with { a = 1f }).ToVeldrid();
 
         ecsWorld.Publish(new messages.SceneLoaded(scene, GetTag<Savegame>()));
-        ecsWorld.Publish(new messages.PlayerEntered(findEntryTrigger()));
     }
 
     private void DisposeUnusedAssets(in messages.SceneLoaded _)

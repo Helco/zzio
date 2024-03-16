@@ -1,11 +1,10 @@
 ﻿using Veldrid;
-using zzio;
 
 namespace zzre.game;
 
 public sealed class BattleGame : Game
 {
-    public BattleGame(ITagContainer diContainer, Savegame savegame) : base(diContainer, savegame)
+    public BattleGame(ITagContainer diContainer, messages.StartBattle message) : base(diContainer, message.Savegame)
     {
         AddTag(this);
 
@@ -15,9 +14,10 @@ public sealed class BattleGame : Game
 
         var updateSystems = new systems.RecordingSequentialSystem<float>(this);
         this.updateSystems = updateSystems;
+        systems.FlyCamera flyCamera;
         updateSystems.Add(
             // Cameras
-            new systems.FlyCamera(this),
+            flyCamera = new systems.FlyCamera(this),
 
             // Models and actors
             new systems.ModelLoader(this),
@@ -51,7 +51,6 @@ public sealed class BattleGame : Game
             new systems.SceneSamples(this),
 
             new systems.TriggerActivation(this),
-            new systems.PlayerTriggers(this),
 
             // Fairies
             new systems.FairyAnimation(this),
@@ -84,5 +83,9 @@ public sealed class BattleGame : Game
             new systems.ModelRenderer(this, components.RenderOrder.LateAdditive),
             new systems.effect.EffectRenderer(this, components.RenderOrder.LateEffect),
             new systems.effect.EffectModelRenderer(this, components.RenderOrder.LateEffect));
+
+        flyCamera.IsEnabled = true;
+        LoadScene($"sd_{message.SceneId:D4}");
+        camera.Location.LocalPosition = -ecsWorld.Get<zzre.rendering.WorldMesh>().Origin;
     }
 }

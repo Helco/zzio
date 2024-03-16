@@ -20,7 +20,6 @@ public partial class Inventory : IReadOnlyCollection<InventoryCard>
     public InventoryCard this[int index] => cards[index] ??
         throw new KeyNotFoundException($"Card index {index} is not used in inventory");
 
-
     public Inventory(ITagContainer diContainer, Savegame? savegame = null)
         : this(diContainer.GetTag<zzio.db.MappedDB>(), savegame) { }
 
@@ -46,6 +45,13 @@ public partial class Inventory : IReadOnlyCollection<InventoryCard>
         }
 
         Count = cards.NotNull().Count();
+    }
+
+    public void Save(Savegame savegame)
+    {
+        savegame.inventory.Clear();
+        savegame.inventory.EnsureCapacity(cards.NotNull().Count());
+        savegame.inventory.AddRange(cards.NotNull());
     }
 
     public void Add(InventoryCard card)

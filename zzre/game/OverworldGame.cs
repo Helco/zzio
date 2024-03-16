@@ -142,11 +142,17 @@ public sealed class OverworldGame : Game
             new systems.effect.EffectRenderer(this, components.RenderOrder.LateEffect),
             new systems.effect.EffectModelRenderer(this, components.RenderOrder.LateEffect));
 
-        onceUpdate.Next += () => LoadOverworldScene(savegame.sceneId, () => FindEntryTrigger(savegame.entryId));
+        onceUpdate.Next += () => LoadScene(savegame.sceneId, () => FindEntryTrigger(savegame.entryId));
     }
 
-    public void LoadOverworldScene(int sceneId, Func<Trigger> entryTrigger) =>
+    public void LoadScene(int sceneId, Func<Trigger> entryTrigger) =>
         LoadScene($"sc_{sceneId:D4}", entryTrigger);
+
+    public void LoadScene(string sceneName, Func<Trigger> findEntryTrigger)
+    {
+        LoadScene(sceneName);
+        ecsWorld.Publish(new messages.PlayerEntered(findEntryTrigger()));
+    }
 
     public Trigger? TryFindTrigger(TriggerType type, int ii1 = -1)
     {

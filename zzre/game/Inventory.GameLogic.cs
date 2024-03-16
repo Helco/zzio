@@ -117,6 +117,7 @@ public partial class Inventory
             fairy.levelChangeCount++;
             fairy.level = newLevel;
         }
+        Update(fairy);
     }
 
     private uint GetLevelByXP(InventoryFairy fairy)

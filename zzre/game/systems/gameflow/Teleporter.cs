@@ -157,7 +157,7 @@ public partial class Teleporter : AEntitySetSystem<float>
                 }
                 else
                 {
-                    game.LoadOverworldScene(targetScene, game.FindEntryTriggerForRune);
+                    game.LoadScene(targetScene, game.FindEntryTriggerForRune);
                     World.Publish(messages.LockPlayerControl.Forever); // this disables the normal timed entry lock
                 }
                 state = State.Arriving;
