@@ -1,6 +1,6 @@
 ﻿namespace zzre.game.messages;
 
-public readonly record struct StartBattle(
+public readonly record struct StartDuel(
     zzio.Savegame Savegame,
     DefaultEcs.Entity OverworldPlayer,
     DefaultEcs.Entity[] OverworldEntities,

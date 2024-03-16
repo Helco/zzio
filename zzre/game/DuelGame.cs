@@ -2,9 +2,9 @@
 
 namespace zzre.game;
 
-public sealed class BattleGame : Game
+public sealed class DuelGame : Game
 {
-    public BattleGame(ITagContainer diContainer, messages.StartBattle message) : base(diContainer, message.Savegame)
+    public DuelGame(ITagContainer diContainer, messages.StartDuel message) : base(diContainer, message.Savegame)
     {
         AddTag(this);
 

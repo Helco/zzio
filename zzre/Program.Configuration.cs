@@ -34,7 +34,7 @@ partial class Program
 
         var config = new Configuration();
         config.AddSource(GameConfigSource.Default);
-        config.AddSource(new ConfigurationSectionAsSource("Default TestBattle", new TestBattleConfig()));
+        config.AddSource(new ConfigurationSectionAsSource("Default TestDuel", new TestDuelConfig()));
         if (!invocationCtx.ParseResult.GetValueForOption(OptionNoZanzarahConfig))
         {
             LoadGameConfig(diContainer, config, "Configs/game.cfg");

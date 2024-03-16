@@ -20,7 +20,7 @@ internal partial class Program
         "Launches a game window upon start");
 
     private static readonly Option<bool> OptionInDevLaunchDuel = new Option<bool>(
-        "--launch-test-battle",
+        "--launch-test-duel",
         () => false,
         "Launches a game window with the test duel (ignores savegame) upon start");
 
@@ -112,7 +112,7 @@ internal partial class Program
         windowContainer.MenuBar.AddButton("Tools/Scene Viewer", () => new SceneEditor(diContainer));
 
         windowContainer.MenuBar.AddButton("Launch Game/Overworld", () => InDevLaunchOverworldGame(diContainer));
-        windowContainer.MenuBar.AddButton("Launch Game/Test Battle", () => InDevLaunchBattleGame(diContainer));
+        windowContainer.MenuBar.AddButton("Launch Game/Test Duel", () => InDevLaunchDuelGame(diContainer));
         windowContainer.MenuBar.AddButton("ImGui Demo", () => windowContainer.ShowImGuiDemoWindow = true);
 
         openDocumentSet.AddEditorType<ModelViewer>("dff");
@@ -136,7 +136,7 @@ internal partial class Program
         if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchGame))
             InDevLaunchOverworldGame(diContainer);
         if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchDuel))
-            InDevLaunchBattleGame(diContainer);
+            InDevLaunchDuelGame(diContainer);
         InDevOpenResources(diContainer, ctx);
 
         var time = diContainer.GetTag<GameTime>();
@@ -212,13 +212,13 @@ internal partial class Program
             zzWindow.OpenECSExplorer();
     }
 
-    private static void InDevLaunchBattleGame(ITagContainer diContainer)
+    private static void InDevLaunchDuelGame(ITagContainer diContainer)
     {
         var ctx = diContainer.GetTag<InvocationContext>();
-        var testBattleConfig = new TestBattleConfig();
-        using var configBinding = diContainer.GetConfigFor(testBattleConfig);
+        var testDuelConfig = new TestDuelConfig();
+        using var configBinding = diContainer.GetConfigFor(testDuelConfig);
 
-        var zzWindow = new ZanzarahWindow(diContainer, testBattleConfig);
+        var zzWindow = new ZanzarahWindow(diContainer, testDuelConfig);
         if (ctx.ParseResult.GetValueForOption(OptionInDevLaunchECSExplorer))
             zzWindow.OpenECSExplorer();
     }

@@ -2,14 +2,14 @@
 
 namespace zzre.game;
 
-internal sealed partial class TestBattleConfig
+internal sealed partial class TestDuelConfig
 {
     private const int MaxFairyId = (int)StdFairyId.Lana;
-    private const int MaxSpellId = 96; // TODO: Check limits in TestBattleConfig
+    private const int MaxSpellId = 96; // TODO: Check limits in TestDuelConfig
     private const int MaxLevel = 60;
     private const string ConfigurationSection = "zanzarah.wizform";
 
-    public messages.StartBattle ConvertToTestBattle(zzio.db.MappedDB mappedDb)
+    public messages.StartDuel ConvertToMessage(zzio.db.MappedDB mappedDb)
     {
         var ecsOverworld = new DefaultEcs.World();
         var playerInventory = new Inventory(mappedDb);

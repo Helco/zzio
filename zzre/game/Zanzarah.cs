@@ -34,8 +34,8 @@ public class Zanzarah : ITagContainer
     private readonly IDisposable gameConfigDisposable;
 
     public OverworldGame? OverworldGame { get; private set; }
-    public BattleGame? BattleGame { get; private set; }
-    public Game? CurrentGame => BattleGame as Game ?? OverworldGame;
+    public DuelGame? DuelGame { get; private set; }
+    public Game? CurrentGame => DuelGame as Game ?? OverworldGame;
     public UI UI { get; }
 
     private Zanzarah(IZanzarahContainer zanzarahContainer, Savegame? savegame = null)
@@ -60,18 +60,18 @@ public class Zanzarah : ITagContainer
         return zz;
     }
 
-    public static Zanzarah StartInTestBattle(IZanzarahContainer container, messages.StartBattle battle)
+    public static Zanzarah StartInTestDuel(IZanzarahContainer container, messages.StartDuel duel)
     {
-        var zz = new Zanzarah(container, battle.Savegame);
-        zz.BattleGame = new BattleGame(zz, battle);
+        var zz = new Zanzarah(container, duel.Savegame);
+        zz.DuelGame = new DuelGame(zz, duel);
         return zz;
     }
 
-    internal static Zanzarah StartInTestBattle(IZanzarahContainer container, TestBattleConfig battleConfig)
+    internal static Zanzarah StartInTestDuel(IZanzarahContainer container, TestDuelConfig duelConfig)
     {
         var zz = new Zanzarah(container, null);
         var db = zz.GetTag<zzio.db.MappedDB>();
-        zz.BattleGame = new BattleGame(zz, battleConfig.ConvertToTestBattle(db));
+        zz.DuelGame = new DuelGame(zz, duelConfig.ConvertToMessage(db));
         return zz;
     }
 
@@ -109,8 +109,8 @@ public class Zanzarah : ITagContainer
 
     public void Dispose()
     {
-        BattleGame?.Dispose();
-        BattleGame = null;
+        DuelGame?.Dispose();
+        DuelGame = null;
         OverworldGame?.Dispose();
         OverworldGame = null;
         tagContainer.Dispose();

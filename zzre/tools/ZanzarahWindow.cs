@@ -90,8 +90,8 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
     public ZanzarahWindow(ITagContainer diContainer, Savegame? savegame = null)
         : this(diContainer, c => Zanzarah.StartInOverworld(c, savegame)) { }
 
-    internal ZanzarahWindow(ITagContainer diContainer, TestBattleConfig battleConfig)
-        : this(diContainer, c => Zanzarah.StartInTestBattle(c, battleConfig)) { }
+    internal ZanzarahWindow(ITagContainer diContainer, TestDuelConfig duelConfig)
+        : this(diContainer, c => Zanzarah.StartInTestDuel(c, duelConfig)) { }
 
     private ZanzarahWindow(ITagContainer diContainer, Func<IZanzarahContainer, Zanzarah> constructZanzarah)
     {
@@ -219,7 +219,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
         yield return ("UI", Zanzarah.UI.GetTag<DefaultEcs.World>());
         if (Zanzarah.OverworldGame != null)
             yield return ("Overworld", Zanzarah.OverworldGame.GetTag<DefaultEcs.World>());
-        if (Zanzarah.BattleGame != null)
-            yield return ("Battle", Zanzarah.BattleGame.GetTag<DefaultEcs.World>());
+        if (Zanzarah.DuelGame != null)
+            yield return ("Duel", Zanzarah.DuelGame.GetTag<DefaultEcs.World>());
     }
 }
