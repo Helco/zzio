@@ -2,6 +2,7 @@
 using Veldrid;
 using zzio;
 using zzio.db;
+using zzre.rendering;
 
 namespace zzre.game;
 
@@ -53,14 +54,14 @@ public sealed class DuelGame : Game
             new systems.effect.ModelEmitter(this),
             new systems.effect.BeamStar(this),
             new systems.effect.Sound(this),
-            new systems.SceneSamples(this),
-
-            new systems.TriggerActivation(this),
 
             // Fairies
+            new systems.FairyPhysics(this),
             new systems.FairyAnimation(this),
             new systems.FairyActivation(this),
 
+            new systems.TriggerActivation(this),
+            new systems.SceneSamples(this),
             new systems.AmbientSounds(this),
 
             new systems.Reaper(this),
@@ -153,6 +154,9 @@ public sealed class DuelGame : Game
             wingsSkeleton.JumpToAnimation(actorParts.Wings.Value.Get<components.AnimationPool>()[AnimationType.Idle0]);
         actorParts.Body.Set(components.Visibility.Invisible);
         actorParts.Wings?.Set(components.Visibility.Invisible);
+
+        var colliderSize = actorParts.Body.Get<ClumpMesh>().BoundingBox.HalfSize.Y;
+        fairy.Set(new Sphere(Vector3.Zero, colliderSize));
 
         fairy.Disable();
         return fairy;

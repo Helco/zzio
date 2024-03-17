@@ -210,8 +210,16 @@ public class ConfigSourceGenerator : IIncrementalGenerator
         source.AppendLine("    [");
         foreach (var variable in section.Variables)
         {
-            source.Append("        $\"{ConfigurationSection}.");
-            source.Append(variable.LocalKey);
+            if (variable.LocalKey.StartsWith('/'))
+            {
+                source.Append("        \"");
+                source.Append(variable.LocalKey.Substring(1));
+            }
+            else
+            {
+                source.Append("        $\"{ConfigurationSection}.");
+                source.Append(variable.LocalKey);
+            }
             source.AppendLine("\",");
         }
         source.AppendLine("    ];");

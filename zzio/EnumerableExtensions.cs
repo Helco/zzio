@@ -74,6 +74,9 @@ public static class EnumerableExtensions
     public static TCompare? MaxOrDefault<TElement, TCompare>(this IEnumerable<TElement> set, Func<TElement, TCompare> selector, TCompare? defaultValue = default) =>
         set.Any() ? set.Max(selector) : defaultValue;
 
+    public static TElement? MinByOrDefault<TElement, TKey>(this IEnumerable<TElement> set, Func<TElement, TKey> compare) =>
+        set.Any() ? set.MinBy(compare) : default;
+
     public delegate bool ReferencePredicate<TElement>(in TElement element);
 
     public static int Count<TElement>(this ReadOnlySpan<TElement> span, ReferencePredicate<TElement> predicate)

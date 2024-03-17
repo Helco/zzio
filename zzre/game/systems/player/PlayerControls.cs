@@ -7,7 +7,7 @@ namespace zzre.game.systems;
 
 public class PlayerControls : AComponentSystem<float, components.PlayerControls>
 {
-    private const float JumpLockDuration = 0.8f;
+    private const float OverworldJumpLockDuration = 0.8f;
     private const KeyCode ForwardKey = KeyCode.KW;
     private const KeyCode BackwardKey = KeyCode.KS;
     private const KeyCode LeftKey = KeyCode.KA;
@@ -18,6 +18,7 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
 
     private readonly IZanzarahContainer zzContainer;
     private readonly IDisposable lockMessageSubscription;
+    private float jumpLockDuration;
 
     private bool stuckMovingForward;
     private float lockTimer;
@@ -37,6 +38,9 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         zzContainer.OnKeyUp += HandleKeyUp;
         zzContainer.OnMouseDown += HandleMouseDown;
         zzContainer.OnMouseUp += HandleMouseUp;
+
+        if (diContainer.GetTag<Game>() is OverworldGame)
+            jumpLockDuration = OverworldJumpLockDuration;
     }
 
     public override void Dispose()
@@ -72,6 +76,7 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         component.GoesBackward = nextControls.GoesBackward;
         component.GoesRight = nextControls.GoesRight;
         component.GoesLeft = nextControls.GoesLeft;
+        component.SwitchesSpells = nextControls.SwitchesSpells;
 
         if (nextControls.Shoots)
             component.FrameCountShooting++;
@@ -124,7 +129,7 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         }
         else if (jumpLockTimer <= 0f)
         {
-            jumpLockTimer = JumpLockDuration;
+            jumpLockTimer = jumpLockDuration;
             nextControls.Jumps = true;
             jumpChanged = true;
         }

@@ -57,6 +57,7 @@ public sealed partial class FairyActivation : ISystem<float>
     private void HandleEntityDisabled(in DefaultEcs.Entity entity)
     {
         entity.Remove<components.FairyPhysics>();
+        entity.Remove<components.PlayerControls>();
 
         var actorParts = entity.Get<components.ActorParts>();
         actorParts.Body.Set(components.Visibility.Invisible);
@@ -68,6 +69,7 @@ public sealed partial class FairyActivation : ISystem<float>
         if (ecsWorld.Get<components.PlayerEntity>().Entity == entity.Get<components.Parent>().Entity)
         {
             entity.Set(components.FairyPhysics.Default);
+            entity.Set<components.PlayerControls>();
         }
 
         var actorParts = entity.Get<components.ActorParts>();
