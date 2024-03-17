@@ -8,6 +8,9 @@ public partial class AdvanceAnimation : AEntitySetSystem<float>
     {
     }
 
+    [WithPredicate]
+    private static bool IsVisible(in components.Visibility vis) => vis == components.Visibility.Visible;
+
     [Update]
     private static void Update(float elapsedTime, DefaultEcs.Entity entity, ref Skeleton component)
     {

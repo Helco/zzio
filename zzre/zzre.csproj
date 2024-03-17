@@ -77,8 +77,4 @@
     <ProjectReference Include="..\zzre.sourcegen\zzre.sourcegen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="game\components\battle\" />
-  </ItemGroup>
-
 </Project>

@@ -28,7 +28,7 @@ internal sealed partial class TestDuelConfig
         AddWizform(enemyInventory, 3, Other4, Other4Level, Other4Attack1, Other4Attack2, Other4Support1, Other4Support2);
         AddWizform(enemyInventory, 4, Other5, Other5Level, Other5Attack1, Other5Attack2, Other5Support1, Other5Support2);
         var enemyEntity = ecsOverworld.CreateEntity();
-        enemyEntity.Set(enemyEntity);
+        enemyEntity.Set(enemyInventory);
 
         var savegame = new Savegame();
         playerInventory.Save(savegame);

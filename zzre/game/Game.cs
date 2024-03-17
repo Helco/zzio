@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using DefaultEcs.System;
 using Serilog;
 using Veldrid;
@@ -30,8 +29,7 @@ public abstract class Game : BaseDisposable, ITagContainer
     private AssetRegistryStats assetStatsBeforeLoading;
     private float timeBeforeLoading;
 
-    public DefaultEcs.Entity PlayerEntity => // Placeholder during transition
-        ecsWorld.GetEntities().With<components.PlayerPuppet>().AsEnumerable().First();
+    public DefaultEcs.Entity PlayerEntity => ecsWorld.Get<components.PlayerEntity>().Entity;
     public IResource SceneResource { get; private set; } = null!;
 
     public bool IsUpdateEnabled

@@ -1,4 +1,7 @@
-﻿using Veldrid;
+﻿using System.Numerics;
+using Veldrid;
+using zzio;
+using zzio.db;
 
 namespace zzre.game;
 
@@ -86,6 +89,70 @@ public sealed class DuelGame : Game
 
         flyCamera.IsEnabled = true;
         LoadScene($"sd_{message.SceneId:D4}");
-        camera.Location.LocalPosition = -ecsWorld.Get<zzre.rendering.WorldMesh>().Origin;
+        camera.Location.LocalPosition = -ecsWorld.Get<rendering.WorldMesh>().Origin;
+
+        var playerEntity = CreateParticipant(message.OverworldPlayer);
+        foreach (var enemy in message.OverworldEnemies)
+            CreateParticipant(enemy);
+
+        playerEntity.Set<components.SoundListener>();
+        ecsWorld.Set(new components.PlayerEntity(playerEntity));
+    }
+
+    private DefaultEcs.Entity CreateParticipant(DefaultEcs.Entity overworldEntity)
+    {
+        var inventory = overworldEntity.Get<Inventory>();
+        var duelEntity = ecsWorld.CreateEntity();
+        duelEntity.Set(new components.DuelParticipant(overworldEntity));
+        duelEntity.Set(new Location());
+        duelEntity.Set(inventory);
+
+        DefaultEcs.Entity firstFairy = default;
+        for (int i = 0; i < Inventory.FairySlotCount; i++)
+        {
+            var invFairy = inventory.GetFairyAtSlot(i);
+            if (invFairy is null || invFairy.currentMHP == 0)
+                continue;
+            var fairy = CreateFairyFor(duelEntity, invFairy);
+            if (firstFairy == default)
+                firstFairy = fairy;
+        }
+        if (firstFairy == default)
+            throw new System.ArgumentException("Participant does not have any alive fairies");
+
+        return duelEntity;
+    }
+
+    private DefaultEcs.Entity CreateFairyFor(DefaultEcs.Entity participant, InventoryFairy invFairy)
+    {
+        var db = GetTag<MappedDB>();
+        var dbRow = db.GetFairy(invFairy.dbUID);
+        var fairy = ecsWorld.CreateEntity();
+        fairy.Disable();
+        fairy.Set(new components.Parent(participant));
+        fairy.Set(new Location());
+        fairy.Set(invFairy);
+        fairy.Set(dbRow);
+        fairy.Set(components.FindActorFloorCollisions.Default);
+        fairy.Set(components.ActorLighting.Default);
+        fairy.Set<components.Velocity>();
+        fairy.Set(new components.FairyAnimation()
+        {
+            TargetDirection = Vector3.UnitX, // does not usually affect overworld fairies
+            Current = AnimationType.PixieFlounder // something not used by fairies
+        });
+        ecsWorld.Publish(new messages.LoadActor(
+            AsEntity: fairy,
+            ActorName: dbRow.Mesh,
+            AssetLoadPriority.Synchronous));
+
+        var actorParts = fairy.Get<components.ActorParts>();
+        actorParts.Body.Get<Location>().Parent = fairy.Get<Location>();
+        if (actorParts.Wings!.Value.TryGet<Skeleton>(out var wingsSkeleton))
+            wingsSkeleton.JumpToAnimation(actorParts.Wings.Value.Get<components.AnimationPool>()[AnimationType.Idle0]);
+        actorParts.Body.Set(components.Visibility.Invisible);
+        actorParts.Wings?.Set(components.Visibility.Invisible);
+
+        return fairy;
     }
 }

@@ -3,7 +3,7 @@
 public readonly record struct StartDuel(
     zzio.Savegame Savegame,
     DefaultEcs.Entity OverworldPlayer,
-    DefaultEcs.Entity[] OverworldEntities,
+    DefaultEcs.Entity[] OverworldEnemies,
     int SceneId,
     bool CanFlee)
 {
