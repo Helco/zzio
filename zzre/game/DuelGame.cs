@@ -59,7 +59,7 @@ public sealed class DuelGame : Game
 
             // Fairies
             new systems.FairyAnimation(this),
-            new systems.FairyGlowEffect(this),
+            new systems.FairyActivation(this),
 
             new systems.AmbientSounds(this),
 
@@ -99,6 +99,8 @@ public sealed class DuelGame : Game
 
         playerEntity.Set<components.SoundListener>();
         ecsWorld.Set(new components.PlayerEntity(playerEntity));
+
+        ecsWorld.Publish(new messages.SwitchFairy(playerEntity));
     }
 
     private DefaultEcs.Entity CreateParticipant(DefaultEcs.Entity overworldEntity)
@@ -109,18 +111,15 @@ public sealed class DuelGame : Game
         duelEntity.Set(new Location());
         duelEntity.Set(inventory);
 
-        DefaultEcs.Entity firstFairy = default;
+        ref var participant = ref duelEntity.Get<components.DuelParticipant>();
         for (int i = 0; i < Inventory.FairySlotCount; i++)
         {
             var invFairy = inventory.GetFairyAtSlot(i);
             if (invFairy is null || invFairy.currentMHP == 0)
                 continue;
             var fairy = CreateFairyFor(duelEntity, invFairy);
-            if (firstFairy == default)
-                firstFairy = fairy;
+            participant.Fairies[i] = fairy;
         }
-        if (firstFairy == default)
-            throw new System.ArgumentException("Participant does not have any alive fairies");
 
         return duelEntity;
     }
@@ -130,7 +129,6 @@ public sealed class DuelGame : Game
         var db = GetTag<MappedDB>();
         var dbRow = db.GetFairy(invFairy.dbUID);
         var fairy = ecsWorld.CreateEntity();
-        fairy.Disable();
         fairy.Set(new components.Parent(participant));
         fairy.Set(new Location());
         fairy.Set(invFairy);
@@ -138,6 +136,7 @@ public sealed class DuelGame : Game
         fairy.Set(components.FindActorFloorCollisions.Default);
         fairy.Set(components.ActorLighting.Default);
         fairy.Set<components.Velocity>();
+        fairy.Set<components.PuppetActorMovement>();
         fairy.Set(new components.FairyAnimation()
         {
             TargetDirection = Vector3.UnitX, // does not usually affect overworld fairies
@@ -155,6 +154,7 @@ public sealed class DuelGame : Game
         actorParts.Body.Set(components.Visibility.Invisible);
         actorParts.Wings?.Set(components.Visibility.Invisible);
 
+        fairy.Disable();
         return fairy;
     }
 }

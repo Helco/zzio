@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using DefaultEcs.System;
 using Silk.NET.SDL;
 
@@ -12,6 +13,9 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
     private const KeyCode LeftKey = KeyCode.KA;
     private const KeyCode RightKey = KeyCode.KD;
     private const KeyCode JumpKey = KeyCode.KSpace;
+    private const MouseButton ShootButton = MouseButton.Left;
+    private const MouseButton SwitchSpellButton = MouseButton.Middle;
+
     private readonly IZanzarahContainer zzContainer;
     private readonly IDisposable lockMessageSubscription;
 
@@ -31,6 +35,8 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         zzContainer = diContainer.GetTag<IZanzarahContainer>();
         zzContainer.OnKeyDown += HandleKeyDown;
         zzContainer.OnKeyUp += HandleKeyUp;
+        zzContainer.OnMouseDown += HandleMouseDown;
+        zzContainer.OnMouseUp += HandleMouseUp;
     }
 
     public override void Dispose()
@@ -67,6 +73,11 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         component.GoesRight = nextControls.GoesRight;
         component.GoesLeft = nextControls.GoesLeft;
 
+        if (nextControls.Shoots)
+            component.FrameCountShooting++;
+        else
+            component.FrameCountShooting = 0;
+
         // Jump is weird, it is set by the physics system (both true and false) 
         // so we should override it with care
         if (jumpChanged)
@@ -76,11 +87,22 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         }
     }
 
+    private void HandleMouseDown(MouseButton button, Vector2 _) => HandleMouse(button, true);
+    private void HandleMouseUp(MouseButton button, Vector2 _) => HandleMouse(button, false);
+    private void HandleMouse(MouseButton button, bool isDown)
+    {
+        switch(button)
+        {
+            case ShootButton: nextControls.FrameCountShooting = isDown ? 1 : 0; break;
+            case SwitchSpellButton: nextControls.SwitchesSpells = isDown; break;
+        }
+    }
+
     private void HandleKeyDown(KeyCode obj) => HandleKey(obj, true);
     private void HandleKeyUp(KeyCode obj) => HandleKey(obj, false);
-    private void HandleKey(KeyCode KeyCode, bool isDown)
+    private void HandleKey(KeyCode code, bool isDown)
     {
-        switch (KeyCode)
+        switch (code)
         {
             case ForwardKey: nextControls.GoesForward = isDown; break;
             case BackwardKey: nextControls.GoesBackward = isDown; break;
