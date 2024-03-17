@@ -12,15 +12,7 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
     private const KeyCode LeftKey = KeyCode.KA;
     private const KeyCode RightKey = KeyCode.KD;
     private const KeyCode JumpKey = KeyCode.KSpace;
-    private const KeyCode MenuKey = KeyCode.KReturn;
-    // private const KeyCode PauseKey = KeyCode.F1;
-    private const KeyCode RuneMenuKey = KeyCode.KF2;
-    private const KeyCode BookMenuKey = KeyCode.KF3;
-    private const KeyCode MapMenuKey = KeyCode.KF4;
-    private const KeyCode DeckMenuKey = KeyCode.KF5;
-    // private const KeyCode EscapeKey = KeyCode.Escape;
     private readonly IZanzarahContainer zzContainer;
-    private readonly UI ui;
     private readonly IDisposable lockMessageSubscription;
 
     private bool stuckMovingForward;
@@ -36,7 +28,6 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         diContainer.AddTag(this);
         World.SetMaxCapacity<components.PlayerControls>(1);
         lockMessageSubscription = World.Subscribe<messages.LockPlayerControl>(HandleLockPlayerControl);
-        ui = diContainer.GetTag<UI>();
         zzContainer = diContainer.GetTag<IZanzarahContainer>();
         zzContainer.OnKeyDown += HandleKeyDown;
         zzContainer.OnKeyUp += HandleKeyUp;
@@ -97,18 +88,6 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
             case RightKey: nextControls.GoesRight = isDown; break;
 
             case JumpKey: HandleJump(isDown); break;
-        }
-
-        if (isDown && !IsLocked)
-        {
-            switch (KeyCode)
-            {
-                case MenuKey: ui.Publish<messages.ui.OpenDeck>(); break;
-                case RuneMenuKey: ui.Publish<messages.ui.OpenRuneMenu>(); break;
-                case BookMenuKey: ui.Publish<messages.ui.OpenBookMenu>(); break;
-                case MapMenuKey: ui.Publish<messages.ui.OpenMapMenu>(); break;
-                case DeckMenuKey: ui.Publish<messages.ui.OpenDeck>(); break;
-            }
         }
     }
 

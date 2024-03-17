@@ -22,6 +22,7 @@ public sealed class OverworldGame : Game
             new systems.Savegame(this),
             new systems.PlayerSpawner(this),
             new systems.PlayerControls(this),
+            new systems.OpenMenuKeys(this),
 
             // Cameras
             new systems.FlyCamera(this),

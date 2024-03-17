@@ -19,6 +19,8 @@ public sealed class DuelGame : Game
         this.updateSystems = updateSystems;
         systems.FlyCamera flyCamera;
         updateSystems.Add(
+            new systems.PlayerControls(this),
+
             // Cameras
             flyCamera = new systems.FlyCamera(this),
 
