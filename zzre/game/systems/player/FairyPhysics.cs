@@ -117,12 +117,12 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         var effectiveSpeed = effectiveVelocity.Length();
         location.LocalPosition = nextPos;
 
-        var acceleration = Vector3.UnitY * -Gravity;
+        var acceleration = Vector3.UnitY * -Gravity * 0;
         ApplyControls(ref acceleration, ref state, controls, location, invFairy.moveSpeed);
         ApplyCeiling(ref acceleration, nextPos);
         ApplyCreatures(ref acceleration, entity, nextPos);
         ApplyGeneralFriction(ref acceleration, effectiveVelocity);
-        ApplyFloorFriction(ref acceleration, elapsedTime, state, effectiveVelocity, dirCollisionToMe);
+        //ApplyFloorFriction(ref acceleration, elapsedTime, state, effectiveVelocity, dirCollisionToMe);
         velocityComp.Value += acceleration * elapsedTime;
     }
 
@@ -142,8 +142,6 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         float bestIntersectionDistSqr = float.PositiveInfinity;
         foreach (var curIntersection in worldCollider.Intersections(new Sphere(nextPos, colliderRadius)))
         {
-            if (Vector3.Dot(curIntersection.Normal, effectiveVelocity) < 0f)
-                continue;
             var curDistSqr = Vector3.DistanceSquared(nextPos, curIntersection.Point);
             if (curDistSqr < bestIntersectionDistSqr)
             {
@@ -153,7 +151,7 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         }
         if (intersection is null)
             return;
-        dirCollisionToMe = Vector3.Normalize(nextPos - intersection.Value.Point);
+        dirCollisionToMe = MathEx.SafeNormalize(nextPos - intersection.Value.Point);
         if (dirCollisionToMe.Y > MinFloorYDir)
             state.HitFloor = true;
 

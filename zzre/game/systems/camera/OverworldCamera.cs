@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace zzre.game.systems;
 
-public class OverworldCamera : BaseGameCamera
+public sealed class OverworldCamera : BaseGameCamera
 {
     private static readonly Vector2 SpeedFactor = new(15f, 0.1f);
     private static readonly Vector3 CameraDirectionFactor = new(1f, 0.2f, 1f);

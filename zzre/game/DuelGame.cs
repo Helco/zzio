@@ -18,12 +18,12 @@ public sealed class DuelGame : Game
 
         var updateSystems = new systems.RecordingSequentialSystem<float>(this);
         this.updateSystems = updateSystems;
-        systems.FlyCamera flyCamera;
         updateSystems.Add(
             new systems.PlayerControls(this),
 
             // Cameras
-            flyCamera = new systems.FlyCamera(this),
+            new systems.FlyCamera(this),
+            new systems.DuelCamera(this) { IsEnabled = true },
 
             // Models and actors
             new systems.ModelLoader(this),
@@ -90,7 +90,6 @@ public sealed class DuelGame : Game
             new systems.effect.EffectRenderer(this, components.RenderOrder.LateEffect),
             new systems.effect.EffectModelRenderer(this, components.RenderOrder.LateEffect));
 
-        flyCamera.IsEnabled = true;
         LoadScene($"sd_{message.SceneId:D4}");
         camera.Location.LocalPosition = -ecsWorld.Get<rendering.WorldMesh>().Origin;
 
@@ -99,6 +98,7 @@ public sealed class DuelGame : Game
             CreateParticipant(enemy);
 
         playerEntity.Set<components.SoundListener>();
+        playerEntity.Set<components.DuelCameraMode>();
         ecsWorld.Set(new components.PlayerEntity(playerEntity));
 
         ecsWorld.Publish(new messages.SwitchFairy(playerEntity));

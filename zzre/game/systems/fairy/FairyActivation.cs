@@ -66,10 +66,12 @@ public sealed partial class FairyActivation : ISystem<float>
 
     private void HandleEntityEnabled(in DefaultEcs.Entity entity)
     {
-        if (ecsWorld.Get<components.PlayerEntity>().Entity == entity.Get<components.Parent>().Entity)
+        var playerEntity = ecsWorld.Get<components.PlayerEntity>().Entity;
+        if (playerEntity == entity.Get<components.Parent>().Entity)
         {
             entity.Set(components.FairyPhysics.Default);
             entity.Set<components.PlayerControls>();
+            playerEntity.Get<Location>().Parent = entity.Get<Location>();
         }
 
         var actorParts = entity.Get<components.ActorParts>();
