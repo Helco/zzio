@@ -134,9 +134,12 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         ApplyCreatures(ref acceleration, entity, nextPos); Validate();
         ApplyGeneralFriction(ref acceleration, effectiveVelocity); Validate();
         ApplyFloorFriction(ref acceleration, elapsedTime, state, effectiveVelocity, dirCollisionToMe); Validate();
-        velocityComp.Value += acceleration * elapsedTime;
+        velocityComp.Value = effectiveVelocity + acceleration * elapsedTime;
         ApplyJumps(ref velocityComp, ref controls);
         ApplySpeedLimit(ref velocityComp, in state, invFairy.moveSpeed); Validate();
+
+        location.LookIn(location.InnerForward with { Y = 0f });
+        Debug.Assert(Math.Abs(location.InnerRight.Y) < 0.0001f);
 
         void Validate() =>
             ValidateState(acceleration, nextPos, effectiveVelocity, dirCollisionToMe);
@@ -320,7 +323,10 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         var horSpeed = (velocity with { Y = 0f }).Length();
         var maxHorSpeed = Math.Abs(MaxSpeedFactor * moveSpeed);
         if (!MathEx.CmpZero(horSpeed) && horSpeed > maxHorSpeed)
-            velocity *= new Vector3(1f, 0f, 1f) * (maxHorSpeed / horSpeed);
+        {
+            velocity.X *= maxHorSpeed / horSpeed;
+            velocity.Z *= maxHorSpeed / horSpeed;
+        }
 
         velocityComp.Value = velocity;
     }
