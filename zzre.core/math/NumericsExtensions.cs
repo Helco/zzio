@@ -111,4 +111,13 @@ public static class NumericsExtensions
 
     public static T NextOf<T>(this Random random) where T : struct, Enum =>
         random.NextOf(Enum.GetValues<T>());
+
+    public static bool IsFinite(this Vector2 v) =>
+        float.IsFinite(v.X) && float.IsFinite(v.Y);
+
+    public static bool IsFinite(this Vector3 v) =>
+        float.IsFinite(v.X) && float.IsFinite(v.Y) && float.IsFinite(v.Z);
+
+    public static bool IsFinite(this Vector4 v) =>
+        float.IsFinite(v.X) && float.IsFinite(v.Y) && float.IsFinite(v.Z) && float.IsFinite(v.W);
 }

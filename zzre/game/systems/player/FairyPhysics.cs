@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
@@ -42,8 +43,16 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
     [Configuration(Description = "A floor sliding friction based on angle to collision",
         Key = "/zanzarah.net.TEST_M_FRICTION")]
     private float MFriction = 1f;
-    [Configuration(Description = "An additiona factor for the floor sliding friction")]
+    [Configuration(Description = "An additional factor for the floor sliding friction")]
     private float MFrictionFactor = 1.5f;
+    [Configuration(Description = "A deadzone for downward velocity when standing on floor")]
+    private float FloorDejitterBand = 0.15f;
+    [Configuration(Description = "Max horizontal speed relative to moveSpeed attribute")]
+    private float MaxSpeedFactor = 3f;
+    [Configuration(Description = "Max upwards speed to trigger jumps")]
+    private float MaxJumpVelocity = 5f;
+    [Configuration(Description = "Upwards speed upon triggering a jump")]
+    private float JumpVelocity = 2.5f;
 
     private readonly IDisposable configDisposable;
     private readonly IDisposable sceneLoadedSubscription;
@@ -102,6 +111,7 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         var startPos = location.LocalPosition;
         state.HitFloor = state.HitCeiling = state.IsRunning = false;
         Vector3 dirCollisionToMe = Vector3.Zero;
+        Vector3 acceleration = Vector3.Zero;
 
         int stepCount = (int)(1 + startSpeed / colliderSphere.RadiusSq);
         stepCount = Math.Min(stepCount, MaxMicroSteps);
@@ -112,18 +122,37 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         {
             if (Vector3.DistanceSquared(nextPos, startPos) > maxMoveDistanceSqr)
                 break;
-            MicroStep(ref state, ref nextPos, ref effectiveVelocity, startPos, elapsedStepTime, colliderSphere.Radius, out dirCollisionToMe);
+            MicroStep(ref state, ref nextPos, ref effectiveVelocity, startPos, elapsedStepTime, colliderSphere.Radius, ref dirCollisionToMe);
+            Validate();
         }
         var effectiveSpeed = effectiveVelocity.Length();
         location.LocalPosition = nextPos;
 
-        var acceleration = Vector3.UnitY * -Gravity * 0;
-        ApplyControls(ref acceleration, ref state, controls, location, invFairy.moveSpeed);
-        ApplyCeiling(ref acceleration, nextPos);
-        ApplyCreatures(ref acceleration, entity, nextPos);
-        ApplyGeneralFriction(ref acceleration, effectiveVelocity);
-        //ApplyFloorFriction(ref acceleration, elapsedTime, state, effectiveVelocity, dirCollisionToMe);
+        acceleration += Vector3.UnitY * -Gravity;
+        ApplyControls(ref acceleration, ref state, controls, location, invFairy.moveSpeed); Validate();
+        ApplyCeiling(ref acceleration, nextPos); Validate();
+        ApplyCreatures(ref acceleration, entity, nextPos); Validate();
+        ApplyGeneralFriction(ref acceleration, effectiveVelocity); Validate();
+        ApplyFloorFriction(ref acceleration, elapsedTime, state, effectiveVelocity, dirCollisionToMe); Validate();
         velocityComp.Value += acceleration * elapsedTime;
+        ApplyJumps(ref velocityComp, ref controls);
+        ApplySpeedLimit(ref velocityComp, in state, invFairy.moveSpeed); Validate();
+
+        void Validate() =>
+            ValidateState(acceleration, nextPos, effectiveVelocity, dirCollisionToMe);
+    }
+
+    [Conditional("DEBUG")]
+    private void ValidateState(
+        in Vector3 acceleration,
+        in Vector3 nextPos,
+        in Vector3 effectiveVelocity,
+        in Vector3 dirCollisionToMe)
+    {
+        Debug.Assert(acceleration.IsFinite());
+        Debug.Assert(nextPos.IsFinite());
+        Debug.Assert(effectiveVelocity.IsFinite());
+        Debug.Assert(dirCollisionToMe.IsFinite());
     }
 
     private void MicroStep(
@@ -133,9 +162,9 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         Vector3 startPos,
         float elapsedStepTime,
         float colliderRadius,
-        out Vector3 dirCollisionToMe)
+        ref Vector3 dirCollisionToMe)
     {
-        dirCollisionToMe = Vector3.Zero;
+        var prevPos = nextPos;
         nextPos += effectiveVelocity * elapsedStepTime;
 
         Intersection? intersection = null;
@@ -160,6 +189,7 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
             effectiveVelocity += dirCollisionToMe * MinCollisionBounce;
         else
             effectiveVelocity -= dirCollisionToMe * Math.Sign(angleCollVel) * CollisionBounceFactor;
+        nextPos = prevPos;
     }
 
     private void ApplyControls(
@@ -170,14 +200,14 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         float moveSpeed)
     {
         if (controls.GoesForward)
-            acceleration += location.InnerForward * moveSpeed * SpeedForward;
+            acceleration += location.InnerForward * moveSpeed * moveSpeed * SpeedForward;
         else if (controls.GoesBackward)
-            acceleration += location.InnerForward * moveSpeed * SpeedBackward;
+            acceleration += location.InnerForward * moveSpeed * moveSpeed * SpeedBackward;
 
         if (controls.GoesRight)
-            acceleration -= location.InnerRight * moveSpeed * SpeedSideways;
+            acceleration -= location.InnerRight * moveSpeed * moveSpeed * SpeedSideways;
         else if (controls.GoesLeft)
-            acceleration += location.InnerRight * moveSpeed * SpeedSideways;
+            acceleration += location.InnerRight * moveSpeed * moveSpeed * SpeedSideways;
 
         state.IsRunning = controls.GoesAnywhere;
     }
@@ -227,8 +257,12 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
     {
         if (!state.HitFloor)
             return;
+        if (MathEx.CmpZero(dirCollisionToMe.LengthSquared()))
+            throw new InvalidOperationException("This should not have happened");
         var accInCollision = MathEx.Project(acceleration, dirCollisionToMe);
-        var velInCollision = MathEx.Project(effectiveVelocity, dirCollisionToMe);
+        var velInCollision = -MathEx.Project(effectiveVelocity, dirCollisionToMe);
+        Debug.Assert(accInCollision.IsFinite());
+        Debug.Assert(velInCollision.IsFinite());
 
         if (MathEx.CmpZero(effectiveVelocity.LengthSquared()))
         {
@@ -238,11 +272,12 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
             return;
         }
 
-        float friction = Vector3.Dot(dirCollisionToMe, acceleration) * MFriction * MFrictionFactor;
+        float friction = state.IsRunning ? 0f
+            : Vector3.Dot(dirCollisionToMe, acceleration) * MFriction * MFrictionFactor;
         var frictionSpeedSqr = friction * friction * elapsedTime * elapsedTime;
         var frictionDir = -MathEx.SafeNormalize(velInCollision);
-        if (state.IsRunning)
-            friction = 0f;
+        Debug.Assert(frictionDir.IsFinite());
+        Debug.Assert(float.IsFinite(frictionSpeedSqr));
 
         if (velInCollision.LengthSquared() >= frictionSpeedSqr) // is this FPS-dependent due to pow?
         {
@@ -257,6 +292,36 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
             // it also seems like it could be reduced quite a bit
             var frictionDivider = friction * elapsedTime;
             acceleration += frictionDir * friction * velInCollision.Length() / frictionDivider;
+            Debug.Assert(acceleration.IsFinite());
         }
+    }
+
+    private void ApplyJumps(
+        ref components.Velocity velocityComp,
+        ref components.PlayerControls controls)
+    {
+        if (!isInterior && controls.Jumps &&
+            velocityComp.Value.Y < MaxJumpVelocity)
+        {
+            velocityComp.Value += Vector3.UnitY * JumpVelocity;
+            controls.Jumps = false; // TODO: CHECK THIS, this is not original
+        }
+    }
+
+    private void ApplySpeedLimit(
+        ref components.Velocity velocityComp,
+        in components.FairyPhysics state,
+        float moveSpeed)
+    {
+        var velocity = velocityComp.Value;
+        if (state.HitFloor && velocity.Y > -FloorDejitterBand && velocity.Y < 0f)
+            velocity.Y = -FloorDejitterBand;
+        
+        var horSpeed = (velocity with { Y = 0f }).Length();
+        var maxHorSpeed = Math.Abs(MaxSpeedFactor * moveSpeed);
+        if (!MathEx.CmpZero(horSpeed) && horSpeed > maxHorSpeed)
+            velocity *= new Vector3(1f, 0f, 1f) * (maxHorSpeed / horSpeed);
+
+        velocityComp.Value = velocity;
     }
 }

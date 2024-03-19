@@ -48,7 +48,6 @@ public sealed partial class DuelCamera : BaseGameCamera
         Key = "/zanzarah.net.TEST_BOB_UP")]
     private float BobHeight = 0.05f;
 
-
     private readonly IDisposable configBinding;
     private bool isFirstFrame;
     private Vector3 oldCamPos;
