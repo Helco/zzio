@@ -174,6 +174,8 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         float bestIntersectionDistSqr = float.PositiveInfinity;
         foreach (var curIntersection in worldCollider.Intersections(new Sphere(nextPos, colliderRadius)))
         {
+            if (Vector3.Dot(curIntersection.Normal, effectiveVelocity) >= 0f)
+                continue;
             var curDistSqr = Vector3.DistanceSquared(nextPos, curIntersection.Point);
             if (curDistSqr < bestIntersectionDistSqr)
             {
@@ -183,6 +185,7 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         }
         if (intersection is null)
             return;
+        state.HitCeiling = true;
         dirCollisionToMe = MathEx.SafeNormalize(nextPos - intersection.Value.Point);
         if (dirCollisionToMe.Y > MinFloorYDir)
             state.HitFloor = true;
@@ -191,7 +194,7 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         if (MathEx.CmpZero(angleCollVel))
             effectiveVelocity += dirCollisionToMe * MinCollisionBounce;
         else
-            effectiveVelocity -= dirCollisionToMe * Math.Sign(angleCollVel) * CollisionBounceFactor;
+            effectiveVelocity += dirCollisionToMe * Math.Abs(angleCollVel) * CollisionBounceFactor;
         nextPos = prevPos;
     }
 
@@ -276,7 +279,7 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         }
 
         float friction = state.IsRunning ? 0f
-            : Vector3.Dot(dirCollisionToMe, acceleration) * MFriction * MFrictionFactor;
+            : Vector3.Dot(dirCollisionToMe, acceleration) * MFriction * MFrictionFactor * -1;
         var frictionSpeedSqr = friction * friction * elapsedTime * elapsedTime;
         var frictionDir = -MathEx.SafeNormalize(velInCollision);
         Debug.Assert(frictionDir.IsFinite());
