@@ -159,6 +159,7 @@ public sealed partial class DuelCamera : BaseGameCamera
             if (totalCamTravel > TotalBobTravel)
                 totalCamTravel -= TotalBobTravel;
         }
+        oldCamPos = camera.Location.GlobalPosition;
         return MathF.Sin(totalCamTravel * BobCycle);
     }
 }
