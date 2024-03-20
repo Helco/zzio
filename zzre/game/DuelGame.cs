@@ -59,6 +59,8 @@ public sealed class DuelGame : Game
             new systems.FairyPhysics(this),
             new systems.FairyAnimation(this),
             new systems.FairyActivation(this),
+            new systems.FairyVisibilityByDistance(this),
+            new systems.FairyVisibilityByCamera(this),
 
             new systems.TriggerActivation(this),
             new systems.SceneSamples(this),
@@ -93,18 +95,18 @@ public sealed class DuelGame : Game
         LoadScene($"sd_{message.SceneId:D4}");
         camera.Location.LocalPosition = -ecsWorld.Get<rendering.WorldMesh>().Origin;
 
-        var playerEntity = CreateParticipant(message.OverworldPlayer);
+        var playerEntity = CreateParticipant(message.OverworldPlayer, isPlayer: true);
         foreach (var enemy in message.OverworldEnemies)
-            CreateParticipant(enemy);
+            CreateParticipant(enemy, isPlayer: false);
 
         playerEntity.Set<components.SoundListener>();
-        playerEntity.Set<components.DuelCameraMode>();
+        playerEntity.Set(components.DuelCameraMode.ZoomIn);
         ecsWorld.Set(new components.PlayerEntity(playerEntity));
 
         ecsWorld.Publish(new messages.SwitchFairy(playerEntity));
     }
 
-    private DefaultEcs.Entity CreateParticipant(DefaultEcs.Entity overworldEntity)
+    private DefaultEcs.Entity CreateParticipant(DefaultEcs.Entity overworldEntity, bool isPlayer)
     {
         var inventory = overworldEntity.Get<Inventory>();
         var duelEntity = ecsWorld.CreateEntity();
@@ -119,6 +121,8 @@ public sealed class DuelGame : Game
             if (invFairy is null || invFairy.currentMHP == 0)
                 continue;
             var fairy = CreateFairyFor(duelEntity, invFairy);
+            if (!isPlayer)
+                fairy.Set<components.FairyDistanceVisibility>();
             participant.Fairies[i] = fairy;
         }
 

@@ -125,7 +125,6 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
             MicroStep(ref state, ref nextPos, ref effectiveVelocity, startPos, elapsedStepTime, colliderSphere.Radius, ref dirCollisionToMe);
             Validate();
         }
-        var effectiveSpeed = effectiveVelocity.Length();
         location.LocalPosition = nextPos;
 
         acceleration += Vector3.UnitY * -Gravity;

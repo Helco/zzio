@@ -52,9 +52,10 @@ public sealed partial class DuelCamera : BaseGameCamera
     private bool isFirstFrame;
     private Vector3 oldCamPos;
     private float currentVerAngle;
-    private float curCamDistance;
     private float targetCamDistance;
     private float totalCamTravel;
+
+    public float CurCamDistance { get; private set; }
 
     public DuelCamera(ITagContainer diContainer) : base(diContainer)
     {
@@ -107,7 +108,7 @@ public sealed partial class DuelCamera : BaseGameCamera
         targetDir.Y += verAngleSin; // I gave up understanding Funatics
         targetDir = Vector3.Normalize(targetDir);
 
-        curCamDistance = targetCamDistance;
+        CurCamDistance = targetCamDistance;
         switch(cameraMode)
         {
             case components.DuelCameraMode.ZoomIn:
@@ -118,18 +119,18 @@ public sealed partial class DuelCamera : BaseGameCamera
                 break;
         }
 
-        if (curCamDistance > MinIntersectionTestDistance)
+        if (CurCamDistance > MinIntersectionTestDistance)
         {
-            targetPos -= targetDir * curCamDistance;
+            targetPos -= targetDir * CurCamDistance;
             var leftClipDistance = GetClipDistance(zeroDistCameraPos, targetPos, -1f);
             var rightClipDistance = GetClipDistance(zeroDistCameraPos, targetPos, +1f);
             if (leftClipDistance > rightClipDistance)
-                curCamDistance = rightClipDistance * IntersectionCameraPos;
+                CurCamDistance = rightClipDistance * IntersectionCameraPos;
             if (rightClipDistance > leftClipDistance)
-                curCamDistance = leftClipDistance * IntersectionCameraPos;
+                CurCamDistance = leftClipDistance * IntersectionCameraPos;
         }
 
-        targetPos = zeroDistCameraPos - targetDir * curCamDistance;
+        targetPos = zeroDistCameraPos - targetDir * CurCamDistance;
         return (targetPos, targetDir);
     }
 
@@ -146,7 +147,6 @@ public sealed partial class DuelCamera : BaseGameCamera
         if (isFirstFrame)
         {
             isFirstFrame = false;
-            oldCamPos = camera.Location.GlobalPosition;
             totalCamTravel = 0f;
         }
         else
