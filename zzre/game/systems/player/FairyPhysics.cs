@@ -146,7 +146,7 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
     }
 
     [Conditional("DEBUG")]
-    private void ValidateState(
+    private static void ValidateState(
         in Vector3 acceleration,
         in Vector3 nextPos,
         in Vector3 effectiveVelocity,
@@ -266,9 +266,7 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         if (MathEx.CmpZero(dirCollisionToMe.LengthSquared()))
             throw new InvalidOperationException("This should not have happened");
         var accInCollision = MathEx.Project(acceleration, dirCollisionToMe);
-        var velInCollision = -MathEx.Project(effectiveVelocity, dirCollisionToMe);
         Debug.Assert(accInCollision.IsFinite());
-        Debug.Assert(velInCollision.IsFinite());
 
         if (MathEx.CmpZero(effectiveVelocity.LengthSquared()))
         {
@@ -277,6 +275,9 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
                 acceleration = Vector3.Zero;
             return;
         }
+
+        var velInCollision = effectiveVelocity - MathEx.Project(effectiveVelocity, dirCollisionToMe);
+        Debug.Assert(velInCollision.IsFinite());
 
         float friction = state.IsRunning ? 0f
             : Vector3.Dot(dirCollisionToMe, acceleration) * MFriction * MFrictionFactor * -1;
