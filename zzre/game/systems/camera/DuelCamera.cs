@@ -144,6 +144,7 @@ public sealed partial class DuelCamera : BaseGameCamera
 
     private float UpdateBobbing(float elapsedTime)
     {
+        var newCamPos = camera.Location.GlobalPosition with { Y = 0f };
         if (isFirstFrame)
         {
             isFirstFrame = false;
@@ -151,15 +152,15 @@ public sealed partial class DuelCamera : BaseGameCamera
         }
         else
         {
-            var lastTravel = (oldCamPos - camera.Location.GlobalPosition).Length();
-            var lastSpeed = lastTravel / elapsedTime;
+            var lastTravel = (oldCamPos - newCamPos).Length();
+            var lastSpeed = lastTravel * elapsedTime / 60; // this adds (unoriginal) framerate-independence
             if (lastSpeed < MinimumCameraBobSpeed)
-                lastTravel = SimulatedBobSpeed * elapsedTime;
-            totalCamTravel += lastTravel * BobDistanceFactor;
+                lastSpeed = SimulatedBobSpeed * elapsedTime;
+            totalCamTravel += MathF.Floor(lastSpeed * BobDistanceFactor);
             if (totalCamTravel > TotalBobTravel)
                 totalCamTravel -= TotalBobTravel;
         }
-        oldCamPos = camera.Location.GlobalPosition;
+        oldCamPos = newCamPos;
         return MathF.Sin(totalCamTravel * BobCycle);
     }
 }
