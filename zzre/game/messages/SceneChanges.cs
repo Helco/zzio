@@ -1,6 +1,7 @@
 ﻿namespace zzre.game.messages;
 
 using System.Collections.Generic;
+using System.Linq;
 using zzio;
 using zzio.scn;
 
@@ -26,10 +27,13 @@ public record struct SceneChanging(string NextScene);
 /// <param name="Savegame">The current savegame</param>
 public readonly record struct SceneLoaded(Scene Scene, Savegame Savegame)
 {
-    public IEnumerable<IGameStateMod> GetGameState() =>
-        Savegame.GetGameStateFor(Scene.dataset.sceneId);
-    public IEnumerable<TMod> GetGameState<TMod>() where TMod : IGameStateMod =>
-        Savegame.GetGameStateFor<TMod>(Scene.dataset.sceneId);
+    public IEnumerable<IGameStateMod> GetGameState() => Scene.dataset.sceneType == SceneType.Overworld
+        ? Savegame.GetGameStateFor(Scene.dataset.sceneId)
+        : Enumerable.Empty<IGameStateMod>();
+
+    public IEnumerable<TMod> GetGameState<TMod>() where TMod : IGameStateMod => Scene.dataset.sceneType == SceneType.Overworld
+        ? Savegame.GetGameStateFor<TMod>(Scene.dataset.sceneId)
+        : Enumerable.Empty<TMod>();
 }
 
 /// <summary>

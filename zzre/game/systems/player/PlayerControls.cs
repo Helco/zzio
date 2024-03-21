@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using DefaultEcs.System;
 using Silk.NET.SDL;
 
@@ -6,22 +7,18 @@ namespace zzre.game.systems;
 
 public class PlayerControls : AComponentSystem<float, components.PlayerControls>
 {
-    private const float JumpLockDuration = 0.8f;
+    private const float OverworldJumpLockDuration = 0.8f;
     private const KeyCode ForwardKey = KeyCode.KW;
     private const KeyCode BackwardKey = KeyCode.KS;
     private const KeyCode LeftKey = KeyCode.KA;
     private const KeyCode RightKey = KeyCode.KD;
     private const KeyCode JumpKey = KeyCode.KSpace;
-    private const KeyCode MenuKey = KeyCode.KReturn;
-    // private const KeyCode PauseKey = KeyCode.F1;
-    private const KeyCode RuneMenuKey = KeyCode.KF2;
-    private const KeyCode BookMenuKey = KeyCode.KF3;
-    private const KeyCode MapMenuKey = KeyCode.KF4;
-    private const KeyCode DeckMenuKey = KeyCode.KF5;
-    // private const KeyCode EscapeKey = KeyCode.Escape;
+    private const MouseButton ShootButton = MouseButton.Left;
+    private const MouseButton SwitchSpellButton = MouseButton.Middle;
+
     private readonly IZanzarahContainer zzContainer;
-    private readonly UI ui;
     private readonly IDisposable lockMessageSubscription;
+    private float jumpLockDuration;
 
     private bool stuckMovingForward;
     private float lockTimer;
@@ -36,10 +33,14 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         diContainer.AddTag(this);
         World.SetMaxCapacity<components.PlayerControls>(1);
         lockMessageSubscription = World.Subscribe<messages.LockPlayerControl>(HandleLockPlayerControl);
-        ui = diContainer.GetTag<UI>();
         zzContainer = diContainer.GetTag<IZanzarahContainer>();
         zzContainer.OnKeyDown += HandleKeyDown;
         zzContainer.OnKeyUp += HandleKeyUp;
+        zzContainer.OnMouseDown += HandleMouseDown;
+        zzContainer.OnMouseUp += HandleMouseUp;
+
+        if (diContainer.GetTag<Game>() is OverworldGame)
+            jumpLockDuration = OverworldJumpLockDuration;
     }
 
     public override void Dispose()
@@ -76,20 +77,48 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         component.GoesRight = nextControls.GoesRight;
         component.GoesLeft = nextControls.GoesLeft;
 
+        if (nextControls.Shoots)
+            component.FrameCountShooting++;
+        else
+            component.FrameCountShooting = 0;
+
         // Jump is weird, it is set by the physics system (both true and false) 
         // so we should override it with care
-        if (jumpChanged)
+        if (jumpLockDuration > 0f)
         {
+            if (jumpChanged)
+            {
+                component.Jumps = nextControls.Jumps;
+                jumpChanged = false;
+            }
+        }
+        else
+        {
+            // however only in Overworld. In Duels the jumps and spell switches
+            // are only active for a single frame
             component.Jumps = nextControls.Jumps;
-            jumpChanged = false;
+            component.SwitchesSpells = nextControls.SwitchesSpells;
+            nextControls.Jumps = false;
+            nextControls.SwitchesSpells = false;
+        }
+    }
+
+    private void HandleMouseDown(MouseButton button, Vector2 _) => HandleMouse(button, true);
+    private void HandleMouseUp(MouseButton button, Vector2 _) => HandleMouse(button, false);
+    private void HandleMouse(MouseButton button, bool isDown)
+    {
+        switch(button)
+        {
+            case ShootButton: nextControls.FrameCountShooting = isDown ? 1 : 0; break;
+            case SwitchSpellButton: nextControls.SwitchesSpells = isDown; break;
         }
     }
 
     private void HandleKeyDown(KeyCode obj) => HandleKey(obj, true);
     private void HandleKeyUp(KeyCode obj) => HandleKey(obj, false);
-    private void HandleKey(KeyCode KeyCode, bool isDown)
+    private void HandleKey(KeyCode code, bool isDown)
     {
-        switch (KeyCode)
+        switch (code)
         {
             case ForwardKey: nextControls.GoesForward = isDown; break;
             case BackwardKey: nextControls.GoesBackward = isDown; break;
@@ -97,18 +126,6 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
             case RightKey: nextControls.GoesRight = isDown; break;
 
             case JumpKey: HandleJump(isDown); break;
-        }
-
-        if (isDown && !IsLocked)
-        {
-            switch (KeyCode)
-            {
-                case MenuKey: ui.Publish<messages.ui.OpenDeck>(); break;
-                case RuneMenuKey: ui.Publish<messages.ui.OpenRuneMenu>(); break;
-                case BookMenuKey: ui.Publish<messages.ui.OpenBookMenu>(); break;
-                case MapMenuKey: ui.Publish<messages.ui.OpenMapMenu>(); break;
-                case DeckMenuKey: ui.Publish<messages.ui.OpenDeck>(); break;
-            }
         }
     }
 
@@ -123,7 +140,7 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         }
         else if (jumpLockTimer <= 0f)
         {
-            jumpLockTimer = JumpLockDuration;
+            jumpLockTimer = jumpLockDuration;
             nextControls.Jumps = true;
             jumpChanged = true;
         }

@@ -76,7 +76,7 @@ public partial class OverworldFairySpawner : AEntitySetSystem<float>
         fairy.Set<components.Velocity>();
         fairy.Set(new components.FairyAnimation()
         {
-            TargetDirection = Vector3.UnitX, // does not usually affects overworld fairies
+            TargetDirection = Vector3.UnitX, // does not usually affect overworld fairies
             Current = zzio.AnimationType.PixieFlounder // something not used by fairies
         });
         World.Publish(new messages.LoadActor(

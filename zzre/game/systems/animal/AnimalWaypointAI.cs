@@ -18,15 +18,16 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
     private const float MinPlayerAngle = 0.6f;
     private const float GroundDistance = 5f;
 
+    private Location PlayerLocation =>
+        World.Get<components.PlayerEntity>().Entity.Get<Location>();
+
     private readonly Random Random = Random.Shared;
-    private readonly Game game;
     private readonly IDisposable sceneLoadedSubscription;
     private readonly IDisposable addSubscription;
     private Trigger[] waypoints = [];
 
     public AnimalWaypointAI(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
-        game = diContainer.GetTag<Game>();
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         addSubscription = World.SubscribeEntityComponentAdded<components.AnimalWaypointAI>(HandleAddedComponent);
     }
@@ -58,7 +59,7 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
         Location location,
         ref components.AnimalWaypointAI ai)
     {
-        var playerLocation = game.PlayerEntity.Get<Location>();
+        var playerLocation = PlayerLocation;
         var playerDistanceSqr = Vector3.DistanceSquared(location.GlobalPosition, playerLocation.GlobalPosition);
         var moveDistance = elapsedTime * ai.CurrentSpeed;
         var nextAnimation = null as AnimationType?;
@@ -103,7 +104,7 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
                 break;
 
             case State.SearchTarget:
-                var nextWaypoint = FindNextWaypoint(location.GlobalPosition, ai.CurrentWaypoint);
+                var nextWaypoint = FindNextWaypoint(location.GlobalPosition, ai.CurrentWaypoint, playerLocation.GlobalPosition);
                 if (nextWaypoint == null)
                 {
                     ai.CurrentState = State.Idle;
@@ -181,10 +182,8 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
         }
     }
 
-    private Trigger? FindNextWaypoint(Vector3 animalPos, Trigger? currentWaypoint)
+    private Trigger? FindNextWaypoint(Vector3 animalPos, Trigger? currentWaypoint, Vector3 playerPos)
     {
-        var random = Random.Shared;
-        var playerPos = game.PlayerEntity.Get<Location>().GlobalPosition;
         var animalToPlayer = Vector3.Normalize(playerPos - animalPos);
 
         var potentialWaypoints = waypoints
@@ -201,7 +200,7 @@ public partial class AnimalWaypointAI : AEntitySetSystem<float>
             }).ToArray();
         if (potentialWaypoints.Length == 0)
             return null;
-        return random.NextOf(potentialWaypoints);
+        return Random.NextOf(potentialWaypoints);
     }
 
     private void PutOnGround(DefaultEcs.Entity entity, in components.AnimalWaypointAI ai)

@@ -116,7 +116,6 @@ internal sealed class ConfigExplorer
                     TableNextRow();
                     TableNextColumn();
                     if (!TreeNodeEx(tokenizer.Current.AsSpan(),
-                        ImGuiTreeNodeFlags.DefaultOpen |
                         ImGuiTreeNodeFlags.OpenOnArrow |
                         ImGuiTreeNodeFlags.OpenOnDoubleClick))
                         break;

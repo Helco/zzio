@@ -47,9 +47,10 @@ partial class ECSExplorer
     private static string GetEntityName(DefaultEcs.Entity entity)
     {
         entityNamers.SortIfNecessary();
-        return entityNamers
+        var name = entityNamers
             .Select(n => n.TryGetEntityName(entity))
             .FirstOrDefault(n => n != null)
             ?? entity.ToString();
+        return entity.IsEnabled() ? name : $"(Disabled) {name}##{name}";
     }
 }

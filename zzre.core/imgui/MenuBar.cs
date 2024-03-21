@@ -48,6 +48,14 @@ public class MenuBar
             onClick();
     });
 
+    public void AddButton(string path, Action onClick, Func<bool> isEnabled) => AddItem(path, name =>
+    {
+        BeginDisabled(!isEnabled());
+        if (MenuItem(name))
+            onClick();
+        EndDisabled();
+    });
+
     public delegate ref T GetRefValueFunc<T>();
 
     public void AddCheckbox(string path, GetRefValueFunc<bool> isChecked, Action? onChanged = null) => AddItem(path, name =>

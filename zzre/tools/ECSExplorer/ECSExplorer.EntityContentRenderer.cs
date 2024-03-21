@@ -88,48 +88,64 @@ internal partial class ECSExplorer
         else if (value is string tmpText)
         {
             NameColumn();
+            SetNextItemWidth(-1f);
             InputText("", ref tmpText, (uint)tmpText.Length);
+        }
+        else if (value is Guid tmpGuid)
+        {
+            NameColumn();
+            var tmpTmpText = tmpGuid.ToString();
+            SetNextItemWidth(-1f);
+            InputText("", ref tmpTmpText, 64);
         }
         else if (value is bool tmpBool)
         {
             NameColumn();
+            SetNextItemWidth(-1f);
             Checkbox("", ref tmpBool);
         }
         else if (value is float tmpFloat)
         {
             NameColumn();
+            SetNextItemWidth(-1f);
             InputFloat("", ref tmpFloat);
         }
         else if (value is int tmpInt)
         {
             NameColumn();
+            SetNextItemWidth(-1f);
             InputInt("", ref tmpInt);
         }
         else if (value is byte tmpByte)
         {
             NameColumn();
             int tmptmpInt = tmpByte;
+            SetNextItemWidth(-1f);
             InputInt("", ref tmptmpInt);
         }
         else if (value is Vector2 tmpVec2)
         {
             NameColumn();
+            SetNextItemWidth(-1f);
             InputFloat2("", ref tmpVec2);
         }
         else if (value is Vector3 tmpVec3)
         {
             NameColumn();
+            SetNextItemWidth(-1f);
             InputFloat3("", ref tmpVec3);
         }
         else if (value is Vector4 tmpVec4)
         {
             NameColumn();
+            SetNextItemWidth(-1f);
             InputFloat4("", ref tmpVec4);
         }
         else if (value is Enum tmpEnum)
         {
             var tmpIndex = 0;
             NameColumn();
+            SetNextItemWidth(-1f);
             Combo("", ref tmpIndex, tmpEnum.ToString());
         }
         else if (value.GetType().IsValueType)

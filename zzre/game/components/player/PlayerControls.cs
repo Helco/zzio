@@ -8,6 +8,9 @@ public struct PlayerControls
     public bool GoesRight;
     public bool Jumps;
     public bool WhirlJumps; // not actually set by input...
+    public bool SwitchesSpells;
+    public int FrameCountShooting;
 
-    public bool GoesAnywhere => GoesForward || GoesBackward || GoesRight || GoesLeft;
+    public readonly bool Shoots => FrameCountShooting > 0;
+    public readonly bool GoesAnywhere => GoesForward || GoesBackward || GoesRight || GoesLeft;
 }

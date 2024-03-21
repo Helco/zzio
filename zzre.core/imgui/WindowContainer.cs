@@ -115,7 +115,9 @@ public class WindowContainer : BaseDisposable, IReadOnlyCollection<BaseWindow>
 
     private bool HandleEvent(SdlWindow window, Event ev)
     {
-        if ((EventType)ev.Type is EventType.Keydown or EventType.Keyup && (KeyCode)ev.Key.Keysym.Sym is not KeyCode.KPrintscreen)
+        if ((EventType)ev.Type is EventType.Keydown or EventType.Keyup &&
+            (KeyCode)ev.Key.Keysym.Sym is not KeyCode.KPrintscreen &&
+            ev.Key.Repeat == 0)
         {
             FocusedWindow?.HandleKeyEvent((KeyCode)ev.Key.Keysym.Sym, (EventType)ev.Type is EventType.Keydown);
             return FocusedWindow != null;

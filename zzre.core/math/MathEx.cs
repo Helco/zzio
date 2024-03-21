@@ -33,7 +33,7 @@ public static class MathEx
     public static Vector3 Project(Vector3 length, Vector3 dir)
     {
         var dot = Vector3.Dot(length, dir);
-        return dir * (dot / dir.LengthSquared());
+        return dir * (dot / dir.Length());
     }
 
     public static Vector3 SafeNormalize(Vector3 v)

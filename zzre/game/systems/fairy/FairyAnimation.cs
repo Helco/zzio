@@ -57,7 +57,7 @@ public partial class FairyAnimation : AEntitySetSystem<float>
         var horVelocity = MathEx.SafeNormalize(velocity.Value with { Y = 0f });
         var horTargetDir = MathEx.SafeNormalize(animation.TargetDirection with { Y = 0f });
         var discrepancy = Vector3.DistanceSquared(horVelocity, horTargetDir);
-        var isMoreRight = Vector3.Cross(horTargetDir, horVelocity).Y <= 0f;
+        var isMoreRight = Vector3.Cross(horTargetDir, horVelocity).Y > 0f;
         float speedSqr = velocity.Value.LengthSquared();
 
         if (velocity.Value.Y == 0f)
@@ -65,9 +65,9 @@ public partial class FairyAnimation : AEntitySetSystem<float>
             if (speedSqr <= 0.1f)
                 return zzio.AnimationType.Idle0;
             else if (discrepancy < MaxForwardDiscrepancy)
-                return zzio.AnimationType.Run;
-            else if (discrepancy > MinBackwardDiscrepancy)
                 return zzio.AnimationType.Back;
+            else if (discrepancy > MinBackwardDiscrepancy)
+                return zzio.AnimationType.Run;
             else if (isMoreRight)
                 return zzio.AnimationType.Right;
             else
@@ -79,9 +79,9 @@ public partial class FairyAnimation : AEntitySetSystem<float>
                 (MathF.Abs(velocity.Value.X) < 0.1f && MathF.Abs(velocity.Value.Z) < 0.1f))
                 return zzio.AnimationType.SpecialIdle0;
             else if (discrepancy < MaxForwardDiscrepancy)
-                return zzio.AnimationType.FlyForward;
-            else if (discrepancy > MinBackwardDiscrepancy)
                 return zzio.AnimationType.FlyBack;
+            else if (discrepancy > MinBackwardDiscrepancy)
+                return zzio.AnimationType.FlyForward;
             else if (isMoreRight)
                 return zzio.AnimationType.Right;
             else

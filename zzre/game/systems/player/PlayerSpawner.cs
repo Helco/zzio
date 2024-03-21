@@ -60,7 +60,6 @@ public class PlayerSpawner : ISystem<float>
         playerEntity.Set(components.Visibility.Visible);
         playerEntity.Set<components.PlayerControls>();
         playerEntity.Set<components.PlayerPuppet>();
-        playerEntity.Set(components.PhysicParameters.Standard);
         playerEntity.Set(new components.NonFairyAnimation(Random.Shared));
         playerEntity.Set<components.PuppetActorMovement>();
         playerEntity.Set(components.FindActorFloorCollisions.Default);

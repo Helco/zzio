@@ -22,7 +22,7 @@ partial class ECSExplorer
         const int Def = 0;
         const int Low = -1000;
 
-        AddEntityNamerByComponent<PlayerControls>(Highest, "Player");
+        AddEntityNamerByComponent<PlayerPuppet>(Highest, "Player");
         AddEntityNamerByComponent(Highest, (in NpcRow npc) => $"NPC \"{npc.Name}\" {npc.InternalName}");
         AddEntityNamerByComponent<Butterfly>(Highest, entity => $"Butterfly {entity.Get<Trigger>().idx}");
         AddEntityNamerByComponent<CirclingBird>(Highest, entity => $"CirclingBird {entity.Get<Trigger>().idx}");
@@ -56,6 +56,7 @@ partial class ECSExplorer
         AddEntityNamerByComponent<InventoryFairy>(High + 1, e => $"OwnedFairy \"{e.Get<InventoryFairy>().name}\" {e}");
         AddEntityNamerByComponent<FairyRow>(High, e => $"Fairy \"{e.Get<FairyRow>().Name}\" {e}");
         AddEntityNamerByComponent<ActorPart>(High, e => $"ActorPart {e}");
+        AddEntityNamerByComponent<DuelParticipant>(High, e => e.World.Get<PlayerEntity>().Entity == e ? "Player" : $"DuelParticipant {e}");
 
         AddEntityNamerByComponent<ActorParts>(Def + 1,
             e => $"Actor {e.Get<AssetHandle>().Get<ActorAsset>().Name} {e}");
