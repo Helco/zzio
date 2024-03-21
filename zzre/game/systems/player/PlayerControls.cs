@@ -76,7 +76,6 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         component.GoesBackward = nextControls.GoesBackward;
         component.GoesRight = nextControls.GoesRight;
         component.GoesLeft = nextControls.GoesLeft;
-        component.SwitchesSpells = nextControls.SwitchesSpells;
 
         if (nextControls.Shoots)
             component.FrameCountShooting++;
@@ -85,10 +84,22 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
 
         // Jump is weird, it is set by the physics system (both true and false) 
         // so we should override it with care
-        if (jumpChanged)
+        if (jumpLockDuration > 0f)
         {
+            if (jumpChanged)
+            {
+                component.Jumps = nextControls.Jumps;
+                jumpChanged = false;
+            }
+        }
+        else
+        {
+            // however only in Overworld. In Duels the jumps and spell switches
+            // are only active for a single frame
             component.Jumps = nextControls.Jumps;
-            jumpChanged = false;
+            component.SwitchesSpells = nextControls.SwitchesSpells;
+            nextControls.Jumps = false;
+            nextControls.SwitchesSpells = false;
         }
     }
 

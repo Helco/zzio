@@ -310,7 +310,6 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
             velocityComp.Value.Y < MaxJumpVelocity)
         {
             velocityComp.Value += Vector3.UnitY * JumpVelocity;
-            controls.Jumps = false; // TODO: CHECK THIS, this is not original
         }
     }
 
