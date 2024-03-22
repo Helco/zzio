@@ -30,6 +30,12 @@ public sealed class OverworldGame : Game
             new systems.TriggerCamera(this),
             new systems.CreatureCamera(this),
 
+            // Player movement
+            new systems.HumanPhysics(this),
+            new systems.PlayerPuppet(this),
+            new systems.PuppetActorTarget(this),
+            new systems.PuppetActorMovement(this),
+
             // Models and actors
             new systems.ModelLoader(this),
             new systems.BackdropLoader(this),
@@ -67,12 +73,6 @@ public sealed class OverworldGame : Game
             new systems.CirclingBird(this),
             new systems.AnimalWaypointAI(this),
             new systems.CollectionFairy(this),
-
-            // Player movement
-            new systems.HumanPhysics(this),
-            new systems.PlayerPuppet(this),
-            new systems.PuppetActorTarget(this),
-            new systems.PuppetActorMovement(this),
 
             // NPC
             new systems.NPC(this),
