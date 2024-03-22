@@ -86,7 +86,7 @@ public partial class ScrGotCard : BaseScreen<components.ui.ScrGotCard, messages.
             .WithAnimation()
             .Build();
 
-        var game = ui.GetTag<Game>();
+        var game = ui.GetTag<Zanzarah>().CurrentGame!;
         game.Publish(new messages.SwitchAnimation(game.PlayerEntity, AnimationType.Joy));
 
         var sampleEntity = ui.World.CreateEntity(); // create own entity otherwise the finishing sound will close the screen
