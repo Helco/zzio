@@ -21,8 +21,10 @@ public partial class FairyGlowEffect : AEntitySetSystem<float>
         ref components.Visibility visibility,
         Location location)
     {
-        location.LocalPosition = parent.Entity.Get<Location>().GlobalPosition -
-            0.1f * camera.Location.GlobalForward;
+        if (!parent.Entity.TryGet(out Location parentLocation))
+            return;
+
+        location.LocalPosition = parentLocation.GlobalPosition - 0.1f * camera.Location.GlobalForward;
         if (parent.Entity.TryGet<components.ActorParts>(out var parts) &&
             parts.Body.TryGet<components.Visibility>(out var parentVisibility) &&
             parentVisibility != visibility)
