@@ -22,7 +22,12 @@ public partial class EffectCombiner : AEntitySetSystem<float>
     {
         logger = diContainer.GetLoggerFor<EffectCombiner>();
         assetRegistry = diContainer.GetTag<IAssetRegistry>();
-        gameConfig = diContainer.GetTag<GameConfigSection>();
+        gameConfig = new()
+        {
+            EffectQuality = GameConfig.EffectQuality.High,
+            ParticleQuality = GameConfig.ParticleQuality.VeryHigh,
+            ExtraGeometry = true
+        };
         sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         spawnEffectDisposable = World.Subscribe<messages.SpawnEffectCombiner>(HandleSpawnEffect);

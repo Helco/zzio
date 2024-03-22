@@ -23,7 +23,7 @@ public sealed partial class SoundEmitter : AComponentSystem<float, components.So
     {
         assetRegistry = diContainer.GetTag<IAssetRegistry>();
         diContainer.TryGetTag(out device);
-        gameConfig = diContainer.GetTag<GameConfigSection>();
+        gameConfig = diContainer.TryGetTag<GameConfigSection>(out var tag) ? tag : new();
         if (!(IsEnabled = diContainer.TryGetTag(out context)))
             return;
         spawnEmitterSubscription = World.Subscribe<messages.SpawnSample>(HandleSpawnSample);
