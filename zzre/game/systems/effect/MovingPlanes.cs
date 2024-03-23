@@ -21,7 +21,8 @@ public sealed class MovingPlanes : BaseCombinerPart<
     {
         var playback = entity.Get<components.Parent>().Entity.Get<components.effect.CombinerPlayback>();
         var vertexRange = effectMesh.RentVertices(data.disableSecondPlane ? 4 : 8);
-        var indexRange = effectMesh.RentQuadIndices(vertexRange);
+        var isBillboard = !data.circlesAround && !data.useDirection;
+        var indexRange = effectMesh.RentQuadIndices(vertexRange, doubleSided: !isBillboard);
         entity.Set(new components.effect.MovingPlanesState(
             vertexRange,
             indexRange,
@@ -30,13 +31,10 @@ public sealed class MovingPlanes : BaseCombinerPart<
             PrevProgress = playback.CurProgress
         });
         Reset(ref entity.Get<components.effect.MovingPlanesState>(), data);
-        
-        var billboardMode = data.circlesAround || data.useDirection
-            ? EffectMaterial.BillboardMode.None
-            : EffectMaterial.BillboardMode.View;
+
         assetRegistry.LoadEffectMaterial(entity,
             data.texName,
-            billboardMode,
+            isBillboard ? EffectMaterial.BillboardMode.View : EffectMaterial.BillboardMode.None,
             data.renderMode,
             playback.DepthTest);
         entity.Set(new components.effect.RenderIndices(indexRange));
@@ -114,9 +112,8 @@ public sealed class MovingPlanes : BaseCombinerPart<
         float amount)
     {
         var shouldGrow = data.targetSize > data.width;
-        var curSize = new Vector2(data.width, data.height) * state.CurScale;
-        if ((shouldGrow && curSize.MaxComponent() < data.targetSize) ||
-            (!shouldGrow && curSize.MinComponent() > data.targetSize))
+        if ((shouldGrow && state.CurScale < data.targetSize) ||
+            (!shouldGrow && state.CurScale > data.targetSize))
             state.CurScale += amount;
     }
 
@@ -161,18 +158,17 @@ public sealed class MovingPlanes : BaseCombinerPart<
         else if (data.useDirection)
         {
             // what even is this rotation, only used in e5021...
-            var dir = location.GlobalForward;
+            var dir = location.InnerForward;
             var rotUp = Vector3.Cross(dir, Vector3.One * 0.42340001f);
             var rotRight = Vector3.Cross(dir, rotUp);
             var rotForward = Vector3.Cross(rotUp, rotRight);
-            var rotMatrix = new Matrix4x4(
+            var rotMatrix = Matrix4x4.CreateFromAxisAngle(Vector3.UnitZ, angle) * new Matrix4x4(
                 rotRight.X, rotRight.Y, rotRight.Z, 0f,
                 rotUp.X, rotUp.Y, rotUp.Z, 0f,
                 rotForward.X, rotForward.Y, rotForward.Z, 0f,
                 0f, 0f, 0f, 1f);
-            rotMatrix = Matrix4x4.Transform(rotMatrix, Quaternion.CreateFromAxisAngle(Vector3.UnitZ, angle));
-            right = Vector3.Transform(Vector3.UnitX * w, rotMatrix);
-            up = Vector3.Transform(Vector3.UnitY * h, rotMatrix);
+            right = Vector3.TransformNormal(Vector3.UnitX * w, rotMatrix);
+            up = Vector3.TransformNormal(Vector3.UnitY * h, rotMatrix);
         }
         else
         {

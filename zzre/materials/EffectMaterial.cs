@@ -96,9 +96,12 @@ public class EffectMesh : DynamicMesh
         return indexRange;
     }
 
-    private static readonly ushort[] QuadIndexPattern = [0, 2, 1, 0, 3, 2];
-    public Range RentQuadIndices(Range vertexRange) =>
-        RentPatternIndices(vertexRange, QuadIndexPattern);
+    private static readonly ushort[] SingleSidedQuadIndexPattern = [0, 2, 1, 0, 3, 2];
+    private static readonly ushort[] DoubleSidedQuadIndexPattern = [0, 2, 1, 0, 3, 2, 0, 1, 2, 0, 2, 3];
+    public Range RentQuadIndices(Range vertexRange, bool doubleSided = false) =>
+        RentPatternIndices(vertexRange, doubleSided
+            ? DoubleSidedQuadIndexPattern
+            : SingleSidedQuadIndexPattern);
 
     public void SetQuad(Range vertexRange, int offset, bool applyCenter, Vector3 center, Vector3 right, Vector3 up, IColor color, Rect texCoords)
     {
