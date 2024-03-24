@@ -12,6 +12,8 @@ namespace zzre.game.systems;
 [With(typeof(components.Visibility))]
 public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, AssetHandle>
 {
+    private const float CullingRadiusFactor = 1.3f; // just some small safety buffer
+
     private struct ClumpCount
     {
         public readonly ClumpMesh Clump;
@@ -32,6 +34,8 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, AssetHan
     private readonly IDisposable sceneLoadedSubscription;
     private readonly components.RenderOrder responsibility;
     private readonly ModelInstanceBuffer instanceBuffer;
+    private readonly Camera camera;
+    private Frustum viewFrustum;
 
     private readonly List<ClumpCount> clumpCounts = [];
     private ModelInstanceBuffer.InstanceArena? instanceArena;
@@ -40,6 +44,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, AssetHan
         base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         this.responsibility = responsibility;
+        camera = diContainer.GetTag<Camera>();
         instanceBuffer = diContainer.GetTag<ModelInstanceBuffer>();
         sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
@@ -75,6 +80,7 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, AssetHan
             instanceArena?.Dispose();
             instanceArena = instanceBuffer.RentVertices(totalCount);
         }
+        viewFrustum.Projection = camera.View * camera.Projection;
     }
 
     [WithPredicate]
@@ -89,7 +95,8 @@ public partial class ModelRenderer : AEntityMultiMapSystem<CommandList, AssetHan
         Location location,
         IColor color)
     {
-        if (color.a == 0)
+        var radius = clumpMesh.BoundingSphere.Radius * CullingRadiusFactor;
+        if (color.a == 0 || !viewFrustum.Intersects(new Sphere(location.GlobalPosition, radius)))
             return;
 
         if (clumpCounts.LastOrDefault().Clump != clumpMesh)

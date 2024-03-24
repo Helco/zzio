@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Numerics;
 using Veldrid;
-using zzio;
 
 namespace zzre.rendering;
 
@@ -54,8 +54,17 @@ public class SkeletonPoseBinding : BaseBinding
         isContentDirty = false;
 
         var map = Parent.Device.Map<Matrix4x4>(poseBuffer, MapMode.Write);
-        foreach (var (bone, i) in Skeleton.Bones.Indexed())
-            map[i] = Skeleton.BindingObjectToBone[i] * bone.LocalToWorld * Skeleton.Location.WorldToLocal;
+        for (int i = 0; i < Skeleton.Bones.Count; i++)
+        {
+            var parentI = Skeleton.Parents[i];
+            Debug.Assert(parentI < i);
+            Debug.Assert(parentI < 0 || Skeleton.Bones[parentI] == Skeleton.Bones[i].Parent);
+            map[i] = parentI < 0
+                ? Skeleton.Bones[i].ParentToLocal
+                : Skeleton.Bones[i].ParentToLocal * map[parentI];
+        }
+        for (int i = 0; i < Skeleton.Bones.Count; i++)
+            map[i] = Skeleton.BindingObjectToBone[i] * map[i];
         Parent.Device.Unmap(poseBuffer);
     }
 }

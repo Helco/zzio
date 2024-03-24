@@ -18,10 +18,12 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     private readonly GraphicsDevice graphicsDevice;
     private readonly Camera camera;
     private readonly Texture whiteTexture;
+    private readonly List<DefaultEcs.Entity> entitiesToDraw = [];
     private readonly UniformBuffer<ModelFactors> modelFactors;
     private readonly UniformBuffer<FogParams> fogParams; // this is not owned by us!
     private readonly IDisposable sceneLoadedSubscription;
     private readonly IDisposable loadActorSubscription;
+    private Frustum viewFrustum;
 
     public ActorRenderer(ITagContainer diContainer) :
         base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
@@ -58,16 +60,38 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
 
     protected override void PreUpdate(CommandList cl)
     {
-        base.PreUpdate(cl);
         cl.PushDebugGroup(nameof(ActorRenderer));
+        viewFrustum.Projection = camera.View * camera.Projection;
         modelFactors.Update(cl);
+        entitiesToDraw.Clear();
+        entitiesToDraw.EnsureCapacity(Set.Count);
     }
 
     [WithPredicate]
     private bool IsVisible(in components.Visibility vis) => vis == components.Visibility.Visible;
 
     [Update]
-    private static void Update(CommandList cl,
+    private void Update(CommandList cl,
+        in DefaultEcs.Entity entity,
+        Location location,
+        in ClumpMesh clumpMesh,
+        in ModelMaterial[] materials)
+    {
+        if (!viewFrustum.Intersects(new Sphere(location.GlobalPosition, clumpMesh.BoundingSphere.Radius)))
+            return;
+        entitiesToDraw.Add(entity);
+        foreach (var material in materials)
+        {
+            if (material.Pose.Skeleton?.Animation != null)
+            {
+                material.Pose.MarkPoseDirty();
+                material.Pose.Update(cl);
+            }
+            material.Tint.Update(cl);
+        }
+    }
+
+    private static void DrawEntity(CommandList cl,
         in DefaultEcs.Entity entity,
         in ClumpMesh clumpMesh,
         in ModelMaterial[] materials)
@@ -84,8 +108,6 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         foreach (var subMesh in clumpMesh.SubMeshes)
         {
             var material = materials[subMesh.Material];
-            if (material.Pose.Skeleton?.Animation != null)
-                material.Pose.MarkPoseDirty();
             (material as IMaterial).Apply(cl);
             cl.DrawIndexed(
                 indexStart: (uint)subMesh.IndexOffset,
@@ -99,7 +121,11 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
 
     protected override void PostUpdate(CommandList cl)
     {
-        base.PostUpdate(cl);
+        var clumpMeshComponents = World.GetComponents<ClumpMesh>();
+        var materialComponents = World.GetComponents<ModelMaterial[]>();
+        foreach (var entity in entitiesToDraw)
+            DrawEntity(cl, entity, clumpMeshComponents[entity], materialComponents[entity]);
+
         cl.PopDebugGroup();
     }
 

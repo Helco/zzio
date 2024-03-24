@@ -93,6 +93,11 @@ public struct Frustum
             Projection.M43); // note no substraction because our depth range is 0->1
         planes[5] = new Plane(row4 - new Vector3(Projection.M13, Projection.M23, Projection.M33),
             Projection.M44 - Projection.M43);
+        for (int i = 0; i < planes.Length; i++)
+        {
+            var l = planes[i].Normal.Length();
+            planes[i] = new(planes[i].Normal / l, -planes[i].Distance / l);
+        }
     }
 
     public PlaneIntersections Intersects(Plane plane)
@@ -106,5 +111,15 @@ public struct Frustum
             isIntersecting ? PlaneIntersections.Intersecting
             : firstSide > 0 ? PlaneIntersections.Inside
             : PlaneIntersections.Outside;
+    }
+
+    public bool Intersects(Sphere sphere)
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            if (planes[i].SignedDistanceTo(sphere.Center) < -sphere.Radius)
+                return false;
+        }
+        return true;
     }
 }
