@@ -23,6 +23,7 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     private readonly UniformBuffer<FogParams> fogParams; // this is not owned by us!
     private readonly IDisposable sceneLoadedSubscription;
     private readonly IDisposable loadActorSubscription;
+    private Frustum viewFrustum;
 
     public ActorRenderer(ITagContainer diContainer) :
         base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
@@ -60,6 +61,7 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     protected override void PreUpdate(CommandList cl)
     {
         cl.PushDebugGroup(nameof(ActorRenderer));
+        viewFrustum.Projection = camera.View * camera.Projection;
         modelFactors.Update(cl);
         entitiesToDraw.Clear();
         entitiesToDraw.EnsureCapacity(Set.Count);
@@ -71,9 +73,12 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     [Update]
     private void Update(CommandList cl,
         in DefaultEcs.Entity entity,
-        in ClumpMesh _,
+        Location location,
+        in ClumpMesh clumpMesh,
         in ModelMaterial[] materials)
     {
+        if (!viewFrustum.Intersects(new Sphere(location.GlobalPosition, clumpMesh.BoundingSphere.Radius)))
+            return;
         entitiesToDraw.Add(entity);
         foreach (var material in materials)
         {
