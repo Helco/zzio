@@ -8,6 +8,8 @@ using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
 
+using KeyCode = Silk.NET.SDL.KeyCode;
+
 namespace zzre.tools;
 
 public partial class SceneEditor : ListDisposable, IDocumentEditor
@@ -109,22 +111,22 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         assetRegistry.Dispose();
     }
 
-    private void HandleKeyDown(Key key)
+    private void HandleKeyDown(KeyCode key)
     {
-        if (key == Key.ControlLeft)
+        if (key == KeyCode.KLctrl)
             ControlIsPressed = true;
     }
-    private void HandleKeyUp(Key key)
+    private void HandleKeyUp(KeyCode key)
     {
-        if (key == Key.ControlLeft)
+        if (key == KeyCode.KLctrl)
             ControlIsPressed = false;
         else if (ControlIsPressed)
         {
-            if (key == Key.D)
+            if (key == KeyCode.KD)
                 DuplicateCurrentSelection();
-            else if (key == Key.S)
+            else if (key == KeyCode.KS)
                 SaveScene();
-            else if (key == Key.X)
+            else if (key == KeyCode.KX)
                 DeleteCurrentSelection();
         }
     }
