@@ -141,7 +141,7 @@ public partial class SceneEditor
 
             var copy = currentTrigger.SceneTrigger.Clone();
             copy.idx = GetNextAvailableTriggerID();
-            editor.scene.triggers = editor.scene.triggers.Append(copy).ToArray();
+            editor.scene.triggers = [.. editor.scene.triggers, copy];
             HandleLoadScene();
             editor.Selected = triggers.Last();
         }
