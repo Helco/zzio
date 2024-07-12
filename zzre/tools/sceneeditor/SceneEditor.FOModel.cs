@@ -208,12 +208,12 @@ public partial class SceneEditor
                 {
                     list.Add(new FOModel(diContainer, m));
                 }
-                catch (InvalidDataException e)
+                catch (InvalidDataException)
                 {
                     Console.Error.WriteLine("Fail to load FOModel with ID {0}, ignoring file {1}", m.idx, m.filename);
                 }
             }
-            models = list.ToArray();
+            models = [.. list];
         }
 
         private void HandleRender(CommandList cl)
@@ -289,7 +289,7 @@ public partial class SceneEditor
 
             var copy = currentFoModel.SceneFOModel.Clone();
             copy.idx = GetNextAvailableFoModelID();
-            editor.scene.foModels = editor.scene.foModels.Append(copy).ToArray();
+            editor.scene.foModels = [.. editor.scene.foModels, copy];
             HandleLoadScene();
             editor.Selected = models.Last();
         }

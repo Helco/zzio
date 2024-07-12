@@ -25,9 +25,8 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     private readonly AssetLocalRegistry assetRegistry;
     private readonly DefaultEcs.World ecsWorld;
 
-    private TriggerComponent triggerComponent;
-
-    private FOModelComponent foModelComponent;
+    private readonly TriggerComponent triggerComponent;
+    private readonly FOModelComponent foModelComponent;
 
     private event Action OnLoadScene = () => { };
 
@@ -37,7 +36,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     public IResource? CurrentResource { get; private set; }
     public Window Window { get; }
 
-    private bool ControlIsPressed = false;
+    private bool ControlIsPressed;
 
     public SceneEditor(ITagContainer diContainer)
     {
