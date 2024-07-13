@@ -95,7 +95,7 @@ public partial class SceneEditor
 
         private Trigger[] triggers = [];
         private bool wasSelected;
-        private float iconSize = 128f;
+        private float iconSize = 256f;
 
         public TriggerComponent(ITagContainer diContainer)
         {
