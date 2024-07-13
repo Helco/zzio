@@ -173,6 +173,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         ecsWorld.Publish(new game.messages.SceneLoaded(scene, Savegame: null!));
         OnLoadScene();
         assetRegistry.ApplyAssets();
+        editor.ResetColumnWidth();
     }
 
     private void HandleResize() => camera.Aspect = fbArea.Ratio;
