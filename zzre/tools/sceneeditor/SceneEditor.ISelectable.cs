@@ -1,4 +1,5 @@
 using ImGuizmoNET;
+using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ public partial class SceneEditor
     private readonly List<IEnumerable<ISelectable>> selectableContainers = [];
     private IEnumerable<ISelectable> Selectables => selectableContainers.SelectMany(c => c);
 
-    private static bool dragMode;
+    private static OPERATION gizmoOperation = OPERATION.TRANSLATE;
     private ISelectable? _selected;
     private ISelectable? Selected
     {
@@ -95,9 +96,10 @@ public partial class SceneEditor
             var projection = camera.Projection;
             var matrix = selected.Location.LocalToWorld;
             ImGuizmo.SetDrawlist();
-            if (ImGuizmo.Manipulate(ref view.M11, ref projection.M11, OPERATION.TRANSLATE, MODE.LOCAL, ref matrix.M11))
+            if (!ImGuizmo.IsUsing())
+                gizmoOperation = ImGui.IsKeyDown(ImGuiKey.ModShift) ? OPERATION.ROTATE : OPERATION.TRANSLATE;
+            if (ImGuizmo.Manipulate(ref view.M11, ref projection.M11, gizmoOperation, MODE.LOCAL, ref matrix.M11))
             {
-                dragMode = true;
                 selected.Location.LocalToWorld = matrix;
                 editor.TriggerSelectionManipulate();
                 HandleNewSelection(selected); // to update the bounds
@@ -119,14 +121,8 @@ public partial class SceneEditor
 
         private void HandleClick(MouseButton button, Vector2 pos)
         {
-            if (button != MouseButton.Left)// || ImGuizmo.IsOver() || ImGuizmo.IsUsing())
+            if (button != MouseButton.Left || ImGuizmo.IsUsing()) // || ImGuizmo.IsOver()
                 return;
-
-            if (dragMode)
-            {
-                dragMode = false;
-                return;
-            }
 
             var ray = camera.RayAt((pos * 2f - Vector2.One) * new Vector2(1f, -1f));
             var newPotentials = editor.Selectables
