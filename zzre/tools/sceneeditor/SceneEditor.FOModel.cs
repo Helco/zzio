@@ -38,6 +38,7 @@ public partial class SceneEditor
         public void SyncWithScene()
         {
             SceneFOModel.pos = Location.LocalPosition;
+            SceneFOModel.rot = Location.LocalRotation.FromZZRotation();;
         }
 
         public FOModel(ITagContainer diContainer, zzio.scn.FOModel sceneModel)
