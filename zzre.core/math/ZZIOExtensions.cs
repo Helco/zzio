@@ -19,6 +19,14 @@ public static class ZZIOExtensions
 
     public static Quaternion ToZZRotation(this Vector3 v) =>
         Quaternion.Conjugate(Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateLookAt(Vector3.Zero, v * -1f, Vector3.UnitY)));
+    public static Vector3 FromZZRotation(this Quaternion q)
+    {
+        Matrix4x4 rotationMatrix = Matrix4x4.CreateFromQuaternion(Quaternion.Conjugate(q));
+        return Vector3.Normalize(new Vector3(rotationMatrix.M13, rotationMatrix.M23, rotationMatrix.M33));
+    }
+
+    public static Vector3 ToZZRotationVector(this Quaternion rotation) =>
+        Vector3.Transform(-Vector3.UnitZ, rotation) * -1f;
 
     public static Vector3 ToZZRotationVector(this Quaternion rotation) =>
         Vector3.Transform(-Vector3.UnitZ, rotation) * -1f;
