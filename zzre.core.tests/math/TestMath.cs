@@ -23,8 +23,8 @@ public class TestMath
             acosAngle = Math.Clamp(acosAngle, -1, 1);
             var roundtripAngle = Math.Acos(acosAngle) * MathEx.RadToDeg;
 
-            Assert.That(dir.Length(), Is.EqualTo(1.0f).Within(1).Percent);
-            Assert.That(roundtripDir.Length(), Is.EqualTo(1.0f).Within(1).Percent);
+            Assert.That(dir.Length(), Is.EqualTo(1.0f).Within(1).Percent, $"For {dir}");
+            Assert.That(roundtripDir.Length(), Is.EqualTo(1.0f).Within(1).Percent, $"For {roundtripDir}");
             Assert.That(roundtripAngle, Is.EqualTo(0).Within(0.1), $"For {dir}");
         }
     }
@@ -34,6 +34,14 @@ public class TestMath
     {
         // TODO: Move uniform sphere point generator to NumericsExtensions
         // (and test that everything still works after that change)
+
+        yield return Vector3.UnitX;
+        yield return -Vector3.UnitX;
+        yield return Vector3.UnitY;
+        yield return -Vector3.UnitY;
+        yield return Vector3.UnitZ;
+        yield return -Vector3.UnitZ;
+        yield return Vector3.Normalize(Vector3.One);
 
         var random = new Random(42);
         for (int i = 0; i < PointCount; i++)
