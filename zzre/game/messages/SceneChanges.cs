@@ -1,14 +1,13 @@
 ﻿namespace zzre.game.messages;
 
 using System.Collections.Generic;
-using System.Linq;
 using zzio;
 using zzio.scn;
 
 // The messages are published in order of declaration:
 
 /// <summary>
-/// Triggered at the start of a fade-out-fade-in process for changing scenes or teleporting to a different sectioln
+/// Triggered at the start of a fade-out-fade-in process for changing scenes or teleporting to a different section
 /// </summary>
 /// <param name="NextScene">The name of the next scene (could be the current one)</param>
 public record struct PlayerLeaving(string NextScene);
@@ -29,11 +28,11 @@ public readonly record struct SceneLoaded(Scene Scene, Savegame Savegame)
 {
     public IEnumerable<IGameStateMod> GetGameState() => Scene.dataset.sceneType == SceneType.Overworld
         ? Savegame.GetGameStateFor(Scene.dataset.sceneId)
-        : Enumerable.Empty<IGameStateMod>();
+        : [];
 
     public IEnumerable<TMod> GetGameState<TMod>() where TMod : IGameStateMod => Scene.dataset.sceneType == SceneType.Overworld
         ? Savegame.GetGameStateFor<TMod>(Scene.dataset.sceneId)
-        : Enumerable.Empty<TMod>();
+        : [];
 }
 
 /// <summary>

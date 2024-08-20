@@ -32,7 +32,7 @@ partial class Program
 
     private static readonly Option<string[]> OptionLogOverrides = new(
         ["--log"],
-        () => Array.Empty<string>(),
+        () => [],
         "Overrides the minimum level for a single log source (use \"Source=Level\")");
 
     private static void AddLoggingOptions(RootCommand command)
