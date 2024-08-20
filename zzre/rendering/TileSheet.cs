@@ -20,7 +20,7 @@ public class TileSheet : IReadOnlyList<Rect>
     public float LineHeight { get; set; }
     public float LineOffset { get; set; }
     public float CharSpacing { get; set; }
-    public IList<TileSheet> Alternatives { get; } = new List<TileSheet>();
+    public IList<TileSheet> Alternatives { get; } = [];
 
     public unsafe TileSheet(string name, SdlSurfacePtr image, bool isFont)
     {

@@ -18,7 +18,7 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
 
     private readonly IZanzarahContainer zzContainer;
     private readonly IDisposable lockMessageSubscription;
-    private float jumpLockDuration;
+    private readonly float jumpLockDuration;
 
     private bool stuckMovingForward;
     private float lockTimer;
@@ -82,7 +82,7 @@ public class PlayerControls : AComponentSystem<float, components.PlayerControls>
         else
             component.FrameCountShooting = 0;
 
-        // Jump is weird, it is set by the physics system (both true and false) 
+        // Jump is weird, it is set by the physics system (both true and false)
         // so we should override it with care
         if (jumpLockDuration > 0f)
         {

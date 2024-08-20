@@ -12,7 +12,6 @@ namespace zzre.tools;
 
 public class ZanzarahWindow : IZanzarahContainer, IECSWindow
 {
-    private readonly ITagContainer diContainer;
     private readonly FramebufferArea fbArea;
     private readonly MouseEventArea mouseArea;
     private readonly OpenFileModal selectSceneModal;
@@ -82,7 +81,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
 
     public Window Window { get; }
     public Zanzarah Zanzarah { get; }
-    public ITagContainer DIContainer => diContainer;
+    public ITagContainer DIContainer { get; }
     public Framebuffer Framebuffer => fbArea.Framebuffer;
     public Vector2 MousePos => mouseArea.MousePosition;
     public bool IsMouseCaptured { get; set; }
@@ -96,7 +95,7 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
     private ZanzarahWindow(ITagContainer diContainer, Func<IZanzarahContainer, Zanzarah> constructZanzarah)
     {
         GlobalWindowIndex++;
-        this.diContainer = diContainer;
+        DIContainer = diContainer;
         Window = diContainer.GetTag<WindowContainer>().NewWindow("Zanzarah");
         Window.AddTag(this);
         Window.InitialBounds = new Rect(float.NaN, float.NaN, 1040, 800); // a bit more to compensate for borders (about)
@@ -192,18 +191,18 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
         if (sceneResource == null)
             return;
 
-        diContainer.GetTag<OpenDocumentSet>().OpenWith<SceneEditor>(sceneResource);
+        DIContainer.GetTag<OpenDocumentSet>().OpenWith<SceneEditor>(sceneResource);
     }
 
     public void OpenECSExplorer()
     {
         if (ecsExplorer == null)
         {
-            ecsExplorer = new ECSExplorer(diContainer, this);
+            ecsExplorer = new ECSExplorer(DIContainer, this);
             ecsExplorer.Window.OnClose += () => ecsExplorer = null;
         }
         else
-            diContainer.GetTag<WindowContainer>().SetNextFocusedWindow(ecsExplorer.Window);
+            DIContainer.GetTag<WindowContainer>().SetNextFocusedWindow(ecsExplorer.Window);
     }
 
     private void TeleportToScene(IResource resource)

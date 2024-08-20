@@ -21,5 +21,5 @@ public abstract class NaiveTriangleCollider : TriangleCollider
         ? Triangles
             .Select(t => TQueries.Intersect(t.Triangle, primitive))
             .NotNull()
-        : Enumerable.Empty<Intersection>();
+        : [];
 }

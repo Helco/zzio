@@ -5,7 +5,7 @@ namespace zzre.game.messages.ui;
 
 public record struct Notification(string[] Texts, CardId? Icon = null)
 {
-    public Notification(string text, CardId? icon = null) : this(new[] { text }, icon) { }
+    public Notification(string text, CardId? icon = null) : this([text], icon) { }
 
     public bool SmallFont { get; init; }
     public float Duration { get; init; } = 3f;

@@ -19,19 +19,19 @@ partial class Program
 #endif
 
     private static readonly Option<LogEventLevel> OptionLogLevel = new(
-        new[] { "--log-level" },
+        ["--log-level"],
         () => DefaultLogLevel,
         "Sets the minimum level for logging");
 
     private const string DefaultLogFilePath = "./zzre.log";
     private static readonly Option<FileInfo> OptionLogFilePath = new Option<FileInfo>(
-        new[] { "--log-file-path" },
+        ["--log-file-path"],
         () => new(DefaultLogFilePath),
         "Sets the path of the log file")
         .LegalFilePathsOnly();
 
     private static readonly Option<string[]> OptionLogOverrides = new(
-        new[] { "--log" },
+        ["--log"],
         () => Array.Empty<string>(),
         "Overrides the minimum level for a single log source (use \"Source=Level\")");
 

@@ -17,7 +17,7 @@ namespace zzre;
 internal static partial class Program
 {
     private static readonly Option<string[]> OptionPools = new(
-        new[] { "--pool", "-p" },
+        ["--pool", "-p"],
         () =>
         [
             // as if run from a directory like zanzarah/zzre or zanzarah/system
@@ -27,7 +27,7 @@ internal static partial class Program
         "Adds a resource pool to use (later pools overwrite previous ones).\nCurrently directories and PAK archives are supported");
 
     private static readonly Option<bool> OptionDebugLayers = new(
-        new[] { "--debug-layers" },
+        ["--debug-layers"],
 #if DEBUG
         () => true,
 #else

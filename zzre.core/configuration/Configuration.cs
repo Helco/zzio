@@ -30,8 +30,8 @@ public sealed partial class Configuration
 {
     private readonly InMemoryConfigurationSource overwriteSource = new("Application");
     private readonly List<IConfigurationSource> sources;
-    private readonly Dictionary<IConfigurationSection, BoundSection> bindings = new();
-    private readonly Dictionary<string, IConfigurationSource> keyMapping = new();
+    private readonly Dictionary<IConfigurationSection, BoundSection> bindings = [];
+    private readonly Dictionary<string, IConfigurationSource> keyMapping = [];
     private bool keysHaveChanged;
 
     public IReadOnlyCollection<string> Keys => keyMapping.Keys;
@@ -148,7 +148,7 @@ public sealed partial class Configuration
         {
             value = default;
             return false;
-        }    
+        }
     }
 
     public IConfigurationBinding Bind<TSection>(TSection instance, Action? onChange = null)

@@ -10,7 +10,7 @@ public class ActorPartDescription
 {
     public string model = "";
     public int animationPoolID = -1;
-    public (AnimationType type, string filename)[] animations = Array.Empty<(AnimationType, string)>();
+    public (AnimationType type, string filename)[] animations = [];
 
     public void Write(BinaryWriter writer, string partName)
     {
@@ -105,8 +105,8 @@ public class ActorExDescription
             }
         }
 
-        actor.body.animations = bodyAnimations.ToArray();
-        actor.wings.animations = wingsAnimations.ToArray();
+        actor.body.animations = [.. bodyAnimations];
+        actor.wings.animations = [.. wingsAnimations];
         return actor;
     }
 
