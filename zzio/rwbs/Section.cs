@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace zzio.rwbs;
 
@@ -114,5 +113,5 @@ public abstract class Section
     }
 
     public virtual Section? FindChildById(SectionId sectionId, bool recursive = true) => null;
-    public virtual IEnumerable<Section> FindAllChildrenById(SectionId sectionId, bool recursive = true) => Enumerable.Empty<Section>();
+    public virtual IEnumerable<Section> FindAllChildrenById(SectionId sectionId, bool recursive = true) => [];
 }

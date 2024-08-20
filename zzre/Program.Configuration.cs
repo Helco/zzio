@@ -17,7 +17,7 @@ partial class Program
         "Prevents the loading of standard zanzarah config files (game.cfg, ai.cfg, net.cfg, wizform.cfg)");
 
     private static readonly Option<string[]> OptionSingleConfigs = new(
-        new[] { "-c", "--config" },
+        ["-c", "--config"],
         () => [],
         "Sets a single configuration value in the form <name>=<value>");
 

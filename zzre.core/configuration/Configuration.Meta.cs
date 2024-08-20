@@ -12,8 +12,7 @@ partial class Configuration
     public static void RegisterMetadataField(string key, Type type, string fieldName, ConfigurationValue? defaultValue = null)
     {
         var field = type.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-        var attribute = field?.GetCustomAttribute<ConfigurationAttribute>();
-        if (attribute is null)
+        var attribute = field?.GetCustomAttribute<ConfigurationAttribute>() ??
             throw new ArgumentException($"Metadata field {type.Name}.{fieldName} does not exist or does not have ConfigurationAttribute");
         RegisterMetadataField(key, attribute, defaultValue);
     }

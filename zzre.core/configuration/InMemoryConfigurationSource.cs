@@ -4,7 +4,7 @@ namespace zzre;
 
 public sealed class InMemoryConfigurationSource(string name) : IConfigurationSource
 {
-    private readonly Dictionary<string, ConfigurationValue> variables = new();
+    private readonly Dictionary<string, ConfigurationValue> variables = [];
     private bool keysHaveChanged, valuesHaveChanged;
 
     public string Name => name;

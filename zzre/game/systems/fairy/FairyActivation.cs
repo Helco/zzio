@@ -17,7 +17,7 @@ public sealed partial class FairyActivation : ISystem<float>
     private readonly IDisposable entityEnabledSubscription;
     private readonly IDisposable switchFairySubscription;
     private readonly DefaultEcs.EntitySet fairySet;
-    private List<zzio.scn.Trigger> startPoints = [];
+    private readonly List<zzio.scn.Trigger> startPoints = [];
 
     public bool IsEnabled { get; set; } = true;
 

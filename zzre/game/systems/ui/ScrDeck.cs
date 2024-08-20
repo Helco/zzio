@@ -449,7 +449,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         Tab.Fairies => deck.Inventory.Fairies.OrderByDescending(c => c.level),
         Tab.AttackSpells => deck.Inventory.AttackSpells.OrderBy(c => c.cardId.EntityId),
         Tab.SupportSpells => deck.Inventory.SupportSpells.OrderBy(c => c.cardId.EntityId),
-        _ => Enumerable.Empty<InventoryCard>()
+        _ => []
     };
 
     private void FillList(ref components.ui.ScrDeck deck)
