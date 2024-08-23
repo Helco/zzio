@@ -3,6 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using zzio.rwbs;
 using zzio;
+using System;
+using System.Collections;
+
+// I regret it already a bit
+using BoxIntersectionEnumerator = zzre.WorldCollider.IntersectionsEnumerator<
+    zzre.Box, zzre.IntersectionQueries, zzre.TreeCollider.IntersectionsEnumerator<
+        zzre.Box, zzre.IntersectionQueries>>;
+using OrientedBoxIntersectionEnumerator = zzre.WorldCollider.IntersectionsEnumerator<
+    zzre.OrientedBox, zzre.IntersectionQueries, zzre.TreeCollider.IntersectionsEnumerator<
+        zzre.OrientedBox, zzre.IntersectionQueries>>;
+using SphereIntersectionEnumerator = zzre.WorldCollider.IntersectionsEnumerator<
+    zzre.Sphere, zzre.IntersectionQueries, zzre.TreeCollider.IntersectionsEnumerator<
+        zzre.Sphere, zzre.IntersectionQueries>>;
+using TriangleIntersectionEnumerator = zzre.WorldCollider.IntersectionsEnumerator<
+    zzre.Triangle, zzre.IntersectionQueries, zzre.TreeCollider.IntersectionsEnumerator<
+        zzre.Triangle, zzre.IntersectionQueries>>;
+using LineIntersectionEnumerator = zzre.WorldCollider.IntersectionsEnumerator<
+    zzre.Line, zzre.IntersectionQueries, zzre.TreeCollider.IntersectionsEnumerator<
+        zzre.Line, zzre.IntersectionQueries>>;
 
 namespace zzre;
 
@@ -23,7 +42,7 @@ public sealed class WorldCollider : BaseGeometryCollider
 
     private readonly RWAtomicSection[] atomicSections;
     private readonly Section rootSection;
-    private readonly IReadOnlyDictionary<RWAtomicSection, TriangleCollider> atomicColliders;
+    private readonly IReadOnlyDictionary<RWAtomicSection, AtomicTreeCollider> atomicColliders;
     protected override IRaycastable CoarseCastable => Box;
     protected override IIntersectable CoarseIntersectable => Box;
 
@@ -36,16 +55,10 @@ public sealed class WorldCollider : BaseGeometryCollider
             .Cast<RWAtomicSection>()
             .ToArray();
         var colliders = atomicSections
-            .Select((section, i) =>
-            {
-                var collider = AtomicCollider.CreateFor(section);
-                collider.AtomicId = i;
-                return collider;
-            })
+            .Select((section, i) => new AtomicTreeCollider(section, i))
             .ToArray();
 
-
-        atomicColliders = colliders.ToDictionary(c => c.Atomic, c => (TriangleCollider)c);
+        atomicColliders = colliders.ToDictionary(c => c.Atomic, c => c);
         Box = colliders.Aggregate(colliders.First().Box, (box, atomic) => box.Union(atomic.Box));
 
         var rootPlane = World.FindChildById(SectionId.PlaneSection, false);
@@ -158,5 +171,210 @@ public sealed class WorldCollider : BaseGeometryCollider
                     break;
             }
         }
+    }
+
+    public void IntersectionsList<T, TQueries>(in T primitive, List<Intersection> intersections)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        if (!CoarseIntersectable.Intersects(primitive))
+            return;
+
+        var splitStack = new Stack<Section>();
+        splitStack.Push(rootSection);
+        while (splitStack.Any())
+        {
+            switch (splitStack.Pop())
+            {
+                case RWAtomicSection atomic when atomicColliders.TryGetValue(atomic, out var collider):
+                    collider.IntersectionsList<T, TQueries>(primitive, intersections);
+                    break;
+
+                case RWPlaneSection plane:
+                    var leftPlane = new Plane(plane.sectorType.AsNormal(), plane.leftValue);
+                    var rightPlane = new Plane(plane.sectorType.AsNormal(), plane.rightValue);
+                    var leftSection = plane.children[0];
+                    var rightSection = plane.children[1];
+
+                    if (TQueries.SideOf(rightPlane, primitive) != PlaneIntersections.Outside)
+                        splitStack.Push(rightSection);
+                    if (TQueries.SideOf(leftPlane, primitive) != PlaneIntersections.Inside)
+                        splitStack.Push(leftSection);
+                    break;
+            }
+        }
+    }
+
+    private delegate TIntersectionEnumerator AtomicIntersectionFn<T, TIntersectionEnumerator>(TreeCollider collider, in T primitive)
+        where T : struct, IIntersectable
+        where TIntersectionEnumerator : struct, IEnumerator<Intersection>;
+    private IEnumerable<Intersection> Intersections<T, TQueries, TIntersectionEnumerator>(T primitive,
+        AtomicIntersectionFn<T, TIntersectionEnumerator> atomicIntersections)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+        where TIntersectionEnumerator : struct, IEnumerator<Intersection>
+    {
+        if (!CoarseIntersectable.Intersects(primitive))
+            yield break;
+
+        var splitStack = new Stack<Section>();
+        splitStack.Push(rootSection);
+        while (splitStack.Any())
+        {
+            switch (splitStack.Pop())
+            {
+                case RWAtomicSection atomic when atomicColliders.TryGetValue(atomic, out var collider):
+                    if (collider is TreeCollider treeCollider)
+                    {
+                        var enumerator = atomicIntersections(treeCollider, primitive);
+                        while (enumerator.MoveNext())
+                            yield return enumerator.Current;
+                    }
+                    else
+                        foreach (var i in TQueries.Intersections(collider, primitive))
+                            yield return i;
+                    break;
+
+                case RWPlaneSection plane:
+                    var leftPlane = new Plane(plane.sectorType.AsNormal(), plane.leftValue);
+                    var rightPlane = new Plane(plane.sectorType.AsNormal(), plane.rightValue);
+                    var leftSection = plane.children[0];
+                    var rightSection = plane.children[1];
+
+                    if (TQueries.SideOf(rightPlane, primitive) != PlaneIntersections.Outside)
+                        splitStack.Push(rightSection);
+                    if (TQueries.SideOf(leftPlane, primitive) != PlaneIntersections.Inside)
+                        splitStack.Push(leftSection);
+                    break;
+            }
+        }
+    }
+
+    public unsafe struct IntersectionsEnumerator<T, TQueries, TIntersectionEnumerator> : IEnumerator<Intersection>
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+        where TIntersectionEnumerator : struct, IEnumerator<Intersection>
+    {
+        private readonly T primitive;
+        private readonly WorldCollider collider;
+        private readonly Stack<Section> splitStack = new();
+        private readonly delegate*<TreeCollider, in T, TIntersectionEnumerator> atomicIntersections;
+        private TIntersectionEnumerator atomicEnumerator;
+
+        public Intersection Current { get; private set; }
+        object IEnumerator.Current => Current;
+
+        public IntersectionsEnumerator(WorldCollider collider, in T primitive,
+            delegate*<TreeCollider, in T, TIntersectionEnumerator> atomicIntersections)
+        {
+            this.primitive = primitive;
+            this.collider = collider;
+            this.atomicIntersections = atomicIntersections;
+            Reset();
+        }
+
+        public void Reset()
+        {
+            atomicEnumerator = default;
+            splitStack.Clear();
+            splitStack.Push(collider.rootSection);
+        }
+
+        public bool MoveNext()
+        {
+            AtomicIntersection:
+            if (atomicEnumerator.MoveNext())
+            {
+                Current = atomicEnumerator.Current;
+                return true;
+            }
+
+            while(splitStack.TryPop(out var section))
+            {
+                switch(section)
+                {
+                    case RWAtomicSection atomic when collider.atomicColliders.TryGetValue(atomic, out var atomicCollider):
+                        if (atomicCollider is not TreeCollider treeCollider)
+                            throw new NotSupportedException("Allocation-less intersection enumerator does not support non-tree enumerators");
+                        atomicEnumerator = atomicIntersections(treeCollider, primitive);
+                        goto AtomicIntersection;
+
+                    case RWPlaneSection plane:
+                        var leftPlane = new Plane(plane.sectorType.AsNormal(), plane.leftValue);
+                        var rightPlane = new Plane(plane.sectorType.AsNormal(), plane.rightValue);
+                        var leftSection = plane.children[0];
+                        var rightSection = plane.children[1];
+
+                        if (TQueries.SideOf(rightPlane, primitive) != PlaneIntersections.Outside)
+                            splitStack.Push(rightSection);
+                        if (TQueries.SideOf(leftPlane, primitive) != PlaneIntersections.Inside)
+                            splitStack.Push(leftSection);
+                        continue;
+                }
+            }
+            return false;
+        }
+
+        public void Dispose() { atomicEnumerator.Dispose(); }
+    }
+
+    public struct IntersectionsEnumeratorVirtCall : IEnumerator<Intersection>
+    {
+        private readonly WorldCollider collider;
+        private readonly AnyIntersectionable primitive;
+        private readonly Stack<Section> splitStack = new();
+        private TreeCollider.IntersectionsEnumeratorVirtCall atomicEnumerator;
+
+        public Intersection Current { get; private set; }
+        object IEnumerator.Current => Current;
+
+        internal IntersectionsEnumeratorVirtCall(WorldCollider collider, in AnyIntersectionable primitive)
+        {
+            this.collider = collider;
+            this.primitive = primitive;
+            Reset();
+        }
+
+        public void Reset()
+        {
+            splitStack.Clear();
+            splitStack.Push(collider.rootSection);
+            atomicEnumerator = default;
+        }
+
+        public bool MoveNext()
+        {
+            AtomicIntersection:
+            if (atomicEnumerator.MoveNext())
+            {
+                Current = atomicEnumerator.Current;
+                return true;
+            }
+
+            while(splitStack.TryPop(out var section))
+            {
+                switch(section)
+                {
+                    case RWAtomicSection atomic when collider.atomicColliders.TryGetValue(atomic, out var atomicCollider):
+                        atomicEnumerator = new(atomicCollider, primitive);
+                        goto AtomicIntersection;
+
+                    case RWPlaneSection plane:
+                        var leftPlane = new Plane(plane.sectorType.AsNormal(), plane.leftValue);
+                        var rightPlane = new Plane(plane.sectorType.AsNormal(), plane.rightValue);
+                        var leftSection = plane.children[0];
+                        var rightSection = plane.children[1];
+
+                        if (primitive.SideOf(rightPlane) != PlaneIntersections.Outside)
+                            splitStack.Push(rightSection);
+                        if (primitive.SideOf(leftPlane) != PlaneIntersections.Inside)
+                            splitStack.Push(leftSection);
+                        continue;
+                }
+            }
+            return false;
+        }
+
+        public void Dispose() { }
     }
 }

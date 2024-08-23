@@ -5,9 +5,17 @@ using System.Linq;
 using zzio;
 using zzio.rwbs;
 
+using BoxIntersections = zzre.Enumeratorable<zzre.Intersection, zzre.TreeCollider.IntersectionsEnumerator<zzre.Box, zzre.IntersectionQueries>>;
+using OrientedBoxIntersections = zzre.Enumeratorable<zzre.Intersection, zzre.TreeCollider.IntersectionsEnumerator<zzre.OrientedBox, zzre.IntersectionQueries>>;
+using SphereIntersections = zzre.Enumeratorable<zzre.Intersection, zzre.TreeCollider.IntersectionsEnumerator<zzre.Sphere, zzre.IntersectionQueries>>;
+using TriangleIntersections = zzre.Enumeratorable<zzre.Intersection, zzre.TreeCollider.IntersectionsEnumerator<zzre.Triangle, zzre.IntersectionQueries>>;
+using LineIntersections = zzre.Enumeratorable<zzre.Intersection, zzre.TreeCollider.IntersectionsEnumerator<zzre.Line, zzre.IntersectionQueries>>;
+using System.Numerics;
+using Silk.NET.SDL;
+
 namespace zzre;
 
-internal readonly struct Enumeratorable<TElement, TEnumerator>(TEnumerator enumerator) : IEnumerable<TElement>
+public readonly struct Enumeratorable<TElement, TEnumerator>(TEnumerator enumerator) : IEnumerable<TElement>
     where TEnumerator : struct, IEnumerator<TElement>
 {
     public IEnumerator<TElement> GetEnumerator()
@@ -24,6 +32,32 @@ public abstract partial class TreeCollider : TriangleCollider
     public RWCollision Collision { get; }
 
     protected TreeCollider(RWCollision collision) => Collision = collision;
+
+    protected static RWCollision CreateNaiveCollision(int triangleCount)
+    {
+        var split = new CollisionSplit()
+        {
+            left =
+            {
+                value = float.NegativeInfinity,
+                type = CollisionSectorType.X,
+                index = -1,
+                count = RWCollision.SplitCount
+            },
+            right =
+            {
+                value = float.NegativeInfinity,
+                type = CollisionSectorType.X,
+                index = 0,
+                count = triangleCount
+            }
+        };
+        return new RWCollision
+        {
+            splits = [split],
+            map = Enumerable.Range(0, triangleCount).ToArray()
+        };
+    }
 
     public override Raycast? Cast(Ray ray, float maxLength)
     {
@@ -102,8 +136,19 @@ public abstract partial class TreeCollider : TriangleCollider
     }
 
     protected override IEnumerable<Intersection> Intersections<T, TQueries>(T primitive) =>
-        new Enumeratorable<Intersection, IntersectionsEnumerator<T, TQueries>>(new(this, primitive));
-    /*{
+        //IntersectionsOld<T, TQueries>(primitive);
+        new IntersectionsEnumerable<T, TQueries>(this, primitive);
+
+    public new BoxIntersections Intersections(in Box box) => new(new(this, box));
+    public new OrientedBoxIntersections Intersections(in OrientedBox box) => new(new(this, box));
+    public new SphereIntersections Intersections(in Sphere sphere) => new(new(this, sphere));
+    public new TriangleIntersections Intersections(in Triangle triangle) => new(new(this, triangle));
+    public new LineIntersections Intersections(in Line line) => new(new(this, line));
+
+    private IEnumerable<Intersection> IntersectionsOld<T, TQueries>(T primitive)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
         if (!CoarseIntersectable.Intersects(primitive))
             yield break;
 
@@ -134,7 +179,7 @@ public abstract partial class TreeCollider : TriangleCollider
                 }
             }
         }
-    }*/
+    }
 
     private IEnumerable<Intersection> IntersectionsLeaf<T, TQueries>(T primitive, CollisionSector sector)
         where T : struct, IIntersectable
@@ -147,6 +192,68 @@ public abstract partial class TreeCollider : TriangleCollider
             if (intersection != null)
                 yield return intersection.Value with { TriangleId = t.TriangleId };
         }
+    }
+
+    public void IntersectionsList<T, TQueries>(T primitive, List<Intersection> intersections)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        if (!CoarseIntersectable.Intersects(primitive))
+            return;
+
+        var splitStack = new Stack<CollisionSplit>();
+        splitStack.Push(Collision.splits[0]);
+        while (splitStack.Any())
+        {
+            var curSplit = splitStack.Pop();
+            if (TQueries.SideOf(GetPlane(curSplit.right), primitive) != PlaneIntersections.Outside)
+            {
+                if (curSplit.right.count == RWCollision.SplitCount)
+                    splitStack.Push(Collision.splits[curSplit.right.index]);
+                else
+                    IntersectionsListLeaf<T, TQueries>(primitive, curSplit.right, intersections);
+            }
+
+            if (TQueries.SideOf(GetPlane(curSplit.left), primitive) != PlaneIntersections.Inside)
+            {
+                if (curSplit.left.count == RWCollision.SplitCount)
+                    splitStack.Push(Collision.splits[curSplit.left.index]);
+                else
+                    IntersectionsListLeaf<T, TQueries>(primitive, curSplit.left, intersections);
+            }
+        }
+    }
+
+    private void  IntersectionsListLeaf<T, TQueries>(T primitive, CollisionSector sector, List<Intersection> intersections)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        for (int i = 0; i < sector.count; i++)
+        {
+            var t = GetTriangle(Collision.map[i + sector.index]);
+            var intersection = TQueries.Intersect(t.Triangle, primitive);
+            if (intersection != null)
+                intersections.Add(intersection.Value with { TriangleId = t.TriangleId });
+        }
+    }
+
+    public struct IntersectionsEnumerable<T, TQueries> : IEnumerable<Intersection>
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        private readonly TreeCollider collider;
+        private readonly T primitive;
+
+        internal IntersectionsEnumerable(TreeCollider collider, in T primitive)
+        {
+            this.collider = collider;
+            this.primitive = primitive;
+        }
+
+        public IEnumerator<Intersection> GetEnumerator() =>
+            new IntersectionsEnumerator<T, TQueries>(collider, primitive);
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     public struct IntersectionsEnumerator<T, TQueries> : IEnumerator<Intersection>
@@ -187,6 +294,8 @@ public abstract partial class TreeCollider : TriangleCollider
 
         public bool MoveNext()
         {
+            if (splitStack is null)
+                return false;
             while (splitStack.Count > 0)
             {
                 if (sectorSelection is SectorSelection.None)
@@ -261,6 +370,121 @@ public abstract partial class TreeCollider : TriangleCollider
         readonly void IDisposable.Dispose() { }
 
     }
+
+    public struct IntersectionsEnumeratorVirtCall : IEnumerator<Intersection>
+    {
+        private enum SectorSelection
+        {
+            None,
+            Last,
+            AlsoTakeLeft
+        }
+
+        private readonly TreeCollider collider;
+        private readonly AnyIntersectionable primitive;
+        private readonly Stack<CollisionSplit> splitStack = new();
+        private CollisionSector curSector;
+        private SectorSelection sectorSelection;
+        private int triangleI;
+        private Intersection current;
+
+        public Intersection Current => current;
+        object IEnumerator.Current => Current;
+
+        internal IntersectionsEnumeratorVirtCall(TreeCollider collider, in AnyIntersectionable primitive)
+        {
+            this.collider = collider;
+            this.primitive = primitive;
+            Reset();
+        }
+
+        public void Reset()
+        {
+            splitStack.Clear();
+            splitStack.Push(collider.Collision.splits[0]);
+            sectorSelection = SectorSelection.None;
+            triangleI = 0;
+        }
+
+        public bool MoveNext()
+        {
+            if (splitStack is null)
+                return false;
+            while (splitStack.Count > 0)
+            {
+                if (sectorSelection is SectorSelection.None)
+                    MoveNextInSplits();
+                else if (MoveNextInSector())
+                    return true;
+            }
+            return false;
+        }
+
+        private void MoveNextInSplits()
+        {
+            var splits = collider.Collision.splits;
+            var curSplit = splitStack.Pop();
+            if (primitive.SideOf(GetPlane(curSplit.right)) != PlaneIntersections.Outside)
+            {
+                if (curSplit.right.count == RWCollision.SplitCount)
+                    splitStack.Push(splits[curSplit.right.index]);
+                else
+                {
+                    sectorSelection = SectorSelection.Last;
+                    curSector = curSplit.right;
+                }
+            }
+
+            if (primitive.SideOf(GetPlane(curSplit.left)) != PlaneIntersections.Inside)
+            {
+                if (curSplit.left.count == RWCollision.SplitCount)
+                    splitStack.Push(splits[curSplit.left.index]);
+                else if (sectorSelection is SectorSelection.None)
+                {
+                    sectorSelection = SectorSelection.Last;
+                    curSector = curSplit.left;
+                }
+                else
+                    sectorSelection = SectorSelection.AlsoTakeLeft;
+            }
+
+            if (sectorSelection is not SectorSelection.None)
+                splitStack.Push(curSplit);
+        }
+
+        private bool MoveNextInSector()
+        {
+            var map = collider.Collision.map;
+            for (; triangleI < curSector.count;)
+            {
+                // increment triangleI already to be able to return
+                var t = collider.GetTriangle(map[triangleI++ + curSector.index]);
+                var intersection = primitive.Intersect(t.Triangle);
+                if (intersection != null)
+                {
+                    current = intersection.Value with { TriangleId = t.TriangleId };
+                    return true;
+                }
+            }
+
+            triangleI = 0;
+            if (sectorSelection == SectorSelection.Last)
+            {
+                sectorSelection = SectorSelection.None;
+                splitStack.Pop();
+            }
+            else
+            {
+                sectorSelection = SectorSelection.Last;
+                curSector = splitStack.Peek().left;
+            }
+            return false;
+        }
+
+        readonly void IDisposable.Dispose() { }
+
+    }
+
 
     private static Plane GetPlane(CollisionSector sector) => new(sector.type.ToNormal(), sector.value);
 }
