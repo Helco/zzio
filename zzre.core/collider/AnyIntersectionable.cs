@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace zzre;
 
-internal unsafe readonly struct AnyIntersectionable
+public unsafe readonly struct AnyIntersectionable
 {
     [StructLayout(LayoutKind.Explicit)]
     private struct Storage
@@ -16,6 +16,16 @@ internal unsafe readonly struct AnyIntersectionable
     private readonly Storage storage;
     private readonly delegate*<in Storage, in Plane, PlaneIntersections> sideOf;
     private readonly delegate*<in Storage, in Triangle, Intersection?> intersection;
+
+    public static AnyIntersectionable From<T>(in T primitive) where T : struct, IIntersectable => primitive switch
+    {
+        Box box => box,
+        OrientedBox obox => obox,
+        Sphere sphere => sphere,
+        Triangle triangle => triangle,
+        Line line => line,
+        _ => throw new System.NotImplementedException()
+    };
 
     public AnyIntersectionable(in Box box)
     {

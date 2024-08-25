@@ -10,8 +10,6 @@ using OrientedBoxIntersections = zzre.Enumeratorable<zzre.Intersection, zzre.Tre
 using SphereIntersections = zzre.Enumeratorable<zzre.Intersection, zzre.TreeCollider.IntersectionsEnumerator<zzre.Sphere, zzre.IntersectionQueries>>;
 using TriangleIntersections = zzre.Enumeratorable<zzre.Intersection, zzre.TreeCollider.IntersectionsEnumerator<zzre.Triangle, zzre.IntersectionQueries>>;
 using LineIntersections = zzre.Enumeratorable<zzre.Intersection, zzre.TreeCollider.IntersectionsEnumerator<zzre.Line, zzre.IntersectionQueries>>;
-using System.Numerics;
-using Silk.NET.SDL;
 
 namespace zzre;
 
@@ -136,7 +134,8 @@ public abstract partial class TreeCollider : TriangleCollider
     }
 
     protected override IEnumerable<Intersection> Intersections<T, TQueries>(T primitive) =>
-        //IntersectionsOld<T, TQueries>(primitive);
+        //IntersectionsGenerator<T, TQueries>(primitive);
+        //IntersectionsList<T, TQueries>(primitive);
         new IntersectionsEnumerable<T, TQueries>(this, primitive);
 
     public new BoxIntersections Intersections(in Box box) => new(new(this, box));
@@ -145,7 +144,7 @@ public abstract partial class TreeCollider : TriangleCollider
     public new TriangleIntersections Intersections(in Triangle triangle) => new(new(this, triangle));
     public new LineIntersections Intersections(in Line line) => new(new(this, line));
 
-    private IEnumerable<Intersection> IntersectionsOld<T, TQueries>(T primitive)
+    public IEnumerable<Intersection> IntersectionsGenerator<T, TQueries>(T primitive)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
@@ -192,6 +191,15 @@ public abstract partial class TreeCollider : TriangleCollider
             if (intersection != null)
                 yield return intersection.Value with { TriangleId = t.TriangleId };
         }
+    }
+
+    public IEnumerable<Intersection> IntersectionsList<T, TQueries>(T primitive)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        var l = new List<Intersection>(32);
+        IntersectionsList<T, TQueries>(primitive, l);
+        return l;
     }
 
     public void IntersectionsList<T, TQueries>(T primitive, List<Intersection> intersections)
