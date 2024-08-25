@@ -258,7 +258,7 @@ public sealed class WorldCollider : BaseGeometryCollider
 
         private static BoxIntersectionsE AtomicIntersections(TreeCollider collider, in Box primitive) => new BoxIntersectionsE(collider, primitive);
         private static OrientedBoxIntersectionsE AtomicIntersections(TreeCollider collider, in OrientedBox primitive) => new OrientedBoxIntersectionsE(collider, primitive);
-        private static SphereIntersectionsE AtomicIntersections(TreeCollider collider, in Sphere primitive) => new SphereIntersectionsE(collider, primitive);
+        public static SphereIntersectionsE AtomicIntersections(TreeCollider collider, in Sphere primitive) => new SphereIntersectionsE(collider, primitive);
         private static TriangleIntersectionsE AtomicIntersections(TreeCollider collider, in Triangle primitive) => new TriangleIntersectionsE(collider, primitive);
         private static LineIntersectionsE AtomicIntersections(TreeCollider collider, in Line primitive) => new LineIntersectionsE(collider, primitive);
     }
@@ -357,7 +357,7 @@ public sealed class WorldCollider : BaseGeometryCollider
         public Intersection Current { get; private set; }
         object IEnumerator.Current => Current;
 
-        internal IntersectionsEnumeratorVirtCall(WorldCollider collider, in AnyIntersectionable primitive)
+        public IntersectionsEnumeratorVirtCall(WorldCollider collider, in AnyIntersectionable primitive)
         {
             this.collider = collider;
             this.primitive = primitive;
