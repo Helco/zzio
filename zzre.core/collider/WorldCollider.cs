@@ -5,9 +5,17 @@ using zzio.rwbs;
 using zzio;
 using System;
 using System.Collections;
+using static zzre.TreeCollider;
 
-// I regret it already a bit
-using BoxIntersectionEnumerator = zzre.WorldCollider.IntersectionsEnumerator<
+// I regret it already a bit#
+
+using BoxIntersectionsE = zzre.TreeCollider.IntersectionsEnumerator<zzre.Box, zzre.IntersectionQueries>;
+using OrientedBoxIntersectionsE = zzre.TreeCollider.IntersectionsEnumerator<zzre.OrientedBox, zzre.IntersectionQueries>;
+using SphereIntersectionsE = zzre.TreeCollider.IntersectionsEnumerator<zzre.Sphere, zzre.IntersectionQueries>;
+using TriangleIntersectionsE = zzre.TreeCollider.IntersectionsEnumerator<zzre.Triangle, zzre.IntersectionQueries>;
+using LineIntersectionsE = zzre.TreeCollider.IntersectionsEnumerator<zzre.Line, zzre.IntersectionQueries>;
+
+/*using BoxIntersectionEnumerator = zzre.WorldCollider.IntersectionsEnumerator<
     zzre.Box, zzre.IntersectionQueries, zzre.TreeCollider.IntersectionsEnumerator<
         zzre.Box, zzre.IntersectionQueries>>;
 using OrientedBoxIntersectionEnumerator = zzre.WorldCollider.IntersectionsEnumerator<
@@ -21,7 +29,7 @@ using TriangleIntersectionEnumerator = zzre.WorldCollider.IntersectionsEnumerato
         zzre.Triangle, zzre.IntersectionQueries>>;
 using LineIntersectionEnumerator = zzre.WorldCollider.IntersectionsEnumerator<
     zzre.Line, zzre.IntersectionQueries, zzre.TreeCollider.IntersectionsEnumerator<
-        zzre.Line, zzre.IntersectionQueries>>;
+        zzre.Line, zzre.IntersectionQueries>>;*/
 
 namespace zzre;
 
@@ -142,7 +150,15 @@ public sealed class WorldCollider : BaseGeometryCollider
         }
     }
 
-    protected override IEnumerable<Intersection> Intersections<T, TQueries>(T primitive)
+    protected override IEnumerable<Intersection> Intersections<T, TQueries>(T primitive) =>
+        //IntersectionsGenerator<T, TQueries>(primitive);
+        //IntersectionsList<T, TQueries>(primitive);
+        //new IntersectionsEnumerable<T, TQueries>(this, primitive);
+        new IntersectionsEnumerableVirtCall(this, AnyIntersectionable.From(primitive));
+
+    public IEnumerable<Intersection> IntersectionsGenerator<T, TQueries>(T primitive)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
     {
         if (!CoarseIntersectable.Intersects(primitive))
             yield break;
@@ -171,6 +187,15 @@ public sealed class WorldCollider : BaseGeometryCollider
                     break;
             }
         }
+    }
+
+    public IEnumerable<Intersection> IntersectionsList<T, TQueries>(T primitive)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        var l = new List<Intersection>(32);
+        IntersectionsList<T, TQueries>(primitive, l);
+        return l;
     }
 
     public void IntersectionsList<T, TQueries>(in T primitive, List<Intersection> intersections)
@@ -205,49 +230,37 @@ public sealed class WorldCollider : BaseGeometryCollider
         }
     }
 
-    private delegate TIntersectionEnumerator AtomicIntersectionFn<T, TIntersectionEnumerator>(TreeCollider collider, in T primitive)
-        where T : struct, IIntersectable
-        where TIntersectionEnumerator : struct, IEnumerator<Intersection>;
-    private IEnumerable<Intersection> Intersections<T, TQueries, TIntersectionEnumerator>(T primitive,
-        AtomicIntersectionFn<T, TIntersectionEnumerator> atomicIntersections)
+    public unsafe struct IntersectionsEnumerable<T, TQueries> : IEnumerable<Intersection>
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
-        where TIntersectionEnumerator : struct, IEnumerator<Intersection>
     {
-        if (!CoarseIntersectable.Intersects(primitive))
-            yield break;
+        private readonly WorldCollider collider;
+        private readonly T primitive;
 
-        var splitStack = new Stack<Section>();
-        splitStack.Push(rootSection);
-        while (splitStack.Any())
+        internal IntersectionsEnumerable(WorldCollider collider, in T primitive)
         {
-            switch (splitStack.Pop())
-            {
-                case RWAtomicSection atomic when atomicColliders.TryGetValue(atomic, out var collider):
-                    if (collider is TreeCollider treeCollider)
-                    {
-                        var enumerator = atomicIntersections(treeCollider, primitive);
-                        while (enumerator.MoveNext())
-                            yield return enumerator.Current;
-                    }
-                    else
-                        foreach (var i in TQueries.Intersections(collider, primitive))
-                            yield return i;
-                    break;
-
-                case RWPlaneSection plane:
-                    var leftPlane = new Plane(plane.sectorType.AsNormal(), plane.leftValue);
-                    var rightPlane = new Plane(plane.sectorType.AsNormal(), plane.rightValue);
-                    var leftSection = plane.children[0];
-                    var rightSection = plane.children[1];
-
-                    if (TQueries.SideOf(rightPlane, primitive) != PlaneIntersections.Outside)
-                        splitStack.Push(rightSection);
-                    if (TQueries.SideOf(leftPlane, primitive) != PlaneIntersections.Inside)
-                        splitStack.Push(leftSection);
-                    break;
-            }
+            this.collider = collider;
+            this.primitive = primitive;
         }
+
+        public IEnumerator<Intersection> GetEnumerator() => primitive switch
+        {
+            Box box => new IntersectionsEnumerator<Box, IntersectionQueries, BoxIntersectionsE>(collider, box, &AtomicIntersections),
+            OrientedBox box => new IntersectionsEnumerator<OrientedBox, IntersectionQueries, OrientedBoxIntersectionsE>(collider, box, &AtomicIntersections),
+            Sphere sphere => new IntersectionsEnumerator<Sphere, IntersectionQueries, SphereIntersectionsE>(collider, sphere, &AtomicIntersections),
+            Triangle tri => new IntersectionsEnumerator<Triangle, IntersectionQueries, TriangleIntersectionsE>(collider, tri, &AtomicIntersections),
+            Line line=> new IntersectionsEnumerator<Line, IntersectionQueries, LineIntersectionsE>(collider, line, &AtomicIntersections),
+            _ => throw new NotImplementedException()
+        };
+
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        private static BoxIntersectionsE AtomicIntersections(TreeCollider collider, in Box primitive) => new BoxIntersectionsE(collider, primitive);
+        private static OrientedBoxIntersectionsE AtomicIntersections(TreeCollider collider, in OrientedBox primitive) => new OrientedBoxIntersectionsE(collider, primitive);
+        private static SphereIntersectionsE AtomicIntersections(TreeCollider collider, in Sphere primitive) => new SphereIntersectionsE(collider, primitive);
+        private static TriangleIntersectionsE AtomicIntersections(TreeCollider collider, in Triangle primitive) => new TriangleIntersectionsE(collider, primitive);
+        private static LineIntersectionsE AtomicIntersections(TreeCollider collider, in Line primitive) => new LineIntersectionsE(collider, primitive);
     }
 
     public unsafe struct IntersectionsEnumerator<T, TQueries, TIntersectionEnumerator> : IEnumerator<Intersection>
@@ -316,6 +329,22 @@ public sealed class WorldCollider : BaseGeometryCollider
         }
 
         public void Dispose() { atomicEnumerator.Dispose(); }
+    }
+
+    public struct IntersectionsEnumerableVirtCall : IEnumerable<Intersection>
+    {
+        private readonly WorldCollider collider;
+        private readonly AnyIntersectionable primitive;
+
+        public IntersectionsEnumerableVirtCall(WorldCollider collider, AnyIntersectionable primitive)
+        {
+            this.collider = collider;
+            this.primitive = primitive;
+        }
+
+        public IEnumerator<Intersection> GetEnumerator() => new IntersectionsEnumeratorVirtCall(collider, primitive);
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     public struct IntersectionsEnumeratorVirtCall : IEnumerator<Intersection>
