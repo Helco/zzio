@@ -2,16 +2,15 @@
 
 namespace zzre;
 
-public sealed class AtomicTreeCollider : TreeCollider
+public sealed class AtomicTreeCollider : TreeCollider<zzre.Box>
 {
     public int AtomicId { get; }
     public RWAtomicSection Atomic { get; }
     public Box Box { get; }
-    protected override IRaycastable CoarseCastable => Box;
-    protected override IIntersectable CoarseIntersectable => Box;
     protected override int TriangleCount => Atomic.triangles.Length;
 
     public AtomicTreeCollider(RWAtomicSection atomic, int atomicId) : base(
+        Box.FromMinMax(atomic.bbox1, atomic.bbox2),
         atomic.FindChildById(SectionId.CollisionPLG, true) as RWCollision ??
         CreateNaiveCollision(atomic.triangles.Length))
     {

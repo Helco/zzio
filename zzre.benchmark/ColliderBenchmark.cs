@@ -6,15 +6,17 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using zzio;
 using zzio.rwbs;
 using zzio.vfs;
 
+using MyJobAttribute = BenchmarkDotNet.Attributes.LongRunJobAttribute;
+
 namespace zzre.benchmark;
 
 [MemoryDiagnoser]
-//[SimpleJob(BenchmarkDotNet.Engines.RunStrategy.Throughput)]
-[LongRunJob]
+[MyJob]
 [MinIterationCount(10), MaxIterationCount(1000)]
 public class ColliderBenchmark
 {
@@ -25,7 +27,7 @@ public class ColliderBenchmark
     private const int CaseCount = 1000;
     private readonly WorldCollider worldCollider;
     private readonly Vector3[] cases;
-    private List<Intersection> intersections = new(128);
+    private List<Intersection> intersections = new(256);
 
     public ColliderBenchmark()
     {
@@ -103,7 +105,7 @@ public class ColliderBenchmark
         foreach (var pos in cases)
         {
             var enumerator = new WorldCollider.IntersectionsEnumerator<Sphere, IntersectionQueries,
-                TreeCollider.IntersectionsEnumerator<Sphere, IntersectionQueries>>
+                TreeCollider<Box>.IntersectionsEnumerator<Sphere, IntersectionQueries>>
                 (worldCollider, new Sphere(pos, SphereRadius),
                 &WorldCollider.IntersectionsEnumerable<Sphere, IntersectionQueries>.AtomicIntersections);
             while (enumerator.MoveNext())
