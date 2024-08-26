@@ -161,6 +161,39 @@ public sealed class WorldCollider : BaseGeometryCollider
         //new IntersectionsEnumerable<T, TQueries>(this, primitive);
         new IntersectionsEnumerableVirtCall(this, AnyIntersectionable.From(primitive));
 
+    public IEnumerable<Intersection> IntersectionsGeneratorOld<T, TQueries>(T primitive)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        if (!CoarseIntersectable.Intersects(primitive))
+            yield break;
+
+        var splitStack = new Stack<Section>();
+        splitStack.Push(rootSection);
+        while (splitStack.Any())
+        {
+            switch (splitStack.Pop())
+            {
+                case RWAtomicSection atomic when atomicColliders.TryGetValue(atomic, out var collider):
+                    foreach (var i in TQueries.Intersections(collider, primitive))
+                        yield return i;
+                    break;
+
+                case RWPlaneSection plane:
+                    var leftPlane = new Plane(plane.sectorType.AsNormal(), plane.leftValue);
+                    var rightPlane = new Plane(plane.sectorType.AsNormal(), plane.rightValue);
+                    var leftSection = plane.children[0];
+                    var rightSection = plane.children[1];
+
+                    if (TQueries.SideOf(rightPlane, primitive) != PlaneIntersections.Outside)
+                        splitStack.Push(rightSection);
+                    if (TQueries.SideOf(leftPlane, primitive) != PlaneIntersections.Inside)
+                        splitStack.Push(leftSection);
+                    break;
+            }
+        }
+    }
+
     public IEnumerable<Intersection> IntersectionsGenerator<T, TQueries>(T primitive)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>

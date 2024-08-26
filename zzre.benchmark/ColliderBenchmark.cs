@@ -60,6 +60,18 @@ public class ColliderBenchmark
     }
 
     [Benchmark(Baseline = true)]
+    public float IntersectionsBaseline()
+    {
+        float f = 0f;
+        foreach (var pos in cases)
+        {
+            foreach (var intersection in worldCollider.IntersectionsGeneratorOld<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius)))
+                f += intersection.Point.X;
+        }
+        return f;
+    }
+
+    [Benchmark]
     public float IntersectionsGenerator()
     {
         float f = 0f;
