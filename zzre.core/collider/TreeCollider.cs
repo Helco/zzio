@@ -144,6 +144,8 @@ public abstract partial class TreeCollider : TriangleCollider
     public new TriangleIntersections Intersections(in Triangle triangle) => new(new(this, triangle));
     public new LineIntersections Intersections(in Line line) => new(new(this, line));
 
+    public static Stack<CollisionSplit> splitStack = new();
+
     public IEnumerable<Intersection> IntersectionsGenerator<T, TQueries>(T primitive)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
@@ -151,7 +153,8 @@ public abstract partial class TreeCollider : TriangleCollider
         if (!CoarseIntersectable.Intersects(primitive))
             yield break;
 
-        var splitStack = new Stack<CollisionSplit>();
+        //var splitStack = new Stack<CollisionSplit>();
+        splitStack.Clear();
         splitStack.Push(Collision.splits[0]);
         while (splitStack.Any())
         {
@@ -209,7 +212,8 @@ public abstract partial class TreeCollider : TriangleCollider
         if (!CoarseIntersectable.Intersects(primitive))
             return;
 
-        var splitStack = new Stack<CollisionSplit>();
+        //var splitStack = new Stack<CollisionSplit>();
+        splitStack.Clear();
         splitStack.Push(Collision.splits[0]);
         while (splitStack.Any())
         {
@@ -277,7 +281,7 @@ public abstract partial class TreeCollider : TriangleCollider
 
         private readonly TreeCollider collider;
         private readonly T primitive;
-        private readonly Stack<CollisionSplit> splitStack = new();
+        //private readonly Stack<CollisionSplit> splitStack = new();
         private CollisionSector curSector;
         private SectorSelection sectorSelection;
         private int triangleI;
@@ -302,7 +306,7 @@ public abstract partial class TreeCollider : TriangleCollider
 
         public bool MoveNext()
         {
-            if (splitStack is null)
+            if (splitStack is null || collider is null)
                 return false;
             while (splitStack.Count > 0)
             {
@@ -390,7 +394,7 @@ public abstract partial class TreeCollider : TriangleCollider
 
         private readonly TreeCollider collider;
         private readonly AnyIntersectionable primitive;
-        private readonly Stack<CollisionSplit> splitStack = new();
+        //private readonly Stack<CollisionSplit> splitStack = new();
         private CollisionSector curSector;
         private SectorSelection sectorSelection;
         private int triangleI;
@@ -416,7 +420,7 @@ public abstract partial class TreeCollider : TriangleCollider
 
         public bool MoveNext()
         {
-            if (splitStack is null)
+            if (splitStack is null || collider is null)
                 return false;
             while (splitStack.Count > 0)
             {
