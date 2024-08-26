@@ -5,15 +5,15 @@ using zzio.rwbs;
 using zzio;
 using System;
 using System.Collections;
-using static zzre.TreeCollider;
+using static zzre.TreeCollider<zzre.Box>;
 
 // I regret it already a bit#
 
-using BoxIntersectionsE = zzre.TreeCollider.IntersectionsEnumerator<zzre.Box, zzre.IntersectionQueries>;
-using OrientedBoxIntersectionsE = zzre.TreeCollider.IntersectionsEnumerator<zzre.OrientedBox, zzre.IntersectionQueries>;
-using SphereIntersectionsE = zzre.TreeCollider.IntersectionsEnumerator<zzre.Sphere, zzre.IntersectionQueries>;
-using TriangleIntersectionsE = zzre.TreeCollider.IntersectionsEnumerator<zzre.Triangle, zzre.IntersectionQueries>;
-using LineIntersectionsE = zzre.TreeCollider.IntersectionsEnumerator<zzre.Line, zzre.IntersectionQueries>;
+using BoxIntersectionsE = zzre.TreeCollider<zzre.Box>.IntersectionsEnumerator<zzre.Box, zzre.IntersectionQueries>;
+using OrientedBoxIntersectionsE = zzre.TreeCollider<zzre.Box>.IntersectionsEnumerator<zzre.OrientedBox, zzre.IntersectionQueries>;
+using SphereIntersectionsE = zzre.TreeCollider<zzre.Box>.IntersectionsEnumerator<zzre.Sphere, zzre.IntersectionQueries>;
+using TriangleIntersectionsE = zzre.TreeCollider<zzre.Box>.IntersectionsEnumerator<zzre.Triangle, zzre.IntersectionQueries>;
+using LineIntersectionsE = zzre.TreeCollider<zzre.Box>.IntersectionsEnumerator<zzre.Line, zzre.IntersectionQueries>;
 
 /*using BoxIntersectionEnumerator = zzre.WorldCollider.IntersectionsEnumerator<
     zzre.Box, zzre.IntersectionQueries, zzre.TreeCollider.IntersectionsEnumerator<
@@ -76,7 +76,7 @@ public sealed class WorldCollider : BaseGeometryCollider
             throw new InvalidDataException("RWWorld has both a root plane and a root atomic");
 
         splitStack ??= new();
-        TreeCollider.splitStack ??= new();
+        TreeCollider<zzre.Box>.splitStack ??= new();
     }
 
     public WorldTriangleInfo GetTriangleInfo(WorldTriangleId id) =>
@@ -175,7 +175,7 @@ public sealed class WorldCollider : BaseGeometryCollider
             switch (splitStack.Pop())
             {
                 case RWAtomicSection atomic when atomicColliders.TryGetValue(atomic, out var collider):
-                    foreach (var i in TQueries.Intersections(collider, primitive))
+                    foreach (var i in TQueries.IntersectionsOld(collider, primitive))
                         yield return i;
                     break;
 
@@ -198,9 +198,6 @@ public sealed class WorldCollider : BaseGeometryCollider
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
-        if (!CoarseIntersectable.Intersects(primitive))
-            yield break;
-
         //var splitStack = new Stack<Section>();
         splitStack.Clear();
         splitStack.Push(rootSection);
@@ -241,15 +238,12 @@ public sealed class WorldCollider : BaseGeometryCollider
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
-        if (!CoarseIntersectable.Intersects(primitive))
-            return;
-
         //var splitStack = new Stack<Section>();
         splitStack.Clear();
         splitStack.Push(rootSection);
-        while (splitStack.Any())
+        while (splitStack.TryPop(out var section))
         {
-            switch (splitStack.Pop())
+            switch (section)
             {
                 case RWAtomicSection atomic when atomicColliders.TryGetValue(atomic, out var collider):
                     collider.IntersectionsList<T, TQueries>(primitive, intersections);
@@ -296,11 +290,11 @@ public sealed class WorldCollider : BaseGeometryCollider
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        private static BoxIntersectionsE AtomicIntersections(TreeCollider collider, in Box primitive) => new BoxIntersectionsE(collider, primitive);
-        private static OrientedBoxIntersectionsE AtomicIntersections(TreeCollider collider, in OrientedBox primitive) => new OrientedBoxIntersectionsE(collider, primitive);
-        public static SphereIntersectionsE AtomicIntersections(TreeCollider collider, in Sphere primitive) => new SphereIntersectionsE(collider, primitive);
-        private static TriangleIntersectionsE AtomicIntersections(TreeCollider collider, in Triangle primitive) => new TriangleIntersectionsE(collider, primitive);
-        private static LineIntersectionsE AtomicIntersections(TreeCollider collider, in Line primitive) => new LineIntersectionsE(collider, primitive);
+        private static BoxIntersectionsE AtomicIntersections(TreeCollider<Box> collider, in Box primitive) => new BoxIntersectionsE(collider, primitive);
+        private static OrientedBoxIntersectionsE AtomicIntersections(TreeCollider<Box> collider, in OrientedBox primitive) => new OrientedBoxIntersectionsE(collider, primitive);
+        public static SphereIntersectionsE AtomicIntersections(TreeCollider<Box> collider, in Sphere primitive) => new SphereIntersectionsE(collider, primitive);
+        private static TriangleIntersectionsE AtomicIntersections(TreeCollider<Box> collider, in Triangle primitive) => new TriangleIntersectionsE(collider, primitive);
+        private static LineIntersectionsE AtomicIntersections(TreeCollider<Box> collider, in Line primitive) => new LineIntersectionsE(collider, primitive);
     }
 
     public unsafe struct IntersectionsEnumerator<T, TQueries, TIntersectionEnumerator> : IEnumerator<Intersection>
@@ -311,14 +305,14 @@ public sealed class WorldCollider : BaseGeometryCollider
         private readonly T primitive;
         private readonly WorldCollider collider;
        // private readonly Stack<Section> splitStack = new();
-        private readonly delegate*<TreeCollider, in T, TIntersectionEnumerator> atomicIntersections;
+        private readonly delegate*<TreeCollider<Box>, in T, TIntersectionEnumerator> atomicIntersections;
         private TIntersectionEnumerator atomicEnumerator;
 
         public Intersection Current { get; private set; }
         object IEnumerator.Current => Current;
 
         public IntersectionsEnumerator(WorldCollider collider, in T primitive,
-            delegate*<TreeCollider, in T, TIntersectionEnumerator> atomicIntersections)
+            delegate*<TreeCollider<Box>, in T, TIntersectionEnumerator> atomicIntersections)
         {
             this.primitive = primitive;
             this.collider = collider;
@@ -347,7 +341,7 @@ public sealed class WorldCollider : BaseGeometryCollider
                 switch(section)
                 {
                     case RWAtomicSection atomic when collider.atomicColliders.TryGetValue(atomic, out var atomicCollider):
-                        if (atomicCollider is not TreeCollider treeCollider)
+                        if (atomicCollider is not TreeCollider<Box> treeCollider)
                             throw new NotSupportedException("Allocation-less intersection enumerator does not support non-tree enumerators");
                         atomicEnumerator = atomicIntersections(treeCollider, primitive);
                         goto AtomicIntersection;
@@ -392,7 +386,7 @@ public sealed class WorldCollider : BaseGeometryCollider
         private readonly WorldCollider collider;
         private readonly AnyIntersectionable primitive;
        // private readonly Stack<Section> splitStack = new();
-        private TreeCollider.IntersectionsEnumeratorVirtCall atomicEnumerator;
+        private TreeCollider<Box>.IntersectionsEnumeratorVirtCall atomicEnumerator;
 
         public Intersection Current { get; private set; }
         object IEnumerator.Current => Current;
