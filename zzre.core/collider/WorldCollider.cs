@@ -74,6 +74,9 @@ public sealed class WorldCollider : BaseGeometryCollider
         rootSection = rootPlane ?? rootAtomic ?? throw new InvalidDataException("RWWorld has no geometry");
         if (rootPlane != null && rootAtomic != null)
             throw new InvalidDataException("RWWorld has both a root plane and a root atomic");
+
+        splitStack ??= new();
+        TreeCollider.splitStack ??= new();
     }
 
     public WorldTriangleInfo GetTriangleInfo(WorldTriangleId id) =>
@@ -150,6 +153,8 @@ public sealed class WorldCollider : BaseGeometryCollider
         }
     }
 
+    private static Stack<Section> splitStack = new();
+
     protected override IEnumerable<Intersection> Intersections<T, TQueries>(T primitive) =>
         //IntersectionsGenerator<T, TQueries>(primitive);
         //IntersectionsList<T, TQueries>(primitive);
@@ -163,7 +168,8 @@ public sealed class WorldCollider : BaseGeometryCollider
         if (!CoarseIntersectable.Intersects(primitive))
             yield break;
 
-        var splitStack = new Stack<Section>();
+        //var splitStack = new Stack<Section>();
+        splitStack.Clear();
         splitStack.Push(rootSection);
         while (splitStack.Any())
         {
@@ -205,7 +211,8 @@ public sealed class WorldCollider : BaseGeometryCollider
         if (!CoarseIntersectable.Intersects(primitive))
             return;
 
-        var splitStack = new Stack<Section>();
+        //var splitStack = new Stack<Section>();
+        splitStack.Clear();
         splitStack.Push(rootSection);
         while (splitStack.Any())
         {
@@ -270,7 +277,7 @@ public sealed class WorldCollider : BaseGeometryCollider
     {
         private readonly T primitive;
         private readonly WorldCollider collider;
-        private readonly Stack<Section> splitStack = new();
+       // private readonly Stack<Section> splitStack = new();
         private readonly delegate*<TreeCollider, in T, TIntersectionEnumerator> atomicIntersections;
         private TIntersectionEnumerator atomicEnumerator;
 
@@ -351,7 +358,7 @@ public sealed class WorldCollider : BaseGeometryCollider
     {
         private readonly WorldCollider collider;
         private readonly AnyIntersectionable primitive;
-        private readonly Stack<Section> splitStack = new();
+       // private readonly Stack<Section> splitStack = new();
         private TreeCollider.IntersectionsEnumeratorVirtCall atomicEnumerator;
 
         public Intersection Current { get; private set; }
