@@ -15,7 +15,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\zzre.core\zzre.core.csproj" />
+    <ProjectReference Include="..\zzre.core\zzre.core.csproj" Aliases="Proj" />
+    <Reference Include="zzre.baseline">
+      <HintPath>zzre.baseline.dll</HintPath>
+      <Aliases>Baseline</Aliases>
+    </Reference>
   </ItemGroup>
 
 </Project>

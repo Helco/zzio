@@ -22,7 +22,7 @@
       <LogicalName>imgui-frag</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Serilog" Version="3.1.1" />
     <PackageReference Include="Silk.NET.SDL" Version="2.20.0" />

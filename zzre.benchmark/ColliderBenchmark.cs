@@ -1,4 +1,7 @@
-﻿using System;
+﻿extern alias Proj;
+extern alias Baseline;
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,8 +13,13 @@ using BenchmarkDotNet.Jobs;
 using zzio;
 using zzio.rwbs;
 using zzio.vfs;
+using Proj::zzre;
 
-using MyJobAttribute = BenchmarkDotNet.Attributes.LongRunJobAttribute;
+using BLWorldCollider = Baseline::zzre.WorldCollider;
+using BLSphere = Baseline::zzre.Sphere;
+using BLIntersectionQueries = Baseline::zzre.IntersectionQueries;
+
+using MyJobAttribute = BenchmarkDotNet.Attributes.ShortRunJobAttribute;
 
 namespace zzre.benchmark;
 
@@ -26,6 +34,7 @@ public class ColliderBenchmark
     private const float SphereRadius = 2.0f;
     private const int CaseCount = 1000;
     private readonly WorldCollider worldCollider;
+    private readonly BLWorldCollider worldColliderBL;
     private readonly Vector3[] cases;
     private List<Intersection> intersections = new(256);
 
@@ -37,6 +46,7 @@ public class ColliderBenchmark
         var rwWorld = Section.ReadNew(worldStream) as RWWorld
             ?? throw new IOException("Could not read world geometry: " + WorldPath);
         worldCollider = new(rwWorld);
+        worldColliderBL = new(rwWorld);
 
         var random = new Random(Seed);
         cases = new Vector3[CaseCount];
@@ -67,7 +77,7 @@ public class ColliderBenchmark
         float f = 0f;
         foreach (var pos in cases)
         {
-            foreach (var intersection in worldCollider.IntersectionsGeneratorOld<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius)))
+            foreach (var intersection in worldColliderBL.IntersectionsGeneratorOld<BLSphere, BLIntersectionQueries>(new BLSphere(pos, SphereRadius)))
                 f += intersection.Point.X;
         }
         return f;
