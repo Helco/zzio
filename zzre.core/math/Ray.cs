@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using zzio.rwbs;
 
 namespace zzre;
@@ -12,10 +13,14 @@ public readonly struct Ray
 
     public Ray(Vector3 start, Vector3 dir) => (Start, Direction) = (start, Vector3.Normalize(dir));
 
+    [MethodImpl(MathEx.MIOptions)]
     public bool Intersects(Vector3 point) => MathEx.Cmp(1f, Vector3.Dot(Direction, Vector3.Normalize(point - Start)));
+    [MethodImpl(MathEx.MIOptions)]
     public float PhaseOf(Vector3 point) => Vector3.Dot(point - Start, Direction);
+    [MethodImpl(MathEx.MIOptions)]
     public Vector3 ClosestPoint(Vector3 point) => Start + Direction * Math.Max(0f, PhaseOf(point));
 
+    [MethodImpl(MathEx.MIOptions)]
     public Raycast? Cast(Sphere sphere)
     {
         var e = sphere.Center - Start;
@@ -33,6 +38,7 @@ public readonly struct Ray
         return new Raycast(d, p, n);
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public Raycast? Cast(Box box)
     {
         return Cast(AABBSlabPoints(box, this));
@@ -54,8 +60,10 @@ public readonly struct Ray
         }
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public Raycast? Cast(OrientedBox obb)
     {
+        [MethodImpl(MathEx.MIOptions)]
         static ((float t, Vector3 n), (float t, Vector3 n))? OBBSlabPoint(Box box, Ray me, Vector3 axis, float halfSize)
         {
             float dirOnAxis = Vector3.Dot(axis, me.Direction);
@@ -84,6 +92,7 @@ public readonly struct Ray
         });
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     private Raycast? Cast(IEnumerable<((float t, Vector3 n), (float t, Vector3 n))> slabPoints)
     {
         var tmin = (t: float.MinValue, n: Vector3.Zero);
@@ -107,6 +116,7 @@ public readonly struct Ray
         return new Raycast(t.t, p, t.n);
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public Raycast? Cast(Plane plane)
     {
         float angle = Vector3.Dot(Direction, plane.Normal);
@@ -118,10 +128,13 @@ public readonly struct Ray
         return new Raycast(t, Start + Direction * t, plane.Normal);
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public float? DistanceTo(CollisionSectorType sectorType, float planeDistance) =>
         DistanceToUnitPlane(sectorType.ToIndex(), planeDistance);
+    [MethodImpl(MathEx.MIOptions)]
     public float? DistanceTo(RWPlaneSectionType sectionType, float planeDistance) =>
         DistanceToUnitPlane(sectionType.ToIndex(), planeDistance);
+    [MethodImpl(MathEx.MIOptions)]
     private float? DistanceToUnitPlane(int componentIndex, float planeDistance)
     {
         float angle = Direction.Component(componentIndex);
@@ -130,6 +143,7 @@ public readonly struct Ray
         return angle >= 0.0f || float.IsNaN(t) || t < 0 ? null : t;
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public Raycast? Cast(Triangle triangle, WorldTriangleId? triangleId = null)
     {
         if (triangle.IsDegenerated)

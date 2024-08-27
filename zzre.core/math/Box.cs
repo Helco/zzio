@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace zzre;
 
@@ -12,40 +13,60 @@ public readonly partial struct Box : IRaycastable, IIntersectable
     public readonly Vector3 Center;
     public readonly Vector3 Size;
 
-    public Vector3 HalfSize => Size / 2;
-    public Vector3 Min => Center - HalfSize;
-    public Vector3 Max => Center + HalfSize;
-    public float MaxSizeComponent => Math.Max(Math.Max(Size.X, Size.Y), Size.Z);
+    public Vector3 HalfSize { [MethodImpl(MathEx.MIOptions)]
+        get => Size / 2; }
+    public Vector3 Min { [MethodImpl(MathEx.MIOptions)]
+        get => Center - HalfSize; }
+    public Vector3 Max { [MethodImpl(MathEx.MIOptions)]
+        get => Center + HalfSize; }
+    public float MaxSizeComponent { [MethodImpl(MathEx.MIOptions)]
+        get => Math.Max(Math.Max(Size.X, Size.Y), Size.Z); }
 
-    public static Box Zero => new();
+    public static readonly Box Zero;
 
+    [MethodImpl(MathEx.MIOptions)]
     public Box(float x, float y, float z, float w, float h, float d)
     {
         Center = new Vector3(x, y, z);
         Size = new Vector3(w, h, d);
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public Box(Vector3 center, Vector3 size)
     {
         Center = center;
         Size = size;
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public static Box FromMinMax(Vector3 min, Vector3 max) => new((min + max) / 2, (max - min));
+    [MethodImpl(MathEx.MIOptions)]
     public static Box Union(params Box[] bounds) => bounds.Skip(1).Aggregate(bounds.First(), (prev, next) => prev.Union(next));
 
+    [MethodImpl(MathEx.MIOptions)]
     public Box OffsettedBy(float x, float y, float z) => new(Center + new Vector3(x, y, z), Size);
+    [MethodImpl(MathEx.MIOptions)]
     public Box OffsettedBy(Vector3 off) => new(Center + off, Size);
+    [MethodImpl(MathEx.MIOptions)]
     public Box GrownBy(float x, float y, float z) => new(Center, Size + new Vector3(x, y, z));
+    [MethodImpl(MathEx.MIOptions)]
     public Box GrownBy(Vector3 off) => new(Center, Size + off);
+    [MethodImpl(MathEx.MIOptions)]
     public Box ScaledBy(float s) => new(Center, Size * s);
+    [MethodImpl(MathEx.MIOptions)]
     public Box ScaledBy(float x, float y, float z) => new(Center, Vector3.Multiply(Size, new Vector3(x, y, z)));
+    [MethodImpl(MathEx.MIOptions)]
     public Box ScaledBy(Vector3 s) => new(Center, Vector3.Multiply(Size, s));
+    [MethodImpl(MathEx.MIOptions)]
     public Box At(Vector3 newCenter) => new(newCenter, Size);
+    [MethodImpl(MathEx.MIOptions)]
     public Box WithSizeOf(Vector3 newSize) => new(Center, newSize);
+    [MethodImpl(MathEx.MIOptions)]
     public Box Union(Box other) => FromMinMax(Vector3.Min(Min, other.Min), Vector3.Max(Max, other.Max));
+    [MethodImpl(MathEx.MIOptions)]
     public Box Union(Vector3 v) => Union(new Box(v, Vector3.Zero));
 
+    // TODO: Replace allocations in Box
     public IReadOnlyList<Vector3> Corners() => new[]
     {
         new Vector3(Min.X, Min.Y, Min.Z),
@@ -93,12 +114,14 @@ public readonly partial struct Box : IRaycastable, IIntersectable
         new Plane(Vector3.UnitZ, Max.Z),
     };
 
+    [MethodImpl(MathEx.MIOptions)]
     public OrientedBox TransformToWorld(Location location)
     {
         var newCenter = Vector3.Transform(Center, location.LocalToWorld);
         return new OrientedBox(new Box(newCenter, Size), location.GlobalRotation);
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public Vector3 ClosestPoint(Vector3 to)
     {
         var min = Min;
@@ -109,12 +132,14 @@ public readonly partial struct Box : IRaycastable, IIntersectable
             Math.Clamp(to.Z, min.Z, max.Z));
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public Vector3 ClosestPoint(Location location, Vector3 to)
     {
         var (transformed, orientation) = TransformToWorld(location);
         return transformed.ClosestPoint(orientation, to);
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public Vector3 ClosestPoint(Quaternion orientation, Vector3 to)
     {
         var dir = to - Center;
@@ -128,8 +153,10 @@ public readonly partial struct Box : IRaycastable, IIntersectable
             forward * Math.Clamp(distanceZ, -HalfSize.Z, +HalfSize.Z);
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     internal Interval IntervalOn(Vector3 axis) => new(Corners().Select(c => Vector3.Dot(c, axis)));
 
+    [MethodImpl(MathEx.MIOptions)]
     internal Interval IntervalOn(Quaternion orientation, Vector3 axis) => new(Corners(orientation).Select(c => Vector3.Dot(c, axis)));
 
     public IEnumerable<Triangle> Triangles() => Triangles(Quaternion.Identity);

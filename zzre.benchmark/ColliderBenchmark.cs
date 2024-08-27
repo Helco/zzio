@@ -18,6 +18,8 @@ using Proj::zzre;
 using BLWorldCollider = Baseline::zzre.WorldCollider;
 using BLSphere = Baseline::zzre.Sphere;
 using BLIntersectionQueries = Baseline::zzre.IntersectionQueries;
+using BLIntersection = Baseline::zzre.Intersection;
+using BLAnyIntersectionable = Baseline::zzre.AnyIntersectionable;
 
 using MyJobAttribute = BenchmarkDotNet.Attributes.ShortRunJobAttribute;
 
@@ -37,6 +39,7 @@ public class ColliderBenchmark
     private readonly BLWorldCollider worldColliderBL;
     private readonly Vector3[] cases;
     private List<Intersection> intersections = new(256);
+    private List<BLIntersection> blintersections = new(256);
 
     public ColliderBenchmark()
     {
@@ -95,6 +98,19 @@ public class ColliderBenchmark
         return f;
     }
 
+        [Benchmark]
+    public float IntersectionsBaselineList()
+    {
+        float f = 0f;
+        foreach (var pos in cases)
+        {
+            blintersections.Clear();
+            worldColliderBL.IntersectionsList<BLSphere, BLIntersectionQueries>(new BLSphere(pos, SphereRadius), blintersections);
+            f += blintersections.Count;
+        }
+        return f;
+    }
+
     [Benchmark]
     public float IntersectionsList()
     {
@@ -118,6 +134,19 @@ public class ColliderBenchmark
                 TreeCollider<Box>.IntersectionsEnumerator<Sphere, IntersectionQueries>>
                 (worldCollider, new Sphere(pos, SphereRadius),
                 &WorldCollider.IntersectionsEnumerable<Sphere, IntersectionQueries>.AtomicIntersections);
+            while (enumerator.MoveNext())
+                f += enumerator.Current.Point.X;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float IntersectionsBaselineTaggedUnion()
+    {
+        float f = 0f;
+        foreach (var pos in cases)
+        {
+            var enumerator = new BLWorldCollider.IntersectionsEnumeratorVirtCall(worldColliderBL, BLAnyIntersectionable.From(new BLSphere(pos, SphereRadius)));
             while (enumerator.MoveNext())
                 f += enumerator.Current.Point.X;
         }

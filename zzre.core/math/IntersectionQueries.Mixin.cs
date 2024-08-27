@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace zzre;
 
 partial class IntersectionQueries
 {
     // Type-erased version
+    [MethodImpl(MathEx.MIOptions)]
     internal static bool Intersects(IIntersectable a, IIntersectable b, bool shouldTryToSwitch) => (a, b) switch
     {
         { a: Triangle A, b: Box B } => Intersects(A, B),
