@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace zzre;
 
@@ -8,26 +9,31 @@ public readonly partial struct Sphere : IRaycastable, IIntersectable
 {
     public readonly Vector3 Center;
     public readonly float Radius;
-    public float RadiusSq => Radius * Radius;
+    public float RadiusSq { [MethodImpl(MathEx.MIOptions)]
+        get => Radius * Radius; }
 
     public static readonly Sphere Zero;
 
+    [MethodImpl(MathEx.MIOptions)]
     public Sphere(float x, float y, float z, float r)
     {
         Center = new Vector3(x, y, z);
         Radius = r;
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public Sphere(Vector3 center, float radius)
     {
         Center = center;
         Radius = radius;
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public Sphere TransformToWorld(Location location) => new(
         Vector3.Transform(Center, location.LocalToWorld),
         Radius);
 
+    // TODO: Remove allocations in Sphere
     public IEnumerable<Line> Edges(int horizontalSections = 8, int verticalSections = 7)
     {
         var horRot = Matrix3x2.CreateRotation(2f * MathF.PI / horizontalSections);
@@ -72,6 +78,7 @@ public readonly partial struct Sphere : IRaycastable, IIntersectable
         }
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     private Vector3 EdgePoint(Vector2 hor, Vector2 ver) =>
         Center + new Vector3(hor.X * ver.X, ver.Y, hor.Y * ver.X) * Radius;
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace zzre;
 
@@ -7,14 +8,21 @@ public readonly partial struct Line : IIntersectable
 {
     public readonly Vector3 Start;
     public readonly Vector3 End;
-    public Vector3 Vector => End - Start;
-    public Vector3 Direction => Vector3.Normalize(Vector);
-    public float Length => Vector.Length();
-    public float LengthSq => Vector.LengthSquared();
+    public Vector3 Vector { [MethodImpl(MathEx.MIOptions)]
+        get => End - Start; }
+    public Vector3 Direction { [MethodImpl(MathEx.MIOptions)]
+        get => Vector3.Normalize(Vector); }
+    public float Length { [MethodImpl(MathEx.MIOptions)]
+        get => Vector.Length(); }
+    public float LengthSq { [MethodImpl(MathEx.MIOptions)]
+        get => Vector.LengthSquared(); }
 
+    [MethodImpl(MathEx.MIOptions)]
     public Line(Vector3 start, Vector3 end) => (Start, End) = (start, end);
 
+    [MethodImpl(MathEx.MIOptions)]
     public float PhaseOf(Vector3 point) => Vector3.Dot(point - Start, Vector) / LengthSq;
+    [MethodImpl(MathEx.MIOptions)]
     public Vector3 ClosestPoint(Vector3 point) => Start + Vector * Math.Clamp(PhaseOf(point), 0f, 1f);
 
     private Raycast? CheckRaycast(Raycast? cast) =>

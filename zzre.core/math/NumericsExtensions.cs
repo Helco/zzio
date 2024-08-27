@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using zzio;
 using Quaternion = System.Numerics.Quaternion;
 
@@ -11,11 +12,13 @@ public static class NumericsExtensions
 {
     private const float EPS = 0.001f;
 
+    [MethodImpl(MathEx.MIOptions)]
     public static Vector3 SomeOrthogonal(this Vector3 v) => Math.Abs(v.Y) < EPS && Math.Abs(v.Z) < EPS
         ? Vector3.Cross(v, Vector3.UnitY)
         : Vector3.Cross(v, Vector3.UnitX);
 
     // from https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+    [MethodImpl(MathEx.MIOptions)]
     public static Vector3 ToEuler(this Quaternion q)
     {
         var euler = Vector3.Zero;
@@ -35,33 +38,47 @@ public static class NumericsExtensions
         return euler;
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public static Quaternion LookAt(Vector3 source, Vector3 dest) => LookIn(Vector3.Normalize(dest - source), Vector3.UnitY);
+    [MethodImpl(MathEx.MIOptions)]
     public static Quaternion LookAt(Vector3 source, Vector3 dest, Vector3 up) => LookIn(Vector3.Normalize(dest - source), up);
+    [MethodImpl(MathEx.MIOptions)]
     public static Quaternion LookIn(Vector3 dir) => LookIn(dir, Vector3.UnitY);
+    [MethodImpl(MathEx.MIOptions)]
     public static Quaternion LookIn(Vector3 dir, Vector3 up)
     {
         var matrix = Matrix4x4.CreateLookAt(dir, Vector3.Zero, up);
         return Quaternion.Inverse(Quaternion.CreateFromRotationMatrix(matrix));
     }
 
+    [MethodImpl(MathEx.MIOptions)]
     public static (Vector3 right, Vector3 up, Vector3 forward) UnitVectors(this Quaternion q) => (
         Vector3.Transform(Vector3.UnitX, q),
         Vector3.Transform(Vector3.UnitY, q),
         Vector3.Transform(Vector3.UnitZ, q));
 
+    [MethodImpl(MathEx.MIOptions)]
     public static float MaxComponent(this Vector2 v) => Math.Max(v.X, v.Y);
+    [MethodImpl(MathEx.MIOptions)]
     public static float MinComponent(this Vector2 v) => Math.Min(v.X, v.Y);
+    [MethodImpl(MathEx.MIOptions)]
     public static float MaxComponent(this Vector3 v) => Math.Max(Math.Max(v.X, v.Y), v.Z);
+    [MethodImpl(MathEx.MIOptions)]
     public static float MinComponent(this Vector3 v) => Math.Min(Math.Min(v.X, v.Y), v.Z);
+    [MethodImpl(MathEx.MIOptions)]
     public static float MaxComponent(this Vector4 v) => Math.Max(Math.Max(Math.Max(v.X, v.Y), v.Z), v.W);
+    [MethodImpl(MathEx.MIOptions)]
     public static float MinComponent(this Vector4 v) => Math.Min(Math.Min(Math.Min(v.X, v.Y), v.Z), v.W);
 
+    [MethodImpl(MathEx.MIOptions)]
     public static unsafe float Component(this Vector2 v, int i) => i >= 0 && i < 2
         ? ((float*)&v)[i]
         : throw new ArgumentOutOfRangeException(nameof(i));
+    [MethodImpl(MathEx.MIOptions)]
     public static unsafe float Component(this Vector3 v, int i) => i >= 0 && i < 3
         ? ((float*)&v)[i]
         : throw new ArgumentOutOfRangeException(nameof(i));
+    [MethodImpl(MathEx.MIOptions)]
     public static unsafe float Component(this Vector4 v, int i) => i >= 0 && i < 4
         ? ((float*)&v)[i]
         : throw new ArgumentOutOfRangeException(nameof(i));
