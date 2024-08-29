@@ -23,6 +23,8 @@ public readonly partial struct Line : IIntersectable
     [MethodImpl(MathEx.MIOptions)]
     public float PhaseOf(Vector3 point) => Vector3.Dot(point - Start, Vector) / LengthSq;
     [MethodImpl(MathEx.MIOptions)]
+    public float UnscaledPhaseOf(Vector3 point) => Vector3.Dot(point - Start, Vector);
+    [MethodImpl(MathEx.MIOptions)]
     public Vector3 ClosestPoint(Vector3 point) => Start + Vector * Math.Clamp(PhaseOf(point), 0f, 1f);
 
     private Raycast? CheckRaycast(Raycast? cast) =>

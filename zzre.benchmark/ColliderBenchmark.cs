@@ -21,7 +21,7 @@ using BLIntersectionQueries = Baseline::zzre.IntersectionQueries;
 using BLIntersection = Baseline::zzre.Intersection;
 using BLAnyIntersectionable = Baseline::zzre.AnyIntersectionable;
 
-using MyJobAttribute = BenchmarkDotNet.Attributes.ShortRunJobAttribute;
+using MyJobAttribute = BenchmarkDotNet.Attributes.LongRunJobAttribute;
 
 namespace zzre.benchmark;
 
