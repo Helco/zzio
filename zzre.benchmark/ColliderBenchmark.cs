@@ -125,6 +125,19 @@ public class ColliderBenchmark
     }
 
     [Benchmark]
+    public float IntersectionsListKD()
+    {
+        float f = 0f;
+        foreach (var pos in cases)
+        {
+            intersections.Clear();
+            worldCollider.IntersectionsListKD<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            f += intersections.Count;
+        }
+        return f;
+    }
+
+    [Benchmark]
     public unsafe float IntersectionsStruct()
     {
         float f = 0f;

@@ -267,6 +267,35 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         }
     }
 
+    public void IntersectionsListKD<T, TQueries>(in T primitive, List<Intersection> intersections)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        //var splitStack = new Stack<CollisionSplit>();
+        splitStack.Clear();
+        splitStack.Push(Collision.splits[0]);
+        while (splitStack.Count > 0)
+        {
+            var curSplit = splitStack.Pop();
+            if (TQueries.SideOf((int)curSplit.right.type / 4, curSplit.right.value, primitive) != PlaneIntersections.Outside)
+            {
+                if (curSplit.right.count == RWCollision.SplitCount)
+                    splitStack.Push(Collision.splits[curSplit.right.index]);
+                else
+                    IntersectionsListLeaf<T, TQueries>(primitive, curSplit.right, intersections);
+            }
+
+            if (TQueries.SideOf((int)curSplit.left.type / 4, curSplit.left.value, primitive) != PlaneIntersections.Inside)
+            {
+                if (curSplit.left.count == RWCollision.SplitCount)
+                    splitStack.Push(Collision.splits[curSplit.left.index]);
+                else
+                    IntersectionsListLeaf<T, TQueries>(primitive, curSplit.left, intersections);
+            }
+        }
+    }
+
+
     private void  IntersectionsListLeaf<T, TQueries>(in T primitive, CollisionSector sector, List<Intersection> intersections)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
