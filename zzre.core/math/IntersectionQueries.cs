@@ -9,6 +9,7 @@ namespace zzre;
 public interface IIntersectionQueries<T> where T : struct
 {
     static abstract PlaneIntersections SideOf(in Plane plane, in T primitive);
+    static abstract PlaneIntersections SideOf(int planeComponent, float planeValue, in T primitive);
     static abstract Intersection? Intersect(in Triangle triangle, in T primitive);
     static abstract IEnumerable<Intersection> Intersections(BaseGeometryCollider collider, in T primitive);
     static abstract IEnumerable<Intersection> IntersectionsOld(TreeCollider<Box> collider, in T primitive);
@@ -227,6 +228,35 @@ public sealed partial class IntersectionQueries :
         collider.IntersectionsGeneratorOld<Triangle, IntersectionQueries>(triangle);
     public static IEnumerable<Intersection> IntersectionsOld(TreeCollider<Box> collider, in Line line) =>
         collider.IntersectionsGeneratorOld<Line, IntersectionQueries>(line);
+
+    [MethodImpl(MIOptions)]
+    private static unsafe Plane PlaneFromComponent(int index, float value)
+    {
+        Vector3 normal = Vector3.Zero;
+        ((float*)&normal)[index] = 1.0f;
+        return new Plane(normal, value);
+    }
+    [MethodImpl(MIOptions)]
+    public static PlaneIntersections SideOf(int planeComponent, float planeValue, in Box box) =>
+        SideOf(PlaneFromComponent(planeComponent, planeValue), box);
+    [MethodImpl(MIOptions)]
+    public static PlaneIntersections SideOf(int planeComponent, float planeValue, in OrientedBox box) =>
+        SideOf(PlaneFromComponent(planeComponent, planeValue), box);
+    [MethodImpl(MIOptions)]
+    public static PlaneIntersections SideOf(int planeComponent, float planeValue, in Triangle box) =>
+        SideOf(PlaneFromComponent(planeComponent, planeValue), box);
+    [MethodImpl(MIOptions)]
+    public static PlaneIntersections SideOf(int planeComponent, float planeValue, in Line box) =>
+        SideOf(PlaneFromComponent(planeComponent, planeValue), box);
+
+    [MethodImpl(MIOptions)]
+    public static unsafe PlaneIntersections SideOf(int planeComponent, float planeValue, in Sphere sphere)
+    {
+        float signedDistance = sphere.Center.Component(planeComponent) - planeValue;
+        return MathF.Abs(signedDistance) <= sphere.Radius
+            ? PlaneIntersections.Intersecting
+            : signedDistance > 0 ? PlaneIntersections.Inside : PlaneIntersections.Outside;
+    }
 
 
     [MethodImpl(MIOptions)]

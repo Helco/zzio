@@ -264,6 +264,35 @@ public sealed class WorldCollider : BaseGeometryCollider
         }
     }
 
+    public void IntersectionsListKD<T, TQueries>(in T primitive, List<Intersection> intersections)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        //var splitStack = new Stack<Section>();
+        splitStack.Clear();
+        splitStack.Push(rootSection);
+        while (splitStack.TryPop(out var section))
+        {
+            switch (section)
+            {
+                case RWAtomicSection atomic when atomicColliders.TryGetValue(atomic, out var collider):
+                    collider.IntersectionsListKD<T, TQueries>(primitive, intersections);
+                    break;
+
+                case RWPlaneSection plane:
+                    int planeType = (int)plane.sectorType / 4;
+                    var leftSection = plane.children[0];
+                    var rightSection = plane.children[1];
+
+                    if (TQueries.SideOf(planeType, plane.rightValue, primitive) != PlaneIntersections.Outside)
+                        splitStack.Push(rightSection);
+                    if (TQueries.SideOf(planeType, plane.leftValue, primitive) != PlaneIntersections.Inside)
+                        splitStack.Push(leftSection);
+                    break;
+            }
+        }
+    }
+
     public unsafe struct IntersectionsEnumerable<T, TQueries> : IEnumerable<Intersection>
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
