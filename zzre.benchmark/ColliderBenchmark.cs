@@ -3,6 +3,7 @@ extern alias Baseline;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -22,6 +23,8 @@ using BLIntersection = Baseline::zzre.Intersection;
 using BLAnyIntersectionable = Baseline::zzre.AnyIntersectionable;
 
 using MyJobAttribute = BenchmarkDotNet.Attributes.LongRunJobAttribute;
+using Perfolizer.Horology;
+using System.Globalization;
 
 namespace zzre.benchmark;
 
@@ -37,6 +40,7 @@ public class ColliderBenchmark
     private const int CaseCount = 1000;
     private readonly WorldCollider worldCollider;
     private readonly BLWorldCollider worldColliderBL;
+    private readonly MergedCollider mergedCollider;
     private readonly Vector3[] cases;
     private List<Intersection> intersections = new(256);
     private List<BLIntersection> blintersections = new(256);
@@ -50,6 +54,12 @@ public class ColliderBenchmark
             ?? throw new IOException("Could not read world geometry: " + WorldPath);
         worldCollider = new(rwWorld);
         worldColliderBL = new(rwWorld);
+
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        mergedCollider = MergedCollider.Create(rwWorld); // TODO: Measure performance of construction
+        stopwatch.Stop();
+        Console.WriteLine($"Merging took {stopwatch.Elapsed.ToFormattedTotalTime(CultureInfo.InvariantCulture)}");
 
         var random = new Random(Seed);
         cases = new Vector3[CaseCount];
@@ -132,6 +142,19 @@ public class ColliderBenchmark
         {
             intersections.Clear();
             worldCollider.IntersectionsListKD<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            f += intersections.Count;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float IntersectionsListKDMerged()
+    {
+        float f = 0f;
+        foreach (var pos in cases)
+        {
+            intersections.Clear();
+            mergedCollider.IntersectionsListKD<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
             f += intersections.Count;
         }
         return f;

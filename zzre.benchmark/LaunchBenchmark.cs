@@ -15,6 +15,7 @@ public static class LaunchBenchmark
         //b.IntersectionsGenerator();
         //b.IntersectionsBaseline();
         //b.IntersectionsList();
+        //b.IntersectionsListKDMerged();
         //b.IntersectionsStruct();
         //b.IntersectionsTaggedUnion();
         BenchmarkSwitcher.FromAssembly(typeof(LaunchBenchmark).Assembly).Run(args);

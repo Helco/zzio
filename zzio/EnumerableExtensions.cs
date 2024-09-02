@@ -111,4 +111,25 @@ public static class EnumerableExtensions
         int newOffset = fullOffset + subOffset;
         return newOffset..(newOffset + subLength);
     }
+
+    public static IEnumerable<TOutput> SubSums<TInput, TOutput>(
+        this IEnumerable<TInput> set, TOutput first, Func<TOutput, TInput, TOutput> next)
+    {
+        foreach (var input in set)
+        {
+            yield return first;
+            first = next(first, input);
+        }
+    }
+
+    public static IEnumerable<TOutput> SubSumsInclusive<TInput, TOutput>(
+        this IEnumerable<TInput> set, TOutput first, Func<TOutput, TInput, TOutput> next)
+    {
+        foreach (var input in set)
+        {
+            yield return first;
+            first = next(first, input);
+        }
+        yield return first;
+    }
 }

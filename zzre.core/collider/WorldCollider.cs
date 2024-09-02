@@ -54,6 +54,8 @@ public sealed class WorldCollider : BaseGeometryCollider
     protected override IRaycastable CoarseCastable => Box;
     protected override IIntersectable CoarseIntersectable => Box;
 
+    private readonly MergedCollider merged;
+
     public WorldCollider(RWWorld world)
     {
         World = world;
@@ -77,6 +79,7 @@ public sealed class WorldCollider : BaseGeometryCollider
 
         splitStack ??= new();
         TreeCollider<zzre.Box>.splitStack ??= new();
+        merged = MergedCollider.Create(world);
     }
 
     public WorldTriangleInfo GetTriangleInfo(WorldTriangleId id) =>
@@ -159,7 +162,8 @@ public sealed class WorldCollider : BaseGeometryCollider
         //IntersectionsGenerator<T, TQueries>(primitive);
         //IntersectionsList<T, TQueries>(primitive);
         //new IntersectionsEnumerable<T, TQueries>(this, primitive);
-        new IntersectionsEnumerableVirtCall(this, AnyIntersectionable.From(primitive));
+        //new IntersectionsEnumerableVirtCall(this, AnyIntersectionable.From(primitive))
+        new MergedCollider.IntersectionsEnumerable<T, TQueries>(merged, primitive);
 
     public IEnumerable<Intersection> IntersectionsGeneratorOld<T, TQueries>(T primitive)
         where T : struct, IIntersectable
