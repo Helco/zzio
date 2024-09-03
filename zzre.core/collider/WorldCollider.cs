@@ -165,39 +165,6 @@ public sealed class WorldCollider : BaseGeometryCollider
         //new IntersectionsEnumerableVirtCall(this, AnyIntersectionable.From(primitive))
         new MergedCollider.IntersectionsEnumerable<T, TQueries>(merged, primitive);
 
-    public IEnumerable<Intersection> IntersectionsGeneratorOld<T, TQueries>(T primitive)
-        where T : struct, IIntersectable
-        where TQueries : IIntersectionQueries<T>
-    {
-        if (!CoarseIntersectable.Intersects(primitive))
-            yield break;
-
-        var splitStack = new Stack<Section>();
-        splitStack.Push(rootSection);
-        while (splitStack.Any())
-        {
-            switch (splitStack.Pop())
-            {
-                case RWAtomicSection atomic when atomicColliders.TryGetValue(atomic, out var collider):
-                    foreach (var i in TQueries.IntersectionsOld(collider, primitive))
-                        yield return i;
-                    break;
-
-                case RWPlaneSection plane:
-                    var leftPlane = new Plane(plane.sectorType.AsNormal(), plane.leftValue);
-                    var rightPlane = new Plane(plane.sectorType.AsNormal(), plane.rightValue);
-                    var leftSection = plane.children[0];
-                    var rightSection = plane.children[1];
-
-                    if (TQueries.SideOf(rightPlane, primitive) != PlaneIntersections.Outside)
-                        splitStack.Push(rightSection);
-                    if (TQueries.SideOf(leftPlane, primitive) != PlaneIntersections.Inside)
-                        splitStack.Push(leftSection);
-                    break;
-            }
-        }
-    }
-
     public IEnumerable<Intersection> IntersectionsGenerator<T, TQueries>(T primitive)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
@@ -215,14 +182,13 @@ public sealed class WorldCollider : BaseGeometryCollider
                     break;
 
                 case RWPlaneSection plane:
-                    var leftPlane = new Plane(plane.sectorType.AsNormal(), plane.leftValue);
-                    var rightPlane = new Plane(plane.sectorType.AsNormal(), plane.rightValue);
+                    var planeType = (int)plane.sectorType / 4;
                     var leftSection = plane.children[0];
                     var rightSection = plane.children[1];
 
-                    if (TQueries.SideOf(rightPlane, primitive) != PlaneIntersections.Outside)
+                    if (TQueries.SideOf(planeType, plane.rightValue, primitive) != PlaneIntersections.Outside)
                         splitStack.Push(rightSection);
-                    if (TQueries.SideOf(leftPlane, primitive) != PlaneIntersections.Inside)
+                    if (TQueries.SideOf(planeType, plane.leftValue, primitive) != PlaneIntersections.Inside)
                         splitStack.Push(leftSection);
                     break;
             }
@@ -251,36 +217,6 @@ public sealed class WorldCollider : BaseGeometryCollider
             {
                 case RWAtomicSection atomic when atomicColliders.TryGetValue(atomic, out var collider):
                     collider.IntersectionsList<T, TQueries>(primitive, intersections);
-                    break;
-
-                case RWPlaneSection plane:
-                    var leftPlane = new Plane(plane.sectorType.AsNormal(), plane.leftValue);
-                    var rightPlane = new Plane(plane.sectorType.AsNormal(), plane.rightValue);
-                    var leftSection = plane.children[0];
-                    var rightSection = plane.children[1];
-
-                    if (TQueries.SideOf(rightPlane, primitive) != PlaneIntersections.Outside)
-                        splitStack.Push(rightSection);
-                    if (TQueries.SideOf(leftPlane, primitive) != PlaneIntersections.Inside)
-                        splitStack.Push(leftSection);
-                    break;
-            }
-        }
-    }
-
-    public void IntersectionsListKD<T, TQueries>(in T primitive, List<Intersection> intersections)
-        where T : struct, IIntersectable
-        where TQueries : IIntersectionQueries<T>
-    {
-        //var splitStack = new Stack<Section>();
-        splitStack.Clear();
-        splitStack.Push(rootSection);
-        while (splitStack.TryPop(out var section))
-        {
-            switch (section)
-            {
-                case RWAtomicSection atomic when atomicColliders.TryGetValue(atomic, out var collider):
-                    collider.IntersectionsListKD<T, TQueries>(primitive, intersections);
                     break;
 
                 case RWPlaneSection plane:
@@ -380,14 +316,13 @@ public sealed class WorldCollider : BaseGeometryCollider
                         goto AtomicIntersection;
 
                     case RWPlaneSection plane:
-                        var leftPlane = new Plane(plane.sectorType.AsNormal(), plane.leftValue);
-                        var rightPlane = new Plane(plane.sectorType.AsNormal(), plane.rightValue);
+                        var planeType = (int)plane.sectorType / 4;
                         var leftSection = plane.children[0];
                         var rightSection = plane.children[1];
 
-                        if (TQueries.SideOf(rightPlane, primitive) != PlaneIntersections.Outside)
+                        if (TQueries.SideOf(planeType, plane.rightValue, primitive) != PlaneIntersections.Outside)
                             splitStack.Push(rightSection);
-                        if (TQueries.SideOf(leftPlane, primitive) != PlaneIntersections.Inside)
+                        if (TQueries.SideOf(planeType, plane.leftValue, primitive) != PlaneIntersections.Inside)
                             splitStack.Push(leftSection);
                         continue;
                 }
@@ -456,14 +391,13 @@ public sealed class WorldCollider : BaseGeometryCollider
                         goto AtomicIntersection;
 
                     case RWPlaneSection plane:
-                        var leftPlane = new Plane(plane.sectorType.AsNormal(), plane.leftValue);
-                        var rightPlane = new Plane(plane.sectorType.AsNormal(), plane.rightValue);
+                        var planeType = (int)plane.sectorType / 4;
                         var leftSection = plane.children[0];
                         var rightSection = plane.children[1];
 
-                        if (primitive.SideOf(rightPlane) != PlaneIntersections.Outside)
+                        if (primitive.SideOf(planeType, plane.rightValue) != PlaneIntersections.Outside)
                             splitStack.Push(rightSection);
-                        if (primitive.SideOf(leftPlane) != PlaneIntersections.Inside)
+                        if (primitive.SideOf(planeType, plane.leftValue) != PlaneIntersections.Inside)
                             splitStack.Push(leftSection);
                         continue;
                 }

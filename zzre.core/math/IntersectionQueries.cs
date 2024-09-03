@@ -12,7 +12,6 @@ public interface IIntersectionQueries<T> where T : struct
     static abstract PlaneIntersections SideOf(int planeComponent, float planeValue, in T primitive);
     static abstract Intersection? Intersect(in Triangle triangle, in T primitive);
     static abstract IEnumerable<Intersection> Intersections(BaseGeometryCollider collider, in T primitive);
-    static abstract IEnumerable<Intersection> IntersectionsOld(TreeCollider<Box> collider, in T primitive);
 }
 
 public sealed partial class IntersectionQueries :
@@ -217,17 +216,6 @@ public sealed partial class IntersectionQueries :
 
     public static IEnumerable<Intersection> Intersections(BaseGeometryCollider collider, in Box box) =>
         collider.Intersections(box);
-
-    public static IEnumerable<Intersection> IntersectionsOld(TreeCollider<Box> collider, in Box box) =>
-        collider.IntersectionsGeneratorOld<Box, IntersectionQueries>(box);
-    public static IEnumerable<Intersection> IntersectionsOld(TreeCollider<Box> collider, in OrientedBox box) =>
-        collider.IntersectionsGeneratorOld<OrientedBox, IntersectionQueries>(box);
-    public static IEnumerable<Intersection> IntersectionsOld(TreeCollider<Box> collider, in Sphere sphere) =>
-        collider.IntersectionsGeneratorOld<Sphere, IntersectionQueries>(sphere);
-    public static IEnumerable<Intersection> IntersectionsOld(TreeCollider<Box> collider, in Triangle triangle) =>
-        collider.IntersectionsGeneratorOld<Triangle, IntersectionQueries>(triangle);
-    public static IEnumerable<Intersection> IntersectionsOld(TreeCollider<Box> collider, in Line line) =>
-        collider.IntersectionsGeneratorOld<Line, IntersectionQueries>(line);
 
     [MethodImpl(MIOptions)]
     private static unsafe Plane PlaneFromComponent(int index, float value)
