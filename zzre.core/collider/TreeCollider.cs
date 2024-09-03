@@ -144,42 +144,6 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
 
     public static Stack<CollisionSplit> splitStack = new();
 
-    public IEnumerable<Intersection> IntersectionsGeneratorOld<T, TQueries>(T primitive)
-        where T : struct, IIntersectable
-        where TQueries : IIntersectionQueries<T>
-    {
-        if (!CoarseIntersectable.Intersects(primitive))
-            yield break;
-
-        var splitStack = new Stack<CollisionSplit>();
-        splitStack.Push(Collision.splits[0]);
-        while (splitStack.Any())
-        {
-            var curSplit = splitStack.Pop();
-            if (TQueries.SideOf(GetPlane(curSplit.right), primitive) != PlaneIntersections.Outside)
-            {
-                if (curSplit.right.count == RWCollision.SplitCount)
-                    splitStack.Push(Collision.splits[curSplit.right.index]);
-                else
-                {
-                    foreach (var i in IntersectionsLeaf<T, TQueries>(primitive, curSplit.right))
-                        yield return i;
-                }
-            }
-
-            if (TQueries.SideOf(GetPlane(curSplit.left), primitive) != PlaneIntersections.Inside)
-            {
-                if (curSplit.left.count == RWCollision.SplitCount)
-                    splitStack.Push(Collision.splits[curSplit.left.index]);
-                else
-                {
-                    foreach (var i in IntersectionsLeaf<T, TQueries>(primitive, curSplit.left))
-                        yield return i;
-                }
-            }
-        }
-    }
-
     public IEnumerable<Intersection> IntersectionsGenerator<T, TQueries>(T primitive)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
@@ -193,7 +157,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         while (splitStack.Any())
         {
             var curSplit = splitStack.Pop();
-            if (TQueries.SideOf(GetPlane(curSplit.right), primitive) != PlaneIntersections.Outside)
+            if (TQueries.SideOf((int)curSplit.right.type / 4, curSplit.right.value, primitive) != PlaneIntersections.Outside)
             {
                 if (curSplit.right.count == RWCollision.SplitCount)
                     splitStack.Push(Collision.splits[curSplit.right.index]);
@@ -204,7 +168,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
                 }
             }
 
-            if (TQueries.SideOf(GetPlane(curSplit.left), primitive) != PlaneIntersections.Inside)
+            if (TQueries.SideOf((int)curSplit.left.type / 4, curSplit.left.value, primitive) != PlaneIntersections.Inside)
             {
                 if (curSplit.left.count == RWCollision.SplitCount)
                     splitStack.Push(Collision.splits[curSplit.left.index]);
@@ -240,34 +204,6 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
     }
 
     public void IntersectionsList<T, TQueries>(in T primitive, List<Intersection> intersections)
-        where T : struct, IIntersectable
-        where TQueries : IIntersectionQueries<T>
-    {
-        //var splitStack = new Stack<CollisionSplit>();
-        splitStack.Clear();
-        splitStack.Push(Collision.splits[0]);
-        while (splitStack.Count > 0)
-        {
-            var curSplit = splitStack.Pop();
-            if (TQueries.SideOf(GetPlane(curSplit.right), primitive) != PlaneIntersections.Outside)
-            {
-                if (curSplit.right.count == RWCollision.SplitCount)
-                    splitStack.Push(Collision.splits[curSplit.right.index]);
-                else
-                    IntersectionsListLeaf<T, TQueries>(primitive, curSplit.right, intersections);
-            }
-
-            if (TQueries.SideOf(GetPlane(curSplit.left), primitive) != PlaneIntersections.Inside)
-            {
-                if (curSplit.left.count == RWCollision.SplitCount)
-                    splitStack.Push(Collision.splits[curSplit.left.index]);
-                else
-                    IntersectionsListLeaf<T, TQueries>(primitive, curSplit.left, intersections);
-            }
-        }
-    }
-
-    public void IntersectionsListKD<T, TQueries>(in T primitive, List<Intersection> intersections)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
@@ -385,7 +321,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         {
             var splits = collider.Collision.splits;
             var curSplit = splitStack.Pop();
-            if (TQueries.SideOf(GetPlane(curSplit.right), primitive) != PlaneIntersections.Outside)
+            if (TQueries.SideOf((int)curSplit.right.type / 4, curSplit.right.value, primitive) != PlaneIntersections.Outside)
             {
                 if (curSplit.right.count == RWCollision.SplitCount)
                     splitStack.Push(splits[curSplit.right.index]);
@@ -396,7 +332,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
                 }
             }
 
-            if (TQueries.SideOf(GetPlane(curSplit.left), primitive) != PlaneIntersections.Inside)
+            if (TQueries.SideOf((int)curSplit.left.type / 4, curSplit.left.value, primitive) != PlaneIntersections.Inside)
             {
                 if (curSplit.left.count == RWCollision.SplitCount)
                     splitStack.Push(splits[curSplit.left.index]);
@@ -500,7 +436,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         {
             var splits = collider.Collision.splits;
             var curSplit = splitStack.Pop();
-            if (primitive.SideOf(GetPlane(curSplit.right)) != PlaneIntersections.Outside)
+            if (primitive.SideOf((int)curSplit.right.type / 4, curSplit.right.value) != PlaneIntersections.Outside)
             {
                 if (curSplit.right.count == RWCollision.SplitCount)
                     splitStack.Push(splits[curSplit.right.index]);
@@ -511,7 +447,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
                 }
             }
 
-            if (primitive.SideOf(GetPlane(curSplit.left)) != PlaneIntersections.Inside)
+            if (primitive.SideOf((int)curSplit.left.type / 4, curSplit.left.value) != PlaneIntersections.Inside)
             {
                 if (curSplit.left.count == RWCollision.SplitCount)
                     splitStack.Push(splits[curSplit.left.index]);
