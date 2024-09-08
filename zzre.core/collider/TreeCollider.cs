@@ -143,6 +143,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
 
 
     public static Stack<CollisionSplit> splitStack = new();
+    public static Stack<int> splitStackI = new();
 
     public IEnumerable<Intersection> IntersectionsGenerator<T, TQueries>(T primitive)
         where T : struct, IIntersectable
@@ -225,6 +226,35 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
             {
                 if (curSplit.left.count == RWCollision.SplitCount)
                     splitStack.Push(Collision.splits[curSplit.left.index]);
+                else
+                    IntersectionsListLeaf<T, TQueries>(primitive, curSplit.left, intersections);
+            }
+        }
+    }
+
+    public void IntersectionsListInty<T, TQueries>(in T primitive, List<Intersection> intersections)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        //var splitStack = new Stack<CollisionSplit>();
+        var splits = Collision.splits;
+        splitStackI.Clear();
+        splitStackI.Push(0);
+        while (splitStackI.TryPop(out var splitI))
+        {
+            var curSplit = splits[splitI];
+            if (TQueries.SideOf((int)curSplit.right.type / 4, curSplit.right.value, primitive) != PlaneIntersections.Outside)
+            {
+                if (curSplit.right.count == RWCollision.SplitCount)
+                    splitStackI.Push(curSplit.right.index);
+                else
+                    IntersectionsListLeaf<T, TQueries>(primitive, curSplit.right, intersections);
+            }
+
+            if (TQueries.SideOf((int)curSplit.left.type / 4, curSplit.left.value, primitive) != PlaneIntersections.Inside)
+            {
+                if (curSplit.left.count == RWCollision.SplitCount)
+                    splitStackI.Push(curSplit.left.index);
                 else
                     IntersectionsListLeaf<T, TQueries>(primitive, curSplit.left, intersections);
             }
