@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ public static class LaunchBenchmark
 {
     public static void Main(string[] args)
     {
+        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         var b = new ColliderBenchmark();
         //b.IntersectionsGenerator();
         //b.IntersectionsBaseline();
@@ -18,7 +20,7 @@ public static class LaunchBenchmark
         //b.IntersectionsListKDMerged();
         //b.IntersectionsStruct();
         //b.IntersectionsTaggedUnion();
-        b.RunTests();
-        //BenchmarkSwitcher.FromAssembly(typeof(LaunchBenchmark).Assembly).Run(args);
+        //b.RunTests();
+        BenchmarkSwitcher.FromAssembly(typeof(LaunchBenchmark).Assembly).Run(args);
     }
 }
