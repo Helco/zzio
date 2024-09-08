@@ -599,7 +599,9 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     }
 
     private static List<Intersection> FindUniques(IEnumerable<Intersection> these, IEnumerable<Intersection> butnotthese) =>
-        these.Where(ti => butnotthese.All(ni => !AreEqualEnough(ti, ni))).OrderBy(i => i.TriangleId!.Value.AtomicIdx).ThenBy(i => i.TriangleId!.Value.TriangleIdx).ToList();
+        these.Where(ti => !butnotthese.Any() || butnotthese.All(ni => !AreEqualEnough(ti, ni)))
+            .OrderBy(i => i.TriangleId!.Value.AtomicIdx)
+            .ThenBy(i => i.TriangleId!.Value.TriangleIdx).ToList();
 
     private static bool AreEqualEnough(Intersection a, Intersection b)
     {
@@ -668,7 +670,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
                     list.Add(e2.Current);
                 return list;
             case IntersectionMethod.MergedList:
-                mergedCollider ??= MergedCollider.Create(worldMesh!.World);
+                mergedCollider ??= MergedCollider.CreateDF1(worldMesh!.World);
                 mergedCollider.IntersectionsList<Sphere, IntersectionQueries>(sphere, list);
                 return list;
             default:

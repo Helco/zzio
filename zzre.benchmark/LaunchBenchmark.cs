@@ -20,7 +20,7 @@ public static class LaunchBenchmark
         //b.IntersectionsListKDMerged();
         //b.IntersectionsStruct();
         //b.IntersectionsTaggedUnion();
-        //b.RunTests();
+        b.RunTests();
         BenchmarkSwitcher.FromAssembly(typeof(LaunchBenchmark).Assembly).Run(args);
     }
 }
