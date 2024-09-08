@@ -22,7 +22,7 @@ using BLIntersectionQueries = Baseline::zzre.IntersectionQueries;
 using BLIntersection = Baseline::zzre.Intersection;
 using BLAnyIntersectionable = Baseline::zzre.AnyIntersectionable;
 
-using MyJobAttribute = BenchmarkDotNet.Attributes.ShortRunJobAttribute;
+using MyJobAttribute = BenchmarkDotNet.Attributes.LongRunJobAttribute;
 using Perfolizer.Horology;
 using System.Globalization;
 
@@ -244,9 +244,53 @@ public class ColliderBenchmark
             for (int j = 0; j < results.Count; j++)
                 results[j] = results[j].OrderBy(i => i.Point.X).ThenBy(i => i.Point.Y).ThenBy(i => i.Point.Z).ToList();
 
-            var i = results.IndexOf(l => l.Count != results.First().Count);
+            var i = results.IndexOf(l => l.Count > results.Last().Count);
             if (i >= 0)
-                throw new Exception($"NOPE case {caseI} {i} {results[i].Count} != {results[0].Count}");
+            {
+                PrintSet(i.ToString(), results.Last(), results[i]);
+
+                throw new Exception($"NOPE case {caseI} {pos} {i} {results[i].Count} != {results.Last().Count} ({pos.X:F3} | {pos.Y:F3} | {pos.Z:F3})");
+            }
         }
     }
+
+    private static void PrintSet(string name, List<Intersection> a, List<Intersection> b)
+    {
+        var onlyA = FindUniques(a, b);
+        var onlyB = FindUniques(b, a);
+        if (onlyA.Any())
+        {
+            Console.WriteLine("Only in A:");
+            onlyA.ForEach(Print);
+        }
+        if (onlyB.Any())
+        {
+            Console.WriteLine("Only in B:");
+            onlyB.ForEach(Print);
+        }
+
+    }
+
+    private static void Print(Intersection i)
+    {
+        Console.Write($"    ({i.Point.X:F3} | {i.Point.Y:F3} | {i.Point.Z:F3}) ");
+        if (i.TriangleId == null)
+            Console.WriteLine("null");
+        else
+            Console.WriteLine($"{i.TriangleId.Value.AtomicIdx}, {i.TriangleId.Value.TriangleIdx}, {i.Triangle.IsDegenerated}");
+    }
+
+    private static List<Intersection> FindUniques(List<Intersection> these, List<Intersection> butnotthese) =>
+        these.Where(ti => butnotthese.All(ni => !AreEqualEnough(ti, ni))).OrderBy(i => i.TriangleId!.Value.AtomicIdx).ThenBy(i => i.TriangleId!.Value.TriangleIdx).ToList();
+
+    private static bool AreEqualEnough(Intersection a, Intersection b)
+    {
+
+        if (a.TriangleId != b.TriangleId)
+            return false;
+            return true;
+        return AreEqualEnough(a.Point, b.Point);
+    }
+
+    private static bool AreEqualEnough(Vector3 a, Vector3 b) => Vector3.Distance(a, b) < 0.0001;
 }

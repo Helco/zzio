@@ -148,7 +148,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
-        if (!coarse.Intersects(primitive))
+        if (!coarse.Intersects(primitive) || Collision.splits.Length == 0)
             yield break;
 
         //var splitStack = new Stack<CollisionSplit>();
