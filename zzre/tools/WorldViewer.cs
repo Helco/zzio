@@ -670,7 +670,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
                     list.Add(e2.Current);
                 return list;
             case IntersectionMethod.MergedList:
-                mergedCollider ??= MergedCollider.CreateDF1(worldMesh!.World);
+                mergedCollider ??= MergedCollider.Create(worldMesh!.World);
                 mergedCollider.IntersectionsList<Sphere, IntersectionQueries>(sphere, list);
                 return list;
             default:

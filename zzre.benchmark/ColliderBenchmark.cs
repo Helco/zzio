@@ -40,9 +40,7 @@ public class ColliderBenchmark
     private const int CaseCount = 1000;
     private readonly WorldCollider worldCollider;
     private readonly BLWorldCollider worldColliderBL;
-    private readonly MergedCollider mergedColliderDF1;
-    private readonly MergedCollider mergedColliderDF2;
-    private readonly MergedCollider mergedColliderBF;
+    private readonly MergedCollider mergedCollider;
     private readonly Vector3[] cases;
     private List<Intersection> intersections = new(256);
     private List<BLIntersection> blintersections = new(256);
@@ -59,9 +57,7 @@ public class ColliderBenchmark
 
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        mergedColliderDF1 = MergedCollider.CreateDF1(rwWorld);
-        mergedColliderDF2 = MergedCollider.CreateDF2(rwWorld);
-        mergedColliderBF = MergedCollider.CreateBF(rwWorld);
+        mergedCollider = MergedCollider.Create(rwWorld);
         stopwatch.Stop();
         Console.WriteLine($"Merging three trees took {stopwatch.Elapsed.ToFormattedTotalTime(CultureInfo.InvariantCulture)}");
 
@@ -145,33 +141,7 @@ public class ColliderBenchmark
         foreach (var pos in cases)
         {
             intersections.Clear();
-            mergedColliderDF1.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
-            f += intersections.Count;
-        }
-        return f;
-    }
-
-    [Benchmark]
-    public float IntersectionsListKDMergedDF2()
-    {
-        float f = 0f;
-        foreach (var pos in cases)
-        {
-            intersections.Clear();
-            mergedColliderDF2.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
-            f += intersections.Count;
-        }
-        return f;
-    }
-
-    [Benchmark]
-    public float IntersectionsListKDMergedBF()
-    {
-        float f = 0f;
-        foreach (var pos in cases)
-        {
-            intersections.Clear();
-            mergedColliderBF.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            mergedCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
             f += intersections.Count;
         }
         return f;
@@ -253,15 +223,7 @@ public class ColliderBenchmark
             results.Add(intersections.ToList());
 
             intersections.Clear();
-            mergedColliderDF1.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
-            results.Add(intersections.ToList());
-
-            intersections.Clear();
-            mergedColliderDF2.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
-            results.Add(intersections.ToList());
-
-            intersections.Clear();
-            mergedColliderBF.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            mergedCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
             results.Add(intersections.ToList());
 
             intersections.Clear();

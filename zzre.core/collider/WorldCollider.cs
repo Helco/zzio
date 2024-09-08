@@ -79,7 +79,7 @@ public sealed class WorldCollider : BaseGeometryCollider
 
         splitStack ??= new();
         TreeCollider<zzre.Box>.splitStack ??= new();
-        merged = MergedCollider.CreateDF1(world);
+        merged = MergedCollider.Create(world);
     }
 
     public WorldTriangleInfo GetTriangleInfo(WorldTriangleId id) =>
