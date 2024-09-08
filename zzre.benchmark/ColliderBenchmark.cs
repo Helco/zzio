@@ -22,7 +22,7 @@ using BLIntersectionQueries = Baseline::zzre.IntersectionQueries;
 using BLIntersection = Baseline::zzre.Intersection;
 using BLAnyIntersectionable = Baseline::zzre.AnyIntersectionable;
 
-using MyJobAttribute = BenchmarkDotNet.Attributes.LongRunJobAttribute;
+using MyJobAttribute = BenchmarkDotNet.Attributes.MediumRunJobAttribute;
 using Perfolizer.Horology;
 using System.Globalization;
 
@@ -40,9 +40,11 @@ public class ColliderBenchmark
     private const int CaseCount = 1000;
     private readonly WorldCollider worldCollider;
     private readonly BLWorldCollider worldColliderBL;
-    private readonly MergedCollider mergedCollider;
+    private readonly MergedCollider mergedColliderDF1;
+    private readonly MergedCollider mergedColliderDF2;
+    private readonly MergedCollider mergedColliderBF;
     private readonly Vector3[] cases;
-    private List<Intersection> intersections = new(256), intersections2 = new(256);
+    private List<Intersection> intersections = new(256);
     private List<BLIntersection> blintersections = new(256);
 
     public ColliderBenchmark()
@@ -57,9 +59,11 @@ public class ColliderBenchmark
 
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        mergedCollider = MergedCollider.Create(rwWorld); // TODO: Measure performance of construction
+        mergedColliderDF1 = MergedCollider.CreateDF1(rwWorld);
+        mergedColliderDF2 = MergedCollider.CreateDF2(rwWorld);
+        mergedColliderBF = MergedCollider.CreateBF(rwWorld);
         stopwatch.Stop();
-        Console.WriteLine($"Merging took {stopwatch.Elapsed.ToFormattedTotalTime(CultureInfo.InvariantCulture)}");
+        Console.WriteLine($"Merging three trees took {stopwatch.Elapsed.ToFormattedTotalTime(CultureInfo.InvariantCulture)}");
 
         var random = new Random(Seed);
         cases = new Vector3[CaseCount];
@@ -135,13 +139,39 @@ public class ColliderBenchmark
     }
 
     [Benchmark]
-    public float IntersectionsListKDMerged()
+    public float IntersectionsListKDMergedDF1()
     {
         float f = 0f;
         foreach (var pos in cases)
         {
             intersections.Clear();
-            mergedCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            mergedColliderDF1.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            f += intersections.Count;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float IntersectionsListKDMergedDF2()
+    {
+        float f = 0f;
+        foreach (var pos in cases)
+        {
+            intersections.Clear();
+            mergedColliderDF2.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            f += intersections.Count;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float IntersectionsListKDMergedBF()
+    {
+        float f = 0f;
+        foreach (var pos in cases)
+        {
+            intersections.Clear();
+            mergedColliderBF.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
             f += intersections.Count;
         }
         return f;
@@ -205,25 +235,33 @@ public class ColliderBenchmark
             caseI++;
             var results = new List<List<Intersection>>();
 
-            results.Add(worldColliderBL
-                .IntersectionsGeneratorOld<BLSphere, BLIntersectionQueries>(new BLSphere(pos, SphereRadius))
-                .Select(ConvertBLIntersection)
-                .ToList());
+            //results.Add(worldColliderBL
+            //    .IntersectionsGeneratorOld<BLSphere, BLIntersectionQueries>(new BLSphere(pos, SphereRadius))
+            //    .Select(ConvertBLIntersection)
+            //    .ToList());
 
             results.Add(worldCollider
                 .IntersectionsGenerator<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius))
                 .ToList());
 
-            blintersections.Clear();
-            worldColliderBL.IntersectionsList<BLSphere, BLIntersectionQueries>(new BLSphere(pos, SphereRadius), blintersections);
-            results.Add(blintersections.Select(ConvertBLIntersection).ToList());
+            //blintersections.Clear();
+            //worldColliderBL.IntersectionsList<BLSphere, BLIntersectionQueries>(new BLSphere(pos, SphereRadius), blintersections);
+            //results.Add(blintersections.Select(ConvertBLIntersection).ToList());
 
             intersections.Clear();
             worldCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
             results.Add(intersections.ToList());
 
             intersections.Clear();
-            mergedCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections2);
+            mergedColliderDF1.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            results.Add(intersections.ToList());
+
+            intersections.Clear();
+            mergedColliderDF2.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            results.Add(intersections.ToList());
+
+            intersections.Clear();
+            mergedColliderBF.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
             results.Add(intersections.ToList());
 
             intersections.Clear();
@@ -244,12 +282,12 @@ public class ColliderBenchmark
             for (int j = 0; j < results.Count; j++)
                 results[j] = results[j].OrderBy(i => i.Point.X).ThenBy(i => i.Point.Y).ThenBy(i => i.Point.Z).ToList();
 
-            var i = results.IndexOf(l => l.Count > results.Last().Count);
+            var i = results.IndexOf(l => l.Count != results.First().Count);
             if (i >= 0)
             {
-                PrintSet(i.ToString(), results.Last(), results[i]);
+                PrintSet(i.ToString(), results.First(), results[i]);
 
-                throw new Exception($"NOPE case {caseI} {pos} {i} {results[i].Count} != {results.Last().Count} ({pos.X:F3} | {pos.Y:F3} | {pos.Z:F3})");
+                throw new Exception($"NOPE case {caseI} {pos} {i} {results[i].Count} != {results.First().Count} ({pos.X:F3} | {pos.Y:F3} | {pos.Z:F3})");
             }
         }
     }
