@@ -135,13 +135,26 @@ public class ColliderBenchmark
     }
 
     [Benchmark]
-    public float IntersectionsListKDMergedDF1()
+    public float IntersectionsListKDMerged()
     {
         float f = 0f;
         foreach (var pos in cases)
         {
             intersections.Clear();
             mergedCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            f += intersections.Count;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float IntersectionsListKDMergedInty()
+    {
+        float f = 0f;
+        foreach (var pos in cases)
+        {
+            intersections.Clear();
+            mergedCollider.IntersectionsListInty<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
             f += intersections.Count;
         }
         return f;
@@ -224,6 +237,10 @@ public class ColliderBenchmark
 
             intersections.Clear();
             mergedCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            results.Add(intersections.ToList());
+
+            intersections.Clear();
+            mergedCollider.IntersectionsListInty<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
             results.Add(intersections.ToList());
 
             intersections.Clear();

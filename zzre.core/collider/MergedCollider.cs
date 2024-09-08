@@ -7,6 +7,9 @@ using System.Numerics;
 using zzio.rwbs;
 using zzio;
 using Silk.NET.Maths;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using System.Runtime.CompilerServices;
 
 namespace zzre;
 
@@ -147,5 +150,91 @@ public sealed class MergedCollider : TreeCollider<Box>
                 default: throw new ArgumentException("Unexpected section type", nameof(section));
             }
         }
+    }
+
+    private static readonly Vector128<int> NegateRightMask = Vector128
+            .Create(uint.MinValue, uint.MaxValue, uint.MinValue, uint.MaxValue)
+            .AsInt32();
+
+    struct Collision2Split
+    {
+        [InlineArray(4)]
+        public struct Children
+        {
+            public (int index, int count) _element0;
+        }
+
+        public Vector128<float> subLimits;
+        public float topLeftValue, topRightValue;
+        public int topType, leftType, rightType;
+        public Children children;
+    }
+
+    [MethodImpl(MathEx.MIOptions)]
+    void abc(Stack<int> splitStack, in Collision2Split split, in Sphere sphere)
+    {
+        Vector128<float> sphereCenterV = sphere.Center.AsVector128();
+
+        var topCompareValues = Vector128.Shuffle(sphereCenterV, Vector128.Create(split.topType));
+        var subCompareValues = Vector128.Shuffle(sphereCenterV, Vector128.Create(
+            split.leftType, split.leftType, split.rightType, split.rightType));
+
+        var topLimits = Vector128.Create(split.topLeftValue, split.topLeftValue, split.topRightValue, split.topRightValue);
+
+        var topDiff = Vector128.Abs(topCompareValues - topLimits);
+        var subDiff = Vector128.Abs(subCompareValues - split.subLimits);
+
+        var topCompare = Vector128.GreaterThan(topDiff, Vector128.Create(sphere.Radius));
+        var subCompare = Vector128.GreaterThan(topDiff, Vector128.Create(sphere.Radius));
+
+        var compare = Vector128.BitwiseAnd(topCompare, subCompare).AsInt32();
+        compare = Vector128.Xor(compare, NegateRightMask);
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (compare.GetElement(i) != 0)
+                continue;
+            int count = split.children[i].count;
+            if (count == RWCollision.SplitCount)
+                splitStack.Push(split.children[i].index);
+            else if (count > 0)
+                IntersectionListLeaf(sphere, split.children[i].index, count);
+        }
+    }
+
+    [MethodImpl(MathEx.MIOptions)]
+    void abc256(Stack<int> splitStack, in Collision2Split split, in Sphere sphere)
+    {
+        var sphereCenterV = sphere.Center.AsVector128().ToVector256();
+
+        var compareValues = Vector256.Shuffle(sphereCenterV, Vector256.Create(
+            split.leftType, split.leftType, split.rightType, split.rightType,
+            split.topType, split.topType, split.topType, split.topType));
+
+        var limits = Vector256.Create(
+            split.subLimits,
+            Vector128.Create(split.topLeftValue, split.topLeftValue, split.topRightValue, split.topRightValue));
+
+        var diff = Vector256.Abs(compareValues - limits);
+        var compareFull = Vector256.GreaterThan(diff, Vector256.Create(sphere.Radius));
+        var compare = Vector128.BitwiseAnd(compareFull.GetLower(), compareFull.GetUpper()).AsInt32();
+
+        compare = Vector128.Xor(compare, NegateRightMask);
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (compare.GetElement(i) != 0)
+                continue;
+            int count = split.children[i].count;
+            if (count == RWCollision.SplitCount)
+                splitStack.Push(split.children[i].index);
+            else if (count > 0)
+                IntersectionListLeaf(sphere, split.children[i].index, count);
+        }
+    }
+
+    void IntersectionListLeaf(in Sphere sphere, int index, int count)
+    {
+
     }
 }

@@ -54,8 +54,6 @@ public sealed class WorldCollider : BaseGeometryCollider
     protected override IRaycastable CoarseCastable => Box;
     protected override IIntersectable CoarseIntersectable => Box;
 
-    private readonly MergedCollider merged;
-
     public WorldCollider(RWWorld world)
     {
         World = world;
@@ -77,9 +75,9 @@ public sealed class WorldCollider : BaseGeometryCollider
         if (rootPlane != null && rootAtomic != null)
             throw new InvalidDataException("RWWorld has both a root plane and a root atomic");
 
-        splitStack ??= new();
-        TreeCollider<zzre.Box>.splitStack ??= new();
-        merged = MergedCollider.Create(world);
+        splitStack ??= new(64);
+        TreeCollider<zzre.Box>.splitStack ??= new(64);
+        TreeCollider<zzre.Box>.splitStackI ??= new(64);
     }
 
     public WorldTriangleInfo GetTriangleInfo(WorldTriangleId id) =>
@@ -159,11 +157,11 @@ public sealed class WorldCollider : BaseGeometryCollider
     private static Stack<Section> splitStack = new();
 
     protected override IEnumerable<Intersection> Intersections<T, TQueries>(T primitive) =>
-        //IntersectionsGenerator<T, TQueries>(primitive);
+        IntersectionsGenerator<T, TQueries>(primitive);
         //IntersectionsList<T, TQueries>(primitive);
         //new IntersectionsEnumerable<T, TQueries>(this, primitive);
         //new IntersectionsEnumerableVirtCall(this, AnyIntersectionable.From(primitive))
-        new MergedCollider.IntersectionsEnumerable<T, TQueries>(merged, primitive);
+        //new MergedCollider.IntersectionsEnumerable<T, TQueries>(merged, primitive);
 
     public IEnumerable<Intersection> IntersectionsGenerator<T, TQueries>(T primitive)
         where T : struct, IIntersectable
