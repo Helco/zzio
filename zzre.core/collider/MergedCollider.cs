@@ -189,18 +189,53 @@ public sealed class MergedCollider : TreeCollider<Box>
 
         var compare = Vector128.BitwiseAnd(topCompare, subCompare).AsInt32();
         compare = Vector128.Xor(compare, NegateRightMask);
+        var compareBits = Vector128.ExtractMostSignificantBits(compare);
+        var childIndices = Vector128.Shuffle(Indices128, ShuffleControls128[compareBits]);
+        var childCount = BitOperations.PopCount(compareBits);
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < childCount; i++)
         {
-            if (compare.GetElement(i) != 0)
-                continue;
-            int count = split.children[i].count;
+            var (index, count) = split.children[childIndices[i]];
             if (count == RWCollision.SplitCount)
                 splitStack.Push(split.children[i].index);
             else if (count > 0)
-                IntersectionListLeaf(sphere, split.children[i].index, count);
+                IntersectionListLeaf(sphere, index, count);
         }
     }
+
+    private static readonly Vector128<int> Indices128 = Vector128.Create(
+        0, 1, 2, 3);
+    private static readonly Vector128<int>[] ShuffleControls128 = Enumerable
+        .Range(0, 1 << 4)
+        .Select(i =>
+        {
+            var control = Vector128<int>.Zero;
+            var index = 0;
+            for (int bit = 0; bit < 4 && i > 0; bit++, i >>= 1)
+            {
+                if ((i & 1) != 0)
+                    control = Vector128.WithElement(control, index++, bit);
+            }
+            return control;
+        })
+        .ToArray();
+
+    private static readonly Vector256<int> Indices256 = Vector256.Create(
+        0, 1, 2, 3, 4, 5, 6, 7);
+    private static readonly Vector256<int>[] ShuffleControls256 = Enumerable
+        .Range(0, 1 << 8)
+        .Select(i =>
+        {
+            var control = Vector256<int>.Zero;
+            var index = 0;
+            for (int bit = 0; bit < 8 && i > 0; bit++, i >>= 1)
+            {
+                if ((i & 1) != 0)
+                    control = Vector256.WithElement(control, index++, bit);
+            }
+            return control;
+        })
+        .ToArray();
 
     [MethodImpl(MathEx.MIOptions)]
     void abc256(Stack<int> splitStack, in Collision2Split split, in Sphere sphere)
@@ -220,16 +255,71 @@ public sealed class MergedCollider : TreeCollider<Box>
         var compare = Vector128.BitwiseAnd(compareFull.GetLower(), compareFull.GetUpper()).AsInt32();
 
         compare = Vector128.Xor(compare, NegateRightMask);
+        var compareBits = Vector128.ExtractMostSignificantBits(compare);
+        var childIndices = Vector128.Shuffle(Indices128, ShuffleControls128[compareBits]);
+        var childCount = BitOperations.PopCount(compareBits);
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < childCount; i++)
         {
-            if (compare.GetElement(i) != 0)
-                continue;
-            int count = split.children[i].count;
+            var (index, count) = split.children[childIndices[i]];
             if (count == RWCollision.SplitCount)
                 splitStack.Push(split.children[i].index);
             else if (count > 0)
-                IntersectionListLeaf(sphere, split.children[i].index, count);
+                IntersectionListLeaf(sphere, index, count);
+        }
+    }
+
+    struct Collision3Split
+    {
+        [InlineArray(8)]
+        public struct Children
+        {
+            public (int index, int count) _element0;
+        }
+
+        public Vector512<float> limits; // 8xSub 4xCenter 2xTop 2xZero
+        public Children children;
+        public int
+            leftLeftType, leftRightType, rightLeftType, rightRightType,
+            leftType, rightType,
+            topType;
+    }
+
+    private static readonly Vector256<int> NegateRightMask256 = Vector256
+            .Create(uint.MinValue, uint.MaxValue, uint.MinValue, uint.MaxValue,
+                    uint.MinValue, uint.MaxValue, uint.MinValue, uint.MaxValue)
+            .AsInt32();
+
+    void abc512(Stack<int> splitStack, in Collision3Split split, in Sphere sphere)
+    {
+        Vector512<float> sphereCenterV = sphere.Center.AsVector128().ToVector256().ToVector512();
+
+        var compareValues = Vector512.Shuffle(sphereCenterV, Vector512.Create(
+            split.leftLeftType, split.leftLeftType, split.leftRightType, split.leftRightType,
+            split.rightLeftType, split.rightLeftType, split.rightRightType, split.rightRightType,
+            split.leftType, split.leftType, split.rightType, split.rightType,
+            split.topType, split.topType, split.topType, split.topType
+        ));
+
+        var diff = Vector512.Abs(compareValues - split.limits);
+        var compareFull = Vector512.GreaterThan(diff, Vector512.Create(sphere.Radius)).AsInt32();
+        var compareHalf = compareFull.GetUpper();
+        var compareQuarter = Vector128.BitwiseAnd(compareHalf.GetUpper(), compareHalf.GetLower());
+        compareHalf = Vector256.Create(compareQuarter, compareQuarter);
+        var compare = Vector256.BitwiseAnd(compareFull.GetLower(), compareHalf);
+
+        compare = Vector256.Xor(compare, NegateRightMask256);
+        var compareBits = Vector256.ExtractMostSignificantBits(compare);
+        var childIndices = Vector256.Shuffle(Indices256, ShuffleControls256[compareBits]);
+        var childCount = BitOperations.PopCount(compareBits);
+
+        for (int i = 0; i < childCount; i++)
+        {
+            var (index, count) = split.children[childIndices[i]];
+            if (count == RWCollision.SplitCount)
+                splitStack.Push(index);
+            else if (count > 0)
+                IntersectionListLeaf(sphere, index, count);
         }
     }
 
