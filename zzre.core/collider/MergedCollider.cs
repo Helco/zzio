@@ -149,21 +149,7 @@ public sealed class MergedCollider : TreeCollider<Box>
         }
     }
 
-    /*struct Collision3Split
-    {
-        [InlineArray(8)]
-        public struct Children
-        {
-            public (int index, int count) _element0;
-        }
-
-        public Vector512<float> limits; // 8xSub 4xCenter 2xTop 2xZero
-        public Children children;
-        public int
-            leftLeftType, leftRightType, rightLeftType, rightRightType,
-            leftType, rightType,
-            topType;
-    }
+    /*
 
     private static readonly Vector256<int> NegateRightMask256 = Vector256
             .Create(uint.MinValue, uint.MaxValue, uint.MinValue, uint.MaxValue,

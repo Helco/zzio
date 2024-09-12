@@ -43,6 +43,7 @@ public class ColliderBenchmark
     private readonly MergedCollider mergedCollider;
     private readonly SIMD128Collider simd128Collider;
     private readonly SIMD256Collider simd256Collider;
+    private readonly SIMD512Collider simd512Collider;
     private readonly Vector3[] cases;
     private List<Intersection> intersections = new(256);
     private List<BLIntersection> blintersections = new(256);
@@ -62,8 +63,9 @@ public class ColliderBenchmark
         mergedCollider = MergedCollider.Create(rwWorld);
         simd128Collider = new(mergedCollider.Coarse, mergedCollider.Collision, mergedCollider.triangles, mergedCollider.triangleIds);
         simd256Collider = new(mergedCollider.Coarse, mergedCollider.Collision, mergedCollider.triangles, mergedCollider.triangleIds);
+        simd512Collider = new(mergedCollider.Coarse, mergedCollider.Collision, mergedCollider.triangles, mergedCollider.triangleIds);
         stopwatch.Stop();
-        Console.WriteLine($"Merging three trees took {stopwatch.Elapsed.ToFormattedTotalTime(CultureInfo.InvariantCulture)}");
+        Console.WriteLine($"Merging four trees took {stopwatch.Elapsed.ToFormattedTotalTime(CultureInfo.InvariantCulture)}");
 
         var random = new Random(Seed);
         cases = new Vector3[CaseCount];
@@ -152,19 +154,6 @@ public class ColliderBenchmark
     }
 
     [Benchmark]
-    public float IntersectionsListKDMergedInty()
-    {
-        float f = 0f;
-        foreach (var pos in cases)
-        {
-            intersections.Clear();
-            mergedCollider.IntersectionsListInty<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
-            f += intersections.Count;
-        }
-        return f;
-    }
-
-    [Benchmark]
     public unsafe float IntersectionsStruct()
     {
         float f = 0f;
@@ -207,26 +196,13 @@ public class ColliderBenchmark
     }
 
     [Benchmark]
-    public float IntersectionsSIMD128MoreBranches()
-    {
-        float f = 0f;
-        foreach (var pos in cases)
-        {
-            intersections.Clear();
-            simd128Collider.IntersectionsList(new Sphere(pos, SphereRadius), intersections);
-            f += intersections.Count;
-        }
-        return f;
-    }
-
-    [Benchmark]
     public float IntersectionsSIMD128()
     {
         float f = 0f;
         foreach (var pos in cases)
         {
             intersections.Clear();
-            simd128Collider.IntersectionsListLessBranches(new Sphere(pos, SphereRadius), intersections);
+            simd128Collider.IntersectionsList(new Sphere(pos, SphereRadius), intersections);
             f += intersections.Count;
         }
         return f;
@@ -240,6 +216,32 @@ public class ColliderBenchmark
         {
             intersections.Clear();
             simd256Collider.IntersectionsList(new Sphere(pos, SphereRadius), intersections);
+            f += intersections.Count;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float IntersectionsSIMD512()
+    {
+        float f = 0f;
+        foreach (var pos in cases)
+        {
+            intersections.Clear();
+            simd512Collider.IntersectionsList(new Sphere(pos, SphereRadius), intersections);
+            f += intersections.Count;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float IntersectionsSIMD512LB()
+    {
+        float f = 0f;
+        foreach (var pos in cases)
+        {
+            intersections.Clear();
+            simd512Collider.IntersectionsListLB(new Sphere(pos, SphereRadius), intersections);
             f += intersections.Count;
         }
         return f;
@@ -306,11 +308,15 @@ public class ColliderBenchmark
             results.Add(intersections.ToList());
 
             intersections.Clear();
-            simd128Collider.IntersectionsListLessBranches(new(pos, SphereRadius), intersections);
+            simd256Collider.IntersectionsList(new(pos, SphereRadius), intersections);
             results.Add(intersections.ToList());
 
             intersections.Clear();
-            simd256Collider.IntersectionsList(new(pos, SphereRadius), intersections);
+            simd512Collider.IntersectionsList(new(pos, SphereRadius), intersections);
+            results.Add(intersections.ToList());
+
+            intersections.Clear();
+            simd512Collider.IntersectionsListLB(new(pos, SphereRadius), intersections);
             results.Add(intersections.ToList());
 
             for (int j = 0; j < results.Count; j++)
