@@ -178,66 +178,6 @@ public sealed class SIMD128Collider : TwoSplitCollider
             }
         }
     }
-
-    private static readonly Vector128<int> Indices128 = Vector128.Create(
-        0, 1, 2, 3);
-    private static readonly Vector128<int>[] ShuffleControls128 = Enumerable
-        .Range(0, 1 << 4)
-        .Select(i =>
-        {
-            var control = Vector128<int>.Zero;
-            var index = 0;
-            for (int bit = 0; bit < 4 && i > 0; bit++, i >>= 1)
-            {
-                if ((i & 1) != 0)
-                    control = Vector128.WithElement(control, index++, bit);
-            }
-            return control;
-        })
-        .ToArray();
-
-    [MethodImpl(MathEx.MIOptions)]
-    public void IntersectionsListLessBranches(in Sphere sphere, List<Intersection> intersections)
-    {
-        if (!data.coarse.Intersects(sphere))
-            return;
-        var sphereCenterV = sphere.Center.AsVector128();
-        var sphereRadiusTopV = Vector128.Create(sphere.Radius) * RadiusFactorsTop;
-        var sphereRadiusSubV = Vector128.Create(sphere.Radius) * RadiusFactorsSub;
-
-        splitStack.Clear();
-        splitStack.Push(0);
-        while (splitStack.TryPop(out var splitI))
-        {
-            var split = data.splits[splitI];
-
-            var topCompareValues = Vector128.Shuffle(sphereCenterV, Vector128.Create(split.topType));
-            var subCompareValues = Vector128.Shuffle(sphereCenterV, Vector128.Create(
-                split.leftType, split.leftType, split.rightType, split.rightType));
-
-            var topLimits = Vector128.Create(split.topLeftValue, split.topLeftValue, split.topRightValue, split.topRightValue);
-
-            var topDiff = topCompareValues - topLimits;
-            var subDiff = subCompareValues - split.subLimits;
-
-            var topCompareMask = Vector128.GreaterThan(topDiff, sphereRadiusTopV).AsInt32();
-            var subCompareMask = Vector128.GreaterThan(subDiff, sphereRadiusSubV).AsInt32();
-            var topCompare = Vector128.ExtractMostSignificantBits(topCompareMask) ^ 0b0011;
-            var subCompare = Vector128.ExtractMostSignificantBits(subCompareMask) ^ 0b0101;
-            var compare = topCompare & subCompare;
-            var childIndices = Vector128.Shuffle(Indices128, ShuffleControls128[compare]);
-            var childCount = BitOperations.PopCount(compare);
-
-            for (int i = 0; i < childCount; i++)
-            {
-                var (index, count) = split.children[childIndices[i]];
-                if (count == RWCollision.SplitCount)
-                    splitStack.Push(index);
-                else if (count > 0)
-                    IntersectionListLeaf(sphere, index, count, intersections);
-            }
-        }
-    }
 }
 
 public sealed class SIMD256Collider : TwoSplitCollider
@@ -248,29 +188,8 @@ public sealed class SIMD256Collider : TwoSplitCollider
         : base(Create(coarse, collision, triangles, triangleIds))
     {}
 
-    private static readonly Vector128<int> NegateRightMask = Vector128
-            .Create(uint.MinValue, uint.MaxValue, uint.MinValue, uint.MaxValue)
-            .AsInt32();
-
     private static readonly Vector256<float> RadiusFactors = Vector256
             .Create(+1f, -1f, +1f, -1f, +1f, +1f, -1f, -1f);
-
-    private static readonly Vector128<int> Indices128 = Vector128.Create(
-        0, 1, 2, 3);
-    private static readonly Vector128<int>[] ShuffleControls128 = Enumerable
-        .Range(0, 1 << 4)
-        .Select(i =>
-        {
-            var control = Vector128<int>.Zero;
-            var index = 0;
-            for (int bit = 0; bit < 4 && i > 0; bit++, i >>= 1)
-            {
-                if ((i & 1) != 0)
-                    control = Vector128.WithElement(control, index++, bit);
-            }
-            return control;
-        })
-        .ToArray();
 
     [MethodImpl(MathEx.MIOptions)]
     public void IntersectionsList(in Sphere sphere, List<Intersection> intersections)
@@ -296,14 +215,14 @@ public sealed class SIMD256Collider : TwoSplitCollider
 
             var diff = compareValues - limits;
             var compareMask = Vector256.GreaterThan(diff, sphereRadiusV);
-            var compare = Vector256.ExtractMostSignificantBits(compareMask);
-            compare = (compare ^ 0b0101) & ((compare >> 4) ^ 0b0011);
-            var childIndices = Vector128.Shuffle(Indices128, ShuffleControls128[compare]);
-            var childCount = BitOperations.PopCount(compare);
+            var compare = Vector256.ExtractMostSignificantBits(compareMask) ^ 0b00110101;
+            compare = compare & (compare >> 4) & 0b1111;
 
-            for (int i = 0; i < childCount; i++)
+            for (int i = 0; i < 4; i++)
             {
-                var (index, count) = split.children[childIndices[i]];
+                if ((compare & (1 << i)) == 0)
+                    continue;
+                var (index, count) = split.children[i];
                 if (count == RWCollision.SplitCount)
                     splitStack.Push(index);
                 else if (count > 0)
