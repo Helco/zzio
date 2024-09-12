@@ -22,16 +22,16 @@ public readonly struct Enumeratorable<TElement, TEnumerator>(TEnumerator enumera
 public abstract partial class TreeCollider<TCoarse> : TriangleCollider
     where TCoarse : struct, IIntersectable, IRaycastable
 {
-    private readonly TCoarse coarse;
+    public readonly TCoarse Coarse;
 
     public RWCollision Collision { get; }
-    protected sealed override IRaycastable CoarseCastable => coarse;
-    protected sealed override IIntersectable CoarseIntersectable => coarse;
+    protected sealed override IRaycastable CoarseCastable => Coarse;
+    protected sealed override IIntersectable CoarseIntersectable => Coarse;
 
     protected TreeCollider(TCoarse coarse, RWCollision collision)
     {
         Collision = collision;
-        this.coarse = coarse;
+        this.Coarse = coarse;
     }
 
     protected static RWCollision CreateNaiveCollision(int triangleCount)
@@ -42,8 +42,8 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
             {
                 value = float.NegativeInfinity,
                 type = CollisionSectorType.X,
-                index = -1,
-                count = RWCollision.SplitCount
+                index = 0,
+                count = 0
             },
             right =
             {
@@ -62,7 +62,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
 
     public override Raycast? Cast(Ray ray, float maxLength)
     {
-        var coarse = this.coarse.Cast(ray);
+        var coarse = this.Coarse.Cast(ray);
         var result = coarse == null
             ? null
             : RaycastNode(splitI: 0, ray, minDist: 0f, maxLength);
@@ -149,7 +149,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
-        if (!coarse.Intersects(primitive) || Collision.splits.Length == 0)
+        if (!Coarse.Intersects(primitive) || Collision.splits.Length == 0)
             yield break;
 
         //var splitStack = new Stack<CollisionSplit>();
