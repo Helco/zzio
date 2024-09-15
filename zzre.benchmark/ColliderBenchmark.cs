@@ -127,7 +127,7 @@ public class ColliderBenchmark
         return f;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public float IntersectionsList()
     {
         float f = 0f;
@@ -154,6 +154,32 @@ public class ColliderBenchmark
     }
 
     [Benchmark]
+    public float IntersectionsStructMerged()
+    {
+        float f = 0f;
+        foreach (var pos in cases)
+        {
+            var enumerator = new MergedCollider.IntersectionsEnumerator<Sphere, IntersectionQueries>(mergedCollider, new Sphere(pos, SphereRadius));
+            while (enumerator.MoveNext())
+                f += enumerator.Current.Point.X;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float IntersectionsTaggedUnionMerged()
+    {
+        float f = 0f;
+        foreach (var pos in cases)
+        {
+            var enumerator = new MergedCollider.IntersectionsEnumeratorVirtCall(mergedCollider, new Sphere(pos, SphereRadius));
+            while (enumerator.MoveNext())
+                f += enumerator.Current.Point.X;
+        }
+        return f;
+    }
+
+    //[Benchmark]
     public unsafe float IntersectionsStruct()
     {
         float f = 0f;
@@ -182,7 +208,7 @@ public class ColliderBenchmark
         return f;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public float IntersectionsTaggedUnion()
     {
         float f = 0f;
@@ -195,7 +221,7 @@ public class ColliderBenchmark
         return f;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public float IntersectionsSIMD128()
     {
         float f = 0f;
@@ -208,7 +234,7 @@ public class ColliderBenchmark
         return f;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public float IntersectionsSIMD256()
     {
         float f = 0f;
@@ -221,7 +247,7 @@ public class ColliderBenchmark
         return f;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public float IntersectionsSIMD512()
     {
         float f = 0f;
@@ -234,7 +260,7 @@ public class ColliderBenchmark
         return f;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public float IntersectionsSIMD512LB()
     {
         float f = 0f;
@@ -301,6 +327,18 @@ public class ColliderBenchmark
             var e2 = new WorldCollider.IntersectionsEnumeratorVirtCall(worldCollider, AnyIntersectionable.From(new Sphere(pos, SphereRadius)));
             while (e2.MoveNext())
                 intersections.Add(e2.Current);
+            results.Add(intersections.ToList());
+
+            intersections.Clear();
+            var e3 = new MergedCollider.IntersectionsEnumerator<Sphere, IntersectionQueries>(mergedCollider, new Sphere(pos, SphereRadius));
+            while (e3.MoveNext())
+                intersections.Add(e3.Current);
+            results.Add(intersections.ToList());
+
+            intersections.Clear();
+            var e4 = new MergedCollider.IntersectionsEnumeratorVirtCall(mergedCollider, new Sphere(pos, SphereRadius));
+            while (e4.MoveNext())
+                intersections.Add(e4.Current);
             results.Add(intersections.ToList());
 
             intersections.Clear();

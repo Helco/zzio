@@ -316,7 +316,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         public Intersection Current => current;
         object IEnumerator.Current => Current;
 
-        internal IntersectionsEnumerator(TreeCollider<TCoarse> collider, in T primitive)
+        public IntersectionsEnumerator(TreeCollider<TCoarse> collider, in T primitive)
         {
             this.collider = collider;
             this.primitive = primitive;
@@ -432,7 +432,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         public Intersection Current => current;
         object IEnumerator.Current => Current;
 
-        internal IntersectionsEnumeratorVirtCall(TreeCollider<TCoarse> collider, in AnyIntersectionable primitive)
+        public IntersectionsEnumeratorVirtCall(TreeCollider<TCoarse> collider, in AnyIntersectionable primitive)
         {
             this.collider = collider;
             this.primitive = primitive;
