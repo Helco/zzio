@@ -31,7 +31,7 @@ namespace zzre.benchmark;
 [MemoryDiagnoser]
 [MyJob]
 [MinIterationCount(10), MaxIterationCount(1000)]
-public class ColliderBenchmark
+public class IntersectionsBenchmark
 {
     private const int Seed = 12345;
     private const string ArchivePath = @"C:\dev\zanzarah\Resources\DATA_0.PAK";
@@ -48,7 +48,7 @@ public class ColliderBenchmark
     private List<Intersection> intersections = new(256);
     private List<BLIntersection> blintersections = new(256);
 
-    public ColliderBenchmark()
+    public IntersectionsBenchmark()
     {
         var archive = new PAKParallelResourcePool(ArchivePath);
         using var worldStream = archive.FindAndOpen(WorldPath)
