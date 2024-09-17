@@ -157,4 +157,49 @@ public readonly struct Ray
             bary.Z >= 0.0f && bary.Z <= 1.0f
             ? cast.Value with { TriangleId = triangleId } : null;
     }
+
+    [MethodImpl(MathEx.MIOptions)]
+    public Raycast? CastScalar(Triangle triangle, WorldTriangleId? triangleId = null)
+    {
+        if (triangle.IsDegenerated)
+            return null;
+        var cast = Cast(triangle.Plane);
+        if (cast == null)
+            return null;
+        var bary = triangle.BarycentricScalar(cast.Value.Point);
+        return bary.X >= 0.0f && bary.X <= 1.0f &&
+            bary.Y >= 0.0f && bary.Y <= 1.0f &&
+            bary.Z >= 0.0f && bary.Z <= 1.0f
+            ? cast.Value with { TriangleId = triangleId } : null;
+    }
+
+    [MethodImpl(MathEx.MIOptions)]
+    public Raycast? CastSse41(Triangle triangle, WorldTriangleId? triangleId = null)
+    {
+        if (triangle.IsDegenerated)
+            return null;
+        var cast = Cast(triangle.Plane);
+        if (cast == null)
+            return null;
+        var bary = triangle.BarycentricSse41(cast.Value.Point);
+        return bary.X >= 0.0f && bary.X <= 1.0f &&
+            bary.Y >= 0.0f && bary.Y <= 1.0f &&
+            bary.Z >= 0.0f && bary.Z <= 1.0f
+            ? cast.Value with { TriangleId = triangleId } : null;
+    }
+
+    [MethodImpl(MathEx.MIOptions)]
+    public Raycast? CastSIMD128(Triangle triangle, WorldTriangleId? triangleId = null)
+    {
+        if (triangle.IsDegenerated)
+            return null;
+        var cast = Cast(triangle.Plane);
+        if (cast == null)
+            return null;
+        var bary = triangle.BarycentricSIMD128(cast.Value.Point);
+        return bary.X >= 0.0f && bary.X <= 1.0f &&
+            bary.Y >= 0.0f && bary.Y <= 1.0f &&
+            bary.Z >= 0.0f && bary.Z <= 1.0f
+            ? cast.Value with { TriangleId = triangleId } : null;
+    }
 }

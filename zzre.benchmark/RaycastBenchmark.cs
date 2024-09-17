@@ -24,7 +24,7 @@ using BLIntersectionQueries = Baseline::zzre.IntersectionQueries;
 using BLIntersection = Baseline::zzre.Intersection;
 using BLAnyIntersectionable = Baseline::zzre.AnyIntersectionable;
 
-using MyJobAttribute = BenchmarkDotNet.Attributes.MediumRunJobAttribute;
+using MyJobAttribute = BenchmarkDotNet.Attributes.LongRunJobAttribute;
 using Perfolizer.Horology;
 using System.Globalization;
 
@@ -98,64 +98,6 @@ public class RaycastBenchmark
     }
 
     [Benchmark]
-    public float LineIntersectionsWorld()
-    {
-        float f = 0f;
-        foreach (var ray in cases)
-        {
-            var cast = CastByIntersectionWorld(ray);
-            f += cast?.Distance ?? 0f;
-        }
-        return f;
-    }
-    private Raycast? CastByIntersectionWorld(in Ray ray)
-    {
-        intersections.Clear();
-        worldCollider.IntersectionsList<Line, IntersectionQueries>(new Line(ray.Start, ray.Start + ray.Direction * 10000f), intersections);
-        Raycast? cast = null;
-        float bestDistance = float.PositiveInfinity;
-        for (int i = 0; i < intersections.Count; i++)
-        {
-            var curDistance = Vector3.DistanceSquared(ray.Start, intersections[i].Point);
-            if (curDistance <= bestDistance)
-            {
-                bestDistance = curDistance;
-                cast = new(MathF.Sqrt(curDistance), intersections[i].Point, intersections[i].Normal, intersections[i].TriangleId);
-            }
-        }
-        return cast;
-    }
-
-    [Benchmark]
-    public float LineIntersectionsMerged()
-    {
-        float f = 0f;
-        foreach (var ray in cases)
-        {
-            var cast = CastByIntersectionMerged(ray);
-            f += cast?.Distance ?? 0f;
-        }
-        return f;
-    }
-    private Raycast? CastByIntersectionMerged(in Ray ray)
-    {
-        intersections.Clear();
-        mergedCollider.IntersectionsList<Line, IntersectionQueries>(new Line(ray.Start, ray.Start + ray.Direction * 10000f), intersections);
-        Raycast? cast = null;
-        float bestDistance = float.PositiveInfinity;
-        for (int i = 0; i < intersections.Count; i++)
-        {
-            var curDistance = Vector3.DistanceSquared(ray.Start, intersections[i].Point);
-            if (curDistance <= bestDistance)
-            {
-                bestDistance = curDistance;
-                cast = new(MathF.Sqrt(curDistance), intersections[i].Point, intersections[i].Normal, intersections[i].TriangleId);
-            }
-        }
-        return cast;
-    }
-
-    [Benchmark]
     public float SimpleOptimizations()
     {
         float f = 0f;
@@ -167,13 +109,49 @@ public class RaycastBenchmark
         return f;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public float Merged()
     {
         float f = 0f;
         foreach (var ray in cases)
         {
             var c = mergedCollider.Cast(ray);
+            f += c?.Distance ?? 0f;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float MergedScalar()
+    {
+        float f = 0f;
+        foreach (var ray in cases)
+        {
+            var c = mergedCollider.CastScalar(ray, float.PositiveInfinity);
+            f += c?.Distance ?? 0f;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float MergedSse41()
+    {
+        float f = 0f;
+        foreach (var ray in cases)
+        {
+            var c = mergedCollider.CastSse41(ray, float.PositiveInfinity);
+            f += c?.Distance ?? 0f;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float MergedSIMD128()
+    {
+        float f = 0f;
+        foreach (var ray in cases)
+        {
+            var c = mergedCollider.CastSIMD128(ray, float.PositiveInfinity);
             f += c?.Distance ?? 0f;
         }
         return f;
@@ -198,10 +176,11 @@ public class RaycastBenchmark
             var results = new List<Raycast?>()
             {
                 ConvertBLCast(worldColliderBL.Cast(new BLRay(ray.Start, ray.Direction))),
-                CastByIntersectionWorld(ray), 
-                CastByIntersectionMerged(ray), 
                 worldCollider.Cast(ray),
                 mergedCollider.Cast(ray),
+                mergedCollider.CastScalar(ray, float.PositiveInfinity),
+                mergedCollider.CastSse41(ray, float.PositiveInfinity),
+                mergedCollider.CastSIMD128(ray, float.PositiveInfinity),
             };
 
             var i = results.IndexOf(c => (c is null && results.First() is not null));
