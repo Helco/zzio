@@ -115,6 +115,12 @@ public readonly partial struct Triangle : IRaycastable, IIntersectable
     {
         if (Sse41.IsSupported)
             return BarycentricSse41(point);
+        return BarycentricScalar(point);
+    }
+
+    [MethodImpl(MIOptions)]
+    public Vector3 BarycentricScalar(Vector3 point)
+    {
         if (CmpZero(Vector3.Cross(AB.Vector, AC.Vector).LengthSquared()))
             return new Vector3(-1f);
         var AP_Vector = point - A;
@@ -135,7 +141,7 @@ public readonly partial struct Triangle : IRaycastable, IIntersectable
     }
 
     [MethodImpl(MIOptions)]
-    private Vector3 BarycentricSse41(Vector3 point)
+    public Vector3 BarycentricSse41(Vector3 point)
     {
         var a = A.AsVector128();
         var b = B.AsVector128();
@@ -175,5 +181,48 @@ public readonly partial struct Triangle : IRaycastable, IIntersectable
         var tmp3 = Sse.Multiply(tmp0, tmp1);
         var tmp4 = Sse.Shuffle(tmp2, tmp2, 0b11001001);
         return Sse.Subtract(tmp3, tmp4);
+    }
+
+    [MethodImpl(MIOptions)]
+    public Vector3 BarycentricSIMD128(Vector3 point)
+    {
+        var a = A.AsVector128();
+        var b = B.AsVector128();
+        var c = C.AsVector128();
+        var p = point.AsVector128();
+        var ab = b - a;
+        var ac = c - a;
+        var abxac = CrossProductSIMD128(ab, ac);
+        var abxac_len = Vector128.Dot(abxac, abxac);
+        if (CmpZero(abxac_len))
+            return new Vector3(-1f);
+
+        var ap = p - a;
+        float d00 = Vector128.Dot(ab, ab);
+        float d01 = Vector128.Dot(ab, ac);
+        float d11 = Vector128.Dot(ac, ac);
+        float d20 = Vector128.Dot(ap, ab);
+        float d21 = Vector128.Dot(ap, ac);
+        float denom = d00 * d11 - d01 * d01;
+        if (CmpZero(denom))
+            return new Vector3(-1f);
+
+        Vector3 result;
+        result.Y = (d11 * d20 - d01 * d21) / denom;
+        result.Z = (d00 * d21 - d01 * d20) / denom;
+        result.X = 1f - result.Y - result.Z;
+        return result;
+    }
+
+    [MethodImpl(MIOptions)]
+    private static Vector128<float> CrossProductSIMD128(Vector128<float> a, Vector128<float> b)
+    {
+        // based on https://geometrian.com/programming/tutorials/cross-product/index.php method 5
+        var tmp0 = Vector128.Shuffle(a, Vector128.Create(1, 2, 0, 3));
+        var tmp1 = Vector128.Shuffle(b, Vector128.Create(2, 0, 1, 3));
+        var tmp2 = tmp0 * b;
+        var tmp3 = tmp0 * tmp1;
+        var tmp4 = Vector128.Shuffle(tmp2, Vector128.Create(1, 2, 0, 3));
+        return tmp3 - tmp4;
     }
 }
