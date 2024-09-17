@@ -13,7 +13,7 @@ public static class LaunchBenchmark
     public static void Main(string[] args)
     {
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-        var b = new ColliderBenchmark();
+        var b = new IntersectionsBenchmark();
         //b.IntersectionsGenerator();
         //b.IntersectionsBaseline();
         //b.IntersectionsList();
@@ -21,6 +21,9 @@ public static class LaunchBenchmark
         //b.IntersectionsStruct();
         //b.IntersectionsTaggedUnion();
         b.RunTests();
+
+        var c = new RaycastBenchmark();
+        c.RunTests();
         BenchmarkSwitcher.FromAssembly(typeof(LaunchBenchmark).Assembly).Run(args);
     }
 }
