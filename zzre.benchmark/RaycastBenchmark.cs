@@ -24,7 +24,7 @@ using BLIntersectionQueries = Baseline::zzre.IntersectionQueries;
 using BLIntersection = Baseline::zzre.Intersection;
 using BLAnyIntersectionable = Baseline::zzre.AnyIntersectionable;
 
-using MyJobAttribute = BenchmarkDotNet.Attributes.MediumRunJobAttribute;
+using MyJobAttribute = BenchmarkDotNet.Attributes.LongRunJobAttribute;
 using Perfolizer.Horology;
 using System.Globalization;
 
@@ -109,7 +109,7 @@ public class RaycastBenchmark
         return f;
     }
 
-    //[Benchmark]
+    [Benchmark]
     public float Merged()
     {
         float f = 0f;
@@ -121,25 +121,13 @@ public class RaycastBenchmark
         return f;
     }
 
-    //[Benchmark]
+    [Benchmark]
     public float MergedIterative()
     {
         float f = 0f;
         foreach (var ray in cases)
         {
             var c = mergedCollider.CastIterative(ray, float.PositiveInfinity);
-            f += c?.Distance ?? 0f;
-        }
-        return f;
-    }
-
-    //[Benchmark]
-    public float MergedRW()
-    {
-        float f = 0f;
-        foreach (var ray in cases)
-        {
-            var c = mergedCollider.CastRW(ray);
             f += c?.Distance ?? 0f;
         }
         return f;
@@ -152,6 +140,18 @@ public class RaycastBenchmark
         foreach (var ray in cases)
         {
             var c = mergedCollider.CastRWBR(ray);
+            f += c?.Distance ?? 0f;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float MergedRWBRSS()
+    {
+        float f = 0f;
+        foreach (var ray in cases)
+        {
+            var c = mergedCollider.CastRWBRSS(ray);
             f += c?.Distance ?? 0f;
         }
         return f;
@@ -179,8 +179,9 @@ public class RaycastBenchmark
                 worldCollider.Cast(ray),
                 mergedCollider.Cast(ray),
                 mergedCollider.CastIterative(ray, float.PositiveInfinity),
-                mergedCollider.CastRW(ray),
-                mergedCollider.CastRWBR(ray)
+                mergedCollider.CastRWBR(ray),
+                mergedCollider.CastRWBR(ray),
+                mergedCollider.CastRWBRSS(ray)
             };
 
             var i = results.IndexOf(c => (c is null && results.First() is not null));
