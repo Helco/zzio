@@ -24,7 +24,7 @@ using BLIntersectionQueries = Baseline::zzre.IntersectionQueries;
 using BLIntersection = Baseline::zzre.Intersection;
 using BLAnyIntersectionable = Baseline::zzre.AnyIntersectionable;
 
-using MyJobAttribute = BenchmarkDotNet.Attributes.LongRunJobAttribute;
+using MyJobAttribute = BenchmarkDotNet.Attributes.MediumRunJobAttribute;
 using Perfolizer.Horology;
 using System.Globalization;
 
@@ -109,7 +109,7 @@ public class RaycastBenchmark
         return f;
     }
 
-    //[Benchmark]
+    [Benchmark]
     public float Merged()
     {
         float f = 0f;
@@ -122,36 +122,24 @@ public class RaycastBenchmark
     }
 
     [Benchmark]
-    public float MergedScalar()
+    public float MergedIterative()
     {
         float f = 0f;
         foreach (var ray in cases)
         {
-            var c = mergedCollider.CastScalar(ray, float.PositiveInfinity);
+            var c = mergedCollider.CastIterative(ray, float.PositiveInfinity);
             f += c?.Distance ?? 0f;
         }
         return f;
     }
 
     [Benchmark]
-    public float MergedSse41()
+    public float MergedRW()
     {
         float f = 0f;
         foreach (var ray in cases)
         {
-            var c = mergedCollider.CastSse41(ray, float.PositiveInfinity);
-            f += c?.Distance ?? 0f;
-        }
-        return f;
-    }
-
-    [Benchmark]
-    public float MergedSIMD128()
-    {
-        float f = 0f;
-        foreach (var ray in cases)
-        {
-            var c = mergedCollider.CastSIMD128(ray, float.PositiveInfinity);
+            var c = mergedCollider.CastRW(ray);
             f += c?.Distance ?? 0f;
         }
         return f;
@@ -178,9 +166,8 @@ public class RaycastBenchmark
                 ConvertBLCast(worldColliderBL.Cast(new BLRay(ray.Start, ray.Direction))),
                 worldCollider.Cast(ray),
                 mergedCollider.Cast(ray),
-                mergedCollider.CastScalar(ray, float.PositiveInfinity),
-                mergedCollider.CastSse41(ray, float.PositiveInfinity),
-                mergedCollider.CastSIMD128(ray, float.PositiveInfinity),
+                mergedCollider.CastIterative(ray, float.PositiveInfinity),
+                mergedCollider.CastRW(ray)
             };
 
             var i = results.IndexOf(c => (c is null && results.First() is not null));

@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using zzio;
 using zzio.rwbs;
 
@@ -71,6 +73,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         return result;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private Raycast? RaycastNode(int splitI, Ray ray, float minDist, float maxDist)
     {
         ref readonly var split = ref Collision.splits[splitI];
@@ -108,6 +111,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         return hit;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private Raycast? RaycastSector(CollisionSector sector, Ray ray, float minDist, float maxDist, Raycast? prevHit)
     {
         if (minDist > maxDist)
@@ -136,234 +140,162 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
             : prevHit;
     }
 
-    public Raycast? CastScalar(Ray ray, float maxLength)
+    private static Stack<(CollisionSector, bool?)> sectorStack = new(128);
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public Raycast? CastIterative(Ray ray, float maxDist)
     {
-        var coarse = this.Coarse.Cast(ray);
-        var result = coarse == null
-            ? null
-            : RaycastNodeScalar(splitI: 0, ray, minDist: 0f, maxLength);
-        if (result != null && result.Value.Distance > maxLength)
-            return null;
-        return result;
-    }
+        //var coarseResult = Coarse.Cast(ray);
+        //if (coarseResult is null || coarseResult.Value.Distance > maxDist)
+          //  return null;
 
-    private Raycast? RaycastNodeScalar(int splitI, Ray ray, float minDist, float maxDist)
-    {
-        ref readonly var split = ref Collision.splits[splitI];
-        // the kd-optimization: no need for a full dot product
-        var compIndex = split.right.type.ToIndex();
-        var startValue = ray.Start.Component(compIndex);
-        var directionDot = ray.Direction.Component(compIndex);
-        var rightDist = ray.DistanceTo(split.right.type, split.right.value);
-        var leftDist = ray.DistanceTo(split.left.type, split.left.value);
+        var splits = Collision.splits;
+        var map = Collision.map;
+        Vector3 start = ray.Start;
+        ReadOnlySpan<float> directionSign =
+        [
+            ray.Direction.X < 0 ? -1f : 1f,
+            ray.Direction.Y < 0 ? -1f : 1f,
+            ray.Direction.Z < 0 ? -1f : 1f
+        ];
+        var nonZeroCompIndex =
+            MathEx.CmpZero(ray.Direction.X)
+            ? MathEx.CmpZero(ray.Direction.Y)
+            ? 2 : 1 : 0;
+        Raycast bestHit = new(maxDist, Vector3.Zero, Vector3.One);
 
-        Raycast? hit = null;
-        if (directionDot < 0f)
+        sectorStack.Clear();
+        sectorStack.Push((new()
         {
-            if (startValue >= split.right.value)
-            {
-                hit = RaycastSectorScalar(split.right, ray, minDist, rightDist ?? maxDist, hit);
-                float hitValue = hit?.Point.Component(compIndex) ?? float.MinValue;
-                if (hitValue > split.left.value)
-                    return hit;
-            }
-            hit = RaycastSectorScalar(split.left, ray, leftDist ?? minDist, maxDist, hit);
-        }
-        else
+            count = RWCollision.SplitCount,
+            index = 0,
+            value = ray.Start.Component(nonZeroCompIndex),
+            type = (CollisionSectorType)(nonZeroCompIndex * 4)
+        }, true));
+        while (sectorStack.TryPop(out var tt))
         {
-            if (startValue <= split.left.value)
+            var (sector, f) = tt;
+            if (bestHit.Distance < maxDist && f is bool ff)
             {
-                hit = RaycastSectorScalar(split.left, ray, minDist, leftDist ?? maxDist, hit);
-                float hitValue = hit?.Point.Component(compIndex) ?? float.MaxValue;
-                if (hitValue < split.right.value)
-                    return hit;
-            }
-            hit = RaycastSectorScalar(split.right, ray, rightDist ?? minDist, maxDist, hit);
-        }
-
-        return hit;
-    }
-
-    private Raycast? RaycastSectorScalar(CollisionSector sector, Ray ray, float minDist, float maxDist, Raycast? prevHit)
-    {
-        if (minDist > maxDist)
-            return prevHit;
-
-        Raycast? myHit;
-        if (sector.count == RWCollision.SplitCount)
-            myHit = RaycastNodeScalar(sector.index, ray, minDist, maxDist);
-        else
-        {
-            myHit = null;
-            for (int i = 0; i < sector.count; i++)
-            {
-                var t = GetTriangle(Collision.map[sector.index + i]);
-                var newHit = ray.CastScalar(t.Triangle, t.TriangleId);
-                if (newHit == null)
+                var compValue = bestHit.Point.Component(sector.type.ToIndex());
+                if (ff && compValue > sector.value ||
+                    !ff && compValue < sector.value)
                     continue;
-                if (newHit.Value.Distance < (myHit?.Distance ?? float.MaxValue))
-                    myHit = newHit;
+            }
+
+            if (sector.count == RWCollision.SplitCount)
+            {
+                ref readonly var split = ref splits[sector.index];
+                var compIndex = split.right.type.ToIndex();
+                if (directionSign[compIndex] < 0)
+                {
+                    // ray goes right to left
+                    sectorStack.Push((split.left, true));
+                    if (start.Component(compIndex) >= split.right.value)
+                        sectorStack.Push((split.right, null));
+                }
+                else
+                {
+                    // ray goes left to right
+                    sectorStack.Push((split.right, false));
+                    if (start.Component(compIndex) <= split.left.value)
+                        sectorStack.Push((split.left, null));
+                }
+            }
+            else
+            {
+                for (int i = 0; i < sector.count; i++)
+                {
+                    var t = GetTriangle(map[sector.index + i]);
+                    var newHit = ray.Cast(t.Triangle, t.TriangleId);
+                    if (newHit is not null && newHit.Value.Distance < bestHit.Distance)
+                        bestHit = newHit.Value;
+                }
             }
         }
 
-        var isBetterHit = prevHit == null || (myHit != null && myHit.Value.Distance < prevHit.Value.Distance);
-        return isBetterHit
-            ? myHit
-            : prevHit;
+        return bestHit.Distance >= maxDist ? null : bestHit;
     }
 
-    public Raycast? CastSse41(Ray ray, float maxLength)
+    private static Stack<(CollisionSector sector, float minDist, float maxDist)> rwStack = new(128);
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public Raycast? CastRW(Ray ray, float maxDistTotal = float.PositiveInfinity)
     {
-        var coarse = this.Coarse.Cast(ray);
-        var result = coarse == null
-            ? null
-            : RaycastNodeSse41(splitI: 0, ray, minDist: 0f, maxLength);
-        if (result != null && result.Value.Distance > maxLength)
+        Box aabb = Coarse switch
+        {
+            Sphere sphere => new Box(sphere.Center, Vector3.One * sphere.Radius * 2),
+            Box box => box,
+            _ => throw new NotImplementedException("Unsupported coarse primitive")
+        };
+        if (!ray.Cast(aabb, out var minDistBox, out var maxDistBox))
             return null;
-        return result;
-    }
+        maxDistTotal = Math.Min(maxDistTotal, maxDistBox);
 
-    private Raycast? RaycastNodeSse41(int splitI, Ray ray, float minDist, float maxDist)
-    {
-        ref readonly var split = ref Collision.splits[splitI];
-        // the kd-optimization: no need for a full dot product
-        var compIndex = split.right.type.ToIndex();
-        var startValue = ray.Start.Component(compIndex);
-        var directionDot = ray.Direction.Component(compIndex);
-        var rightDist = ray.DistanceTo(split.right.type, split.right.value);
-        var leftDist = ray.DistanceTo(split.left.type, split.left.value);
+        var splits = Collision.splits;
+        var map = Collision.map;
+        Raycast bestHit = new(maxDistTotal, Vector3.Zero, Vector3.One);
 
-        Raycast? hit = null;
-        if (directionDot < 0f)
+        var direction = ray.Direction;
+        var invDirection = MathEx.Reciprocal(direction);
+
+        rwStack.Clear();
+        rwStack.Push((new() { index = 0, count = RWCollision.SplitCount }, 0f, maxDistTotal));
+        while (rwStack.TryPop(out var t))
         {
-            if (startValue >= split.right.value)
+            var (sector, minDist, maxDist) = t;
+
+            if (sector.count == RWCollision.SplitCount)
             {
-                hit = RaycastSectorSse41(split.right, ray, minDist, rightDist ?? maxDist, hit);
-                float hitValue = hit?.Point.Component(compIndex) ?? float.MinValue;
-                if (hitValue > split.left.value)
-                    return hit;
+                ref readonly var split = ref splits[sector.index];
+                var compIndex = split.left.type.ToIndex();
+                var dir = direction.Component(compIndex);
+                var start = ray.Start.Component(compIndex) + dir * minDist;
+                var end = ray.Start.Component(compIndex) + dir * maxDist;
+                var invDir = invDirection.Component(compIndex);
+                if (dir > 0)
+                {
+                    // left -> right
+                    if (split.right.value > end)
+                        rwStack.Push((split.left, minDist, maxDist));
+                    else if (split.left.value < start)
+                        rwStack.Push((split.right, minDist, maxDist));
+                    else
+                    {
+                        var rightMinDist = minDist + invDir * MathF.Max(0f, split.right.value - start);
+                        rwStack.Push((split.right, rightMinDist, maxDist));
+                        var leftMaxDist = maxDist + invDir * MathF.Min(0f, split.left.value - end);
+                        rwStack.Push((split.left, minDist, leftMaxDist));
+                    }
+                }
+                else
+                {
+                    // right -> left
+                    if (split.left.value < end)
+                        rwStack.Push((split.right, minDist, maxDist));
+                    else if (split.right.value > start)
+                        rwStack.Push((split.left, minDist, maxDist));
+                    else
+                    {
+                        var leftMinDist = minDist + invDir * MathF.Max(0f, split.left.value - start);
+                        rwStack.Push((split.left, leftMinDist, maxDist));
+                        var rightMaxDist = maxDist + invDir * MathF.Min(0f, split.right.value - end);
+                        rwStack.Push((split.right, minDist, rightMaxDist));
+                    }
+                }
             }
-            hit = RaycastSectorSse41(split.left, ray, leftDist ?? minDist, maxDist, hit);
-        }
-        else
-        {
-            if (startValue <= split.left.value)
+            else
             {
-                hit = RaycastSectorSse41(split.left, ray, minDist, leftDist ?? maxDist, hit);
-                float hitValue = hit?.Point.Component(compIndex) ?? float.MaxValue;
-                if (hitValue < split.right.value)
-                    return hit;
-            }
-            hit = RaycastSectorSse41(split.right, ray, rightDist ?? minDist, maxDist, hit);
-        }
-
-        return hit;
-    }
-
-    private Raycast? RaycastSectorSse41(CollisionSector sector, Ray ray, float minDist, float maxDist, Raycast? prevHit)
-    {
-        if (minDist > maxDist)
-            return prevHit;
-
-        Raycast? myHit;
-        if (sector.count == RWCollision.SplitCount)
-            myHit = RaycastNodeSse41(sector.index, ray, minDist, maxDist);
-        else
-        {
-            myHit = null;
-            for (int i = 0; i < sector.count; i++)
-            {
-                var t = GetTriangle(Collision.map[sector.index + i]);
-                var newHit = ray.CastSse41(t.Triangle, t.TriangleId);
-                if (newHit == null)
-                    continue;
-                if (newHit.Value.Distance < (myHit?.Distance ?? float.MaxValue))
-                    myHit = newHit;
-            }
-        }
-
-        var isBetterHit = prevHit == null || (myHit != null && myHit.Value.Distance < prevHit.Value.Distance);
-        return isBetterHit
-            ? myHit
-            : prevHit;
-    }
-
-    public Raycast? CastSIMD128(Ray ray, float maxLength)
-    {
-        var coarse = this.Coarse.Cast(ray);
-        var result = coarse == null
-            ? null
-            : RaycastNodeSIMD128(splitI: 0, ray, minDist: 0f, maxLength);
-        if (result != null && result.Value.Distance > maxLength)
-            return null;
-        return result;
-    }
-
-    private Raycast? RaycastNodeSIMD128(int splitI, Ray ray, float minDist, float maxDist)
-    {
-        ref readonly var split = ref Collision.splits[splitI];
-        // the kd-optimization: no need for a full dot product
-        var compIndex = split.right.type.ToIndex();
-        var startValue = ray.Start.Component(compIndex);
-        var directionDot = ray.Direction.Component(compIndex);
-        var rightDist = ray.DistanceTo(split.right.type, split.right.value);
-        var leftDist = ray.DistanceTo(split.left.type, split.left.value);
-
-        Raycast? hit = null;
-        if (directionDot < 0f)
-        {
-            if (startValue >= split.right.value)
-            {
-                hit = RaycastSectorSIMD128(split.right, ray, minDist, rightDist ?? maxDist, hit);
-                float hitValue = hit?.Point.Component(compIndex) ?? float.MinValue;
-                if (hitValue > split.left.value)
-                    return hit;
-            }
-            hit = RaycastSectorSIMD128(split.left, ray, leftDist ?? minDist, maxDist, hit);
-        }
-        else
-        {
-            if (startValue <= split.left.value)
-            {
-                hit = RaycastSectorSIMD128(split.left, ray, minDist, leftDist ?? maxDist, hit);
-                float hitValue = hit?.Point.Component(compIndex) ?? float.MaxValue;
-                if (hitValue < split.right.value)
-                    return hit;
-            }
-            hit = RaycastSectorSIMD128(split.right, ray, rightDist ?? minDist, maxDist, hit);
-        }
-
-        return hit;
-    }
-
-    private Raycast? RaycastSectorSIMD128(CollisionSector sector, Ray ray, float minDist, float maxDist, Raycast? prevHit)
-    {
-        if (minDist > maxDist)
-            return prevHit;
-
-        Raycast? myHit;
-        if (sector.count == RWCollision.SplitCount)
-            myHit = RaycastNodeSIMD128(sector.index, ray, minDist, maxDist);
-        else
-        {
-            myHit = null;
-            for (int i = 0; i < sector.count; i++)
-            {
-                var t = GetTriangle(Collision.map[sector.index + i]);
-                var newHit = ray.CastSIMD128(t.Triangle, t.TriangleId);
-                if (newHit == null)
-                    continue;
-                if (newHit.Value.Distance < (myHit?.Distance ?? float.MaxValue))
-                    myHit = newHit;
+                for (int i = 0; i < sector.count; i++)
+                {
+                    var (tri, triId) = GetTriangle(map[sector.index + i]);
+                    var newHit = ray.Cast(tri, triId);
+                    if (newHit is not null && newHit.Value.Distance < bestHit.Distance)
+                        bestHit = newHit.Value;
+                }
             }
         }
 
-        var isBetterHit = prevHit == null || (myHit != null && myHit.Value.Distance < prevHit.Value.Distance);
-        return isBetterHit
-            ? myHit
-            : prevHit;
+        return bestHit.Distance < maxDistTotal ? bestHit : null;
     }
-
     protected override IEnumerable<Intersection> Intersections<T, TQueries>(T primitive) =>
         IntersectionsGenerator<T, TQueries>(primitive);
         //IntersectionsList<T, TQueries>(primitive);

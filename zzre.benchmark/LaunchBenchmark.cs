@@ -24,6 +24,7 @@ public static class LaunchBenchmark
 
         var c = new RaycastBenchmark();
         c.RunTests();
+
         BenchmarkSwitcher.FromAssembly(typeof(LaunchBenchmark).Assembly).Run(args);
     }
 }
