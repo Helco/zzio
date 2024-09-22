@@ -60,6 +60,36 @@ public readonly struct Ray
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public bool Cast(Box box, out float minDist, out float maxDist)
+    {
+        var min = box.Min;
+        var max = box.Max;
+        minDist = float.NegativeInfinity;
+        maxDist = float.PositiveInfinity;
+        var result =
+            Cast(Start.X, Direction.X, min.X, max.X, ref minDist, ref maxDist) &&
+            Cast(Start.Y, Direction.Y, min.Y, max.Y, ref minDist, ref maxDist) &&
+            Cast(Start.Z, Direction.Z, min.Z, max.Z, ref minDist, ref maxDist);
+        return result;
+    }
+
+    [MethodImpl(MathEx.MIOptions)]
+    private static bool Cast(float start, float dir, float min, float max, ref float minDist, ref float maxDist)
+    {
+        var p0 = (min - start) / dir;
+        var p1 = (max - start) / dir;
+        if (p0 > p1)
+            (p0, p1) = (p1, p0);
+        var result = minDist <= p1 && maxDist >= p0;
+        if (result)
+        {
+            minDist = Math.Max(minDist, p0);
+            maxDist = Math.Min(maxDist, p1);
+        }
+        return result;
+    }
+
     [MethodImpl(MathEx.MIOptions)]
     public Raycast? Cast(OrientedBox obb)
     {
@@ -148,6 +178,12 @@ public readonly struct Ray
     {
         if (triangle.IsDegenerated)
             return null;
+        return CastUnsafe(triangle, triangleId);
+    }
+
+    [MethodImpl(MathEx.MIOptions)]
+    public Raycast? CastUnsafe(Triangle triangle, WorldTriangleId? triangleId = null)
+    {
         var cast = Cast(triangle.Plane);
         if (cast == null)
             return null;
@@ -158,48 +194,4 @@ public readonly struct Ray
             ? cast.Value with { TriangleId = triangleId } : null;
     }
 
-    [MethodImpl(MathEx.MIOptions)]
-    public Raycast? CastScalar(Triangle triangle, WorldTriangleId? triangleId = null)
-    {
-        if (triangle.IsDegenerated)
-            return null;
-        var cast = Cast(triangle.Plane);
-        if (cast == null)
-            return null;
-        var bary = triangle.BarycentricScalar(cast.Value.Point);
-        return bary.X >= 0.0f && bary.X <= 1.0f &&
-            bary.Y >= 0.0f && bary.Y <= 1.0f &&
-            bary.Z >= 0.0f && bary.Z <= 1.0f
-            ? cast.Value with { TriangleId = triangleId } : null;
-    }
-
-    [MethodImpl(MathEx.MIOptions)]
-    public Raycast? CastSse41(Triangle triangle, WorldTriangleId? triangleId = null)
-    {
-        if (triangle.IsDegenerated)
-            return null;
-        var cast = Cast(triangle.Plane);
-        if (cast == null)
-            return null;
-        var bary = triangle.BarycentricSse41(cast.Value.Point);
-        return bary.X >= 0.0f && bary.X <= 1.0f &&
-            bary.Y >= 0.0f && bary.Y <= 1.0f &&
-            bary.Z >= 0.0f && bary.Z <= 1.0f
-            ? cast.Value with { TriangleId = triangleId } : null;
-    }
-
-    [MethodImpl(MathEx.MIOptions)]
-    public Raycast? CastSIMD128(Triangle triangle, WorldTriangleId? triangleId = null)
-    {
-        if (triangle.IsDegenerated)
-            return null;
-        var cast = Cast(triangle.Plane);
-        if (cast == null)
-            return null;
-        var bary = triangle.BarycentricSIMD128(cast.Value.Point);
-        return bary.X >= 0.0f && bary.X <= 1.0f &&
-            bary.Y >= 0.0f && bary.Y <= 1.0f &&
-            bary.Z >= 0.0f && bary.Z <= 1.0f
-            ? cast.Value with { TriangleId = triangleId } : null;
-    }
 }

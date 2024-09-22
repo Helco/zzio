@@ -41,6 +41,10 @@ public static class MathEx
         new(MathF.Floor(v.X), MathF.Floor(v.Y), MathF.Floor(v.Z), MathF.Floor(v.W));
 
     [MethodImpl(MIOptions)]
+    public static Vector3 Reciprocal(Vector3 v) =>
+        new(1f / v.X, 1f / v.Y, 1f / v.Z);
+
+    [MethodImpl(MIOptions)]
     public static Vector3 Project(Vector3 length, Vector3 dir)
     {
         var dot = Vector3.Dot(length, dir);
