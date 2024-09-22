@@ -109,7 +109,7 @@ public class RaycastBenchmark
         return f;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public float Merged()
     {
         float f = 0f;
@@ -121,7 +121,7 @@ public class RaycastBenchmark
         return f;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public float MergedIterative()
     {
         float f = 0f;
@@ -133,13 +133,25 @@ public class RaycastBenchmark
         return f;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public float MergedRW()
     {
         float f = 0f;
         foreach (var ray in cases)
         {
             var c = mergedCollider.CastRW(ray);
+            f += c?.Distance ?? 0f;
+        }
+        return f;
+    }
+
+    [Benchmark]
+    public float MergedRWBR()
+    {
+        float f = 0f;
+        foreach (var ray in cases)
+        {
+            var c = mergedCollider.CastRWBR(ray);
             f += c?.Distance ?? 0f;
         }
         return f;
@@ -167,7 +179,8 @@ public class RaycastBenchmark
                 worldCollider.Cast(ray),
                 mergedCollider.Cast(ray),
                 mergedCollider.CastIterative(ray, float.PositiveInfinity),
-                mergedCollider.CastRW(ray)
+                mergedCollider.CastRW(ray),
+                mergedCollider.CastRWBR(ray)
             };
 
             var i = results.IndexOf(c => (c is null && results.First() is not null));

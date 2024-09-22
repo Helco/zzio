@@ -296,6 +296,88 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
 
         return bestHit.Distance < maxDistTotal ? bestHit : null;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public Raycast? CastRWBR(Ray ray, float maxDistTotal = float.PositiveInfinity)
+    {
+        Box aabb = Coarse switch
+        {
+            Sphere sphere => new Box(sphere.Center, Vector3.One * sphere.Radius * 2),
+            Box box => box,
+            _ => throw new NotImplementedException("Unsupported coarse primitive")
+        };
+        if (!ray.Cast(aabb, out var minDistBox, out var maxDistBox))
+            return null;
+        maxDistTotal = Math.Min(maxDistTotal, maxDistBox);
+
+        var splits = Collision.splits;
+        var map = Collision.map;
+        var triangles = Triangles;
+        var triangleIds = WorldTriangleIds;
+        Raycast bestHit = new(maxDistTotal, Vector3.Zero, Vector3.One);
+
+        var direction = ray.Direction;
+        var invDirection = MathEx.Reciprocal(direction);
+
+        rwStack.Clear();
+        rwStack.Push((new() { index = 0, count = RWCollision.SplitCount }, 0f, maxDistTotal));
+        while (rwStack.TryPop(out var t))
+        {
+            var (sector, minDist, maxDist) = t;
+
+            if (sector.count == RWCollision.SplitCount)
+            {
+                var split = splits[sector.index];
+                var compIndex = split.left.type.ToIndex();
+                var dir = direction.Component(compIndex);
+                var start = ray.Start.Component(compIndex) + dir * minDist;
+                var end = ray.Start.Component(compIndex) + dir * maxDist;
+                var invDir = invDirection.Component(compIndex);
+                if (dir > 0)
+                {
+                    // left -> right
+                    if (split.right.value > end)
+                        rwStack.Push((split.left, minDist, maxDist));
+                    else if (split.left.value < start)
+                        rwStack.Push((split.right, minDist, maxDist));
+                    else
+                    {
+                        var rightMinDist = minDist + invDir * MathF.Max(0f, split.right.value - start);
+                        rwStack.Push((split.right, rightMinDist, maxDist));
+                        var leftMaxDist = maxDist + invDir * MathF.Min(0f, split.left.value - end);
+                        rwStack.Push((split.left, minDist, leftMaxDist));
+                    }
+                }
+                else
+                {
+                    // right -> left
+                    if (split.left.value < end)
+                        rwStack.Push((split.right, minDist, maxDist));
+                    else if (split.right.value > start)
+                        rwStack.Push((split.left, minDist, maxDist));
+                    else
+                    {
+                        var leftMinDist = minDist + invDir * MathF.Max(0f, split.left.value - start);
+                        rwStack.Push((split.left, leftMinDist, maxDist));
+                        var rightMaxDist = maxDist + invDir * MathF.Min(0f, split.right.value - end);
+                        rwStack.Push((split.right, minDist, rightMaxDist));
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < sector.count; i++)
+                {
+                    var triI = map[sector.index + i];
+                    if (ray.Cast(triangles[triI]) is Raycast newHit && newHit.Distance < bestHit.Distance)
+                        bestHit = newHit with { TriangleId = triangleIds[triI] };
+                }
+            }
+        }
+
+        return bestHit.Distance < maxDistTotal ? bestHit : null;
+    }
+
     protected override IEnumerable<Intersection> Intersections<T, TQueries>(T primitive) =>
         IntersectionsGenerator<T, TQueries>(primitive);
         //IntersectionsList<T, TQueries>(primitive);

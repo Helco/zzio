@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using zzio;
 
@@ -40,4 +41,6 @@ public abstract class TriangleCollider : BaseGeometryCollider
 {
     protected abstract int TriangleCount { get; }
     public abstract (Triangle Triangle, WorldTriangleId TriangleId) GetTriangle(int i);
+    public virtual ReadOnlySpan<Triangle> Triangles => throw new NotSupportedException();
+    public virtual ReadOnlySpan<WorldTriangleId> WorldTriangleIds => throw new NotSupportedException();
 }
