@@ -13,6 +13,11 @@ public static class LaunchBenchmark
     public static void Main(string[] args)
     {
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+        /*var cc = new RaycastBenchmark();
+        for (int i = 0; i < 100; i++)
+            cc.MergedRWBR();
+        return;*/
+
         var b = new IntersectionsBenchmark();
         //b.IntersectionsGenerator();
         //b.IntersectionsBaseline();

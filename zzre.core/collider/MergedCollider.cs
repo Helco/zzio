@@ -14,6 +14,9 @@ public sealed class MergedCollider : TreeCollider<Box>
     public readonly Triangle[] triangles;
     public readonly WorldTriangleId[] triangleIds;
 
+    public override ReadOnlySpan<Triangle> Triangles => triangles;
+    public override ReadOnlySpan<WorldTriangleId> WorldTriangleIds => triangleIds;
+
     protected override int TriangleCount => triangles.Length;
 
     private MergedCollider(Box coarse, RWCollision collision,
@@ -25,6 +28,7 @@ public sealed class MergedCollider : TreeCollider<Box>
 
     public override (Triangle Triangle, WorldTriangleId TriangleId) GetTriangle(int i) =>
         (triangles[i], triangleIds[i]);
+
 
     public static MergedCollider Create(RWWorld world)
     {
