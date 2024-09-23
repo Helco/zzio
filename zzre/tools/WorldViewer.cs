@@ -1,5 +1,3 @@
-extern alias Baseline;
-
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -17,12 +15,6 @@ using zzre.rendering;
 using zzre.game.systems;
 using KeyCode = Silk.NET.SDL.KeyCode;
 using static ImGuiNET.ImGui;
-
-using BLWorldCollider = Baseline::zzre.WorldCollider;
-using BLSphere = Baseline::zzre.Sphere;
-using BLIntersectionQueries = Baseline::zzre.IntersectionQueries;
-using BLIntersection = Baseline::zzre.Intersection;
-using BLAnyIntersectionable = Baseline::zzre.AnyIntersectionable;
 
 namespace zzre.tools;
 
@@ -68,8 +60,8 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private int highlightedSectionI = -1;
     private int highlightedSplitI = -1;
     private IntersectionPrimitive intersectionPrimitive;
-    private bool updateIntersectionPrimitive = true;
-    private float intersectionSize = 2f;
+    private bool updateIntersectionPrimitive;
+    private float intersectionSize = 0.5f;
     private bool showVertexColors;
     private bool setRaycastToCamera;
     private Vector3 raycastStart;
@@ -556,13 +548,6 @@ public class WorldViewer : ListDisposable, IDocumentEditor
             shouldUpdate |= SliderFloat("Size", ref intersectionSize, 0.01f, 20f);
         }
         shouldUpdate |= Checkbox("Update location", ref updateIntersectionPrimitive);
-        shouldUpdate |= ImGuiEx.EnumCombo("Baseline", ref baseline);
-        shouldUpdate |= ImGuiEx.EnumCombo("Comparison", ref comparison);
-
-        if (Button("Cheat"))
-        {
-            camera.Location.LocalPosition = new(359.4327f, 195.16211f, 385.25195f);
-        }
         if (updateIntersectionPrimitive || shouldUpdate)
         {
             if (intersectionPrimitive == IntersectionPrimitive.Ray)
@@ -583,7 +568,15 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         }
 
         var ray = new Ray(raycastStart, raycastDir);
-        var cast = worldCollider.Cast(ray);
+        var n = true;
+        Raycast? cast = null;
+        if (n)
+        {
+            var mergedCollider = MergedCollider.Create(worldCollider.World);
+            cast = mergedCollider.CastRWNext(ray);
+        }
+        else
+            cast = worldCollider.Cast(ray);
         rayRenderer.Clear();
         rayRenderer.Add(IColor.Green, ray.Start, ray.Start + ray.Direction * (cast?.Distance ?? 100f));
         if (cast.HasValue)
@@ -598,125 +591,67 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         fbArea.IsDirty = true;
     }
 
-    private static List<Intersection> FindUniques(IEnumerable<Intersection> these, IEnumerable<Intersection> butnotthese) =>
-        these.Where(ti => !butnotthese.Any() || butnotthese.All(ni => !AreEqualEnough(ti, ni)))
-            .OrderBy(i => i.TriangleId!.Value.AtomicIdx)
-            .ThenBy(i => i.TriangleId!.Value.TriangleIdx).ToList();
-
-    private static bool AreEqualEnough(Intersection a, Intersection b)
-    {
-
-        if (a.TriangleId != b.TriangleId)
-            return false;
-        return true;
-        return AreEqualEnough(a.Point, b.Point);
-    }
-
-    private static bool AreEqualEnough(Vector3 a, Vector3 b) => Vector3.Distance(a, b) < 0.0001;
-
-    private static Intersection ConvertBLIntersection(BLIntersection i)
-    {
-        var t = new Triangle(i.Triangle.A, i.Triangle.B, i.Triangle.C);
-        var ti = i.TriangleId == null ? null as WorldTriangleId?
-            : new WorldTriangleId(i.TriangleId.Value.AtomicIdx, i.TriangleId.Value.TriangleIdx);
-        return new Intersection(i.Point, t, ti);
-    }
-
-    private enum IntersectionMethod
-    {
-        Baseline,
-        Generator,
-        List,
-        FullStruct,
-        VirtCall,
-        MergedList,
-    }
-
-    private IntersectionMethod baseline = IntersectionMethod.List, comparison = IntersectionMethod.MergedList;
-    private BLWorldCollider? blWorldCollider;
-    private MergedCollider? mergedCollider;
-
-    private  unsafe IEnumerable<Intersection> IntersectionByMethod(WorldCollider worldCollider, Sphere sphere, IntersectionMethod method)
-    {
-        var list = new List<Intersection>();
-        switch(method)
-        {
-            case IntersectionMethod.Baseline:
-                blWorldCollider ??= new(worldMesh!.World);
-                try
-                {
-                    return blWorldCollider.IntersectionsGenerator<BLSphere, BLIntersectionQueries>(new(sphere.Center, sphere.Radius)).Select(ConvertBLIntersection).ToArray();
-                }
-                catch(IndexOutOfRangeException e)
-                {
-                    return Enumerable.Empty<Intersection>();
-                }
-            case IntersectionMethod.Generator:
-                return worldCollider.IntersectionsGenerator<Sphere, IntersectionQueries>(sphere);
-            case IntersectionMethod.List:
-                worldCollider.IntersectionsList<Sphere, IntersectionQueries>(sphere, list);
-                return list;
-            case IntersectionMethod.FullStruct:
-                var e1 = new WorldCollider.IntersectionsEnumerator<Sphere, IntersectionQueries,
-                    TreeCollider<Box>.IntersectionsEnumerator<Sphere, IntersectionQueries>>
-                    (worldCollider, sphere,
-                    &WorldCollider.IntersectionsEnumerable<Sphere, IntersectionQueries>.AtomicIntersections);
-                while (e1.MoveNext())
-                    list.Add(e1.Current);
-                return list;
-            case IntersectionMethod.VirtCall:
-                var e2 = new WorldCollider.IntersectionsEnumeratorVirtCall(worldCollider, AnyIntersectionable.From(sphere));
-                while (e2.MoveNext())
-                    list.Add(e2.Current);
-                return list;
-            case IntersectionMethod.MergedList:
-                mergedCollider ??= MergedCollider.Create(worldMesh!.World);
-                mergedCollider.IntersectionsList<Sphere, IntersectionQueries>(sphere, list);
-                return list;
-            default:
-                throw new NotSupportedException();
-        }
-    }
-
-    bool lastInteresting = false;
-
     private void UpdateIntersectionPrimitive()
     {
         if (!updateIntersectionPrimitive || worldCollider == null)
             return;
 
         Vector3 center = camera.Location.GlobalPosition;
-        IEnumerable<Intersection> baselineIntersections, comparisonIntersections;
+        IEnumerable<Intersection> intersections;
         IEnumerable<Line> edges;
         rayRenderer.Clear();
+        switch (intersectionPrimitive)
+        {
+            case IntersectionPrimitive.Box:
+                var box = new Box(center, Vector3.One * intersectionSize);
+                intersections = worldCollider.Intersections(box);
+                edges = box.Edges();
+                break;
 
-        var sphere = new Sphere(center, intersectionSize);
-        baselineIntersections = IntersectionByMethod(worldCollider, sphere, baseline);
-        comparisonIntersections = IntersectionByMethod(worldCollider, sphere, comparison);
-        edges = sphere.Edges();
+            case IntersectionPrimitive.OrientedBox:
+                var orientedBox = new OrientedBox(
+                    new Box(center, Vector3.One * intersectionSize),
+                    camera.Location.GlobalRotation);
+                intersections = worldCollider.Intersections(orientedBox);
+                edges = orientedBox.Edges();
+                break;
+
+            case IntersectionPrimitive.Sphere:
+                var sphere = new Sphere(center, intersectionSize);
+                intersections = worldCollider.Intersections(sphere);
+                edges = sphere.Edges();
+                break;
+
+            case IntersectionPrimitive.Triangle:
+                var hh = intersectionSize * MathF.Sqrt(3f) / 4f;
+                var (right, up) = (camera.Location.GlobalRight, camera.Location.GlobalUp);
+                var triangle = new Triangle(
+                    center - right * intersectionSize / 2f - up * hh,
+                    center + right * intersectionSize / 2f - up * hh,
+                    center + up * hh);
+                intersections = worldCollider.Intersections(triangle);
+                edges = triangle.Edges();
+                break;
+
+            case IntersectionPrimitive.Line:
+                var pos = camera.Location.GlobalPosition;
+                var line = new Line(pos, pos - camera.Location.GlobalForward * intersectionSize);
+                intersections = worldCollider.Intersections(line);
+                edges = new[] { line };
+                break;
+
+            default: return;
+        }
 
         rayRenderer.Add(
-            baselineIntersections.Any() ? IColor.Black : IColor.White,
+            intersections.Any() ? IColor.Red : IColor.Green,
             edges);
-
-        var missing = FindUniques(baselineIntersections, comparisonIntersections);
-        var instead = FindUniques(comparisonIntersections, baselineIntersections);
-
-        var interesting = false;
-        foreach (var intersection in missing)
+        foreach (var intersection in intersections)
         {
-            rayRenderer.Add(IColor.Red, intersection.Triangle.Edges());
-            interesting = true;
-        }
-        foreach (var intersection in instead)
-        {
+            var p1 = intersection.Point;
+            var p2 = p1 + intersection.Normal * 0.1f;
             rayRenderer.Add(IColor.Green, intersection.Triangle.Edges());
-            interesting = true;
-        }
-        if (lastInteresting != interesting)
-        {
-            Console.WriteLine(interesting ? "got interesting" : "NOTHING ANYMORE");
-            lastInteresting = interesting;
+            rayRenderer.Add(IColor.Blue, p1, p2);
         }
 
         fbArea.IsDirty = true;

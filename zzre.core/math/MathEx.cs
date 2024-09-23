@@ -12,6 +12,7 @@ public static class MathEx
 
     public const float DegToRad = MathF.PI / 180f;
     public const float RadToDeg = 180f / MathF.PI;
+    public const float ZeroEpsilon = 0.1E-10f;
 
     [MethodImpl(MIOptions)]
     public static float Lerp(float from, float to, float t) =>
@@ -26,7 +27,7 @@ public static class MathEx
         Math.Abs(a - b) <= float.Epsilon * Math.Max(1f, Math.Max(Math.Abs(a), Math.Abs(b)));
 
     [MethodImpl(MIOptions)]
-    public static bool CmpZero(float a) => Math.Abs(a) < 0.1E-10;
+    public static bool CmpZero(float a) => Math.Abs(a) < ZeroEpsilon;
 
     [MethodImpl(MIOptions)]
     public static Vector2 Floor(Vector2 v) =>
