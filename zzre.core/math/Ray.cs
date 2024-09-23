@@ -247,4 +247,36 @@ public readonly struct Ray
         return new(t, Start + Direction * t, triangle.Normal);
     }
 
+    [MethodImpl(MathEx.MIOptions)]
+    public Raycast TryCastMT2(in Triangle triangle)
+    {
+        if (triangle.IsDegenerated)
+            return new(float.NaN, default, default);
+
+        // adapted from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm#C++_implementation
+        var triangleAB = triangle.AB.Vector;
+        var triangleAC = triangle.AC.Vector;
+        var rayCrossAC = Vector3.Cross(Direction, triangleAC);
+        var det = Vector3.Dot(rayCrossAC, triangleAB);
+        if (det < MathEx.ZeroEpsilon) // not using abs causes the desired backface culling
+            return new(float.NaN, default, default);
+
+        var invDet = 1 / det;
+        var s = Start - triangle.A;
+        var u = invDet * Vector3.Dot(s, rayCrossAC);
+        if (u < 0 || u > 1)
+            return new(float.NaN, default, default);
+
+        var sCrossAB = Vector3.Cross(s, triangleAB);
+        var v = invDet * Vector3.Dot(Direction, sCrossAB);
+        if (v < 0 || u + v > 1)
+            return new(float.NaN, default, default);
+
+        float t = invDet * Vector3.Dot(triangleAC, sCrossAB);
+        if (t < MathEx.ZeroEpsilon)
+            return new(float.NaN, default, default);
+
+        return new(t, Start + Direction * t, triangle.Normal);
+    }
+
 }
