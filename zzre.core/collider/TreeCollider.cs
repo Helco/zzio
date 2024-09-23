@@ -290,7 +290,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
                 for (int i = 0; i < sector.count; i++)
                 {
                     var triI = map[sector.index + i];
-                    var newHit = ray.TryCast(triangles[triI]);
+                    var newHit = ray.TryCastMT(triangles[triI]);
                     if (newHit.Distance < bestHit.Distance) // for misses: NaN < bestDistance is always false
                         bestHit = newHit with { TriangleId = triangleIds[triI] };
                 }
@@ -374,7 +374,7 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
                 for (int i = 0; i < sector.count; i++)
                 {
                     var triI = map[sector.index + i];
-                    var newHit = ray.TryCastMT(triangles[triI]);
+                    var newHit = ray.TryCastMT2(triangles[triI]);
                     if (newHit.Distance < bestHit.Distance) // for misses: NaN < bestDistance is always false
                         bestHit = newHit with { TriangleId = triangleIds[triI] };
                 }
