@@ -250,9 +250,6 @@ public readonly struct Ray
     [MethodImpl(MathEx.MIOptions)]
     public Raycast TryCastMT2(in Triangle triangle)
     {
-        if (triangle.IsDegenerated)
-            return new(float.NaN, default, default);
-
         // adapted from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm#C++_implementation
         var triangleAB = triangle.AB.Vector;
         var triangleAC = triangle.AC.Vector;

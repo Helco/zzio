@@ -48,22 +48,31 @@ public sealed class MergedCollider : TreeCollider<Box>
             (acc, section) => Vector3.Max(acc, Vector3.Max(section.bbox1, section.bbox2)));
         var box = Box.FromMinMax(boxMin, boxMax);
 
-        var triangles = atomicSections
-            .SelectMany(zip => zip.triangles
-                .Select(t => new Triangle(zip.vertices[t.v1], zip.vertices[t.v2], zip.vertices[t.v3])))
-            .ToArray();
-        var triangleIds = atomicSections
-            .SelectMany((zip, i) => Enumerable.Range(0, zip.triangles.Length).Select(j => new WorldTriangleId(i, j)))
-            .ToArray();
-        var baseMapIndices = atomicCollisions
-            .SubSums(0, (prev, col) => prev + col.map.Length)
-            .ToArray();
-        var baseTriangleIndices = atomicSections
-            .SubSums(0, (prev, section) => prev + section.triangles.Length)
-            .ToArray();
-        var map = atomicCollisions
-            .SelectMany((s, si) => s.map.Select(mi => mi + baseTriangleIndices[si]))
-            .ToArray();
+        var triangleCount = atomicCollisions.Sum(s => s.map.Length);
+        var triangles = new Triangle[triangleCount];
+        var triangleIds = new WorldTriangleId[triangleCount];
+        var baseMapIndices = new int[atomicSections.Length];
+        var triangleCounts = new int[atomicSections.Length]; // that is original count but without the degenerated ones
+        var map = new int[triangleCount];
+        var triangleI = 0;
+        for (int sectionI = 0; sectionI < atomicSections.Length; sectionI++)
+        {
+            var section = atomicCollisions[sectionI];
+            var localTriangles = atomicSections[sectionI].triangles;
+            var vertices = atomicSections[sectionI].vertices;
+            baseMapIndices[sectionI] = triangleI;
+            for (int localTriangleI = 0; localTriangleI < section.map.Length; localTriangleI++)
+            {
+                var t = localTriangles[section.map[localTriangleI]];
+                triangles[triangleI] = new(vertices[t.v1], vertices[t.v2], vertices[t.v3]);
+                if (triangles[triangleI].IsDegenerated)
+                    continue;
+                triangleIds[triangleI] = new(sectionI, section.map[localTriangleI]);
+                map[triangleI] = triangleI;
+                triangleI++;
+            }
+            triangleCounts[sectionI] = triangleI - baseMapIndices[sectionI];
+        }
 
         int splitCount =
             atomicCollisions.Sum(c => c.splits.Length) +
@@ -98,7 +107,7 @@ public sealed class MergedCollider : TreeCollider<Box>
                 right = ProcessSubSection(splitType, plane.rightValue, rightSection)
             };
         }
-        Debug.Assert(splitI == splits.Length);
+
         return new MergedCollider(box, new()
         {
             map = map,
@@ -124,17 +133,27 @@ public sealed class MergedCollider : TreeCollider<Box>
                     var atomicId = atomicSections.IndexOf(atomic);
                     Debug.Assert(atomicId >= 0);
                     var subSplits = atomicCollisions[atomicId].splits;
+                    if (subSplits.Length == 1 && float.IsInfinity(subSplits[0].left.value))
+                    {
+                        // naive collision where we can save the dummy split
+                        return new()
+                        {
+                            type = splitType,
+                            value = value,
+                            index = baseMapIndices[atomicId],
+                            count = triangleCounts[atomicId],
+                        };
+                    }
+
                     var startSplitI = splitI;
                     splitI += subSplits.Length;
 
                     subSplits.CopyTo(splits, startSplitI);
                     foreach (ref var subSplit in splits.AsSpan(startSplitI, subSplits.Length))
                     {
-                        if (subSplit.left.index >= 0)
                         subSplit.left.index += subSplit.left.count == RWCollision.SplitCount
                             ? startSplitI
                             : baseMapIndices[atomicId];
-                        if (subSplit.right.index >= 0)
                         subSplit.right.index += subSplit.right.count == RWCollision.SplitCount
                             ? startSplitI
                             : baseMapIndices[atomicId];
