@@ -217,91 +217,8 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         return bestHit.Distance >= maxDist ? null : bestHit;
     }
 
-    private static Stack<(CollisionSector sector, float minDist, float maxDist)> rwStack = new(128);
-
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public Raycast? CastRWBR(Ray ray, float maxDistTotal = float.PositiveInfinity)
-    {
-        Box aabb = Coarse switch
-        {
-            Sphere sphere => new Box(sphere.Center, Vector3.One * sphere.Radius * 2),
-            Box box => box,
-            _ => throw new NotImplementedException("Unsupported coarse primitive")
-        };
-        if (!ray.Cast(aabb, out var minDistBox, out var maxDistBox))
-            return null;
-        maxDistTotal = Math.Min(maxDistTotal, maxDistBox);
-
-        var splits = Collision.splits;
-        var map = Collision.map;
-        var triangles = Triangles;
-        var triangleIds = WorldTriangleIds;
-        Raycast bestHit = new(maxDistTotal, Vector3.Zero, Vector3.One);
-
-        var direction = ray.Direction;
-        var invDirection = MathEx.Reciprocal(direction);
-
-        rwStack.Clear();
-        rwStack.Push((new() { index = 0, count = RWCollision.SplitCount }, 0f, maxDistTotal));
-        while (rwStack.TryPop(out var t))
-        {
-            var (sector, minDist, maxDist) = t;
-
-            if (sector.count == RWCollision.SplitCount)
-            {
-                var split = splits[sector.index];
-                var compIndex = split.left.type.ToIndex();
-                var dir = direction.Component(compIndex);
-                var start = ray.Start.Component(compIndex) + dir * minDist;
-                var end = ray.Start.Component(compIndex) + dir * maxDist;
-                var invDir = invDirection.Component(compIndex);
-                if (dir > 0)
-                {
-                    // left -> right
-                    if (split.right.value > end)
-                        rwStack.Push((split.left, minDist, maxDist));
-                    else if (split.left.value < start)
-                        rwStack.Push((split.right, minDist, maxDist));
-                    else
-                    {
-                        var rightMinDist = minDist + invDir * MathF.Max(0f, split.right.value - start);
-                        rwStack.Push((split.right, rightMinDist, maxDist));
-                        var leftMaxDist = maxDist + invDir * MathF.Min(0f, split.left.value - end);
-                        rwStack.Push((split.left, minDist, leftMaxDist));
-                    }
-                }
-                else
-                {
-                    // right -> left
-                    if (split.left.value < end)
-                        rwStack.Push((split.right, minDist, maxDist));
-                    else if (split.right.value > start)
-                        rwStack.Push((split.left, minDist, maxDist));
-                    else
-                    {
-                        var leftMinDist = minDist + invDir * MathF.Max(0f, split.left.value - start);
-                        rwStack.Push((split.left, leftMinDist, maxDist));
-                        var rightMaxDist = maxDist + invDir * MathF.Min(0f, split.right.value - end);
-                        rwStack.Push((split.right, minDist, rightMaxDist));
-                    }
-                }
-            }
-            else
-            {
-                for (int i = 0; i < sector.count; i++)
-                {
-                    var triI = map[sector.index + i];
-                    if (ray.Cast(triangles[triI]) is Raycast newHit && newHit.Distance < bestHit.Distance)
-                        bestHit = newHit with { TriangleId = triangleIds[triI] };
-                }
-            }
-        }
-
-        return bestHit.Distance < maxDistTotal ? bestHit : null;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public Raycast? CastRWBRSS(Ray ray, float maxDistTotal = float.PositiveInfinity)
+    public Raycast? CastRWPrevious(Ray ray, float maxDistTotal = float.PositiveInfinity)
     {
         Box aabb = Coarse switch
         {
@@ -373,7 +290,92 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
                 for (int i = 0; i < sector.count; i++)
                 {
                     var triI = map[sector.index + i];
-                    if (ray.Cast(triangles[triI]) is Raycast newHit && newHit.Distance < bestHit.Distance)
+                    var newHit = ray.TryCast(triangles[triI]);
+                    if (newHit.Distance < bestHit.Distance) // for misses: NaN < bestDistance is always false
+                        bestHit = newHit with { TriangleId = triangleIds[triI] };
+                }
+            }
+        }
+
+        ArrayPool<(CollisionSector, float, float)>.Shared.Return(stackArray);
+        return bestHit.Distance < maxDistTotal ? bestHit : null;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public Raycast? CastRWNext(Ray ray, float maxDistTotal = float.PositiveInfinity)
+    {
+        Box aabb = Coarse switch
+        {
+            Sphere sphere => new Box(sphere.Center, Vector3.One * sphere.Radius * 2),
+            Box box => box,
+            _ => throw new NotImplementedException("Unsupported coarse primitive")
+        };
+        if (!ray.Cast(aabb, out var minDistBox, out var maxDistBox))
+            return null;
+        maxDistTotal = Math.Min(maxDistTotal, maxDistBox);
+
+        var splits = Collision.splits;
+        var map = Collision.map;
+        var triangles = Triangles;
+        var triangleIds = WorldTriangleIds;
+        Raycast bestHit = new(maxDistTotal, Vector3.Zero, Vector3.One);
+
+        var direction = ray.Direction;
+        var invDirection = MathEx.Reciprocal(direction);
+
+        var stackArray = ArrayPool<(CollisionSector, float, float)>.Shared.Rent(128);
+        var stack = new StackOverSpan<(CollisionSector sector, float minDist, float maxDist)>(stackArray);
+        stack.Push((new() { index = 0, count = RWCollision.SplitCount }, 0f, maxDistTotal));
+        while (stack.TryPop(out var t))
+        {
+            var (sector, minDist, maxDist) = t;
+
+            if (sector.count == RWCollision.SplitCount)
+            {
+                var split = splits[sector.index];
+                var compIndex = split.left.type.ToIndex();
+                var dir = direction.Component(compIndex);
+                var start = ray.Start.Component(compIndex) + dir * minDist;
+                var end = ray.Start.Component(compIndex) + dir * maxDist;
+                var invDir = invDirection.Component(compIndex);
+                if (dir > 0)
+                {
+                    // left -> right
+                    if (split.right.value > end)
+                        stack.Push().sector = split.left; // min/maxDist are reused
+                    else if (split.left.value < start)
+                        stack.Push().sector = split.right;
+                    else
+                    {
+                        var rightMinDist = minDist + invDir * MathF.Max(0f, split.right.value - start);
+                        stack.Push((split.right, rightMinDist, maxDist));
+                        var leftMaxDist = maxDist + invDir * MathF.Min(0f, split.left.value - end);
+                        stack.Push((split.left, minDist, leftMaxDist));
+                    }
+                }
+                else
+                {
+                    // right -> left
+                    if (split.left.value < end)
+                        stack.Push().sector = split.right;
+                    else if (split.right.value > start)
+                        stack.Push().sector = split.left;
+                    else
+                    {
+                        var leftMinDist = minDist + invDir * MathF.Max(0f, split.left.value - start);
+                        stack.Push((split.left, leftMinDist, maxDist));
+                        var rightMaxDist = maxDist + invDir * MathF.Min(0f, split.right.value - end);
+                        stack.Push((split.right, minDist, rightMaxDist));
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < sector.count; i++)
+                {
+                    var triI = map[sector.index + i];
+                    var newHit = ray.TryCastMT(triangles[triI]);
+                    if (newHit.Distance < bestHit.Distance) // for misses: NaN < bestDistance is always false
                         bestHit = newHit with { TriangleId = triangleIds[triI] };
                 }
             }

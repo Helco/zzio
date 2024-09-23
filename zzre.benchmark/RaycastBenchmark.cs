@@ -109,7 +109,7 @@ public class RaycastBenchmark
         return f;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public float Merged()
     {
         float f = 0f;
@@ -121,7 +121,7 @@ public class RaycastBenchmark
         return f;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public float MergedIterative()
     {
         float f = 0f;
@@ -134,24 +134,24 @@ public class RaycastBenchmark
     }
 
     [Benchmark]
-    public float MergedRWBR()
+    public float MergedRWPrevious()
     {
         float f = 0f;
         foreach (var ray in cases)
         {
-            var c = mergedCollider.CastRWBR(ray);
+            var c = mergedCollider.CastRWPrevious(ray);
             f += c?.Distance ?? 0f;
         }
         return f;
     }
 
     [Benchmark]
-    public float MergedRWBRSS()
+    public float MergedRWNext()
     {
         float f = 0f;
         foreach (var ray in cases)
         {
-            var c = mergedCollider.CastRWBRSS(ray);
+            var c = mergedCollider.CastRWNext(ray);
             f += c?.Distance ?? 0f;
         }
         return f;
@@ -179,9 +179,8 @@ public class RaycastBenchmark
                 worldCollider.Cast(ray),
                 mergedCollider.Cast(ray),
                 mergedCollider.CastIterative(ray, float.PositiveInfinity),
-                mergedCollider.CastRWBR(ray),
-                mergedCollider.CastRWBR(ray),
-                mergedCollider.CastRWBRSS(ray)
+                mergedCollider.CastRWPrevious(ray),
+                mergedCollider.CastRWNext(ray),
             };
 
             var i = results.IndexOf(c => (c is null && results.First() is not null));
@@ -189,9 +188,20 @@ public class RaycastBenchmark
                 i = results.IndexOf(c => c is not null && c.Value.TriangleId != results.First().Value.TriangleId);
             if (i >= 0)
             {
-                throw new Exception($"NOPE case {caseI} {i}\nEXP: {results.First()}\nACT: {results[i]}");
+                throw new Exception($"NOPE case {caseI} {i}\nRAY: {ray.Start} in {ray.Direction}\nEXP: {results.First()}\nACT: {results[i]}");
             }
         }
+    }
+
+    private static bool AreEqualEnough(Raycast a, Raycast b)
+    {
+        var diffDist = MathF.Abs(a.Distance - b.Distance);
+        var diffPoint = Vector3.Distance(a.Point, b.Point);
+        var diffNormal = Vector3.Distance(a.Normal, b.Normal);
+        var diffNormalAlt = Vector3.Distance(a.Normal, -b.Normal);
+        Console.WriteLine($"{diffDist}  {diffPoint}  {diffNormal} {diffNormalAlt}");
+        return diffDist < 0.005f && diffPoint < 0.005f &&
+            (diffNormal < 0.001f || diffNormalAlt < 0.001f);
     }
 
 }
