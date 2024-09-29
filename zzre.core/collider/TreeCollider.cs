@@ -8,20 +8,35 @@ using zzio.rwbs;
 
 namespace zzre;
 
-public abstract partial class TreeCollider<TCoarse> : TriangleCollider
+public abstract partial class TreeCollider<TCoarse> : BaseGeometryCollider
     where TCoarse : struct, IIntersectable, IRaycastable
 {
     private const int MaxTreeDepth = 64;
+    private readonly bool hasSpans;
     public readonly TCoarse Coarse;
 
     public RWCollision Collision { get; }
     protected sealed override IRaycastable CoarseCastable => Coarse;
     protected sealed override IIntersectable CoarseIntersectable => Coarse;
 
+    protected abstract int TriangleCount { get; }
+    public abstract (Triangle Triangle, WorldTriangleId TriangleId) GetTriangle(int i);
+    public virtual ReadOnlySpan<Triangle> Triangles => throw new NotSupportedException();
+    public virtual ReadOnlySpan<WorldTriangleId> WorldTriangleIds => throw new NotSupportedException();
+
     protected TreeCollider(TCoarse coarse, RWCollision collision)
     {
         Collision = collision;
         this.Coarse = coarse;
+        try
+        {
+            _ = Triangles;
+            hasSpans = true;
+        }
+        catch(NotSupportedException)
+        {
+            hasSpans = false;
+        }
     }
 
     protected static RWCollision CreateNaiveCollision(int triangleCount)
@@ -50,246 +65,11 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         };
     }
 
-    public override Raycast? Cast(Ray ray, float maxLength)
-    {
-        var coarse = this.Coarse.Cast(ray);
-        var result = coarse == null
-            ? null
-            : RaycastNode(splitI: 0, ray, minDist: 0f, maxLength);
-        if (result != null && result.Value.Distance > maxLength)
-            return null;
-        return result;
-    }
+    public override Raycast? Cast(Ray ray, float maxDistTotal = float.PositiveInfinity) =>
+        hasSpans ? CastNewInterface(ray, maxDistTotal) : CastLegacyInterface(ray, maxDistTotal);
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private Raycast? RaycastNode(int splitI, Ray ray, float minDist, float maxDist)
-    {
-        ref readonly var split = ref Collision.splits[splitI];
-        // the kd-optimization: no need for a full dot product
-        var compIndex = split.right.type.ToIndex();
-        var startValue = ray.Start.Component(compIndex);
-        var directionDot = ray.Direction.Component(compIndex);
-        var rightDist = ray.DistanceTo(split.right.type, split.right.value);
-        var leftDist = ray.DistanceTo(split.left.type, split.left.value);
-
-        Raycast? hit = null;
-        if (directionDot < 0f)
-        {
-            if (startValue >= split.right.value)
-            {
-                hit = RaycastSector(split.right, ray, minDist, rightDist ?? maxDist, hit);
-                float hitValue = hit?.Point.Component(compIndex) ?? float.MinValue;
-                if (hitValue > split.left.value)
-                    return hit;
-            }
-            hit = RaycastSector(split.left, ray, leftDist ?? minDist, maxDist, hit);
-        }
-        else
-        {
-            if (startValue <= split.left.value)
-            {
-                hit = RaycastSector(split.left, ray, minDist, leftDist ?? maxDist, hit);
-                float hitValue = hit?.Point.Component(compIndex) ?? float.MaxValue;
-                if (hitValue < split.right.value)
-                    return hit;
-            }
-            hit = RaycastSector(split.right, ray, rightDist ?? minDist, maxDist, hit);
-        }
-
-        return hit;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private Raycast? RaycastSector(CollisionSector sector, Ray ray, float minDist, float maxDist, Raycast? prevHit)
-    {
-        if (minDist > maxDist)
-            return prevHit;
-
-        Raycast? myHit;
-        if (sector.count == RWCollision.SplitCount)
-            myHit = RaycastNode(sector.index, ray, minDist, maxDist);
-        else
-        {
-            myHit = null;
-            for (int i = 0; i < sector.count; i++)
-            {
-                var t = GetTriangle(Collision.map[sector.index + i]);
-                var newHit = ray.Cast(t.Triangle, t.TriangleId);
-                if (newHit == null)
-                    continue;
-                if (newHit.Value.Distance < (myHit?.Distance ?? float.MaxValue))
-                    myHit = newHit;
-            }
-        }
-
-        var isBetterHit = prevHit == null || (myHit != null && myHit.Value.Distance < prevHit.Value.Distance);
-        return isBetterHit
-            ? myHit
-            : prevHit;
-    }
-
-    private static Stack<(CollisionSector, bool?)> sectorStack = new(128);
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public Raycast? CastIterative(Ray ray, float maxDist)
-    {
-        //var coarseResult = Coarse.Cast(ray);
-        //if (coarseResult is null || coarseResult.Value.Distance > maxDist)
-          //  return null;
-
-        var splits = Collision.splits;
-        var map = Collision.map;
-        Vector3 start = ray.Start;
-        ReadOnlySpan<float> directionSign =
-        [
-            ray.Direction.X < 0 ? -1f : 1f,
-            ray.Direction.Y < 0 ? -1f : 1f,
-            ray.Direction.Z < 0 ? -1f : 1f
-        ];
-        var nonZeroCompIndex =
-            MathEx.CmpZero(ray.Direction.X)
-            ? MathEx.CmpZero(ray.Direction.Y)
-            ? 2 : 1 : 0;
-        Raycast bestHit = new(maxDist, Vector3.Zero, Vector3.One);
-
-        sectorStack.Clear();
-        sectorStack.Push((new()
-        {
-            count = RWCollision.SplitCount,
-            index = 0,
-            value = ray.Start.Component(nonZeroCompIndex),
-            type = (CollisionSectorType)(nonZeroCompIndex * 4)
-        }, true));
-        while (sectorStack.TryPop(out var tt))
-        {
-            var (sector, f) = tt;
-            if (bestHit.Distance < maxDist && f is bool ff)
-            {
-                var compValue = bestHit.Point.Component(sector.type.ToIndex());
-                if (ff && compValue > sector.value ||
-                    !ff && compValue < sector.value)
-                    continue;
-            }
-
-            if (sector.count == RWCollision.SplitCount)
-            {
-                ref readonly var split = ref splits[sector.index];
-                var compIndex = split.right.type.ToIndex();
-                if (directionSign[compIndex] < 0)
-                {
-                    // ray goes right to left
-                    sectorStack.Push((split.left, true));
-                    if (start.Component(compIndex) >= split.right.value)
-                        sectorStack.Push((split.right, null));
-                }
-                else
-                {
-                    // ray goes left to right
-                    sectorStack.Push((split.right, false));
-                    if (start.Component(compIndex) <= split.left.value)
-                        sectorStack.Push((split.left, null));
-                }
-            }
-            else
-            {
-                for (int i = 0; i < sector.count; i++)
-                {
-                    var t = GetTriangle(map[sector.index + i]);
-                    var newHit = ray.Cast(t.Triangle, t.TriangleId);
-                    if (newHit is not null && newHit.Value.Distance < bestHit.Distance)
-                        bestHit = newHit.Value;
-                }
-            }
-        }
-
-        return bestHit.Distance >= maxDist ? null : bestHit;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public Raycast? CastRWPrevious(Ray ray, float maxDistTotal = float.PositiveInfinity)
-    {
-        Box aabb = Coarse switch
-        {
-            Sphere sphere => new Box(sphere.Center, Vector3.One * sphere.Radius * 2),
-            Box box => box,
-            _ => throw new NotImplementedException("Unsupported coarse primitive")
-        };
-        if (!ray.Cast(aabb, out var minDistBox, out var maxDistBox))
-            return null;
-        maxDistTotal = Math.Min(maxDistTotal, maxDistBox);
-
-        var splits = Collision.splits;
-        var map = Collision.map;
-        var triangles = Triangles;
-        var triangleIds = WorldTriangleIds;
-        Raycast bestHit = new(maxDistTotal, Vector3.Zero, Vector3.One);
-
-        var direction = ray.Direction;
-        var invDirection = MathEx.Reciprocal(direction);
-
-        var stackArray = ArrayPool<(CollisionSector, float, float)>.Shared.Rent(128);
-        var stack = new StackOverSpan<(CollisionSector sector, float minDist, float maxDist)>(stackArray);
-        stack.Push((new() { index = 0, count = RWCollision.SplitCount }, 0f, maxDistTotal));
-        while (stack.TryPop(out var t))
-        {
-            var (sector, minDist, maxDist) = t;
-
-            if (sector.count == RWCollision.SplitCount)
-            {
-                var split = splits[sector.index];
-                var compIndex = split.left.type.ToIndex();
-                var dir = direction.Component(compIndex);
-                var start = ray.Start.Component(compIndex) + dir * minDist;
-                var end = ray.Start.Component(compIndex) + dir * maxDist;
-                var invDir = invDirection.Component(compIndex);
-                if (dir > 0)
-                {
-                    // left -> right
-                    if (split.right.value > end)
-                        stack.Push().sector = split.left; // min/maxDist are reused
-                    else if (split.left.value < start)
-                        stack.Push().sector = split.right;
-                    else
-                    {
-                        var rightMinDist = minDist + invDir * MathF.Max(0f, split.right.value - start);
-                        stack.Push((split.right, rightMinDist, maxDist));
-                        var leftMaxDist = maxDist + invDir * MathF.Min(0f, split.left.value - end);
-                        stack.Push((split.left, minDist, leftMaxDist));
-                    }
-                }
-                else
-                {
-                    // right -> left
-                    if (split.left.value < end)
-                        stack.Push().sector = split.right;
-                    else if (split.right.value > start)
-                        stack.Push().sector = split.left;
-                    else
-                    {
-                        var leftMinDist = minDist + invDir * MathF.Max(0f, split.left.value - start);
-                        stack.Push((split.left, leftMinDist, maxDist));
-                        var rightMaxDist = maxDist + invDir * MathF.Min(0f, split.right.value - end);
-                        stack.Push((split.right, minDist, rightMaxDist));
-                    }
-                }
-            }
-            else
-            {
-                for (int i = 0; i < sector.count; i++)
-                {
-                    var triI = map[sector.index + i];
-                    var newHit = ray.TryCastMT(triangles[triI]);
-                    if (newHit.Distance < bestHit.Distance) // for misses: NaN < bestDistance is always false
-                        bestHit = newHit with { TriangleId = triangleIds[triI] };
-                }
-            }
-        }
-
-        ArrayPool<(CollisionSector, float, float)>.Shared.Return(stackArray);
-        return bestHit.Distance < maxDistTotal ? bestHit : null;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public Raycast? CastRWNext(Ray ray, float maxDistTotal = float.PositiveInfinity)
+    private Raycast? CastNewInterface(Ray ray, float maxDistTotal = float.PositiveInfinity)
     {
         Box aabb = Coarse switch
         {
@@ -361,9 +141,92 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
                 for (int i = 0; i < sector.count; i++)
                 {
                     var triI = sector.index + i;
-                    var newHit = ray.TryCastMT2(triangles[triI]);
+                    var newHit = ray.TryCastUnsafe(triangles[triI]);
                     if (newHit.Distance < bestHit.Distance) // for misses: NaN < bestDistance is always false
                         bestHit = newHit with { TriangleId = triangleIds[triI] };
+                }
+            }
+        }
+
+        ArrayPool<(CollisionSector, float, float)>.Shared.Return(stackArray);
+        return bestHit.Distance < maxDistTotal ? bestHit : null;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    private Raycast? CastLegacyInterface(Ray ray, float maxDistTotal = float.PositiveInfinity)
+    {
+        Box aabb = Coarse switch
+        {
+            Sphere sphere => new Box(sphere.Center, Vector3.One * sphere.Radius * 2),
+            Box box => box,
+            _ => throw new NotImplementedException("Unsupported coarse primitive")
+        };
+        if (!ray.Cast(aabb, out var minDistBox, out var maxDistBox))
+            return null;
+        maxDistTotal = Math.Min(maxDistTotal, maxDistBox);
+
+        var splits = Collision.splits;
+        var map = Collision.map;
+        Raycast bestHit = new(maxDistTotal, Vector3.Zero, Vector3.One);
+
+        var direction = ray.Direction;
+        var invDirection = MathEx.Reciprocal(direction);
+
+        var stackArray = ArrayPool<(CollisionSector, float, float)>.Shared.Rent(MaxTreeDepth);
+        var stack = new StackOverSpan<(CollisionSector sector, float minDist, float maxDist)>(stackArray);
+        stack.Push((new() { index = 0, count = RWCollision.SplitCount }, 0f, maxDistTotal));
+        while (stack.TryPop(out var t))
+        {
+            var (sector, minDist, maxDist) = t;
+
+            if (sector.count == RWCollision.SplitCount)
+            {
+                var split = splits[sector.index];
+                var compIndex = split.left.type.ToIndex();
+                var dir = direction.Component(compIndex);
+                var start = ray.Start.Component(compIndex) + dir * minDist;
+                var end = ray.Start.Component(compIndex) + dir * maxDist;
+                var invDir = invDirection.Component(compIndex);
+                if (dir > 0)
+                {
+                    // left -> right
+                    if (split.right.value > end)
+                        stack.Push().sector = split.left; // min/maxDist are reused
+                    else if (split.left.value < start)
+                        stack.Push().sector = split.right;
+                    else
+                    {
+                        var rightMinDist = minDist + invDir * MathF.Max(0f, split.right.value - start);
+                        stack.Push((split.right, rightMinDist, maxDist));
+                        var leftMaxDist = maxDist + invDir * MathF.Min(0f, split.left.value - end);
+                        stack.Push((split.left, minDist, leftMaxDist));
+                    }
+                }
+                else
+                {
+                    // right -> left
+                    if (split.left.value < end)
+                        stack.Push().sector = split.right;
+                    else if (split.right.value > start)
+                        stack.Push().sector = split.left;
+                    else
+                    {
+                        var leftMinDist = minDist + invDir * MathF.Max(0f, split.left.value - start);
+                        stack.Push((split.left, leftMinDist, maxDist));
+                        var rightMaxDist = maxDist + invDir * MathF.Min(0f, split.right.value - end);
+                        stack.Push((split.right, minDist, rightMaxDist));
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < sector.count; i++)
+                {
+                    var triI = sector.index + i;
+                    var (triangle, triangleId) = GetTriangle(Collision.map[triI]);
+                    var newHit = ray.TryCastUnsafe(triangle);
+                    if (newHit.Distance < bestHit.Distance) // for misses: NaN < bestDistance is always false
+                        bestHit = newHit with { TriangleId = triangleId };
                 }
             }
         }
@@ -379,23 +242,19 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
         return l;
     }
 
-
-    public static Stack<CollisionSplit> splitStack = new(); // TODO: Do not do this
-
     public void IntersectionsList<T, TQueries>(in T primitive, List<Intersection> intersections)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
-        //var splitStack = new Stack<CollisionSplit>();
-        splitStack.Clear();
-        splitStack.Push(Collision.splits[0]);
-        while (splitStack.Count > 0)
+        var stackArray = ArrayPool<CollisionSplit>.Shared.Rent(MaxTreeDepth);
+        var stack = new StackOverSpan<CollisionSplit>(stackArray);
+        stack.Push(Collision.splits[0]);
+        while (stack.TryPop(out var curSplit))
         {
-            var curSplit = splitStack.Pop();
             if (TQueries.SideOf((int)curSplit.right.type / 4, curSplit.right.value, primitive) != PlaneIntersections.Outside)
             {
                 if (curSplit.right.count == RWCollision.SplitCount)
-                    splitStack.Push(Collision.splits[curSplit.right.index]);
+                    stack.Push(Collision.splits[curSplit.right.index]);
                 else
                     IntersectionsListLeaf<T, TQueries>(primitive, curSplit.right, intersections);
             }
@@ -403,11 +262,12 @@ public abstract partial class TreeCollider<TCoarse> : TriangleCollider
             if (TQueries.SideOf((int)curSplit.left.type / 4, curSplit.left.value, primitive) != PlaneIntersections.Inside)
             {
                 if (curSplit.left.count == RWCollision.SplitCount)
-                    splitStack.Push(Collision.splits[curSplit.left.index]);
+                    stack.Push(Collision.splits[curSplit.left.index]);
                 else
                     IntersectionsListLeaf<T, TQueries>(primitive, curSplit.left, intersections);
             }
         }
+        ArrayPool<CollisionSplit>.Shared.Return(stackArray);
     }
 
     private void  IntersectionsListLeaf<T, TQueries>(in T primitive, CollisionSector sector, List<Intersection> intersections)

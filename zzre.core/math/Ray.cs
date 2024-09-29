@@ -178,77 +178,14 @@ public readonly struct Ray
     {
         if (triangle.IsDegenerated)
             return null;
-        return CastUnsafe(triangle, triangleId);
+        var result = TryCastUnsafe(triangle);
+        return float.IsNaN(result.Distance)
+            ? null
+            : result with { TriangleId = triangleId };
     }
 
     [MethodImpl(MathEx.MIOptions)]
-    public Raycast? CastUnsafe(Triangle triangle, WorldTriangleId? triangleId = null)
-    {
-        var cast = Cast(triangle.Plane);
-        if (cast == null)
-            return null;
-        var bary = triangle.Barycentric(cast.Value.Point);
-        return bary.X >= 0.0f && bary.X <= 1.0f &&
-            bary.Y >= 0.0f && bary.Y <= 1.0f &&
-            bary.Z >= 0.0f && bary.Z <= 1.0f
-            ? cast.Value with { TriangleId = triangleId } : null;
-    }
-
-    [MethodImpl(MathEx.MIOptions)]
-    public Raycast TryCast(in Triangle triangle)
-    {
-        var normal = triangle.Normal;
-        var planeDistance = Vector3.Dot(triangle.A, normal);
-        float angle = Vector3.Dot(Direction, normal);
-        float rayPos = Vector3.Dot(Start, normal);
-        float t = (planeDistance - rayPos) / angle;
-        if (angle >= 0.0f || float.IsNaN(t) || t < 0)
-            return new Raycast(float.NaN, default, default);
-
-        var result = new Raycast(t, Start + Direction * t, normal);
-        var bary = triangle.Barycentric(result.Point);
-        if (bary.X >= 0.0f && bary.X <= 1.0f &&
-            bary.Y >= 0.0f && bary.Y <= 1.0f &&
-            bary.Z >= 0.0f && bary.Z <= 1.0f)
-            return result;
-
-        return new Raycast(float.NaN, default, default);
-    }
-
-    [MethodImpl(MathEx.MIOptions)]
-    public Raycast TryCastMT(in Triangle triangle)
-    {
-        if (triangle.IsDegenerated || Vector3.Dot(Direction, triangle.NormalUn) > 0)
-            return new(float.NaN, default, default);
-
-        // adapted from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm#C++_implementation
-        var triangleAB = triangle.AB.Vector;
-        var triangleAC = triangle.AC.Vector;
-        var rayCrossAC = Vector3.Cross(Direction, triangleAC);
-        var det = Vector3.Dot(rayCrossAC, triangleAB);
-        if (MathEx.CmpZero(det))
-            return new(float.NaN, default, default);
-        
-        var invDet = 1 / det;
-        var s = Start - triangle.A;
-        var u = invDet * Vector3.Dot(s, rayCrossAC);
-        if (u < 0 || u > 1)
-            return new(float.NaN, default, default);
-
-        var sCrossAB = Vector3.Cross(s, triangleAB);
-        var v = invDet * Vector3.Dot(Direction, sCrossAB);
-        if (v < 0 || u + v > 1)
-            return new(float.NaN, default, default);
-
-        float t = invDet * Vector3.Dot(triangleAC, sCrossAB);
-        if (t < MathEx.ZeroEpsilon)
-            return new(float.NaN, default, default);
-
-        return new(t, Start + Direction * t, triangle.Normal);
-    }
-
-    [MethodImpl(MathEx.MIOptions)]
-    public Raycast TryCastMT2(in Triangle triangle)
+    public Raycast TryCastUnsafe(in Triangle triangle)
     {
         // adapted from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm#C++_implementation
         var triangleAB = triangle.AB.Vector;

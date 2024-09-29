@@ -573,7 +573,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         if (n)
         {
             var mergedCollider = MergedCollider.Create(worldCollider.World);
-            cast = mergedCollider.CastRWNext(ray);
+            cast = mergedCollider.Cast(ray);
         }
         else
             cast = worldCollider.Cast(ray);

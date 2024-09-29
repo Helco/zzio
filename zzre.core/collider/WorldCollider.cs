@@ -49,7 +49,6 @@ public sealed class WorldCollider : BaseGeometryCollider
             throw new InvalidDataException("RWWorld has both a root plane and a root atomic");
 
         splitStack ??= new(64);
-        TreeCollider<zzre.Box>.splitStack ??= new(64);
     }
 
     public WorldTriangleInfo GetTriangleInfo(WorldTriangleId id) =>
