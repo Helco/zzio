@@ -98,60 +98,12 @@ public class RaycastBenchmark
     }
 
     [Benchmark]
-    public float SimpleOptimizations()
-    {
-        float f = 0f;
-        foreach (var ray in cases)
-        {
-            var c = worldCollider.Cast(ray);
-            f += c?.Distance ?? 0f;
-        }
-        return f;
-    }
-
-    //[Benchmark]
     public float Merged()
     {
         float f = 0f;
         foreach (var ray in cases)
         {
             var c = mergedCollider.Cast(ray);
-            f += c?.Distance ?? 0f;
-        }
-        return f;
-    }
-
-    //[Benchmark]
-    public float MergedIterative()
-    {
-        float f = 0f;
-        foreach (var ray in cases)
-        {
-            var c = mergedCollider.CastIterative(ray, float.PositiveInfinity);
-            f += c?.Distance ?? 0f;
-        }
-        return f;
-    }
-
-    [Benchmark]
-    public float MergedRWPrevious()
-    {
-        float f = 0f;
-        foreach (var ray in cases)
-        {
-            var c = mergedCollider.CastRWPrevious(ray);
-            f += c?.Distance ?? 0f;
-        }
-        return f;
-    }
-
-    [Benchmark]
-    public float MergedRWNext()
-    {
-        float f = 0f;
-        foreach (var ray in cases)
-        {
-            var c = mergedCollider.CastRWNext(ray);
             f += c?.Distance ?? 0f;
         }
         return f;
@@ -177,10 +129,7 @@ public class RaycastBenchmark
             {
                 ConvertBLCast(worldColliderBL.Cast(new BLRay(ray.Start, ray.Direction))),
                 worldCollider.Cast(ray),
-                mergedCollider.Cast(ray),
-                mergedCollider.CastIterative(ray, float.PositiveInfinity),
-                mergedCollider.CastRWPrevious(ray),
-                mergedCollider.CastRWNext(ray),
+                mergedCollider.Cast(ray)
             };
 
             var i = results.IndexOf(c => (c is null && results.First() is not null));
