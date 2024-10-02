@@ -54,7 +54,7 @@ public class TestRaycaster : ListDisposable
         Window.OnContent += OnContent;
 
         var rwWorld = diContainer.GetTag<IResourcePool>().FindFile("resources/worlds/sc_3302.bsp")!.OpenAsRWBS<RWWorld>();
-        var worldCollider = new WorldCollider(rwWorld);
+        var worldCollider = WorldCollider.Create(rwWorld);
         camera.Location.LocalPosition = -rwWorld.origin;
 
         rotatingBox = new RaycastObject()

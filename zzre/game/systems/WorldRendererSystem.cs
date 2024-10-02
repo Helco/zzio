@@ -103,7 +103,7 @@ public class WorldRendererSystem : ISystem<CommandList>
         }
 
         ecsWorld.Set(worldMesh);
-        ecsWorld.Set(new WorldCollider(worldMesh.World));
+        ecsWorld.Set(WorldCollider.Create(worldMesh.World));
     }
 
     public void Update(CommandList cl)
