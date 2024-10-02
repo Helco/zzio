@@ -2,7 +2,7 @@
 
 namespace zzre;
 
-public sealed class AtomicTreeCollider : TreeCollider<zzre.Box>
+public sealed class AtomicTreeCollider : TreeCollider
 {
     public int AtomicId { get; }
     public RWAtomicSection Atomic { get; }

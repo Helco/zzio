@@ -8,26 +8,27 @@ using zzio.rwbs;
 
 namespace zzre;
 
-public abstract partial class TreeCollider<TCoarse> : BaseGeometryCollider
-    where TCoarse : struct, IIntersectable, IRaycastable
+public abstract partial class TreeCollider : BaseGeometryCollider
 {
     private const int MaxTreeDepth = 64;
     private readonly bool hasSpans;
-    public readonly TCoarse Coarse;
+    public readonly Box Coarse;
 
     public RWCollision Collision { get; }
+    public Location? Location { get; }
     protected sealed override IRaycastable CoarseCastable => Coarse;
     protected sealed override IIntersectable CoarseIntersectable => Coarse;
 
-    protected abstract int TriangleCount { get; }
-    public abstract (Triangle Triangle, WorldTriangleId TriangleId) GetTriangle(int i);
+    protected virtual int TriangleCount { get => 0; }
+    public virtual (Triangle Triangle, WorldTriangleId TriangleId) GetTriangle(int i) => throw new NotSupportedException();
     public virtual ReadOnlySpan<Triangle> Triangles => throw new NotSupportedException();
     public virtual ReadOnlySpan<WorldTriangleId> WorldTriangleIds => throw new NotSupportedException();
 
-    protected TreeCollider(TCoarse coarse, RWCollision collision)
+    protected TreeCollider(Box coarse, RWCollision collision, Location? location = null)
     {
         Collision = collision;
-        this.Coarse = coarse;
+        Coarse = coarse;
+        Location = location;
         try
         {
             _ = Triangles;
@@ -71,13 +72,7 @@ public abstract partial class TreeCollider<TCoarse> : BaseGeometryCollider
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private Raycast? CastNewInterface(Ray ray, float maxDistTotal = float.PositiveInfinity)
     {
-        Box aabb = Coarse switch
-        {
-            Sphere sphere => new Box(sphere.Center, Vector3.One * sphere.Radius * 2),
-            Box box => box,
-            _ => throw new NotImplementedException("Unsupported coarse primitive")
-        };
-        if (!ray.Cast(aabb, out var minDistBox, out var maxDistBox))
+        if (!ray.Cast(Coarse, out var minDistBox, out var maxDistBox))
             return null;
         maxDistTotal = Math.Min(maxDistTotal, maxDistBox);
 
@@ -149,19 +144,17 @@ public abstract partial class TreeCollider<TCoarse> : BaseGeometryCollider
         }
 
         ArrayPool<(CollisionSector, float, float)>.Shared.Return(stackArray);
-        return bestHit.Distance < maxDistTotal ? bestHit : null;
+        return bestHit.Distance >= maxDistTotal ? null
+            : Location is not null ? bestHit.TransformToWorld(Location)
+            : bestHit;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private Raycast? CastLegacyInterface(Ray ray, float maxDistTotal = float.PositiveInfinity)
     {
-        Box aabb = Coarse switch
-        {
-            Sphere sphere => new Box(sphere.Center, Vector3.One * sphere.Radius * 2),
-            Box box => box,
-            _ => throw new NotImplementedException("Unsupported coarse primitive")
-        };
-        if (!ray.Cast(aabb, out var minDistBox, out var maxDistBox))
+        if (Location is not null)
+            ray = ray.TransformToLocal(Location);
+        if (!ray.Cast(Coarse, out var minDistBox, out var maxDistBox))
             return null;
         maxDistTotal = Math.Min(maxDistTotal, maxDistBox);
 
@@ -232,7 +225,9 @@ public abstract partial class TreeCollider<TCoarse> : BaseGeometryCollider
         }
 
         ArrayPool<(CollisionSector, float, float)>.Shared.Return(stackArray);
-        return bestHit.Distance < maxDistTotal ? bestHit : null;
+        return bestHit.Distance >= maxDistTotal ? null
+            : Location is not null ? bestHit.TransformToWorld(Location)
+            : bestHit;
     }
 
     protected override IEnumerable<Intersection> Intersections<T, TQueries>(T primitive)
@@ -242,10 +237,14 @@ public abstract partial class TreeCollider<TCoarse> : BaseGeometryCollider
         return l;
     }
 
-    public void IntersectionsList<T, TQueries>(in T primitive, List<Intersection> intersections)
+    public void IntersectionsList<T, TQueries>(in T primitiveWorld, List<Intersection> intersections)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
+        var prevCount = intersections.Count;
+        var primitive = Location is null ? primitiveWorld :
+            TQueries.TransformToLocal(primitiveWorld, Location);
+
         var stackArray = ArrayPool<CollisionSplit>.Shared.Rent(MaxTreeDepth);
         var stack = new StackOverSpan<CollisionSplit>(stackArray);
         stack.Push(Collision.splits[0]);
@@ -268,6 +267,12 @@ public abstract partial class TreeCollider<TCoarse> : BaseGeometryCollider
             }
         }
         ArrayPool<CollisionSplit>.Shared.Return(stackArray);
+
+        if (Location is not null)
+        {
+            for (int i = prevCount; i < intersections.Count; i++)
+                intersections[i] = intersections[i].TransformToWorld(Location);
+        }
     }
 
     private void  IntersectionsListLeaf<T, TQueries>(in T primitive, CollisionSector sector, List<Intersection> intersections)
