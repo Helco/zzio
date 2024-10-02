@@ -21,6 +21,15 @@ public readonly partial struct Box : IRaycastable, IIntersectable
         get => Center + HalfSize; }
     public float MaxSizeComponent { [MethodImpl(MathEx.MIOptions)]
         get => Math.Max(Math.Max(Size.X, Size.Y), Size.Z); }
+    public float HalfArea { [MethodImpl(MathEx.MIOptions)]
+        get => Size.X * Size.Y + Size.X * Size.Z + Size.Y * Size.Z;
+    }
+    public float Area { [MethodImpl(MathEx.MIOptions)]
+        get => HalfArea * 2;
+    }
+    public float Volume { [MethodImpl(MathEx.MIOptions)]
+        get => Size.X * Size.Y * Size.Z;
+    }
 
     public static readonly Box Zero;
 

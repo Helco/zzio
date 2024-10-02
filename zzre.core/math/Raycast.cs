@@ -10,6 +10,16 @@ public readonly record struct Raycast(
 {
     public Intersection AsIntersection(Triangle triangle) =>
         new Intersection(Point, triangle, TriangleId);
+
+    public Raycast TransformToWorld(Location location)
+    {
+        var localToWorld = location.LocalToWorld;
+        return this with
+        {
+            Point = Vector3.Transform(Point, localToWorld),
+            Normal = Vector3.TransformNormal(Normal, localToWorld)
+        };
+    }
 }
 
 public interface IRaycastable

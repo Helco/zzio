@@ -9,7 +9,7 @@ using zzio;
 
 namespace zzre;
 
-public sealed class MergedCollider : TreeCollider<Box>
+public sealed class MergedCollider : TreeCollider
 {
     public readonly Triangle[] triangles;
     public readonly WorldTriangleId[] triangleIds;

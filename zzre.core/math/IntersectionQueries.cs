@@ -12,6 +12,7 @@ public interface IIntersectionQueries<T> where T : struct
     static abstract PlaneIntersections SideOf(int planeComponent, float planeValue, in T primitive);
     static abstract Intersection? Intersect(in Triangle triangle, in T primitive);
     static abstract IEnumerable<Intersection> Intersections(BaseGeometryCollider collider, in T primitive);
+    static abstract T TransformToLocal(in T primitive, Location location);
 }
 
 public sealed partial class IntersectionQueries :
@@ -293,5 +294,44 @@ public sealed partial class IntersectionQueries :
     public static IEnumerable<Intersection> Intersections(BaseGeometryCollider collider, in Line line) =>
         collider.Intersections(line);
 
+    [MethodImpl(MIOptions)]
+    public static Box TransformToLocal(in Box box, Location location)
+    {
+        return new(Vector3.Transform(box.Center, location.WorldToLocal), box.Size);
+    }
 
+    [MethodImpl(MIOptions)]
+    public static OrientedBox TransformToLocal(in OrientedBox box, Location location)
+    {
+        var worldToLocal = location.WorldToLocal;
+        return new(
+            new(Vector3.Transform(box.AABox.Center, worldToLocal), box.AABox.Size),
+            box.Orientation * Quaternion.CreateFromRotationMatrix(worldToLocal));
+    }
+
+    [MethodImpl(MIOptions)]
+    public static Triangle TransformToLocal(in Triangle tri, Location location)
+    {
+        var worldToLocal = location.WorldToLocal;
+        return new(
+            Vector3.Transform(tri.A, worldToLocal),
+            Vector3.Transform(tri.B, worldToLocal),
+            Vector3.Transform(tri.C, worldToLocal));
+    }
+
+    [MethodImpl(MIOptions)]
+    public static Line TransformToLocal(in Line line, Location location)
+    {
+        var worldToLocal = location.WorldToLocal;
+        return new(
+            Vector3.Transform(line.Start, worldToLocal),
+            Vector3.Transform(line.End, worldToLocal));
+    }
+
+    [MethodImpl(MIOptions)]
+    public static Sphere TransformToLocal(in Sphere sphere, Location location)
+    {
+        var worldToLocal = location.WorldToLocal;
+        return new(Vector3.Transform(sphere.Center, worldToLocal), sphere.Radius);
+    }
 }

@@ -14,6 +14,19 @@ public readonly struct Ray
     public Ray(Vector3 start, Vector3 dir) => (Start, Direction) = (start, Vector3.Normalize(dir));
 
     [MethodImpl(MathEx.MIOptions)]
+    public Ray TransformToLocal(Location location)
+    {
+        if (location.Parent is null)
+            return new Ray(
+                Start - location.LocalPosition,
+                Vector3.Transform(Direction, Quaternion.Inverse(location.LocalRotation)));
+        var localToWorld = location.WorldToLocal;
+        return new Ray(
+            Vector3.Transform(Start, localToWorld),
+            Vector3.TransformNormal(Direction, localToWorld));
+    }
+
+    [MethodImpl(MathEx.MIOptions)]
     public bool Intersects(Vector3 point) => MathEx.Cmp(1f, Vector3.Dot(Direction, Vector3.Normalize(point - Start)));
     [MethodImpl(MathEx.MIOptions)]
     public float PhaseOf(Vector3 point) => Vector3.Dot(point - Start, Direction);
