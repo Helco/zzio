@@ -568,15 +568,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         }
 
         var ray = new Ray(raycastStart, raycastDir);
-        var n = true;
-        Raycast? cast = null;
-        if (n)
-        {
-            var mergedCollider = MergedCollider.Create(worldCollider.World);
-            cast = mergedCollider.Cast(ray);
-        }
-        else
-            cast = worldCollider.Cast(ray);
+        Raycast? cast = worldCollider.Cast(ray);
         rayRenderer.Clear();
         rayRenderer.Add(IColor.Green, ray.Start, ray.Start + ray.Direction * (cast?.Distance ?? 100f));
         if (cast.HasValue)

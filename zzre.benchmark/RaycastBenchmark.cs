@@ -25,8 +25,6 @@ using BLIntersection = Baseline::zzre.Intersection;
 using BLAnyIntersectionable = Baseline::zzre.AnyIntersectionable;
 
 using MyJobAttribute = BenchmarkDotNet.Attributes.LongRunJobAttribute;
-using Perfolizer.Horology;
-using System.Globalization;
 
 namespace zzre.benchmark;
 
@@ -41,7 +39,6 @@ public class RaycastBenchmark
     private const int CaseCount = 1000;
     private readonly WorldCollider worldCollider;
     private readonly BLWorldCollider worldColliderBL;
-    private readonly MergedCollider mergedCollider;
     private readonly Ray[] cases;
     private readonly List<Intersection> intersections = new(128);
 
@@ -52,14 +49,8 @@ public class RaycastBenchmark
             ?? throw new FileNotFoundException($"Could not open world geometry: " + WorldPath);
         var rwWorld = Section.ReadNew(worldStream) as RWWorld
             ?? throw new IOException("Could not read world geometry: " + WorldPath);
-        worldCollider = new(rwWorld);
+        worldCollider = WorldCollider.Create(rwWorld);
         worldColliderBL = new(rwWorld);
-
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-        mergedCollider = MergedCollider.Create(rwWorld);
-        stopwatch.Stop();
-        Console.WriteLine($"Merging one tree took {stopwatch.Elapsed.ToFormattedTotalTime(CultureInfo.InvariantCulture)}");
 
         var random = new Random(Seed);
         cases = new Ray[CaseCount];
@@ -103,7 +94,7 @@ public class RaycastBenchmark
         float f = 0f;
         foreach (var ray in cases)
         {
-            var c = mergedCollider.Cast(ray);
+            var c = worldCollider.Cast(ray);
             f += c?.Distance ?? 0f;
         }
         return f;
@@ -128,8 +119,7 @@ public class RaycastBenchmark
             var results = new List<Raycast?>()
             {
                 ConvertBLCast(worldColliderBL.Cast(new BLRay(ray.Start, ray.Direction))),
-                worldCollider.Cast(ray),
-                mergedCollider.Cast(ray)
+                worldCollider.Cast(ray)
             };
 
             var i = results.IndexOf(c => (c is null && results.First() is not null));

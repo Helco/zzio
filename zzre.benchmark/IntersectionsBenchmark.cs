@@ -23,8 +23,6 @@ using BLIntersection = Baseline::zzre.Intersection;
 using BLAnyIntersectionable = Baseline::zzre.AnyIntersectionable;
 
 using MyJobAttribute = BenchmarkDotNet.Attributes.MediumRunJobAttribute;
-using Perfolizer.Horology;
-using System.Globalization;
 
 namespace zzre.benchmark;
 
@@ -40,7 +38,6 @@ public class IntersectionsBenchmark
     private const int CaseCount = 1000;
     private readonly WorldCollider worldCollider;
     private readonly BLWorldCollider worldColliderBL;
-    private readonly MergedCollider mergedCollider;
     private readonly Vector3[] cases;
     private List<Intersection> intersections = new(256);
     private List<BLIntersection> blintersections = new(256);
@@ -52,14 +49,8 @@ public class IntersectionsBenchmark
             ?? throw new FileNotFoundException($"Could not open world geometry: " + WorldPath);
         var rwWorld = Section.ReadNew(worldStream) as RWWorld
             ?? throw new IOException("Could not read world geometry: " + WorldPath);
-        worldCollider = new(rwWorld);
+        worldCollider = WorldCollider.Create(rwWorld);
         worldColliderBL = new(rwWorld);
-
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-        mergedCollider = MergedCollider.Create(rwWorld);
-        stopwatch.Stop();
-        Console.WriteLine($"Merging one trees took {stopwatch.Elapsed.ToFormattedTotalTime(CultureInfo.InvariantCulture)}");
 
         var random = new Random(Seed);
         cases = new Vector3[CaseCount];
@@ -103,7 +94,7 @@ public class IntersectionsBenchmark
         foreach (var pos in cases)
         {
             intersections.Clear();
-            mergedCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            worldCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
             f += intersections.Count;
         }
         return f;
@@ -126,10 +117,6 @@ public class IntersectionsBenchmark
 
             intersections.Clear();
             worldCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
-            results.Add(intersections.ToList());
-
-            intersections.Clear();
-            mergedCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
             results.Add(intersections.ToList());
 
             for (int j = 0; j < results.Count; j++)

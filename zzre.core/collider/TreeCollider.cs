@@ -4,14 +4,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using zzio;
 using zzio.rwbs;
 
 namespace zzre;
 
-public abstract partial class TreeCollider : BaseGeometryCollider
+public readonly record struct WorldTriangleId(int AtomicIdx, int TriangleIdx);
+
+public readonly record struct WorldTriangleInfo(RWAtomicSection Atomic, VertexTriangle VertexTriangle)
+{
+    public Triangle Triangle => new(
+        Atomic.vertices[VertexTriangle.v1],
+        Atomic.vertices[VertexTriangle.v2],
+        Atomic.vertices[VertexTriangle.v3]);
+}
+
+public partial class TreeCollider : BaseGeometryCollider
 {
     private const int MaxTreeDepth = 64;
     private readonly bool hasSpans;
+    private readonly ReadOnlyMemory<Triangle> triangles;
+    private readonly ReadOnlyMemory<WorldTriangleId> triangleIds;
     public readonly Box Coarse;
 
     public RWCollision Collision { get; }
@@ -21,8 +34,10 @@ public abstract partial class TreeCollider : BaseGeometryCollider
 
     protected virtual int TriangleCount { get => 0; }
     public virtual (Triangle Triangle, WorldTriangleId TriangleId) GetTriangle(int i) => throw new NotSupportedException();
-    public virtual ReadOnlySpan<Triangle> Triangles => throw new NotSupportedException();
-    public virtual ReadOnlySpan<WorldTriangleId> WorldTriangleIds => throw new NotSupportedException();
+    public virtual ReadOnlySpan<Triangle> Triangles =>
+        triangles.IsEmpty ? throw new NotSupportedException() : triangles.Span;
+    public virtual ReadOnlySpan<WorldTriangleId> TriangleIds =>
+        triangleIds.IsEmpty ? throw new NotSupportedException() : triangleIds.Span;
 
     protected TreeCollider(Box coarse, RWCollision collision, Location? location = null)
     {
@@ -38,6 +53,18 @@ public abstract partial class TreeCollider : BaseGeometryCollider
         {
             hasSpans = false;
         }
+    }
+
+    protected TreeCollider(Box coarse, RWCollision collision, Location? location,
+        ReadOnlyMemory<Triangle> triangles,
+        ReadOnlyMemory<WorldTriangleId> triangleIds)
+    {
+        Collision = collision;
+        Coarse = coarse;
+        Location = location;
+        this.triangles = triangles;
+        this.triangleIds = triangleIds;
+        hasSpans = true;
     }
 
     protected static RWCollision CreateNaiveCollision(int triangleCount)
@@ -79,7 +106,7 @@ public abstract partial class TreeCollider : BaseGeometryCollider
         var splits = Collision.splits;
         var map = Collision.map;
         var triangles = Triangles;
-        var triangleIds = WorldTriangleIds;
+        var triangleIds = TriangleIds;
         Raycast bestHit = new(maxDistTotal, Vector3.Zero, Vector3.One);
 
         var direction = ray.Direction;
@@ -279,12 +306,27 @@ public abstract partial class TreeCollider : BaseGeometryCollider
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
-        for (int i = 0; i < sector.count; i++)
+        if (hasSpans)
         {
-            var t = GetTriangle(Collision.map[i + sector.index]);
-            var intersection = TQueries.Intersect(t.Triangle, primitive);
-            if (intersection != null)
-                intersections.Add(intersection.Value with { TriangleId = t.TriangleId });
+            var triangles = Triangles;
+            var triangleIds = TriangleIds;
+            for (int i = 0; i < sector.count; i++)
+            {
+                var t = triangles[i + sector.index];
+                var intersection = TQueries.Intersect(t, primitive);
+                if (intersection != null)
+                    intersections.Add(intersection.Value with { TriangleId = triangleIds[i + sector.index] });
+            }
+        }
+        else
+        {
+            for (int i = 0; i < sector.count; i++)
+            {
+                var t = GetTriangle(Collision.map[i + sector.index]);
+                var intersection = TQueries.Intersect(t.Triangle, primitive);
+                if (intersection != null)
+                    intersections.Add(intersection.Value with { TriangleId = t.TriangleId });
+            }
         }
     }
 }
