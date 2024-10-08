@@ -81,7 +81,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         Window.AddTag(onceAction);
         Window.OnContent += onceAction.Invoke;
         Window.OnContent += UpdateIntersectionPrimitive;
-        Window.OnKeyDown += HandleKeyDown;
+        Window.OnContent += ShootRay;
         var menuBar = new MenuBarWindowTag(Window);
         menuBar.AddButton("Open", HandleMenuOpen);
         menuBar.AddCheckbox("View/Vertex Colors", () => ref showVertexColors, HandleShowVertexColors);
@@ -239,12 +239,6 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     }
 
     private void HandleResize() => camera.Aspect = fbArea.Ratio;
-
-    private void HandleKeyDown(KeyCode key)
-    {
-        if (key == KeyCode.KSpace)
-            ShootRay();
-    }
 
     private void HandleMenuOpen()
     {
@@ -542,10 +536,11 @@ public class WorldViewer : ListDisposable, IDocumentEditor
             shouldUpdate |= DragFloat3("Start", ref raycastStart);
             shouldUpdate |= DragFloat3("Direction", ref raycastDir);
             EndDisabled();
+            shouldUpdate |= SliderFloat("Max distance", ref intersectionSize, 0.1f, 200f, null, ImGuiSliderFlags.AlwaysClamp);
         }
         else
         {
-            shouldUpdate |= SliderFloat("Size", ref intersectionSize, 0.01f, 20f);
+            shouldUpdate |= SliderFloat("Size", ref intersectionSize, 0.01f, 20f, null, ImGuiSliderFlags.AlwaysClamp);
         }
         shouldUpdate |= Checkbox("Update location", ref updateIntersectionPrimitive);
         if (updateIntersectionPrimitive || shouldUpdate)
@@ -559,7 +554,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
 
     private void ShootRay()
     {
-        if (worldCollider == null)
+        if (!updateIntersectionPrimitive || worldCollider == null)
             return;
         if (setRaycastToCamera)
         {
@@ -568,11 +563,15 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         }
 
         var ray = new Ray(raycastStart, raycastDir);
-        Raycast? cast = worldCollider.Cast(ray);
+        Raycast? cast = worldCollider.Cast(ray, intersectionSize);
         rayRenderer.Clear();
         rayRenderer.Add(IColor.Green, ray.Start, ray.Start + ray.Direction * (cast?.Distance ?? 100f));
         if (cast.HasValue)
         {
+            BeginDisabled();
+            var d = cast.Value.Distance;
+            DragFloat("Distance: ", ref d);
+            EndDisabled();
             if (cast.Value.TriangleId.HasValue)
             {
                 var triInfo = worldCollider.GetTriangleInfo(cast.Value.TriangleId.Value);
