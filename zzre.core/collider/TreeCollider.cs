@@ -111,6 +111,10 @@ public partial class TreeCollider : BaseGeometryCollider
 
         var direction = ray.Direction;
         var invDirection = MathEx.Reciprocal(direction);
+        static void FiniteOrZero(ref float v) => v = float.IsInfinity(v) ? 0 : v;
+        FiniteOrZero(ref invDirection.X); // direction.* == 0 will turn into infinities here
+        FiniteOrZero(ref invDirection.Y); // this can turn into NaNs down the line which
+        FiniteOrZero(ref invDirection.Z); // will turn into missed hits for axis-aligned casts
 
         var stackArray = ArrayPool<(CollisionSector, float, float)>.Shared.Rent(MaxTreeDepth);
         var stack = new StackOverSpan<(CollisionSector sector, float minDist, float maxDist)>(stackArray);
