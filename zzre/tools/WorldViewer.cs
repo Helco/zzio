@@ -13,7 +13,6 @@ using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
 using zzre.game.systems;
-using KeyCode = Silk.NET.SDL.KeyCode;
 using static ImGuiNET.ImGui;
 
 namespace zzre.tools;

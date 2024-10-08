@@ -19,7 +19,14 @@ public readonly record struct WorldTriangleInfo(RWAtomicSection Atomic, VertexTr
         Atomic.vertices[VertexTriangle.v3]);
 }
 
-public partial class TreeCollider : BaseGeometryCollider
+public partial class TreeCollider :
+    IRaycastable,
+    IIntersectionable,
+    IIntersectable<Box>,
+    IIntersectable<OrientedBox>,
+    IIntersectable<Sphere>,
+    IIntersectable<Triangle>,
+    IIntersectable<Line>
 {
     private const int MaxTreeDepth = 64;
     private readonly bool hasSpans;
@@ -29,8 +36,6 @@ public partial class TreeCollider : BaseGeometryCollider
 
     public RWCollision Collision { get; }
     public Location? Location { get; }
-    protected sealed override IRaycastable CoarseCastable => Coarse;
-    protected sealed override IIntersectable CoarseIntersectable => Coarse;
 
     protected virtual int TriangleCount { get => 0; }
     public virtual (Triangle Triangle, WorldTriangleId TriangleId) GetTriangle(int i) => throw new NotSupportedException();
@@ -93,7 +98,10 @@ public partial class TreeCollider : BaseGeometryCollider
         };
     }
 
-    public override Raycast? Cast(Ray ray, float maxDistTotal = float.PositiveInfinity) =>
+    public Raycast? Cast(Ray ray) => Cast(ray, float.PositiveInfinity);
+    public Raycast? Cast(Line line) => Cast(new(line.Start, line.Direction), line.Length);
+
+    public Raycast? Cast(Ray ray, float maxDistTotal) =>
         hasSpans ? CastNewInterface(ray, maxDistTotal) : CastLegacyInterface(ray, maxDistTotal);
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -261,7 +269,9 @@ public partial class TreeCollider : BaseGeometryCollider
             : bestHit;
     }
 
-    protected override IEnumerable<Intersection> Intersections<T, TQueries>(T primitive)
+    private IEnumerable<Intersection> Intersections<T, TQueries>(T primitive)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
     {
         var l = new List<Intersection>(32);
         IntersectionsList<T, TQueries>(primitive, l);
@@ -333,4 +343,10 @@ public partial class TreeCollider : BaseGeometryCollider
             }
         }
     }
+
+    public IEnumerable<Intersection> Intersections(in Box item) => Intersections<Box, IntersectionQueries>(item);
+    public IEnumerable<Intersection> Intersections(in OrientedBox item) => Intersections<OrientedBox, IntersectionQueries>(item);
+    public IEnumerable<Intersection> Intersections(in Sphere item) => Intersections<Sphere, IntersectionQueries>(item);
+    public IEnumerable<Intersection> Intersections(in Triangle item) => Intersections<Triangle, IntersectionQueries>(item);
+    public IEnumerable<Intersection> Intersections(in Line item) => Intersections<Line, IntersectionQueries>(item);
 }
