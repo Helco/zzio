@@ -46,7 +46,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private readonly List<AssetHandle> assetHandles = [];
 
     private ClumpMesh? mesh;
-    private GeometryTreeCollider? collider;
+    private GeometryCollider? collider;
     private ModelMaterial[] materials = [];
     private DebugSkeletonRenderer? skeletonRenderer;
     private int highlightedSplitI = -1;
@@ -204,7 +204,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
 
         collider = mesh.Geometry.FindChildById(SectionId.CollisionPLG, true) == null
             ? null
-            : new GeometryTreeCollider(mesh.Geometry, location: null);
+            : GeometryCollider.Create(mesh.Geometry, location: null);
 
         controls.ResetView();
         HighlightSplit(-1);
@@ -266,7 +266,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         ImGui.Text($"Triangles: {mesh?.TriangleCount}");
         ImGui.Text($"Submeshes: {mesh?.SubMeshes.Count}");
         ImGui.Text($"Bones: {skeletonRenderer?.Skeleton.Bones.Count.ToString() ?? "none"}");
-        ImGui.Text($"Collision splits: {collider?.Collision.splits.Length.ToString() ?? "none"}");
+        ImGui.Text($"Collision splits: {collider?.Splits.Length.ToString() ?? "none"}");
         ImGui.Text("Collision test: " + (mesh?.HasCollisionTest is true ? "yes" : "no"));
     }
 
@@ -300,7 +300,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         if (collider == null || mesh == null || highlightedSplitI < 0)
             return;
 
-        var split = collider.Collision.splits[splitI];
+        var split = collider.Splits[splitI];
         var normal = split.left.type switch
         {
             zzio.rwbs.CollisionSectorType.X => Vector3.UnitX,
@@ -319,12 +319,8 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             SectorTriangles(split.left).Concat(SectorTriangles(split.right));
 
         IEnumerable<Triangle> SectorTriangles(CollisionSector sector) => sector.count == RWCollision.SplitCount
-            ? SplitTriangles(collider!.Collision.splits[sector.index])
-            : collider!.Collision.map
-                .Skip(sector.index)
-                .Take(sector.count)
-                .Select(i => collider.GetTriangle(i).Triangle)
-                .ToArray();
+            ? SplitTriangles(collider!.Splits[sector.index])
+            : collider!.Triangles.Slice(sector.index, sector.count).ToArray();
     }
 
     private void SetPlanes(Box bounds, Vector3 normal, float leftValue, float rightValue, float? centerValue)
@@ -399,7 +395,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         Split(0);
         void Split(int splitI)
         {
-            var split = collider.Collision.splits[splitI];
+            var split = collider.Splits[splitI];
             var flags = (splitI == highlightedSplitI ? ImGuiTreeNodeFlags.Selected : 0) |
                 ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow |
                 ImGuiTreeNodeFlags.DefaultOpen;

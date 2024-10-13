@@ -197,6 +197,10 @@ public readonly struct Ray
             : result with { TriangleId = triangleId };
     }
 
+    /// <summary>Casts against a triangle</summary>
+    /// <remarks>Will not check for degenerated triangles</remarks>
+    /// <param name="triangle">The triangle to cast against</param>
+    /// <returns>A valid raycast on hit or NaN as distance on miss</returns>
     [MethodImpl(MathEx.MIOptions)]
     public Raycast TryCastUnsafe(in Triangle triangle)
     {

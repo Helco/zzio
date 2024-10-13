@@ -13,6 +13,19 @@ public static class MathEx
     public const float DegToRad = MathF.PI / 180f;
     public const float RadToDeg = 180f / MathF.PI;
     public const float ZeroEpsilon = 0.1E-10f;
+    public static readonly Vector2 Vector2NaN = Vector2.One * float.NaN;
+    public static readonly Vector3 Vector3NaN = Vector3.One * float.NaN;
+    public static readonly Vector4 Vector4NaN = Vector4.One * float.NaN;
+
+    [MethodImpl(MIOptions)]
+    public static bool IsFinite(Vector2 v) =>
+        float.IsFinite(v.X) && float.IsFinite(v.Y);
+    [MethodImpl(MIOptions)]
+    public static bool IsFinite(Vector3 v) =>
+        float.IsFinite(v.X) && float.IsFinite(v.Y) && float.IsFinite(v.Z);
+    [MethodImpl(MIOptions)]
+    public static bool IsFinite(Vector4 v) =>
+        float.IsFinite(v.X) && float.IsFinite(v.Y) && float.IsFinite(v.Z) && float.IsFinite(v.W);
 
     [MethodImpl(MIOptions)]
     public static float Lerp(float from, float to, float t) =>

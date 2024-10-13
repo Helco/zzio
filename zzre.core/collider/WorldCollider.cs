@@ -21,11 +21,12 @@ public sealed class WorldCollider : TreeCollider
     private readonly RWAtomicSection[] atomicSections;
 
     private WorldCollider(
-        Box coarse, RWCollision collision,
+        Box coarse,
+        ReadOnlyMemory<CollisionSplit> splits,
         ReadOnlyMemory<Triangle> triangles,
         ReadOnlyMemory<WorldTriangleId> triangleIds,
         RWAtomicSection[] atomicSections)
-        : base(coarse, collision, location: null, triangles, triangleIds)
+        : base(coarse, splits, triangles, triangleIds)
     {
         this.atomicSections = atomicSections;
     }
@@ -55,7 +56,6 @@ public sealed class WorldCollider : TreeCollider
         var triangleIds = new WorldTriangleId[triangleCount];
         var baseMapIndices = new int[atomicSections.Length];
         var triangleCounts = new int[atomicSections.Length]; // that is original count but without the degenerated ones
-        var map = new int[triangleCount];
         var triangleI = 0;
         for (int sectionI = 0; sectionI < atomicSections.Length; sectionI++)
         {
@@ -65,12 +65,17 @@ public sealed class WorldCollider : TreeCollider
             baseMapIndices[sectionI] = triangleI;
             for (int localTriangleI = 0; localTriangleI < section.map.Length; localTriangleI++)
             {
-                var t = localTriangles[section.map[localTriangleI]];
-                triangles[triangleI] = new(vertices[t.v1], vertices[t.v2], vertices[t.v3]);
+                var mappedTriangleI = section.map[localTriangleI];
+                if (mappedTriangleI >= 0 && mappedTriangleI < localTriangles.Length)
+                {
+                    var t = localTriangles[mappedTriangleI];
+                    triangles[triangleI] = new(vertices[t.v1], vertices[t.v2], vertices[t.v3]);
+                }
+                else
+                    triangles[triangleI] = new(Vector3.Zero, Vector3.Zero, Vector3.Zero);
                 if (triangles[triangleI].IsDegenerated)
-                    continue;
+                    triangles[triangleI] = new(MathEx.Vector3NaN, MathEx.Vector3NaN, MathEx.Vector3NaN);
                 triangleIds[triangleI] = new(sectionI, section.map[localTriangleI]);
-                map[triangleI] = triangleI;
                 triangleI++;
             }
             triangleCounts[sectionI] = triangleI - baseMapIndices[sectionI];
@@ -116,11 +121,7 @@ public sealed class WorldCollider : TreeCollider
             };
         }
 
-        return new WorldCollider(box, new()
-        {
-            map = map,
-            splits = splits
-        }, triangles, triangleIds, atomicSections);
+        return new WorldCollider(box, splits, triangles, triangleIds, atomicSections);
 
         CollisionSector ProcessSubSection(CollisionSectorType splitType, float value, Section section) => section switch
         {
