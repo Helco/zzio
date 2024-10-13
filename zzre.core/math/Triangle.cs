@@ -17,7 +17,8 @@ public readonly partial struct Triangle : IRaycastable, IIntersectable
     public Vector3 NormalUn { [MethodImpl(MIOptions)] get => Vector3.Cross(AB.Vector, AC.Vector); }
     public Vector3 Normal { [MethodImpl(MIOptions)] get => Vector3.Normalize(NormalUn); }
     public Plane Plane { [MethodImpl(MIOptions)] get => new(Normal, Vector3.Dot(A, Normal)); }
-    public bool IsDegenerated { [MethodImpl(MIOptions)] get => NormalUn.LengthSquared() < 1e-10f; }
+    public bool IsDegenerated { [MethodImpl(MIOptions)] get =>
+            !A.IsFinite() || !B.IsFinite() || !C.IsFinite() || NormalUn.LengthSquared() < 1e-10f; }
 
     [MethodImpl(MIOptions)]
     public Triangle(Vector3 a, Vector3 b, Vector3 c) => (A, B, C) = (a, b, c);

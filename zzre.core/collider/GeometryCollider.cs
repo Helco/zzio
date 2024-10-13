@@ -1,36 +1,52 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using zzio.rwbs;
 
 namespace zzre;
 
-public sealed class GeometryTreeCollider : TreeCollider
+public sealed class GeometryCollider : TreeCollider
 {
     public RWGeometry Geometry { get; }
-    public Sphere Sphere => new(
-        Geometry.morphTargets[0].bsphereCenter,
-        Geometry.morphTargets[0].bsphereRadius);
-    protected override int TriangleCount => Geometry.triangles.Length;
 
-    public GeometryTreeCollider(RWGeometry geometry, Location? location) : base(
-        new(geometry.morphTargets[0].bsphereCenter,
-            Vector3.One * 2 * geometry.morphTargets[0].bsphereRadius),
-        geometry.FindChildById(SectionId.CollisionPLG, true) as RWCollision ??
-        CreateNaiveCollision(geometry.triangles.Length),
-        location)
+    private GeometryCollider(
+        RWGeometry geometry,
+        Box coarse,
+        ReadOnlyMemory<CollisionSplit> splits,
+        ReadOnlyMemory<Triangle> triangles,
+        ReadOnlyMemory<WorldTriangleId> triangleIds)
+        : base(coarse, splits, triangles, triangleIds)
     {
         Geometry = geometry;
     }
 
-    public override (Triangle Triangle, WorldTriangleId TriangleId) GetTriangle(int i)
+    public static GeometryCollider Create(RWGeometry geometry, Location? location)
     {
-        // TODO: Benchmark whether to transform all vertices first
+        // TODO: Also no, do not instantiate collider for every geomtry instance
+        if (geometry.morphTargets.Length != 1)
+            throw new ArgumentException("GeometryTreeCollider does not support geometries with zero or more-than-one morph targets");
+        var morphTarget = geometry.morphTargets[0];
+        var coarse = new Box(morphTarget.bsphereCenter, Vector3.One * morphTarget.bsphereRadius);
+        var collision = geometry.FindChildById(SectionId.CollisionPLG, true) as RWCollision
+            ?? CreateNaiveCollision(geometry.triangles.Length);
 
-        var vertices = Geometry.morphTargets[0].vertices;
-        var indices = Geometry.triangles[i];
-        return (new Triangle(
-            vertices[indices.v1],
-            vertices[indices.v2],
-            vertices[indices.v3]),
-            new WorldTriangleId(0, i));
+        // unmap triangles and remove degenerated ones
+        var triangles = new Triangle[collision.map.Length];
+        var triangleIds = new WorldTriangleId[triangles.Length];
+        var vertices = morphTarget.vertices;
+        for (int triangleI = 0; triangleI < triangles.Length; triangleI++)
+        {
+            var t = geometry.triangles[collision.map[triangleI]];
+            triangles[triangleI] = new(vertices[t.v1], vertices[t.v2], vertices[t.v3]);
+            if (triangles[triangleI].IsDegenerated)
+                triangles[triangleI] = new(MathEx.Vector3NaN, MathEx.Vector3NaN, MathEx.Vector3NaN);
+            triangleIds[triangleI] = new(0, collision.map[triangleI]);
+            triangleI++;
+        }
+
+        return new GeometryCollider(geometry, coarse, collision.splits, triangles, triangleIds)
+        {
+            Location = location
+        };
     }
+
 }
