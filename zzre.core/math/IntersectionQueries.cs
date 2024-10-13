@@ -11,7 +11,6 @@ public interface IIntersectionQueries<T> where T : struct
     static abstract PlaneIntersections SideOf(in Plane plane, in T primitive);
     static abstract PlaneIntersections SideOf(int planeComponent, float planeValue, in T primitive);
     static abstract Intersection? Intersect(in Triangle triangle, in T primitive);
-    static abstract IEnumerable<Intersection> Intersections(TreeCollider collider, in T primitive);
     static abstract T TransformToLocal(in T primitive, Location location);
 }
 
@@ -215,9 +214,6 @@ public sealed partial class IntersectionQueries :
         ? new Intersection(triangle.ClosestPoint(primitive.Center), triangle)
         : null;
 
-    public static IEnumerable<Intersection> Intersections(TreeCollider collider, in Box box) =>
-        collider.Intersections(box);
-
     [MethodImpl(MIOptions)]
     private static unsafe Plane PlaneFromComponent(int index, float value)
     {
@@ -258,7 +254,7 @@ public sealed partial class IntersectionQueries :
         : null;
     [MethodImpl(MIOptions)]
     public static IEnumerable<Intersection> Intersections(TreeCollider collider, in Triangle triangle) =>
-        collider.Intersections(triangle);
+        (collider as IIntersectionable).Intersections(triangle);
 
     [MethodImpl(MIOptions)]
     public static PlaneIntersections SideOf(in Plane plane, in OrientedBox box) =>
@@ -268,9 +264,6 @@ public sealed partial class IntersectionQueries :
         Intersects(triangle, primitive)
         ? new Intersection(triangle.ClosestPoint(primitive.AABox.Center), triangle)
         : null;
-    [MethodImpl(MIOptions)]
-    public static IEnumerable<Intersection> Intersections(TreeCollider collider, in OrientedBox box) =>
-        collider.Intersections(box);
 
     [MethodImpl(MIOptions)]
     public static PlaneIntersections SideOf(in Plane plane, in Sphere sphere) =>
@@ -280,9 +273,6 @@ public sealed partial class IntersectionQueries :
         Intersects(primitive, triangle)
         ? new Intersection(triangle.ClosestPoint(primitive.Center), triangle)
         : null;
-    [MethodImpl(MIOptions)]
-    public static IEnumerable<Intersection> Intersections(TreeCollider collider, in Sphere sphere) =>
-        collider.Intersections(sphere);
 
     [MethodImpl(MIOptions)]
     public static PlaneIntersections SideOf(in Plane plane, in Line line) =>
@@ -290,9 +280,6 @@ public sealed partial class IntersectionQueries :
     [MethodImpl(MIOptions)]
     public static Intersection? Intersect(in Triangle triangle, in Line line) =>
         triangle.Cast(line)?.AsIntersection(triangle);
-    [MethodImpl(MIOptions)]
-    public static IEnumerable<Intersection> Intersections(TreeCollider collider, in Line line) =>
-        collider.Intersections(line);
 
     [MethodImpl(MIOptions)]
     public static Box TransformToLocal(in Box box, Location location)
