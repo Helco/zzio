@@ -112,7 +112,7 @@ public static class EnumerableExtensions
         return newOffset..(newOffset + subLength);
     }
 
-    public static IEnumerable<TOutput> SubSums<TInput, TOutput>(
+    public static IEnumerable<TOutput> PrefixSums<TInput, TOutput>(
         this IEnumerable<TInput> set, TOutput first, Func<TOutput, TInput, TOutput> next)
     {
         foreach (var input in set)
@@ -122,7 +122,7 @@ public static class EnumerableExtensions
         }
     }
 
-    public static IEnumerable<TOutput> SubSumsInclusive<TInput, TOutput>(
+    public static IEnumerable<TOutput> PrefixSumsInclusive<TInput, TOutput>(
         this IEnumerable<TInput> set, TOutput first, Func<TOutput, TInput, TOutput> next)
     {
         foreach (var input in set)
