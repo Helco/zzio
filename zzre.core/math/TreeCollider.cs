@@ -171,11 +171,99 @@ public partial class TreeCollider :
         where TQueries : IIntersectionQueries<T>
     {
         var l = new List<Intersection>(32);
-        IntersectionsList<T, TQueries>(primitive, l);
+        Intersections<T, TQueries>(primitive, l);
         return l;
     }
+    
+    public bool Intersects<T, TQueries>(in T primitiveWorld)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        var list = new PooledList<Intersection>(1);
+        Intersections<T, TQueries>(primitiveWorld, ref list);
+        list.Dispose();
+        return list.Count > 0;
+    }
+    public bool Intersects(in Box primitiveWorld) => Intersects<Box, IntersectionQueries>(primitiveWorld);
+    public bool Intersects(in OrientedBox primitiveWorld) => Intersects<OrientedBox, IntersectionQueries>(primitiveWorld);
+    public bool Intersects(in Sphere primitiveWorld) => Intersects<Sphere, IntersectionQueries>(primitiveWorld);
+    public bool Intersects(in Triangle primitiveWorld) => Intersects<Triangle, IntersectionQueries>(primitiveWorld);
+    public bool Intersects(in Line primitiveWorld) => Intersects<Line, IntersectionQueries>(primitiveWorld);
 
-    public void IntersectionsList<T, TQueries>(in T primitiveWorld, List<Intersection> intersections)
+    public void Intersections(in Box primitiveWorld, ref PooledList<Intersection> intersections) =>
+        Intersections<Box, IntersectionQueries>(primitiveWorld, ref intersections);
+    public void Intersections(in OrientedBox primitiveWorld, ref PooledList<Intersection> intersections) =>
+        Intersections<OrientedBox, IntersectionQueries>(primitiveWorld, ref intersections);
+    public void Intersections(in Sphere primitiveWorld, ref PooledList<Intersection> intersections) =>
+        Intersections<Sphere, IntersectionQueries>(primitiveWorld, ref intersections);
+    public void Intersections(in Triangle primitiveWorld, ref PooledList<Intersection> intersections) =>
+        Intersections<Triangle, IntersectionQueries>(primitiveWorld, ref intersections);
+    public void Intersections(in Line primitiveWorld, ref PooledList<Intersection> intersections) =>
+        Intersections<Line, IntersectionQueries>(primitiveWorld, ref intersections);
+    public void Intersections<T, TQueries>(in T primitiveWorld, ref PooledList<Intersection> intersections)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        if (intersections.IsFull)
+            return;
+        var prevCount = intersections.Count;
+        var primitive = Location is null ? primitiveWorld :
+            TQueries.TransformToLocal(primitiveWorld, Location);
+
+        var splits = Splits;
+        var stackArray = ArrayPool<CollisionSplit>.Shared.Rent(MaxTreeDepth);
+        var stack = new StackOverSpan<CollisionSplit>(stackArray);
+        stack.Push(splits[0]);
+        while (stack.TryPop(out var curSplit))
+        {
+            if (TQueries.SideOf((int)curSplit.right.type / 4, curSplit.right.value, primitive) != PlaneIntersections.Outside)
+            {
+                if (curSplit.right.count == RWCollision.SplitCount)
+                    stack.Push(splits[curSplit.right.index]);
+                else if (!IntersectionsLeaf<T, TQueries>(primitive, curSplit.right, ref intersections))
+                    break;
+            }
+
+            if (TQueries.SideOf((int)curSplit.left.type / 4, curSplit.left.value, primitive) != PlaneIntersections.Inside)
+            {
+                if (curSplit.left.count == RWCollision.SplitCount)
+                    stack.Push(splits[curSplit.left.index]);
+                else if (!IntersectionsLeaf<T, TQueries>(primitive, curSplit.left, ref intersections))
+                    break;
+            }
+        }
+        ArrayPool<CollisionSplit>.Shared.Return(stackArray);
+
+        if (Location is not null)
+        {
+            for (int i = prevCount; i < intersections.Count; i++)
+                intersections[i] = intersections[i].TransformToWorld(Location);
+        }
+    }
+
+    private bool IntersectionsLeaf<T, TQueries>(in T primitive, CollisionSector sector, ref PooledList<Intersection> intersections)
+        where T : struct, IIntersectable
+        where TQueries : IIntersectionQueries<T>
+    {
+        var triangles = Triangles;
+        var triangleIds = TriangleIds;
+        for (int i = 0; i < sector.count; i++)
+        {
+            var triI = sector.index + i;
+            var triangle = triangles[triI];
+            if (float.IsNaN(triangle.A.X))
+                continue;
+            var intersection = TQueries.Intersect(triangle, primitive);
+            if (intersection is null)
+                continue;
+            intersections.Add(intersection.Value with { TriangleId = triangleIds[triI] });
+            if (intersections.IsFull)
+                return false;
+        }
+        return true;
+    }
+
+    public void Intersections<T, TQueries>(in T primitiveWorld, List<Intersection> intersections)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
