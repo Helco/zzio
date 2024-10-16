@@ -13,9 +13,19 @@ public struct PooledList<T> : IDisposable, IEnumerable<T> where T : struct
     private ArrayPool<T>? pool;
     private int count;
 
-    public readonly int Count => count;
     public readonly int Capacity => array.Length;
     public readonly bool IsFull => count >= array.Length;
+
+    public int Count
+    {
+        readonly get => count;
+        [MethodImpl(MIOptions)] set
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(value);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(value, array.Length);
+            count = value;
+        }
+    }
 
     public readonly ref T this[int index]
     {
