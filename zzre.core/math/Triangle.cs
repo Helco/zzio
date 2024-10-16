@@ -42,6 +42,7 @@ public readonly partial struct Triangle : IRaycastable, IIntersectable
     [MethodImpl(MIOptions)]
     public Vector3 ClosestPoint(Vector3 point)
     {
+        // adapted from https://github.com/RenderKit/embree/blob/master/tutorials/common/math/closest_point.h
         var ab = B - A;
         var ac = C - A;
         var ap = point - A;
@@ -50,32 +51,32 @@ public readonly partial struct Triangle : IRaycastable, IIntersectable
 
         float d1 = Vector3.Dot(ab, ap);
         float d2 = Vector3.Dot(ac, ap);
-        if (d1 <= 0 && d2 <= 0) return A; //#1
+        if (d1 <= 0 && d2 <= 0) return A;
 
         float d3 = Vector3.Dot(ab, bp);
         float d4 = Vector3.Dot(ac, bp);
-        if (d3 >= 0 && d4 <= d3) return B; //#2
+        if (d3 >= 0 && d4 <= d3) return B;
 
         float d5 = Vector3.Dot(ab, cp);
         float d6 = Vector3.Dot(ac, cp);
-        if (d6 >= 0 && d5 <= d6) return C; //#3
+        if (d6 >= 0 && d5 <= d6) return C;
 
         float vc = d1 * d4 - d3 * d2;
         if (vc <= 0 && d1 >= 0 && d3 <= 0)
-            return A + d1 / (d1 - d3) * ab; //#4
+            return A + d1 / (d1 - d3) * ab; // AB edge
 
         float vb = d5 * d2 - d1 * d6;
         if (vb <= 0 && d2 >= 0 && d6 <= 0)
-            return A + d2 / (d2 - d6) * ac; //#5
+            return A + d2 / (d2 - d6) * ac; // AC edge
 
         float va = d3 * d6 - d5 * d4;
         if (va <= 0 && (d4 - d3) >= 0 && (d5 - d6) >= 0)
-            return B + (d4 - d3) / ((d4 - d3) + (d5 - d6)) * (C - B); //#6
+            return B + (d4 - d3) / ((d4 - d3) + (d5 - d6)) * (C - B); // BC edge
 
         float denom = 1 / (va + vb + vc);
         float v = vb * denom;
         float w = vc * denom;
-        return A + v * ab + w * ac; //#0
+        return A + v * ab + w * ac; // contained within triangle
     }
 
     [MethodImpl(MIOptions)]

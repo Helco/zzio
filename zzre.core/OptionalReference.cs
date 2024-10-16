@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-public unsafe ref struct OptionalReference<TValue>
+public readonly unsafe ref struct OptionalReference<TValue>
 {
     private readonly ref TValue value;
 

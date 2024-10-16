@@ -1,7 +1,7 @@
 ﻿namespace zzre.game.systems;
 using System;
-using System.Linq;
 using System.Numerics;
+using System.Linq;
 using DefaultEcs.System;
 using Mode = zzre.game.components.FairyHoverBehind.Mode;
 

@@ -94,7 +94,7 @@ public class IntersectionsBenchmark
         foreach (var pos in cases)
         {
             intersections.Clear();
-            worldCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            worldCollider.Intersections<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
             f += intersections.Count;
         }
         return f;
@@ -116,7 +116,7 @@ public class IntersectionsBenchmark
             var results = new List<List<Intersection>>();
 
             intersections.Clear();
-            worldCollider.IntersectionsList<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
+            worldCollider.Intersections<Sphere, IntersectionQueries>(new Sphere(pos, SphereRadius), intersections);
             results.Add(intersections.ToList());
 
             for (int j = 0; j < results.Count; j++)
