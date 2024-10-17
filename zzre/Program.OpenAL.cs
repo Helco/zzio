@@ -26,20 +26,12 @@ internal sealed class MojoALLibraryNameContainer : SearchPathContainer
     public static readonly MojoALLibraryNameContainer Instance = new();
 }
 
-internal unsafe sealed class OpenALDevice : BaseDisposable
+internal sealed unsafe class OpenALDevice(ILogger logger, AL al, ALContext alc, Device* device) : BaseDisposable
 {
-    public ILogger Logger { get; }
-    public AL AL { get; }
-    public ALContext ALC { get; } 
-    public Device* Device { get; private set; }
-
-    public OpenALDevice(ILogger logger, AL al, ALContext alc, Device* device)
-    {
-        Logger = logger;
-        AL = al;
-        ALC = alc;
-        Device = device;
-    }
+    public ILogger Logger { get; } = logger;
+    public AL AL { get; } = al;
+    public ALContext ALC { get; } = alc;
+    public Device* Device { get; private set; } = device;
 
     protected override void DisposeNative()
     {
@@ -54,7 +46,7 @@ internal unsafe sealed class OpenALDevice : BaseDisposable
     }
 }
 
-unsafe partial class Program
+internal unsafe partial class Program
 {
     private static readonly Option<bool> OptionNoSound = new(
         "--no-sound",

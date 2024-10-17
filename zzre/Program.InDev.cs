@@ -14,32 +14,32 @@ namespace zzre;
 
 internal partial class Program
 {
-    private static readonly Option<bool> OptionInDevLaunchGame = new Option<bool>(
+    private static readonly Option<bool> OptionInDevLaunchGame = new(
         "--launch-game",
         () => false,
         "Launches a game window upon start");
 
-    private static readonly Option<bool> OptionInDevLaunchDuel = new Option<bool>(
+    private static readonly Option<bool> OptionInDevLaunchDuel = new(
         "--launch-test-duel",
         () => false,
         "Launches a game window with the test duel (ignores savegame) upon start");
 
-    private static readonly Option<bool> OptionInDevLaunchGameMuted = new Option<bool>(
+    private static readonly Option<bool> OptionInDevLaunchGameMuted = new(
         "--launch-game-muted",
         () => false,
         "Launches the game window muted");
 
-    private static readonly Option<bool> OptionInDevLaunchAssetExplorer = new Option<bool>(
+    private static readonly Option<bool> OptionInDevLaunchAssetExplorer = new(
         "--launch-asset-explorer",
         () => false,
         "Launches the asset explorer upon start");
 
-    private static readonly Option<bool> OptionInDevLaunchECSExplorer = new Option<bool>(
+    private static readonly Option<bool> OptionInDevLaunchECSExplorer = new(
         "--launch-ecs-explorer",
         () => false,
         "Launches the ECS explorer upon start");
 
-    private static readonly Option<bool> OptionInDevLaunchConfigExplorer = new Option<bool>(
+    private static readonly Option<bool> OptionInDevLaunchConfigExplorer = new(
         "--launch-config-explorer",
         () => false,
         "Launches the config explorer upon start");
@@ -97,6 +97,7 @@ internal partial class Program
         diContainer.AddTag(window);
 
         CommonStartupAfterWindow(diContainer);
+        diContainer.AddTag(CreateConfiguration(diContainer));
         var graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         var windowContainer = new WindowContainer(window, graphicsDevice);
         var openDocumentSet = new OpenDocumentSet(diContainer);

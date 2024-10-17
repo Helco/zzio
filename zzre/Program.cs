@@ -51,6 +51,7 @@ internal static partial class Program
         AddGlobalRenderDocOption(rootCommand);
         AddRemoteryOptions(rootCommand);
         AddInDevCommand(rootCommand);
+        AddValidationCommand(rootCommand);
         rootCommand.Invoke(args);
     }
 
@@ -70,9 +71,11 @@ internal static partial class Program
 
     private static void CommonStartupAfterWindow(ITagContainer diContainer)
     {
-        var window = diContainer.GetTag<SdlWindow>();
+        if (diContainer.TryGetTag<SdlWindow>(out var window))
+            SetupRenderDocKeys(window);
+        else
+            window = null;
         var ctx = diContainer.GetTag<InvocationContext>();
-        SetupRenderDocKeys(window);
         var graphicsDevice = CreateGraphicsDevice(window, ctx);
 
         diContainer
@@ -84,27 +87,28 @@ internal static partial class Program
                 ?? throw new InvalidDataException("Shader set is not compiled into zzre")))
             .AddTag(new GameTime())
             .AddTag(CreateResourcePool(diContainer))
-            .AddTag(CreateConfiguration(diContainer))
             .AddTag(CreateAssetRegistry(diContainer));
     }
 
-    private static GraphicsDevice CreateGraphicsDevice(SdlWindow window, InvocationContext ctx)
+    private static GraphicsDevice CreateGraphicsDevice(SdlWindow? window, InvocationContext ctx)
     {
         var options = new GraphicsDeviceOptions()
         {
             Debug = ctx.ParseResult.GetValueForOption(OptionDebugLayers),
-            HasMainSwapchain = true,
+            HasMainSwapchain = window is not null,
             PreferDepthRangeZeroToOne = true,
             PreferStandardClipSpaceYDirection = true,
             SyncToVerticalBlank = true
         };
-        SwapchainDescription scDesc = new SwapchainDescription(
+        if (window is null)
+            return GraphicsDevice.CreateVulkan(options);
+        SwapchainDescription scDesc = new(
             window.CreateSwapchainSource(),
             (uint)window.Width,
             (uint)window.Height,
             options.SwapchainDepthFormat,
             options.SyncToVerticalBlank,
-            colorSrgb : false);
+            colorSrgb: false);
         return GraphicsDevice.CreateVulkan(options, scDesc);
     }
 
