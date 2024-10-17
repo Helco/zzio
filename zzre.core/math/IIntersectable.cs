@@ -9,6 +9,8 @@ public interface IIntersectable<T>
     public bool Intersects(in T item);
 }
 
+// TODO: Remove IIntersectionable
+
 public interface IIntersectionable<T> : IIntersectable<T>
 {
     public IEnumerable<Intersection> Intersections(in T item);

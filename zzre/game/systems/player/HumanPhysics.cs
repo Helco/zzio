@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
+using Serilog;
 using zzre.rendering;
 using AnimationState = zzre.game.components.HumanPhysics.AnimationState;
 
@@ -34,6 +35,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
     }
 
     private readonly Random Random = Random.Shared;
+    private readonly ILogger logger;
     private readonly IDisposable configDisposable;
     private readonly IDisposable sceneLoadedSubscription;
     private readonly IDisposable controlsLockedSubscription;
@@ -45,6 +47,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
     public HumanPhysics(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         World.SetMaxCapacity<components.HumanPhysics>(1);
+        logger = diContainer.GetLoggerFor<HumanPhysics>();
         configDisposable = diContainer.GetConfigFor(this);
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         controlsLockedSubscription = World.Subscribe<messages.LockPlayerControl>(HandleControlsLocked);
@@ -175,12 +178,10 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         newPos += Vector3.UnitY * colliderOffset;
         var collider = new Sphere(newPos, colliderRadius);
 
-        var velocity = state.Velocity;
-        var intersections = FindAllIntersections(collider, state.DisableModelCollisionTimer <= 0f)
-            .Where(i => Vector3.Dot(velocity, i.normal) < 0f);
-        if (!intersections.Any())
+        var nextCollision = FindCollision(collider, state.Velocity, canCollideWithModels: state.DisableModelCollisionTimer <= 0f);
+        if (nextCollision.type == CollisionType.None)
             return newPos - colliderOffset * Vector3.UnitY;
-        collision = intersections.MinBy(i => Vector3.DistanceSquared(i.point, newPos));
+        collision = nextCollision;
 
         collision.dirToPlayer = newPos - collision.point;
         if (colliderOffset > 0f) // only for the upper collider check
@@ -251,17 +252,42 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         return bestPos;
     }
 
-    private IEnumerable<Collision> FindAllIntersections(Sphere collider, bool canCollideWithModels)
+    private Collision FindCollision(
+        Sphere collider,
+        Vector3 velocity,
+        bool canCollideWithModels)
     {
-        var intersections = worldCollider
-            .Intersections(collider)
-            .Select(i => new Collision(i, CollisionType.World));
+        var intersections = new PooledList<Intersection>(64);
+        worldCollider.Intersections(collider, ref intersections);
+        int worldCollisionCount = intersections.Count;
+
         if (canCollideWithModels)
+        {
             foreach (ref readonly var model in collidableModels.GetEntities())
-                intersections = intersections.Concat(model.Get<IIntersectionable>()
-                    .Intersections(collider)
-                    .Select(i => new Collision(i, CollisionType.Model)));
-        return intersections;
+            {
+                var geometryCollider = model.Get<IIntersectionable>() as GeometryCollider;
+                geometryCollider!.Intersections(collider, ref intersections);
+            }
+        }
+        if (intersections.IsFull)
+            logger.Warning("Intersection list was satiated. Make sure nothing was missed.");
+
+        Collision result = default;
+        float bestDistanceSqr = float.PositiveInfinity;
+        for (int i = 0; i < intersections.Count; i++)
+        {
+            ref readonly var intersection = ref intersections.Span[i];
+            if (Vector3.Dot(velocity, intersection.Normal) >= 0f)
+                continue;
+            float curDistanceSqr = Vector3.DistanceSquared(intersection.Point, collider.Center);
+            if (curDistanceSqr < bestDistanceSqr)
+            {
+                result = new(intersection, i < worldCollisionCount ? CollisionType.World : CollisionType.Model);
+                bestDistanceSqr = curDistanceSqr;
+            }
+        }
+        intersections.Dispose();
+        return result;
     }
 
     private void ApplyControls(

@@ -39,6 +39,7 @@ public struct PooledList<T> : IDisposable, IEnumerable<T> where T : struct
     }
     public readonly ArraySegment<T> ArraySegment => new(array, 0, count);
     public readonly Span<T> Span => array.AsSpan(0, count);
+    public readonly Span<T> FullSpan => array.AsSpan();
 
     [MethodImpl(MIOptions)]
     public void Dispose()
