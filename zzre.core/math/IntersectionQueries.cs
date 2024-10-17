@@ -252,9 +252,6 @@ public sealed partial class IntersectionQueries :
         Intersects(triangle, primitive)
         ? new Intersection(triangle.ClosestPoint((primitive.A + primitive.B + primitive.C) / 3f), triangle)
         : null;
-    [MethodImpl(MIOptions)]
-    public static IEnumerable<Intersection> Intersections(TreeCollider collider, in Triangle triangle) =>
-        (collider as IIntersectionable).Intersections(triangle);
 
     [MethodImpl(MIOptions)]
     public static PlaneIntersections SideOf(in Plane plane, in OrientedBox box) =>

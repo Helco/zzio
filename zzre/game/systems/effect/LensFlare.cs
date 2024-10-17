@@ -224,10 +224,12 @@ public partial class LensFlare : AEntitySetSystem<float>
             return false;
 
         var line = new Line(camera.Location.LocalPosition, worldPos);
-        return worldCollider.Intersections(line).Any(intersection =>
+        var intersections = new PooledList<Intersection>(8);
+        worldCollider.Intersections(line, ref intersections);
+        foreach (ref readonly var intersection in intersections.Span)
         {
-            if (intersection.TriangleId == null)
-                return false;
+            if (intersection.TriangleId is null)
+                continue;
             var info = worldCollider.GetTriangleInfo(intersection.TriangleId.Value);
             var rwMaterial = worldMesh.Materials[(int)info.Atomic.matIdBase + info.VertexTriangle.m];
             var rwTexture = rwMaterial.FindChildById(SectionId.Texture, recursive: false) as RWTexture;
@@ -237,9 +239,15 @@ public partial class LensFlare : AEntitySetSystem<float>
                 rwTextureName.value.StartsWith('_') ||
                 rwMaskTextureName?.value is null || // this is IsNullOrNotEmpty
                 rwMaskTextureName?.value.Length > 0) // which string does not have
-                return false;
+                continue;
+
+            intersections.Dispose();
             return true;
-        });
+        }
+        if (intersections.IsFull)
+            logger.Warning("Intersection list was satiated. Make sure nothing was missed");
+        intersections.Dispose();
+        return false;
     }
 
     private void SetPrimaryPos(Span<Vector3> vertices, float flareSize, float cosCamAngle)

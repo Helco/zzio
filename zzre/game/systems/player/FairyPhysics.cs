@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using DefaultEcs.System;
+using Serilog;
 
 namespace zzre.game.systems;
 
@@ -54,6 +55,7 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
     [Configuration(Description = "Upwards speed upon triggering a jump")]
     private float JumpVelocity = 2.5f;
 
+    private readonly ILogger logger;
     private readonly IDisposable configDisposable;
     private readonly IDisposable sceneLoadedSubscription;
     private readonly DefaultEcs.EntitySet fairySet;
@@ -64,6 +66,7 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
     public FairyPhysics(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         World.SetMaxCapacity<components.FairyPhysics>(1);
+        logger = diContainer.GetLoggerFor<FairyPhysics>();
         configDisposable = diContainer.GetConfigFor(this);
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
 
@@ -169,23 +172,10 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         var prevPos = nextPos;
         nextPos += effectiveVelocity * elapsedStepTime;
 
-        Intersection? intersection = null;
-        float bestIntersectionDistSqr = float.PositiveInfinity;
-        foreach (var curIntersection in worldCollider.Intersections(new Sphere(nextPos, colliderRadius)))
-        {
-            if (Vector3.Dot(curIntersection.Normal, effectiveVelocity) >= 0f)
-                continue;
-            var curDistSqr = Vector3.DistanceSquared(nextPos, curIntersection.Point);
-            if (curDistSqr < bestIntersectionDistSqr)
-            {
-                bestIntersectionDistSqr = curDistSqr;
-                intersection = curIntersection;
-            }
-        }
-        if (intersection is null)
+        if (!FindCollision(new Sphere(nextPos, colliderRadius), effectiveVelocity, out var intersection))
             return;
         state.HitCeiling = true;
-        dirCollisionToMe = MathEx.SafeNormalize(nextPos - intersection.Value.Point);
+        dirCollisionToMe = MathEx.SafeNormalize(nextPos - intersection.Point);
         if (dirCollisionToMe.Y > MinFloorYDir)
             state.HitFloor = true;
 
@@ -195,6 +185,32 @@ public sealed partial class FairyPhysics : AEntitySetSystem<float>
         else
             effectiveVelocity += dirCollisionToMe * Math.Abs(angleCollVel) * CollisionBounceFactor;
         nextPos = prevPos;
+    }
+
+    private bool FindCollision(Sphere collider, Vector3 velocity, out Intersection nearestIntersection)
+    {
+        nearestIntersection = default;
+        var intersections = new PooledList<Intersection>(64);
+        using var _ = intersections;
+        worldCollider.Intersections(collider, ref intersections);
+        if (intersections.IsFull)
+            logger.Warning("Intersection list was satiated. Make sure nothing was missed.");
+        else if (intersections.Count == 0)
+            return false;
+
+        float bestDistanceSqr = float.PositiveInfinity;
+        foreach (ref readonly var intersection in intersections.Span)
+        {
+            if (Vector3.Dot(velocity, intersection.Normal) >= 0f)
+                continue;
+            var curDistanceSqr = Vector3.DistanceSquared(collider.Center, intersection.Point);
+            if (curDistanceSqr < bestDistanceSqr)
+            {
+                nearestIntersection = intersection;
+                bestDistanceSqr = curDistanceSqr;
+            }
+        }
+        return float.IsFinite(bestDistanceSqr);
     }
 
     private void ApplyControls(

@@ -189,7 +189,7 @@ public partial class TreeCollider :
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
-        var listOverSpan = new ListOverSpan<Intersection>(intersections.Span, intersections.Count);
+        var listOverSpan = new ListOverSpan<Intersection>(intersections.FullSpan, intersections.Count);
         Intersections<T, TQueries>(primitiveWorld, ref listOverSpan);
         intersections.Count = listOverSpan.Count;
     }
