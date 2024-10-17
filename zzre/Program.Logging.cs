@@ -8,7 +8,7 @@ using Serilog.Events;
 
 namespace zzre;
 
-partial class Program
+internal partial class Program
 {
     private const string LoggingOutputTemplate = "[{Timestamp:HH:mm:ss} {Level:u3} {SourceContext}] {Message:lj}{NewLine}{Exception}";
 
@@ -32,8 +32,10 @@ partial class Program
 
     private static readonly Option<string[]> OptionLogOverrides = new(
         ["--log"],
-        () => [],
+        Array.Empty<string>,
         "Overrides the minimum level for a single log source (use \"Source=Level\")");
+
+    private static readonly object consoleLock = new();
 
     private static void AddLoggingOptions(RootCommand command)
     {
@@ -48,7 +50,7 @@ partial class Program
         var ctx = diContainer.GetTag<InvocationContext>();
         var config = new LoggerConfiguration()
             .MinimumLevel.Is(ctx.ParseResult.GetValueForOption(OptionLogLevel))
-            .WriteTo.Async(wt => wt.Console(outputTemplate: LoggingOutputTemplate));
+            .WriteTo.Async(wt => wt.Console(outputTemplate: LoggingOutputTemplate, syncRoot: consoleLock));
 
         var filePath = ctx.ParseResult.GetValueForOption(OptionLogFilePath);
         if (filePath is not null)

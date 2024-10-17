@@ -118,6 +118,7 @@ public abstract class Game : BaseDisposable, ITagContainer
         ecsWorld.Publish(new messages.SceneChanging(sceneName));
         ecsWorld.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
 
+        // TODO: Make Scene a registerable asset type
         var resourcePool = GetTag<IResourcePool>();
         SceneResource = resourcePool.FindFile($"resources/worlds/{sceneName}.scn") ??
             throw new System.IO.FileNotFoundException($"Could not find scene: {sceneName}"); ;
