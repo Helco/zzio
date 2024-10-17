@@ -56,7 +56,7 @@ public class Validator(ITagContainer diContainer)
         resourceTraversalBlock.Complete();
         await processResourceBlock.Completion;
         stopwatch.Stop();
-        logger.Information("Validation finished in {Elapsed}", stopwatch.Elapsed);
+        logger.Information("Validation of {ProcessedFileCount} resources finished in {Elapsed}", processedFileCount, stopwatch.Elapsed);
     }
 
     private IEnumerable<IResource> TraverseResourcePool(IResourcePool pool)
@@ -83,14 +83,21 @@ public class Validator(ITagContainer diContainer)
 
     private async Task ValidateResource(IResource resource)
     {
+        bool wasIgnored = false;
         try
         {
             switch (Path.GetExtension(resource.Name).ToLowerInvariant())
             {
                 case ".bsp": await ValidateWorld(resource); break;
                 case ".scn": ValidateScene(resource); break;
+                case ".bmp":
+                case ".dds": await ValidateTexture(resource); break;
+                case ".aed": await ValidateActor(resource); break;
+                case ".ed": await ValidateEffect(resource); break;
+                case ".dff": await ValidateClump(resource); break;
                 default:
                     logger.Verbose("Ignored file (due to extension): {FileName}", resource.Name);
+                    wasIgnored = true;
                     break;
             }
         }
@@ -101,23 +108,56 @@ public class Validator(ITagContainer diContainer)
         }
         finally
         {
-            Interlocked.Increment(ref processedFileCount);
+            if (!wasIgnored)
+                Interlocked.Increment(ref processedFileCount);
         }
     }
 
     private async Task ValidateWorld(IResource resource)
     {
         using var handle = assetRegistry.LoadWorld(resource.Path, AssetLoadPriority.High);
-        await assetRegistry.WaitAsyncAll([ handle.Inner ]);
+        await assetRegistry.WaitAsyncAll([handle.Inner]);
         var world = handle.Get();
         var collider = WorldCollider.Create(world.Mesh.World);
     }
 
-    private void ValidateScene(IResource resource)
+    private async Task ValidateClump(IResource resource)
+    {
+        using var handle = assetRegistry.Load(
+            new ClumpAsset.Info(resource.Path),
+            AssetLoadPriority.High).As<ClumpAsset>();
+        await assetRegistry.WaitAsyncAll([handle.Inner]);
+        var world = handle.Get();
+        var collider = GeometryCollider.Create(world.Mesh.Geometry, location: null);
+    }
+
+    private Task ValidateTexture(IResource resource)
+    {
+        using var handle = assetRegistry.LoadTexture(resource.Path, AssetLoadPriority.Synchronous);
+        return assetRegistry.WaitAsyncAll([handle.Inner]);
+    }
+
+    private static void ValidateScene(IResource resource)
     {
         using var stream = resource.OpenContent() ??
             throw new IOException($"Could not open scene {resource.Name}");
         var scene = new Scene();
         scene.Read(stream);
+    }
+
+    private Task ValidateActor(IResource resource)
+    {
+        using var handle = assetRegistry.Load(
+            new ActorAsset.Info(Path.GetFileNameWithoutExtension(resource.Name)),
+            AssetLoadPriority.Synchronous);
+        return assetRegistry.WaitAsyncAll([handle]);
+    }
+
+    private Task ValidateEffect(IResource resource)
+    {
+        using var handle = assetRegistry.Load(
+            new EffectCombinerAsset.Info(resource.Path),
+            AssetLoadPriority.Synchronous);
+        return assetRegistry.WaitAsyncAll([handle]);
     }
 }
