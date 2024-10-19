@@ -102,7 +102,10 @@ public class DynamicGraphicsBuffer : BaseDisposable
 
         int nextCapacity = ReservedCapacity;
         if (nextCapacity > CommittedCapacity)
+        {
             nextCapacity = Math.Max(ReservedCapacity, (int)(CommittedCapacity * minGrowFactor + 0.5f));
+            ReservedCapacity = Math.Max(ReservedCapacity, nextCapacity);
+        }
 
         var nextCapacityInBytes = nextCapacity * sizePerElement;
         if (nextCapacityInBytes > (bytes?.Length ?? 0))
