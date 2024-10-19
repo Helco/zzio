@@ -58,6 +58,7 @@ public class IntersectionsBenchmark
             .FindAllChildrenById(SectionId.AtomicSection, recursive: true)
             .Cast<RWAtomicSection>()
             .ToArray();
+        var intersections = new List<Intersection>(64);
         for (int i = 0; i < cases.Length; i++)
         {
             while(true)
@@ -66,7 +67,8 @@ public class IntersectionsBenchmark
                 var bboxmin = Vector3.Min(atomic.bbox1, atomic.bbox2);
                 var bboxmax = Vector3.Max(atomic.bbox1, atomic.bbox2);
                 var pos = bboxmin + random.InPositiveCube() * (bboxmax - bboxmin);
-                if (worldCollider.Intersections(new Sphere(pos, SphereRadius)).Any())
+                intersections.Clear();
+                if (worldCollider.Intersections(new Sphere(pos, SphereRadius), intersections) > 0)
                 {
                     cases[i] = pos;
                     break;

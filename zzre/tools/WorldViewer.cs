@@ -49,8 +49,9 @@ public class WorldViewer : ListDisposable, IDocumentEditor
     private readonly WorldRendererSystem worldRenderer;
     private readonly Camera camera;
     private readonly LocationBuffer locationBuffer;
-
     private readonly UniformBuffer<Matrix4x4> worldTransform;
+    private readonly List<Intersection> intersections = new List<Intersection>(128); // pooled to reduce GC
+
     private WorldMesh? worldMesh;
     private WorldCollider? worldCollider;
     private RWAtomicSection? sectionAtomic;
@@ -80,7 +81,6 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         Window.AddTag(onceAction);
         Window.OnContent += onceAction.Invoke;
         Window.OnContent += UpdateIntersectionPrimitive;
-        Window.OnContent += ShootRay;
         var menuBar = new MenuBarWindowTag(Window);
         menuBar.AddButton("Open", HandleMenuOpen);
         menuBar.AddCheckbox("View/Vertex Colors", () => ref showVertexColors, HandleShowVertexColors);
@@ -542,18 +542,28 @@ public class WorldViewer : ListDisposable, IDocumentEditor
             shouldUpdate |= SliderFloat("Size", ref intersectionSize, 0.01f, 20f, null, ImGuiSliderFlags.AlwaysClamp);
         }
         shouldUpdate |= Checkbox("Update location", ref updateIntersectionPrimitive);
-        if (updateIntersectionPrimitive || shouldUpdate)
+        if (shouldUpdate)
         {
             if (intersectionPrimitive == IntersectionPrimitive.Ray)
                 ShootRay();
             else
-                UpdateIntersectionPrimitive();
+                CheckIntersections();
         }
+    }
+
+    private void UpdateIntersectionPrimitive()
+    {
+        if (!updateIntersectionPrimitive)
+            return;
+        if (intersectionPrimitive == IntersectionPrimitive.Ray)
+            ShootRay();
+        else
+            CheckIntersections();
     }
 
     private void ShootRay()
     {
-        if (!updateIntersectionPrimitive || worldCollider == null)
+        if (worldCollider is null)
             return;
         if (setRaycastToCamera)
         {
@@ -581,20 +591,19 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         fbArea.IsDirty = true;
     }
 
-    private void UpdateIntersectionPrimitive()
+    private void CheckIntersections()
     {
-        if (!updateIntersectionPrimitive || worldCollider == null)
+        if (worldCollider is null)
             return;
-
         Vector3 center = camera.Location.GlobalPosition;
-        IEnumerable<Intersection> intersections;
         IEnumerable<Line> edges;
         rayRenderer.Clear();
+        intersections.Clear();
         switch (intersectionPrimitive)
         {
             case IntersectionPrimitive.Box:
                 var box = new Box(center, Vector3.One * intersectionSize);
-                intersections = worldCollider.Intersections(box);
+                worldCollider.Intersections(box, intersections);
                 edges = box.Edges();
                 break;
 
@@ -602,13 +611,13 @@ public class WorldViewer : ListDisposable, IDocumentEditor
                 var orientedBox = new OrientedBox(
                     new Box(center, Vector3.One * intersectionSize),
                     camera.Location.GlobalRotation);
-                intersections = worldCollider.Intersections(orientedBox);
+                worldCollider.Intersections(orientedBox, intersections);
                 edges = orientedBox.Edges();
                 break;
 
             case IntersectionPrimitive.Sphere:
                 var sphere = new Sphere(center, intersectionSize);
-                intersections = worldCollider.Intersections(sphere);
+                worldCollider.Intersections(sphere, intersections);
                 edges = sphere.Edges();
                 break;
 
@@ -619,14 +628,14 @@ public class WorldViewer : ListDisposable, IDocumentEditor
                     center - right * intersectionSize / 2f - up * hh,
                     center + right * intersectionSize / 2f - up * hh,
                     center + up * hh);
-                intersections = worldCollider.Intersections(triangle);
+                worldCollider.Intersections(triangle, intersections);
                 edges = triangle.Edges();
                 break;
 
             case IntersectionPrimitive.Line:
                 var pos = camera.Location.GlobalPosition;
                 var line = new Line(pos, pos - camera.Location.GlobalForward * intersectionSize);
-                intersections = worldCollider.Intersections(line);
+                worldCollider.Intersections(line, intersections);
                 edges = new[] { line };
                 break;
 

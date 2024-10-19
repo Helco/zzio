@@ -21,7 +21,6 @@ public readonly record struct WorldTriangleInfo(RWAtomicSection Atomic, VertexTr
 
 public partial class TreeCollider :
     IRaycastable,
-    IIntersectionable,
     IIntersectable<Box>,
     IIntersectable<OrientedBox>,
     IIntersectable<Sphere>,
@@ -166,40 +165,31 @@ public partial class TreeCollider :
             : bestHit;
     }
 
-    private IEnumerable<Intersection> Intersections<T, TQueries>(T primitive)
-        where T : struct, IIntersectable
-        where TQueries : IIntersectionQueries<T>
-    {
-        var l = new List<Intersection>(32);
-        Intersections<T, TQueries>(primitive, l);
-        return l;
-    }
-    
     public bool Intersects<T, TQueries>(in T primitiveWorld)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
         Intersection intersection = default;
         var list = new ListOverSpan<Intersection>(new(ref intersection));
-        Intersections<T, TQueries>(primitiveWorld, ref list);
-        return list.Count > 0;
+        return Intersections<T, TQueries>(primitiveWorld, ref list) > 0;
     }
 
-    public void Intersections<T, TQueries>(in T primitiveWorld, ref PooledList<Intersection> intersections)
+    public int Intersections<T, TQueries>(in T primitiveWorld, ref PooledList<Intersection> intersections)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
         var listOverSpan = new ListOverSpan<Intersection>(intersections.FullSpan, intersections.Count);
-        Intersections<T, TQueries>(primitiveWorld, ref listOverSpan);
+        var result = Intersections<T, TQueries>(primitiveWorld, ref listOverSpan);
         intersections.Count = listOverSpan.Count;
+        return result;
     }
 
-    public void Intersections<T, TQueries>(in T primitiveWorld, ref ListOverSpan<Intersection> intersections)
+    public int Intersections<T, TQueries>(in T primitiveWorld, ref ListOverSpan<Intersection> intersections)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
         if (intersections.IsFull)
-            return;
+            return 0;
         var prevCount = intersections.Count;
         var primitive = Location is null ? primitiveWorld :
             TQueries.TransformToLocal(primitiveWorld, Location);
@@ -233,6 +223,7 @@ public partial class TreeCollider :
             for (int i = prevCount; i < intersections.Count; i++)
                 intersections[i] = intersections[i].TransformToWorld(Location);
         }
+        return intersections.Count - prevCount;
     }
 
     private bool IntersectionsLeaf<T, TQueries>(in T primitive, CollisionSector sector, ref ListOverSpan<Intersection> intersections)
@@ -257,7 +248,7 @@ public partial class TreeCollider :
         return true;
     }
 
-    public void Intersections<T, TQueries>(in T primitiveWorld, List<Intersection> intersections)
+    public int Intersections<T, TQueries>(in T primitiveWorld, List<Intersection> intersections)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
@@ -294,9 +285,10 @@ public partial class TreeCollider :
             for (int i = prevCount; i < intersections.Count; i++)
                 intersections[i] = intersections[i].TransformToWorld(Location);
         }
+        return intersections.Count - prevCount;
     }
 
-    private void  IntersectionsListLeaf<T, TQueries>(in T primitive, CollisionSector sector, List<Intersection> intersections)
+    private void IntersectionsListLeaf<T, TQueries>(in T primitive, CollisionSector sector, List<Intersection> intersections)
         where T : struct, IIntersectable
         where TQueries : IIntersectionQueries<T>
     {
@@ -320,31 +312,36 @@ public partial class TreeCollider :
     public bool Intersects(in Triangle primitiveWorld) => Intersects<Triangle, IntersectionQueries>(primitiveWorld);
     public bool Intersects(in Line primitiveWorld) => Intersects<Line, IntersectionQueries>(primitiveWorld);
 
-    public void Intersections(in Box primitiveWorld, ref ListOverSpan<Intersection> intersections) =>
+    public int Intersections(in Box primitiveWorld, ref ListOverSpan<Intersection> intersections) =>
         Intersections<Box, IntersectionQueries>(primitiveWorld, ref intersections);
-    public void Intersections(in OrientedBox primitiveWorld, ref ListOverSpan<Intersection> intersections) =>
+    public int Intersections(in OrientedBox primitiveWorld, ref ListOverSpan<Intersection> intersections) =>
         Intersections<OrientedBox, IntersectionQueries>(primitiveWorld, ref intersections);
-    public void Intersections(in Sphere primitiveWorld, ref ListOverSpan<Intersection> intersections) =>
+    public int Intersections(in Sphere primitiveWorld, ref ListOverSpan<Intersection> intersections) =>
         Intersections<Sphere, IntersectionQueries>(primitiveWorld, ref intersections);
-    public void Intersections(in Triangle primitiveWorld, ref ListOverSpan<Intersection> intersections) =>
+    public int Intersections(in Triangle primitiveWorld, ref ListOverSpan<Intersection> intersections) =>
         Intersections<Triangle, IntersectionQueries>(primitiveWorld, ref intersections);
-    public void Intersections(in Line primitiveWorld, ref ListOverSpan<Intersection> intersections) =>
+    public int Intersections(in Line primitiveWorld, ref ListOverSpan<Intersection> intersections) =>
         Intersections<Line, IntersectionQueries>(primitiveWorld, ref intersections);
 
-    public void Intersections(in Box primitiveWorld, ref PooledList<Intersection> intersections) =>
+    public int Intersections(in Box primitiveWorld, ref PooledList<Intersection> intersections) =>
         Intersections<Box, IntersectionQueries>(primitiveWorld, ref intersections);
-    public void Intersections(in OrientedBox primitiveWorld, ref PooledList<Intersection> intersections) =>
+    public int Intersections(in OrientedBox primitiveWorld, ref PooledList<Intersection> intersections) =>
         Intersections<OrientedBox, IntersectionQueries>(primitiveWorld, ref intersections);
-    public void Intersections(in Sphere primitiveWorld, ref PooledList<Intersection> intersections) =>
+    public int Intersections(in Sphere primitiveWorld, ref PooledList<Intersection> intersections) =>
         Intersections<Sphere, IntersectionQueries>(primitiveWorld, ref intersections);
-    public void Intersections(in Triangle primitiveWorld, ref PooledList<Intersection> intersections) =>
+    public int Intersections(in Triangle primitiveWorld, ref PooledList<Intersection> intersections) =>
         Intersections<Triangle, IntersectionQueries>(primitiveWorld, ref intersections);
-    public void Intersections(in Line primitiveWorld, ref PooledList<Intersection> intersections) =>
+    public int Intersections(in Line primitiveWorld, ref PooledList<Intersection> intersections) =>
         Intersections<Line, IntersectionQueries>(primitiveWorld, ref intersections);
 
-    public IEnumerable<Intersection> Intersections(in Box item) => Intersections<Box, IntersectionQueries>(item);
-    public IEnumerable<Intersection> Intersections(in OrientedBox item) => Intersections<OrientedBox, IntersectionQueries>(item);
-    public IEnumerable<Intersection> Intersections(in Sphere item) => Intersections<Sphere, IntersectionQueries>(item);
-    public IEnumerable<Intersection> Intersections(in Triangle item) => Intersections<Triangle, IntersectionQueries>(item);
-    public IEnumerable<Intersection> Intersections(in Line item) => Intersections<Line, IntersectionQueries>(item);
+    public int Intersections(in Box primitiveWorld, List<Intersection> intersections) =>
+        Intersections<Box, IntersectionQueries>(primitiveWorld, intersections);
+    public int Intersections(in OrientedBox primitiveWorld, List<Intersection> intersections) =>
+        Intersections<OrientedBox, IntersectionQueries>(primitiveWorld, intersections);
+    public int Intersections(in Sphere primitiveWorld, List<Intersection> intersections) =>
+        Intersections<Sphere, IntersectionQueries>(primitiveWorld, intersections);
+    public int Intersections(in Triangle primitiveWorld, List<Intersection> intersections) =>
+        Intersections<Triangle, IntersectionQueries>(primitiveWorld, intersections);
+    public int Intersections(in Line primitiveWorld, List<Intersection> intersections) =>
+        Intersections<Line, IntersectionQueries>(primitiveWorld, intersections);
 }

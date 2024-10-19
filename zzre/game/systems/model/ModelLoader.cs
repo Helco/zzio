@@ -95,7 +95,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
             if (hasBehavior)
             {
                 SetBehaviour(entity, behaviour, model.idx);
-                SetIntersectionable(entity);
+                SetGeometryCollider(entity);
                 if (model.wiggleAmpl > 0)
                 {
                     model.wiggleAmpl = 0;
@@ -167,7 +167,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
         if (HasEmptyMesh(entity))
             entity.Dispose(); // I am fine with ignoring empty FOModels
         else
-            SetCollider(entity);
+            SetSphereCollider(entity);
     }
 
     private void HandleCreateItem(in messages.CreateItem msg)
@@ -192,7 +192,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
     private static bool HasEmptyMesh(DefaultEcs.Entity entity) =>
          entity.Get<ClumpMesh>().IsEmpty;
 
-    private static void SetCollider(DefaultEcs.Entity entity)
+    private static void SetSphereCollider(DefaultEcs.Entity entity)
     {
         var clumpMesh = entity.Get<ClumpMesh>();
         var halfSize = clumpMesh.BoundingBox.HalfSize;
@@ -200,7 +200,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
         entity.Set(new Sphere(0f, 0f, 0f, radius));
     }
 
-    private static void SetIntersectionable(DefaultEcs.Entity entity)
+    private static void SetGeometryCollider(DefaultEcs.Entity entity)
     {
         if (!entity.Has<components.Collidable>())
             return;
@@ -209,7 +209,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
         // therefore we always have the ClumpMesh already at this point
         var clumpMesh = entity.Get<ClumpMesh>();
         var location = entity.Get<Location>();
-        entity.Set<IIntersectionable>(GeometryCollider.Create(clumpMesh.Geometry, location));
+        entity.Set(GeometryCollider.Create(clumpMesh.Geometry, location));
     }
 
     private static void SetPlantWiggle(DefaultEcs.Entity entity, int wiggleAmplitude, float delay)

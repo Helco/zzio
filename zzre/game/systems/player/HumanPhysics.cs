@@ -53,7 +53,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
 
         collidableModels = World
             .GetEntities()
-            .With<IIntersectionable>()
+            .With<GeometryCollider>()
             .With<components.Collidable>()
             .With<ClumpMesh>() // a model not a creature
             .AsSet();
@@ -263,10 +263,7 @@ public partial class HumanPhysics : AEntitySetSystem<float>
         if (canCollideWithModels)
         {
             foreach (ref readonly var model in collidableModels.GetEntities())
-            {
-                var geometryCollider = model.Get<IIntersectionable>() as GeometryCollider;
-                geometryCollider!.Intersections(collider, ref intersections);
-            }
+                model.Get<GeometryCollider>().Intersections(collider, ref intersections);
         }
         if (intersections.IsFull)
             logger.Warning("Intersection list was satiated. Make sure nothing was missed.");

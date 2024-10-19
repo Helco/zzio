@@ -1,20 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
+﻿using System.Numerics;
 
 namespace zzre;
 
 public interface IIntersectable<T>
 {
     public bool Intersects(in T item);
-}
-
-// TODO: Remove IIntersectionable
-
-public interface IIntersectionable<T> : IIntersectable<T>
-{
-    public IEnumerable<Intersection> Intersections(in T item);
-    bool IIntersectable<T>.Intersects(in T item) => Intersections(item).Any();
 }
 
 public interface IIntersectable :
@@ -28,13 +18,4 @@ public interface IIntersectable :
 {
     public bool Intersects(IIntersectable other) =>
         IntersectionQueries.Intersects(this, other, true);
-}
-
-public interface IIntersectionable :
-    IIntersectionable<Box>,
-    IIntersectionable<OrientedBox>,
-    IIntersectionable<Sphere>,
-    IIntersectionable<Triangle>,
-    IIntersectionable<Line>
-{
 }
