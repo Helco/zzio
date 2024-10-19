@@ -1,7 +1,6 @@
 ﻿namespace zzre.game.systems;
 using System;
 using System.Numerics;
-using System.Linq;
 using DefaultEcs.System;
 using Mode = zzre.game.components.FairyHoverBehind.Mode;
 
@@ -87,7 +86,7 @@ public partial class FairyHoverBehind : AEntitySetSystem<float>
         velocity = new(move);
 
         worldCollider ??= World.Get<WorldCollider>();
-        if (worldCollider.Intersections(new Sphere(location.LocalPosition, 0.6f)).Any()) // TODO: NO!
+        if (worldCollider.Intersects(new Sphere(location.LocalPosition, 0.6f)))
         {
             hoverBehind.TimeLeft = 3f;
             hoverBehind.CurMode = Mode.CenterHigh;
