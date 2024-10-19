@@ -21,7 +21,7 @@ public sealed class GeometryCollider : TreeCollider
 
     public static GeometryCollider Create(RWGeometry geometry, Location? location)
     {
-        // TODO: Also no, do not instantiate collider for every geomtry instance
+        // TODO: Do not instantiate collider for every geomtry instance
         if (geometry.morphTargets.Length != 1)
             throw new ArgumentException("GeometryTreeCollider does not support geometries with zero or more-than-one morph targets");
         var morphTarget = geometry.morphTargets[0];

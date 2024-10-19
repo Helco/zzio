@@ -75,10 +75,6 @@
     <ProjectReference Include="..\zzio\zzio.csproj" />
     <ProjectReference Include="..\zzre.core\zzre.core.csproj" />
     <ProjectReference Include="..\zzre.sourcegen\zzre.sourcegen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <Reference Include="zzre.baseline">
-      <HintPath>..\zzre.benchmark\zzre.baseline.dll</HintPath>
-      <Aliases>Baseline</Aliases>
-    </Reference>
   </ItemGroup>
 
 </Project>

@@ -202,7 +202,7 @@ public sealed partial class IntersectionQueries :
     public static bool Intersects(in Line line, Vector3 point) =>
          CmpZero((point - line.ClosestPoint(point)).LengthSquared());
 
-    // There might be faster methods than this, but it will suffice for now // TODO: Reevalute this statement :)
+    // There might be faster methods than this, but it will suffice for now
 
     [MethodImpl(MIOptions)]
     public static PlaneIntersections SideOf(in Plane plane, in Box box) =>

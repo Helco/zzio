@@ -75,5 +75,6 @@ public partial class FindActorFloorCollisions : AEntitySetSystem<float>
         }
         else
             entity.Set(coll);
+        intersections.Dispose();
     }
 }
