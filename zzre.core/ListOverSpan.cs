@@ -6,19 +6,18 @@ namespace zzre;
 
 public ref struct ListOverSpan<T>(Span<T> span)
 {
-    private readonly Span<T> span = span;
-    private int count;
-
     public ListOverSpan(Span<T> span, int initialCount) : this(span)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(initialCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCount, span.Length);
-        count = initialCount;
+        Count = initialCount;
     }
 
-    public readonly int Count => count;
-    public readonly int Capacity => span.Length;
-    public readonly bool IsFull => count >= span.Length;
+    public int Count { readonly get; private set; }
+    public readonly int Capacity => FullSpan.Length;
+    public readonly bool IsFull => Count >= FullSpan.Length;
+    public readonly Span<T> FullSpan { get; } = span;
+    public readonly Span<T> Span => FullSpan[0..Count];
 
     public readonly ref T this[int index]
     {
@@ -26,31 +25,30 @@ public ref struct ListOverSpan<T>(Span<T> span)
         get
         {
             ArgumentOutOfRangeException.ThrowIfNegative(index);
-            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, count);
-            return ref span[index];
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, Count);
+            return ref FullSpan[index];
         }
     }
-    public readonly Span<T> Span => span;
 
     [MethodImpl(MIOptions)]
-    public void Clear() => count = 0;
+    public void Clear() => Count = 0;
 
     [MethodImpl(MIOptions)]
     public void Add(in T value)
     {
-        if (count >= span.Length)
+        if (Count >= FullSpan.Length)
             throw new InvalidOperationException($"ListOverSpan has no more capacity to add new value");
-        span[count++] = value;
+        FullSpan[Count++] = value;
     }
 
     [MethodImpl(MIOptions)]
     public ref T Add()
     {
-        if (count >= span.Length)
+        if (Count >= FullSpan.Length)
             throw new InvalidOperationException($"ListOverSpan has no more capacity to add new value");
-        return ref span[count++];
+        return ref FullSpan[Count++];
     }
 
     [MethodImpl(MIOptions)]
-    public readonly Span<T>.Enumerator GetEnumerator() => span[0..count].GetEnumerator();
+    public readonly Span<T>.Enumerator GetEnumerator() => FullSpan[0..Count].GetEnumerator();
 }

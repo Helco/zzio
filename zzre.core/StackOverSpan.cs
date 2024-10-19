@@ -8,57 +8,56 @@ namespace zzre;
 public ref struct StackOverSpan<T>(Span<T> span)
 {
     private readonly Span<T> span = span;
-    private int count;
 
-    public readonly int Count => count;
+    public int Count { readonly get; private set; }
     public readonly int Capacity => span.Length;
 
     [MethodImpl(MIOptions)]
-    public void Clear() => count = 0;
+    public void Clear() => Count = 0;
 
     [MethodImpl(MIOptions)]
     public readonly ref T Peek()
     {
-        if (count == 0)
+        if (Count == 0)
             throw new InvalidOperationException("Cannot peek into stack, stack is empty");
-        return ref span[count - 1];
+        return ref span[Count - 1];
     }
 
     [MethodImpl(MIOptions)]
     public void Push(in T value)
     {
-        if (count >= span.Length)
+        if (Count >= span.Length)
             throw new InvalidOperationException("Cannot push on stack, stack is full");
-        span[count++] = value;
+        span[Count++] = value;
     }
 
     [MethodImpl(MIOptions)]
     public ref T Push()
     {
-        if (count >= span.Length)
+        if (Count >= span.Length)
             throw new InvalidOperationException("Cannot push on stack, stack is full");
-        return ref span[count++];
+        return ref span[Count++];
     }
 
     [MethodImpl(MIOptions)]
     public ref readonly T Pop()
     {
-        if (count == 0)
+        if (Count == 0)
             throw new InvalidOperationException("Cannot pop from stack, stack is empty");
-        return ref span[--count];
+        return ref span[--Count];
     }
 
     [MethodImpl(MIOptions)]
     public bool TryPop(out T value)
     {
-        if (count == 0)
+        if (Count == 0)
         {
             value = default!;
             return false;
         }
         else
         {
-            value = span[--count];
+            value = span[--Count];
             return true;
         }
     }
