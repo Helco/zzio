@@ -53,8 +53,8 @@ public class TestRaycaster : ListDisposable
         Window.OnRender += OnRender; // on window to not update framebuffer texture during rendering
         Window.OnContent += OnContent;
 
-        var rwWorld = diContainer.GetTag<IResourcePool>().FindFile("resources/worlds/sc_3302.bsp")!.OpenAsRWBS<RWWorld>();
-        var worldCollider = new WorldCollider(rwWorld);
+        var rwWorld = diContainer.GetTag<IResourcePool>().FindFile("resources/worlds/sc_1243.bsp")!.OpenAsRWBS<RWWorld>();
+        var worldCollider = WorldCollider.Create(rwWorld);
         camera.Location.LocalPosition = -rwWorld.origin;
 
         rotatingBox = new RaycastObject()

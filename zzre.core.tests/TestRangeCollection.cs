@@ -148,6 +148,14 @@ public class TestRangeCollection
     }
 
     [Test]
+    public void AddBestFit_ExclusiveMaxRangeValue()
+    {
+        var coll = new RangeCollection(10) { 0..8 };
+        Assert.That(coll.AddBestFit(3), Is.Null);
+        Assert.That(coll.AddBestFit(2), Is.EqualTo(8..10));
+    }
+
+    [Test]
     public void Remove_NonExistant()
     {
         var coll = new RangeCollection();

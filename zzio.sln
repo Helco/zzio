@@ -32,7 +32,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0Common", "0Common", "{FB32
 		NoCodeQuality.props = NoCodeQuality.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zzre.sourcegen", "zzre.sourcegen\zzre.sourcegen.csproj", "{BE8DA2D7-E8FC-4767-894F-CD760F90D5CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zzre.sourcegen", "zzre.sourcegen\zzre.sourcegen.csproj", "{BE8DA2D7-E8FC-4767-894F-CD760F90D5CF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

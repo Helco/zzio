@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Runtime.CompilerServices;
 using zzio;
 
 namespace zzio.rwbs;
@@ -14,6 +15,7 @@ public enum CollisionSectorType
 }
 public static class CollisionSectorTypeExtension
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static int ToIndex(this CollisionSectorType t) => ((int)t) / 4;
 }
 

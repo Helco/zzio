@@ -26,11 +26,13 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
         : -1;
 
     private int _maxRangeValue;
+    /// <summary>Exclusive limit of ranges stored in this list</summary>
     public int MaxRangeValue
     {
         get => _maxRangeValue;
         set
         {
+            ArgumentOutOfRangeException.ThrowIfNegative(value);
             if (_maxRangeValue > value)
                 Remove(value..);
             _maxRangeValue = value;
@@ -159,7 +161,7 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
 
         if (bestI < 0) // no space *before* another range found
         {
-            if (MaxValue + length <= MaxRangeValue)
+            if (MaxValue + length < MaxRangeValue)
             {
                 var newRangeAtEnd = ranges[^1].End..(ranges[^1].End.Value + length);
                 ranges[^1] = ranges[^1].Start..(MaxValue + length + 1);

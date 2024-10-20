@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../CodeQuality.props"/>
+  <Import Project="../CodeQuality.props" />
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -22,7 +22,7 @@
       <LogicalName>imgui-frag</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Serilog" Version="3.1.1" />
     <PackageReference Include="Silk.NET.SDL" Version="2.20.0" />

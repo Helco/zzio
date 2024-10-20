@@ -16,3 +16,5 @@ nuget-feed
 **/BuildOutput.sarif
 sarif-output
 **/.DS_Store
+
+BenchmarkDotNet*
