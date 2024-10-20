@@ -169,7 +169,7 @@ public sealed class SoundAsset : Asset
         buffer = null;
     }
 
-    public override string ToString() => $"SoundAsset {info.FullPath}";
+    protected override string ToStringInner() => $"SoundAsset {info.FullPath}";
 }
 
 partial class AssetExtensions

@@ -43,7 +43,7 @@ public sealed class EffectCombinerAsset : Asset
         effectCombiner = null;
     }
 
-    public override string ToString() => $"EffectCombiner {info.Name}";
+    protected override string ToStringInner() => $"EffectCombiner {info.Name}";
 }
 
 partial class AssetExtensions

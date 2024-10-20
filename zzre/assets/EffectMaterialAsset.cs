@@ -97,7 +97,7 @@ public sealed class EffectMaterialAsset : Asset
         material = null;
     }
 
-    public override string ToString() => $"EffectMaterial {DebugName}";
+    protected override string ToStringInner() => $"EffectMaterial {DebugName}";
 }
 
 partial class AssetExtensions

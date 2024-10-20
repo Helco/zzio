@@ -86,7 +86,7 @@ public abstract class ModelMaterialAsset : Asset
         material = null;
     }
 
-    public override string ToString() => DebugName;
+    protected override string ToStringInner() => DebugName;
 
     protected abstract IReadOnlyList<FilePath> TextureBasePaths { get; }
     protected abstract void SetMaterialVariant(ModelMaterial material);

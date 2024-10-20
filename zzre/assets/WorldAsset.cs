@@ -36,7 +36,7 @@ public sealed class WorldAsset : Asset
         mesh = null;
     }
 
-    public override string ToString() => $"World {info.FullPath.Parts[^1]}";
+    protected override string ToStringInner() => $"World {info.FullPath.Parts[^1]}";
 }
 
 public static unsafe partial class AssetExtensions

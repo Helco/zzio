@@ -67,6 +67,7 @@ public abstract class Asset : IAsset
     /// <summary>The <see cref="ITagContainer"/> of the apparent registry to be used during loading</summary>
     protected readonly ITagContainer diContainer;
     private readonly TaskCompletionSource completionSource = new();
+    private string? description;
     private AssetHandle[] secondaryAssets = [];
     private int refCount;
 
@@ -236,5 +237,10 @@ public abstract class Asset : IAsset
 
     /// <summary>Produces a description of the asset to be shown in debug logs and tools</summary>
     /// <returns>A description of the asset instance for debugging</returns>
-    public override string ToString() => $"{GetType().Name} {ID}";
+    public override sealed string ToString() => description ??= ToStringInner();
+
+    /// <summary>Produces a description of the asset to be shown in debug logs and tools</summary>
+    /// <remarks>Used to cache description strings</remarks>
+    /// <returns>A description of the asset instance for debugging</returns>
+    protected virtual string ToStringInner() => $"{GetType().Name} {ID}";
 }

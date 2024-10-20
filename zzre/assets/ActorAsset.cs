@@ -79,5 +79,5 @@ public sealed class ActorAsset : Asset
         wingsAnimations = [];
     }
 
-    public override string ToString() => $"Actor {info.Name}";
+    protected override string ToStringInner() => $"Actor {info.Name}";
 }

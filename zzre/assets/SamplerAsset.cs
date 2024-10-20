@@ -49,7 +49,7 @@ public sealed class SamplerAsset : Asset
         sampler = null;
     }
 
-    public override string ToString() => DebugName;
+    protected override string ToStringInner() => DebugName;
 }
 
 public static unsafe partial class AssetExtensions

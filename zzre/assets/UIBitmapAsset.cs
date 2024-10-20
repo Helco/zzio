@@ -162,7 +162,7 @@ public class UIBitmapAsset : Asset
         material = null;
     }
 
-    public override string ToString() => DebugName;
+    protected override string ToStringInner() => DebugName;
 }
 
 partial class AssetExtensions

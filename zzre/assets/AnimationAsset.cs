@@ -44,5 +44,5 @@ public sealed class AnimationAsset : Asset
         animation = null;
     }
 
-    public override string ToString() => $"Animation {info.Name}";
+    protected override string ToStringInner() => $"Animation {info.Name}";
 }

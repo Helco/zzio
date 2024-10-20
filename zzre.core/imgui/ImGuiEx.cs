@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -171,16 +172,16 @@ public static class ImGuiEx
     {
         if (label.Length > 0)
         {
-            Text(label);
+            ImGui.Text(label);
             SameLine();
         }
         if (!isEnabled)
         {
-            Text(text);
+            ImGui.Text(text);
             return false;
         }
         PushStyleColor(ImGuiCol.Text, GetStyle().Colors[(int)ImGuiCol.ButtonHovered]);
-        Text(text + (addIcon ? " " + IconFonts.ForkAwesome.ExternalLink : ""));
+        ImGui.Text(text + (addIcon ? " " + IconFonts.ForkAwesome.ExternalLink : ""));
         PopStyleColor();
         AddUnderLine(GetStyle().Colors[(int)(IsItemHovered()
             ? IsMouseDown(ImGuiMouseButton.Left)
@@ -234,7 +235,7 @@ public static class ImGuiEx
     public static bool ValueRangeAnimation(string label, ref ValueRangeAnimation a, float min = float.MinValue, float max = float.MaxValue)
     {
         PushID(label);
-        Text(label + ':');
+        ImGui.Text(label + ':');
         Indent();
         float minValue = a.value - a.width, maxValue = a.value + a.width;
         var result = DragFloatRange2("Range", ref minValue, ref maxValue, 1f, min, max);
@@ -274,5 +275,37 @@ public static class ImGuiEx
         var result = ImGui.InputInt(label, ref curI);
         cur = (byte)Math.Clamp(curI, byte.MinValue, byte.MaxValue);
         return result;
+    }
+
+    private static readonly int GuidCharLength = Guid.Empty.ToString().Length;
+    public static void Text(in Guid gguid)
+    {
+        Span<char> chars = stackalloc char[GuidCharLength];
+        var success = gguid.TryFormat(chars, out _);
+        System.Diagnostics.Debug.Assert(success);
+        ImGui.Text(chars);
+    }
+
+    private static readonly Dictionary<Type, char[][]> enumNames = [];
+    public static void Text<TEnum>(TEnum value) where TEnum : struct, Enum
+    {
+        if (!enumNames.TryGetValue(typeof(TEnum), out var names))
+        {
+            var values = Enum.GetValues<TEnum>();
+            var minValue = values.Min(e => e.GetHashCode());
+            var maxValue = values.Max(e => e.GetHashCode());
+            if (minValue != 0 || maxValue - minValue + 1 != values.Length)
+                throw new ArgumentException($"Enum is not sequential");
+            names = new char[values.Length][];
+            foreach (var v in values)
+            {
+                if (names[v.GetHashCode()] is not null)
+                    throw new ArgumentException("Enum has duplicates");
+                names[v.GetHashCode()] = v.ToString().ToCharArray();
+            }
+            enumNames.Add(typeof(TEnum), names);
+        }
+
+        ImGui.Text(names[value.GetHashCode()]);
     }
 }

@@ -117,14 +117,14 @@ internal sealed class AssetExplorer
         {
             TableNextRow();
             int i = 0;
-            if (TableSetColumnIndex(i++)) Text(asset.ID.ToString());
+            if (TableSetColumnIndex(i++)) ImGuiEx.Text(asset.ID);
             if (TableSetColumnIndex(i++)) Text(asset.Type.Name);
             if (TableSetColumnIndex(i++))
                 if (Selectable(asset.Name, selectedRow == asset.ID, ImGuiSelectableFlags.SpanAllColumns))
                     selectedRow = asset.ID;
-            if (TableSetColumnIndex(i++)) Text(asset.State.ToString());
+            if (TableSetColumnIndex(i++)) ImGuiEx.Text(asset.State);
             if (TableSetColumnIndex(i++)) Text(asset.RefCount.ToString());
-            if (TableSetColumnIndex(i++)) Text(asset.Priority.ToString());
+            if (TableSetColumnIndex(i++)) ImGuiEx.Text(asset.Priority);
             if (selectedRow == asset.ID && focusSelectedRow)
             {
                 SetScrollHereY();
