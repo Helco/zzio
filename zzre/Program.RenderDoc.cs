@@ -56,7 +56,17 @@ partial class Program
         };
     }
 #else
-    private static void AddGlobalRenderDocOption(RootCommand _) { }
+    private static readonly Option<bool> OptionRenderDoc = new(
+        "--renderdoc",
+        () => false,
+        "(NOT AVAILABLE IN RELEASE BUILDS) Whether RenderDoc is to be loaded at start.")
+    {
+        IsHidden = true
+    };
+
+    private static void AddGlobalRenderDocOption(RootCommand command) =>
+        command.AddGlobalOption(OptionRenderDoc);
+
     private static void LoadRenderDoc(ITagContainer _) { }
     private static void SetupRenderDocKeys(SdlWindow _) { }
 #endif
