@@ -30,7 +30,10 @@ internal partial class Program
         CommonStartupAfterWindow(diContainer);
 
         using var cancellationSource = new CancellationTokenSource();
-        var validator = new Validator(diContainer);
+        var validator = new Validator(diContainer)
+        {
+            MaxConcurrency = ctx.ParseResult.GetValueForOption(OptionValidationConcurrency)
+        };
         Task.Run(async () =>
         {
             WriteConsoleLine("Validation: starting...");
