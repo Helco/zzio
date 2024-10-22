@@ -125,8 +125,8 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
     public override readonly string ToString() => $"AssetHandle {AssetID}";
 
     public override readonly bool Equals(object? obj) => obj is AssetHandle handle && Equals(handle);
-    public readonly bool Equals(AssetHandle other) => AssetID.Equals(other.AssetID);
-    public override readonly int GetHashCode() => HashCode.Combine(AssetID);
+    public readonly bool Equals(AssetHandle other) => AssetID.Equals(other.AssetID) && ReferenceEquals(registryInternal, other.registryInternal);
+    public override readonly int GetHashCode() => HashCode.Combine(AssetID, registryInternal);
     public static bool operator ==(AssetHandle left, AssetHandle right) => left.Equals(right);
     public static bool operator !=(AssetHandle left, AssetHandle right) => !(left == right);
 }
