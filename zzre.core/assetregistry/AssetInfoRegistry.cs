@@ -98,11 +98,10 @@ public static class AssetInfoRegistry<TInfo> where TInfo : IEquatable<TInfo>
     internal static TInfo ToInfo(Guid assetId)
     {
         EnsureRegistered();
-        lock(@lock)
+        lock (@lock)
         {
-            if (guidToInfo.TryGetValue(assetId, out var info))
-                return info;
-            throw new KeyNotFoundException($"Could not find registered info for {assetId}");
+            return guidToInfo.TryGetValue(assetId, out var info) ? info
+                : throw new KeyNotFoundException($"Could not find registered info for {assetId}");
         }
     }
 }
