@@ -59,41 +59,32 @@ internal interface IAsset : IDisposable
 }
 
 /// <summary>The base class for asset types</summary>
-public abstract class Asset : IAsset
+/// <remarks>Only call the constructor with data given by a registry</remarks>
+/// <param name="registry">The apparent registry of this asset to report and load secondary assets from</param>
+/// <param name="id">The ID chosen by the registry for this asset</param>
+public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
 {
     protected static ValueTask<IEnumerable<AssetHandle>> NoSecondaryAssets =>
         ValueTask.FromResult(Enumerable.Empty<AssetHandle>());
 
     /// <summary>The <see cref="ITagContainer"/> of the apparent registry to be used during loading</summary>
-    protected readonly ITagContainer diContainer;
+    protected readonly ITagContainer diContainer = registry.DIContainer;
     private readonly TaskCompletionSource completionSource = new();
     private string? description;
     private AssetHandle[] secondaryAssets = [];
     private int refCount;
 
-    private IAssetRegistryInternal InternalRegistry { get; }
-    public IAssetRegistry Registry { get; }
+    private IAssetRegistryInternal InternalRegistry { get; } = registry.InternalRegistry;
+    public IAssetRegistry Registry { get; } = registry;
     /// <summary>An unique identifier given by the registry related to the Info value in order to efficiently address an asset instance</summary>
     /// <remarks>The ID is chosen randomly and will change at least per process per asset</remarks>
-    public Guid ID { get; }
+    public Guid ID { get; } = id;
     /// <summary>The current loading state of the asset</summary>
     public AssetState State { get; private set; }
     Task IAsset.LoadTask => completionSource.Task;
     int IAsset.RefCount => refCount;
     AssetLoadPriority IAsset.Priority { get; set; }
     OnceAction<AssetHandle> IAsset.ApplyAction { get; } = new();
-
-    /// <summary>Constructs the base information for an asset</summary>
-    /// <remarks>Only call this constructor with data given by a registry</remarks>
-    /// <param name="registry">The apparent registry of this asset to report and load secondary assets from</param>
-    /// <param name="id">The ID chosen by the registry for this asset</param>
-    public Asset(IAssetRegistry registry, Guid id)
-    {
-        Registry = registry;
-        InternalRegistry = registry.InternalRegistry;
-        diContainer = registry.DIContainer;
-        ID = id;
-    }
 
     void IDisposable.Dispose()
     {
@@ -199,7 +190,7 @@ public abstract class Asset : IAsset
         }
         catch (Exception ex)
         {
-            lock(this)
+            lock (this)
             {
                 State = AssetState.Error;
                 completionSource.SetException(ex);
@@ -237,7 +228,7 @@ public abstract class Asset : IAsset
 
     /// <summary>Produces a description of the asset to be shown in debug logs and tools</summary>
     /// <returns>A description of the asset instance for debugging</returns>
-    public override sealed string ToString() => description ??= ToStringInner();
+    public sealed override string ToString() => description ??= ToStringInner();
 
     /// <summary>Produces a description of the asset to be shown in debug logs and tools</summary>
     /// <remarks>Used to cache description strings</remarks>

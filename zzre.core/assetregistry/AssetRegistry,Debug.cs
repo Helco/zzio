@@ -28,7 +28,7 @@ public interface IAssetRegistryDebug : IAssetRegistry
     void CopyDebugInfo(List<AssetInfo> assetInfos);
 }
 
-partial class AssetRegistry : IAssetRegistryDebug
+public partial class AssetRegistry : IAssetRegistryDebug
 {
     void IAssetRegistryDebug.CopyDebugInfo(List<IAssetRegistryDebug.AssetInfo> assetInfos)
     {

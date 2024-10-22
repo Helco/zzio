@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace zzre;
 
-partial class AssetRegistry
+public partial class AssetRegistry
 {
     CancellationToken IAssetRegistryInternal.Cancellation => cancellationSource.Token;
     bool IAssetRegistryInternal.IsLocalRegistry => apparentRegistry != this;

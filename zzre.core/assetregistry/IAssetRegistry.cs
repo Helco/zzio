@@ -68,6 +68,12 @@ public interface IAssetRegistry : IDisposable
     /// <param name="assets">Handles to the asset to wait for</param>
     /// <returns>A task completing when all given assets finish loading</returns>
     Task WaitAsyncAll(AssetHandle[] assets) => InternalRegistry.WaitAsyncAll(assets);
+
+    /// <summary>Asynchronously wait for one or more assets to finish loading</summary>
+    /// <remarks>Use this method to wait for secondary assets</remarks>
+    /// <param name="assets">Handles to the asset to wait for</param>
+    /// <returns>A task completing when all given assets finish loading</returns>
+    Task WaitAsyncAll(AssetHandle assets) => InternalRegistry.WaitAsyncAll(assets);
 }
 
 internal interface IAssetRegistryInternal : IAssetRegistry

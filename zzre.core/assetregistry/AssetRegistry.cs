@@ -48,10 +48,9 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
     {
         DIContainer = diContainer;
         this.apparentRegistry = apparentRegistry ?? this;
-        if (string.IsNullOrEmpty(debugName))
-            logger = diContainer.GetLoggerFor<AssetRegistry>();
-        else
-            logger = diContainer.GetTag<ILogger>().For($"{nameof(AssetRegistry)}-{debugName}");
+        logger = string.IsNullOrEmpty(debugName)
+            ? diContainer.GetLoggerFor<AssetRegistry>()
+            : diContainer.GetTag<ILogger>().For($"{nameof(AssetRegistry)}-{debugName}");
     }
 
     protected override void DisposeManaged()
@@ -73,14 +72,14 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
     }
 
     private IAsset GetOrCreateAsset<TInfo>(in TInfo info)
-        where TInfo :  IEquatable<TInfo>
+        where TInfo : IEquatable<TInfo>
     {
         Cancellation.ThrowIfCancellationRequested();
         if (AssetInfoRegistry<TInfo>.Locality is not AssetLocality.Global && apparentRegistry == this)
             throw new InvalidOperationException("Cannot retrieve or create local assets in a global asset registry");
 
         var guid = AssetInfoRegistry<TInfo>.ToGuid(info);
-        lock(assets)
+        lock (assets)
         {
             if (!assets.TryGetValue(guid, out var asset) || asset.State is AssetState.Disposed)
             {
@@ -152,7 +151,7 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         // We assume that asset is locked for our thread during this method
         asset.AddRef();
         var handle = new AssetHandle(this, asset.ID);
-        switch(asset.State)
+        switch (asset.State)
         {
             case AssetState.Disposed or AssetState.Error:
                 throw new ArgumentException("LoadInner was called with asset in unexpected state");
