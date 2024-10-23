@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualBasic;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
-using NUnit.Framework.Internal;
 
 namespace zzre.tests;
 
-[TestFixture, Apartment(System.Threading.ApartmentState.STA)]
+[TestFixture, Apartment(System.Threading.ApartmentState.STA), CancelAfter(1000)]
 public class TestAssetRegistry
 {
     class SynchronousAsset : Asset
@@ -61,11 +61,45 @@ public class TestAssetRegistry
         public int InfoID { get; }
     }
 
+    class ManualGlobalAsset : Asset
+    {
+        public ManualGlobalAsset(IAssetRegistry registry, Guid id, Info info) : base(registry, id)
+        {
+            this.info = info;
+        }
+
+        public class Info(int id) : IEquatable<Info>
+        {
+            public readonly int ID = id;
+            public readonly TaskCompletionSource Completion = new();
+            public readonly TaskCompletionSource WasStarted = new();
+            public readonly TaskCompletionSource WasUnloaded = new();
+
+            bool IEquatable<Info>.Equals(Info? other) => ID == other?.ID;
+        }
+
+        public int InfoID => info.ID;
+        private readonly Info info;
+
+        protected override ValueTask<IEnumerable<AssetHandle>> Load()
+        {
+            info.WasStarted.SetResult(); // throws if we enter twice. Good.
+            return new(info.Completion.Task.ContinueWith(_ => Enumerable.Empty<AssetHandle>()));
+        }
+
+        protected override void Unload()
+        {
+            info.WasUnloaded.SetResult();
+        }
+    }
+
     static TestAssetRegistry()
     {
         AssetInfoRegistry<SynchronousGlobalAsset.Info>.Register<SynchronousGlobalAsset>(AssetLocality.Global);
         AssetInfoRegistry<SynchronousContextAsset.Info>.Register<SynchronousContextAsset>(AssetLocality.Context);
         AssetInfoRegistry<SynchronousSingleUsageAsset.Info>.Register<SynchronousSingleUsageAsset>(AssetLocality.SingleUsage);
+
+        AssetInfoRegistry<ManualGlobalAsset.Info>.Register<ManualGlobalAsset>(AssetLocality.Global);
     }
 
     private TagContainer diContainer;
@@ -79,6 +113,8 @@ public class TestAssetRegistry
         diContainer.AddTag<Serilog.ILogger>(Serilog.Core.Logger.None);
         diContainer.AddTag<IAssetRegistry>(globalRegistry = new AssetRegistry("Global", diContainer));
         localRegistry = new AssetLocalRegistry("Local", diContainer);
+        TestContext.CurrentContext.CancellationToken.Register(localRegistry.Dispose);
+        TestContext.CurrentContext.CancellationToken.Register(globalRegistry.Dispose);
     }
 
     [TearDown]
@@ -217,4 +253,155 @@ public class TestAssetRegistry
         var asset2 = assetHandle2.Get<SynchronousContextAsset>();
         Assert.That(asset1, Is.Not.SameAs(asset2));
     }
+
+    [Test]
+    public void LoadSyncSingleUsageAsset_MultipleLoads()
+    {
+        using var assetHandle1 = localRegistry.Load(new SynchronousSingleUsageAsset.Info(42), AssetLoadPriority.Synchronous, null);
+        using var assetHandle2 = localRegistry.Load(new SynchronousSingleUsageAsset.Info(42), AssetLoadPriority.Synchronous, null);
+
+        Assert.That(assetHandle1, Is.Not.EqualTo(assetHandle2));
+
+        var asset1 = assetHandle1.Get<SynchronousSingleUsageAsset>();
+        var asset2 = assetHandle2.Get<SynchronousSingleUsageAsset>();
+        Assert.That(asset1, Is.Not.SameAs(asset2));
+
+        assetHandle1.Dispose();
+        Assert.That(assetHandle2.IsLoaded);
+        Assert.That(asset2.State, Is.EqualTo(AssetState.Loaded));
+        Assert.That(asset1.State, Is.EqualTo(AssetState.Disposed));
+    }
+
+    [Test]
+    public void ApplySyncAsset_Action()
+    {
+        int callCount = 0;
+        using var assetHandle = globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous, assetHandle =>
+        {
+            callCount++;
+            Assert.That(assetHandle.IsLoaded);
+            Assert.That(assetHandle.Get<SynchronousGlobalAsset>().InfoID, Is.EqualTo(42));
+        });
+
+        Assert.That(callCount, Is.EqualTo(1));
+    }
+
+    private static void IncrementInteger(AssetHandle assetHandle, in StrongBox<int> callCount)
+    {
+        Assert.That(assetHandle.IsLoaded);
+        Assert.That(assetHandle.Get<SynchronousGlobalAsset>().InfoID, Is.EqualTo(42));
+        callCount.Value++;
+    }
+
+    [Test]
+    public unsafe void ApplySyncAsset_FnPtr()
+    {
+        StrongBox<int> callCount = new(0);
+        using var assetHandle = globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous,
+            &IncrementInteger, callCount);
+        Assert.That(callCount.Value, Is.EqualTo(1));
+    }
+
+    [Test]
+    public unsafe void ApplySyncAsset_ApplyAfterLoad()
+    {
+        StrongBox<int> callCountFnPtr = new(0);
+        using var assetHandle1 = globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous,
+            &IncrementInteger, callCountFnPtr);
+        Assert.That(callCountFnPtr.Value, Is.EqualTo(1));
+
+        int callCountAction = 0;
+        using var assetHandle2 = globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous,
+            _ => callCountAction++);
+        Assert.That(callCountAction, Is.EqualTo(1));
+
+        Assert.That(callCountFnPtr.Value, Is.EqualTo(1)); // checks we have not called the previous apply action twice
+    }
+
+    [Test]
+    public unsafe void ApplySyncAsset_OverHandle()
+    {
+        using var assetHandle = globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous, null);
+
+        StrongBox<int> callCountFnPtr = new(0);
+        assetHandle.Apply(&IncrementInteger, callCountFnPtr);
+        Assert.That(callCountFnPtr.Value, Is.EqualTo(1));
+
+        int callCountAction = 0;
+        assetHandle.Apply(_ => callCountAction++);
+        Assert.That(callCountAction, Is.EqualTo(1));
+
+        Assert.That(callCountFnPtr.Value, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void LoadAsyncGlobalAsset_HighSync()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
+        Assert.That(assetHandle.IsLoaded, Is.False);
+        // we cannot reason about WasStarted, as it is called asynchronously
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
+
+        assetInfo.Completion.SetResult();
+        var asset = assetHandle.Get<ManualGlobalAsset>();
+
+        Assert.That(assetHandle.IsLoaded, Is.True);
+        Assert.That(assetInfo.WasStarted.Task.IsCompletedSuccessfully, Is.True);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
+    }
+
+    [Test]
+    public void LoadAsyncGlobalAsset_LowSync()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
+        Assert.That(assetHandle.IsLoaded, Is.False);
+        Assert.That(assetInfo.WasStarted.Task.IsCompleted, Is.False);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
+
+        globalRegistry.ApplyAssets();
+        assetInfo.Completion.SetResult();
+        var asset = assetHandle.Get<ManualGlobalAsset>();
+
+        Assert.That(assetHandle.IsLoaded, Is.True);
+        Assert.That(assetInfo.WasStarted.Task.IsCompletedSuccessfully, Is.True);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
+    }
+
+    [Test]
+    public async Task LoadAsyncGlobalAsset_HighAsync()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
+        Assert.That(assetHandle.IsLoaded, Is.False);
+        // we cannot reason about WasStarted, as it is called asynchronously
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
+
+        assetInfo.Completion.SetResult();
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
+
+        Assert.That(assetHandle.IsLoaded, Is.True);
+        Assert.That(assetInfo.WasStarted.Task.IsCompletedSuccessfully, Is.True);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
+    }
+
+    [Test]
+    public async Task LoadAsyncGlobalAsset_LowAsync()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
+        Assert.That(assetHandle.IsLoaded, Is.False);
+        Assert.That(assetInfo.WasStarted.Task.IsCompleted, Is.False);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
+
+        globalRegistry.ApplyAssets();
+        assetInfo.Completion.SetResult();
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
+
+        Assert.That(assetHandle.IsLoaded, Is.True);
+        Assert.That(assetInfo.WasStarted.Task.IsCompletedSuccessfully, Is.True);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
+    }
+
 }
