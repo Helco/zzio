@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <WarningsAsErrors>NU1605;nullable</WarningsAsErrors>
     <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
