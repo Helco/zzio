@@ -404,4 +404,129 @@ public class TestAssetRegistry
         Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
     }
 
+    [Test]
+    public async Task UnloadAsyncGlobalAsset_HighNormal()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
+        assetInfo.Completion.SetResult();
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
+        Assert.That(assetHandle.IsLoaded, Is.True);
+
+        assetHandle.Dispose();
+        globalRegistry.ApplyAssets();
+
+        Assert.That(assetHandle.IsLoaded, Is.False);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompletedSuccessfully, Is.True);
+    }
+
+    [Test]
+    public async Task UnloadAsyncGlobalAsset_LowNormal()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
+        assetInfo.Completion.SetResult();
+        globalRegistry.ApplyAssets();
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
+        Assert.That(assetHandle.IsLoaded, Is.True);
+
+        assetHandle.Dispose();
+        globalRegistry.ApplyAssets();
+
+        Assert.That(assetHandle.IsLoaded, Is.False);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompletedSuccessfully, Is.True);
+    }
+
+    [Test]
+    public async Task UnloadAsyncGlobalAsset_HighDuringLoad()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
+        await assetInfo.WasStarted.Task;
+
+        assetHandle.Dispose();
+        globalRegistry.ApplyAssets();
+        assetInfo.Completion.SetResult();
+
+        Assert.That(assetHandle.IsLoaded, Is.False);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompletedSuccessfully, Is.True);
+    }
+
+    [Test]
+    public async Task UnloadAsyncGlobalAsset_LowDuringLoad()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
+        globalRegistry.ApplyAssets();
+        await assetInfo.WasStarted.Task;
+
+        assetHandle.Dispose();
+        globalRegistry.ApplyAssets();
+        assetInfo.Completion.SetResult();
+
+        Assert.That(assetHandle.IsLoaded, Is.False);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompletedSuccessfully, Is.True);
+    }
+
+    [Test]
+    public async Task UnloadAsyncGlobalAsset_HighBeforeLoad()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
+        assetHandle.Dispose();
+        if (assetInfo.WasStarted.Task.IsCompletedSuccessfully)
+            // yes, this is not fully correct but also not terrible if *this* test not always succeeds
+            Assert.Ignore("Asset was already started, unsynchronizable test will not be conclusive");
+
+        assetInfo.Completion.SetResult();
+        await Task.Yield();
+
+        Assert.That(assetHandle.IsLoaded, Is.False);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompletedSuccessfully, Is.True);
+    }
+
+    [Test]
+    public async Task UnloadAsyncGlobalAsset_LowBeforeLoad()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
+        assetHandle.Dispose();
+        globalRegistry.ApplyAssets();
+
+        assetInfo.Completion.SetResult();
+        await Task.Yield();
+
+        Assert.That(assetHandle.IsLoaded, Is.False);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompletedSuccessfully, Is.True);
+    }
+
+    [Test]
+    public Task UnloadAsyncGlobalAsset_High_AccessDisposedHandle()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
+        if (assetInfo.WasStarted.Task.IsCompletedSuccessfully)
+            Assert.Ignore("Asset was already started, unsynchronizable test will not be conclusive");
+        assetHandle.Dispose();
+        globalRegistry.ApplyAssets();
+
+        assetInfo.Completion.SetResult();
+        return Assert.ThatAsync(
+            () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle),
+            Throws.InstanceOf<ObjectDisposedException>());
+    }
+
+    [Test]
+    public Task UnloadAsyncGlobalAsset_Low_AccessDisposedHandle()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
+        assetHandle.Dispose();
+        globalRegistry.ApplyAssets();
+
+        assetInfo.Completion.SetResult();
+        return Assert.ThatAsync(
+            () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle),
+            Throws.InstanceOf<ObjectDisposedException>());
+    }
 }

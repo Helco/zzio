@@ -24,7 +24,7 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
     {
         get
         {
-            CheckDisposed();
+            CheckDefault();
             return registryInternal.IsLoaded(AssetID);
         }
     }
@@ -66,6 +66,10 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
     [Conditional("DEBUG")]
     private readonly void CheckDisposed() =>
         ObjectDisposedException.ThrowIf(wasDisposed || AssetID == Guid.Empty, this);
+
+    [Conditional("DEBUG")]
+    private readonly void CheckDefault() =>
+        ObjectDisposedException.ThrowIf(AssetID == Guid.Empty, this);
 
     /// <summary>Returns a loaded asset instance</summary>
     /// <remarks>The asset has to be marked as <see cref="AssetState.Loaded"/>, otherwise it will try to synchronously wait for loading completion</remarks>
