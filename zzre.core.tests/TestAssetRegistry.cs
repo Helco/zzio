@@ -68,23 +68,27 @@ public class TestAssetRegistry
             this.info = info;
         }
 
-        public class Info(int id) : IEquatable<Info>
+        public class Info(int id, bool waitForSecondary = true) : IEquatable<Info>
         {
             public readonly int ID = id;
-            public readonly TaskCompletionSource Completion = new();
+            public readonly bool WaitForSecondary = waitForSecondary;
+            public readonly TaskCompletionSource<IEnumerable<AssetHandle>> Completion = new();
             public readonly TaskCompletionSource WasStarted = new();
             public readonly TaskCompletionSource WasUnloaded = new();
+            
+            public void Complete(params AssetHandle[] secondary) => Completion.SetResult(secondary);
 
             bool IEquatable<Info>.Equals(Info? other) => ID == other?.ID;
         }
 
         public int InfoID => info.ID;
+        protected override bool NeedsSecondaryAssets => info.WaitForSecondary;
         private readonly Info info;
 
         protected override ValueTask<IEnumerable<AssetHandle>> Load()
         {
             info.WasStarted.SetResult(); // throws if we enter twice. Good.
-            return new(info.Completion.Task.ContinueWith(_ => Enumerable.Empty<AssetHandle>()));
+            return new(info.Completion.Task);
         }
 
         protected override void Unload()
@@ -343,7 +347,7 @@ public class TestAssetRegistry
         // we cannot reason about WasStarted, as it is called asynchronously
         Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
 
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         var asset = assetHandle.Get<ManualGlobalAsset>();
 
         Assert.That(assetHandle.IsLoaded, Is.True);
@@ -361,7 +365,7 @@ public class TestAssetRegistry
         Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
 
         globalRegistry.ApplyAssets();
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         var asset = assetHandle.Get<ManualGlobalAsset>();
 
         Assert.That(assetHandle.IsLoaded, Is.True);
@@ -378,7 +382,7 @@ public class TestAssetRegistry
         // we cannot reason about WasStarted, as it is called asynchronously
         Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
 
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
 
         Assert.That(assetHandle.IsLoaded, Is.True);
@@ -396,7 +400,7 @@ public class TestAssetRegistry
         Assert.That(assetInfo.WasUnloaded.Task.IsCompleted, Is.False);
 
         globalRegistry.ApplyAssets();
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
 
         Assert.That(assetHandle.IsLoaded, Is.True);
@@ -409,7 +413,7 @@ public class TestAssetRegistry
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
         Assert.That(assetHandle.IsLoaded, Is.True);
 
@@ -425,7 +429,7 @@ public class TestAssetRegistry
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         globalRegistry.ApplyAssets();
         await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
         Assert.That(assetHandle.IsLoaded, Is.True);
@@ -446,7 +450,7 @@ public class TestAssetRegistry
 
         assetHandle.Dispose();
         globalRegistry.ApplyAssets();
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
 
         Assert.That(assetHandle.IsLoaded, Is.False);
         Assert.That(assetInfo.WasUnloaded.Task.IsCompletedSuccessfully, Is.True);
@@ -462,7 +466,7 @@ public class TestAssetRegistry
 
         assetHandle.Dispose();
         globalRegistry.ApplyAssets();
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
 
         Assert.That(assetHandle.IsLoaded, Is.False);
         Assert.That(assetInfo.WasUnloaded.Task.IsCompletedSuccessfully, Is.True);
@@ -478,7 +482,7 @@ public class TestAssetRegistry
             // yes, this is not fully correct but also not terrible if *this* test not always succeeds
             Assert.Ignore("Asset was already started, unsynchronizable test will not be conclusive");
 
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         await Task.Yield();
 
         Assert.That(assetHandle.IsLoaded, Is.False);
@@ -493,7 +497,7 @@ public class TestAssetRegistry
         assetHandle.Dispose();
         globalRegistry.ApplyAssets();
 
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         await Task.Yield();
 
         Assert.That(assetHandle.IsLoaded, Is.False);
@@ -510,7 +514,7 @@ public class TestAssetRegistry
         assetHandle.Dispose();
         globalRegistry.ApplyAssets();
 
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         return Assert.ThatAsync(
             () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle),
             Throws.InstanceOf<ObjectDisposedException>());
@@ -524,7 +528,7 @@ public class TestAssetRegistry
         assetHandle.Dispose();
         globalRegistry.ApplyAssets();
 
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         return Assert.ThatAsync(
             () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle),
             Throws.InstanceOf<ObjectDisposedException>());
@@ -554,7 +558,7 @@ public class TestAssetRegistry
         ApplyIncrementInteger(assetHandle, callCountFnPtr); // we cannot use unsafe but can call unsafe functions...
 
         globalRegistry.ApplyAssets();
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
         globalRegistry.ApplyAssets(); // preapply actions are run on main thread, so another call is necessary for pre-load apply actions
 
@@ -576,7 +580,7 @@ public class TestAssetRegistry
         assetHandle.Apply(_ => callCountAction++);
         ApplyIncrementInteger(assetHandle, callCountFnPtr); // we cannot use unsafe but can call unsafe functions...
 
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
         globalRegistry.ApplyAssets();
 
@@ -593,7 +597,7 @@ public class TestAssetRegistry
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
 
-        assetInfo.Completion.SetResult();
+        assetInfo.Complete();
         await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
         Assert.That(assetHandle.IsLoaded);
 
@@ -602,5 +606,60 @@ public class TestAssetRegistry
 
         ApplyIncrementInteger(assetHandle, callCountFnPtr);
         Assert.That(callCountFnPtr.Value, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task SecondaryAssets_SingleSync()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(42);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(1337);
+        assetInfoSecondary.Complete();
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+
+        await assetInfoPrimary.WasStarted.Task;
+        var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.Synchronous, null);
+        assetInfoPrimary.Complete(assetHandleSecondary);
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary);
+
+        Assert.That(assetHandlePrimary.IsLoaded);
+        Assert.That(assetHandleSecondary.IsLoaded);
+    }
+
+    [Test]
+    public async Task SecondaryAssets_SingleHigh()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(42);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(1337);
+        assetInfoSecondary.Complete();
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+
+        await assetInfoPrimary.WasStarted.Task;
+        var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.High, null);
+        assetInfoPrimary.Complete(assetHandleSecondary);
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary);
+
+        Assert.That(assetHandlePrimary.IsLoaded);
+        Assert.That(assetHandleSecondary.IsLoaded);
+    }
+
+    [Test]
+    public async Task SecondaryAssets_SingleLow()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(42);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(1337);
+        assetInfoSecondary.Complete();
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+
+        await assetInfoPrimary.WasStarted.Task;
+        var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.Low, null);
+        assetInfoPrimary.Complete(assetHandleSecondary);
+        globalRegistry.ApplyAssets(); // necessary to start secondary loading 
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary);
+
+        Assert.That(assetHandlePrimary.IsLoaded);
+        Assert.That(assetHandleSecondary.IsLoaded);
     }
 }
