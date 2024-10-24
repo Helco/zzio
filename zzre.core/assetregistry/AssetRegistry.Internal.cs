@@ -127,6 +127,7 @@ public partial class AssetRegistry
         {
             foreach (var handle in secondaryHandles)
             {
+                handle.CheckDisposed();
                 if (assets.TryGetValue(handle.AssetID, out var asset))
                     asset.StartLoading();
             }

@@ -64,7 +64,7 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
     }
 
     [Conditional("DEBUG")]
-    private readonly void CheckDisposed() =>
+    internal readonly void CheckDisposed() =>
         ObjectDisposedException.ThrowIf(wasDisposed || AssetID == Guid.Empty, this);
 
     [Conditional("DEBUG")]
