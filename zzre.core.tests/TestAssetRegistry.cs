@@ -662,4 +662,48 @@ public class TestAssetRegistry
         Assert.That(assetHandlePrimary.IsLoaded);
         Assert.That(assetHandleSecondary.IsLoaded);
     }
+
+    [Test]
+    public async Task SecondaryAssets_MultipleSync()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(42);
+        var assetInfoSecondary1 = new ManualGlobalAsset.Info(1337);
+        var assetInfoSecondary2 = new ManualGlobalAsset.Info(1338);
+        assetInfoSecondary1.Complete();
+        assetInfoSecondary2.Complete();
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+
+        await assetInfoPrimary.WasStarted.Task;
+        var assetHandleSecondary1 = globalRegistry.Load(assetInfoSecondary1, AssetLoadPriority.Synchronous, null);
+        var assetHandleSecondary2 = globalRegistry.Load(assetInfoSecondary2, AssetLoadPriority.Synchronous, null);
+        assetInfoPrimary.Complete([assetHandleSecondary1, assetHandleSecondary2]);
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary);
+
+        Assert.That(assetHandlePrimary.IsLoaded);
+        Assert.That(assetHandleSecondary1.IsLoaded);
+        Assert.That(assetHandleSecondary2.IsLoaded);
+    }
+
+    [Test]
+    public async Task SecondaryAssets_PartiallyAsync()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(42);
+        var assetInfoSecondary1 = new ManualGlobalAsset.Info(1337);
+        var assetInfoSecondary2 = new ManualGlobalAsset.Info(1338);
+        assetInfoSecondary1.Complete();
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+
+        await assetInfoPrimary.WasStarted.Task;
+        var assetHandleSecondary1 = globalRegistry.Load(assetInfoSecondary1, AssetLoadPriority.Synchronous, null);
+        var assetHandleSecondary2 = globalRegistry.Load(assetInfoSecondary2, AssetLoadPriority.High, null);
+        assetInfoPrimary.Complete([assetHandleSecondary1, assetHandleSecondary2]);
+        assetInfoSecondary2.Complete();
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary);
+
+        Assert.That(assetHandlePrimary.IsLoaded);
+        Assert.That(assetHandleSecondary1.IsLoaded);
+        Assert.That(assetHandleSecondary2.IsLoaded);
+    }
 }
