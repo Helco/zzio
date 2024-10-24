@@ -286,7 +286,7 @@ public class TestAssetRegistry
         Assert.That(callCount, Is.EqualTo(1));
     }
 
-    private static void IncrementInteger(AssetHandle assetHandle, in StrongBox<int> callCount)
+    private static void IncrementIntegerSync(AssetHandle assetHandle, in StrongBox<int> callCount)
     {
         Assert.That(assetHandle.IsLoaded);
         Assert.That(assetHandle.Get<SynchronousGlobalAsset>().InfoID, Is.EqualTo(42));
@@ -298,7 +298,7 @@ public class TestAssetRegistry
     {
         StrongBox<int> callCount = new(0);
         using var assetHandle = globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous,
-            &IncrementInteger, callCount);
+            &IncrementIntegerSync, callCount);
         Assert.That(callCount.Value, Is.EqualTo(1));
     }
 
@@ -307,7 +307,7 @@ public class TestAssetRegistry
     {
         StrongBox<int> callCountFnPtr = new(0);
         using var assetHandle1 = globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous,
-            &IncrementInteger, callCountFnPtr);
+            &IncrementIntegerSync, callCountFnPtr);
         Assert.That(callCountFnPtr.Value, Is.EqualTo(1));
 
         int callCountAction = 0;
@@ -324,7 +324,7 @@ public class TestAssetRegistry
         using var assetHandle = globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous, null);
 
         StrongBox<int> callCountFnPtr = new(0);
-        assetHandle.Apply(&IncrementInteger, callCountFnPtr);
+        assetHandle.Apply(&IncrementIntegerSync, callCountFnPtr);
         Assert.That(callCountFnPtr.Value, Is.EqualTo(1));
 
         int callCountAction = 0;
@@ -335,7 +335,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public void LoadAsyncGlobalAsset_HighSync()
+    public void LoadAsyncAsset_HighSync()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
@@ -352,7 +352,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public void LoadAsyncGlobalAsset_LowSync()
+    public void LoadAsyncAsset_LowSync()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
@@ -370,7 +370,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public async Task LoadAsyncGlobalAsset_HighAsync()
+    public async Task LoadAsyncAsset_HighAsync()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
@@ -387,7 +387,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public async Task LoadAsyncGlobalAsset_LowAsync()
+    public async Task LoadAsyncAsset_LowAsync()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
@@ -405,7 +405,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public async Task UnloadAsyncGlobalAsset_HighNormal()
+    public async Task UnloadAsyncAsset_HighNormal()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
@@ -421,7 +421,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public async Task UnloadAsyncGlobalAsset_LowNormal()
+    public async Task UnloadAsyncAsset_LowNormal()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
@@ -438,7 +438,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public async Task UnloadAsyncGlobalAsset_HighDuringLoad()
+    public async Task UnloadAsyncAsset_HighDuringLoad()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
@@ -453,7 +453,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public async Task UnloadAsyncGlobalAsset_LowDuringLoad()
+    public async Task UnloadAsyncAsset_LowDuringLoad()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
@@ -469,7 +469,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public async Task UnloadAsyncGlobalAsset_HighBeforeLoad()
+    public async Task UnloadAsyncAsset_HighBeforeLoad()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
@@ -486,7 +486,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public async Task UnloadAsyncGlobalAsset_LowBeforeLoad()
+    public async Task UnloadAsyncAsset_LowBeforeLoad()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
@@ -501,7 +501,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public Task UnloadAsyncGlobalAsset_High_AccessDisposedHandle()
+    public Task UnloadAsyncAsset_High_AccessDisposedHandle()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
@@ -517,7 +517,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public Task UnloadAsyncGlobalAsset_Low_AccessDisposedHandle()
+    public Task UnloadAsyncAsset_Low_AccessDisposedHandle()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
@@ -528,5 +528,79 @@ public class TestAssetRegistry
         return Assert.ThatAsync(
             () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle),
             Throws.InstanceOf<ObjectDisposedException>());
+    }
+
+    private static void IncrementIntegerAsync(AssetHandle assetHandle, in StrongBox<int> callCount)
+    {
+        Assert.That(assetHandle.IsLoaded);
+        Assert.That(assetHandle.Get<ManualGlobalAsset>().InfoID, Is.EqualTo(42));
+        callCount.Value++;
+    }
+
+    private unsafe void ApplyIncrementInteger(AssetHandle assetHandle, StrongBox<int> callCount)
+    {
+        assetHandle.Apply(&IncrementIntegerAsync, callCount);
+    }
+
+    [Test]
+    public async Task ApplyAsyncAsset_BeforeLoadingStarted()
+    {
+        int callCountAction = 0;
+        StrongBox<int> callCountFnPtr = new(0);
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
+
+        assetHandle.Apply(_ => callCountAction++);
+        ApplyIncrementInteger(assetHandle, callCountFnPtr); // we cannot use unsafe but can call unsafe functions...
+
+        globalRegistry.ApplyAssets();
+        assetInfo.Completion.SetResult();
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
+        globalRegistry.ApplyAssets(); // preapply actions are run on main thread, so another call is necessary for pre-load apply actions
+
+        Assert.That(assetHandle.IsLoaded);
+        Assert.That(callCountAction, Is.EqualTo(1));
+        Assert.That(callCountFnPtr.Value, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task ApplyAsyncAsset_DuringLoad()
+    {
+        int callCountAction = 0;
+        StrongBox<int> callCountFnPtr = new(0);
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
+
+        await assetInfo.WasStarted.Task;
+
+        assetHandle.Apply(_ => callCountAction++);
+        ApplyIncrementInteger(assetHandle, callCountFnPtr); // we cannot use unsafe but can call unsafe functions...
+
+        assetInfo.Completion.SetResult();
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
+        globalRegistry.ApplyAssets();
+
+        Assert.That(assetHandle.IsLoaded);
+        Assert.That(callCountAction, Is.EqualTo(1));
+        Assert.That(callCountFnPtr.Value, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task ApplyAsyncAsset_AfterLoad()
+    {
+        int callCountAction = 0;
+        StrongBox<int> callCountFnPtr = new(0);
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
+
+        assetInfo.Completion.SetResult();
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
+        Assert.That(assetHandle.IsLoaded);
+
+        assetHandle.Apply(_ => callCountAction++);
+        Assert.That(callCountAction, Is.EqualTo(1)); // if the asset was loaded, apply actions are to be run synchronously
+
+        ApplyIncrementInteger(assetHandle, callCountFnPtr);
+        Assert.That(callCountFnPtr.Value, Is.EqualTo(1));
     }
 }
