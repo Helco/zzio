@@ -102,14 +102,14 @@ public struct Frustum
 
     public PlaneIntersections Intersects(Plane plane)
     {
-        var firstSide = plane.SideOf(corners.First());
-        var isIntersecting = corners
-            .Skip(1)
-            .Select(plane.SideOf)
-            .Any(cornerSide => cornerSide != firstSide);
-        return
-            isIntersecting ? PlaneIntersections.Intersecting
-            : firstSide > 0 ? PlaneIntersections.Inside
+        var firstSide = plane.SideOf(corners[0]);
+        for (int i = 1; i < corners.Length; i++)
+        {
+            if (plane.SideOf(corners[i]) != firstSide)
+                return PlaneIntersections.Intersecting;
+        }
+        return firstSide > 0
+            ? PlaneIntersections.Inside
             : PlaneIntersections.Outside;
     }
 
