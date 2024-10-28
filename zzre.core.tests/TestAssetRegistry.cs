@@ -10,6 +10,7 @@ using NUnit.Framework.Constraints;
 namespace zzre.tests;
 
 [TestFixture, Apartment(System.Threading.ApartmentState.STA), CancelAfter(1000)]
+[Timeout(3000)]
 public class TestAssetRegistry
 {
     class SynchronousAsset : Asset
@@ -126,6 +127,8 @@ public class TestAssetRegistry
     {
         localRegistry.Dispose();
         diContainer.Dispose();
+        if (TestContext.CurrentContext.CancellationToken.IsCancellationRequested)
+            Assert.Fail("Test was cancelled, most likely due to a timeout.");
     }
 
     [Test]
@@ -705,5 +708,119 @@ public class TestAssetRegistry
         Assert.That(assetHandlePrimary.IsLoaded);
         Assert.That(assetHandleSecondary1.IsLoaded);
         Assert.That(assetHandleSecondary2.IsLoaded);
+    }
+
+    [Test]
+    public async Task SecondaryAssets_FullyAsync()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(42);
+        var assetInfoSecondary1 = new ManualGlobalAsset.Info(1337);
+        var assetInfoSecondary2 = new ManualGlobalAsset.Info(1338);
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+
+        await assetInfoPrimary.WasStarted.Task;
+        var assetHandleSecondary1 = globalRegistry.Load(assetInfoSecondary1, AssetLoadPriority.High, null);
+        var assetHandleSecondary2 = globalRegistry.Load(assetInfoSecondary2, AssetLoadPriority.High, null);
+        assetInfoPrimary.Complete([assetHandleSecondary1, assetHandleSecondary2]);
+        assetInfoSecondary2.Complete();
+        assetInfoSecondary1.Complete(); // reverse completion order, why not.
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary);
+
+        Assert.That(assetHandlePrimary.IsLoaded);
+        Assert.That(assetHandleSecondary1.IsLoaded);
+        Assert.That(assetHandleSecondary2.IsLoaded);
+    }
+
+    [Test]
+    public async Task SecondaryAssets_HighNoWait()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(42, waitForSecondary: false);
+        var assetInfoSecondary1 = new ManualGlobalAsset.Info(1337);
+        var assetInfoSecondary2 = new ManualGlobalAsset.Info(1338);
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+
+        await assetInfoPrimary.WasStarted.Task;
+        var assetHandleSecondary1 = globalRegistry.Load(assetInfoSecondary1, AssetLoadPriority.High, null);
+        var assetHandleSecondary2 = globalRegistry.Load(assetInfoSecondary2, AssetLoadPriority.High, null);
+        assetInfoPrimary.Complete([assetHandleSecondary1, assetHandleSecondary2]);
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary);
+
+        Assert.That(assetHandlePrimary.IsLoaded);
+        Assert.That(assetHandleSecondary1.IsLoaded, Is.False);
+        Assert.That(assetHandleSecondary2.IsLoaded, Is.False);
+
+        assetInfoSecondary1.Complete(); // I don't want to task cancellation behavior in *this* test
+        assetInfoSecondary2.Complete();
+    }
+
+    [Test]
+    public async Task SecondaryAssets_LowNoWait()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(42, waitForSecondary: false);
+        var assetInfoSecondary1 = new ManualGlobalAsset.Info(1337);
+        var assetInfoSecondary2 = new ManualGlobalAsset.Info(1338);
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+
+        await assetInfoPrimary.WasStarted.Task;
+        var assetHandleSecondary1 = globalRegistry.Load(assetInfoSecondary1, AssetLoadPriority.Low, null);
+        var assetHandleSecondary2 = globalRegistry.Load(assetInfoSecondary2, AssetLoadPriority.Low, null);
+        assetInfoPrimary.Complete([assetHandleSecondary1, assetHandleSecondary2]);
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary);
+
+        Assert.That(assetHandlePrimary.IsLoaded);
+        Assert.That(assetHandleSecondary1.IsLoaded, Is.False);
+        Assert.That(assetHandleSecondary2.IsLoaded, Is.False);
+    }
+
+    [Test]
+    public async Task SecondaryAssets_TransitiveWait()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        var assetInfoTertiary = new ManualGlobalAsset.Info(3);
+        var assetInfoQuaternary = new ManualGlobalAsset.Info(4);
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+        using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.High, null);
+        using var assetHandleTertiary = globalRegistry.Load(assetInfoTertiary, AssetLoadPriority.High, null);
+        using var assetHandleQuaternary = globalRegistry.Load(assetInfoQuaternary, AssetLoadPriority.High, null);
+
+        assetInfoPrimary.Complete([assetHandleSecondary]);
+        assetInfoSecondary.Complete([assetHandleTertiary]);
+        assetInfoTertiary.Complete([assetHandleQuaternary]);
+        assetInfoQuaternary.Complete();
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary);
+
+        Assert.That(assetHandlePrimary.IsLoaded);
+        Assert.That(assetHandleSecondary.IsLoaded);
+        Assert.That(assetHandleTertiary.IsLoaded);
+        Assert.That(assetHandleQuaternary.IsLoaded);
+    }
+
+    [Test, Ignore("Recursive waits are broken and NUnit does not report this well at the moment")]
+    public async Task SecondaryAssets_RecursiveWait()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        var assetInfoTertiary = new ManualGlobalAsset.Info(3);
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+        using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.High, null);
+        using var assetHandleTertiary = globalRegistry.Load(assetInfoTertiary, AssetLoadPriority.High, null);
+
+        assetInfoPrimary.Complete([assetHandleSecondary]);
+        assetInfoSecondary.Complete([assetHandleTertiary]);
+        assetInfoTertiary.Complete([assetHandlePrimary]);
+
+        await Assert.ThatAsync(
+            async () => await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary),
+            Throws.InvalidOperationException);
+
+        Assert.That(assetHandlePrimary.IsLoaded, Is.False);
+        Assert.That(assetHandleSecondary.IsLoaded, Is.False);
+        Assert.That(assetHandleTertiary.IsLoaded, Is.False);
     }
 }
