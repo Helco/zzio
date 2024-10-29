@@ -342,6 +342,27 @@ public class TestAssetRegistry
     }
 
     [Test]
+    public async Task ApplySyncAsset_AsyncApplyByLoad()
+    {
+        using var assetHandle = globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous, null);
+
+        StrongBox<int> callCountAction = new(0);
+        var mainThreadId = Environment.CurrentManagedThreadId;
+        var semaphore = new SemaphoreSlim(0, 1);
+        new Thread(() =>
+        {
+            Assert.That(Environment.CurrentManagedThreadId, Is.Not.EqualTo(mainThreadId));
+            globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous, _ => callCountAction.Value++);
+            semaphore.Release();
+        }).Start();
+        await semaphore.WaitAsync();
+
+        Assert.That(callCountAction.Value, Is.EqualTo(0)); // otherwise the apply action would have been called on a non-main thread
+        globalRegistry.ApplyAssets();
+        Assert.That(callCountAction.Value, Is.EqualTo(1));
+    }
+
+    [Test]
     public void LoadAsyncAsset_HighSync()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);

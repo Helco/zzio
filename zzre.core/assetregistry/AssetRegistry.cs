@@ -167,7 +167,10 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
                 if (IsMainThread)
                     applyAction?.Invoke(handle);
                 else if (applyAction is not null)
+                {
+                    asset.ApplyAction.Next += applyAction;
                     assetsToApply.Writer.WriteAsync(asset, Cancellation).AsTask().WaitAndRethrow();
+                }
                 return handle;
 
             default: throw new NotImplementedException($"Unimplemented asset state {asset.State}");
