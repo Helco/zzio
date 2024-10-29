@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -203,8 +204,11 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
     {
         if (State == AssetState.Error)
         {
-            completionSource.Task.WaitAndRethrow();
-            throw new InvalidOperationException("Asset was marked erroneous but does not contain exception");
+            var exception = completionSource.Task.Exception;
+            if (exception is null)
+                throw new InvalidOperationException("Asset was marked erroneous but does not contain exception");
+            else
+                ExceptionDispatchInfo.Capture(exception.InnerException!).Throw();
         }
     }
 
