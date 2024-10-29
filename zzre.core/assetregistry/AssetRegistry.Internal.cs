@@ -52,7 +52,7 @@ public partial class AssetRegistry
             {
                 asset.ApplyAction.Next += ConvertFnptr(applyFnptr, in applyContext);
                 if (asset.State == AssetState.Loaded)
-                    assetsToApply.Writer.WriteAsync(asset, Cancellation).AsTask().Wait();
+                    assetsToApply.Writer.TryWrite(asset);
             }
         }
     }
@@ -73,7 +73,7 @@ public partial class AssetRegistry
                 var applyContextCopy = applyContext;
                 asset.ApplyAction.Next += handle => applyAction(handle, in applyContextCopy);
                 if (asset.State == AssetState.Loaded)
-                    assetsToApply.Writer.WriteAsync(asset, Cancellation).AsTask().Wait();
+                    assetsToApply.Writer.TryWrite(asset);
             }
         }
     }
@@ -92,33 +92,27 @@ public partial class AssetRegistry
             {
                 asset.ApplyAction.Next += applyAction;
                 if (asset.State == AssetState.Loaded)
-                    assetsToApply.Writer.WriteAsync(asset, Cancellation).AsTask().Wait();
+                    assetsToApply.Writer.TryWrite(asset);
             }
         }
     }
 
-    ValueTask IAssetRegistryInternal.QueueRemoveAsset(IAsset asset)
+    void IAssetRegistryInternal.QueueRemoveAsset(IAsset asset)
     {
         stats.OnAssetRemoved();
         if (IsMainThread)
-        {
             RemoveAsset(asset);
-            return ValueTask.CompletedTask;
-        }
         else
-            return assetsToRemove.Writer.WriteAsync(asset, Cancellation);
+            assetsToRemove.Writer.TryWrite(asset);
     }
 
-    ValueTask IAssetRegistryInternal.QueueApplyAsset(IAsset asset)
+    void IAssetRegistryInternal.QueueApplyAsset(IAsset asset)
     {
         stats.OnAssetLoaded();
         if (IsMainThread)
-        {
             ApplyAsset(asset);
-            return ValueTask.CompletedTask;
-        }
         else
-            return assetsToApply.Writer.WriteAsync(asset, Cancellation);
+            assetsToApply.Writer.TryWrite(asset);
     }
 
     Task IAssetRegistry.WaitAsyncAll(AssetHandle[] secondaryHandles)

@@ -10,6 +10,13 @@ using Serilog;
 
 namespace zzre;
 
+/*
+ * As global note to the AssetRegistry, as far as I see using ChannelWriter.TryWrite without
+ * checking the result is correct, as we always use a SingleConsumerUnboundChannelWriter so
+ * the only way TryWrite returns false is if the writer was completed in which not writing
+ * the item is correct.
+ */
+
 /// <summary>A global asset registry to facilitate loading, retrieval and disposal of assets</summary>
 public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryInternal
 {
@@ -61,12 +68,16 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
             .Where(a => a.State is AssetState.Loading or AssetState.LoadingSecondary)
             .Select(a => a.LoadTask))
             .Wait(10000);
+        if (!Monitor.TryEnter(assets, 1000))
+            logger.Warning("Could not lock assets in AssetRegistry disposal. This is ignored and assets are disposed regardless.");
         foreach (var asset in assets.Values)
             asset.Dispose();
         assets.Clear();
         assetsToRemove.Writer.Complete();
         assetsToApply.Writer.Complete();
         assetsToStart.Writer.Complete();
+        if (Monitor.IsEntered(assets))
+            Monitor.Exit(assets);
         cancellationSource.Dispose();
         logger.Verbose("Finished disposing registry");
     }
@@ -169,7 +180,7 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
                 else if (applyAction is not null)
                 {
                     asset.ApplyAction.Next += applyAction;
-                    assetsToApply.Writer.WriteAsync(asset, Cancellation).AsTask().WaitAndRethrow();
+                    assetsToApply.Writer.TryWrite(asset);
                 }
                 return handle;
 
@@ -193,7 +204,7 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
                 asset.StartLoading();
                 break;
             case AssetLoadPriority.Low:
-                assetsToStart.Writer.WriteAsync(asset, Cancellation).AsTask().WaitAndRethrow();
+                assetsToStart.Writer.TryWrite(asset);
                 break;
             default: throw new NotImplementedException($"Unimplemented asset load priority {priority}");
         }
