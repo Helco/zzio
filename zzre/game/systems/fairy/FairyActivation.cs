@@ -121,11 +121,11 @@ public sealed partial class FairyActivation : ISystem<float>
             throw new InvalidOperationException("No start points were found in scene");
 
         int bestTriggerI = -1;
-        float bestDistanceSqr = float.PositiveInfinity;
+        float bestDistanceSqr = float.NegativeInfinity;
         for (int i = 0; i < startPoints.Count; i++)
         {
             var curDistanceSqr = GetMinimalDistanceToFairies(startPoints[i].pos);
-            if (curDistanceSqr < bestDistanceSqr)
+            if (curDistanceSqr > bestDistanceSqr)
             {
                 bestDistanceSqr = curDistanceSqr;
                 bestTriggerI = i;
