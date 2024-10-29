@@ -520,7 +520,7 @@ public class TestAssetRegistry
         assetHandle.Dispose();
         if (assetInfo.WasStarted.Task.IsCompletedSuccessfully)
             // yes, this is not fully correct but also not terrible if *this* test not always succeeds
-            Assert.Ignore("Asset was already started, unsynchronizable test will not be conclusive");
+            Assert.Inconclusive("Asset was already started, unsynchronizable test will not be conclusive");
 
         assetInfo.Complete();
         await Task.Yield();
@@ -550,7 +550,7 @@ public class TestAssetRegistry
         var assetInfo = new ManualGlobalAsset.Info(42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
         if (assetInfo.WasStarted.Task.IsCompletedSuccessfully)
-            Assert.Ignore("Asset was already started, unsynchronizable test will not be conclusive");
+            Assert.Inconclusive("Asset was already started, unsynchronizable test will not be conclusive");
         assetHandle.Dispose();
         globalRegistry.ApplyAssets();
 
