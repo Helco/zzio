@@ -346,20 +346,36 @@ public class TestAssetRegistry
     {
         using var assetHandle = globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous, null);
 
-        StrongBox<int> callCountAction = new(0);
+        int callCountAction = 0;
         var mainThreadId = Environment.CurrentManagedThreadId;
-        var semaphore = new SemaphoreSlim(0, 1);
-        new Thread(() =>
+        await Task.Factory.StartNew(async () =>
         {
             Assert.That(Environment.CurrentManagedThreadId, Is.Not.EqualTo(mainThreadId));
-            globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous, _ => callCountAction.Value++);
-            semaphore.Release();
-        }).Start();
-        await semaphore.WaitAsync();
+            using var secondHandle = globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.High, _ => callCountAction++);
+            await (globalRegistry as IAssetRegistry).WaitAsyncAll(secondHandle);
+        }, TaskCreationOptions.LongRunning); // this option should ensure a new thread
 
-        Assert.That(callCountAction.Value, Is.EqualTo(0)); // otherwise the apply action would have been called on a non-main thread
+        Assert.That(callCountAction, Is.EqualTo(0)); // otherwise the apply action would have been called on a non-main thread
         globalRegistry.ApplyAssets();
-        Assert.That(callCountAction.Value, Is.EqualTo(1));
+        Assert.That(callCountAction, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task ApplySyncAsset_AsyncApplyByHandle()
+    {
+        using var assetHandle = globalRegistry.Load(new SynchronousGlobalAsset.Info(42), AssetLoadPriority.Synchronous, null);
+
+        int callCountAction = 0;
+        var mainThreadId = Environment.CurrentManagedThreadId;
+        await Task.Factory.StartNew(async () =>
+        {
+            Assert.That(Environment.CurrentManagedThreadId, Is.Not.EqualTo(mainThreadId));
+            assetHandle.Apply(_ => callCountAction++);
+        }, TaskCreationOptions.LongRunning); // this option should ensure a new thread
+
+        Assert.That(callCountAction, Is.EqualTo(0)); // otherwise the apply action would have been called on a non-main thread
+        globalRegistry.ApplyAssets();
+        Assert.That(callCountAction, Is.EqualTo(1));
     }
 
     [Test]
