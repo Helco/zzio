@@ -95,8 +95,8 @@ internal interface IAssetRegistryInternal : IAssetRegistry
         Action<AssetHandle> applyAction);
 
     void DisposeHandle(AssetHandle handle);
-    ValueTask QueueRemoveAsset(IAsset asset);
-    ValueTask QueueApplyAsset(IAsset asset);
+    void QueueRemoveAsset(IAsset asset);
+    void QueueApplyAsset(IAsset asset);
     bool IsLoaded(Guid assetId);
     TAsset GetLoadedAsset<TAsset>(Guid assetId);
 }

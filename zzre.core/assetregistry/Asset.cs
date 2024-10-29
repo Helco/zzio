@@ -156,7 +156,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
             lock (this)
             {
                 (this as IAsset).Dispose();
-                InternalRegistry.QueueRemoveAsset(this).AsTask().WaitAndRethrow();
+                InternalRegistry.QueueRemoveAsset(this);
             }
         }
     }
@@ -186,7 +186,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
             ct.ThrowIfCancellationRequested();
             State = AssetState.Loaded;
             completionSource.SetResult();
-            await InternalRegistry.QueueApplyAsset(this);
+            InternalRegistry.QueueApplyAsset(this);
         }
         catch (Exception ex)
         {
