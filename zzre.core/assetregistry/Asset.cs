@@ -89,8 +89,9 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
 
     void IDisposable.Dispose()
     {
-        if (State != AssetState.Error)
-            State = AssetState.Disposed;
+        if (State is AssetState.Disposed or AssetState.Error)
+            return;
+        State = AssetState.Disposed;
 
         Unload();
 
@@ -126,6 +127,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
                 case AssetState.Queued:
                     State = AssetState.Loading;
                     PrivateLoad().WaitAndRethrow();
+                    (this as IAsset).ThrowIfError();
                     return;
 
                 case AssetState.Disposed:
@@ -186,16 +188,16 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
 
             ct.ThrowIfCancellationRequested();
             State = AssetState.Loaded;
-            completionSource.SetResult();
+            completionSource.SetResult(); // this might be the reason for unordered apply actions
             InternalRegistry.QueueApplyAsset(this);
         }
         catch (Exception ex)
         {
             lock (this)
             {
+                (this as IDisposable).Dispose();
                 State = AssetState.Error;
                 completionSource.SetException(ex);
-                (this as IDisposable).Dispose();
             }
         }
     }
