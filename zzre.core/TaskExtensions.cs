@@ -17,4 +17,18 @@ public static class TaskExtensions
             ExceptionDispatchInfo.Capture(ex.InnerException!).Throw();
         }
     }
+
+    // from https://github.com/dotnet/runtime/issues/47605
+    public static async Task WithAggregateException(this Task source)
+    {
+        try
+        {
+            await source.ConfigureAwait(false);
+        }
+        catch
+        {
+            if (source.Exception == null) throw;
+            ExceptionDispatchInfo.Capture(source.Exception).Throw();
+        }
+    }
 }
