@@ -10,7 +10,9 @@ using NUnit.Framework.Constraints;
 
 namespace zzre.tests;
 
-[TestFixture, Apartment(System.Threading.ApartmentState.STA), CancelAfter(1000)]
+[TestFixture(TaskContinuationOptions.None)]
+[TestFixture(TaskContinuationOptions.RunContinuationsAsynchronously)]
+[Apartment(System.Threading.ApartmentState.STA), CancelAfter(1000)]
 [Timeout(3000)]
 public class TestAssetRegistry
 {
@@ -70,7 +72,7 @@ public class TestAssetRegistry
             this.info = info;
         }
 
-        public class Info(int id, bool waitForSecondary = true) : IEquatable<Info>
+        public class Info(TaskContinuationOptions tcsOptions, int id, bool waitForSecondary = true) : IEquatable<Info>
         {
             public readonly int ID = id;
             public readonly bool WaitForSecondary = waitForSecondary;
@@ -112,6 +114,9 @@ public class TestAssetRegistry
     private TagContainer diContainer;
     private AssetRegistry globalRegistry;
     private AssetLocalRegistry localRegistry;
+    private readonly TaskContinuationOptions tcsOptions;
+
+    public TestAssetRegistry(TaskContinuationOptions tcsOptions) => this.tcsOptions = tcsOptions;
 
     [SetUp]
     public void Setup()
@@ -383,7 +388,7 @@ public class TestAssetRegistry
     [Test]
     public void LoadAsyncAsset_HighSync()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
         Assert.That(assetHandle.IsLoaded, Is.False);
         // we cannot reason about WasStarted, as it is called asynchronously
@@ -400,7 +405,7 @@ public class TestAssetRegistry
     [Test]
     public void LoadAsyncAsset_LowSync()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
         Assert.That(assetHandle.IsLoaded, Is.False);
         Assert.That(assetInfo.WasStarted.Task.IsCompleted, Is.False);
@@ -418,7 +423,7 @@ public class TestAssetRegistry
     [Test]
     public async Task LoadAsyncAsset_HighAsync()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
         Assert.That(assetHandle.IsLoaded, Is.False);
         // we cannot reason about WasStarted, as it is called asynchronously
@@ -435,7 +440,7 @@ public class TestAssetRegistry
     [Test]
     public async Task LoadAsyncAsset_LowAsync()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
         Assert.That(assetHandle.IsLoaded, Is.False);
         Assert.That(assetInfo.WasStarted.Task.IsCompleted, Is.False);
@@ -453,7 +458,7 @@ public class TestAssetRegistry
     [Test]
     public async Task LoadAsyncAsset_LowThenHigh()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         assetInfo.Complete();
 
         using var assetHandleLow = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
@@ -471,7 +476,7 @@ public class TestAssetRegistry
     [Test]
     public async Task LoadAsyncAsset_LowThenSynchronous()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         assetInfo.Complete();
         
         using var assetHandleLow = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
@@ -488,7 +493,7 @@ public class TestAssetRegistry
     [Test]
     public async Task UnloadAsyncAsset_HighNormal()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
         assetInfo.Complete();
         await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle);
@@ -504,7 +509,7 @@ public class TestAssetRegistry
     [Test]
     public async Task UnloadAsyncAsset_LowNormal()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
         assetInfo.Complete();
         globalRegistry.ApplyAssets();
@@ -521,7 +526,7 @@ public class TestAssetRegistry
     [Test]
     public async Task UnloadAsyncAsset_HighDuringLoad()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
         await assetInfo.WasStarted.Task;
 
@@ -536,7 +541,7 @@ public class TestAssetRegistry
     [Test]
     public async Task UnloadAsyncAsset_LowDuringLoad()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
         globalRegistry.ApplyAssets();
         await assetInfo.WasStarted.Task;
@@ -552,7 +557,7 @@ public class TestAssetRegistry
     [Test]
     public async Task UnloadAsyncAsset_HighBeforeLoad()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
         assetHandle.Dispose();
         if (assetInfo.WasStarted.Task.IsCompletedSuccessfully)
@@ -569,7 +574,7 @@ public class TestAssetRegistry
     [Test]
     public async Task UnloadAsyncAsset_LowBeforeLoad()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
         assetHandle.Dispose();
         globalRegistry.ApplyAssets();
@@ -584,7 +589,7 @@ public class TestAssetRegistry
     [Test]
     public Task UnloadAsyncAsset_High_AccessDisposedHandle()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
         if (assetInfo.WasStarted.Task.IsCompletedSuccessfully)
             Assert.Inconclusive("Asset was already started, unsynchronizable test will not be conclusive");
@@ -600,7 +605,7 @@ public class TestAssetRegistry
     [Test]
     public Task UnloadAsyncAsset_Low_AccessDisposedHandle()
     {
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
         assetHandle.Dispose();
         globalRegistry.ApplyAssets();
@@ -628,7 +633,7 @@ public class TestAssetRegistry
     {
         int callCountAction = 0;
         StrongBox<int> callCountFnPtr = new(0);
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
 
         assetHandle.Apply(_ => callCountAction++);
@@ -649,7 +654,7 @@ public class TestAssetRegistry
     {
         int callCountAction = 0;
         StrongBox<int> callCountFnPtr = new(0);
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
 
         await assetInfo.WasStarted.Task;
@@ -671,7 +676,7 @@ public class TestAssetRegistry
     {
         int callCountAction = 0;
         StrongBox<int> callCountFnPtr = new(0);
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
 
         assetInfo.Complete();
@@ -690,7 +695,7 @@ public class TestAssetRegistry
     {
         const int Low = 1, Sync = 2;
         var actions = new List<int>(2);
-        var assetInfo = new ManualGlobalAsset.Info(42);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
         assetInfo.Complete();
 
         using var assetHandleLow = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, _ => actions.Add(Low));
@@ -707,8 +712,8 @@ public class TestAssetRegistry
     [Test]
     public async Task SecondaryAssets_SingleSync()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(42);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(1337);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 42);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 1337);
         assetInfoSecondary.Complete();
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
@@ -725,8 +730,8 @@ public class TestAssetRegistry
     [Test]
     public async Task SecondaryAssets_SingleHigh()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(42);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(1337);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 42);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 1337);
         assetInfoSecondary.Complete();
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
@@ -743,8 +748,8 @@ public class TestAssetRegistry
     [Test]
     public async Task SecondaryAssets_SingleLow()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(42);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(1337);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 42);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 1337);
         assetInfoSecondary.Complete();
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
@@ -762,9 +767,9 @@ public class TestAssetRegistry
     [Test]
     public async Task SecondaryAssets_MultipleSync()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(42);
-        var assetInfoSecondary1 = new ManualGlobalAsset.Info(1337);
-        var assetInfoSecondary2 = new ManualGlobalAsset.Info(1338);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 42);
+        var assetInfoSecondary1 = new ManualGlobalAsset.Info(tcsOptions, 1337);
+        var assetInfoSecondary2 = new ManualGlobalAsset.Info(tcsOptions, 1338);
         assetInfoSecondary1.Complete();
         assetInfoSecondary2.Complete();
 
@@ -784,9 +789,9 @@ public class TestAssetRegistry
     [Test]
     public async Task SecondaryAssets_PartiallyAsync()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(42);
-        var assetInfoSecondary1 = new ManualGlobalAsset.Info(1337);
-        var assetInfoSecondary2 = new ManualGlobalAsset.Info(1338);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 42);
+        var assetInfoSecondary1 = new ManualGlobalAsset.Info(tcsOptions, 1337);
+        var assetInfoSecondary2 = new ManualGlobalAsset.Info(tcsOptions, 1338);
         assetInfoSecondary1.Complete();
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
@@ -806,9 +811,9 @@ public class TestAssetRegistry
     [Test]
     public async Task SecondaryAssets_FullyAsync()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(42);
-        var assetInfoSecondary1 = new ManualGlobalAsset.Info(1337);
-        var assetInfoSecondary2 = new ManualGlobalAsset.Info(1338);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 42);
+        var assetInfoSecondary1 = new ManualGlobalAsset.Info(tcsOptions, 1337);
+        var assetInfoSecondary2 = new ManualGlobalAsset.Info(tcsOptions, 1338);
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
 
@@ -828,9 +833,9 @@ public class TestAssetRegistry
     [Test]
     public async Task SecondaryAssets_HighNoWait()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(42, waitForSecondary: false);
-        var assetInfoSecondary1 = new ManualGlobalAsset.Info(1337);
-        var assetInfoSecondary2 = new ManualGlobalAsset.Info(1338);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 42, waitForSecondary: false);
+        var assetInfoSecondary1 = new ManualGlobalAsset.Info(tcsOptions, 1337);
+        var assetInfoSecondary2 = new ManualGlobalAsset.Info(tcsOptions, 1338);
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
 
@@ -851,9 +856,9 @@ public class TestAssetRegistry
     [Test]
     public async Task SecondaryAssets_LowNoWait()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(42, waitForSecondary: false);
-        var assetInfoSecondary1 = new ManualGlobalAsset.Info(1337);
-        var assetInfoSecondary2 = new ManualGlobalAsset.Info(1338);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 42, waitForSecondary: false);
+        var assetInfoSecondary1 = new ManualGlobalAsset.Info(tcsOptions, 1337);
+        var assetInfoSecondary2 = new ManualGlobalAsset.Info(tcsOptions, 1338);
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
 
@@ -871,10 +876,10 @@ public class TestAssetRegistry
     [Test]
     public async Task SecondaryAssets_TransitiveWait()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
-        var assetInfoTertiary = new ManualGlobalAsset.Info(3);
-        var assetInfoQuaternary = new ManualGlobalAsset.Info(4);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 2);
+        var assetInfoTertiary = new ManualGlobalAsset.Info(tcsOptions, 3);
+        var assetInfoQuaternary = new ManualGlobalAsset.Info(tcsOptions, 4);
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
         using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.High, null);
@@ -896,9 +901,9 @@ public class TestAssetRegistry
     [Test, Ignore("Recursive waits are broken and NUnit does not report this well at the moment")]
     public async Task SecondaryAssets_RecursiveWait()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
-        var assetInfoTertiary = new ManualGlobalAsset.Info(3);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 2);
+        var assetInfoTertiary = new ManualGlobalAsset.Info(tcsOptions, 3);
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
         using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.High, null);
@@ -921,7 +926,7 @@ public class TestAssetRegistry
     public void Error_PrimarySync()
     {
         var applyActionCount = 0;
-        var assetInfo = new ManualGlobalAsset.Info(1);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 1);
         assetInfo.Fail();
 
         Assert.That(() =>
@@ -937,7 +942,7 @@ public class TestAssetRegistry
     public async Task Error_PrimaryHigh()
     {
         var applyActionCount = 0;
-        var assetInfo = new ManualGlobalAsset.Info(1);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 1);
 
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, _ => applyActionCount++);
         assetInfo.Fail();
@@ -954,7 +959,7 @@ public class TestAssetRegistry
     public async Task Error_PrimaryLow()
     {
         var applyActionCount = 0;
-        var assetInfo = new ManualGlobalAsset.Info(1);
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 1);
 
         using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, _ => applyActionCount++);
         globalRegistry.ApplyAssets();
@@ -975,8 +980,8 @@ public class TestAssetRegistry
     [Test]
     public void Error_SyncSecondaryHigh()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 2);
         assetInfoSecondary.Fail();
 
         using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.High, null);
@@ -994,8 +999,8 @@ public class TestAssetRegistry
     [Test]
     public void Error_SyncSecondaryLow()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 2);
         assetInfoSecondary.Fail();
 
         using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.Low, null);
@@ -1014,8 +1019,8 @@ public class TestAssetRegistry
     [Test]
     public async Task Error_HighSecondarySync()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 2);
         assetInfoSecondary.Fail();
         
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
@@ -1042,8 +1047,8 @@ public class TestAssetRegistry
     [Test]
     public async Task Error_HighSecondaryHigh()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 2);
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
         await assetInfoPrimary.WasStarted.Task;
@@ -1065,8 +1070,8 @@ public class TestAssetRegistry
     [Test]
     public async Task Error_HighSecondaryLow()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 2);
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
         await assetInfoPrimary.WasStarted.Task;
@@ -1089,8 +1094,8 @@ public class TestAssetRegistry
     [Test]
     public async Task Error_LowSecondarySync()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 2);
         assetInfoSecondary.Fail();
         
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.Low, null);
@@ -1118,8 +1123,8 @@ public class TestAssetRegistry
     [Test]
     public async Task Error_LowSecondaryHigh()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 2);
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.Low, null);
         globalRegistry.ApplyAssets();
@@ -1142,8 +1147,8 @@ public class TestAssetRegistry
     [Test]
     public async Task Error_LowSecondaryLow()
     {
-        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
-        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 2);
 
         using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.Low, null);
         globalRegistry.ApplyAssets();
@@ -1162,5 +1167,40 @@ public class TestAssetRegistry
         Assert.That(assetHandleSecondary.IsLoaded, Is.False);
         Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
         Assert.That(assetInfoSecondary.WasUnloaded.Task.IsCompletedSuccessfully);
+    }
+
+    public async Task Error_DeadlockAssetStateAndSecondaryException()
+    {
+        // motivation is that we want to create a scenario where:
+        //   - primary waits on one thread (mistakenly holding the asset state lock)
+        //   - secondary on another thread failed and sets its completion exception
+        //   - the completion continues synchronously
+        //   - primary wants to sets its error and tries to lock the asset state.
+        // -> deadlock
+
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfoSecondary1 = new ManualGlobalAsset.Info(tcsOptions, 2);
+        var assetInfoSecondary2 = new ManualGlobalAsset.Info(tcsOptions, 3);
+        assetInfoSecondary1.Fail();
+        assetInfoSecondary2.Fail();
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.Low, null);
+        assetInfoPrimary.WasStarted.Task.ContinueWith(_ =>
+        {
+            var assetHandleSecondary1 = globalRegistry.Load(assetInfoSecondary1, AssetLoadPriority.High, null);
+            var assetHandleSecondary2 = globalRegistry.Load(assetInfoSecondary2, AssetLoadPriority.High, null);
+            assetInfoPrimary.Complete([assetHandleSecondary1, assetHandleSecondary2]);
+        },
+        TestContext.CurrentContext.CancellationToken,
+        TaskContinuationOptions.ExecuteSynchronously,
+        TaskScheduler.Current);
+        Assert.That(() =>
+        {
+            assetHandlePrimary.Get<ManualGlobalAsset>();
+        }, Throws.InstanceOf<AggregateException>()); // aggregate because we will always use Task.WhenAll to wait for secondaries
+
+        Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
+        Assert.That(assetInfoSecondary1.WasUnloaded.Task.IsCompletedSuccessfully);
+        Assert.That(assetInfoSecondary2.WasUnloaded.Task.IsCompletedSuccessfully);
     }
 }
