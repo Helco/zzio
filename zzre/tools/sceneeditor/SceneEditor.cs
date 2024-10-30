@@ -86,6 +86,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         new LightComponent(localDiContainer);
         new EffectComponent(localDiContainer);
         new Sample3DComponent(localDiContainer);
+        new WaypointComponent(localDiContainer);
         new SelectionComponent(localDiContainer);
         diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
     }

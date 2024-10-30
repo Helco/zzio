@@ -37,17 +37,28 @@ public class DebugLineRenderer : BaseDisposable
         mesh.Dispose();
     }
 
-    public void Render(CommandList cl)
+    public void Render(CommandList cl) => Render(cl, ..);
+
+    public void Render(CommandList cl, Range range)
     {
-        if (mesh.VertexCount == 0)
+        var (offset, count) = range.GetOffsetAndLength(Count);
+        if (count == 0)
             return;
         mesh.Update(cl);
         (Material as IMaterial).Apply(cl);
         Material.ApplyAttributes(cl, mesh);
-        cl.Draw((uint)mesh.VertexCount);
+        cl.Draw((uint)count * 2, 1, (uint)offset * 2, 0);
     }
 
     public void Clear() => mesh.Clear();
+
+    public void Reserve(int additional)
+    {
+        var vertices = mesh.RentVertices(additional * 2);
+        mesh.AttrPos.Read(vertices);
+        mesh.AttrColor.Read(vertices);
+        mesh.ReturnVertices(vertices);
+    }
 
     public void Add(IColor color, Vector3 start, Vector3 end) => Add(color, new Line(start, end));
     public void Add(IColor color, params Line[] lines) => Add(color, lines as IEnumerable<Line>);
@@ -61,6 +72,19 @@ public class DebugLineRenderer : BaseDisposable
             mesh.AttrPos[index++] = line.Start;
             mesh.AttrPos[index++] = line.End;
         }
+    }
+
+    public void AddCross(IColor color, Vector3 center, float radius)
+    {
+        var range = mesh.RentVertices(6);
+        mesh.AttrColor.Write(range).Fill(color);
+        var index = range.Start.Value;
+        mesh.AttrPos[index++] = center - Vector3.UnitX * radius;
+        mesh.AttrPos[index++] = center + Vector3.UnitX * radius;
+        mesh.AttrPos[index++] = center - Vector3.UnitY * radius;
+        mesh.AttrPos[index++] = center + Vector3.UnitY * radius;
+        mesh.AttrPos[index++] = center - Vector3.UnitZ * radius;
+        mesh.AttrPos[index++] = center + Vector3.UnitZ * radius;
     }
 
     public void AddTriangles(IColor color, IEnumerable<Triangle> triangles)

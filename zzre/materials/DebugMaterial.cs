@@ -44,6 +44,7 @@ public class DebugMaterial : MlangMaterial, IStandardTransformMaterial
     public ColorMode Color { set => SetOption(nameof(ColorMode), (uint)value); }
     public TopologyMode Topology { set => SetOption(nameof(Topology), (uint)value); }
     public bool BothSided { set => SetOption(nameof(BothSided), value); }
+    public bool DepthTest { set => SetOption(nameof(DepthTest), value); }
 
     public UniformBinding<Matrix4x4> Projection { get; }
     public UniformBinding<Matrix4x4> View { get; }
