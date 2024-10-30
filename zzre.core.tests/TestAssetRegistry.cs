@@ -449,6 +449,41 @@ public class TestAssetRegistry
     }
 
     [Test]
+    public async Task LoadAsyncAsset_LowThenHigh()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        assetInfo.Complete();
+
+        using var assetHandleLow = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
+        using var assetHandleHigh = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
+
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandleHigh);
+        Assert.That(assetHandleHigh.IsLoaded, Is.True); // without ever ApplyAssets to start loading as low
+
+        globalRegistry.ApplyAssets();
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandleLow);
+
+        Assert.That(assetHandleLow.IsLoaded, Is.True); // mainly checking that no exception came during the second load
+    }
+
+    [Test]
+    public async Task LoadAsyncAsset_LowThenSynchronous()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        assetInfo.Complete();
+        
+        using var assetHandleLow = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, null);
+        using var assetHandleSync = globalRegistry.Load(assetInfo, AssetLoadPriority.Synchronous, null);
+
+        Assert.That(assetHandleLow.IsLoaded, Is.True);
+
+        globalRegistry.ApplyAssets();
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandleSync);
+
+        Assert.That(assetHandleSync.IsLoaded, Is.True);
+    }
+
+    [Test]
     public async Task UnloadAsyncAsset_HighNormal()
     {
         var assetInfo = new ManualGlobalAsset.Info(42);
@@ -646,6 +681,25 @@ public class TestAssetRegistry
 
         ApplyIncrementInteger(assetHandle, callCountFnPtr);
         Assert.That(callCountFnPtr.Value, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task ApplyAsyncAsset_StoredLow()
+    {
+        const int Low = 1, Sync = 2;
+        var actions = new List<int>(2);
+        var assetInfo = new ManualGlobalAsset.Info(42);
+        assetInfo.Complete();
+
+        using var assetHandleLow = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, _ => actions.Add(Low));
+        using var assetHandleSync = globalRegistry.Load(assetInfo, AssetLoadPriority.Synchronous, _ => actions.Add(Sync));
+
+        Assert.That(actions, Is.EquivalentTo(new int[] { Low, Sync }));
+
+        globalRegistry.ApplyAssets(); // provoke the registry to do something stupid
+        await (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandleLow);
+
+        Assert.That(actions, Is.EquivalentTo(new int[] { Low, Sync }));
     }
 
     [Test]
