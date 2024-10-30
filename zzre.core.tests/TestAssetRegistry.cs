@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -78,6 +79,7 @@ public class TestAssetRegistry
             public readonly TaskCompletionSource WasUnloaded = new();
             
             public void Complete(params AssetHandle[] secondary) => Completion.SetResult(secondary);
+            public void Fail() => Completion.SetException(new IOException("Oh no, something failed"));
 
             bool IEquatable<Info>.Equals(Info? other) => ID == other?.ID;
         }
@@ -913,5 +915,56 @@ public class TestAssetRegistry
         Assert.That(assetHandlePrimary.IsLoaded, Is.False);
         Assert.That(assetHandleSecondary.IsLoaded, Is.False);
         Assert.That(assetHandleTertiary.IsLoaded, Is.False);
+    }
+
+    [Test]
+    public void Error_PrimarySync()
+    {
+        var applyActionCount = 0;
+        var assetInfo = new ManualGlobalAsset.Info(1);
+        assetInfo.Fail();
+
+        Assert.That(() =>
+        {
+            using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Synchronous, _ => applyActionCount++);
+        }, Throws.InstanceOf<IOException>());
+
+        Assert.That(applyActionCount, Is.Zero);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompletedSuccessfully);
+    }
+
+    [Test]
+    public async Task Error_PrimaryHigh()
+    {
+        var applyActionCount = 0;
+        var assetInfo = new ManualGlobalAsset.Info(1);
+
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, _ => applyActionCount++);
+        assetInfo.Fail();
+        await Assert.ThatAsync(
+            () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle),
+            Throws.InstanceOf<IOException>());
+        
+        Assert.That(assetHandle.IsLoaded, Is.False);
+        Assert.That(applyActionCount, Is.Zero);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompletedSuccessfully);
+    }
+
+    [Test]
+    public async Task Error_PrimaryLow()
+    {
+        var applyActionCount = 0;
+        var assetInfo = new ManualGlobalAsset.Info(1);
+
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.Low, _ => applyActionCount++);
+        globalRegistry.ApplyAssets();
+        assetInfo.Fail();
+        await Assert.ThatAsync(
+            () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle),
+            Throws.InstanceOf<IOException>());
+
+        Assert.That(assetHandle.IsLoaded, Is.False);
+        Assert.That(applyActionCount, Is.Zero);
+        Assert.That(assetInfo.WasUnloaded.Task.IsCompletedSuccessfully);
     }
 }
