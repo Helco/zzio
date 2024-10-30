@@ -943,7 +943,7 @@ public class TestAssetRegistry
         assetInfo.Fail();
         await Assert.ThatAsync(
             () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle),
-            Throws.InstanceOf<IOException>());
+            Throws.InstanceOf<AggregateException>());
         
         Assert.That(assetHandle.IsLoaded, Is.False);
         Assert.That(applyActionCount, Is.Zero);
@@ -961,10 +961,206 @@ public class TestAssetRegistry
         assetInfo.Fail();
         await Assert.ThatAsync(
             () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandle),
-            Throws.InstanceOf<IOException>());
+            Throws.InstanceOf<AggregateException>());
 
         Assert.That(assetHandle.IsLoaded, Is.False);
         Assert.That(applyActionCount, Is.Zero);
         Assert.That(assetInfo.WasUnloaded.Task.IsCompletedSuccessfully);
+    }
+
+    // testing SyncSecondarySync does not make much sense. As the secondary load would have to be before
+    // loading primary the test case just degrades to Error_PrimarySync.
+    // We test transitive errors in any other of these Error_*Secondary* tests
+
+    [Test]
+    public void Error_SyncSecondaryHigh()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        assetInfoSecondary.Fail();
+
+        using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.High, null);
+        assetInfoPrimary.Complete([assetHandleSecondary]);
+        Assert.That(() =>
+        {
+            using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.Synchronous, null);
+        }, Throws.InstanceOf<AggregateException>()); // aggregate because we will always use Task.WhenAll to wait for secondaries
+
+        Assert.That(assetHandleSecondary.IsLoaded, Is.False);
+        Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
+        Assert.That(assetInfoSecondary.WasUnloaded.Task.IsCompletedSuccessfully);
+    }
+
+    [Test]
+    public void Error_SyncSecondaryLow()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        assetInfoSecondary.Fail();
+
+        using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.Low, null);
+        assetInfoPrimary.Complete([assetHandleSecondary]);
+        globalRegistry.ApplyAssets();
+        Assert.That(() =>
+        {
+            using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.Synchronous, null);
+        }, Throws.InstanceOf<AggregateException>()); // aggregate because we will always use Task.WhenAll to wait for secondaries
+
+        Assert.That(assetHandleSecondary.IsLoaded, Is.False);
+        Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
+        Assert.That(assetInfoSecondary.WasUnloaded.Task.IsCompletedSuccessfully);
+    }
+
+    [Test]
+    public async Task Error_HighSecondarySync()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        assetInfoSecondary.Fail();
+        
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+        await assetInfoPrimary.WasStarted.Task;
+        try
+        {
+            using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.Synchronous, null);
+            Assert.Fail("Expected the secondary asset load to throw an exception");
+        }
+        catch(Exception ex) // we do not have a handle to the secondary, but the exception would be thrown in the Load method of the primary 
+        {
+            assetInfoPrimary.Completion.SetException(ex);
+        }
+
+        await Assert.ThatAsync(
+            () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary),
+            Throws.InstanceOf<AggregateException>());
+
+        Assert.That(assetHandlePrimary.IsLoaded, Is.False);
+        Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
+        Assert.That(assetInfoSecondary.WasUnloaded.Task.IsCompletedSuccessfully);
+    }
+
+    [Test]
+    public async Task Error_HighSecondaryHigh()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+        await assetInfoPrimary.WasStarted.Task;
+        using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.High, null);
+        assetInfoPrimary.Complete([assetHandleSecondary]);
+        await assetInfoSecondary.WasStarted.Task;
+        assetInfoSecondary.Fail();
+
+        await Assert.ThatAsync(
+            () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary),
+            Throws.InstanceOf<AggregateException>());
+
+        Assert.That(assetHandlePrimary.IsLoaded, Is.False);
+        Assert.That(assetHandleSecondary.IsLoaded, Is.False);
+        Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
+        Assert.That(assetInfoSecondary.WasUnloaded.Task.IsCompletedSuccessfully);
+    }
+
+    [Test]
+    public async Task Error_HighSecondaryLow()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+        await assetInfoPrimary.WasStarted.Task;
+        using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.Low, null);
+        assetInfoPrimary.Complete([assetHandleSecondary]);
+        globalRegistry.ApplyAssets();
+        await assetInfoSecondary.WasStarted.Task;
+        assetInfoSecondary.Fail();
+
+        await Assert.ThatAsync(
+            () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary),
+            Throws.InstanceOf<AggregateException>());
+
+        Assert.That(assetHandlePrimary.IsLoaded, Is.False);
+        Assert.That(assetHandleSecondary.IsLoaded, Is.False);
+        Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
+        Assert.That(assetInfoSecondary.WasUnloaded.Task.IsCompletedSuccessfully);
+    }
+
+    [Test]
+    public async Task Error_LowSecondarySync()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+        assetInfoSecondary.Fail();
+        
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.Low, null);
+        globalRegistry.ApplyAssets();
+        await assetInfoPrimary.WasStarted.Task;
+        try
+        {
+            using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.Synchronous, null);
+            Assert.Fail("Expected the secondary asset load to throw an exception");
+        }
+        catch(Exception ex) // we do not have a handle to the secondary, but the exception would be thrown in the Load method of the primary 
+        {
+            assetInfoPrimary.Completion.SetException(ex);
+        }
+
+        await Assert.ThatAsync(
+            () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary),
+            Throws.InstanceOf<AggregateException>());
+
+        Assert.That(assetHandlePrimary.IsLoaded, Is.False);
+        Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
+        Assert.That(assetInfoSecondary.WasUnloaded.Task.IsCompletedSuccessfully);
+    }
+
+    [Test]
+    public async Task Error_LowSecondaryHigh()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.Low, null);
+        globalRegistry.ApplyAssets();
+        await assetInfoPrimary.WasStarted.Task;
+        using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.High, null);
+        assetInfoPrimary.Complete([assetHandleSecondary]);
+        await assetInfoSecondary.WasStarted.Task;
+        assetInfoSecondary.Fail();
+
+        await Assert.ThatAsync(
+            () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary),
+            Throws.InstanceOf<AggregateException>());
+
+        Assert.That(assetHandlePrimary.IsLoaded, Is.False);
+        Assert.That(assetHandleSecondary.IsLoaded, Is.False);
+        Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
+        Assert.That(assetInfoSecondary.WasUnloaded.Task.IsCompletedSuccessfully);
+    }
+
+    [Test]
+    public async Task Error_LowSecondaryLow()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(2);
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.Low, null);
+        globalRegistry.ApplyAssets();
+        await assetInfoPrimary.WasStarted.Task;
+        using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.Low, null);
+        assetInfoPrimary.Complete([assetHandleSecondary]);
+        globalRegistry.ApplyAssets();
+        await assetInfoSecondary.WasStarted.Task;
+        assetInfoSecondary.Fail();
+
+        await Assert.ThatAsync(
+            () => (globalRegistry as IAssetRegistry).WaitAsyncAll(assetHandlePrimary),
+            Throws.InstanceOf<AggregateException>());
+
+        Assert.That(assetHandlePrimary.IsLoaded, Is.False);
+        Assert.That(assetHandleSecondary.IsLoaded, Is.False);
+        Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
+        Assert.That(assetInfoSecondary.WasUnloaded.Task.IsCompletedSuccessfully);
     }
 }

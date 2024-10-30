@@ -125,7 +125,8 @@ public partial class AssetRegistry
                 if (assets.TryGetValue(handle.AssetID, out var asset))
                     asset.StartLoading();
             }
-            return Task.WhenAll(secondaryHandles.Select(h => assets[h.AssetID].LoadTask));
+            return Task.WhenAll(secondaryHandles.Select(h => assets[h.AssetID].LoadTask))
+                .WithAggregateException();
         }
     }
 
