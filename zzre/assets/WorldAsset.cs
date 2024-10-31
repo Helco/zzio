@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using zzio;
 using zzre.rendering;
 
@@ -24,7 +23,7 @@ public sealed class WorldAsset : Asset
         this.info = info;
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override IEnumerable<AssetHandle> Load()
     {
         mesh = new WorldMesh(diContainer, info.FullPath);
         return NoSecondaryAssets;
