@@ -182,8 +182,10 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
         {
             var secondaryAssetSet = Load();
             if (ReferenceEquals(secondaryAssetSet, LoadAsynchronously))
-                throw new NotImplementedException("Asynchronous asset loading is not implemented yet");
-            else if (!ReferenceEquals(secondaryAssetSet, NoSecondaryAssets))
+                secondaryAssetSet = await LoadAsync();
+            if (ReferenceEquals(secondaryAssetSet, LoadAsynchronously))
+                throw new InvalidOperationException("LoadAsync is not allowed to return LoadAsynchronously");
+            if (!ReferenceEquals(secondaryAssetSet, NoSecondaryAssets))
             {
                 secondaryAssets = secondaryAssetSet.ToArray();
                 EnsureLocality(secondaryAssets);
@@ -237,10 +239,15 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
 
     /// <summary>Whether marking this asset as loaded should be deferred until all secondary asset are loaded as well</summary>
     protected virtual bool NeedsSecondaryAssets { get; } = true;
-    /// <summary>Override this method to actually load the asset contents</summary>
+    /// <summary>Override this method to load the asset contents synchronously.</summary>
     /// <remarks>This method can be called asynchronously</remarks>
+    /// <returns>The set of secondary assets to be loaded from the same registry interface as this asset or <see cref="LoadAsynchronously"/></returns>
+    protected virtual IEnumerable<AssetHandle> Load() => LoadAsynchronously;
+    /// <summary> Override this method to load the asset contents asynchronously.</summary>
+    /// <remarks>This method is only used if <see cref="Load"/> returns <see cref="LoadAsynchronously"/></remarks>
     /// <returns>The set of secondary assets to be loaded from the same registry interface as this asset</returns>
-    protected abstract IEnumerable<AssetHandle> Load();
+    protected virtual Task<IEnumerable<AssetHandle>> LoadAsync() =>
+        throw new NotImplementedException("Asset.Load returned LoadAsynchronously but LoadAsync was not implemented");
     /// <summary>Unloads any resources the asset might hold</summary>
     /// <remarks>It is not necessary to manually dispose secondary asset handles</remarks>
     protected abstract void Unload();

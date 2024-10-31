@@ -22,9 +22,9 @@ public class TestAssetRegistry
         {
         }
 
-        protected override ValueTask<IEnumerable<AssetHandle>> Load()
+        protected override IEnumerable<AssetHandle> Load()
         {
-            return ValueTask.FromResult(Enumerable.Empty<AssetHandle>());
+            return NoSecondaryAssets;
         }
 
         protected override void Unload()
@@ -90,11 +90,16 @@ public class TestAssetRegistry
         protected override bool NeedsSecondaryAssets => info.WaitForSecondary;
         private readonly Info info;
 
-        protected override ValueTask<IEnumerable<AssetHandle>> Load()
+        protected override IEnumerable<AssetHandle> Load()
         {
             info.WasStarted.SetResult(); // throws if we enter twice. Good.
-            return new(info.Completion.Task);
+            if (info.Completion.Task.IsCompletedSuccessfully)
+                return info.Completion.Task.Result;
+            else
+                return LoadAsynchronously;
         }
+
+        protected override Task<IEnumerable<AssetHandle>> LoadAsync() => info.Completion.Task;
 
         protected override void Unload()
         {
