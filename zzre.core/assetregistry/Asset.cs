@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -65,8 +66,15 @@ internal interface IAsset : IDisposable
 /// <param name="id">The ID chosen by the registry for this asset</param>
 public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
 {
-    protected static ValueTask<IEnumerable<AssetHandle>> NoSecondaryAssets =>
-        ValueTask.FromResult(Enumerable.Empty<AssetHandle>());
+    private sealed class LoadAsynchronousSentinel : IEnumerable<AssetHandle>
+    {
+        public IEnumerator<AssetHandle> GetEnumerator() =>
+            throw new InvalidOperationException("This is a sentinel value, you cannot use this for anything other than ReferenceEquals");
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    protected static readonly IEnumerable<AssetHandle> NoSecondaryAssets = [];
+    protected static readonly IEnumerable<AssetHandle> LoadAsynchronously = new LoadAsynchronousSentinel();
 
     /// <summary>The <see cref="ITagContainer"/> of the apparent registry to be used during loading</summary>
     protected readonly ITagContainer diContainer = registry.DIContainer;
@@ -172,18 +180,23 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
         var ct = InternalRegistry.Cancellation;
         try
         {
-            var secondaryAssetSet = await Load();
-            secondaryAssets = secondaryAssetSet.ToArray();
-            EnsureLocality(secondaryAssets);
-            ct.ThrowIfCancellationRequested();
-
-            if (secondaryAssets.Length > 0 && NeedsSecondaryAssets)
+            var secondaryAssetSet = Load();
+            if (ReferenceEquals(secondaryAssetSet, LoadAsynchronously))
+                throw new NotImplementedException("Asynchronous asset loading is not implemented yet");
+            else if (!ReferenceEquals(secondaryAssetSet, NoSecondaryAssets))
             {
-                lock (this)
+                secondaryAssets = secondaryAssetSet.ToArray();
+                EnsureLocality(secondaryAssets);
+                ct.ThrowIfCancellationRequested();
+
+                if (secondaryAssets.Length > 0 && NeedsSecondaryAssets)
                 {
-                    State = AssetState.LoadingSecondary;
+                    lock (this)
+                    {
+                        State = AssetState.LoadingSecondary;
+                    }
+                    await InternalRegistry.WaitAsyncAll(secondaryAssets);
                 }
-                await InternalRegistry.WaitAsyncAll(secondaryAssets);
             }
 
             ct.ThrowIfCancellationRequested();
@@ -227,7 +240,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
     /// <summary>Override this method to actually load the asset contents</summary>
     /// <remarks>This method can be called asynchronously</remarks>
     /// <returns>The set of secondary assets to be loaded from the same registry interface as this asset</returns>
-    protected abstract ValueTask<IEnumerable<AssetHandle>> Load();
+    protected abstract IEnumerable<AssetHandle> Load();
     /// <summary>Unloads any resources the asset might hold</summary>
     /// <remarks>It is not necessary to manually dispose secondary asset handles</remarks>
     protected abstract void Unload();

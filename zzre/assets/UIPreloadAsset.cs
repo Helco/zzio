@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace zzre;
 
@@ -48,7 +47,7 @@ public sealed class UIPreloadAsset : Asset
     public UIPreloadAsset(IAssetRegistry registry, Guid assetId, Info _) : base(registry, assetId)
     { }
 
-    protected override async ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override IEnumerable<AssetHandle> Load()
     {
         AssetHandle[] allAssets =
         [
@@ -77,9 +76,9 @@ public sealed class UIPreloadAsset : Asset
             Preload(out var swt000, Swt000)
         ];
 
-        await Registry.WaitAsyncAll([fnt000, fnt001, fnt002, fnt003]);
+        //await Registry.WaitAsyncAll([fnt000, fnt001, fnt002, fnt003]);
 
-        await SetAlternatives(target: fnt000,
+        SetAlternatives(target: fnt000,
             fnt001,
             fnt002,
             fsp000,
@@ -90,12 +89,12 @@ public sealed class UIPreloadAsset : Asset
             cls001,
             fnt004);
 
-        await SetAlternatives(target: fnt001,
+        SetAlternatives(target: fnt001,
             fnt002,
             inf000,
             fnt000);
 
-        await SetAlternatives(target: fnt002,
+        SetAlternatives(target: fnt002,
             fnt001,
             inf000,
             fsp000,
@@ -103,7 +102,7 @@ public sealed class UIPreloadAsset : Asset
             cls000,
             cls001);
 
-        await SetAlternatives(target: fnt003,
+        SetAlternatives(target: fnt003,
             fnt001,
             fnt002,
             fsp000,
@@ -127,8 +126,8 @@ public sealed class UIPreloadAsset : Asset
     {
         var applyConfig = (lineHeight ?? lineOffset ?? charSpacing) is not null;
         return handle = (applyConfig
-            ? Registry.Load(info, AssetLoadPriority.High, &ApplyFontConfig, (lineHeight, lineOffset, charSpacing))
-            : Registry.Load(info, AssetLoadPriority.High))
+            ? Registry.Load(info, AssetLoadPriority.Synchronous, &ApplyFontConfig, (lineHeight, lineOffset, charSpacing))
+            : Registry.Load(info, AssetLoadPriority.Synchronous))
             .As<UITileSheetAsset>();
     }
 
@@ -144,9 +143,9 @@ public sealed class UIPreloadAsset : Asset
             tileSheet.CharSpacing = charSpacing.Value;
     }
 
-    private async Task SetAlternatives(AssetHandle target, params AssetHandle[] alternatives)
+    private static void SetAlternatives(AssetHandle target, params AssetHandle[] alternatives)
     {
-        await Registry.WaitAsyncAll(alternatives);
+        //await Registry.WaitAsyncAll(alternatives);
         var targetTileSheet = target.Get<UITileSheetAsset>().TileSheet;
         foreach (var alternative in alternatives)
             targetTileSheet.Alternatives.Add(alternative.Get<UITileSheetAsset>().TileSheet);

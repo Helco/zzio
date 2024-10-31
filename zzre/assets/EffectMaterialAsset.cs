@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Veldrid;
 using zzio;
 using zzio.effect;
@@ -47,7 +46,7 @@ public sealed class EffectMaterialAsset : Asset
 
     protected override bool NeedsSecondaryAssets => false;
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override IEnumerable<AssetHandle> Load()
     {
         diContainer.TryGetTag(out UniformBuffer<FogParams> fogParams);
         material = new EffectMaterial(diContainer)
@@ -73,8 +72,8 @@ public sealed class EffectMaterialAsset : Asset
             material.FogParams.Buffer = fogParams.Buffer;
         
         return textureHandle is null
-            ? ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerHandle ])
-            : ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerHandle, textureHandle.Value ]);
+            ? [ samplerHandle ]
+            : [ samplerHandle, textureHandle.Value ];
     }
 
     private AssetHandle? LoadTexture()
