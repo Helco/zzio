@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
-using System.Threading.Tasks;
 using Silk.NET.SDL;
 using Veldrid;
 using zzio;
@@ -49,7 +48,7 @@ public class UIBitmapAsset : Asset
     //   - We don't have to wait for samplers
     protected override bool NeedsSecondaryAssets => false;
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override IEnumerable<AssetHandle> Load()
     {
         var graphicsDevice = diContainer.GetTag<GraphicsDevice>();
         using var bitmap = LoadMaskedBitmap(info.Name);
@@ -77,7 +76,7 @@ public class UIBitmapAsset : Asset
             material.MaskTexture.Texture = maskTexture;
         }
 
-        return ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerAsset ]);
+        return [ samplerAsset ];
     }
 
     protected unsafe SdlSurfacePtr LoadMaskedBitmap(string name)

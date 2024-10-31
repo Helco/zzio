@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Veldrid;
 using zzio;
 using zzio.rwbs;
@@ -38,7 +37,7 @@ public abstract class ModelMaterialAsset : Asset
 
     protected override bool NeedsSecondaryAssets => false;
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override IEnumerable<AssetHandle> Load()
     {
         material = new ModelMaterial(diContainer);
         material.DebugName = DebugName;
@@ -52,8 +51,8 @@ public abstract class ModelMaterialAsset : Asset
         material.View.BufferRange = camera.ViewRange;
 
         return textureHandle is null
-            ? ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerHandle ])
-            : ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerHandle, textureHandle.Value ]);
+            ? [ samplerHandle ]
+            : [ samplerHandle, textureHandle.Value ];
     }
 
     private AssetHandle? LoadTexture()

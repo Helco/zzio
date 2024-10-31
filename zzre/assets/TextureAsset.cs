@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using Silk.NET.SDL;
 using Veldrid;
 using zzio;
@@ -32,7 +31,7 @@ public sealed class TextureAsset : Asset
         path = info.FullPath;
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override IEnumerable<AssetHandle> Load()
     {
         var resourcePool = diContainer.GetTag<IResourcePool>();
         using var textureStream = resourcePool.FindAndOpen(path) ??

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using zzio;
 using zzio.vfs;
 
@@ -30,7 +29,7 @@ public sealed class AnimationAsset : Asset
         this.info = info;
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override IEnumerable<AssetHandle> Load()
     {
         var resourcePool = diContainer.GetTag<IResourcePool>();
         using var stream = resourcePool.FindAndOpen(info.FullPath) ??
