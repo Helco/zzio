@@ -68,18 +68,18 @@ public partial class SceneEditor
                 return;
 
             var wpSystem = editor.scene.waypointSystem;
-            var idToIndex = wpSystem.waypointData.Indexed().ToDictionary(t => t.Value.ii1, t => t.Index);
-            var walkableLinks = LinkSet(wpSystem.waypointData.Select(wp => wp.innerdata1));
-            var jumpableLinks = LinkSet(wpSystem.waypointData.Select(wp => wp.innerdata2));
-            hasPrecomputedVisibility = wpSystem.waypointData.Any(wp => wp.inner3data1?.Length > 0);
+            var idToIndex = wpSystem.Waypoints.Indexed().ToDictionary(t => t.Value.Id, t => t.Index);
+            var walkableLinks = LinkSet(wpSystem.Waypoints.Select(wp => wp.WalkableIds));
+            var jumpableLinks = LinkSet(wpSystem.Waypoints.Select(wp => wp.JumpableIds));
+            hasPrecomputedVisibility = wpSystem.Waypoints.Any(wp => wp.VisibleIds?.Length > 0);
 
-            rangePoints = 0..(wpSystem.waypointData.Length * 3);
+            rangePoints = 0..(wpSystem.Waypoints.Length * 3);
             rangeTraversableEdges = rangePoints.Suffix(walkableLinks.Count + jumpableLinks.Count);
             lineRenderer.Reserve(
-                wpSystem.waypointData.Length * 3 +
+                wpSystem.Waypoints.Length * 3 +
                 walkableLinks.Count + jumpableLinks.Count);
-            foreach (var wp in wpSystem.waypointData)
-                lineRenderer.AddCross(IColor.White, wp.v1, 0.1f);
+            foreach (var wp in wpSystem.Waypoints)
+                lineRenderer.AddCross(IColor.White, wp.Position, 0.1f);
             AddLinkSet(walkableLinks, new(0, 0, 230), new(0, 0, 130));
             AddLinkSet(jumpableLinks, new(230, 0, 0), new(130, 0, 0));
 
@@ -88,8 +88,8 @@ public partial class SceneEditor
                 foreach (var ((linkFrom, linkTo), isFull) in linkSet)
                     lineRenderer.Add(
                         isFull ? fullColor : halfColor,
-                        wpSystem.waypointData[linkFrom].v1,
-                        wpSystem.waypointData[linkTo].v1);
+                        wpSystem.Waypoints[linkFrom].Position,
+                        wpSystem.Waypoints[linkTo].Position);
             }
 
             Dictionary<(int, int), bool> LinkSet(IEnumerable<IEnumerable<uint>?> halfLinks)
@@ -127,8 +127,8 @@ public partial class SceneEditor
         private void HandleInfoSection()
         {
             var wpSystem = editor.scene?.waypointSystem;
-            LabelText("Version", wpSystem?.version.ToString() ?? "n/a");
-            LabelText("Waypoints", wpSystem?.waypointData?.Length.ToString() ?? "");
+            LabelText("Version", wpSystem?.Version.ToString() ?? "n/a");
+            LabelText("Waypoints", wpSystem?.Waypoints?.Length.ToString() ?? "");
             LabelText("Precomp. visibility", hasPrecomputedVisibility.ToString());
         }
     }
