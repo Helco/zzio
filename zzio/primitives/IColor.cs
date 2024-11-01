@@ -7,7 +7,7 @@ public struct IColor
 {
     public byte r, g, b, a;
 
-    public IColor(byte r, byte g, byte b, byte a)
+    public IColor(byte r, byte g, byte b, byte a = 255)
     {
         this.r = r;
         this.g = g;

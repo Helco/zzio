@@ -11,7 +11,6 @@ using zzre.materials;
 using zzre.rendering;
 using static ImGuiNET.ImGui;
 using static zzre.imgui.ImGuiEx;
-using Quaternion = System.Numerics.Quaternion;
 
 namespace zzre.tools;
 
@@ -29,9 +28,11 @@ public partial class SceneEditor
         private readonly DebugLineRenderer lineRenderer;
         private readonly SceneEditor editor;
 
-        private Range rangePoints, rangeTraversableEdges, rangeVisibleEdges;
-        private bool showPoints = true;
-        private EdgeVisibility edgeVisibility = EdgeVisibility.Traversable;
+        private Range rangePoints, rangeTraversableEdges;
+        private bool
+            showPoints = true,
+            showTraversableEdges = true,
+            hasPrecomputedVisibility;
 
         public WaypointComponent(ITagContainer diContainer)
         {
@@ -43,7 +44,7 @@ public partial class SceneEditor
 
             var menuBar = diContainer.GetTag<MenuBarWindowTag>();
             menuBar.AddCheckbox("View/Waypoints/Points", () => ref showPoints, () => editor.fbArea.IsDirty = true);
-            menuBar.AddRadio("View/Waypoints/Edges", () => ref edgeVisibility, () => editor.fbArea.IsDirty = true);
+            menuBar.AddCheckbox("View/Waypoints/Traversable", () => ref showTraversableEdges, () => editor.fbArea.IsDirty = true);
 
             lineRenderer = new(diContainer);
             lineRenderer.Material.LinkTransformsTo(diContainer.GetTag<Camera>());
@@ -61,15 +62,55 @@ public partial class SceneEditor
         {
             lineRenderer.Clear();
             showPoints = true;
-            edgeVisibility = EdgeVisibility.Traversable;
+            showTraversableEdges = true;
+            rangePoints = rangeTraversableEdges = default;
             if (editor.scene == null)
                 return;
 
             var wpSystem = editor.scene.waypointSystem;
+            var idToIndex = wpSystem.waypointData.Indexed().ToDictionary(t => t.Value.ii1, t => t.Index);
+            var walkableLinks = LinkSet(wpSystem.waypointData.Select(wp => wp.innerdata1));
+            var jumpableLinks = LinkSet(wpSystem.waypointData.Select(wp => wp.innerdata2));
+            hasPrecomputedVisibility = wpSystem.waypointData.Any(wp => wp.inner3data1?.Length > 0);
+
             rangePoints = 0..(wpSystem.waypointData.Length * 3);
-            lineRenderer.Reserve(wpSystem.waypointData.Length * 3);
+            rangeTraversableEdges = rangePoints.Suffix(walkableLinks.Count + jumpableLinks.Count);
+            lineRenderer.Reserve(
+                wpSystem.waypointData.Length * 3 +
+                walkableLinks.Count + jumpableLinks.Count);
             foreach (var wp in wpSystem.waypointData)
                 lineRenderer.AddCross(IColor.White, wp.v1, 0.1f);
+            AddLinkSet(walkableLinks, new(0, 0, 230), new(0, 0, 130));
+            AddLinkSet(jumpableLinks, new(230, 0, 0), new(130, 0, 0));
+
+            void AddLinkSet(Dictionary<(int, int), bool> linkSet, IColor fullColor, IColor halfColor)
+            {
+                foreach (var ((linkFrom, linkTo), isFull) in linkSet)
+                    lineRenderer.Add(
+                        isFull ? fullColor : halfColor,
+                        wpSystem.waypointData[linkFrom].v1,
+                        wpSystem.waypointData[linkTo].v1);
+            }
+
+            Dictionary<(int, int), bool> LinkSet(IEnumerable<IEnumerable<uint>?> halfLinks)
+            {
+                if (!halfLinks.Any())
+                    return [];
+                var fullLinks = new Dictionary<(int, int), bool>((halfLinks.First()?.Count() ?? 1) * halfLinks.Count());
+                foreach (var (halfLinkSet, i) in halfLinks.Indexed())
+                {
+                    if (halfLinkSet == null)
+                        continue;
+                    foreach (var jId in halfLinkSet)
+                    {
+                        var j = idToIndex[jId];
+                        var key = i < j ? (i, j) : (j, i);
+                        if (!fullLinks.TryAdd(key, false))
+                            fullLinks[key] = true;
+                    }
+                }
+                return fullLinks;
+            }
         }
         
         private void HandleRender(CommandList cl)
@@ -79,19 +120,16 @@ public partial class SceneEditor
 
             if (showPoints)
                 lineRenderer.Render(cl, rangePoints);
-            switch (edgeVisibility)
-            {
-                case EdgeVisibility.None: break;
-                case EdgeVisibility.Traversable: lineRenderer.Render(cl, rangeTraversableEdges); break;
-                case EdgeVisibility.Visibility: lineRenderer.Render(cl, rangeVisibleEdges); break;
-                default: throw new NotImplementedException($"Unimplemented edge visibility mode: {edgeVisibility}");
-            }
+            if (showTraversableEdges)
+                lineRenderer.Render(cl, rangeTraversableEdges);
         }
 
         private void HandleInfoSection()
         {
             var wpSystem = editor.scene?.waypointSystem;
+            LabelText("Version", wpSystem?.version.ToString() ?? "n/a");
             LabelText("Waypoints", wpSystem?.waypointData?.Length.ToString() ?? "");
+            LabelText("Precomp. visibility", hasPrecomputedVisibility.ToString());
         }
     }
 }

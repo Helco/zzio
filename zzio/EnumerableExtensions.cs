@@ -112,6 +112,11 @@ public static class EnumerableExtensions
         return newOffset..(newOffset + subLength);
     }
 
+    public static Range Suffix(this Range range, int suffixLength) =>
+        range.End.IsFromEnd
+        ? range.End..(range.End.Value - suffixLength)
+        : range.End..(range.End.Value + suffixLength);
+
     public static IEnumerable<TOutput> PrefixSums<TInput, TOutput>(
         this IEnumerable<TInput> set, TOutput first, Func<TOutput, TInput, TOutput> next)
     {

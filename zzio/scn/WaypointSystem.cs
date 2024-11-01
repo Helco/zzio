@@ -19,7 +19,7 @@ public struct WaypointData
     public uint ii1, ii1ext, iiv2;
     public Vector3 v1;
     public uint[] innerdata1, innerdata2;
-    public uint[] inner3data1;
+    public uint[]? inner3data1;
 }
 
 [Serializable]
@@ -35,7 +35,8 @@ public class WaypointSystem : ISceneSection
         using BinaryReader reader = new(stream);
         version = reader.ReadUInt32();
         uint mustBeZero = reader.ReadUInt32();
-        Debug.Assert(mustBeZero == 0);
+        if (mustBeZero != 0)
+            throw new InvalidDataException("Waypoint system start magic is not correct");
 
         if (version >= 5)
             data = reader.ReadBytes(0x18);
@@ -48,15 +49,8 @@ public class WaypointSystem : ISceneSection
                 d[i].ii1ext = reader.ReadUInt32();
             d[i].v1 = reader.ReadVector3();
 
-            uint ci1 = reader.ReadUInt32();
-            d[i].innerdata1 = new uint[ci1];
-            for (uint j = 0; j < ci1; j++)
-                d[i].innerdata1[j] = reader.ReadUInt32();
-
-            uint ci2 = reader.ReadUInt32();
-            d[i].innerdata2 = new uint[ci2];
-            for (uint j = 0; j < ci2; j++)
-                d[i].innerdata2[j] = reader.ReadUInt32();
+            d[i].innerdata1 = reader.ReadStructureArray<uint>(reader.ReadInt32(), 4);
+            d[i].innerdata2 = reader.ReadStructureArray<uint>(reader.ReadInt32(), 4);
         }
 
         if (version >= 2)
@@ -66,27 +60,20 @@ public class WaypointSystem : ISceneSection
             for (uint j = 0; j < count2; j++)
             {
                 inner2data1[j].iiv2 = reader.ReadUInt32();
-                uint ci3 = reader.ReadUInt32();
-                inner2data1[j].data = new uint[ci3];
-                for (uint k = 0; k < ci3; k++)
-                    inner2data1[j].data[k] = reader.ReadUInt32();
+                inner2data1[j].data = reader.ReadStructureArray<uint>(reader.ReadInt32(), 4);
             }
         }
 
         if (version >= 3)
         {
             for (uint j = 0; j < count1; j++)
-            {
-                uint ci4 = reader.ReadUInt32();
-                d[j].inner3data1 = new uint[ci4];
-                for (uint k = 0; k < ci4; k++)
-                    d[j].inner3data1[k] = reader.ReadUInt32();
-            }
+                d[j].inner3data1 = reader.ReadStructureArray<uint>(reader.ReadInt32(), 4);
         }
         waypointData = d;
 
         uint mustBeFFFF = reader.ReadUInt32();
-        Debug.Assert(mustBeFFFF == 0xffff);
+        if (mustBeFFFF != 0xffff)
+            throw new InvalidDataException("Waypoint system end magic is not correct");
     }
 
     public void Write(Stream stream)
@@ -131,9 +118,9 @@ public class WaypointSystem : ISceneSection
         {
             for (int i = 0; i < d.Length; i++)
             {
-                writer.Write(d[i].inner3data1.Length);
-                for (int j = 0; j < d[i].inner3data1.Length; j++)
-                    writer.Write(d[i].inner3data1[j]);
+                var links = d[i].inner3data1 ?? [];
+                writer.Write(links.Length);
+                writer.WriteStructureArray(links, 4);
             }
         }
 

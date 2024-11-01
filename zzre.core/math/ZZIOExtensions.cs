@@ -3,6 +3,8 @@ using System.Numerics;
 using Veldrid;
 using zzio;
 using zzio.rwbs;
+using static System.MathF;
+using static zzre.MathEx;
 
 namespace zzre;
 
@@ -41,4 +43,69 @@ public static class ZZIOExtensions
         CollisionSectorType.Z => Vector3.UnitZ,
         _ => throw new ArgumentOutOfRangeException($"Unknown collision sector type {sectorType}")
     };
+
+    // adapted from https://gist.github.com/ciembor/1494530 - "It's the do what you want license :)"
+    
+    public static FColor RGBToHSL(this FColor c)
+    {
+        float max = Max(Max(c.r, c.g), c.b);
+        float min = Min(Min(c.r, c.g), c.b);
+        float mid = (max + min) / 2;
+
+        FColor result = new(mid, mid, mid, c.a);
+        if (Cmp(max, min))
+            result.r = result.g = 0f; // achromatic
+        else
+        {
+            float d = max - min;
+            result.g = (result.b > 0.5) ? d / (2 - max - min) : d / (max + min);
+
+            if (Cmp(max, c.r))
+            {
+                result.r = (c.g - c.b) / d + (c.g < c.b ? 6 : 0);
+            }
+            else if (Cmp(max, c.g))
+            {
+                result.r = (c.b - c.r) / d + 2;
+            }
+            else if (Cmp(max, c.b))
+            {
+                result.r = (c.r - c.g) / d + 4;
+            }
+
+            result.r /= 6;
+        }
+        return result;
+    }
+
+    private static float HueToRGB(float p, float q, float t)
+    {
+        if (t < 0)
+            t += 1;
+        if (t > 1)
+            t -= 1;
+        return t switch
+        {
+            < 1f / 6 => p + (q - p) * 6 * t,
+            < 1f / 2 => q,
+            < 2f / 3 => p + (q - p) * (2f / 3 - t) * 6,
+            _ => p
+        };
+    }
+
+    public static FColor HSLToRGB(this FColor c)
+    {
+        if (CmpZero(c.g))
+            return new(c.b, c.b, c.b, c.a);
+
+        float q = c.b < 0.5f
+            ? c.b * (1 + c.g)
+            : c.b + c.g - c.b * c.g;
+        float p = 2 * c.b - q;
+        return new(
+            HueToRGB(p, q, c.r + 1f / 3),
+            HueToRGB(p, q, c.r),
+            HueToRGB(p, q, c.r - 1f / 3),
+            c.a);
+    }
 }
