@@ -27,8 +27,7 @@ public class WaypointSystem : ISceneSection
     {
         using BinaryReader reader = new(stream);
         Version = reader.ReadUInt32();
-        uint mustBeZero = reader.ReadUInt32();
-        if (mustBeZero != 0)
+        if (reader.ReadUInt32() != 0)
             throw new InvalidDataException("Waypoint system start magic is not correct");
 
         if (Version >= 5)
@@ -65,8 +64,7 @@ public class WaypointSystem : ISceneSection
         }
         Waypoints = d;
 
-        uint mustBeFFFF = reader.ReadUInt32();
-        if (mustBeFFFF != 0xffff)
+        if (reader.ReadUInt32() != 0xffff)
             throw new InvalidDataException("Waypoint system end magic is not correct");
     }
 
