@@ -148,7 +148,7 @@ public static class MathEx
     public static IEnumerable<FColor> GoldenRatioColors(
         float hueStart = 0f,
         float saturation = 1f,
-        float luminosity = 1f,
+        float luminosity = 0.5f,
         float alpha = 1f) =>
         GoldenRatioSequence(hueStart)
         .Select(hue => new FColor(hue, saturation, luminosity, alpha).HSLToRGB());

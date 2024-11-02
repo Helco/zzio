@@ -47,6 +47,7 @@ public partial class SceneEditor
         private bool
             showPoints = true,
             showTraversableEdges = true,
+            colorGroups = false,
             hasPrecomputedVisibility;
         private EdgeVisibility edgeVisibility = EdgeVisibility.Traversable; // for selected waypoints
         private Selection selection = Selection.None;
@@ -100,14 +101,14 @@ public partial class SceneEditor
             LinkSet(wpSystem.Waypoints.Select(wp => wp.JumpableIds), jumpableLinks);
             hasPrecomputedVisibility = wpSystem.Waypoints.Any(wp => wp.VisibleIds?.Length > 0);
 
-            rangePoints = 0..(wpSystem.Waypoints.Length * 3);
-            rangeTraversableEdges = rangePoints.Suffix(walkableLinks.Count + jumpableLinks.Count);
-            UpdateUnselectedEdges();
-
             var groupIds = wpSystem.Waypoints.Select(wp => wp.Group).Distinct();
             var groupColors_ = groupIds.Zip(MathEx.GoldenRatioColors().Zip(MathEx.GoldenRatioColors(saturation: 0.5f)));
             foreach (var (groupId, colors) in groupColors_)
                 groupColors[groupId] = colors;
+
+            rangePoints = 0..(wpSystem.Waypoints.Length * 3);
+            rangeTraversableEdges = rangePoints.Suffix(walkableLinks.Count + jumpableLinks.Count);
+            UpdateUnselectedEdges();
 
             void LinkSet(IEnumerable<IEnumerable<uint>?> halfLinks, Dictionary<(int, int), bool> fullLinks)
             {
@@ -166,16 +167,22 @@ public partial class SceneEditor
                 }
             }
             NewLine();
-            if (selection == Selection.Waypoint)
+            switch(selection)
             {
-                if (DragInt("Index", ref selectedWaypoint, 1f, -1, wpCount - 1) ||
-                    EnumCombo("Edges", ref edgeVisibility))
-                    UpdateSelectedWaypointEdges();
-            }
-            else if (selection == Selection.Group)
-            {
-                if (DragInt("Index", ref selectedGroup, 0.1f, -1, groupColors.Count - 1))
-                    UpdateSelectedGroupEdges();
+                case Selection.None:
+                    if (Checkbox("Color groups", ref colorGroups))
+                        UpdateUnselectedEdges();
+                    break;
+                case Selection.Waypoint:
+                    if (DragInt("Index", ref selectedWaypoint, 0.2f, -1, wpCount - 1) |
+                        EnumCombo("Edges", ref edgeVisibility))
+                        UpdateSelectedWaypointEdges();
+                    break;
+                case Selection.Group:
+                    if (DragInt("Index", ref selectedGroup, 0.1f, -1, groupColors.Count - 1))
+                        UpdateSelectedGroupEdges();
+                    break;
+                default: break;
             }
         }
 
@@ -188,7 +195,10 @@ public partial class SceneEditor
                 wpSystem.Waypoints.Length * 3 +
                 walkableLinks.Count + jumpableLinks.Count);
             foreach (var wp in wpSystem.Waypoints)
-                lineRenderer.AddCross(IColor.White, wp.Position, WaypointCrossSize);
+            {
+                var color = colorGroups ? groupColors[wp.Group].full : IColor.White;
+                lineRenderer.AddCross(color, wp.Position, WaypointCrossSize);
+            }
             AddLinkSet(walkableLinks, new(0, 0, 230), new(0, 0, 130));
             AddLinkSet(jumpableLinks, new(230, 0, 0), new(130, 0, 0));
 
@@ -211,6 +221,12 @@ public partial class SceneEditor
                 ? null as Waypoint?
                 : wpSystem.Waypoints[selectedWaypoint];
             var selectedPosition = waypoint?.Position ?? Vector3.Zero;
+            var allLinkedIds =
+                (waypoint is null ? null
+                : edgeVisibility is EdgeVisibility.Traversable ? waypoint.Value.WalkableIds.Concat(waypoint.Value.JumpableIds)
+                : edgeVisibility is EdgeVisibility.Visibility ? waypoint.Value.VisibleIds
+                : null)
+                ?? Enumerable.Empty<uint>();
             for (int i = 0; i < wpSystem.Waypoints.Length; i++)
             {
                 if (i == selectedWaypoint)
@@ -219,7 +235,10 @@ public partial class SceneEditor
                     lineRenderer.AddDiamondSphere(new(selectedPosition, WaypointSphereSize), IColor.Red);
                 }
                 else
-                    lineRenderer.AddCross(IColor.White, wpSystem.Waypoints[i].Position, WaypointCrossSize);
+                {
+                    var color = allLinkedIds.Contains(wpSystem.Waypoints[i].Id) ? IColor.Blue : IColor.Grey;
+                    lineRenderer.AddCross(color, wpSystem.Waypoints[i].Position, WaypointCrossSize);
+                }
             }
 
             switch (edgeVisibility)
@@ -239,7 +258,6 @@ public partial class SceneEditor
                 foreach (var otherId in edges ?? [])
                 {
                     var otherWaypoint = wpSystem.Waypoints[idToIndex[otherId]];
-                    lineRenderer.AddCross(IColor.White, otherWaypoint.Position, WaypointCrossSize);
                     lineRenderer.Add(color, otherWaypoint.Position, selectedPosition);
                 }
             }
