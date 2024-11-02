@@ -54,6 +54,7 @@ public static class BinaryIOExtension
 
     public static T[] ReadStructureArray<T>(this BinaryReader reader, int count, int expectedSizeOfElement) where T : unmanaged
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
         var array = new T[count];
         reader.ReadStructureArray(array, expectedSizeOfElement);
         return array;

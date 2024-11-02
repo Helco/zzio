@@ -7,7 +7,7 @@ public struct IColor
 {
     public byte r, g, b, a;
 
-    public IColor(byte r, byte g, byte b, byte a)
+    public IColor(byte r, byte g, byte b, byte a = 255)
     {
         this.r = r;
         this.g = g;
@@ -53,6 +53,7 @@ public struct IColor
     public static implicit operator FColor(IColor c) => new(c.r / 255f, c.g / 255f, c.b / 255f, c.a / 255f);
 
     public static readonly IColor White = new(0xFFFFFFFF);
+    public static readonly IColor Grey = new(0xFF808080);
     public static readonly IColor Black = new(0xFF000000);
     public static readonly IColor Clear = new(0x00000000);
     public static readonly IColor Red = new(0xFF0000FF);

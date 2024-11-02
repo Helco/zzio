@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using zzio;
 
 namespace zzre;
 
@@ -131,4 +132,24 @@ public static class MathEx
             from.Y,
             MathF.Cos(newAngle));
     }
+
+    public const float GoldenRatioFract = 0.61803398875f;
+    public const float GoldenRatio = 1.61803398875f;
+
+    public static IEnumerable<float> GoldenRatioSequence(float acc = 0f)
+    {
+        while (true)
+        {
+            yield return acc;
+            acc = (acc + GoldenRatioFract) % 1f;
+        }
+    }
+
+    public static IEnumerable<FColor> GoldenRatioColors(
+        float hueStart = 0f,
+        float saturation = 1f,
+        float luminosity = 0.5f,
+        float alpha = 1f) =>
+        GoldenRatioSequence(hueStart)
+        .Select(hue => new FColor(hue, saturation, luminosity, alpha).HSLToRGB());
 }

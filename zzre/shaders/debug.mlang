@@ -2,6 +2,7 @@ option IsSkinned;
 option ColorMode = VertexColor, SkinWeights, SingleBoneWeight;
 option Topology = Triangles, Lines;
 option BothSided;
+option DepthTest;
 
 variants exclude if (ColorMode != VertexColor && IsSkinned);
 variants exclude if (Topology == Lines && BothSided);
@@ -41,6 +42,12 @@ pipeline if (Topology == Lines)
 pipeline if (BothSided)
 {
 	cull none;
+}
+
+pipeline if (DepthTest)
+{
+	DepthTest On;
+	DepthWrite On;
 }
 
 vec4 GetDebugColorOf(uint index)

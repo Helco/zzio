@@ -80,6 +80,24 @@ public class MenuBar
         EndMenu();
     });
 
+    public void AddRadio<TEnum>(string path, GetRefValueFunc<TEnum> getValue, Action? onChanged = null)
+        where TEnum : struct, Enum => AddItem(path, name =>
+    {
+        if (!BeginMenu(name))
+            return;
+        ref var curValue = ref getValue();
+        var values = Enum.GetValues<TEnum>();
+        foreach (var value in values)
+        {
+            if (MenuItem(value.ToString(), "", curValue.GetHashCode() == value.GetHashCode()))
+            {
+                curValue = value;
+                onChanged?.Invoke();
+            }
+        }
+        EndMenu();
+    });
+
     public void AddSlider(string path, float minVal, float maxVal, GetRefValueFunc<float> getValue, Action? onChanged = null) => AddItem(path, name =>
     {
         if (SliderFloat(name, ref getValue(), minVal, maxVal))
