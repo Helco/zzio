@@ -2,12 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using DefaultEcs.System;
-using Silk.NET.Core.Native;
 using Veldrid;
 using zzio;
 using zzio.scn;
-using zzre.debug;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
@@ -39,15 +36,15 @@ public partial class SceneEditor
 
         private readonly DebugLineRenderer lineRenderer;
         private readonly SceneEditor editor;
-        private readonly Dictionary<(int, int), bool> walkableLinks = new(), jumpableLinks = new();
-        private readonly Dictionary<uint, int> idToIndex = new();
-        private readonly Dictionary<uint, (IColor full, IColor half)> groupColors = new();
+        private readonly Dictionary<(int, int), bool> walkableLinks = [], jumpableLinks = [];
+        private readonly Dictionary<uint, int> idToIndex = [];
+        private readonly Dictionary<uint, (IColor full, IColor half)> groupColors = [];
 
         private Range rangePoints, rangeTraversableEdges;
         private bool
             showPoints = true,
             showTraversableEdges = true,
-            colorGroups = false,
+            colorGroups,
             hasPrecomputedVisibility;
         private EdgeVisibility edgeVisibility = EdgeVisibility.Traversable; // for selected waypoints
         private Selection selection = Selection.None;
@@ -226,7 +223,7 @@ public partial class SceneEditor
                 : edgeVisibility is EdgeVisibility.Traversable ? waypoint.Value.WalkableIds.Concat(waypoint.Value.JumpableIds)
                 : edgeVisibility is EdgeVisibility.Visibility ? waypoint.Value.VisibleIds
                 : null)
-                ?? Enumerable.Empty<uint>();
+                ?? [];
             for (int i = 0; i < wpSystem.Waypoints.Length; i++)
             {
                 if (i == selectedWaypoint)
