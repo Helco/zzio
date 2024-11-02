@@ -1,7 +1,10 @@
-﻿namespace zzre.game.components.ai;
+﻿using System.Numerics;
 
-internal class AIPath
+namespace zzre.game.components;
+
+public struct AIPath
 {
+    public PooledList<(uint Id, Vector3 Position)> WaypointIndices;
 }
 
 /*
