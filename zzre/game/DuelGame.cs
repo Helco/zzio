@@ -56,6 +56,7 @@ public sealed class DuelGame : Game
             new systems.effect.Sound(this),
 
             // Fairies
+            new systems.AIPath(this),
             new systems.FairyPhysics(this),
             new systems.FairyAnimation(this),
             new systems.FairyActivation(this),
@@ -90,7 +91,9 @@ public sealed class DuelGame : Game
             new systems.ModelRenderer(this, components.RenderOrder.LateSolid),
             new systems.ModelRenderer(this, components.RenderOrder.LateAdditive),
             new systems.effect.EffectRenderer(this, components.RenderOrder.LateEffect),
-            new systems.effect.EffectModelRenderer(this, components.RenderOrder.LateEffect));
+            new systems.effect.EffectModelRenderer(this, components.RenderOrder.LateEffect),
+            
+            new systems.DebugAIPath(this));
 
         LoadScene($"sd_{message.SceneId:D4}");
         camera.Location.LocalPosition = -ecsWorld.Get<rendering.WorldMesh>().Origin;
