@@ -129,6 +129,39 @@ public static class NumericsExtensions
     public static T NextOf<T>(this Random random) where T : struct, Enum =>
         random.NextOf(Enum.GetValues<T>());
 
+    public static bool IsSorted<T>(this ReadOnlySpan<T> list)
+        where T : struct, IComparisonOperators<T, T, bool>
+    {
+        for (int i = 1; i < list.Length; i++)
+        {
+            if (list[i - 1] > list[i])
+                return false;
+        }
+        return true;
+    }
+
+    public static T NextOf<T>(this Random random, ReadOnlySpan<T> from, ReadOnlySpan<T> except)
+        where T : struct, IComparable<T>, IEquatable<T>, IComparisonOperators<T, T, bool>
+    {
+        // Used in the path finder the original code would only try 20 times and without sorting check
+        int index;
+        if (except.Length > 8 && except.IsSorted())
+        {
+            do
+            {
+                index = random.Next(from.Length);
+            } while (except.BinarySearch(from[index]) >= 0);
+        }
+        else
+        {
+            do
+            {
+                index = random.Next(from.Length);
+            } while (except.Contains(from[index]));
+        }
+        return from[index];
+    }
+
     public static bool IsFinite(this Vector2 v) =>
         float.IsFinite(v.X) && float.IsFinite(v.Y);
 

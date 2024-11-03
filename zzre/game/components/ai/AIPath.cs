@@ -4,7 +4,7 @@ namespace zzre.game.components;
 
 public struct AIPath
 {
-    public PooledList<(uint Id, Vector3 Position)> WaypointIndices;
+    public PooledList<uint> WaypointIndices;
 }
 
 /*

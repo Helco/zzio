@@ -8,6 +8,13 @@ using zzio.scn;
 
 namespace zzre.game;
 
+public enum WaypointEdgeKind
+{
+    None,
+    Walkable,
+    Jumpable
+}
+
 public class PathFinder : IDisposable
 {
     public const uint InvalidId = uint.MaxValue;
@@ -142,6 +149,9 @@ public class PathFinder : IDisposable
         return bestId;
     }
 
+    public bool IsTraversable(uint waypointId) =>
+        IsTraversable(wpSystem.Waypoints[idToIndex[waypointId]]);
+
     public static bool IsTraversable(in Waypoint waypoint) =>
         waypoint.Group == InvalidId || waypoint.WalkableIds.Length > 0 || waypoint.JumpableIds.Length > 0;
 
@@ -179,5 +189,37 @@ public class PathFinder : IDisposable
     {
         public bool IsValid(in Waypoint waypoint, int index) =>
             !isVisible[index] && IsTraversable(waypoint);
+    }
+
+    public uint TryRandomNextTraversable(uint fromId, out WaypointEdgeKind edgeKind) =>
+        TryRandomNextTraversable(fromId, ReadOnlySpan<uint>.Empty, out edgeKind);
+
+    public uint TryRandomNextTraversable(uint fromId, ReadOnlySpan<uint> except, out WaypointEdgeKind edgeKind)
+    {
+        // TODO: Investigate weird waypoint modification from random next in original code
+        // The original engine would override the walkable list with the jumpable ones if it could not find
+        // any walkable next waypoint. This would not happen in the original code... right?!
+
+        // Also with the validation command not done yet I just suspect that there are no directed edges so 
+        // this should degrade cleanly to: any random walkable except - otherwise any random jumpable
+        // which oculd be implemented a bit more efficiently and cleaner.
+
+        ref readonly var from = ref wpSystem.Waypoints[idToIndex[fromId]];
+        var toId = random.NextOf(from.WalkableIds, except);
+        if (IsTraversable(toId))
+        {
+            edgeKind = WaypointEdgeKind.Walkable;
+            return toId;
+        }
+
+        toId = random.NextOf(from.JumpableIds, except);
+        if (IsTraversable(toId))
+        {
+            edgeKind = WaypointEdgeKind.Jumpable;
+            return toId;
+        }
+
+        edgeKind = WaypointEdgeKind.None;
+        return InvalidId;
     }
 }
