@@ -62,7 +62,8 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
 
     protected override void DisposeManaged()
     {
-        EnsureMainThread();
+        if (!IsMainThread)
+            logger.Warning("AssetRegistry.Dispose is called from a secondary thread.");
         cancellationSource.Cancel();
         Task.WhenAll(assets.Values
             .Where(a => a.State is AssetState.Loading or AssetState.LoadingSecondary)
@@ -70,14 +71,20 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
             .Wait(10000);
         if (!Monitor.TryEnter(assets, 1000))
             logger.Warning("Could not lock assets in AssetRegistry disposal. This is ignored and assets are disposed regardless.");
-        foreach (var asset in assets.Values)
-            asset.Dispose();
-        assets.Clear();
-        assetsToRemove.Writer.Complete();
-        assetsToApply.Writer.Complete();
-        assetsToStart.Writer.Complete();
-        if (Monitor.IsEntered(assets))
-            Monitor.Exit(assets);
+        try
+        {
+            foreach (var asset in assets.Values)
+                asset.Dispose();
+            assets.Clear();
+            assetsToRemove.Writer.Complete();
+            assetsToApply.Writer.Complete();
+            assetsToStart.Writer.Complete();
+        }
+        finally
+        {
+            if (Monitor.IsEntered(assets))
+                Monitor.Exit(assets);
+        }
         cancellationSource.Dispose();
         logger.Verbose("Finished disposing registry");
     }
