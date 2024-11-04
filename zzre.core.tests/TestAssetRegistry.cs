@@ -13,7 +13,6 @@ namespace zzre.tests;
 [TestFixture(TaskContinuationOptions.None)]
 [TestFixture(TaskContinuationOptions.RunContinuationsAsynchronously)]
 [Apartment(System.Threading.ApartmentState.STA), CancelAfter(1000)]
-[Timeout(3000)]
 public class TestAssetRegistry
 {
     class SynchronousAsset : Asset

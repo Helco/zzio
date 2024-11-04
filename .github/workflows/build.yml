@@ -51,7 +51,7 @@ jobs:
       run: dotnet build --configuration Debug --no-restore --verbosity normal ${{ inputs.warningsAsErrors && '-warnaserror' || '' }}
     - name: Debug Tests
       timeout-minutes: 10
-      run: dotnet test --configuration Debug --no-restore --verbosity normal
+      run: dotnet test --configuration Debug --no-restore --verbosity normal -- NUnit.DebugExecution=true NUnit.DebugDiscovery=true
     - name: Release Build
       run: dotnet build --configuration Release --no-restore --verbosity normal ${{ inputs.warningsAsErrors && '-warnaserror' || '' }}
     - name: Release Tests
