@@ -50,8 +50,10 @@ jobs:
     - name: Debug Build
       run: dotnet build --configuration Debug --no-restore --verbosity normal ${{ inputs.warningsAsErrors && '-warnaserror' || '' }}
     - name: Debug Tests
+      timeout-minutes: 10
       run: dotnet test --configuration Debug --no-restore --verbosity normal
     - name: Release Build
       run: dotnet build --configuration Release --no-restore --verbosity normal ${{ inputs.warningsAsErrors && '-warnaserror' || '' }}
     - name: Release Tests
+      timeout-minutes: 10
       run: dotnet test --configuration Release --no-restore --verbosity normal
