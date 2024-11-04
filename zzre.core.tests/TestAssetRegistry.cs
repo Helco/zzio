@@ -130,17 +130,25 @@ public class TestAssetRegistry
         diContainer.AddTag<Serilog.ILogger>(Serilog.Core.Logger.None);
         diContainer.AddTag<IAssetRegistry>(globalRegistry = new AssetRegistry("Global", diContainer));
         localRegistry = new AssetLocalRegistry("Local", diContainer);
-        TestContext.CurrentContext.CancellationToken.Register(localRegistry.Dispose);
-        TestContext.CurrentContext.CancellationToken.Register(globalRegistry.Dispose);
+        TestContext.CurrentContext.CancellationToken.Register(() => Cleanup("Cancellation"));
     }
 
     [TearDown]
-    public void TearDown()
+    public void TearDown() => Cleanup("TearDown");
+
+    private void Cleanup(string reason)
     {
-        localRegistry.Dispose();
-        diContainer.Dispose();
-        if (TestContext.CurrentContext.CancellationToken.IsCancellationRequested)
-            Assert.Fail("Test was cancelled, most likely due to a timeout.");
+        try
+        {
+            localRegistry.Dispose();
+            diContainer.Dispose();
+            if (TestContext.CurrentContext.CancellationToken.IsCancellationRequested)
+                Assert.Fail("Test was cancelled, most likely due to a timeout.");
+        }
+        catch(Exception e)
+        {
+            Assert.Fail($"Exception during {reason}: {e}");
+        }
     }
 
     [Test]
