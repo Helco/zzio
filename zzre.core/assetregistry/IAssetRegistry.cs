@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Runtime.CompilerServices;
 namespace zzre;
 
 /// <summary>Controls when an asset is actually loaded</summary>
@@ -100,5 +99,4 @@ internal interface IAssetRegistryInternal : IAssetRegistry
     void QueueApplyAsset(IAsset asset);
     bool IsLoaded(Guid assetId);
     TAsset GetLoadedAsset<TAsset>(Guid assetId);
-    void WaitSynchronously(Task task, [CallerMemberName] string methodName = "<null>");
 }
