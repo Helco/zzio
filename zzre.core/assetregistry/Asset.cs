@@ -37,22 +37,21 @@ internal interface IAsset : IDisposable
     Task LoadTask { get; }
     /// <summary>The priority that the asset was *effectively* loaded with</summary>
     AssetLoadPriority Priority { get; set; }
-    /// <summary>The current reference count to be atomically modified to keep assets alive or disposing them</summary>
+    /// <summary>The current reference count to be modified to keep assets alive or disposing them</summary>
     /// <remarks>Modifying has to be done using the <see cref="AddRef"/> and <see cref="DelRef"/> methods</remarks>
     int RefCount { get; }
     /// <summary>The *stored* apply actions to be taken after loading</summary>
     /// <remarks>This will not include immediate apply actions if the asset is loaded synchronously or was already loaded</remarks>
     OnceAction<AssetHandle> ApplyAction { get; }
 
+    SemaphoreSlim StateLock { get; }
+
     /// <summary>Starts the loading of the asset on the thread pool</summary>
     /// <remarks>This call is ignored if the <see cref="State"/> is not <see cref="AssetState.Queued"/></remarks>
     void StartLoading();
-    /// <summary>Synchronously completes loading of the asset</summary>
-    /// <remarks>This call will also rethrow loading exceptions</remarks>
-    void Complete();
-    /// <summary>Atomically increases the reference count</summary>
+    /// <summary>Increases the reference count</summary>
     void AddRef();
-    /// <summary>Atomically decreases the reference count and disposes the asset if necessary</summary>
+    /// <summary>Decreases the reference count and disposes the asset if necessary</summary>
     /// <remarks>It will also signal a disposal to the registry</remarks>
     void DelRef();
     /// <summary>Rethrows a loading exception that already occured</summary>
@@ -78,7 +77,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
 
     /// <summary>The <see cref="ITagContainer"/> of the apparent registry to be used during loading</summary>
     protected readonly ITagContainer diContainer = registry.DIContainer;
-    private readonly TaskCompletionSource completionSource = new();
+    private readonly TaskCompletionSource completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private string? description;
     private AssetHandle[] secondaryAssets = [];
     private int refCount;
@@ -94,6 +93,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
     int IAsset.RefCount => refCount;
     AssetLoadPriority IAsset.Priority { get; set; }
     OnceAction<AssetHandle> IAsset.ApplyAction { get; } = new();
+    SemaphoreSlim IAsset.StateLock { get; } = new(1, 1);
 
     void IDisposable.Dispose()
     {
@@ -110,70 +110,31 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
 
     void IAsset.StartLoading()
     {
-        lock (this)
-        {
-            if (State != AssetState.Queued)
-                return;
-            State = AssetState.Loading;
-            Task.Run(PrivateLoad, InternalRegistry.Cancellation);
-        }
+        Debug.Assert((this as IAsset).StateLock.CurrentCount == 0 && State == AssetState.Queued);
+        State = AssetState.Loading;
+        Task.Run(PrivateLoad, InternalRegistry.Cancellation);
     }
 
-    void IAsset.Complete()
+    void IAsset.AddRef()
     {
-        lock (this)
-        {
-            switch (State)
-            {
-                case AssetState.Loaded: return;
-
-                case AssetState.Loading:
-                case AssetState.LoadingSecondary:
-                    completionSource.Task.WaitAndRethrow();
-                    return;
-
-                case AssetState.Queued:
-                    State = AssetState.Loading;
-                    PrivateLoad().WaitAndRethrow();
-                    (this as IAsset).ThrowIfError();
-                    return;
-
-                case AssetState.Disposed:
-                    throw new ObjectDisposedException(ToString());
-                case AssetState.Error:
-                    (this as IAsset).ThrowIfError();
-                    return;
-
-                default:
-                    throw new NotImplementedException($"Unimplemented asset state {State}");
-            }
-        }
+        Debug.Assert((this as IAsset).StateLock.CurrentCount == 0);
+        refCount++;
     }
 
-    void IAsset.AddRef() => Interlocked.Increment(ref refCount);
     void IAsset.DelRef()
     {
-        int oldRefCount;
-        while (true)
-        {
-            oldRefCount = refCount;
-            if (oldRefCount <= 0)
-                return;
-            if (Interlocked.CompareExchange(ref refCount, oldRefCount - 1, oldRefCount) == oldRefCount)
-                break;
-        }
-        if (oldRefCount == 1) // we just hit zero
-        {
-            lock (this)
-            {
-                (this as IAsset).Dispose();
-                InternalRegistry.QueueRemoveAsset(this);
-            }
-        }
+        Debug.Assert((this as IAsset).StateLock.CurrentCount == 0);
+        if (refCount != 0)
+            return;
+
+        (this as IAsset).Dispose();
+        InternalRegistry.QueueRemoveAsset(this);
     }
 
     private async Task PrivateLoad()
     {
+        // TODO: This will currently not work when disposed while loading
+
         if (State != AssetState.Loading)
             throw new InvalidOperationException("Asset.PrivateLoad was called during an unexpected state");
 
@@ -193,9 +154,15 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
 
                 if (secondaryAssets.Length > 0 && NeedsSecondaryAssets)
                 {
-                    lock (this)
+                    (this as IAsset).StateLock.Wait();
+                    try
                     {
+                        Debug.Assert(State == AssetState.Loading);
                         State = AssetState.LoadingSecondary;
+                    }
+                    finally
+                    {
+                        (this as IAsset).StateLock.Release();
                     }
                     await InternalRegistry.WaitAsyncAll(secondaryAssets);
                 }
@@ -208,18 +175,24 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
         }
         catch (Exception ex)
         {
-            lock (this)
+            (this as IAsset).StateLock.Wait();
+            try
             {
                 (this as IDisposable).Dispose();
-                State = AssetState.Error;
                 completionSource.SetException(ex);
+            }
+            finally
+            {
+                (this as IAsset).StateLock.Release();
+                State = AssetState.Error;
             }
         }
     }
 
     void IAsset.ThrowIfError()
     {
-        if (State == AssetState.Error)
+#pragma warning disable CA1513 // Use ObjectDisposedException throw helper
+        if (State is AssetState.Error)
         {
             var exception = completionSource.Task.Exception;
             if (exception is null)
@@ -227,6 +200,9 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
             else
                 ExceptionDispatchInfo.Capture(exception.InnerException!).Throw();
         }
+        else if (State is AssetState.Disposed)
+            throw new ObjectDisposedException(ToString());
+#pragma warning restore CA1513 // Use ObjectDisposedException throw helper
     }
 
     [Conditional("DEBUG")]

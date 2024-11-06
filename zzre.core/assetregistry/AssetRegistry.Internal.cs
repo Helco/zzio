@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,26 +15,51 @@ public partial class AssetRegistry
     {
         if (handle.Registry != this)
             throw new ArgumentException("Tried to unload asset at wrong registry");
+        IAsset? asset = null;
         lock (assets)
+            asset = assets.GetValueOrDefault(handle.AssetID);
+        if (asset is null)
+            throw new InvalidOperationException("Asset was not found or already deleted, this should not happen if you used a valid handle");
+        asset.StateLock.Wait();
+        try
         {
-            if (assets.TryGetValue(handle.AssetID, out var asset))
-                asset.DelRef();
+            asset.DelRef();
         }
+        finally
+        {
+            asset.StateLock.Release();
+        }
+    }
+
+    [Flags]
+    private enum AddApplyActions
+    {
+        Execute = 1 << 0,
+        Add = 1 << 1,
+        Queue = 1 << 2
     }
 
     private IAsset? TryGetForApplying(AssetHandle handle)
     {
         lock (assets)
+            return assets.GetValueOrDefault(handle.AssetID);
+    }
+
+    private AddApplyActions DecideForApplying(IAsset? asset)
+    {
+        if (asset is null || asset.State is AssetState.Error or AssetState.Disposed)
+            return default;
+
+        AddApplyActions actions = default;
+        if (asset.State is AssetState.Loaded && IsMainThread)
+            actions = AddApplyActions.Execute;
+        else
         {
-            var asset = assets.GetValueOrDefault(handle.AssetID);
-            if (asset is not null)
-            {
-                asset.ThrowIfError();
-                if (asset.State == AssetState.Disposed)
-                    asset = null;
-            }
-            return asset;
+            actions |= AddApplyActions.Add;
+            if (asset.State is AssetState.Loaded)
+                actions |= AddApplyActions.Queue;
         }
+        return actions;
     }
 
     unsafe void IAssetRegistryInternal.AddApplyAction<TApplyContext>(AssetHandle handle,
@@ -44,37 +69,29 @@ public partial class AssetRegistry
         var asset = TryGetForApplying(handle);
         if (asset is null)
             return;
-        lock (asset)
-        {
-            if (asset.State == AssetState.Loaded && IsMainThread)
-                applyFnptr(handle, in applyContext);
-            else
-            {
-                asset.ApplyAction.Next += ConvertFnptr(applyFnptr, in applyContext);
-                if (asset.State == AssetState.Loaded)
-                    assetsToApply.Writer.TryWrite(asset);
-            }
-        }
-    }
 
-    void IAssetRegistryInternal.AddApplyAction<TApplyContext>(AssetHandle handle,
-        IAssetRegistry.ApplyWithContextAction<TApplyContext> applyAction,
-        in TApplyContext applyContext)
-    {
-        var asset = TryGetForApplying(handle);
-        if (asset is null)
-            return;
-        lock (asset)
+        AddApplyActions actions;
+        Action<AssetHandle>? previousApplyActions = null;
+        asset.StateLock.Wait();
+        try
         {
-            if (asset.State == AssetState.Loaded && IsMainThread)
-                applyAction(handle, in applyContext);
-            else
-            {
-                var applyContextCopy = applyContext;
-                asset.ApplyAction.Next += handle => applyAction(handle, in applyContextCopy);
-                if (asset.State == AssetState.Loaded)
-                    assetsToApply.Writer.TryWrite(asset);
-            }
+            actions = DecideForApplying(asset);
+            if (actions.HasFlag(AddApplyActions.Execute))
+                previousApplyActions = asset.ApplyAction.Reset();
+            if (actions.HasFlag(AddApplyActions.Add))
+                asset.ApplyAction.Next += ConvertFnptr(applyFnptr, in applyContext);
+        }
+        finally
+        {
+            asset.StateLock.Release();
+        }
+
+        if (actions.HasFlag(AddApplyActions.Queue))
+            assetsToApply.Writer.TryWrite(asset);
+        if (actions.HasFlag(AddApplyActions.Execute))
+        {
+            previousApplyActions?.Invoke(handle);
+            applyFnptr(handle, in applyContext);
         }
     }
 
@@ -84,16 +101,29 @@ public partial class AssetRegistry
         var asset = TryGetForApplying(handle);
         if (asset is null)
             return;
-        lock (asset)
+
+        AddApplyActions actions;
+        Action<AssetHandle>? previousApplyActions = null;
+        asset.StateLock.Wait();
+        try
         {
-            if (asset.State == AssetState.Loaded && IsMainThread)
-                applyAction(handle);
-            else
-            {
+            actions = DecideForApplying(asset);
+            if (actions.HasFlag(AddApplyActions.Execute))
+                previousApplyActions = asset.ApplyAction.Reset();
+            if (actions.HasFlag(AddApplyActions.Add) && applyAction is not null)
                 asset.ApplyAction.Next += applyAction;
-                if (asset.State == AssetState.Loaded)
-                    assetsToApply.Writer.TryWrite(asset);
-            }
+        }
+        finally
+        {
+            asset.StateLock.Release();
+        }
+
+        if (actions.HasFlag(AddApplyActions.Queue))
+            assetsToApply.Writer.TryWrite(asset);
+        if (actions.HasFlag(AddApplyActions.Execute))
+        {
+            previousApplyActions?.Invoke(handle);
+            applyAction?.Invoke(handle);
         }
     }
 
@@ -117,16 +147,32 @@ public partial class AssetRegistry
 
     Task IAssetRegistry.WaitAsyncAll(AssetHandle[] secondaryHandles)
     {
+        // Task.WhenAll(IEnumerable) would create a List anyway. So we can use it
+        // to prefilter, which we have to do anyways
+        var secondaryTasks = new List<Task>(secondaryHandles.Length);
         lock (assets)
         {
             foreach (var handle in secondaryHandles)
             {
                 handle.CheckDisposed();
-                if (assets.TryGetValue(handle.AssetID, out var asset))
-                    asset.StartLoading();
+                if (!assets.TryGetValue(handle.AssetID, out var asset))
+                    continue;
+                asset.StateLock.Wait();
+                try
+                {
+                    asset.ThrowIfError();
+                    if (asset.State == AssetState.Loaded)
+                        continue;
+                    else if (asset.State == AssetState.Queued)
+                        asset.StartLoading();
+                    secondaryTasks.Add(asset.LoadTask);
+                }
+                finally
+                {
+                    asset.StateLock.Release();
+                }
             }
-            return Task.WhenAll(secondaryHandles.Select(h => assets[h.AssetID].LoadTask))
-                .WithAggregateException();
+            return Task.WhenAll(secondaryTasks).WithAggregateException();
         }
     }
 
@@ -136,10 +182,9 @@ public partial class AssetRegistry
         IAsset? asset;
         lock (assets)
             asset = assets.GetValueOrDefault(assetId);
-        if (asset == null)
-            return false;
-        lock (asset)
-            return asset.State == AssetState.Loaded;
+        return asset is IAsset { State: AssetState.Loaded };
+        // no use locking the asset. If there is non-synchronized access it could just as well change before 
+        // the caller decides on their action based on our return value.
     }
 
     TAsset IAssetRegistryInternal.GetLoadedAsset<TAsset>(Guid assetId)
@@ -149,24 +194,56 @@ public partial class AssetRegistry
             asset = assets.GetValueOrDefault(assetId);
         if (asset == null)
             throw new InvalidOperationException("Asset is not present in registry");
-        if (asset is not TAsset)
+        if (asset is not TAsset tasset)
             throw new InvalidOperationException($"Asset is not of type {typeof(TAsset).Name}");
-        lock (asset)
+
+        asset.StateLock.Wait();
+        try
         {
-            asset.ThrowIfError();
-            switch (asset.State)
-            {
-                case AssetState.Disposed:
-                    throw new ObjectDisposedException(asset.ToString());
-                case AssetState.Loaded:
-                    return (TAsset)asset;
-                default:
-                    if (!IsMainThread)
-                        throw new InvalidOperationException("Cannot synchronously wait for assets to load on secondary threads");
-                    asset.Complete();
-                    asset.ApplyAction.Invoke(new(this, assetId));
-                    return (TAsset)asset;
-            }
+            asset.ThrowIfError(); // so not disposed or error after this
+            if (asset.State is AssetState.Loaded)
+                return tasset;
         }
+        finally
+        {
+            asset.StateLock.Release();
+        }
+
+        // We ended up having to (potentially start and) wait for loading.
+        // Let's use the normal synchronous load mechanism for that
+        Load(asset, AssetLoadPriority.Synchronous, applyAction: null, addRef: false);
+        Debug.Assert(asset.State == AssetState.Loaded);
+        return tasset;
+    }
+
+    ValueTask<TAsset> IAssetRegistryInternal.GetLoadedAssetAsync<TAsset>(Guid assetId)
+    {
+        IAsset? asset;
+        lock (assets)
+            asset = assets.GetValueOrDefault(assetId);
+        if (asset == null)
+            throw new InvalidOperationException("Asset is not present in registry");
+        if (asset is not TAsset tasset)
+            throw new InvalidOperationException($"Asset is not of type {typeof(TAsset).Name}");
+
+        asset.StateLock.Wait();
+        try
+        {
+            asset.ThrowIfError(); // so not disposed or error after this
+            if (asset.State is AssetState.Loaded)
+                return ValueTask.FromResult(tasset);
+        }
+        finally
+        {
+            asset.StateLock.Release();
+        }
+        
+        // We still use the normal loading mechanism but asynchronously and wait ourselves
+        Load(asset, AssetLoadPriority.High, applyAction: null, addRef: false);
+        return new ValueTask<TAsset>(asset.LoadTask.ContinueWith(_ =>
+        {
+            Debug.Assert(asset.State == AssetState.Loaded); // on exception we should have thrown already
+            return tasset;
+        }));
     }
 }
