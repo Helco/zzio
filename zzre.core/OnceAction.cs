@@ -12,6 +12,12 @@ public class OnceAction
         Next = null;
         next?.Invoke();
     }
+    public Action? MoveOut()
+    {
+        var result = Next;
+        Next = null;
+        return result;
+    }
 }
 
 public class OnceAction<T1>
@@ -23,6 +29,12 @@ public class OnceAction<T1>
         var next = Next;
         Next = null;
         next?.Invoke(a);
+    }
+    public Action<T1>? MoveOut()
+    {
+        var result = Next;
+        Next = null;
+        return result;
     }
 }
 
@@ -36,6 +48,12 @@ public class OnceAction<T1, T2>
         Next = null;
         next?.Invoke(a, b);
     }
+    public Action<T1, T2>? MoveOut()
+    {
+        var result = Next;
+        Next = null;
+        return result;
+    }
 }
 
 public class OnceAction<T1, T2, T3>
@@ -47,5 +65,11 @@ public class OnceAction<T1, T2, T3>
         var next = Next;
         Next = null;
         next?.Invoke(a, b, c);
+    }
+    public Action<T1, T2, T3>? MoveOut()
+    {
+        var result = Next;
+        Next = null;
+        return result;
     }
 }

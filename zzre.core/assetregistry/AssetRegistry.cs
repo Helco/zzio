@@ -112,6 +112,23 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         }
     }
 
+    private AssetHandle TryFastPathLoad(IAsset asset)
+    {
+        // If we managed the fast path we have a valid handle and are on the main thread
+        // No secondary thread should be able to delete that asset as long as we have the
+        // handle (except for asynchronous registry disposal which is bad news anyway)
+        if (IsMainThread && asset is { State: AssetState.Loaded })
+        {
+            using var _ = asset.StateLock.Lock();
+            if (asset.State is AssetState.Loaded)
+            {
+                asset.AddRef();
+                return new AssetHandle(this, asset.ID);
+            }
+        }
+        return AssetHandle.Invalid;
+    }
+
     /// <inheritdoc/>
     public unsafe AssetHandle Load<TInfo, TApplyContext>(
         in TInfo info,
@@ -120,19 +137,16 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         in TApplyContext applyContext)
         where TInfo : IEquatable<TInfo>
     {
+        if (priority is AssetLoadPriority.Synchronous && !IsMainThread)
+            throw new InvalidOperationException("Cannot load synchronous from secondary threads");
+
         var asset = GetOrCreateAsset(in info);
-        lock (asset)
-        {
-            if (asset is { State: AssetState.Loaded } && IsMainThread)
-            {
-                // fast path: asset is already loaded and we only need to apply it
-                asset.AddRef();
-                var handle = new AssetHandle(this, asset.ID);
-                applyFnptr(handle, in applyContext);
-                return handle;
-            }
+        var fastHandle = TryFastPathLoad(asset);
+        if (fastHandle == AssetHandle.Invalid)
             return LoadInner(asset, priority, ConvertFnptr(applyFnptr, applyContext));
-        }
+        applyFnptr(fastHandle, in applyContext);
+        return fastHandle;
+        
     }
 
     private static unsafe Action<AssetHandle> ConvertFnptr<TContext>(
@@ -150,49 +164,59 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         Action<AssetHandle>? applyAction)
         where TInfo : IEquatable<TInfo>
     {
+        if (priority is AssetLoadPriority.Synchronous && !IsMainThread)
+            throw new InvalidOperationException("Cannot load synchronous from secondary threads");
+
         var asset = GetOrCreateAsset(in info);
-        lock (asset)
-        {
-            if (asset is { State: AssetState.Loaded } && IsMainThread)
-            {
-                asset.AddRef();
-                var handle = new AssetHandle(this, asset.ID);
-                applyAction?.Invoke(handle);
-                return handle;
-            }
+        var fastHandle = TryFastPathLoad(asset);
+        if (fastHandle == AssetHandle.Invalid)
             return LoadInner(asset, priority, applyAction);
-        }
+        applyAction?.Invoke(fastHandle);
+        return fastHandle;
     }
 
     private AssetHandle LoadInner(IAsset asset, AssetLoadPriority priority, Action<AssetHandle>? applyAction)
     {
-        // We assume that asset is locked for our thread during this method
-        asset.AddRef();
-        var handle = new AssetHandle(this, asset.ID);
-        switch (asset.State)
+        var assetHandle = new AssetHandle(this, asset.ID);
+        AssetState decisionState;
+        using (var _ = asset.StateLock.Lock())
         {
-            case AssetState.Disposed or AssetState.Error:
-                throw new ArgumentException("LoadInner was called with asset in unexpected state");
+            asset.AddRef();
+            decisionState = asset.State;
 
-            case AssetState.Queued or AssetState.Loading or AssetState.LoadingSecondary:
-                if (applyAction is not null)
-                    asset.ApplyAction.Next += applyAction;
-                if (asset.State == AssetState.Queued)
-                    StartLoading(asset, priority);
-                return handle;
-
-            case AssetState.Loaded:
-                if (IsMainThread)
-                    applyAction?.Invoke(handle);
-                else if (applyAction is not null)
-                {
-                    asset.ApplyAction.Next += applyAction;
-                    assetsToApply.Writer.TryWrite(asset);
-                }
-                return handle;
-
-            default: throw new NotImplementedException($"Unimplemented asset state {asset.State}");
+            // Queue apply action
+            if (decisionState is AssetState.Queued or AssetState.Loading or AssetState.LoadingSecondary)
+                asset.ApplyAction.Next += applyAction;
+            else if (decisionState is AssetState.Loaded && !IsMainThread)
+            {
+                if (asset.ApplyAction.IsEmpty)
+                    (this as IAssetRegistryInternal).QueueApplyAsset(asset);
+                asset.ApplyAction.Next += applyAction;
+            }
+            
+            if (decisionState is AssetState.Queued)
+            {
+                if (priority == AssetLoadPriority.Low)
+                    assetsToStart.Writer.TryWrite(asset);
+                else
+                    asset.StartLoading();
+            }
         }
+
+        if (decisionState is AssetState.Disposed or AssetState.Error)
+        {
+            asset.ThrowIfError();
+            throw new InvalidOperationException("Asset load decision state was erroneous but no exception was thrown. This is a grave inconsistency in AssetRegistry");
+        }
+        if (priority is AssetLoadPriority.Synchronous && decisionState is not AssetState.Loaded)
+        {
+            asset.Complete();
+            applyAction?.Invoke(assetHandle);
+        }
+        
+        if (IsMainThread && (decisionState is AssetState.Loaded || priority is AssetLoadPriority.Synchronous))
+            applyAction?.Invoke(assetHandle);
+        return assetHandle;
     }
 
     private void StartLoading(IAsset asset, AssetLoadPriority priority)
@@ -219,36 +243,42 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
 
     private void RemoveAsset(IAsset asset)
     {
+        Debug.Assert(Monitor.IsEntered(assets));
         if (asset.State is not (AssetState.Disposed or AssetState.Error))
             throw new InvalidOperationException($"Unexpected asset state for removal: {asset.State}");
-        lock (assets)
-            assets.Remove(asset.ID);
+        assets.Remove(asset.ID);
         logger.Verbose("Remove asset {Type} {ID}", asset.GetType().Name, asset.ID);
     }
 
     private void ApplyAsset(IAsset asset)
     {
-        if (!asset.LoadTask.IsCompleted)
-            throw new InvalidOperationException("Cannot apply assets that are not (internally) loaded");
-        asset.ApplyAction.Invoke(new(this, asset.ID));
+        Action<AssetHandle>? applyAction = null;
+        using (var _ = asset.StateLock.Lock())
+        {
+            if (!asset.LoadTask.IsCompleted)
+                throw new InvalidOperationException("Cannot apply assets that are not (internally) loaded");
+            applyAction = asset.ApplyAction.MoveOut();
+        }
+        applyAction?.Invoke(new(this, asset.ID));
     }
 
     /// <inheritdoc/>
     public void ApplyAssets()
     {
         EnsureMainThread();
-        while (assetsToRemove.Reader.TryRead(out var asset))
-            RemoveAsset(asset);
+        lock(assets)
+        {
+            while (assetsToRemove.Reader.TryRead(out var asset))
+                RemoveAsset(asset);
+        }
         while (assetsToApply.Reader.TryRead(out var asset))
             ApplyAsset(asset);
 
         for (int i = 0; i < MaxLowPriorityAssetsPerFrame && assetsToStart.Reader.TryRead(out var asset); i++)
         {
-            lock (asset)
-            {
-                if (asset.State == AssetState.Queued)
-                    asset.StartLoading();
-            }
+            using var _ = asset.StateLock.Lock();
+            if (asset.State == AssetState.Queued)
+                asset.StartLoading();
         }
     }
 
