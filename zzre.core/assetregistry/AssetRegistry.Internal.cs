@@ -101,7 +101,10 @@ public partial class AssetRegistry
     {
         stats.OnAssetRemoved();
         if (IsMainThread)
-            RemoveAsset(asset);
+        {
+            lock(assets)
+                RemoveAsset(asset);
+        }
         else
             assetsToRemove.Writer.TryWrite(asset);
     }
@@ -168,5 +171,11 @@ public partial class AssetRegistry
                     return (TAsset)asset;
             }
         }
+    }
+
+    void IAssetRegistryInternal.WaitSynchronously(Task task, string methodName)
+    {
+        EnsureMainThread(methodName);
+        task.WaitAndRethrow();
     }
 }
