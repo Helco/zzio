@@ -106,19 +106,6 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
 
     /// <summary>Adds an apply action to the asset</summary>
     /// <remarks>Depending on whether the asset is already loaded the action will be called immediately or only stored for later execution</remarks>
-    /// <typeparam name="TApplyContext">The type of the apply context given to the apply action</typeparam>
-    /// <param name="applyAction">The delegate to call as apply action</param>
-    /// <param name="applyContext">The apply context given to the apply action</param>
-    public readonly void Apply<TApplyContext>(
-        IAssetRegistry.ApplyWithContextAction<TApplyContext> applyAction,
-        in TApplyContext applyContext)
-    {
-        CheckDisposed();
-        registryInternal.AddApplyAction(this, applyAction, in applyContext);
-    }
-
-    /// <summary>Adds an apply action to the asset</summary>
-    /// <remarks>Depending on whether the asset is already loaded the action will be called immediately or only stored for later execution</remarks>
     /// <param name="applyAction">The delegate to call as apply action</param>
     public readonly void Apply(Action<AssetHandle> applyAction)
     {

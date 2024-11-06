@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Threading;
+
 namespace zzre;
 
 /// <summary>Controls when an asset is actually loaded</summary>
@@ -18,8 +19,6 @@ public enum AssetLoadPriority
 /// <remarks>This interface may point to a local or a global registry</remarks>
 public interface IAssetRegistry : IDisposable
 {
-    public delegate void ApplyWithContextAction<TApplyContext>(AssetHandle handle, in TApplyContext context);
-
     internal IAssetRegistryInternal InternalRegistry { get; }
     /// <summary>The <see cref="ITagContainer"/> given to this registry at construction to be used for loading the asset contents</summary>
     ITagContainer DIContainer { get; }
@@ -87,10 +86,6 @@ internal interface IAssetRegistryInternal : IAssetRegistry
         delegate* managed<AssetHandle, ref readonly TApplyContext, void> applyFnptr,
         in TApplyContext applyContext);
 
-    void AddApplyAction<TApplyContext>(AssetHandle asset,
-        ApplyWithContextAction<TApplyContext> applyAction,
-        in TApplyContext applyContext);
-
     void AddApplyAction(AssetHandle asset,
         Action<AssetHandle> applyAction);
 
@@ -98,5 +93,6 @@ internal interface IAssetRegistryInternal : IAssetRegistry
     void QueueRemoveAsset(IAsset asset);
     void QueueApplyAsset(IAsset asset);
     bool IsLoaded(Guid assetId);
-    TAsset GetLoadedAsset<TAsset>(Guid assetId);
+    TAsset GetLoadedAsset<TAsset>(Guid assetId) where TAsset : IAsset;
+    ValueTask<TAsset> GetLoadedAssetAsync<TAsset>(Guid assetId) where TAsset : IAsset;
 }
