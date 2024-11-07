@@ -12,7 +12,7 @@ namespace zzre.tests;
 
 [TestFixture(TaskContinuationOptions.None)]
 [TestFixture(TaskContinuationOptions.RunContinuationsAsynchronously)]
-[Apartment(System.Threading.ApartmentState.STA), CancelAfter(1000)]
+[CancelAfter(1000)]
 public class TestAssetRegistry
 {
     class SynchronousAsset : Asset
