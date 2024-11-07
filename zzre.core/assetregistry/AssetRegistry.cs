@@ -73,12 +73,25 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
             logger.Warning("Could not lock assets in AssetRegistry disposal. This is ignored and assets are disposed regardless.");
         try
         {
-            foreach (var asset in assets.Values)
-                asset.Dispose();
-            assets.Clear();
             assetsToRemove.Writer.Complete();
             assetsToApply.Writer.Complete();
             assetsToStart.Writer.Complete();
+
+            bool failedToDisposeSomeAsset = false;
+            foreach (var asset in assets.Values)
+            {
+                if (asset.StateLock.Wait(500))
+                {
+                    asset.Dispose();
+                    asset.StateLock.Release();
+                }
+                else if (!failedToDisposeSomeAsset)
+                {
+                    logger.Warning("Failed to dispose all assets, someone holds an asset state lock for way to long");
+                    failedToDisposeSomeAsset = true;   
+                }
+            }
+            assets.Clear();
         }
         finally
         {
@@ -121,10 +134,9 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
     [Flags]
     private enum LoadActions
     {
-        Start = 1 << 0,
-        Complete = 1 << 1,
-        Apply = 1 << 2,
-        QueueApply = 1 << 3
+        Complete = 1 << 0,
+        Apply = 1 << 1,
+        QueueApply = 1 << 2
     }
 
     private LoadActions DecideLoadActions(IAsset asset, AssetLoadPriority priority)
@@ -132,18 +144,27 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         Debug.Assert(asset.StateLock.CurrentCount == 0);
         LoadActions actions = default;
 
-        if (priority != AssetLoadPriority.Low && asset.State == AssetState.Queued)
-            actions |= LoadActions.Start;
+        if (asset.State is AssetState.Queued)
+        {
+            if (priority is AssetLoadPriority.Low)
+                assetsToStart.Writer.TryWrite(asset);
+            else
+                asset.StartLoading();
+        }
         if (priority == AssetLoadPriority.Synchronous)
         {
             if (!IsMainThread)
                 throw new InvalidOperationException("Cannot load synchronous assets on secondary threads.");
-            actions |= LoadActions.Complete;
+            actions |= LoadActions.Complete | LoadActions.Apply;
         }
-        if (asset.State == AssetState.Loaded)
-            actions |= IsMainThread ? LoadActions.Apply : LoadActions.QueueApply;
+        else
+            actions |= IsMainThread && asset.State is AssetState.Loaded
+                ? LoadActions.Apply
+                : LoadActions.QueueApply;
 
-        Debug.Assert(!actions.HasFlag(LoadActions.Apply) || !actions.HasFlag(LoadActions.QueueApply));
+        // If we neither Apply nor QueueApply we lose apply actions
+        // If we both Apply and QueueApply we duplicate apply actions
+        Debug.Assert(actions.HasFlag(LoadActions.Apply) ^ actions.HasFlag(LoadActions.QueueApply));
         return actions;
     }
 
@@ -164,8 +185,6 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         {
             asset.AddRef();
             loadActions = DecideLoadActions(asset, priority);
-            if (loadActions.HasFlag(LoadActions.Start))
-                asset.StartLoading();
             if (loadActions.HasFlag(LoadActions.Apply))
                 previousApplyActions = asset.ApplyAction.Reset();
             if (loadActions.HasFlag(LoadActions.QueueApply))
@@ -219,8 +238,6 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
             if (addRef)
                 asset.AddRef();
             loadActions = DecideLoadActions(asset, priority);
-            if (loadActions.HasFlag(LoadActions.Start))
-                asset.StartLoading();
             if (loadActions.HasFlag(LoadActions.Apply))
                 previousApplyActions = asset.ApplyAction.Reset();
             if (loadActions.HasFlag(LoadActions.QueueApply) && applyAction is not null)

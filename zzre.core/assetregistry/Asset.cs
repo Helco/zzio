@@ -29,7 +29,7 @@ public enum AssetState
 }
 
 /// <summary>The internal interface into an asset</summary>
-internal interface IAsset : IDisposable
+internal interface IAsset
 {
     Guid ID { get; }
     AssetState State { get; }
@@ -57,6 +57,7 @@ internal interface IAsset : IDisposable
     /// <summary>Rethrows a loading exception that already occured</summary>
     /// <remarks>Assumes that the load task has already completed with an error</remarks>
     void ThrowIfError();
+    void Dispose();
 }
 
 /// <summary>The base class for asset types</summary>
@@ -95,8 +96,9 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
     OnceAction<AssetHandle> IAsset.ApplyAction { get; } = new();
     SemaphoreSlim IAsset.StateLock { get; } = new(1, 1);
 
-    void IDisposable.Dispose()
+    void IAsset.Dispose()
     {
+        Debug.Assert((this as IAsset).StateLock.CurrentCount == 0);
         if (State is AssetState.Disposed or AssetState.Error)
             return;
         State = AssetState.Disposed;
@@ -124,7 +126,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
     void IAsset.DelRef()
     {
         Debug.Assert((this as IAsset).StateLock.CurrentCount == 0);
-        if (refCount != 0)
+        if (--refCount != 0)
             return;
 
         (this as IAsset).Dispose();
@@ -178,7 +180,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
             (this as IAsset).StateLock.Wait();
             try
             {
-                (this as IDisposable).Dispose();
+                (this as IAsset).Dispose();
                 completionSource.SetException(ex);
             }
             finally
