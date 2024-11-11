@@ -28,16 +28,16 @@ public sealed partial class DebugAIPath : AEntitySetSystem<CommandList>
     private void Update(in components.AIPath aiPath)
     {
         var pathFinder = World.Get<PathFinder>();
-        foreach (var index in aiPath.WaypointIndices)
+        foreach (var index in aiPath.WaypointIds)
         {
             lineRenderer.AddDiamondSphere(new(pathFinder[index], 0.1f), IColor.White);
         }
 
-        for (int i = 1; i < aiPath.WaypointIndices.Count; i++)
+        for (int i = 1; i < aiPath.WaypointIds.Count; i++)
         {
             lineRenderer.Add(IColor.White,
-                pathFinder[aiPath.WaypointIndices[i - 1]],
-                pathFinder[aiPath.WaypointIndices[i]]);
+                pathFinder[aiPath.WaypointIds[i - 1]],
+                pathFinder[aiPath.WaypointIds[i]]);
         }
     }
 

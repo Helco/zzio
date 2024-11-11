@@ -57,6 +57,7 @@ public sealed class DuelGame : Game
 
             // Fairies
             new systems.AIPath(this),
+            new systems.AIMovement(this),
             new systems.FairyPhysics(this),
             new systems.FairyAnimation(this),
             new systems.FairyActivation(this),
@@ -128,7 +129,10 @@ public sealed class DuelGame : Game
                 continue;
             var fairy = CreateFairyFor(duelEntity, invFairy);
             if (!isPlayer)
+            {
                 fairy.Set<components.FairyDistanceVisibility>();
+                fairy.Set<components.AIMovement>();
+            }
             participant.Fairies[i] = fairy;
         }
 

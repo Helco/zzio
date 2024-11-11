@@ -114,7 +114,10 @@ public sealed partial class FairyActivation : ISystem<float>
         var nextFairy = participant.ActiveFairy;
         nextFairy.Enable();
         if (fairy.Participant != ecsWorld.Get<components.PlayerEntity>().Entity)
+        {
+            ecsWorld.Publish(new messages.ResetAIMovement(nextFairy));
             ecsWorld.Publish(new messages.GenerateAIPath(nextFairy));
+        }
     }
 
     private (Vector3 pos, Vector3 dir) FindFarthestStartPoint()
