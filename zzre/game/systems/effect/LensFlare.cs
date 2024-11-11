@@ -87,7 +87,7 @@ public partial class LensFlare : AEntitySetSystem<float>
 
     public LensFlare(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
-        logger = diContainer.GetTag<ILogger>();
+        logger = diContainer.GetLoggerFor<LensFlare>();
         camera = diContainer.GetTag<Camera>();
         zzContainer = diContainer.GetTag<IZanzarahContainer>();
         assetRegistry = diContainer.GetTag<IAssetRegistry>();

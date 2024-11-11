@@ -15,6 +15,14 @@ public enum WaypointEdgeKind
     Jumpable
 }
 
+public enum FindPathResult
+{
+    NotThereYet,
+    Success,
+    NotFound,
+    Timeout
+}
+
 public class PathFinder : IDisposable
 {
     public const uint InvalidId = uint.MaxValue;
