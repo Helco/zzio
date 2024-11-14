@@ -172,8 +172,8 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
 
             ct.ThrowIfCancellationRequested();
             State = AssetState.Loaded;
-            completionSource.SetResult(); // this might be the reason for unordered apply actions
             InternalRegistry.QueueApplyAsset(this);
+            completionSource.SetResult();
         }
         catch (Exception ex)
         {
