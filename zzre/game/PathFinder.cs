@@ -213,18 +213,17 @@ public class PathFinder : IDisposable
         // which oculd be implemented a bit more efficiently and cleaner.
 
         ref readonly var from = ref wpSystem.Waypoints[idToIndex[fromId]];
-        var toId = random.NextOf(from.WalkableIds, except);
-        if (IsTraversable(toId))
+
+        if (random.NextOf(from.WalkableIds, except) is uint toId && IsTraversable(toId))
         {
             edgeKind = WaypointEdgeKind.Walkable;
             return toId;
         }
 
-        toId = random.NextOf(from.JumpableIds, except);
-        if (IsTraversable(toId))
+        if (random.NextOf(from.JumpableIds, except) is uint toId2 && IsTraversable(toId2))
         {
             edgeKind = WaypointEdgeKind.Jumpable;
-            return toId;
+            return toId2;
         }
 
         edgeKind = WaypointEdgeKind.None;

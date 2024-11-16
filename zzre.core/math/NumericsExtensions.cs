@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -140,26 +141,76 @@ public static class NumericsExtensions
         return true;
     }
 
-    public static T NextOf<T>(this Random random, ReadOnlySpan<T> from, ReadOnlySpan<T> except)
+    // the original code would just give up after 20 tries, I will at least try a bit more
+    private const int NextOfRandomCount = 20;
+
+    public static T? NextOf<T>(this Random random, ReadOnlySpan<T> from, ReadOnlySpan<T> except)
         where T : struct, IComparable<T>, IEquatable<T>, IComparisonOperators<T, T, bool>
     {
-        // Used in the path finder the original code would only try 20 times and without sorting check
-        int index;
+        if (from.IsEmpty)
+            return null;
+        if (except.IsEmpty)
+            return from[random.Next(from.Length)];
+
         if (except.Length > 8 && except.IsSorted())
         {
-            do
+            for (int i = 0; i < NextOfRandomCount; i++)
             {
-                index = random.Next(from.Length);
-            } while (except.BinarySearch(from[index]) >= 0);
+                int index = random.Next(from.Length);
+                if (except.BinarySearch(from[index]) < 0)
+                    return from[index];
+            }
         }
         else
         {
-            do
+            for (int i = 0; i < NextOfRandomCount; i++)
             {
-                index = random.Next(from.Length);
-            } while (except.Contains(from[index]));
+                int index = random.Next(from.Length);
+                if (!except.Contains(from[index]))
+                    return from[index];
+            }
         }
-        return from[index];
+
+        return NextOfPrefilter(random, from, except);
+    }
+
+    public static T? NextOfPrefilter<T>(this Random random, ReadOnlySpan<T> fromOriginal, ReadOnlySpan<T> exceptOriginal)
+        where T : struct, IComparable<T>, IEquatable<T>, IComparisonOperators<T, T, bool>
+    {
+        if (fromOriginal.IsEmpty)
+            return null;
+        if (exceptOriginal.IsEmpty)
+            return fromOriginal[random.Next(fromOriginal.Length)];
+
+        var buffer = ArrayPool<T>.Shared.Rent(fromOriginal.Length * 2 + exceptOriginal.Length);
+        var from = buffer.AsSpan(0, fromOriginal.Length);
+        var except = buffer.AsSpan(from.Length, exceptOriginal.Length);
+
+        var destination = buffer.AsSpan(from.Length + except.Length);
+        fromOriginal.CopyTo(buffer);
+        exceptOriginal.CopyTo(buffer.AsSpan(from.Length));
+        Array.Sort(buffer, 0, from.Length);
+        Array.Sort(buffer, from.Length, except.Length);
+
+        int j = 0;
+        int k = 0;
+        for (int i = 0; i < from.Length; i++)
+        {
+            while (j < except.Length && except[j] < from[i])
+                j++;
+            if (j >= except.Length)
+            {
+                from[i..].CopyTo(destination[k..]);
+                k += from.Length - i;
+                break;
+            }
+            if (except[j] > from[i])
+                destination[k++] = from[i];
+        }
+
+        T? result = k > 0 ? destination[random.Next(k)] : null;
+        ArrayPool<T>.Shared.Return(buffer);
+        return result;
     }
 
     public static bool IsFinite(this Vector2 v) =>
