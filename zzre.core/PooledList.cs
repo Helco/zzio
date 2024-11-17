@@ -15,6 +15,7 @@ public struct PooledList<T> : IDisposable, IEnumerable<T> where T : struct
 
     public readonly int Capacity => array.Length;
     public readonly bool IsFull => count >= array.Length;
+    public readonly bool IsEmpty => count == 0;
 
     public int Count
     {

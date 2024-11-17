@@ -56,13 +56,15 @@ public sealed partial class AIPath : ISystem<float>
                 WaypointIds = new(DefaultPathLength),
                 Waypoints = new(DefaultPathLength),
                 EdgeKinds = new(DefaultPathLength),
-                CurrentIndex = -1
+                TargetIndex = -1
             });
             optPath = new(ref entity.Get<components.AIPath>());
         }
         ref var path = ref optPath.Value;
+        path.Waypoints.Clear();
         path.WaypointIds.Clear();
-        path.CurrentIndex = 0;
+        path.EdgeKinds.Clear();
+        path.TargetIndex = 0;
         path.LastResult = FindPathResult.NotFound;
         return ref path;
     }
