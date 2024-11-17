@@ -56,6 +56,8 @@ public sealed class DuelGame : Game
             new systems.effect.Sound(this),
 
             // Fairies
+            new systems.AIPath(this),
+            new systems.AIMovement(this),
             new systems.FairyPhysics(this),
             new systems.FairyAnimation(this),
             new systems.FairyActivation(this),
@@ -90,20 +92,25 @@ public sealed class DuelGame : Game
             new systems.ModelRenderer(this, components.RenderOrder.LateSolid),
             new systems.ModelRenderer(this, components.RenderOrder.LateAdditive),
             new systems.effect.EffectRenderer(this, components.RenderOrder.LateEffect),
-            new systems.effect.EffectModelRenderer(this, components.RenderOrder.LateEffect));
+            new systems.effect.EffectModelRenderer(this, components.RenderOrder.LateEffect),
+            
+            new systems.DebugAIPath(this));
 
         LoadScene($"sd_{message.SceneId:D4}");
         camera.Location.LocalPosition = -ecsWorld.Get<rendering.WorldMesh>().Origin;
 
         var playerEntity = CreateParticipant(message.OverworldPlayer, isPlayer: true);
-        foreach (var enemy in message.OverworldEnemies)
-            CreateParticipant(enemy, isPlayer: false);
+        var enemyEntities = new DefaultEcs.Entity[message.OverworldEnemies.Length];
+        for (int i = 0; i < enemyEntities.Length; i++)
+            enemyEntities[i] = CreateParticipant(message.OverworldEnemies[i], isPlayer: false);
 
         playerEntity.Set<components.SoundListener>();
         playerEntity.Set(components.DuelCameraMode.ZoomIn);
         ecsWorld.Set(new components.PlayerEntity(playerEntity));
 
         ecsWorld.Publish(new messages.SwitchFairy(playerEntity));
+        foreach (var enemy in enemyEntities)
+            ecsWorld.Publish(new messages.SwitchFairy(enemy));
     }
 
     private DefaultEcs.Entity CreateParticipant(DefaultEcs.Entity overworldEntity, bool isPlayer)
@@ -122,7 +129,10 @@ public sealed class DuelGame : Game
                 continue;
             var fairy = CreateFairyFor(duelEntity, invFairy);
             if (!isPlayer)
+            {
                 fairy.Set<components.FairyDistanceVisibility>();
+                fairy.Set<components.AIMovement>();
+            }
             participant.Fairies[i] = fairy;
         }
 

@@ -103,6 +103,11 @@ public partial class Inventory
         spell.mana = (uint)Math.Clamp((int)spell.mana + delta, 0, dbRow.MaxMana);
     }
 
+    public static void AddJumpMana(InventoryFairy fairy, int delta)
+    {
+        fairy.jumpMana = Math.Clamp(fairy.jumpMana + delta, 0, fairy.maxJumpMana);
+    }
+
     public void AddXP(InventoryFairy fairy, uint moreXP)
     {
         fairy.xpChangeCount += moreXP;

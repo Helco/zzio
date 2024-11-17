@@ -14,6 +14,7 @@ public static class MathEx
     public const float DegToRad = MathF.PI / 180f;
     public const float RadToDeg = 180f / MathF.PI;
     public const float ZeroEpsilon = 0.1E-10f;
+    public const float TwoPI = MathF.PI * 2f;
     public static readonly Vector2 Vector2NaN = Vector2.One * float.NaN;
     public static readonly Vector3 Vector3NaN = Vector3.One * float.NaN;
     public static readonly Vector4 Vector4NaN = Vector4.One * float.NaN;
@@ -42,6 +43,18 @@ public static class MathEx
 
     [MethodImpl(MIOptions)]
     public static bool CmpZero(float a) => Math.Abs(a) < ZeroEpsilon;
+
+    [MethodImpl(MIOptions)]
+    public static float NormalizeAngle(float angle)
+    {
+        while (angle < -MathF.PI) angle += TwoPI;
+        while (angle > +MathF.PI) angle -= TwoPI;
+        return angle;
+    }
+
+    [MethodImpl(MIOptions)]
+    public static Vector3 HorizontalDirection(float angle) =>
+        new(MathF.Sin(angle), 0f, MathF.Cos(angle));
 
     [MethodImpl(MIOptions)]
     public static Vector2 Floor(Vector2 v) =>

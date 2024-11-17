@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using NUnit.Framework;
 
-namespace zzre.core.tests.math;
+namespace zzre.tests;
 
 [TestFixture]
 public class TestMath
@@ -57,5 +57,67 @@ public class TestMath
                 (float)(cosPhi));
             yield return vec;
         }
+    }
+
+    public readonly record struct AlmostANumber(int value)
+        : IComparable<AlmostANumber>, IComparisonOperators<AlmostANumber, AlmostANumber, bool>
+    {
+        public int CompareTo(AlmostANumber other) => value - other.value;
+        public static bool operator <(AlmostANumber left, AlmostANumber right) => left.CompareTo(right) < 0;
+        public static bool operator >(AlmostANumber left, AlmostANumber right) => left.CompareTo(right) > 0;
+        public static bool operator <=(AlmostANumber left, AlmostANumber right) => left.CompareTo(right) <= 0;
+        public static bool operator >=(AlmostANumber left, AlmostANumber right) => left.CompareTo(right) >= 0;
+    }
+    public static readonly AlmostANumber A = new(1), B = new(2), C = new(3), D = new(4), E = new(5);
+
+    [Test, Repeat(1000)]
+    public void TestNextOf()
+    {
+        var value = Random.Shared.NextOf(new[] { A, B, C, D, E });
+        Assert.That(value, Is.AnyOf(A, B, C, D, E));
+    }
+
+    [Test]
+    public void TestNextOfEmpty()
+    {
+        Assert.That(() =>
+        {
+            Random.Shared.NextOf(new AlmostANumber[] { });
+        }, Throws.ArgumentException);
+    }
+
+    [Test, Repeat(1000)]
+    public void TestNextOfExceptEmpty()
+    {
+        var value = Random.Shared.NextOf<AlmostANumber>([A, B, C, D, E], []);
+        Assert.That(value, Is.AnyOf(A, B, C, D, E));
+    }
+
+    [Test, Repeat(1000)]
+    public void TestNextOfDisjunct()
+    {
+        var value = Random.Shared.NextOf<AlmostANumber>([A, B, C], [D, E]);
+        Assert.That(value, Is.AnyOf(A, B, C));
+    }
+
+    [Test, Repeat(1000)]
+    public void TestNextOfEmptyInput()
+    {
+        var value = Random.Shared.NextOf<AlmostANumber>([], [A, B, C, D, E]);
+        Assert.That(value, Is.Null);
+    }
+
+    [Test, Repeat(1000)]
+    public void TestNextOfSuper()
+    {
+        var value = Random.Shared.NextOf<AlmostANumber>([B, C, D], [A, B, C, D, E]);
+        Assert.That(value, Is.Null);
+    }
+
+    [Test, Repeat(1000)]
+    public void TestNextOfExcept()
+    {
+        var value = Random.Shared.NextOf<AlmostANumber>([A, B, C, D, E], [B, C, D]);
+        Assert.That(value, Is.AnyOf(A, E));
     }
 }

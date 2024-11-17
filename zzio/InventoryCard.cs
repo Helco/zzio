@@ -90,8 +90,8 @@ public class InventoryFairy : InventoryCard
     public uint maxMHP;
     public float moveSpeed;
     public float jumpPower;
-    public float jumpMana = 10000f;
-    public float maxJumpMana = 10000f;
+    public int jumpMana = 10000;
+    public int maxJumpMana = 10000;
     public float criticalHit;
 
     protected override void ReadSub(BinaryReader r)
