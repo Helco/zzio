@@ -7,10 +7,10 @@ public struct AIPath
     public PooledList<uint> WaypointIds;
     public PooledList<Vector3> Waypoints;
     public PooledList<WaypointEdgeKind> EdgeKinds;
-    public int CurrentIndex;
+    public int TargetIndex;
     public FindPathResult LastResult;
 
-    public readonly bool HasPath => CurrentIndex + 1 < WaypointIds.Count;
+    public readonly bool HasNextWaypoint => TargetIndex + 1 < WaypointIds.Count;
 }
 
 /*

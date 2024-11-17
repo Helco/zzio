@@ -188,12 +188,12 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
     {
         while (moveDistLeft > 0f)
         {
-            if (path.HasPath && movement.DistToCurWp - (movement.DistMovedToCurWp + moveDistLeft) > 0f)
+            if (!path.Waypoints.IsEmpty && movement.DistToCurWp - (movement.DistMovedToCurWp + moveDistLeft) > 0f)
                 break;
             //if (movement.ShouldAdvanceNode && path.WaypointIds.Count > 2) // TODO: Why 2?
             //    path.CurrentIndex++;
 
-            var needsNewPath = /*path.WaypointIds.Count < MinPathLength || */ !path.HasPath;
+            var needsNewPath = /*path.WaypointIds.Count < MinPathLength || */ !path.HasNextWaypoint;
             // TODO: Add bailout behavior
 
             if (needsNewPath)
@@ -218,13 +218,13 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
                 // I skipped a lot of weird original cached/non-cached/smoothing waypoint handling here
             }
 
-            Debug.Assert(path.WaypointIds.Count > 0 && path.CurrentIndex + 1 < path.WaypointIds.Count);
-            moveDistLeft -= Vector3.Distance(path.Waypoints[path.CurrentIndex], movement.CurrentPos); // rest distance
-            movement.CurrentPos = path.Waypoints[path.CurrentIndex];
-            path.CurrentIndex++;
-            movement.CurrentEdgeKind = path.EdgeKinds[path.CurrentIndex];
-            movement.DirToCurrentWp = MathEx.SafeNormalize(path.Waypoints[path.CurrentIndex] - movement.CurrentPos);
-            movement.DistToCurWp = Vector3.Distance(path.Waypoints[path.CurrentIndex], movement.CurrentPos);
+            Debug.Assert(path.WaypointIds.Count > 0 && path.HasNextWaypoint);
+            moveDistLeft -= Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos); // rest distance
+            movement.CurrentPos = path.Waypoints[path.TargetIndex];
+            path.TargetIndex++;
+            movement.CurrentEdgeKind = path.EdgeKinds[path.TargetIndex];
+            movement.DirToCurrentWp = MathEx.SafeNormalize(path.Waypoints[path.TargetIndex] - movement.CurrentPos);
+            movement.DistToCurWp = Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos);
             movement.DistMovedToCurWp = 0f;
 
             // TODO: Investigate wheter DistToCurWp can be zero upon switch
