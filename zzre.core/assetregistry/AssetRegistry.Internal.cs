@@ -237,7 +237,7 @@ public partial class AssetRegistry
         {
             asset.StateLock.Release();
         }
-        
+
         // We still use the normal loading mechanism but asynchronously and wait ourselves
         Load(asset, AssetLoadPriority.High, applyAction: null, addRef: false);
         return new ValueTask<TAsset>(asset.LoadTask.ContinueWith(_ =>
@@ -245,5 +245,25 @@ public partial class AssetRegistry
             Debug.Assert(asset.State == AssetState.Loaded); // on exception we should have thrown already
             return tasset;
         }));
+    }
+
+    void IAssetRegistryInternal.AddRefOf(Guid assetId)
+    {
+        IAsset? asset = null;
+        lock (assets)
+            asset = assets.GetValueOrDefault(assetId);
+        if (asset is null)
+            throw new InvalidOperationException("Asset was not found or already deleted, this should not happen if you used a valid handle");
+        asset.StateLock.Wait();
+        try
+        {
+            if (asset.State is AssetState.Disposed)
+                throw new InvalidOperationException("Asset was already disposed, this should not happen if you used a valid handle");
+            asset.AddRef();
+        }
+        finally
+        {
+            asset.StateLock.Release();
+        }
     }
 }

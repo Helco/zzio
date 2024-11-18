@@ -1002,7 +1002,7 @@ public class TestAssetRegistry
         Assert.That(() =>
         {
             using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.Synchronous, null);
-        }, Throws.InstanceOf<IOException>().Or.InstanceOf<AggregateException>()); // aggregate because we will always use Task.WhenAll to wait for secondaries
+        }, Throws.InstanceOf<IOException>().Or.InstanceOf<AggregateException>()); 
 
         Assert.That(assetHandleSecondary.IsLoaded, Is.False);
         Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
@@ -1022,7 +1022,7 @@ public class TestAssetRegistry
         Assert.That(() =>
         {
             using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.Synchronous, null);
-        }, Throws.InstanceOf<IOException>().Or.InstanceOf<AggregateException>()); // aggregate because we will always use Task.WhenAll to wait for secondaries
+        }, Throws.InstanceOf<IOException>().Or.InstanceOf<AggregateException>()); 
 
         Assert.That(assetHandleSecondary.IsLoaded, Is.False);
         Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
@@ -1210,7 +1210,7 @@ public class TestAssetRegistry
         Assert.That(() =>
         {
             assetHandlePrimary.Get<ManualGlobalAsset>();
-        }, Throws.InstanceOf<AggregateException>()); // aggregate because we will always use Task.WhenAll to wait for secondaries
+        }, Throws.InstanceOf<AggregateException>()); 
 
         Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
         Assert.That(assetInfoSecondary1.WasUnloaded.Task.IsCompletedSuccessfully);
