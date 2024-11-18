@@ -13,8 +13,7 @@ namespace zzre.tests;
 [TestFixture(TaskContinuationOptions.None)]
 [TestFixture(TaskContinuationOptions.RunContinuationsAsynchronously)]
 [CancelAfter(1000)]
-[Apartment(ApartmentState.STA)] // TODO: Do not merge with this, Linux CI will be useless D:
-public class TestAssetRegistry
+public class TestAssetRegistry : SynchronizedTestFixture
 {
     class SynchronousAsset : Asset
     {
