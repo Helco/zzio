@@ -50,6 +50,15 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
         AssetID = assetId;
     }
 
+    internal AssetHandle(AssetHandle original)
+    {
+        original.CheckDisposed();
+        registryInternal = original.registryInternal;
+        handleScope = original.handleScope;
+        AssetID = original.AssetID;
+        registryInternal.AddRefOf(original.AssetID);
+    }
+
     /// <summary>Disposes the stake on the asset this handle is tied to</summary>
     /// <remarks>*May* trigger disposal of the asset and related secondary assets</remarks>
     public void Dispose()

@@ -93,6 +93,7 @@ internal interface IAssetRegistryInternal : IAssetRegistry
     void QueueRemoveAsset(IAsset asset);
     void QueueApplyAsset(IAsset asset);
     bool IsLoaded(Guid assetId);
+    void AddRefOf(Guid assetId);
     TAsset GetLoadedAsset<TAsset>(Guid assetId) where TAsset : IAsset;
     ValueTask<TAsset> GetLoadedAssetAsync<TAsset>(Guid assetId) where TAsset : IAsset;
 }

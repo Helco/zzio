@@ -150,8 +150,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
                 throw new InvalidOperationException("LoadAsync is not allowed to return LoadAsynchronously");
             if (!ReferenceEquals(secondaryAssetSet, NoSecondaryAssets))
             {
-                secondaryAssets = secondaryAssetSet.ToArray();
-                EnsureLocality(secondaryAssets);
+                PrepareSecondaryAssets(secondaryAssetSet);
                 ct.ThrowIfCancellationRequested();
 
                 if (secondaryAssets.Length > 0 && NeedsSecondaryAssets)
@@ -180,8 +179,8 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
             (this as IAsset).StateLock.Wait();
             try
             {
-                (this as IAsset).Dispose();
                 completionSource.SetException(ex);
+                (this as IAsset).Dispose();
             }
             finally
             {
@@ -207,12 +206,15 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
 #pragma warning restore CA1513 // Use ObjectDisposedException throw helper
     }
 
-    [Conditional("DEBUG")]
-    private void EnsureLocality(AssetHandle[] secondaryAssets)
+    private void PrepareSecondaryAssets(IEnumerable<AssetHandle> secondaryAssetSet)
     {
-        foreach (var secondary in secondaryAssets)
+        secondaryAssets = secondaryAssetSet.ToArray();
+        foreach (ref var secondary in secondaryAssets.AsSpan())
+        {
             if (!InternalRegistry.IsLocalRegistry && secondary.registryInternal.IsLocalRegistry)
                 throw new InvalidOperationException("Global assets cannot load local assets as secondary ones");
+            secondary = new(secondary); // increments the reference count
+        }
     }
 
     /// <summary>Whether marking this asset as loaded should be deferred until all secondary asset are loaded as well</summary>
