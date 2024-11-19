@@ -1181,6 +1181,7 @@ public class TestAssetRegistry : SynchronizedTestFixture
         Assert.That(assetInfoSecondary.WasUnloaded.Task.IsCompletedSuccessfully);
     }
 
+    // TODO: Why has this no Test attribute? 
     public async Task Error_DeadlockAssetStateAndSecondaryException()
     {
         // motivation is that we want to create a scenario where:
@@ -1214,5 +1215,43 @@ public class TestAssetRegistry : SynchronizedTestFixture
         Assert.That(assetInfoPrimary.WasUnloaded.Task.IsCompletedSuccessfully);
         Assert.That(assetInfoSecondary1.WasUnloaded.Task.IsCompletedSuccessfully);
         Assert.That(assetInfoSecondary2.WasUnloaded.Task.IsCompletedSuccessfully);
+    }
+
+    [Test]
+    public void ReloadAsset_Disposal([Values] AssetLoadPriority priority)
+    {
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 1);
+        assetInfo.Complete();
+        using (var _ = globalRegistry.Load(assetInfo, priority, null));
+        using (var _ = globalRegistry.Load(assetInfo, priority, null));
+        using (var _ = globalRegistry.Load(assetInfo, priority, null));
+    }
+
+    [Test]
+    public void ReloadAsset_Error([Values] AssetLoadPriority priority)
+    {
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 1);
+        assetInfo.Fail();
+        using (var _ = globalRegistry.Load(assetInfo, priority, null));
+        using (var _ = globalRegistry.Load(assetInfo, priority, null));
+        using (var _ = globalRegistry.Load(assetInfo, priority, null));
+    }
+
+    [Test]
+    public void ReloadAsset_MixedErrorAndDisposal([Values] AssetLoadPriority priority)
+    {
+        var assetInfo1 = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfo2 = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfo3 = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfo4 = new ManualGlobalAsset.Info(tcsOptions, 1);
+        assetInfo1.Fail();
+        assetInfo2.Complete();
+        assetInfo3.Fail();
+        assetInfo4.Complete();
+
+        using (var _ = globalRegistry.Load(assetInfo1, priority, null));
+        using (var _ = globalRegistry.Load(assetInfo2, priority, null));
+        using (var _ = globalRegistry.Load(assetInfo3, priority, null));
+        using (var _ = globalRegistry.Load(assetInfo4, priority, null));
     }
 }
