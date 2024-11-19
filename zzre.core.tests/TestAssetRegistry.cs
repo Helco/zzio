@@ -1217,41 +1217,59 @@ public class TestAssetRegistry : SynchronizedTestFixture
         Assert.That(assetInfoSecondary2.WasUnloaded.Task.IsCompletedSuccessfully);
     }
 
-    [Test]
-    public void ReloadAsset_Disposal([Values] AssetLoadPriority priority)
+    private async Task LoadAndWait(AssetLoadPriority priority, bool shouldFail, bool waitForCompletion)
     {
         var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 1);
-        assetInfo.Complete();
-        using (var _ = globalRegistry.Load(assetInfo, priority, null));
-        using (var _ = globalRegistry.Load(assetInfo, priority, null));
-        using (var _ = globalRegistry.Load(assetInfo, priority, null));
+        if (shouldFail)
+            assetInfo.Fail();
+        else
+            assetInfo.Complete();
+        if (shouldFail && waitForCompletion)
+        {
+            await Assert.ThatAsync(async () => 
+            {
+                using var handle = globalRegistry.Load(assetInfo, priority, null);
+                await (globalRegistry as IAssetRegistry).WaitAsyncAll(handle);
+            }, Throws.InstanceOf<IOException>().Or.InstanceOf<AggregateException>());
+        }
+        else if (shouldFail && priority is AssetLoadPriority.Synchronous)
+        {
+            // for asynchronous loads the fail is not triggered by the load, only by wait 
+            Assert.That(async () => 
+            {
+                using var handle = globalRegistry.Load(assetInfo, priority, null);
+            }, Throws.InstanceOf<IOException>().Or.InstanceOf<AggregateException>());
+        }
+        else
+        {
+            using var handle = globalRegistry.Load(assetInfo, priority, null);
+            if (waitForCompletion)
+                await (globalRegistry as IAssetRegistry).WaitAsyncAll(handle);
+        }
     }
 
     [Test]
-    public void ReloadAsset_Error([Values] AssetLoadPriority priority)
+    public async Task ReloadAsset_Disposal([Values] AssetLoadPriority priority, [Values] bool waitForCompletion)
     {
-        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 1);
-        assetInfo.Fail();
-        using (var _ = globalRegistry.Load(assetInfo, priority, null));
-        using (var _ = globalRegistry.Load(assetInfo, priority, null));
-        using (var _ = globalRegistry.Load(assetInfo, priority, null));
+        await LoadAndWait(priority, shouldFail: false, waitForCompletion);
+        await LoadAndWait(priority, shouldFail: false, waitForCompletion);
+        await LoadAndWait(priority, shouldFail: false, waitForCompletion);
     }
 
     [Test]
-    public void ReloadAsset_MixedErrorAndDisposal([Values] AssetLoadPriority priority)
+    public async Task ReloadAsset_Error([Values] AssetLoadPriority priority, [Values] bool waitForCompletion)
     {
-        var assetInfo1 = new ManualGlobalAsset.Info(tcsOptions, 1);
-        var assetInfo2 = new ManualGlobalAsset.Info(tcsOptions, 1);
-        var assetInfo3 = new ManualGlobalAsset.Info(tcsOptions, 1);
-        var assetInfo4 = new ManualGlobalAsset.Info(tcsOptions, 1);
-        assetInfo1.Fail();
-        assetInfo2.Complete();
-        assetInfo3.Fail();
-        assetInfo4.Complete();
+        await LoadAndWait(priority, shouldFail: true, waitForCompletion);
+        await LoadAndWait(priority, shouldFail: true, waitForCompletion);
+        await LoadAndWait(priority, shouldFail: true, waitForCompletion);
+    }
 
-        using (var _ = globalRegistry.Load(assetInfo1, priority, null));
-        using (var _ = globalRegistry.Load(assetInfo2, priority, null));
-        using (var _ = globalRegistry.Load(assetInfo3, priority, null));
-        using (var _ = globalRegistry.Load(assetInfo4, priority, null));
+    [Test]
+    public async Task ReloadAsset_MixedErrorAndDisposal([Values] AssetLoadPriority priority, [Values] bool waitForCompletion)
+    {
+        await LoadAndWait(priority, shouldFail: true, waitForCompletion);
+        await LoadAndWait(priority, shouldFail: false, waitForCompletion);
+        await LoadAndWait(priority, shouldFail: true, waitForCompletion);
+        await LoadAndWait(priority, shouldFail: false, waitForCompletion);
     }
 }
