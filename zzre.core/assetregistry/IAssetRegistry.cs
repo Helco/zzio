@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Threading;
+
 namespace zzre;
 
 /// <summary>Controls when an asset is actually loaded</summary>
@@ -18,8 +19,6 @@ public enum AssetLoadPriority
 /// <remarks>This interface may point to a local or a global registry</remarks>
 public interface IAssetRegistry : IDisposable
 {
-    public delegate void ApplyWithContextAction<TApplyContext>(AssetHandle handle, in TApplyContext context);
-
     internal IAssetRegistryInternal InternalRegistry { get; }
     /// <summary>The <see cref="ITagContainer"/> given to this registry at construction to be used for loading the asset contents</summary>
     ITagContainer DIContainer { get; }
@@ -68,6 +67,12 @@ public interface IAssetRegistry : IDisposable
     /// <param name="assets">Handles to the asset to wait for</param>
     /// <returns>A task completing when all given assets finish loading</returns>
     Task WaitAsyncAll(AssetHandle[] assets) => InternalRegistry.WaitAsyncAll(assets);
+
+    /// <summary>Asynchronously wait for one or more assets to finish loading</summary>
+    /// <remarks>Use this method to wait for secondary assets</remarks>
+    /// <param name="asset">Handles to the asset to wait for</param>
+    /// <returns>A task completing when all given assets finish loading</returns>
+    Task WaitAsyncAll(AssetHandle asset) => InternalRegistry.WaitAsyncAll([asset]);
 }
 
 internal interface IAssetRegistryInternal : IAssetRegistry
@@ -81,16 +86,14 @@ internal interface IAssetRegistryInternal : IAssetRegistry
         delegate* managed<AssetHandle, ref readonly TApplyContext, void> applyFnptr,
         in TApplyContext applyContext);
 
-    void AddApplyAction<TApplyContext>(AssetHandle asset,
-        ApplyWithContextAction<TApplyContext> applyAction,
-        in TApplyContext applyContext);
-
     void AddApplyAction(AssetHandle asset,
         Action<AssetHandle> applyAction);
 
     void DisposeHandle(AssetHandle handle);
-    ValueTask QueueRemoveAsset(IAsset asset);
-    ValueTask QueueApplyAsset(IAsset asset);
+    void QueueRemoveAsset(IAsset asset);
+    void QueueApplyAsset(IAsset asset);
     bool IsLoaded(Guid assetId);
-    TAsset GetLoadedAsset<TAsset>(Guid assetId);
+    void AddRefOf(Guid assetId);
+    TAsset GetLoadedAsset<TAsset>(Guid assetId) where TAsset : IAsset;
+    ValueTask<TAsset> GetLoadedAssetAsync<TAsset>(Guid assetId) where TAsset : IAsset;
 }

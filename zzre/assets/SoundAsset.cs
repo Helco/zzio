@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using Silk.NET.OpenAL;
 using Silk.NET.OpenAL.Extensions.EXT;
 using Silk.NET.SDL;
@@ -29,7 +28,7 @@ public sealed class SoundAsset : Asset
         this.info = info;
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override IEnumerable<AssetHandle> Load()
     {
         if (!diContainer.TryGetTag(out OpenALDevice device) ||
             !diContainer.TryGetTag(out SoundContext context))

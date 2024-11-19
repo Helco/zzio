@@ -1,6 +1,6 @@
 ﻿namespace zzre;
 
-partial class AssetRegistry
+public partial class AssetRegistry
 {
     /// <summary>
     /// Adds watchers to automatically dispose <see cref="AssetHandle"/> components when they are removed from an entity or the world is disposed
