@@ -24,6 +24,7 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     private readonly IDisposable removedSubscription;
     protected readonly IZanzarahContainer zzContainer;
     protected readonly Zanzarah zanzarah;
+    protected Inventory inventory => zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
     protected readonly UI ui;
     protected readonly DefaultEcs.World uiWorld;// necessary as Dialog UI is owned by the game and not by the UI.
                                                 // Probably worth some cleanup but this would mean merging 

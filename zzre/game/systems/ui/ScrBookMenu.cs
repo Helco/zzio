@@ -19,7 +19,10 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         new(0xB031B8B1), // Jump Ability
         new(0xB6CA5A11)  // Special
     ];
-    private static readonly UID UIDEvol = new (0x69226721); // Evolution at level
+    private static readonly UID UIDEvol = new(0x69226721); // Evolution at level
+
+    // elementIds: 0-76 are fairy buttons
+    // 1000 etc are nav buttons from InGameScreen
 
     public ScrBookMenu(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
     {
@@ -29,58 +32,56 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
 
     protected override void HandleOpen(in messages.ui.OpenBookMenu message)
     {
-        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
         if (!inventory.Contains(StdItemId.FairyBook))
             return;
 
-        var entity = World.CreateEntity();
-        entity.Set<components.ui.ScrBookMenu>();
-        ref var book = ref entity.Get<components.ui.ScrBookMenu>();
-        book.Inventory = inventory;
-
-        preload.CreateFullBackOverlay(entity);
-
+        var uiEntity = World.CreateEntity();
+        uiEntity.Set<components.ui.ScrBookMenu>();
+        ref var book = ref uiEntity.Get<components.ui.ScrBookMenu>();
         book.Fairies = [.. db.Fairies.OrderBy(fairyRow => fairyRow.CardId.EntityId)];
-        book.FairyButtons = [];
         book.Sidebar = default;
         book.Crosshair = default;
 
-        preload.CreateImage(entity)
-            .With(-new Vector2(320, 240))
+        preload.CreateFullBackOverlay(uiEntity);
+
+        // Draw Fairy Book background
+        preload.CreateImage(uiEntity)
+            .With(components.ui.FullAlignment.Center)
             .WithBitmap("col000")
             .WithRenderOrder(1)
             .Build();
 
-        preload.CreateTooltipTarget(entity)
-            .With(new Vector2(-320 + 11, -240 + 11))
+        preload.CreateTooltipTarget(uiEntity)
+            .With(Mid + new Vector2(11, 11))
             .WithText("{205} - ")
             .Build();
 
-        CreateTopButtons(preload, entity, inventory, IDOpenFairybook);
-        CreateFairyButtons(preload, entity, inventory, ref book);
+        CreateTopButtons(preload, uiEntity, inventory, IDOpenFairybook);
+        CreateFairyButtons(uiEntity, ref book);
     }
 
-    private static void CreateFairyButtons(UIBuilder preload, in DefaultEcs.Entity entity, Inventory inventory, ref components.ui.ScrBookMenu book)
+    private void CreateFairyButtons(in DefaultEcs.Entity entity, ref components.ui.ScrBookMenu book)
     {
         var fairies = book.Fairies;
         for (int i = 0; i < fairies.Length; i++)
         {
             if (inventory.Contains(fairies[i].CardId))
             {
-                var element = new components.ui.ElementId(1 + i);
+                // Fairy icon
                 var button = preload.CreateButton(entity)
-                    .With(element)
+                    .With(new components.ui.ElementId(i))
                     .With(Mid + FairyButtonPos(i))
                     .With(new components.ui.ButtonTiles(fairies[i].CardId.EntityId))
                     .With(UIPreloadAsset.Wiz000)
                     .Build();
                 button.Set(button.Get<Rect>().GrownBy(new Vector2(5, 5))); // No gaps
                 button.Set(new components.ui.Silent());
-                book.FairyButtons.Add(element, fairies[i]);
 
                 // In the original engine, only the first fairy is checked for isInUse
                 // This is an intentional bug fix
-                if (inventory.Fairies.Any(c => fairies[i].CardId == c.cardId && c.isInUse)) {
+                if (inventory.Fairies.Any(c => fairies[i].CardId == c.cardId && c.isInUse))
+                {
+                    // "Fairy is equipped" indicator
                     preload.CreateImage(entity)
                         .With(Mid + FairyButtonPos(i))
                         .With(UIPreloadAsset.Inf000, 16)
@@ -91,24 +92,16 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
         }
     }
 
-    private DefaultEcs.Entity CreateSidebar(UIBuilder preload, in DefaultEcs.Entity parent, FairyRow fairyRow, ref components.ui.ScrBookMenu book)
+    private DefaultEcs.Entity CreateSidebar(in DefaultEcs.Entity parent, ref components.ui.ScrBookMenu book, int fairyI)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
 
-        var fairyI = Array.IndexOf(book.Fairies, fairyRow) + 1;
-
-        var element = new components.ui.ElementId(0);
-        preload.CreateButton(entity)
-            .With(element)
-            .With(Mid + new Vector2(160, 218))
-            .With(new components.ui.ButtonTiles(fairyRow.CardId.EntityId))
-            .With(UIPreloadAsset.Wiz000)
-            .Build();
+        var fairyRow = book.Fairies[fairyI];
 
         preload.CreateLabel(entity)
             .With(Mid + new Vector2(21, 57))
-            .WithText($"#{fairyI} {fairyRow.Name}")
+            .WithText($"#{fairyI + 1} {fairyRow.Name}")
             .With(UIPreloadAsset.Fnt000)
             .Build();
 
@@ -130,58 +123,59 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
                 .With(UIPreloadAsset.Fnt002)
                 .Build();
 
-        CreateStat(preload, entity, 0, Math.Min(500, fairyRow.MHP) / 100);
-        CreateStat(preload, entity, 1, fairyRow.MovSpeed + 1);
-        CreateStat(preload, entity, 2, fairyRow.JumpPower + 1);
-        CreateStat(preload, entity, 3, fairyRow.CriticalHit + 1);
+        preload.CreateImage(entity)
+            .With(Mid + new Vector2(160, 218))
+            .With(UIPreloadAsset.Wiz000, fairyRow.CardId.EntityId)
+            .Build();
 
-        const float MaxTextWidth = 190f;
+        preload.CreateLabel(entity)
+            .With(Mid + new Vector2(21, 271))
+            .WithText(String.Join("\n", UIDStatNames.Select(uid => db.GetText(uid).Text)))
+            .WithLineHeight(17)
+            .With(UIPreloadAsset.Fnt002)
+            .Build();
+
+        preload.CreateLabel(entity)
+            .With(Mid + new Vector2(111, 266))
+            .WithText(StatsLights([
+                Math.Min(500, fairyRow.MHP) / 100,
+                fairyRow.MovSpeed + 1,
+                fairyRow.JumpPower + 1,
+                fairyRow.CriticalHit + 1
+            ]))
+            .WithLineHeight(17)
+            .With(UIPreloadAsset.Fnt001)
+            .Build();
+
         preload.CreateLabel(entity)
             .With(Mid + new Vector2(21, 346))
             .WithText(fairyRow.Info)
             .With(UIPreloadAsset.Fnt002)
-            .WithLineWrap(MaxTextWidth)
+            .WithLineWrap(190f)
             .Build();
 
         return entity;
     }
 
-    private void CreateStat(UIBuilder preload, in DefaultEcs.Entity entity, int index, int value)
+    private static string StatsLights(int[] values) =>
+        String.Join("\n", values.Select(value => UIBuilder.GetLightsIndicator(value)));
+
+    private static Vector2 FairyButtonPos(int fairyI) =>
+        new Vector2(226 + 45 * (fairyI % 9), 66 + 45 * (fairyI / 9));
+
+    private void HandleElementDown(DefaultEcs.Entity clickedEntity, components.ui.ElementId id)
     {
-        preload.CreateLabel(entity)
-            .With(Mid + new Vector2(21, 271 + index*17))
-            .WithText(db.GetText(UIDStatNames[index]).Text)
-            .With(UIPreloadAsset.Fnt002)
-            .Build();
-
-        preload.CreateLabel(entity)
-            .With(Mid + new Vector2(111, 266 + index*17))
-            .WithText(UIBuilder.GetLightsIndicator(value))
-            .With(UIPreloadAsset.Fnt001)
-            .Build();
-    }
-
-    private static Vector2 FairyButtonPos(int fairyI) {
-        return new Vector2(226 + 45 * (fairyI % 9), 66 + 45 * (fairyI / 9));
-    }
-
-    protected override void Update(float timeElapsed, in DefaultEcs.Entity entity, ref components.ui.ScrBookMenu bookMenu)
-    {
-        base.Update(timeElapsed, entity, ref bookMenu);
-    }
-
-    private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId id)
-    {
-        var bookMenuEntity = Set.GetEntities()[0];
-        ref var book = ref bookMenuEntity.Get<components.ui.ScrBookMenu>();
-
-        if (book.FairyButtons.TryGetValue(id, out var fairyRow))
+        var uiEntity = Set.GetEntities()[0];
+        ref var book = ref uiEntity.Get<components.ui.ScrBookMenu>();
+        var fairyI = id.Value;
+        var fairyRow = book.Fairies.ElementAtOrDefault(fairyI);
+        if (fairyRow != default)
         {
             book.Sidebar.Dispose();
-            book.Sidebar = CreateSidebar(preload, entity, fairyRow, ref book);
+            book.Sidebar = CreateSidebar(uiEntity, ref book, fairyI);
             book.Crosshair.Dispose();
-            book.Crosshair = preload.CreateImage(entity)
-                .With(Mid + new Vector2(-2, -2) + FairyButtonPos(book.Fairies.IndexOf(fairyRow)))
+            book.Crosshair = preload.CreateImage(uiEntity)
+                .With(Mid + new Vector2(-2, -2) + FairyButtonPos(fairyI))
                 .With(UIPreloadAsset.Dnd000, 0)
                 .WithRenderOrder(-2)
                 .Build();
@@ -189,40 +183,43 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
 
         if (id == IDOpenDeck)
         {
-            bookMenuEntity.Dispose();
+            uiEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenDeck>();
         }
         else if (id == IDOpenRunes)
         {
-            bookMenuEntity.Dispose();
+            uiEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
         }
         else if (id == IDOpenMap)
         {
-            bookMenuEntity.Dispose();
+            uiEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
         }
         else if (id == IDClose)
-            bookMenuEntity.Dispose();
+            uiEntity.Dispose();
     }
 
     protected override void HandleKeyDown(KeyCode key)
     {
-        var bookMenuEntity = Set.GetEntities()[0];
+        var uiEntity = Set.GetEntities()[0];
         base.HandleKeyDown(key);
-        if (key == KeyCode.KF2) {
-            bookMenuEntity.Dispose();
+        if (key == KeyCode.KF2)
+        {
+            uiEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
         }
-        if (key == KeyCode.KF4) {
-            bookMenuEntity.Dispose();
+        if (key == KeyCode.KF4)
+        {
+            uiEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
         }
-        if (key == KeyCode.KF5) {
-            bookMenuEntity.Dispose();
+        if (key == KeyCode.KF5)
+        {
+            uiEntity.Dispose();
             zanzarah.UI.Publish<messages.ui.OpenDeck>();
         }
-        if (key == KeyCode.KReturn|| key == KeyCode.KEscape || key == KeyCode.KF3)
+        if (key == KeyCode.KReturn || key == KeyCode.KEscape || key == KeyCode.KF3)
             Set.DisposeAll();
     }
 }
