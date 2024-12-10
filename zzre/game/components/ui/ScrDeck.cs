@@ -1,4 +1,4 @@
-﻿namespace zzre.game.components.ui;
+namespace zzre.game.components.ui;
 
 public struct ScrDeck
 {
@@ -14,7 +14,6 @@ public struct ScrDeck
     public Tab ActiveTab;
     public bool IsGridMode;
     public int Scroll;
-    public Inventory Inventory;
     public DefaultEcs.Entity SummaryBackground;
     public DefaultEcs.Entity SpellBackground;
     public DefaultEcs.Entity ListSlider;

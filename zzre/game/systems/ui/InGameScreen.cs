@@ -38,7 +38,7 @@ public static class InGameScreen
 
         preload.CreateButton(parent)
             .With(IDSaveGame)
-            .With(Mid + new Vector2(384, 3))
+            .With(Mid + new Vector2(385, 3))
             .With(new components.ui.ButtonTiles(26, 27))
             .With(UIPreloadAsset.Btn002)
             .WithTooltip(0x7113B8A1)

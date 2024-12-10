@@ -59,7 +59,6 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         var entity = World.CreateEntity();
         entity.Set<components.ui.ScrDeck>();
         ref var deck = ref entity.Get<components.ui.ScrDeck>();
-        deck.Inventory = inventory;
         deck.DeckSlotParents = [];
 
         CreateBackgrounds(entity, ref deck);
@@ -76,23 +75,23 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         preload.CreateFullBackOverlay(entity);
 
         preload.CreateImage(entity)
-            .With(-new Vector2(52, 240))
+            .With(Mid + new Vector2(268, 0))
             .WithBitmap("dec000")
             .WithRenderOrder(1)
             .Build();
 
         deck.SpellBackground = preload.CreateImage(entity)
-            .With(-new Vector2(320, 240))
+            .With(Mid)
             .WithBitmap("dec001")
             .WithRenderOrder(1);
 
         deck.SummaryBackground = preload.CreateImage(entity)
-            .With(-new Vector2(320, 240))
+            .With(Mid)
             .WithBitmap("dec002")
             .WithRenderOrder(1);
 
         preload.CreateTooltipTarget(entity)
-            .With(new Vector2(-320 + 11, -240 + 11))
+            .With(Mid + new Vector2(11, 11))
             .WithText("{205} - ")
             .Build();
     }
@@ -159,14 +158,18 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             .WithTooltip(0xA086B911)
             .Build();
 
-        // TODO: Add pixie count label
+        preload.CreateLabel(entity)
+            .With(Mid + new Vector2(337, 42))
+            .With(UIPreloadAsset.Fnt002)
+            .WithText($"{zanzarah.OverworldGame!.GetTag<zzio.Savegame>().pixiesCatched}/30")
+            .Build();
     }
 
     private void CreateFairySlots(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
         for (int i = 0; i < Inventory.FairySlotCount; i++)
         {
-            var fairy = deck.Inventory.GetFairyAtSlot(i);
+            var fairy = inventory.GetFairyAtSlot(i);
             var fairyI = fairy?.cardId.EntityId ?? -1;
             preload.CreateButton(entity)
                 .With(FirstFairySlot + i)
@@ -211,10 +214,10 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         var nextElementId = FirstSpellSlot;
         for (int fairyI = 0; fairyI < Inventory.FairySlotCount; fairyI++)
         {
-            var fairy = deck.Inventory.GetFairyAtSlot(fairyI);
+            var fairy = inventory.GetFairyAtSlot(fairyI);
             for (int spellI = 0; spellI < InventoryFairy.SpellSlotCount; spellI++)
             {
-                var spell = fairy == null ? null : deck.Inventory.GetSpellAtSlot(fairy, spellI);
+                var spell = fairy == null ? null : inventory.GetSpellAtSlot(fairy, spellI);
                 preload.CreateButton(deck.DeckSlotParents[fairyI])
                     .With(nextElementId)
                     .With(DeckSlotPos(fairyI, spellI))
@@ -261,7 +264,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             deck.DeckSlotParents[fairyI].Dispose();
         var slotParent = deck.DeckSlotParents[fairyI] = World.CreateEntity();
         slotParent.Set(new components.Parent(entity));
-        var fairy = deck.Inventory.GetFairyAtSlot(fairyI);
+        var fairy = inventory.GetFairyAtSlot(fairyI);
         if (fairy == null)
             return;
 
@@ -273,7 +276,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
                 .WithTooltip(UIDFairyInfoDescriptions[slotI])
                 .Build();
 
-            var spell = deck.Inventory.GetSpellAtSlot(fairy, slotI);
+            var spell = inventory.GetSpellAtSlot(fairy, slotI);
             if (spell == null)
                 continue;
             preload.CreateLabel(slotParent)
@@ -286,7 +289,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         preload.CreateLabel(slotParent)
             .With(DeckSlotPos(fairyI, 0))
             .With(UIPreloadAsset.Fnt002)
-            .WithText(FormatSummary(deck.Inventory, fairy))
+            .WithText(FormatSummary(inventory, fairy))
             .Build();
 
     }
@@ -439,12 +442,12 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     private IEnumerable<InventoryCard> AllCardsOfType(in components.ui.ScrDeck deck) => deck.ActiveTab switch
     {
-        Tab.Items => deck.Inventory.Items
+        Tab.Items => inventory.Items
             .OrderBy(c => mappedDB.GetItem(c.dbUID).Unknown switch { 1 => 0, 0 => 1, _ => 2 })
             .ThenBy(c => c.cardId.EntityId),
-        Tab.Fairies => deck.Inventory.Fairies.OrderByDescending(c => c.level),
-        Tab.AttackSpells => deck.Inventory.AttackSpells.OrderBy(c => c.cardId.EntityId),
-        Tab.SupportSpells => deck.Inventory.SupportSpells.OrderBy(c => c.cardId.EntityId),
+        Tab.Fairies => inventory.Fairies.OrderByDescending(c => c.level),
+        Tab.AttackSpells => inventory.AttackSpells.OrderBy(c => c.cardId.EntityId),
+        Tab.SupportSpells => inventory.SupportSpells.OrderBy(c => c.cardId.EntityId),
         _ => []
     };
 
@@ -482,7 +485,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             {
                 InventoryItem item => FormatSummary(item),
                 InventorySpell spell => FormatSummary(spell),
-                InventoryFairy fairy => FormatSummary(deck.Inventory, fairy),
+                InventoryFairy fairy => FormatSummary(inventory, fairy),
                 _ => throw new NotSupportedException("Unknown inventory card type")
             };
             deck.ListSummaries[i].Set(new components.ui.Label(summary));
