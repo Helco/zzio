@@ -55,10 +55,6 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     protected override void HandleOpen(in messages.ui.OpenDeck message)
     {
-        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
-        if (!inventory.Contains(StdItemId.FairyBag))
-           return;
-
         World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g006.wav"));
         var entity = World.CreateEntity();
         entity.Set<components.ui.ScrDeck>();
@@ -550,23 +546,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             UpdateSliderPosition(deck);
             FillList(ref deck);
         }
-        else if (id == IDOpenRunes)
-        {
-            deckEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
-        }
-        else if (id == IDOpenFairybook)
-        {
-            deckEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
-        }
-        else if (id == IDOpenMap)
-        {
-            deckEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
-        }
-        else if (id == IDClose)
-            deckEntity.Dispose();
+        else HandleNavClick(id, zanzarah, deckEntity, IDOpenDeck);
     }
 
     private void UpdateSliderPosition(in components.ui.ScrDeck deck)
@@ -595,19 +575,6 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         var deckEntity = Set.GetEntities()[0];
         base.HandleKeyDown(key);
-        if (key == KeyCode.KF2) {
-            deckEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
-        }
-        if (key == KeyCode.KF3) {
-            deckEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
-        }
-        if (key == KeyCode.KF4) {
-            deckEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
-        }
-        if (key == KeyCode.KReturn || key == KeyCode.KEscape || key == KeyCode.KF3)
-            Set.DisposeAll();
+        HandleNavKeyDown(key, zanzarah, deckEntity, IDOpenDeck);
     }
 }

@@ -32,9 +32,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
 
     protected override void HandleOpen(in messages.ui.OpenBookMenu message)
     {
-        if (!inventory.Contains(StdItemId.FairyBook))
-            return;
-
+        World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g006.wav"));
         var uiEntity = World.CreateEntity();
         uiEntity.Set<components.ui.ScrBookMenu>();
         ref var book = ref uiEntity.Get<components.ui.ScrBookMenu>();
@@ -180,46 +178,13 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
                 .WithRenderOrder(-2)
                 .Build();
         }
-
-        if (id == IDOpenDeck)
-        {
-            uiEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenDeck>();
-        }
-        else if (id == IDOpenRunes)
-        {
-            uiEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
-        }
-        else if (id == IDOpenMap)
-        {
-            uiEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
-        }
-        else if (id == IDClose)
-            uiEntity.Dispose();
+        HandleNavClick(id, zanzarah, uiEntity, IDOpenFairybook);
     }
 
     protected override void HandleKeyDown(KeyCode key)
     {
         var uiEntity = Set.GetEntities()[0];
         base.HandleKeyDown(key);
-        if (key == KeyCode.KF2)
-        {
-            uiEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
-        }
-        if (key == KeyCode.KF4)
-        {
-            uiEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
-        }
-        if (key == KeyCode.KF5)
-        {
-            uiEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenDeck>();
-        }
-        if (key == KeyCode.KReturn || key == KeyCode.KEscape || key == KeyCode.KF3)
-            Set.DisposeAll();
+        HandleNavKeyDown(key, zanzarah, uiEntity, IDOpenFairybook);
     }
 }
