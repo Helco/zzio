@@ -166,6 +166,7 @@ public class UIBuilder : BaseDisposable
         ZZClass.Dark => GetDBText(new UID(0x8313DCA1)), // Dark
         ZZClass.Chaos => GetDBText(new UID(0xC659DCA1)), // Chaos
         ZZClass.Metal => GetDBText(new UID(0x3CE1DCA1)), // Metal
+        ZZClass.Neutral => GetDBText(new UID(0x8B6BDCA1)), // Neutral
         _ => throw new ArgumentException($"Unknown spell class: {zzClass}")
     };
 }
