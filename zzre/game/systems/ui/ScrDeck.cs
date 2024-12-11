@@ -159,7 +159,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
         preload.CreateButton(entity)
             .With(IDSwitchListMode)
-            .With(tabButtonRect.Min + new Vector2(15, 261))
+            .With(tabButtonRect.Min + new Vector2(16, 261))
             .With(new components.ui.ButtonTiles(28, 29))
             .With(UIPreloadAsset.Btn002)
             .WithTooltip(0xA086B911)
