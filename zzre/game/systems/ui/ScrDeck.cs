@@ -482,6 +482,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         for (; i < deck.ListButtons.Length; i++)
         {
             deck.ListButtons[i].Set(components.Visibility.Invisible);
+            deck.ListButtons[i].Set(new components.ui.CardButton());
             deck.ListUsedMarkers[i].Set(components.Visibility.Invisible);
         }
 
@@ -589,6 +590,9 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         ResetStats(ref deck);
         var card = deck.LastHovered.Get<components.ui.CardButton>().card;
+        // Show empty stats for blank buttons
+        if (card == default)
+            return;
         var summary = FormatStats(card);
 
         deck.StatsTitle = preload.CreateLabel(entity)
