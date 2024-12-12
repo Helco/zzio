@@ -27,4 +27,6 @@ public struct ScrDeck
     public DefaultEcs.Entity StatsDescriptions;
     public DefaultEcs.Entity StatsLights;
     public DefaultEcs.Entity StatsLevel;
+    public DefaultEcs.Entity DraggedCard;
+    public DefaultEcs.Entity DraggedOverlay;
 }

@@ -457,18 +457,26 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         _ => []
     };
 
+    private bool IsClickable(InventoryCard card) => card.cardId.Type switch
+    {
+        CardType.Item => mappedDB.GetItem(card.dbUID).Script.Length != 0,
+        CardType.Spell => !card.isInUse,
+        CardType.Fairy => !card.isInUse,
+        _ => throw new ArgumentException($"Invalid inventory card type: {card.cardId.Type}")
+    };
+
     private components.ui.TooltipUID CardTooltip(InventoryItem item)
-        => mappedDB.GetItem(item.dbUID).Script.Length == 0
+        => !IsClickable(item)
         ? new UID(0x8F4510A1) // item cannot be used
         : new UID(0x75F10CA1); // select item
 
-    private static components.ui.TooltipUID CardTooltip(InventoryFairy fairy)
-        => fairy.isInUse
+    private components.ui.TooltipUID CardTooltip(InventoryFairy fairy)
+        => !IsClickable(fairy)
         ? new UID(0x9054EAB1) // fairy is in use
         : new UID(0x00B500A1); // select fairy
 
     private components.ui.TooltipUID CardTooltip(InventorySpell spell)
-        => spell.isInUse
+        => !IsClickable(spell)
         ? new UID(0x6B46EEB1) // spell is in use
         : mappedDB.GetSpell(spell.dbUID).Type == 0
         ? new UID(0xDA2B08A1) // select offensive spell
@@ -501,7 +509,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             deck.ListButtons[i].Set(new components.ui.ButtonTiles(shownCards[i].cardId.EntityId));
             deck.ListButtons[i].Set(new components.ui.CardButton(shownCards[i]));
             deck.ListButtons[i].Set(CardTooltip(shownCards[i]));
-            deck.ListUsedMarkers[i].Set(shownCards[i].isInUse || shownCards[i].cardId.Type == CardType.Item && mappedDB.GetItem(shownCards[i].dbUID).Script.Length == 0
+            deck.ListUsedMarkers[i].Set(!IsClickable(shownCards[i])
                 ? components.Visibility.Visible
                 : components.Visibility.Invisible);
         }
@@ -692,6 +700,32 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             UpdateSliderPosition(deck);
             FillList(ref deck);
         }
+        else if (id >= FirstListCell && id < FirstListCell + deck.ListButtons.Length)
+        {
+            if (clickedEntity.TryGet(out components.ui.CardButton cardButton))
+            {
+                if (cardButton.card != default && IsClickable(cardButton.card))
+                {
+                    var buttonTileSheet = ListTileSheet(deck);
+                    if (deck.DraggedCard != default) deck.DraggedCard.Dispose();
+                    deck.DraggedCard = preload.CreateImage(deckEntity)
+                        .With(Mid)
+                        .With(cardButton.card.cardId)
+                        .WithRenderOrder(-2)
+                        .Build();
+                    deck.DraggedCard.Set(new components.ui.CardButton(cardButton.card));
+                    deck.DraggedCard.Set(components.ui.UIOffset.GameUpperLeft);
+
+                    if (deck.DraggedOverlay != default) deck.DraggedOverlay.Dispose();
+                    deck.DraggedOverlay = preload.CreateImage(deckEntity)
+                        .With(Mid)
+                        .With(UIPreloadAsset.Dnd000, 0)
+                        .WithRenderOrder(-3)
+                        .Build();
+                    deck.DraggedOverlay.Set(components.ui.UIOffset.GameUpperLeft);
+                }
+            }
+        }
         else HandleNavClick(id, zanzarah, deckEntity, IDOpenDeck);
     }
 
@@ -700,6 +734,12 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         var allCardsCount = AllCardsOfType(deck).Count();
         ref var slider = ref deck.ListSlider.Get<components.ui.Slider>();
         slider = slider with { Current = Vector2.UnitY * Math.Clamp(deck.Scroll / (allCardsCount - 1f), 0, 1f) };
+    }
+
+    private void Drag(DefaultEcs.Entity entity)
+    {
+        var tiles = entity.Get<components.ui.Tile[]>();
+        tiles[0].Rect = tiles[0].Rect with { Center = ui.CursorEntity.Get<Rect>().Center };
     }
 
     protected override void Update(
@@ -714,6 +754,12 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         {
             deck.Scroll = newScrollI;
             FillList(ref deck);
+        }
+
+        if (deck.DraggedCard != default)
+        {
+            Drag(deck.DraggedCard);
+            Drag(deck.DraggedOverlay);
         }
 
         var curHovered = World.Has<components.ui.HoveredElement>()
