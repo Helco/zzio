@@ -457,7 +457,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         _ => []
     };
 
-    private bool IsClickable(InventoryCard card) => card.cardId.Type switch
+    private bool IsDraggable(InventoryCard card) => card.cardId.Type switch
     {
         CardType.Item => mappedDB.GetItem(card.dbUID).Script.Length != 0,
         CardType.Spell => !card.isInUse,
@@ -466,17 +466,17 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     };
 
     private components.ui.TooltipUID CardTooltip(InventoryItem item)
-        => !IsClickable(item)
+        => !IsDraggable(item)
         ? new UID(0x8F4510A1) // item cannot be used
         : new UID(0x75F10CA1); // select item
 
     private components.ui.TooltipUID CardTooltip(InventoryFairy fairy)
-        => !IsClickable(fairy)
+        => !IsDraggable(fairy)
         ? new UID(0x9054EAB1) // fairy is in use
         : new UID(0x00B500A1); // select fairy
 
     private components.ui.TooltipUID CardTooltip(InventorySpell spell)
-        => !IsClickable(spell)
+        => !IsDraggable(spell)
         ? new UID(0x6B46EEB1) // spell is in use
         : mappedDB.GetSpell(spell.dbUID).Type == 0
         ? new UID(0xDA2B08A1) // select offensive spell
@@ -509,7 +509,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             deck.ListButtons[i].Set(new components.ui.ButtonTiles(shownCards[i].cardId.EntityId));
             deck.ListButtons[i].Set(new components.ui.CardButton(shownCards[i]));
             deck.ListButtons[i].Set(CardTooltip(shownCards[i]));
-            deck.ListUsedMarkers[i].Set(!IsClickable(shownCards[i])
+            deck.ListUsedMarkers[i].Set(!IsDraggable(shownCards[i])
                 ? components.Visibility.Visible
                 : components.Visibility.Invisible);
         }
@@ -674,6 +674,29 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         RecreateList(entity, ref deck);
     }
 
+    private void TryDragCard(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, InventoryCard card)
+    {
+        if (!IsDraggable(card)) return;
+
+        var buttonTileSheet = ListTileSheet(deck);
+        if (deck.DraggedCard != default) deck.DraggedCard.Dispose();
+        deck.DraggedCard = preload.CreateImage(entity)
+            .With(Mid)
+            .With(card.cardId)
+            .WithRenderOrder(-2)
+            .Build();
+        deck.DraggedCard.Set(new components.ui.CardButton(card));
+        deck.DraggedCard.Set(components.ui.UIOffset.GameUpperLeft);
+
+        if (deck.DraggedOverlay != default) deck.DraggedOverlay.Dispose();
+        deck.DraggedOverlay = preload.CreateImage(entity)
+            .With(Mid)
+            .With(UIPreloadAsset.Dnd000, 0)
+            .WithRenderOrder(-3)
+            .Build();
+        deck.DraggedOverlay.Set(components.ui.UIOffset.GameUpperLeft);
+    }
+
     private void HandleElementDown(DefaultEcs.Entity clickedEntity, components.ui.ElementId id)
     {
         var deckEntity = Set.GetEntities()[0];
@@ -703,28 +726,8 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         else if (id >= FirstListCell && id < FirstListCell + deck.ListButtons.Length)
         {
             if (clickedEntity.TryGet(out components.ui.CardButton cardButton))
-            {
-                if (cardButton.card != default && IsClickable(cardButton.card))
-                {
-                    var buttonTileSheet = ListTileSheet(deck);
-                    if (deck.DraggedCard != default) deck.DraggedCard.Dispose();
-                    deck.DraggedCard = preload.CreateImage(deckEntity)
-                        .With(Mid)
-                        .With(cardButton.card.cardId)
-                        .WithRenderOrder(-2)
-                        .Build();
-                    deck.DraggedCard.Set(new components.ui.CardButton(cardButton.card));
-                    deck.DraggedCard.Set(components.ui.UIOffset.GameUpperLeft);
-
-                    if (deck.DraggedOverlay != default) deck.DraggedOverlay.Dispose();
-                    deck.DraggedOverlay = preload.CreateImage(deckEntity)
-                        .With(Mid)
-                        .With(UIPreloadAsset.Dnd000, 0)
-                        .WithRenderOrder(-3)
-                        .Build();
-                    deck.DraggedOverlay.Set(components.ui.UIOffset.GameUpperLeft);
-                }
-            }
+                if (cardButton.card != default)
+                    TryDragCard(deckEntity, ref deck, cardButton.card);
         }
         else HandleNavClick(id, zanzarah, deckEntity, IDOpenDeck);
     }
