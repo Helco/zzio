@@ -457,6 +457,31 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         _ => []
     };
 
+    private components.ui.TooltipUID CardTooltip(InventoryItem item)
+        => mappedDB.GetItem(item.dbUID).Script.Length == 0
+        ? new UID(0x8F4510A1) // item cannot be used
+        : new UID(0x75F10CA1); // select item
+
+    private static components.ui.TooltipUID CardTooltip(InventoryFairy fairy)
+        => fairy.isInUse
+        ? new UID(0x9054EAB1) // fairy is in use
+        : new UID(0x00B500A1); // select fairy
+
+    private components.ui.TooltipUID CardTooltip(InventorySpell spell)
+        => spell.isInUse
+        ? new UID(0x6B46EEB1) // spell is in use
+        : mappedDB.GetSpell(spell.dbUID).Type == 0
+        ? new UID(0xDA2B08A1) // select offensive spell
+        : new UID(0x93840CA1); // select passive spell
+
+    private components.ui.TooltipUID CardTooltip(InventoryCard card) => card.cardId.Type switch
+    {
+        CardType.Item => CardTooltip((InventoryItem)card),
+        CardType.Spell => CardTooltip((InventorySpell)card),
+        CardType.Fairy => CardTooltip((InventoryFairy)card),
+        _ => throw new ArgumentException($"Invalid inventory card type: {card.cardId.Type}")
+    };
+
     private void FillList(ref components.ui.ScrDeck deck)
     {
         var allCardsOfType = AllCardsOfType(deck);
@@ -475,7 +500,8 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             deck.ListButtons[i].Set(ListTileSheet(deck));
             deck.ListButtons[i].Set(new components.ui.ButtonTiles(shownCards[i].cardId.EntityId));
             deck.ListButtons[i].Set(new components.ui.CardButton(shownCards[i]));
-            deck.ListUsedMarkers[i].Set(shownCards[i].isInUse
+            deck.ListButtons[i].Set(CardTooltip(shownCards[i]));
+            deck.ListUsedMarkers[i].Set(shownCards[i].isInUse || shownCards[i].cardId.Type == CardType.Item && mappedDB.GetItem(shownCards[i].dbUID).Script.Length == 0
                 ? components.Visibility.Visible
                 : components.Visibility.Invisible);
         }
@@ -483,6 +509,8 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         {
             deck.ListButtons[i].Set(components.Visibility.Invisible);
             deck.ListButtons[i].Set(new components.ui.CardButton());
+            if (deck.ListButtons[i].Has<components.ui.TooltipUID>())
+                deck.ListButtons[i].Remove<components.ui.TooltipUID>();
             deck.ListUsedMarkers[i].Set(components.Visibility.Invisible);
         }
 
