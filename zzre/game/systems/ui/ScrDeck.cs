@@ -745,26 +745,8 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         tiles[0].Rect = tiles[0].Rect with { Center = ui.CursorEntity.Get<Rect>().Center };
     }
 
-    protected override void Update(
-        float elapsedTime,
-        in DefaultEcs.Entity entity,
-        ref components.ui.ScrDeck deck)
+    private void TryStartDragging(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
-        var slider = deck.ListSlider.Get<components.ui.Slider>();
-        var allCardsCount = AllCardsOfType(deck).Count();
-        var newScrollI = (int)MathF.Round(slider.Current.Y * (allCardsCount - 1) * (deck.IsGridMode ? ListRows : 1));
-        if (newScrollI != deck.Scroll)
-        {
-            deck.Scroll = newScrollI;
-            FillList(ref deck);
-        }
-
-        if (deck.DraggedCard != default)
-        {
-            Drag(deck.DraggedCard);
-            Drag(deck.DraggedOverlay);
-        }
-
         var curHovered = World.Has<components.ui.HoveredElement>()
             ? World.Get<components.ui.HoveredElement>()
             : default;
@@ -779,6 +761,30 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         {
             deck.LastHovered = curHovered.Entity;
             CreateStats(entity, ref deck);
+        }
+    }
+
+    private void UpdateScroll(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
+    {
+        var slider = deck.ListSlider.Get<components.ui.Slider>();
+        var allCardsCount = AllCardsOfType(deck).Count();
+        var newScrollI = (int)MathF.Round(slider.Current.Y * (allCardsCount - 1) * (deck.IsGridMode ? ListRows : 1));
+        if (newScrollI != deck.Scroll)
+        {
+            deck.Scroll = newScrollI;
+            FillList(ref deck);
+        }
+    }
+
+    protected override void Update(float elapsedTime, in DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
+    {
+        TryStartDragging(entity, ref deck);
+        UpdateScroll(entity, ref deck);
+
+        if (deck.DraggedCard != default)
+        {
+            Drag(deck.DraggedCard);
+            Drag(deck.DraggedOverlay);
         }
     }
 
