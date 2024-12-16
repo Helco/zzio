@@ -23,7 +23,7 @@ public partial class ScrDeck
         slot.buttonId = id;
         slot.button = preload.CreateButton(entity)
             .With(id)
-            .With(Rect.FromTopLeftSize(pos, SlotButtonSize))
+            .With(pos)
             .With(new components.ui.ButtonTiles(-1))
             .With(UIPreloadAsset.Wiz000)
             .Build();
@@ -54,6 +54,21 @@ public partial class ScrDeck
         preload.UI.GetTag<IAssetRegistry>().LoadUITileSheet(entity, tileSheetInfo);
     }
 
+    private void SetSummaryOffset(ref components.ui.Slot slot)
+    {
+        var min = slot.button.Get<Rect>().Min + SummaryOffset(ref slot);
+        slot.summary.Set(Rect.FromMinMax(min, min));
+    }
+
+    private Vector2 SummaryOffset(ref components.ui.Slot slot)
+    {
+        if (slot.type == components.ui.Slot.Type.DeckSlot)
+            return new(48, 4);
+        if (slot.card!.cardId.Type == CardType.Item)
+            return new(42, 18);
+        return new(42, 9);
+    }
+
     private void SetSlot(ref components.ui.Slot slot, InventoryCard card)
     {
         slot.card = card;
@@ -63,6 +78,7 @@ public partial class ScrDeck
         slot.button.Set(CardTooltip(card));
 
         if (slot.summary != default)
+        {
             slot.summary.Set(new components.ui.Label(slot.card switch
             {
                 InventoryItem item => FormatSlotSummary(item),
@@ -70,6 +86,8 @@ public partial class ScrDeck
                 InventoryFairy fairy => FormatSlotSummary(fairy),
                 _ => throw new NotSupportedException("Unknown inventory card type")
             }));
+            SetSummaryOffset(ref slot);
+        }
     }
 
     private static void UnsetSlot(ref components.ui.Slot slot)

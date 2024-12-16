@@ -6,6 +6,7 @@ namespace zzre.game.systems.ui;
 
 public partial class ScrDeck
 {
+    public Vector2 SpellSlotSize = new(38, 38);
     private static readonly UID[] UIDSpellSlotNames =
     [
         new(0x37697321), // First offensive slot
@@ -32,7 +33,7 @@ public partial class ScrDeck
 
         spellSlot.button = preload.CreateButton(entity)
             .With(slot.buttonId + index + 1)
-            .With(slot.button.Get<Rect>().OffsettedBy(50 + 46 * spellSlot.index, 0))
+            .With(Rect.FromTopLeftSize(slot.button.Get<Rect>().Min + new Vector2(50 + 46 * spellSlot.index, 0), SpellSlotSize))
             .With(new components.ui.ButtonTiles(-1))
             .With(UIPreloadAsset.Spl000)
             .Build();
