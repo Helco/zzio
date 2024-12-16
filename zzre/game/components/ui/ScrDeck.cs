@@ -16,17 +16,18 @@ public struct ScrDeck
     public int Scroll;
     public DefaultEcs.Entity SummaryBackground;
     public DefaultEcs.Entity SpellBackground;
+
+    public DefaultEcs.Entity[] DeckCards;
+    public DefaultEcs.Entity[] TabButtons;
+    public DefaultEcs.Entity[] ListCards;
     public DefaultEcs.Entity ListSlider;
-    public DefaultEcs.Entity[] ListTabs;
-    public DefaultEcs.Entity[] ListButtons;
-    public DefaultEcs.Entity[] ListUsedMarkers;
-    public DefaultEcs.Entity[] ListSummaries;
-    public DefaultEcs.Entity[] DeckSlotParents;
-    public DefaultEcs.Entity LastHovered;
+
     public DefaultEcs.Entity StatsTitle;
     public DefaultEcs.Entity StatsDescriptions;
     public DefaultEcs.Entity StatsLights;
     public DefaultEcs.Entity StatsLevel;
+
+    public DefaultEcs.Entity LastHovered;
     public DefaultEcs.Entity DraggedCard;
     public DefaultEcs.Entity DraggedOverlay;
 }

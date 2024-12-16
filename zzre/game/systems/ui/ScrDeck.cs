@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,29 +14,6 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 {
     private const int ListRows = 6;
 
-    private static readonly UID UIDChooseFairyToSwap = new(0x41912581);
-    private static readonly UID[] UIDSpellSlotNames =
-    [
-        new(0x37697321), // First offensive slot
-        new(0x8A717321), // First defensive slot
-        new(0x0F207721), // Second offensive slot
-        new(0x5C577721)  // Second defensive slot
-    ];
-    private static readonly UID[] UIDFairyInfoDescriptions =
-    [
-        new(0x45B032A1), // Current and max HP
-        new(0xE58236A1), // Level of your fairy
-        new(0xB26B36A1), // XP, current and necessary for next level
-        new(0xB26B36A1)
-    ];
-
-    private static readonly UID[] UIDStatNames =
-    [
-        new(0xE946ECA1), // Damage
-        new(0x238A3981), // Mana
-        new(0x04211121), // Fire Rate
-    ];
-
     private static readonly components.ui.ElementId IDSliderUp = new(1);
     private static readonly components.ui.ElementId IDSliderDown = new(2);
     private static readonly components.ui.ElementId IDSlider = new(3);
@@ -49,6 +26,21 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     private static readonly components.ui.ElementId FirstFairySlot = new(20);
     private static readonly components.ui.ElementId FirstSpellSlot = new(30);
     private static readonly components.ui.ElementId FirstListCell = new(50);
+
+    private record struct DeckTabInfo(
+        components.ui.ScrDeck.Tab Type,
+        components.ui.ElementId Id,
+        int PosY,
+        int TileNormal, int TileHovered, int TileActive,
+        UID TooltipUID
+    );
+    private static readonly List<DeckTabInfo> Tabs =
+    [
+        new(Tab.Fairies,       IDTabFairies,       PosY:  79, TileNormal: 0, TileHovered:  1, TileActive:  2, TooltipUID: new(0x7DB4EEB1)),
+        new(Tab.Items,         IDTabItems,         PosY: 123, TileNormal: 3, TileHovered:  4, TileActive:  5, TooltipUID: new(0x93530331)),
+        new(Tab.AttackSpells,  IDTabAttackSpells,  PosY: 167, TileNormal: 6, TileHovered:  7, TileActive:  8, TooltipUID: new(0xB5E80331)),
+        new(Tab.SupportSpells, IDTabSupportSpells, PosY: 211, TileNormal: 9, TileHovered: 10, TileActive: 11, TooltipUID: new(0x9D0DAD11)),
+    ];
 
     private readonly IAssetRegistry assetRegistry;
     private readonly zzio.db.MappedDB mappedDB;
@@ -66,12 +58,11 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         var entity = World.CreateEntity();
         entity.Set<components.ui.ScrDeck>();
         ref var deck = ref entity.Get<components.ui.ScrDeck>();
-        deck.DeckSlotParents = [];
 
         CreateBackgrounds(entity, ref deck);
         CreateListControls(entity, ref deck);
         CreateTopButtons(preload, entity, inventory, IDOpenDeck);
-        CreateFairySlots(entity, ref deck);
+        CreateDeckCards(entity, ref deck);
 
         if (deck.ActiveTab == Tab.None)
             OpenTab(entity, ref deck, Tab.Fairies);
@@ -101,6 +92,12 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             .With(Mid + new Vector2(11, 11))
             .WithText("{205} - ")
             .Build();
+
+        preload.CreateLabel(entity)
+            .With(Mid + new Vector2(337, 42))
+            .With(UIPreloadAsset.Fnt002)
+            .WithText($"{zanzarah.OverworldGame!.GetTag<zzio.Savegame>().pixiesCatched}/30")
+            .Build();
     }
 
     private void CreateListControls(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
@@ -126,36 +123,16 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             .With(UIPreloadAsset.Btn001);
         deck.ListSlider.Set(components.ui.Slider.Vertical);
 
-        deck.ListTabs = new DefaultEcs.Entity[4];
+        deck.TabButtons = new DefaultEcs.Entity[4];
         var tabButtonRect = Rect.FromTopLeftSize(Mid + new Vector2(281, 0f), new Vector2(35, 35));
 
-        deck.ListTabs[(int)Tab.Fairies - 1] = preload.CreateButton(entity)
-            .With(IDTabFairies)
-            .With(tabButtonRect.OffsettedBy(0, 79))
-            .With(new components.ui.ButtonTiles(0, 1, 2))
-            .With(UIPreloadAsset.Btn002)
-            .WithTooltip(0x7DB4EEB1);
-
-        deck.ListTabs[(int)Tab.Items - 1] = preload.CreateButton(entity)
-            .With(IDTabItems)
-            .With(tabButtonRect.OffsettedBy(0, 123))
-            .With(new components.ui.ButtonTiles(3, 4, 5))
-            .With(UIPreloadAsset.Btn002)
-            .WithTooltip(0x93530331);
-
-        deck.ListTabs[(int)Tab.AttackSpells - 1] = preload.CreateButton(entity)
-            .With(IDTabAttackSpells)
-            .With(tabButtonRect.OffsettedBy(0, 167))
-            .With(new components.ui.ButtonTiles(6, 7, 8))
-            .With(UIPreloadAsset.Btn002)
-            .WithTooltip(0xB5E80331);
-
-        deck.ListTabs[(int)Tab.SupportSpells - 1] = preload.CreateButton(entity)
-            .With(IDTabSupportSpells)
-            .With(tabButtonRect.OffsettedBy(0, 211))
-            .With(new components.ui.ButtonTiles(9, 10, 11))
-            .With(UIPreloadAsset.Btn002)
-            .WithTooltip(0x9D0DAD11);
+        foreach (var tab in Tabs)
+            deck.TabButtons[(int)tab.Type - 1] = preload.CreateButton(entity)
+                .With(tab.Id)
+                .With(tabButtonRect.OffsettedBy(0, tab.PosY))
+                .With(new components.ui.ButtonTiles(tab.TileNormal, tab.TileHovered, tab.TileActive))
+                .With(UIPreloadAsset.Btn002)
+                .WithTooltip(tab.TooltipUID);
 
         preload.CreateButton(entity)
             .With(IDSwitchListMode)
@@ -164,286 +141,63 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             .With(UIPreloadAsset.Btn002)
             .WithTooltip(0xA086B911)
             .Build();
-
-        preload.CreateLabel(entity)
-            .With(Mid + new Vector2(337, 42))
-            .With(UIPreloadAsset.Fnt002)
-            .WithText($"{zanzarah.OverworldGame!.GetTag<zzio.Savegame>().pixiesCatched}/30")
-            .Build();
     }
 
-    private void CreateFairySlots(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
+    private void CreateDeckCards(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
+        deck.DeckCards = new DefaultEcs.Entity[Inventory.FairySlotCount];
         for (int i = 0; i < Inventory.FairySlotCount; i++)
         {
+            deck.DeckCards[i] = CreateDeckCard(entity, Mid + new Vector2(31, 60 + 79 * i), FirstFairySlot + i);
             var fairy = inventory.GetFairyAtSlot(i);
-            var fairyI = fairy?.cardId.EntityId ?? -1;
-            preload.CreateButton(entity)
-                .With(FirstFairySlot + i)
-                .With(Mid + new Vector2(31, 60 + 79 * i))
-                .With(new components.ui.ButtonTiles(fairyI))
-                .With(UIPreloadAsset.Wiz000)
-                .WithTooltip(UIDChooseFairyToSwap)
-                .Build();
+            if (fairy != default)
+                SetDeckCard(deck.DeckCards[i], fairy);
         }
     }
 
-    private void ResetDeckSlotParents(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, bool createNewEntities)
-    {
-        foreach (var oldParent in deck.DeckSlotParents)
-            oldParent.Dispose();
-
-        if (createNewEntities)
-        {
-            deck.DeckSlotParents = Enumerable
-                .Repeat(0, Inventory.FairySlotCount)
-                .Select(_ =>
-                {
-                    var slotParent = World.CreateEntity();
-                    slotParent.Set(new components.Parent(entity));
-                    return slotParent;
-                })
-                .ToArray();
-        }
-        else
-            deck.DeckSlotParents = new DefaultEcs.Entity[Inventory.FairySlotCount];
-    }
-
-    private static Vector2 DeckSlotPos(int fairyI, int slotI) =>
+    private static Vector2 DeckCardPos(int fairyI, int slotI) =>
         Mid + new Vector2(81 + 46 * slotI, 60 + 79 * fairyI);
 
-    private void CreateSpellSlots(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
+    private static void SpellMode(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
         deck.SpellBackground.Set(components.Visibility.Visible);
         deck.SummaryBackground.Set(components.Visibility.Invisible);
-
-        ResetDeckSlotParents(entity, ref deck, createNewEntities: true);
-        var nextElementId = FirstSpellSlot;
-        for (int fairyI = 0; fairyI < Inventory.FairySlotCount; fairyI++)
-        {
-            var fairy = inventory.GetFairyAtSlot(fairyI);
-            for (int spellI = 0; spellI < InventoryFairy.SpellSlotCount; spellI++)
-            {
-                var spell = fairy == null ? null : inventory.GetSpellAtSlot(fairy, spellI);
-                preload.CreateButton(deck.DeckSlotParents[fairyI])
-                    .With(nextElementId)
-                    .With(DeckSlotPos(fairyI, spellI))
-                    .With(new components.ui.ButtonTiles(spell?.cardId.EntityId ?? -1))
-                    .With(UIPreloadAsset.Spl000)
-                    .WithTooltip(UIDSpellSlotNames[spellI])
-                    .Build();
-                nextElementId += 1;
-
-                var spellReq = fairy == null ? default : fairy.spellReqs[spellI];
-                if (spellReq != default)
-                    CreateSpellReq(
-                        deck.DeckSlotParents[fairyI],
-                        spellReq,
-                        isAttack: (spellI % 2) == 0,
-                        DeckSlotPos(fairyI, spellI) + new Vector2(2, 45));
-            }
-        }
+        foreach (var deckCard in deck.DeckCards)
+            SpellMode(ref deckCard.Get<components.ui.Card>());
     }
 
-    private DefaultEcs.Entity CreateSpellReq(DefaultEcs.Entity parent, SpellReq spellReq, bool isAttack, Vector2 pos, int renderOrder = 0)
-    {
-        var entity = World.CreateEntity();
-        entity.Set(new components.Parent(parent));
-        entity.Set(components.Visibility.Visible);
-        entity.Set(components.ui.UIOffset.Center);
-        entity.Set(new components.ui.RenderOrder(renderOrder));
-        entity.Set(IColor.White);
-        assetRegistry.LoadUITileSheet(entity, isAttack ? UIPreloadAsset.Cls001 : UIPreloadAsset.Cls000);
-
-        var tileSize = entity.Get<rendering.TileSheet>().GetPixelSize(0);
-        entity.Set(Rect.FromTopLeftSize(pos, tileSize * 3));
-        entity.Set(spellReq.Select((req, i) => new components.ui.Tile(
-            TileId: (int)req,
-            Rect: Rect.FromTopLeftSize(pos + i * new Vector2(8, 5), tileSize)))
-            .ToArray());
-
-        return entity;
-    }
-
-    private void CreateFairyInfo(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, int fairyI)
-    {
-        if (deck.DeckSlotParents[fairyI] != default)
-            deck.DeckSlotParents[fairyI].Dispose();
-        var slotParent = deck.DeckSlotParents[fairyI] = World.CreateEntity();
-        slotParent.Set(new components.Parent(entity));
-        var fairy = inventory.GetFairyAtSlot(fairyI);
-        if (fairy == null)
-            return;
-
-        for (int slotI = 0; slotI < InventoryFairy.SpellSlotCount; slotI++)
-        {
-            preload.CreateTooltipArea(slotParent)
-                .With(FirstSpellSlot + fairyI * InventoryFairy.SpellSlotCount + slotI)
-                .With(Rect.FromTopLeftSize(DeckSlotPos(fairyI, slotI), Vector2.One * 40))
-                .WithTooltip(UIDFairyInfoDescriptions[slotI])
-                .Build();
-
-            var spell = inventory.GetSpellAtSlot(fairy, slotI);
-            if (spell == null)
-                continue;
-            preload.CreateLabel(slotParent)
-                .With(DeckSlotPos(fairyI, slotI) + new Vector2(0, 44))
-                .With(UIPreloadAsset.Fnt002)
-                .WithText(FormatManaAmount(spell))
-                .Build();
-        }
-
-        preload.CreateLabel(slotParent)
-            .With(DeckSlotPos(fairyI, 0))
-            .With(UIPreloadAsset.Fnt002)
-            .WithText(FormatSummary(inventory, fairy))
-            .Build();
-    }
-
-    private string FormatManaAmount(InventorySpell spell)
-    {
-        var dbSpell = mappedDB.GetSpell(spell.dbUID);
-        return dbSpell.MaxMana == 5
-            ? "{104}-"
-            : $"{{104}}{spell.mana}/{dbSpell.MaxMana}";
-    }
-
-    private static string FormatSummary(Inventory inv, InventoryFairy fairy)
-    {
-        var builder = new System.Text.StringBuilder();
-        builder.Append(fairy.name);
-        builder.Append(' ');
-
-        builder.Append(fairy.status switch
-        {
-            ZZPermSpellStatus.Poisoned => "{110}",
-            ZZPermSpellStatus.Cursed => "{111}",
-            ZZPermSpellStatus.Burned => "{115}",
-            ZZPermSpellStatus.Frozen => "{114}",
-            ZZPermSpellStatus.Silenced => "{112}",
-            _ => ""
-        });
-        builder.Append('\n');
-
-        builder.Append("{100}");
-        builder.Append(fairy.currentMHP);
-        builder.Append('/');
-        builder.Append(fairy.maxMHP);
-        if (fairy.currentMHP < 100)
-            builder.Append(' ');
-        if (fairy.currentMHP < 10)
-            builder.Append(' ');
-        if (fairy.maxMHP < 100)
-            builder.Append(' ');
-        // no second space for maxMHP
-
-        builder.Append(" L-");
-        builder.Append(fairy.level);
-        if (fairy.level < 10)
-            builder.Append(' ');
-
-        builder.Append("  {101}");
-        builder.Append(fairy.xp);
-        var levelupXP = inv.GetLevelupXP(fairy);
-        if (levelupXP.HasValue)
-        {
-            builder.Append("{105}");
-            builder.Append(levelupXP.Value + 1);
-        }
-
-        return builder.ToString();
-    }
-
-    private string FormatSummary(InventoryItem item) => item.amount > 1
-        ? $"{item.amount} x {mappedDB.GetItem(item.dbUID).Name}"
-        : mappedDB.GetItem(item.dbUID).Name;
-
-    private string FormatSummary(InventorySpell spell)
-    {
-        var dbSpell = mappedDB.GetSpell(spell.dbUID);
-        var mana = dbSpell.Mana == 5 ? "-/-" : $"{spell.mana}/{dbSpell.MaxMana}";
-        return $"{dbSpell.Name}\n{{104}}{mana} {UIBuilder.GetSpellPrices(dbSpell)}";
-    }
-
-    private void CreateFairyInfos(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
+    private void InfoMode(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
         deck.SpellBackground.Set(components.Visibility.Invisible);
         deck.SummaryBackground.Set(components.Visibility.Visible);
-
-        ResetDeckSlotParents(entity, ref deck, createNewEntities: false);
-        for (int i = 0; i < Inventory.FairySlotCount; i++)
-            CreateFairyInfo(entity, ref deck, i);
+        foreach (var deckCard in deck.DeckCards)
+            InfoMode(ref deckCard.Get<components.ui.Card>());
     }
 
     private static void ResetList(ref components.ui.ScrDeck deck)
     {
-        var allEntities = new[]
-        {
-            deck.ListButtons,
-            deck.ListSummaries,
-            deck.ListUsedMarkers
-        }.NotNull().SelectMany();
-        foreach (var entity in allEntities)
-            entity.Dispose();
-        deck.ListButtons = deck.ListSummaries = deck.ListUsedMarkers =
-            [];
+        if (deck.ListCards != default)
+            foreach (var entity in deck.ListCards)
+                entity.Dispose();
+        deck.ListCards = [];
     }
 
-    private static Vector2 ListCellPos(int column, int row) =>
+    private static Vector2 ListCardPos(int column, int row) =>
         Mid + new Vector2(322 + column * 42, 70 + row * 43);
 
-    private static UITileSheetAsset.Info ListTileSheet(in components.ui.ScrDeck deck) => deck.ActiveTab switch
+    private void CreateListCards(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, int columns, int rows = ListRows)
     {
-        Tab.Fairies => UIPreloadAsset.Wiz000,
-        Tab.Items => UIPreloadAsset.Itm000,
-        Tab.SupportSpells => UIPreloadAsset.Spl000,
-        Tab.AttackSpells => UIPreloadAsset.Spl000,
-        _ => UIPreloadAsset.Wiz000
-    };
-
-    private void CreateListCells(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, int columns, int rows = ListRows)
-    {
-        var buttonTileSheet = ListTileSheet(deck);
-        deck.ListButtons = new DefaultEcs.Entity[rows * columns];
-        deck.ListUsedMarkers = new DefaultEcs.Entity[rows * columns];
+        deck.ListCards = new DefaultEcs.Entity[rows * columns];
         for (int y = 0; y < rows; y++)
         {
             for (int x = 0; x < columns; x++)
             {
                 var i = y * columns + x;
-                deck.ListButtons[i] = preload.CreateButton(entity)
-                    .With(FirstListCell + i)
-                    .With(ListCellPos(x, y))
-                    .With(new components.ui.ButtonTiles(-1))
-                    .With(buttonTileSheet);
-
-                deck.ListUsedMarkers[i] = preload.CreateImage(entity)
-                    .With(ListCellPos(x, y))
-                    .With(UIPreloadAsset.Inf000, 16)
-                    .WithRenderOrder(-1)
-                    .Invisible();
+                deck.ListCards[i] = CreateListCard(entity, ListCardPos(x, y), FirstListCell + i);
+                if (columns == 1)
+                    CreateCardSummary(deck.ListCards[i], new(42, 9));
             }
         }
-    }
-
-    private void CreateRowList(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
-    {
-        ResetList(ref deck);
-        CreateListCells(entity, ref deck, columns: 1);
-        var summaryOffset = new Vector2(42, deck.ActiveTab == Tab.Items ? 14 : 5);
-        deck.ListSummaries = new DefaultEcs.Entity[ListRows];
-        for (int i = 0; i < ListRows; i++)
-        {
-            deck.ListSummaries[i % ListRows] = preload.CreateLabel(entity)
-                .With(ListCellPos(column: 0, row: i) + summaryOffset)
-                .With(UIPreloadAsset.Fnt002);
-        }
-    }
-
-    private void CreateGridList(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
-    {
-        ResetList(ref deck);
-        CreateListCells(entity, ref deck, columns: 6);
     }
 
     private IEnumerable<InventoryCard> AllCardsOfType(in components.ui.ScrDeck deck) => deck.ActiveTab switch
@@ -457,39 +211,6 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         _ => []
     };
 
-    private bool IsDraggable(InventoryCard card) => card.cardId.Type switch
-    {
-        CardType.Item => mappedDB.GetItem(card.dbUID).Script.Length != 0,
-        CardType.Spell => !card.isInUse,
-        CardType.Fairy => !card.isInUse,
-        _ => throw new ArgumentException($"Invalid inventory card type: {card.cardId.Type}")
-    };
-
-    private components.ui.TooltipUID CardTooltip(InventoryItem item)
-        => !IsDraggable(item)
-        ? new UID(0x8F4510A1) // item cannot be used
-        : new UID(0x75F10CA1); // select item
-
-    private components.ui.TooltipUID CardTooltip(InventoryFairy fairy)
-        => !IsDraggable(fairy)
-        ? new UID(0x9054EAB1) // fairy is in use
-        : new UID(0x00B500A1); // select fairy
-
-    private components.ui.TooltipUID CardTooltip(InventorySpell spell)
-        => !IsDraggable(spell)
-        ? new UID(0x6B46EEB1) // spell is in use
-        : mappedDB.GetSpell(spell.dbUID).Type == 0
-        ? new UID(0xDA2B08A1) // select offensive spell
-        : new UID(0x93840CA1); // select passive spell
-
-    private components.ui.TooltipUID CardTooltip(InventoryCard card) => card.cardId.Type switch
-    {
-        CardType.Item => CardTooltip((InventoryItem)card),
-        CardType.Spell => CardTooltip((InventorySpell)card),
-        CardType.Fairy => CardTooltip((InventoryFairy)card),
-        _ => throw new ArgumentException($"Invalid inventory card type: {card.cardId.Type}")
-    };
-
     private void FillList(ref components.ui.ScrDeck deck)
     {
         var allCardsOfType = AllCardsOfType(deck);
@@ -497,161 +218,22 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.Scroll = Math.Clamp(deck.Scroll, 0, Math.Max(0, count - 1));
         var shownCards = allCardsOfType
             .Skip(deck.Scroll)
-            .Take(deck.ListButtons.Length)
-            .ToArray();
+            .Take(deck.ListCards.Length);
 
-        int i;
-
-        for (i = 0; i < shownCards.Length; i++)
+        for (var i = 0; i < deck.ListCards.Length; i++)
         {
-            deck.ListButtons[i].Set(components.Visibility.Visible);
-            deck.ListButtons[i].Set(ListTileSheet(deck));
-            deck.ListButtons[i].Set(new components.ui.ButtonTiles(shownCards[i].cardId.EntityId));
-            deck.ListButtons[i].Set(new components.ui.CardButton(shownCards[i]));
-            deck.ListButtons[i].Set(CardTooltip(shownCards[i]));
-            deck.ListUsedMarkers[i].Set(!IsDraggable(shownCards[i])
-                ? components.Visibility.Visible
-                : components.Visibility.Invisible);
+            var shownCard = shownCards.ElementAtOrDefault(i);
+            if (shownCard != default)
+                SetListCard(deck.ListCards[i], shownCard);
+            else UnsetCard(ref deck.ListCards[i].Get<components.ui.Card>());
         }
-        for (; i < deck.ListButtons.Length; i++)
-        {
-            deck.ListButtons[i].Set(components.Visibility.Invisible);
-            deck.ListButtons[i].Set(new components.ui.CardButton());
-            if (deck.ListButtons[i].Has<components.ui.TooltipUID>())
-                deck.ListButtons[i].Remove<components.ui.TooltipUID>();
-            deck.ListUsedMarkers[i].Set(components.Visibility.Invisible);
-        }
-
-        if (deck.IsGridMode)
-            return;
-        for (i = 0; i < shownCards.Length; i++)
-        {
-            var summary = shownCards[i] switch
-            {
-                InventoryItem item => FormatSummary(item),
-                InventorySpell spell => FormatSummary(spell),
-                InventoryFairy fairy => FormatSummary(inventory, fairy),
-                _ => throw new NotSupportedException("Unknown inventory card type")
-            };
-            deck.ListSummaries[i].Set(new components.ui.Label(summary));
-        }
-        for (; i < deck.ListButtons.Length; i++)
-            deck.ListSummaries[i].Set(new components.ui.Label(""));
     }
 
     private void RecreateList(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
-        if (deck.IsGridMode)
-            CreateGridList(entity, ref deck);
-        else
-            CreateRowList(entity, ref deck);
+        ResetList(ref deck);
+        CreateListCards(entity, ref deck, columns: deck.IsGridMode ? 6 : 1);
         FillList(ref deck);
-    }
-
-    private static void ResetStats(ref components.ui.ScrDeck deck)
-    {
-        var allEntities = new[]
-            {
-                deck.StatsTitle,
-                deck.StatsDescriptions,
-                deck.StatsLights,
-                deck.StatsLevel
-            };
-        foreach (var entity in allEntities)
-            if (entity != default)
-                entity.Dispose();
-        deck.StatsTitle =
-        deck.StatsDescriptions =
-        deck.StatsLights =
-        deck.StatsLevel = default;
-    }
-
-    private string[] FormatStats(InventoryFairy fairy)
-    {
-        var fairyRow = mappedDB.GetFairy(fairy.dbUID);
-        return [fairy.name, fairyRow.Info, "", ""];
-    }
-
-    private string[] FormatStats(InventoryItem item)
-    {
-        var itemRow = mappedDB.GetItem(item.dbUID);
-        var count = item.amount != 1 ? $"{{5*x{item.amount}}}" : "";
-        return [$"{itemRow.Name} {count}", itemRow.Info, "", ""];
-    }
-
-    private string[] FormatStats(InventorySpell spell)
-    {
-        var spellRow = mappedDB.GetSpell(spell.dbUID);
-        if (spellRow.Type == 0)
-        {
-            var stats = new[] {
-                spellRow.Damage + 1,
-                spellRow.Mana + 1,
-                spellRow.Loadup + 1,
-            };
-            var descs = new[] {
-                mappedDB.GetText(UIDStatNames[0]).Text,
-                mappedDB.GetText(UIDStatNames[1]).Text,
-                mappedDB.GetText(UIDStatNames[2]).Text,
-                spellRow.Info,
-            };
-            return [
-                spellRow.Name,
-                String.Join(":\n", descs),
-                String.Join("\n", stats.Select(stat => UIBuilder.GetLightsIndicator(stat))),
-                $"Level: {UIBuilder.GetSpellPrices(spellRow)}",
-            ];
-        }
-        else
-        {
-            return [
-                spellRow.Name,
-                $"{mappedDB.GetText(UIDStatNames[1]).Text}:\n{spellRow.Info}",
-                spellRow.Mana != 5 ? UIBuilder.GetLightsIndicator(spellRow.Mana + 1) : "-",
-                $"Level: {UIBuilder.GetSpellPrices(spellRow)}",
-            ];
-        }
-    }
-
-    private string[] FormatStats(InventoryCard card)
-    => card.cardId.Type switch
-    {
-        CardType.Item => FormatStats((InventoryItem)card),
-        CardType.Spell => FormatStats((InventorySpell)card),
-        CardType.Fairy => FormatStats((InventoryFairy)card),
-        _ => throw new ArgumentException($"Invalid inventory card type: {card.cardId.Type}")
-    };
-
-    private void CreateStats(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
-    {
-        ResetStats(ref deck);
-        var card = deck.LastHovered.Get<components.ui.CardButton>().card;
-        // Show empty stats for blank buttons
-        if (card == default)
-            return;
-        var summary = FormatStats(card);
-
-        deck.StatsTitle = preload.CreateLabel(entity)
-            .With(Mid + new Vector2(320, 350))
-            .With(UIPreloadAsset.Fnt000)
-            .WithText(summary[0])
-            .Build();
-        deck.StatsDescriptions = preload.CreateLabel(entity)
-            .With(Mid + new Vector2(330, 379))
-            .With(UIPreloadAsset.Fnt002)
-            .WithText(summary[1])
-            .WithLineWrap(260f)
-            .Build();
-        deck.StatsLights = preload.CreateLabel(entity)
-            .With(Mid + new Vector2(380, 379))
-            .With(UIPreloadAsset.Fnt002)
-            .WithText(summary[2])
-            .Build();
-        deck.StatsLevel = preload.CreateLabel(entity)
-            .With(Mid + new Vector2(473, 379))
-            .With(UIPreloadAsset.Fnt002)
-            .WithText(summary[3])
-            .Build();
     }
 
     private static bool IsInfoTab(Tab tab) => tab == Tab.Fairies || tab == Tab.Items;
@@ -663,13 +245,13 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.ActiveTab = newTab;
 
         if (oldTab != Tab.None)
-            deck.ListTabs[(int)oldTab - 1].Remove<components.ui.Active>();
-        deck.ListTabs[(int)newTab - 1].Set<components.ui.Active>();
+            deck.TabButtons[(int)oldTab - 1].Remove<components.ui.Active>();
+        deck.TabButtons[(int)newTab - 1].Set<components.ui.Active>();
 
         if (IsInfoTab(newTab) && !IsInfoTab(oldTab))
-            CreateFairyInfos(entity, ref deck);
+            InfoMode(entity, ref deck);
         if (IsSpellTab(newTab) && !IsSpellTab(oldTab))
-            CreateSpellSlots(entity, ref deck);
+            SpellMode(entity, ref deck);
 
         RecreateList(entity, ref deck);
     }
@@ -678,14 +260,13 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         if (!IsDraggable(card)) return;
 
-        var buttonTileSheet = ListTileSheet(deck);
         if (deck.DraggedCard != default) deck.DraggedCard.Dispose();
         deck.DraggedCard = preload.CreateImage(entity)
             .With(Mid)
             .With(card.cardId)
             .WithRenderOrder(-2)
             .Build();
-        deck.DraggedCard.Set(new components.ui.CardButton(card));
+        deck.DraggedCard.Set(new components.ui.DraggedCard(card));
         deck.DraggedCard.Set(components.ui.UIOffset.GameUpperLeft);
 
         if (deck.DraggedOverlay != default) deck.DraggedOverlay.Dispose();
@@ -723,11 +304,11 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             UpdateSliderPosition(deck);
             FillList(ref deck);
         }
-        else if (id >= FirstListCell && id < FirstListCell + deck.ListButtons.Length)
+        else if (id >= FirstListCell && id < FirstListCell + deck.ListCards.Length)
         {
-            if (clickedEntity.TryGet(out components.ui.CardButton cardButton))
-                if (cardButton.card != default)
-                    TryDragCard(deckEntity, ref deck, cardButton.card);
+            if (clickedEntity.TryGet(out components.ui.DraggedCard card))
+                if (card.card != default)
+                    TryDragCard(deckEntity, ref deck, card.card);
         }
         else HandleNavClick(id, zanzarah, deckEntity, IDOpenDeck);
     }
@@ -757,7 +338,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             deck.LastHovered = default;
             ResetStats(ref deck);
         }
-        if (deck.ListButtons.Contains(curHovered.Entity))
+        if (deck.ListCards.Contains(curHovered.Entity))
         {
             deck.LastHovered = curHovered.Entity;
             CreateStats(entity, ref deck);
