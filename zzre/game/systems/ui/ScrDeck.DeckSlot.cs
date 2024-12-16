@@ -34,6 +34,17 @@ public partial class ScrDeck
         ref var slot = ref entity.Get<components.ui.Slot>();
         SetSlot(ref slot, card);
         slot.button.Set(new components.ui.TooltipUID(UIDSelectFairy));
+
+        for (int i = 0; i < InventoryFairy.SpellSlotCount; i++)
+        {
+            var spell = slot.card == null
+                ? null
+                : inventory.GetSpellAtSlot((InventoryFairy)slot.card, i);
+            if (spell != default)
+                SetSpellSlot(slot.spellSlots[i], spell);
+            else
+                UnsetSpellSlot(slot.spellSlots[i]);
+        }
     }
 
     private void InfoMode(ref components.ui.Slot slot)
