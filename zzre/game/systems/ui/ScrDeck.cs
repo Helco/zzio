@@ -62,7 +62,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         CreateBackgrounds(entity, ref deck);
         CreateListControls(entity, ref deck);
         CreateTopButtons(preload, entity, inventory, IDOpenDeck);
-        CreateDeckCards(entity, ref deck);
+        CreateDeckSlots(entity, ref deck);
 
         if (deck.ActiveTab == Tab.None)
             OpenTab(entity, ref deck, Tab.Fairies);
@@ -143,59 +143,54 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             .Build();
     }
 
-    private void CreateDeckCards(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
+    private void CreateDeckSlots(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
-        deck.DeckCards = new DefaultEcs.Entity[Inventory.FairySlotCount];
+        deck.DeckSlots = new DefaultEcs.Entity[Inventory.FairySlotCount];
         for (int i = 0; i < Inventory.FairySlotCount; i++)
         {
-            deck.DeckCards[i] = CreateDeckCard(entity, Mid + new Vector2(31, 60 + 79 * i), FirstFairySlot + i);
+            deck.DeckSlots[i] = CreateDeckSlot(entity, Mid + new Vector2(31, 60 + 79 * i), FirstFairySlot + i);
             var fairy = inventory.GetFairyAtSlot(i);
             if (fairy != default)
-                SetDeckCard(deck.DeckCards[i], fairy);
+                SetDeckSlot(deck.DeckSlots[i], fairy);
         }
     }
 
-    private static Vector2 DeckCardPos(int fairyI, int slotI) =>
+    private static Vector2 DeckSlotPos(int fairyI, int slotI) =>
         Mid + new Vector2(81 + 46 * slotI, 60 + 79 * fairyI);
 
     private static void SpellMode(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
         deck.SpellBackground.Set(components.Visibility.Visible);
         deck.SummaryBackground.Set(components.Visibility.Invisible);
-        foreach (var deckCard in deck.DeckCards)
-            SpellMode(ref deckCard.Get<components.ui.Card>());
+        foreach (var deckCard in deck.DeckSlots)
+            SpellMode(ref deckCard.Get<components.ui.Slot>());
     }
 
     private void InfoMode(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
         deck.SpellBackground.Set(components.Visibility.Invisible);
         deck.SummaryBackground.Set(components.Visibility.Visible);
-        foreach (var deckCard in deck.DeckCards)
-            InfoMode(ref deckCard.Get<components.ui.Card>());
+        foreach (var deckCard in deck.DeckSlots)
+            InfoMode(ref deckCard.Get<components.ui.Slot>());
     }
 
-    private static void ResetList(ref components.ui.ScrDeck deck)
-    {
-        if (deck.ListCards != default)
-            foreach (var entity in deck.ListCards)
-                entity.Dispose();
-        deck.ListCards = [];
-    }
-
-    private static Vector2 ListCardPos(int column, int row) =>
+    private static Vector2 ListSlotPos(int column, int row) =>
         Mid + new Vector2(322 + column * 42, 70 + row * 43);
 
-    private void CreateListCards(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, int columns, int rows = ListRows)
+    private void CreateListSlots(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, int columns, int rows = ListRows)
     {
-        deck.ListCards = new DefaultEcs.Entity[rows * columns];
+        if (deck.ListSlots != default)
+            foreach (var listSlot in deck.ListSlots)
+                listSlot.Dispose();
+        deck.ListSlots = new DefaultEcs.Entity[rows * columns];
         for (int y = 0; y < rows; y++)
         {
             for (int x = 0; x < columns; x++)
             {
                 var i = y * columns + x;
-                deck.ListCards[i] = CreateListCard(entity, ListCardPos(x, y), FirstListCell + i);
+                deck.ListSlots[i] = CreateListSlot(entity, ListSlotPos(x, y), FirstListCell + i);
                 if (columns == 1)
-                    CreateCardSummary(deck.ListCards[i], new(42, 9));
+                    CreateSlotSummary(deck.ListSlots[i], new(42, 9));
             }
         }
     }
@@ -218,21 +213,20 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.Scroll = Math.Clamp(deck.Scroll, 0, Math.Max(0, count - 1));
         var shownCards = allCardsOfType
             .Skip(deck.Scroll)
-            .Take(deck.ListCards.Length);
+            .Take(deck.ListSlots.Length);
 
-        for (var i = 0; i < deck.ListCards.Length; i++)
+        for (var i = 0; i < deck.ListSlots.Length; i++)
         {
             var shownCard = shownCards.ElementAtOrDefault(i);
             if (shownCard != default)
-                SetListCard(deck.ListCards[i], shownCard);
-            else UnsetCard(ref deck.ListCards[i].Get<components.ui.Card>());
+                SetListSlot(deck.ListSlots[i], shownCard);
+            else UnsetSlot(ref deck.ListSlots[i].Get<components.ui.Slot>());
         }
     }
 
     private void RecreateList(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
-        ResetList(ref deck);
-        CreateListCards(entity, ref deck, columns: deck.IsGridMode ? 6 : 1);
+        CreateListSlots(entity, ref deck, columns: deck.IsGridMode ? 6 : 1);
         FillList(ref deck);
     }
 
@@ -304,7 +298,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             UpdateSliderPosition(deck);
             FillList(ref deck);
         }
-        else if (id >= FirstListCell && id < FirstListCell + deck.ListCards.Length)
+        else if (id >= FirstListCell && id < FirstListCell + deck.ListSlots.Length)
         {
             if (clickedEntity.TryGet(out components.ui.DraggedCard card))
                 if (card.card != default)
@@ -338,7 +332,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             deck.LastHovered = default;
             ResetStats(ref deck);
         }
-        if (deck.ListCards.Contains(curHovered.Entity))
+        if (deck.ListSlots.Contains(curHovered.Entity))
         {
             deck.LastHovered = curHovered.Entity;
             CreateStats(entity, ref deck);

@@ -22,64 +22,64 @@ public partial class ScrDeck
         new(0xB26B36A1)
     ];
 
-    private DefaultEcs.Entity CreateSpellSlot(DefaultEcs.Entity parent, ref components.ui.Card card, int index)
+    private DefaultEcs.Entity CreateSpellSlot(DefaultEcs.Entity parent, ref components.ui.Slot slot, int index)
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
         entity.Set(new components.ui.SpellSlot());
-        ref var spell = ref entity.Get<components.ui.SpellSlot>();
-        spell.index = index;
+        ref var spellSlot = ref entity.Get<components.ui.SpellSlot>();
+        spellSlot.index = index;
 
-        spell.button = preload.CreateButton(entity)
-            .With(card.buttonId + index + 1)
-            .With(card.button.Get<Rect>().Min + new Vector2(81 + 46 * spell.index))
+        spellSlot.button = preload.CreateButton(entity)
+            .With(slot.buttonId + index + 1)
+            .With(slot.button.Get<Rect>().Min + new Vector2(81 + 46 * spellSlot.index))
             .With(new components.ui.ButtonTiles(-1))
             .With(UIPreloadAsset.Spl000)
             // .WithTooltip(UIDSpellSlotNames[i])
             .Build();
 
-        InfoMode(ref spell);
+        InfoMode(ref spellSlot);
 
         return entity;
     }
 
-    public void SetSpell(DefaultEcs.Entity entity, ref components.ui.SpellSlot spell, InventorySpell invSpell)
+    public void SetSpell(DefaultEcs.Entity entity, ref components.ui.SpellSlot spellSlot, InventorySpell invSpell)
     {
-        spell.spell = invSpell;
-        spell.button.Set(new components.ui.ButtonTiles(invSpell.cardId.EntityId));
-        if (spell.summary != default) spell.summary.Dispose();
-        spell.summary = preload.CreateLabel(entity)
-            .With(spell.button.Get<Rect>().Min + new Vector2(0, 44))
+        spellSlot.spell = invSpell;
+        spellSlot.button.Set(new components.ui.ButtonTiles(invSpell.cardId.EntityId));
+        if (spellSlot.summary != default) spellSlot.summary.Dispose();
+        spellSlot.summary = preload.CreateLabel(entity)
+            .With(spellSlot.button.Get<Rect>().Min + new Vector2(0, 44))
             .With(UIPreloadAsset.Fnt002)
-            .WithText(FormatManaAmount(spell.spell))
+            .WithText(FormatManaAmount(spellSlot.spell))
             .Build();
-        if (spell.req != default) spell.req.Dispose();
-        spell.req = CreateSpellReq(
+        if (spellSlot.req != default) spellSlot.req.Dispose();
+        spellSlot.req = CreateSpellReq(
             entity,
-            ((InventoryFairy)(entity.Get<components.Parent>().Entity.Get<components.ui.Card>().card!)).spellReqs[spell.index],
-            (spell.index % 2) == 0,
-            spell.button.Get<Rect>().Min + new Vector2(2, 45)
+            ((InventoryFairy)(entity.Get<components.Parent>().Entity.Get<components.ui.Slot>().card!)).spellReqs[spellSlot.index],
+            (spellSlot.index % 2) == 0,
+            spellSlot.button.Get<Rect>().Min + new Vector2(2, 45)
         );
     }
 
-    public static void InfoMode(ref components.ui.SpellSlot spell)
+    public static void InfoMode(ref components.ui.SpellSlot spellSlot)
     {
-        spell.button.Set(components.Visibility.Invisible);
-        spell.button.Set(new components.ui.TooltipUID(UIDFairyInfoDescriptions[spell.index]));
-        if (spell.summary != default)
-            spell.summary.Set(components.Visibility.Visible);
-        if (spell.req != default)
-            spell.req.Set(components.Visibility.Invisible);
+        spellSlot.button.Set(components.Visibility.Invisible);
+        spellSlot.button.Set(new components.ui.TooltipUID(UIDFairyInfoDescriptions[spellSlot.index]));
+        if (spellSlot.summary != default)
+            spellSlot.summary.Set(components.Visibility.Visible);
+        if (spellSlot.req != default)
+            spellSlot.req.Set(components.Visibility.Invisible);
     }
 
-    public static void SpellMode(ref components.ui.SpellSlot spell)
+    public static void SpellMode(ref components.ui.SpellSlot spellSlot)
     {
-        spell.button.Set(components.Visibility.Visible);
-        spell.button.Set(new components.ui.TooltipUID(UIDSpellSlotNames[spell.index]));
-        if (spell.summary != default)
-            spell.summary.Set(components.Visibility.Invisible);
-        if (spell.req != default)
-            spell.req.Set(components.Visibility.Visible);
+        spellSlot.button.Set(components.Visibility.Visible);
+        spellSlot.button.Set(new components.ui.TooltipUID(UIDSpellSlotNames[spellSlot.index]));
+        if (spellSlot.summary != default)
+            spellSlot.summary.Set(components.Visibility.Invisible);
+        if (spellSlot.req != default)
+            spellSlot.req.Set(components.Visibility.Visible);
     }
 
     private DefaultEcs.Entity CreateSpellReq(DefaultEcs.Entity parent, SpellReq spellReq, bool isAttack, Vector2 pos)
@@ -108,5 +108,4 @@ public partial class ScrDeck
             ? "{104}-"
             : $"{{104}}{spell.mana}/{dbSpell.MaxMana}";
     }
-
 }

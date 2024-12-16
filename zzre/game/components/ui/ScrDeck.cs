@@ -17,10 +17,11 @@ public struct ScrDeck
     public DefaultEcs.Entity SummaryBackground;
     public DefaultEcs.Entity SpellBackground;
 
-    public DefaultEcs.Entity[] DeckCards;
     public DefaultEcs.Entity[] TabButtons;
-    public DefaultEcs.Entity[] ListCards;
     public DefaultEcs.Entity ListSlider;
+
+    public DefaultEcs.Entity[] DeckSlots;
+    public DefaultEcs.Entity[] ListSlots;
 
     public DefaultEcs.Entity StatsTitle;
     public DefaultEcs.Entity StatsDescriptions;

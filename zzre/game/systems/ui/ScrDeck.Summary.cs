@@ -18,7 +18,7 @@ public partial class ScrDeck
     private void CreateStats(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
         ResetStats(ref deck);
-        var card = deck.LastHovered.Get<components.ui.Card>().card;
+        var card = deck.LastHovered.Get<components.ui.Slot>().card;
         // Show empty stats for blank buttons
         if (card == default)
             return;

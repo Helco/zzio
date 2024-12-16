@@ -7,16 +7,16 @@ namespace zzre.game.systems.ui;
 public partial class ScrDeck
 {
 
-    private DefaultEcs.Entity CreateListCard(
+    private DefaultEcs.Entity CreateListSlot(
         DefaultEcs.Entity parent,
         Vector2 pos,
         components.ui.ElementId id
         )
     {
-        var entity = CreateBaseCard(parent, pos, id);
-        ref var card = ref entity.Get<components.ui.Card>();
+        var entity = CreateBaseSlot(parent, pos, id);
+        ref var slot = ref entity.Get<components.ui.Slot>();
 
-        card.usedMarker = preload.CreateImage(entity)
+        slot.usedMarker = preload.CreateImage(entity)
             .With(pos)
             .With(UIPreloadAsset.Inf000, 16)
             .WithRenderOrder(-1)
@@ -26,14 +26,14 @@ public partial class ScrDeck
         return entity;
     }
 
-    private void SetListCard(DefaultEcs.Entity entity, InventoryCard invCard)
+    private void SetListSlot(DefaultEcs.Entity entity, InventoryCard card)
     {
-        ref var card = ref entity.Get<components.ui.Card>();
-        SetCard(ref card, invCard);
-        card.usedMarker.Set(!IsDraggable(invCard)
+        ref var slot = ref entity.Get<components.ui.Slot>();
+        SetSlot(ref slot, card);
+        slot.usedMarker.Set(!IsDraggable(card)
             ? components.Visibility.Visible
             : components.Visibility.Invisible);
-        card.button.Set(CardTooltip(invCard));
+        slot.button.Set(CardTooltip(card));
     }
 
     private bool IsDraggable(InventoryCard card) => card.cardId.Type switch

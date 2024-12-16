@@ -6,7 +6,7 @@ namespace zzre.game.systems.ui;
 
 public partial class ScrDeck
 {
-    private DefaultEcs.Entity CreateBaseCard(
+    private DefaultEcs.Entity CreateBaseSlot(
         DefaultEcs.Entity parent,
         Vector2 pos,
         components.ui.ElementId id
@@ -14,26 +14,26 @@ public partial class ScrDeck
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
-        entity.Set(new components.ui.Card());
-        ref var card = ref entity.Get<components.ui.Card>();
+        entity.Set(new components.ui.Slot());
+        ref var slot = ref entity.Get<components.ui.Slot>();
 
-        card.buttonId = id;
-        card.button = preload.CreateButton(entity)
+        slot.buttonId = id;
+        slot.button = preload.CreateButton(entity)
             .With(id)
             .With(pos)
             .With(new components.ui.ButtonTiles(-1))
             .With(UIPreloadAsset.Wiz000)
             .Build();
 
-        UnsetCard(ref card);
+        UnsetSlot(ref slot);
         return entity;
     }
 
-    private void CreateCardSummary(DefaultEcs.Entity entity, Vector2 offset)
+    private void CreateSlotSummary(DefaultEcs.Entity entity, Vector2 offset)
     {
-        ref var card = ref entity.Get<components.ui.Card>();
-        card.summary = preload.CreateLabel(entity)
-            .With(card.button.Get<Rect>().Min + offset)
+        ref var slot = ref entity.Get<components.ui.Slot>();
+        slot.summary = preload.CreateLabel(entity)
+            .With(slot.button.Get<Rect>().Min + offset)
             .With(UIPreloadAsset.Fnt002);
     }
 
@@ -51,37 +51,37 @@ public partial class ScrDeck
         preload.UI.GetTag<IAssetRegistry>().LoadUITileSheet(entity, tileSheetInfo);
     }
 
-    private void SetCard(ref components.ui.Card card, InventoryCard invCard)
+    private void SetSlot(ref components.ui.Slot slot, InventoryCard card)
     {
-        card.card = invCard;
-        card.button.Set(components.Visibility.Visible);
-        ChangeTileSheet(card.button, TileSheet(invCard.cardId));
-        card.button.Set(new components.ui.ButtonTiles(invCard.cardId.EntityId));
-        card.button.Set(CardTooltip(invCard));
+        slot.card = card;
+        slot.button.Set(components.Visibility.Visible);
+        ChangeTileSheet(slot.button, TileSheet(card.cardId));
+        slot.button.Set(new components.ui.ButtonTiles(card.cardId.EntityId));
+        slot.button.Set(CardTooltip(card));
 
-        if (card.summary != default)
-            card.summary.Set(new components.ui.Label(card.card switch
+        if (slot.summary != default)
+            slot.summary.Set(new components.ui.Label(slot.card switch
             {
-                InventoryItem item => FormatSummary(item),
-                InventorySpell spell => FormatSummary(spell),
-                InventoryFairy fairy => FormatSummary(fairy),
+                InventoryItem item => FormatSlotSummary(item),
+                InventorySpell spell => FormatSlotSummary(spell),
+                InventoryFairy fairy => FormatSlotSummary(fairy),
                 _ => throw new NotSupportedException("Unknown inventory card type")
             }));
     }
 
-    private static void UnsetCard(ref components.ui.Card card)
+    private static void UnsetSlot(ref components.ui.Slot slot)
     {
-        card.card = default;
-        card.button.Set(components.Visibility.Invisible);
-        if (card.button.Has<components.ui.TooltipUID>())
-            card.button.Remove<components.ui.TooltipUID>();
-        if (card.usedMarker != default)
-            card.usedMarker.Set(components.Visibility.Invisible);
-        if (card.summary != default)
-            card.summary.Set(new components.ui.Label(""));
+        slot.card = default;
+        slot.button.Set(components.Visibility.Invisible);
+        if (slot.button.Has<components.ui.TooltipUID>())
+            slot.button.Remove<components.ui.TooltipUID>();
+        if (slot.usedMarker != default)
+            slot.usedMarker.Set(components.Visibility.Invisible);
+        if (slot.summary != default)
+            slot.summary.Set(new components.ui.Label(""));
     }
 
-    private string FormatSummary(InventoryFairy fairy)
+    private string FormatSlotSummary(InventoryFairy fairy)
     {
         var builder = new System.Text.StringBuilder();
         builder.Append(fairy.name);
@@ -127,15 +127,14 @@ public partial class ScrDeck
         return builder.ToString();
     }
 
-    private string FormatSummary(InventoryItem item) => item.amount > 1
+    private string FormatSlotSummary(InventoryItem item) => item.amount > 1
         ? $"{item.amount} x {mappedDB.GetItem(item.dbUID).Name}"
         : mappedDB.GetItem(item.dbUID).Name;
 
-    private string FormatSummary(InventorySpell spell)
+    private string FormatSlotSummary(InventorySpell spell)
     {
         var dbSpell = mappedDB.GetSpell(spell.dbUID);
         var mana = dbSpell.Mana == 5 ? "-/-" : $"{spell.mana}/{dbSpell.MaxMana}";
         return $"{dbSpell.Name}\n{{104}}{mana} {UIBuilder.GetSpellPrices(dbSpell)}";
     }
-
 }

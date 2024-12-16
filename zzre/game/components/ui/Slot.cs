@@ -2,9 +2,9 @@ using zzio;
 
 namespace zzre.game.components.ui;
 
-public record struct Card
+public record struct Slot
 {
-    public enum Type { DeckCard, ListCard }
+    public enum Type { DeckSlot, ListSlot }
     public Type type;
     public InventoryCard? card;
     public DefaultEcs.Entity button;
