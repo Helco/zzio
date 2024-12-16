@@ -54,13 +54,13 @@ public partial class ScrDeck
         preload.UI.GetTag<IAssetRegistry>().LoadUITileSheet(entity, tileSheetInfo);
     }
 
-    private void SetSummaryOffset(ref components.ui.Slot slot)
+    private static void SetSummaryOffset(ref components.ui.Slot slot)
     {
         var min = slot.button.Get<Rect>().Min + SummaryOffset(ref slot);
         slot.summary.Set(Rect.FromMinMax(min, min));
     }
 
-    private Vector2 SummaryOffset(ref components.ui.Slot slot)
+    private static Vector2 SummaryOffset(ref components.ui.Slot slot)
     {
         if (slot.type == components.ui.Slot.Type.DeckSlot)
             return new(48, 4);

@@ -94,7 +94,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             .Build();
 
         preload.CreateLabel(entity)
-            .With(Mid + new Vector2(337, 42))
+            .With(Mid + new Vector2(337, 44))
             .With(UIPreloadAsset.Fnt002)
             .WithText($"{zanzarah.OverworldGame!.GetTag<zzio.Savegame>().pixiesCatched}/30")
             .Build();
@@ -124,19 +124,17 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.ListSlider.Set(components.ui.Slider.Vertical);
 
         deck.TabButtons = new DefaultEcs.Entity[4];
-        var tabButtonRect = Rect.FromTopLeftSize(Mid + new Vector2(281, 0f), new Vector2(35, 35));
-
         foreach (var tab in Tabs)
             deck.TabButtons[(int)tab.Type - 1] = preload.CreateButton(entity)
                 .With(tab.Id)
-                .With(tabButtonRect.OffsettedBy(0, tab.PosY))
+                .With(Mid + new Vector2(282, tab.PosY))
                 .With(new components.ui.ButtonTiles(tab.TileNormal, tab.TileHovered, tab.TileActive))
                 .With(UIPreloadAsset.Btn002)
                 .WithTooltip(tab.TooltipUID);
 
         preload.CreateButton(entity)
             .With(IDSwitchListMode)
-            .With(tabButtonRect.Min + new Vector2(16, 261))
+            .With(Mid + new Vector2(297, 261))
             .With(new components.ui.ButtonTiles(28, 29))
             .With(UIPreloadAsset.Btn002)
             .WithTooltip(0xA086B911)

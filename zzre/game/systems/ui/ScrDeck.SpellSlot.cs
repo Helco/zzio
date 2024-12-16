@@ -85,7 +85,7 @@ public partial class ScrDeck
         ref var spellSlot = ref entity.Get<components.ui.SpellSlot>();
         if (spellSlot.summary != default) spellSlot.summary.Dispose();
         spellSlot.summary = preload.CreateLabel(entity)
-            .With(spellSlot.button.Get<Rect>().Min + new Vector2(0, 47))
+            .With(spellSlot.button.Get<Rect>().Min + new Vector2(0, 48))
             .With(UIPreloadAsset.Fnt002)
             .Build();
     }
