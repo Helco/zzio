@@ -6,6 +6,9 @@ namespace zzre.game.systems.ui;
 
 public partial class ScrDeck
 {
+    // Provide a size for buttons, including unset ones.
+    public Vector2 SlotButtonSize = Vector2.One * 38;
+
     private DefaultEcs.Entity CreateBaseSlot(
         DefaultEcs.Entity parent,
         Vector2 pos,
@@ -20,7 +23,7 @@ public partial class ScrDeck
         slot.buttonId = id;
         slot.button = preload.CreateButton(entity)
             .With(id)
-            .With(pos)
+            .With(Rect.FromTopLeftSize(pos, SlotButtonSize))
             .With(new components.ui.ButtonTiles(-1))
             .With(UIPreloadAsset.Wiz000)
             .Build();

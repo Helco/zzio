@@ -19,6 +19,7 @@ public partial class ScrDeck
     {
         var entity = CreateBaseSlot(parent, pos, id);
         ref var slot = ref entity.Get<components.ui.Slot>();
+        slot.type = components.ui.Slot.Type.DeckSlot;
 
         CreateSlotSummary(entity, new(48, 4));
 

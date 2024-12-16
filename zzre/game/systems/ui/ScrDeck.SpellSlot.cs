@@ -32,10 +32,9 @@ public partial class ScrDeck
 
         spellSlot.button = preload.CreateButton(entity)
             .With(slot.buttonId + index + 1)
-            .With(slot.button.Get<Rect>().Min + new Vector2(50 + 46 * spellSlot.index, 0))
+            .With(slot.button.Get<Rect>().OffsettedBy(50 + 46 * spellSlot.index, 0))
             .With(new components.ui.ButtonTiles(-1))
             .With(UIPreloadAsset.Spl000)
-            // .WithTooltip(UIDSpellSlotNames[i])
             .Build();
 
         InfoMode(ref spellSlot);
@@ -71,7 +70,8 @@ public partial class ScrDeck
 
     public static void SpellMode(ref components.ui.SpellSlot spellSlot)
     {
-        spellSlot.button.Set(components.Visibility.Visible);
+        if (spellSlot.button.Get<components.ui.ButtonTiles>().Normal != -1)
+            spellSlot.button.Set(components.Visibility.Visible);
         spellSlot.button.Set(new components.ui.TooltipUID(UIDSpellSlotNames[spellSlot.index]));
         if (spellSlot.summary != default)
             spellSlot.summary.Set(new components.ui.Label(""));
@@ -84,7 +84,7 @@ public partial class ScrDeck
         ref var spellSlot = ref entity.Get<components.ui.SpellSlot>();
         if (spellSlot.summary != default) spellSlot.summary.Dispose();
         spellSlot.summary = preload.CreateLabel(entity)
-            .With(spellSlot.button.Get<Rect>().Min + new Vector2(0, 44))
+            .With(spellSlot.button.Get<Rect>().Min + new Vector2(0, 47))
             .With(UIPreloadAsset.Fnt002)
             .Build();
     }
