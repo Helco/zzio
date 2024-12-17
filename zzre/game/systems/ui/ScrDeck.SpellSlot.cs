@@ -29,6 +29,7 @@ public partial class ScrDeck
         entity.Set(new components.Parent(parent));
         entity.Set(new components.ui.Slot());
         ref var slot = ref entity.Get<components.ui.Slot>();
+        slot.type = components.ui.Slot.Type.SpellSlot;
         slot.index = index;
 
         slot.button = preload.CreateButton(entity)

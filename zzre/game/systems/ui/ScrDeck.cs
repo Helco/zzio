@@ -248,9 +248,9 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         RecreateList(entity, ref deck);
     }
 
-    private void TryDragCard(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, InventoryCard card)
+    private void DragCard(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, InventoryCard card)
     {
-        if (!IsDraggable(card)) return;
+        // if (!IsDraggable(card)) return;
 
         if (deck.DraggedCardImage != default) deck.DraggedCardImage.Dispose();
         deck.DraggedCardImage = preload.CreateImage(entity)
@@ -270,24 +270,33 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.DraggedOverlay.Set(components.ui.UIOffset.GameUpperLeft);
     }
 
+    private void HandleSlotDown(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity)
+    {
+        ref var slot = ref slotEntity.Get<components.ui.Slot>();
+        if (slot.card == default) return;
+        switch (slot.type)
+        {
+            case components.ui.Slot.Type.DeckSlot:
+                DragCard(deckEntity, ref deck, slot.card);
+                break;
+            case components.ui.Slot.Type.ListSlot:
+                if (IsDraggable(slot.card))
+                    DragCard(deckEntity, ref deck, slot.card);
+                break;
+            case components.ui.Slot.Type.SpellSlot:
+                break;
+            default:
+                throw new ArgumentException($"Invalid slot type: {slot.type}");
+        }
+    }
+
     private void HandleElementDown(DefaultEcs.Entity clickedEntity, components.ui.ElementId id)
     {
         var deckEntity = Set.GetEntities()[0];
         ref var deck = ref deckEntity.Get<components.ui.ScrDeck>();
 
         if (clickedEntity.Has<components.ui.SlotButton>())
-        {
-            ref var slot = ref deck.LastHovered.Get<components.Parent>().Entity.Get<components.ui.Slot>();
-            if (slot.card != default)
-                TryDragCard(deckEntity, ref deck, slot.card);
-        }
-
-        // if (id >= FirstListCell && id < FirstListCell + deck.ListSlots.Length)
-        // {
-        //     if (clickedEntity.TryGet(out components.ui.DraggedCard card))
-        //         if (card.card != default)
-        //             TryDragCard(deckEntity, ref deck, card.card);
-        // }
+            HandleSlotDown(deckEntity, ref deck, clickedEntity.Get<components.Parent>().Entity);
 
         if (deck.VacatedDeckSlot != default)
             return;
@@ -313,7 +322,11 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             UpdateSliderPosition(deck);
             FillList(ref deck);
         }
-        else HandleNavClick(id, zanzarah, deckEntity, IDOpenDeck);
+
+        if (deck.DraggedCardImage != default)
+            return;
+
+        HandleNavClick(id, zanzarah, deckEntity, IDOpenDeck);
     }
 
     private void UpdateSliderPosition(in components.ui.ScrDeck deck)

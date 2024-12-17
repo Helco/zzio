@@ -48,7 +48,7 @@ public partial class ScrDeck
             .Build();
     }
 
-    private InventoryCard? GetHoveredCard(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
+    private static InventoryCard? GetHoveredCard(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
         // Hovering over a non-slot entity
         if (!deck.LastHovered.Has<components.ui.SlotButton>()) return default;

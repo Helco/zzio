@@ -4,7 +4,7 @@ namespace zzre.game.components.ui;
 
 public record struct Slot
 {
-    public enum Type { DeckSlot, ListSlot, SpellSlot }
+    public enum Type { None, DeckSlot, ListSlot, SpellSlot }
     public Type type;
     public int index;
     public InventoryCard? card;
