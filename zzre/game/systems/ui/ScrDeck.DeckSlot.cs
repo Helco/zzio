@@ -78,4 +78,39 @@ public partial class ScrDeck
         foreach (var spellSlot in slot.spellSlots)
             SpellModeSpell(ref spellSlot.Get<components.ui.Slot>());
     }
+
+    private void HandleDeckSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity, ref components.ui.Slot slot)
+    {
+        if (deck.DraggedCard == default)
+        {
+            // Clicking on an empty slot with an empty hand
+            if (slot.card == default)
+                return;
+            // Picking up a card
+            DragCard(deckEntity, ref deck, slot.card);
+            SetDeckSlot(slotEntity, ref deck);
+            return;
+        }
+
+        // Applying a card
+        if (deck.DraggedCard.cardId.Type == CardType.Spell)
+            return;
+        if (deck.DraggedCard.cardId.Type == CardType.Fairy)
+        {
+            // Swap fairies
+            var oldDrag = deck.DraggedCard;
+            var newDrag = slot.card;
+            inventory.SetSlot((InventoryFairy)oldDrag, slot.index);
+            if (newDrag != default)
+            {
+                DragCard(deckEntity, ref deck, newDrag);
+            }
+            SetDeckSlot(slotEntity, ref deck);
+            return;
+        }
+        else if (deck.DraggedCard.cardId.Type == CardType.Item)
+        {
+            Console.WriteLine("Apply item {deck.DraggedCard.cardId} to fairy {slotEntity}");
+        }
+    }
 }

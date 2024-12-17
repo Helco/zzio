@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using System.Linq;
 using zzio;
@@ -84,6 +85,13 @@ public partial class ScrDeck
             slot.summary.Set(new components.ui.Label(""));
         if (slot.req != default)
             slot.req.Set(components.Visibility.Visible);
+    }
+
+    private void HandleSpellSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity, ref components.ui.Slot slot)
+    {
+        if (deck.DraggedCard == default) return;
+        if (deck.DraggedCard.cardId.Type != CardType.Spell) return;
+        Console.WriteLine("Apply spell {deck.DraggedCard.cardId} to spell {slotEntity}");
     }
 
     private void CreateSpellSummary(DefaultEcs.Entity entity)

@@ -46,6 +46,14 @@ public partial class ScrDeck
         _ => throw new ArgumentException($"Invalid inventory card type: {card.cardId.Type}")
     };
 
+    private void HandleListSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity, ref components.ui.Slot slot)
+    {
+        if (deck.DraggedCard != default) return;
+        if (slot.card == default) return;
+        if (!IsDraggable(slot.card)) return;
+        DragCard(deckEntity, ref deck, slot.card);
+    }
+
     private components.ui.TooltipUID CardTooltip(InventoryItem item)
             => !IsDraggable(item)
             ? new UID(0x8F4510A1) // item cannot be used

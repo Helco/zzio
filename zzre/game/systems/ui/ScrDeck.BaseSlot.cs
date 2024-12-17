@@ -104,6 +104,25 @@ public partial class ScrDeck
             slot.summary.Set(new components.ui.Label(""));
     }
 
+    private void HandleSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity)
+    {
+        ref var slot = ref slotEntity.Get<components.ui.Slot>();
+        switch (slot.type)
+        {
+            case components.ui.Slot.Type.DeckSlot:
+                HandleDeckSlotClick(deckEntity, ref deck, slotEntity, ref slot);
+                break;
+            case components.ui.Slot.Type.ListSlot:
+                HandleListSlotClick(deckEntity, ref deck, slotEntity, ref slot);
+                break;
+            case components.ui.Slot.Type.SpellSlot:
+                HandleSpellSlotClick(deckEntity, ref deck, slotEntity, ref slot);
+                break;
+            default:
+                throw new ArgumentException($"Invalid slot type: {slot.type}");
+        }
+    }
+
     private string FormatSlotSummary(InventoryFairy fairy)
     {
         var builder = new System.Text.StringBuilder();
