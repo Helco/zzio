@@ -32,6 +32,7 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     protected readonly UIBuilder preload;
     protected event Action<DefaultEcs.Entity, components.ui.ElementId>? OnElementDown;
     protected event Action<DefaultEcs.Entity, components.ui.ElementId>? OnElementUp;
+    protected event Action? OnRightClick;
 
     protected Vector2 ScreenCenter => ui.LogicalScreen.Center;
 
@@ -90,6 +91,12 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     private void HandleMouseUp(MouseButton button, Vector2 pos) => HandleMouse(button, pos, isDown: false);
     private void HandleMouse(MouseButton button, Vector2 pos, bool isDown)
     {
+        if (button == MouseButton.Right)
+        {
+            if (isDown)
+                OnRightClick?.Invoke();
+            return;
+        }
         if (button != MouseButton.Left)
             return;
 

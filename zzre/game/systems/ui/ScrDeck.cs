@@ -50,6 +50,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         assetRegistry = diContainer.GetTag<IAssetRegistry>();
         mappedDB = diContainer.GetTag<zzio.db.MappedDB>();
         OnElementDown += HandleElementDown;
+        OnRightClick += HandleRightClick;
     }
 
     protected override void HandleOpen(in messages.ui.OpenDeck message)
@@ -248,28 +249,6 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         RecreateList(entity, ref deck);
     }
 
-    private void DragCard(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, InventoryCard card)
-    {
-        // if (!IsDraggable(card)) return;
-
-        if (deck.DraggedCardImage != default) deck.DraggedCardImage.Dispose();
-        deck.DraggedCardImage = preload.CreateImage(entity)
-            .With(Mid)
-            .With(card.cardId)
-            .WithRenderOrder(-2)
-            .Build();
-        deck.DraggedCardImage.Set(new components.ui.DraggedCard(card));
-        deck.DraggedCardImage.Set(components.ui.UIOffset.GameUpperLeft);
-
-        if (deck.DraggedOverlay != default) deck.DraggedOverlay.Dispose();
-        deck.DraggedOverlay = preload.CreateImage(entity)
-            .With(Mid)
-            .With(UIPreloadAsset.Dnd000, 0)
-            .WithRenderOrder(-3)
-            .Build();
-        deck.DraggedOverlay.Set(components.ui.UIOffset.GameUpperLeft);
-    }
-
     private void HandleSlotDown(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity)
     {
         ref var slot = ref slotEntity.Get<components.ui.Slot>();
@@ -336,12 +315,6 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         slider = slider with { Current = Vector2.UnitY * Math.Clamp(deck.Scroll / (allCardsCount - 1f), 0, 1f) };
     }
 
-    private void Drag(DefaultEcs.Entity entity)
-    {
-        var tiles = entity.Get<components.ui.Tile[]>();
-        tiles[0].Rect = tiles[0].Rect with { Center = ui.CursorEntity.Get<Rect>().Center };
-    }
-
     private void HandleHover(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
         var curHovered = World.Has<components.ui.HoveredElement>()
@@ -380,12 +353,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         HandleHover(entity, ref deck);
         UpdateScroll(entity, ref deck);
-
-        if (deck.DraggedCardImage != default)
-        {
-            Drag(deck.DraggedCardImage);
-            Drag(deck.DraggedOverlay);
-        }
+        Drag(ref deck);
     }
 
     protected override void HandleKeyDown(KeyCode key)
@@ -395,5 +363,15 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         base.HandleKeyDown(key);
         if (deck.DraggedCardImage == default)
             HandleNavKeyDown(key, zanzarah, deckEntity, IDOpenDeck);
+    }
+
+    protected void HandleRightClick()
+    {
+        Console.WriteLine("Right click");
+        var deckEntity = Set.GetEntities()[0];
+        ref var deck = ref deckEntity.Get<components.ui.ScrDeck>();
+        if (deck.DraggedCard == default)
+            return;
+        DropCard(ref deck);
     }
 }
