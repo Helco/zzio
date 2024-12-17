@@ -31,9 +31,16 @@ public partial class ScrDeck
         return entity;
     }
 
-    private void SetDeckSlot(DefaultEcs.Entity entity, InventoryCard card, ref components.ui.ScrDeck deck)
+    private void SetDeckSlot(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
         ref var slot = ref entity.Get<components.ui.Slot>();
+        var card = inventory.GetFairyAtSlot(slot.index);
+        if (card == default)
+        {
+            UnsetSlot(ref slot);
+            return;
+        };
+
         SetSlot(ref slot, card);
         slot.button.Set(new components.ui.TooltipUID(UIDSelectFairy));
 

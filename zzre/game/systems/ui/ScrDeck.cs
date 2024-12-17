@@ -153,11 +153,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     private void SetDeckSlots(ref components.ui.ScrDeck deck)
     {
         for (int i = 0; i < Inventory.FairySlotCount; i++)
-        {
-            var fairy = inventory.GetFairyAtSlot(i);
-            if (fairy != default)
-                SetDeckSlot(deck.DeckSlots[i], fairy, ref deck);
-        }
+            SetDeckSlot(deck.DeckSlots[i], ref deck);
     }
 
     private static Vector2 DeckSlotPos(int fairyI, int slotI) =>
@@ -255,33 +251,67 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         RecreateList(entity, ref deck);
     }
 
-    private void HandleTryDragSlot(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity)
+    private void HandleDeckSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity, ref components.ui.Slot slot)
     {
-        ref var slot = ref slotEntity.Get<components.ui.Slot>();
-        var card = slot.card;
-        if (card == default) return;
-        if (slot.type == components.ui.Slot.Type.DeckSlot)
+        if (deck.DraggedCard == default)
         {
-            UnsetSlot(ref slot);
-            DragCard(deckEntity, ref deck, card);
+            // Clicking on an empty slot with an empty hand
+            if (slot.card == default)
+                return;
+            // Picking up a card
+            DragCard(deckEntity, ref deck, slot.card);
+            SetDeckSlot(slotEntity, ref deck);
+            return;
         }
-        else if (slot.type == components.ui.Slot.Type.ListSlot && IsDraggable(card))
+
+        // Applying a card
+        if (deck.DraggedCard.cardId.Type == CardType.Spell)
+            return;
+        if (deck.DraggedCard.cardId.Type == CardType.Fairy)
         {
-            UnsetSlot(ref slot);
-            DragCard(deckEntity, ref deck, card);
+            // Swap fairies
+            var oldDrag = deck.DraggedCard;
+            var newDrag = slot.card;
+            inventory.SetSlot((InventoryFairy)oldDrag, slot.index);
+            if (newDrag != default)
+            {
+                DragCard(deckEntity, ref deck, newDrag);
+            }
+            SetDeckSlot(slotEntity, ref deck);
+            return;
+        }
+        else if (deck.DraggedCard.cardId.Type == CardType.Item)
+        {
+            Console.WriteLine("Apply item {deck.DraggedCard.cardId} to fairy {slotEntity}");
         }
     }
 
-    private void HandleTryDropSlot(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity)
+    private void HandleListSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity, ref components.ui.Slot slot)
+    {
+        if (deck.DraggedCard != default) return;
+        if (slot.card == default) return;
+        DragCard(deckEntity, ref deck, slot.card);
+    }
+
+    private void HandleSpellSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity, ref components.ui.Slot slot)
+    {
+        if (deck.DraggedCard == default) return;
+        if (deck.DraggedCard.cardId.Type != CardType.Spell) return;
+        Console.WriteLine("Apply spell {deck.DraggedCard.cardId} to spell {slotEntity}");
+    }
+    private void HandleSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity)
     {
         ref var slot = ref slotEntity.Get<components.ui.Slot>();
         switch (slot.type)
         {
             case components.ui.Slot.Type.DeckSlot:
+                HandleDeckSlotClick(deckEntity, ref deck, slotEntity, ref slot);
                 break;
             case components.ui.Slot.Type.ListSlot:
+                HandleListSlotClick(deckEntity, ref deck, slotEntity, ref slot);
                 break;
             case components.ui.Slot.Type.SpellSlot:
+                HandleSpellSlotClick(deckEntity, ref deck, slotEntity, ref slot);
                 break;
             default:
                 throw new ArgumentException($"Invalid slot type: {slot.type}");
@@ -295,10 +325,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
         if (clickedEntity.Has<components.ui.SlotButton>())
         {
-            if (deck.DraggedCard == default)
-                HandleTryDragSlot(deckEntity, ref deck, clickedEntity.Get<components.Parent>().Entity);
-            else
-                HandleTryDropSlot(deckEntity, ref deck, clickedEntity.Get<components.Parent>().Entity);
+            HandleSlotClick(deckEntity, ref deck, clickedEntity.Get<components.Parent>().Entity);
         }
         if (deck.VacatedDeckSlot != default)
             return;

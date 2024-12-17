@@ -5,12 +5,12 @@ namespace zzre.game.systems.ui;
 
 public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.OpenDeck>
 {
-    private void DragCard(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, InventoryCard card)
+    private void DragCard(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, InventoryCard card)
     {
         deck.DraggedCard = card;
 
         if (deck.DraggedCardImage != default) deck.DraggedCardImage.Dispose();
-        deck.DraggedCardImage = preload.CreateImage(entity)
+        deck.DraggedCardImage = preload.CreateImage(deckEntity)
             .With(Mid)
             .With(card.cardId)
             .WithRenderOrder(-2)
@@ -19,7 +19,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.DraggedCardImage.Set(components.ui.UIOffset.GameUpperLeft);
 
         if (deck.DraggedOverlay != default) deck.DraggedOverlay.Dispose();
-        deck.DraggedOverlay = preload.CreateImage(entity)
+        deck.DraggedOverlay = preload.CreateImage(deckEntity)
             .With(Mid)
             .With(UIPreloadAsset.Dnd000, 0)
             .WithRenderOrder(-3)
