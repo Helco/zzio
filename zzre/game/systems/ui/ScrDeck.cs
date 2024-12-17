@@ -356,4 +356,17 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             return;
         DropCard(deckEntity, ref deck);
     }
+
+    protected override void HandleScroll(float scrollAmount)
+    {
+        var deckEntity = Set.GetEntities()[0];
+        ref var deck = ref deckEntity.Get<components.ui.ScrDeck>();
+
+        if (scrollAmount < 0)
+            deck.Scroll += deck.IsGridMode ? ListRows : 1;
+        else
+            deck.Scroll -= deck.IsGridMode ? ListRows : 1;
+        UpdateSliderPosition(deck);
+        SetListSlots(ref deck);
+    }
 }

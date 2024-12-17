@@ -64,6 +64,7 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
         zzContainer.OnMouseDown += HandleMouseDown;
         zzContainer.OnMouseUp += HandleMouseUp;
         zzContainer.OnKeyDown += HandleKeyDown;
+        zzContainer.OnScroll += HandleScroll;
 
         if (zanzarah.CurrentGame != null && blockFlags.HasFlag(BlockFlags.DisableGameUpdate))
             zanzarah.CurrentGame.IsUpdateEnabled = false;
@@ -78,6 +79,7 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
         zzContainer.OnMouseDown -= HandleMouseDown;
         zzContainer.OnMouseUp -= HandleMouseUp;
         zzContainer.OnKeyDown -= HandleKeyDown;
+        zzContainer.OnScroll -= HandleScroll;
 
         if (zanzarah.CurrentGame != null && blockFlags.HasFlag(BlockFlags.DisableGameUpdate))
             zanzarah.CurrentGame.IsUpdateEnabled = true;
@@ -113,7 +115,9 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     protected virtual void HandleKeyDown(KeyCode key)
     {
     }
-
+    protected virtual void HandleScroll(float scrollAmount)
+    {
+    }
     protected abstract void HandleOpen(in TMessage message);
 
     [Update]
