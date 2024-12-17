@@ -324,7 +324,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         var slider = deck.ListSlider.Get<components.ui.Slider>();
         var allCardsCount = AllCardsOfType(deck).Count();
-        var newScrollI = (int)MathF.Round(slider.Current.Y * (allCardsCount - 1) * (deck.IsGridMode ? ListRows : 1));
+        var newScrollI = (int)MathF.Round(slider.Current.Y * (allCardsCount - 1));
         if (newScrollI != deck.Scroll)
         {
             deck.Scroll = newScrollI;
