@@ -275,6 +275,23 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         var deckEntity = Set.GetEntities()[0];
         ref var deck = ref deckEntity.Get<components.ui.ScrDeck>();
 
+        if (clickedEntity.Has<components.ui.SlotButton>())
+        {
+            ref var slot = ref deck.LastHovered.Get<components.Parent>().Entity.Get<components.ui.Slot>();
+            if (slot.card != default)
+                TryDragCard(deckEntity, ref deck, slot.card);
+        }
+
+        // if (id >= FirstListCell && id < FirstListCell + deck.ListSlots.Length)
+        // {
+        //     if (clickedEntity.TryGet(out components.ui.DraggedCard card))
+        //         if (card.card != default)
+        //             TryDragCard(deckEntity, ref deck, card.card);
+        // }
+
+        if (deck.VacatedDeckSlot != default)
+            return;
+
         if (id == IDSwitchListMode)
         {
             deck.IsGridMode = !deck.IsGridMode;
@@ -295,12 +312,6 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             deck.Scroll -= deck.IsGridMode ? ListRows : 1;
             UpdateSliderPosition(deck);
             FillList(ref deck);
-        }
-        else if (id >= FirstListCell && id < FirstListCell + deck.ListSlots.Length)
-        {
-            if (clickedEntity.TryGet(out components.ui.DraggedCard card))
-                if (card.card != default)
-                    TryDragCard(deckEntity, ref deck, card.card);
         }
         else HandleNavClick(id, zanzarah, deckEntity, IDOpenDeck);
     }
@@ -367,7 +378,9 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     protected override void HandleKeyDown(KeyCode key)
     {
         var deckEntity = Set.GetEntities()[0];
+        ref var deck = ref deckEntity.Get<components.ui.ScrDeck>();
         base.HandleKeyDown(key);
-        HandleNavKeyDown(key, zanzarah, deckEntity, IDOpenDeck);
+        if (deck.DraggedCardImage == default)
+            HandleNavKeyDown(key, zanzarah, deckEntity, IDOpenDeck);
     }
 }

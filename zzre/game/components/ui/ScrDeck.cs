@@ -25,12 +25,11 @@ public struct ScrDeck
     public DefaultEcs.Entity[] DeckSlots;
     public DefaultEcs.Entity[] ListSlots;
 
+    public DefaultEcs.Entity LastHovered;
     public DefaultEcs.Entity StatsTitle;
     public DefaultEcs.Entity StatsDescriptions;
     public DefaultEcs.Entity StatsLights;
     public DefaultEcs.Entity StatsLevel;
-
-    public DefaultEcs.Entity LastHovered;
 
     public int VacatedDeckSlot;
     public InventoryCard? DraggedCard;
