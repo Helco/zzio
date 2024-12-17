@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using zzre.game.components;
 using zzre.game.components.ui;
 using zzre.materials;
@@ -69,8 +69,7 @@ partial class ECSExplorer
         AddEntityNamerByComponent<TooltipTarget>(High, e => $"Tooltip Target {e}");
         AddEntityNamerByComponent<Fade>(High, e => $"Fade {e}");
         AddEntityNamerByComponent<Slider>(High, e => $"Slider #{e.TryGet<ElementId>().GetValueOrDefault(default).Value} {e}");
-        AddEntityNamerByComponent<Slot>(High, e => $"{e.TryGet<Slot>().GetValueOrDefault(default).type} {e}");
-        AddEntityNamerByComponent<SpellSlot>(High, e => $"SpellSlot #{e.TryGet<SpellSlot>().GetValueOrDefault(default).index} {e}");
+        AddEntityNamerByComponent<Slot>(High, e => $"{e.TryGet<Slot>().GetValueOrDefault(default).type} #{e.TryGet<Slot>().GetValueOrDefault(default).index} {e}");
         AddEntityNamerByComponent(High, (in AnimatedLabel label) => $"Anim. Label \"{Sanitize(label.FullText)}\"");
         AddEntityNamerByComponent(Def, (in Label label) => $"Label \"{Sanitize(label.Text)}\"");
         AddEntityNamerByComponent<Tile[]>(Low, e => $"Visuals {e}");

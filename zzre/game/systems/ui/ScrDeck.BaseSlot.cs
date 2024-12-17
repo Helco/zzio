@@ -27,6 +27,7 @@ public partial class ScrDeck
             .With(new components.ui.ButtonTiles(-1))
             .With(UIPreloadAsset.Wiz000)
             .Build();
+        slot.button.Set(new components.ui.SlotButton());
 
         UnsetSlot(ref slot);
         return entity;

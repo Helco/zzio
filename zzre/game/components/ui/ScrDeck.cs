@@ -1,3 +1,5 @@
+using zzio;
+
 namespace zzre.game.components.ui;
 
 public struct ScrDeck
@@ -29,6 +31,9 @@ public struct ScrDeck
     public DefaultEcs.Entity StatsLevel;
 
     public DefaultEcs.Entity LastHovered;
-    public DefaultEcs.Entity DraggedCard;
+
+    public int VacatedDeckSlot;
+    public InventoryCard? DraggedCard;
+    public DefaultEcs.Entity DraggedCardImage;
     public DefaultEcs.Entity DraggedOverlay;
 }

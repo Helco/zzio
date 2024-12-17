@@ -252,14 +252,14 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         if (!IsDraggable(card)) return;
 
-        if (deck.DraggedCard != default) deck.DraggedCard.Dispose();
-        deck.DraggedCard = preload.CreateImage(entity)
+        if (deck.DraggedCardImage != default) deck.DraggedCardImage.Dispose();
+        deck.DraggedCardImage = preload.CreateImage(entity)
             .With(Mid)
             .With(card.cardId)
             .WithRenderOrder(-2)
             .Build();
-        deck.DraggedCard.Set(new components.ui.DraggedCard(card));
-        deck.DraggedCard.Set(components.ui.UIOffset.GameUpperLeft);
+        deck.DraggedCardImage.Set(new components.ui.DraggedCard(card));
+        deck.DraggedCardImage.Set(components.ui.UIOffset.GameUpperLeft);
 
         if (deck.DraggedOverlay != default) deck.DraggedOverlay.Dispose();
         deck.DraggedOverlay = preload.CreateImage(entity)
@@ -318,23 +318,26 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         tiles[0].Rect = tiles[0].Rect with { Center = ui.CursorEntity.Get<Rect>().Center };
     }
 
-    private void TryStartDragging(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
+    private void HandleHover(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
         var curHovered = World.Has<components.ui.HoveredElement>()
             ? World.Get<components.ui.HoveredElement>()
             : default;
-        if (curHovered.Entity == deck.LastHovered)
-            return;
+
+        // Still hovering over the same entity
+        if (curHovered.Entity == deck.LastHovered) return;
+
+        // Unhovered an entity
         if (deck.LastHovered != default)
         {
             deck.LastHovered = default;
-            ResetStats(ref deck);
-        }
-        if (deck.ListSlots.Contains(curHovered.Entity))
-        {
-            deck.LastHovered = curHovered.Entity;
             CreateStats(entity, ref deck);
+            return;
         }
+
+        // Hovered an entity
+        deck.LastHovered = curHovered.Entity;
+        CreateStats(entity, ref deck);
     }
 
     private void UpdateScroll(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
@@ -351,12 +354,12 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     protected override void Update(float elapsedTime, in DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
-        TryStartDragging(entity, ref deck);
+        HandleHover(entity, ref deck);
         UpdateScroll(entity, ref deck);
 
-        if (deck.DraggedCard != default)
+        if (deck.DraggedCardImage != default)
         {
-            Drag(deck.DraggedCard);
+            Drag(deck.DraggedCardImage);
             Drag(deck.DraggedOverlay);
         }
     }

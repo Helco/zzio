@@ -59,13 +59,13 @@ public partial class ScrDeck
                 _ => throw new NotSupportedException("Unknown inventory card type")
             }));
         foreach (var spellSlot in slot.spellSlots)
-            InfoMode(ref spellSlot.Get<components.ui.SpellSlot>());
+            InfoModeSpell(ref spellSlot.Get<components.ui.Slot>());
     }
 
     private static void SpellMode(ref components.ui.Slot slot)
     {
         slot.summary.Set(new components.ui.Label(""));
         foreach (var spellSlot in slot.spellSlots)
-            SpellMode(ref spellSlot.Get<components.ui.SpellSlot>());
+            SpellModeSpell(ref spellSlot.Get<components.ui.Slot>());
     }
 }

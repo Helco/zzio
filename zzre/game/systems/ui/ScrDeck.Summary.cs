@@ -14,32 +14,33 @@ public partial class ScrDeck
         new(0x238A3981), // Mana
         new(0x04211121), // Fire Rate
     ];
+    private static readonly UID numCollectedFairies = new(0xA3EC01B1);
 
     private void CreateStats(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
-        ResetStats(ref deck);
-        var card = deck.LastHovered.Get<components.ui.Slot>().card;
-        // Show empty stats for blank buttons
-        if (card == default)
-            return;
-        var summary = FormatStats(card);
+        var card = GetHoveredCard(entity, ref deck);
+        var summary = card == default ? GetDefaultSummary(ref deck) : FormatStats(card);
 
+        if (deck.StatsTitle != default) deck.StatsTitle.Dispose();
         deck.StatsTitle = preload.CreateLabel(entity)
             .With(Mid + new Vector2(320, 350))
             .With(UIPreloadAsset.Fnt000)
             .WithText(summary[0])
             .Build();
+        if (deck.StatsDescriptions != default) deck.StatsDescriptions.Dispose();
         deck.StatsDescriptions = preload.CreateLabel(entity)
             .With(Mid + new Vector2(330, 379))
             .With(UIPreloadAsset.Fnt002)
             .WithText(summary[1])
             .WithLineWrap(260f)
             .Build();
+        if (deck.StatsLights != default) deck.StatsLights.Dispose();
         deck.StatsLights = preload.CreateLabel(entity)
             .With(Mid + new Vector2(380, 379))
             .With(UIPreloadAsset.Fnt002)
             .WithText(summary[2])
             .Build();
+        if (deck.StatsLevel != default) deck.StatsLevel.Dispose();
         deck.StatsLevel = preload.CreateLabel(entity)
             .With(Mid + new Vector2(473, 379))
             .With(UIPreloadAsset.Fnt002)
@@ -47,22 +48,37 @@ public partial class ScrDeck
             .Build();
     }
 
-    private static void ResetStats(ref components.ui.ScrDeck deck)
+    private InventoryCard? GetHoveredCard(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
-        var allEntities = new[]
-            {
-                deck.StatsTitle,
-                deck.StatsDescriptions,
-                deck.StatsLights,
-                deck.StatsLevel
-            };
-        foreach (var entity in allEntities)
-            if (entity != default)
-                entity.Dispose();
-        deck.StatsTitle =
-        deck.StatsDescriptions =
-        deck.StatsLights =
-        deck.StatsLevel = default;
+        // Hovering over a non-slot entity
+        if (!deck.LastHovered.Has<components.ui.SlotButton>()) return default;
+
+        ref var slot = ref deck.LastHovered.Get<components.Parent>().Entity.Get<components.ui.Slot>();
+
+        // Hovering over an empty slot entity
+        if (slot.card == default)
+            return default;
+
+        // Hovering over deck slot while in fairy tab (get "faery count" instead)
+        if (deck.ActiveTab == components.ui.ScrDeck.Tab.Fairies && slot.type == components.ui.Slot.Type.DeckSlot)
+            return default;
+
+        // Dragging fairy over non-deck slot
+        if (deck.DraggedCard?.cardId.Type == CardType.Fairy && slot.type != components.ui.Slot.Type.DeckSlot)
+            return default;
+
+        // Dragging spell over non-spell slot
+        if (deck.DraggedCard?.cardId.Type == CardType.Spell && slot.type != components.ui.Slot.Type.SpellSlot)
+            return default;
+
+        return slot.card;
+    }
+
+    private string[] GetDefaultSummary(ref components.ui.ScrDeck deck)
+    {
+        if (deck.ActiveTab == components.ui.ScrDeck.Tab.Fairies)
+            return ["", $"{mappedDB.GetText(numCollectedFairies).Text} {inventory.Fairies.Count()}", "", ""];
+        return ["", "", "", ""];
     }
 
     private string[] FormatStats(InventoryFairy fairy)
@@ -120,5 +136,4 @@ public partial class ScrDeck
         CardType.Fairy => FormatStats((InventoryFairy)card),
         _ => throw new ArgumentException($"Invalid inventory card type: {card.cardId.Type}")
     };
-
 }
