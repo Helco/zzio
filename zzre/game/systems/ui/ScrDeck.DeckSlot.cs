@@ -12,12 +12,13 @@ public partial class ScrDeck
     private static readonly UID UIDUseItemOnFairy = new(0x41912581);
 
     private DefaultEcs.Entity CreateDeckSlot(
-    DefaultEcs.Entity parent,
-    Vector2 pos,
-    components.ui.ElementId id
+        DefaultEcs.Entity parent,
+        Vector2 pos,
+        components.ui.ElementId id,
+        int index
     )
     {
-        var entity = CreateBaseSlot(parent, pos, id);
+        var entity = CreateBaseSlot(parent, pos, id, index);
         ref var slot = ref entity.Get<components.ui.Slot>();
         slot.type = components.ui.Slot.Type.DeckSlot;
 

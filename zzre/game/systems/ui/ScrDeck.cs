@@ -146,7 +146,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.DeckSlots = new DefaultEcs.Entity[Inventory.FairySlotCount];
         for (int i = 0; i < Inventory.FairySlotCount; i++)
         {
-            deck.DeckSlots[i] = CreateDeckSlot(entity, Mid + new Vector2(31, 60 + 79 * i), FirstFairySlot + i);
+            deck.DeckSlots[i] = CreateDeckSlot(entity, Mid + new Vector2(31, 60 + 79 * i), FirstFairySlot + i, i);
             var fairy = inventory.GetFairyAtSlot(i);
             if (fairy != default)
                 SetDeckSlot(deck.DeckSlots[i], fairy);
@@ -186,7 +186,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             for (int x = 0; x < columns; x++)
             {
                 var i = y * columns + x;
-                deck.ListSlots[i] = CreateListSlot(entity, ListSlotPos(x, y), FirstListCell + i);
+                deck.ListSlots[i] = CreateListSlot(entity, ListSlotPos(x, y), FirstListCell + i, i);
                 if (columns == 1)
                     CreateSlotSummary(deck.ListSlots[i], new(42, 9));
             }

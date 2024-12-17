@@ -23,7 +23,11 @@ public partial class ScrDeck
         new(0xB26B36A1)
     ];
 
-    private DefaultEcs.Entity CreateSpellSlot(DefaultEcs.Entity parent, ref components.ui.Slot parentSlot, int index)
+    private DefaultEcs.Entity CreateSpellSlot(
+        DefaultEcs.Entity parent,
+        ref components.ui.Slot parentSlot,
+        int index
+    )
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
@@ -31,9 +35,9 @@ public partial class ScrDeck
         ref var slot = ref entity.Get<components.ui.Slot>();
         slot.type = components.ui.Slot.Type.SpellSlot;
         slot.index = index;
-
+        slot.buttonId = parentSlot.buttonId + index + 1;
         slot.button = preload.CreateButton(entity)
-            .With(parentSlot.buttonId + index + 1)
+            .With(slot.buttonId)
             .With(Rect.FromTopLeftSize(parentSlot.button.Get<Rect>().Min + new Vector2(50 + 46 * slot.index, 0), SpellSlotSize))
             .With(new components.ui.ButtonTiles(-1))
             .With(UIPreloadAsset.Spl000)

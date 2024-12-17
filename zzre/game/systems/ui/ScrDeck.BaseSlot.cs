@@ -12,14 +12,15 @@ public partial class ScrDeck
     private DefaultEcs.Entity CreateBaseSlot(
         DefaultEcs.Entity parent,
         Vector2 pos,
-        components.ui.ElementId id
+        components.ui.ElementId id,
+        int index
     )
     {
         var entity = World.CreateEntity();
         entity.Set(new components.Parent(parent));
         entity.Set(new components.ui.Slot());
         ref var slot = ref entity.Get<components.ui.Slot>();
-
+        slot.index = index;
         slot.buttonId = id;
         slot.button = preload.CreateButton(entity)
             .With(id)

@@ -10,10 +10,11 @@ public partial class ScrDeck
     private DefaultEcs.Entity CreateListSlot(
         DefaultEcs.Entity parent,
         Vector2 pos,
-        components.ui.ElementId id
+        components.ui.ElementId id,
+        int index
         )
     {
-        var entity = CreateBaseSlot(parent, pos, id);
+        var entity = CreateBaseSlot(parent, pos, id, index);
         ref var slot = ref entity.Get<components.ui.Slot>();
         slot.type = components.ui.Slot.Type.ListSlot;
 
