@@ -27,13 +27,15 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.DraggedOverlay.Set(components.ui.UIOffset.GameUpperLeft);
     }
 
-    private static void DropCard(ref components.ui.ScrDeck deck)
+    private void DropCard(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
         deck.DraggedCard = default;
         deck.DraggedCardImage.Dispose();
         deck.DraggedCardImage = default;
         deck.DraggedOverlay.Dispose();
         deck.DraggedOverlay = default;
+        SetListSlots(ref deck);
+        SetDeckSlots(ref deck);
     }
 
     private void Drag(ref components.ui.ScrDeck deck)

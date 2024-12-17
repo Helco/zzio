@@ -31,7 +31,7 @@ public partial class ScrDeck
         return entity;
     }
 
-    private void SetDeckSlot(DefaultEcs.Entity entity, InventoryCard card)
+    private void SetDeckSlot(DefaultEcs.Entity entity, InventoryCard card, ref components.ui.ScrDeck deck)
     {
         ref var slot = ref entity.Get<components.ui.Slot>();
         SetSlot(ref slot, card);
@@ -47,6 +47,8 @@ public partial class ScrDeck
             else
                 UnsetSpellSlot(slot.spellSlots[i]);
         }
+        if (IsInfoTab(deck.ActiveTab)) InfoMode(ref slot);
+        else SpellMode(ref slot);
     }
 
     private void InfoMode(ref components.ui.Slot slot)

@@ -146,11 +146,17 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         deck.DeckSlots = new DefaultEcs.Entity[Inventory.FairySlotCount];
         for (int i = 0; i < Inventory.FairySlotCount; i++)
-        {
             deck.DeckSlots[i] = CreateDeckSlot(entity, Mid + new Vector2(31, 60 + 79 * i), FirstFairySlot + i, i);
+        SetDeckSlots(ref deck);
+    }
+
+    private void SetDeckSlots(ref components.ui.ScrDeck deck)
+    {
+        for (int i = 0; i < Inventory.FairySlotCount; i++)
+        {
             var fairy = inventory.GetFairyAtSlot(i);
             if (fairy != default)
-                SetDeckSlot(deck.DeckSlots[i], fairy);
+                SetDeckSlot(deck.DeckSlots[i], fairy, ref deck);
         }
     }
 
@@ -178,9 +184,6 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     private void CreateListSlots(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck, int columns, int rows = ListRows)
     {
-        if (deck.ListSlots != default)
-            foreach (var listSlot in deck.ListSlots)
-                listSlot.Dispose();
         deck.ListSlots = new DefaultEcs.Entity[rows * columns];
         for (int y = 0; y < rows; y++)
         {
@@ -205,7 +208,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         _ => []
     };
 
-    private void FillList(ref components.ui.ScrDeck deck)
+    private void SetListSlots(ref components.ui.ScrDeck deck)
     {
         var allCardsOfType = AllCardsOfType(deck);
         var count = allCardsOfType.Count();
@@ -225,8 +228,11 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     private void RecreateList(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {
+        if (deck.ListSlots != default)
+            foreach (var listSlot in deck.ListSlots)
+                listSlot.Dispose();
         CreateListSlots(entity, ref deck, columns: deck.IsGridMode ? 6 : 1);
-        FillList(ref deck);
+        SetListSlots(ref deck);
     }
 
     private static bool IsInfoTab(Tab tab) => tab == Tab.Fairies || tab == Tab.Items;
@@ -249,18 +255,31 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         RecreateList(entity, ref deck);
     }
 
-    private void HandleSlotDown(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity)
+    private void HandleTryDragSlot(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity)
     {
         ref var slot = ref slotEntity.Get<components.ui.Slot>();
-        if (slot.card == default) return;
+        var card = slot.card;
+        if (card == default) return;
+        if (slot.type == components.ui.Slot.Type.DeckSlot)
+        {
+            UnsetSlot(ref slot);
+            DragCard(deckEntity, ref deck, card);
+        }
+        else if (slot.type == components.ui.Slot.Type.ListSlot && IsDraggable(card))
+        {
+            UnsetSlot(ref slot);
+            DragCard(deckEntity, ref deck, card);
+        }
+    }
+
+    private void HandleTryDropSlot(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity)
+    {
+        ref var slot = ref slotEntity.Get<components.ui.Slot>();
         switch (slot.type)
         {
             case components.ui.Slot.Type.DeckSlot:
-                DragCard(deckEntity, ref deck, slot.card);
                 break;
             case components.ui.Slot.Type.ListSlot:
-                if (IsDraggable(slot.card))
-                    DragCard(deckEntity, ref deck, slot.card);
                 break;
             case components.ui.Slot.Type.SpellSlot:
                 break;
@@ -275,8 +294,12 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         ref var deck = ref deckEntity.Get<components.ui.ScrDeck>();
 
         if (clickedEntity.Has<components.ui.SlotButton>())
-            HandleSlotDown(deckEntity, ref deck, clickedEntity.Get<components.Parent>().Entity);
-
+        {
+            if (deck.DraggedCard == default)
+                HandleTryDragSlot(deckEntity, ref deck, clickedEntity.Get<components.Parent>().Entity);
+            else
+                HandleTryDropSlot(deckEntity, ref deck, clickedEntity.Get<components.Parent>().Entity);
+        }
         if (deck.VacatedDeckSlot != default)
             return;
 
@@ -293,13 +316,13 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         {
             deck.Scroll += deck.IsGridMode ? ListRows : 1;
             UpdateSliderPosition(deck);
-            FillList(ref deck);
+            SetListSlots(ref deck);
         }
         else if (id == IDSliderUp)
         {
             deck.Scroll -= deck.IsGridMode ? ListRows : 1;
             UpdateSliderPosition(deck);
-            FillList(ref deck);
+            SetListSlots(ref deck);
         }
 
         if (deck.DraggedCardImage != default)
@@ -345,7 +368,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         if (newScrollI != deck.Scroll)
         {
             deck.Scroll = newScrollI;
-            FillList(ref deck);
+            SetListSlots(ref deck);
         }
     }
 
@@ -367,11 +390,10 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     protected void HandleRightClick()
     {
-        Console.WriteLine("Right click");
         var deckEntity = Set.GetEntities()[0];
         ref var deck = ref deckEntity.Get<components.ui.ScrDeck>();
         if (deck.DraggedCard == default)
             return;
-        DropCard(ref deck);
+        DropCard(deckEntity, ref deck);
     }
 }
