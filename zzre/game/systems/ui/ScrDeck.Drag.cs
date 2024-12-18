@@ -30,7 +30,10 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     private void DropCard(ref components.ui.ScrDeck deck)
     {
         if (deck.VacatedDeckSlot != -1)
+        {
             inventory.SetSlot((InventoryFairy)deck.DraggedCard!, deck.VacatedDeckSlot);
+            SetDeckSlot(deck.DeckSlots[deck.VacatedDeckSlot], ref deck);
+        }
         deck.VacatedDeckSlot = -1;
         deck.DraggedCard = default;
         deck.DraggedCardImage.Dispose();
@@ -38,7 +41,6 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.DraggedOverlay.Dispose();
         deck.DraggedOverlay = default;
         SetListSlots(ref deck);
-        SetDeckSlots(ref deck);
     }
 
     private void Drag(ref components.ui.ScrDeck deck)
