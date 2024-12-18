@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22, windows-latest, macos-13, macos-14]
+        os: [ubuntu-22.04, windows-latest, macos-13, macos-14]
     uses: ./.github/workflows/build.yml
     with:
       runs-on: ${{ matrix.os }}

@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22]
+        os: [ubuntu-22.04]
     uses: ./.github/workflows/build.yml
     with:
       runs-on: ${{ matrix.os }}
