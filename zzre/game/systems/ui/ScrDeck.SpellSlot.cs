@@ -63,7 +63,7 @@ public partial class ScrDeck
     public void UnsetSpellSlot(DefaultEcs.Entity entity)
     {
         ref var slot = ref entity.Get<components.ui.Slot>();
-        slot.button.Set(components.Visibility.Invisible);
+        UnsetSlot(ref slot);
         slot.button.Set(new components.ui.ButtonTiles(-1));
         CreateSpellSummary(entity);
         CreateSpellReq(entity);
