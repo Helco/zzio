@@ -54,6 +54,7 @@ public partial class ScrDeck
     {
         ref var slot = ref entity.Get<components.ui.Slot>();
         slot.card = invSpell;
+        slot.button.Set(components.Visibility.Visible);
         slot.button.Set(new components.ui.ButtonTiles(invSpell.cardId.EntityId));
         CreateSpellSummary(entity);
         CreateSpellReq(entity);
@@ -61,6 +62,10 @@ public partial class ScrDeck
 
     public void UnsetSpellSlot(DefaultEcs.Entity entity)
     {
+        ref var slot = ref entity.Get<components.ui.Slot>();
+        slot.button.Set(components.Visibility.Invisible);
+        slot.button.Set(new components.ui.ButtonTiles(-1));
+        CreateSpellSummary(entity);
         CreateSpellReq(entity);
     }
 
@@ -87,7 +92,7 @@ public partial class ScrDeck
             slot.req.Set(components.Visibility.Visible);
     }
 
-    private void HandleSpellSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity, ref components.ui.Slot slot)
+    private static void HandleSpellSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity, ref components.ui.Slot slot)
     {
         if (deck.DraggedCard == default) return;
         if (deck.DraggedCard.cardId.Type != CardType.Spell) return;
@@ -107,11 +112,19 @@ public partial class ScrDeck
     private void CreateSpellReq(DefaultEcs.Entity entity)
     {
         ref var slot = ref entity.Get<components.ui.Slot>();
-        var spellReq = ((InventoryFairy)(entity.Get<components.Parent>().Entity.Get<components.ui.Slot>().card!)).spellReqs[slot.index];
+        if (slot.req != default)
+        {
+            slot.req.Dispose();
+            slot.req = default;
+        };
+
+        ref var deckSlot = ref entity.Get<components.Parent>().Entity.Get<components.ui.Slot>();
+        if (deckSlot.card == default) return;
+
+        var spellReq = ((InventoryFairy)deckSlot.card).spellReqs[slot.index];
         var isAttack = slot.index % 2 == 0;
         var pos = slot.button.Get<Rect>().Min + new Vector2(2, 45);
 
-        if (slot.req != default) slot.req.Dispose();
         slot.req = World.CreateEntity();
         slot.req.Set(new components.Parent(entity));
         slot.req.Set(components.Visibility.Visible);

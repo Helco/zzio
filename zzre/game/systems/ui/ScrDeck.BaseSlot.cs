@@ -92,7 +92,7 @@ public partial class ScrDeck
         }
     }
 
-    private static void UnsetSlot(ref components.ui.Slot slot)
+    private void UnsetSlot(ref components.ui.Slot slot)
     {
         slot.card = default;
         slot.button.Set(components.Visibility.Invisible);
@@ -102,6 +102,9 @@ public partial class ScrDeck
             slot.usedMarker.Set(components.Visibility.Invisible);
         if (slot.summary != default)
             slot.summary.Set(new components.ui.Label(""));
+        if (slot.spellSlots != default)
+            foreach (var spellSlot in slot.spellSlots)
+                UnsetSpellSlot(spellSlot);
     }
 
     private void HandleSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity)

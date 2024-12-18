@@ -18,8 +18,19 @@ public partial class ScrDeck
         int index
     )
     {
-        var entity = CreateBaseSlot(parent, pos, id, index);
+        var entity = World.CreateEntity();
+        entity.Set(new components.Parent(parent));
+        entity.Set(new components.ui.Slot());
         ref var slot = ref entity.Get<components.ui.Slot>();
+        slot.index = index;
+        slot.buttonId = id;
+        slot.button = preload.CreateButton(entity)
+            .With(id)
+            .With(Rect.FromTopLeftSize(pos, new Vector2(38, 38)))
+            .With(new components.ui.ButtonTiles(-1))
+            .With(UIPreloadAsset.Wiz000)
+            .Build();
+        slot.button.Set(new components.ui.SlotButton());
         slot.type = components.ui.Slot.Type.DeckSlot;
 
         CreateSlotSummary(entity, new(48, 4));
@@ -27,6 +38,8 @@ public partial class ScrDeck
         slot.spellSlots = new DefaultEcs.Entity[4];
         for (int i = 0; i < InventoryFairy.SpellSlotCount; i++)
             slot.spellSlots[i] = CreateSpellSlot(entity, ref slot, i);
+
+        UnsetSlot(ref slot);
 
         return entity;
     }
@@ -87,6 +100,8 @@ public partial class ScrDeck
             if (slot.card == default)
                 return;
             // Picking up a card
+            inventory.SetSlot((InventoryFairy)slot.card, -1);
+            deck.VacatedDeckSlot = slot.index;
             DragCard(deckEntity, ref deck, slot.card);
             SetDeckSlot(slotEntity, ref deck);
             return;
@@ -97,13 +112,24 @@ public partial class ScrDeck
             return;
         if (deck.DraggedCard.cardId.Type == CardType.Fairy)
         {
-            // Swap fairies
             var oldDrag = deck.DraggedCard;
             var newDrag = slot.card;
             inventory.SetSlot((InventoryFairy)oldDrag, slot.index);
+            // Swap fairies
             if (newDrag != default)
             {
                 DragCard(deckEntity, ref deck, newDrag);
+                if (newDrag.isInUse)
+                {
+                    inventory.SetSlot((InventoryFairy)newDrag, -1);
+                    deck.VacatedDeckSlot = slot.index;
+                }
+            }
+            else
+            {
+                // Drop off fairy
+                deck.VacatedDeckSlot = -1;
+                DropCard(ref deck);
             }
             SetDeckSlot(slotEntity, ref deck);
             return;

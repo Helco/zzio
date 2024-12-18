@@ -67,6 +67,8 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
         if (deck.ActiveTab == Tab.None)
             OpenTab(entity, ref deck, Tab.Fairies);
+
+        deck.VacatedDeckSlot = -1;
     }
 
     private void CreateBackgrounds(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
@@ -260,7 +262,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         {
             HandleSlotClick(deckEntity, ref deck, clickedEntity.Get<components.Parent>().Entity);
         }
-        if (deck.VacatedDeckSlot != default)
+        if (deck.VacatedDeckSlot != -1)
             return;
 
         if (id == IDSwitchListMode)
@@ -354,7 +356,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         ref var deck = ref deckEntity.Get<components.ui.ScrDeck>();
         if (deck.DraggedCard == default)
             return;
-        DropCard(deckEntity, ref deck);
+        DropCard(ref deck);
     }
 
     protected override void HandleScroll(float scrollAmount)
