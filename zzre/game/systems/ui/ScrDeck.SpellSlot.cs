@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using System.Linq;
 using zzio;
@@ -96,12 +95,20 @@ public partial class ScrDeck
     {
         if (deck.DraggedCard == default) return;
         if (deck.DraggedCard.cardId.Type != CardType.Spell) return;
-        Console.WriteLine("Apply spell {deck.DraggedCard.cardId} to spell {slotEntity}");
 
         var fairyEntity = slotEntity.Get<components.Parent>().Entity;
         ref var fairySlot = ref fairyEntity.Get<components.ui.Slot>();
 
         if (fairySlot.card == default) return;
+
+        if (mappedDB.GetSpell(deck.DraggedCard.dbUID).Type == 0 && slot.index % 2 != 0 ||
+            mappedDB.GetSpell(deck.DraggedCard.dbUID).Type != 0 && slot.index % 2 == 0
+        )
+        {
+            var note = slot.index % 2 == 0 ? new UID(0xC18D4C31) : new UID(0x9CD74C31);
+            ui.Publish(new messages.ui.Notification(mappedDB.GetText(note).Text));
+            return;
+        }
 
         var oldDrag = deck.DraggedCard;
         var newDrag = slot.card;
