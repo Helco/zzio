@@ -92,11 +92,37 @@ public partial class ScrDeck
             slot.req.Set(components.Visibility.Visible);
     }
 
-    private static void HandleSpellSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity, ref components.ui.Slot slot)
+    private void HandleSpellSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity, ref components.ui.Slot slot)
     {
         if (deck.DraggedCard == default) return;
         if (deck.DraggedCard.cardId.Type != CardType.Spell) return;
         Console.WriteLine("Apply spell {deck.DraggedCard.cardId} to spell {slotEntity}");
+
+        var fairyEntity = slotEntity.Get<components.Parent>().Entity;
+        ref var fairySlot = ref fairyEntity.Get<components.ui.Slot>();
+
+        if (fairySlot.card == default) return;
+
+        var oldDrag = deck.DraggedCard;
+        var newDrag = slot.card;
+
+        inventory.SetSpellSlot((InventoryFairy)fairySlot.card, (InventorySpell)oldDrag, slot.index);
+
+        // Swap spells
+        if (newDrag != default)
+        {
+            newDrag.isInUse = false; // Is this never handled in Inventory.GameLogic?
+            DragCard(deckEntity, ref deck, newDrag);
+            SetListSlots(ref deck);
+        }
+        else
+        {
+            // Drop off spell
+            DropCard(ref deck);
+        }
+        // Update the slot visual
+        SetDeckSlot(fairyEntity, ref deck);
+        return;
     }
 
     private void CreateSpellSummary(DefaultEcs.Entity entity)
