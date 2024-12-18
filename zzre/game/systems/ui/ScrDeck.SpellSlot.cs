@@ -109,6 +109,12 @@ public partial class ScrDeck
             ui.Publish(new messages.ui.Notification(mappedDB.GetText(note).Text));
             return;
         }
+        if (!((InventoryFairy)fairySlot.card).spellReqs[slot.index].IsCompatible(mappedDB.GetSpell(((InventorySpell)deck.DraggedCard).dbUID)))
+        {
+            // Not enough skills to use spell
+            ui.Publish(new messages.ui.Notification(mappedDB.GetText(new UID(0x79C75031)).Text));
+            return;
+        }
 
         var oldDrag = deck.DraggedCard;
         var newDrag = slot.card;
