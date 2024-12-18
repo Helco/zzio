@@ -24,7 +24,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     private static readonly components.ui.ElementId IDTabSupportSpells = new(13);
 
     private static readonly components.ui.ElementId FirstFairySlot = new(20);
-    private static readonly components.ui.ElementId FirstSpellSlot = new(30);
+    // private static readonly components.ui.ElementId FirstSpellSlot = new(30);
     private static readonly components.ui.ElementId FirstListCell = new(50);
 
     private record struct DeckTabInfo(

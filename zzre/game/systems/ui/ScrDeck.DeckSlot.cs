@@ -8,9 +8,9 @@ namespace zzre.game.systems.ui;
 public partial class ScrDeck
 {
     private static readonly UID UIDSelectFairy = new(0x41912581);
-    private static readonly UID UIDPlaceFairy = new(0x41912581);
-    private static readonly UID UIDReplaceFairy = new(0x41912581);
-    private static readonly UID UIDUseItemOnFairy = new(0x41912581);
+    // private static readonly UID UIDPlaceFairy = new(0x41912581);
+    // private static readonly UID UIDReplaceFairy = new(0x41912581);
+    // private static readonly UID UIDUseItemOnFairy = new(0x41912581);
 
     private DefaultEcs.Entity CreateDeckSlot(
         DefaultEcs.Entity parent,
