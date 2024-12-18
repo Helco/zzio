@@ -119,6 +119,7 @@ public partial class ScrDeck
             if (newDrag != default)
             {
                 DragCard(deckEntity, ref deck, newDrag);
+                SetListSlots(ref deck);
                 if (newDrag.isInUse)
                 {
                     inventory.SetSlot((InventoryFairy)newDrag, -1);
