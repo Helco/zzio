@@ -148,18 +148,15 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
     {
         deck.DeckSlots = new DefaultEcs.Entity[Inventory.FairySlotCount];
         for (int i = 0; i < Inventory.FairySlotCount; i++)
-            deck.DeckSlots[i] = CreateDeckSlot(entity, Mid + new Vector2(31, 60 + 79 * i), FirstFairySlot + i, i);
+            deck.DeckSlots[i] = CreateDeckSlot(entity, FirstFairySlot + i, i);
         SetDeckSlots(ref deck);
     }
 
     private void SetDeckSlots(ref components.ui.ScrDeck deck)
     {
-        for (int i = 0; i < Inventory.FairySlotCount; i++)
-            SetDeckSlot(deck.DeckSlots[i], ref deck);
+        foreach (var deckSlot in deck.DeckSlots)
+            SetDeckSlot(deckSlot, ref deck);
     }
-
-    private static Vector2 DeckSlotPos(int fairyI, int slotI) =>
-        Mid + new Vector2(81 + 46 * slotI, 60 + 79 * fairyI);
 
     private static void SpellMode(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
     {

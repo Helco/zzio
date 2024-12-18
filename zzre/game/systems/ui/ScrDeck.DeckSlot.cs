@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using zzio;
+using static zzre.game.systems.ui.InGameScreen;
 
 namespace zzre.game.systems.ui;
 
@@ -13,7 +14,6 @@ public partial class ScrDeck
 
     private DefaultEcs.Entity CreateDeckSlot(
         DefaultEcs.Entity parent,
-        Vector2 pos,
         components.ui.ElementId id,
         int index
     )
@@ -26,7 +26,7 @@ public partial class ScrDeck
         slot.buttonId = id;
         slot.button = preload.CreateButton(entity)
             .With(id)
-            .With(Rect.FromTopLeftSize(pos, new Vector2(38, 38)))
+            .With(Rect.FromTopLeftSize(Mid + new Vector2(31, 60 + 79 * slot.index), new Vector2(40, 40)))
             .With(new components.ui.ButtonTiles(-1))
             .With(UIPreloadAsset.Wiz000)
             .Build();
@@ -39,23 +39,25 @@ public partial class ScrDeck
         for (int i = 0; i < InventoryFairy.SpellSlotCount; i++)
             slot.spellSlots[i] = CreateSpellSlot(entity, ref slot, i);
 
-        UnsetSlot(ref slot);
-
         return entity;
     }
 
-    private void SetDeckSlot(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
+    private void SetDeckSlot(DefaultEcs.Entity slotEntity, ref components.ui.ScrDeck deck)
     {
-        ref var slot = ref entity.Get<components.ui.Slot>();
+        ref var slot = ref slotEntity.Get<components.ui.Slot>();
         var card = inventory.GetFairyAtSlot(slot.index);
         if (card == default)
         {
             UnsetSlot(ref slot);
             return;
-        };
+        }
 
-        SetSlot(ref slot, card);
+        slot.card = card;
+        slot.button.Set(components.Visibility.Visible);
+        slot.button.Set(new components.ui.ButtonTiles(card.cardId.EntityId));
         slot.button.Set(new components.ui.TooltipUID(UIDSelectFairy));
+        slot.summary.Set(new components.ui.Label(FormatSlotSummary(card)));
+        SetSummaryOffset(ref slot);
 
         for (int i = 0; i < InventoryFairy.SpellSlotCount; i++)
         {
@@ -74,13 +76,7 @@ public partial class ScrDeck
     private void InfoMode(ref components.ui.Slot slot)
     {
         if (slot.card != default)
-            slot.summary.Set(new components.ui.Label(slot.card switch
-            {
-                InventoryItem item => FormatSlotSummary(item),
-                InventorySpell spell => FormatSlotSummary(spell),
-                InventoryFairy fairy => FormatSlotSummary(fairy),
-                _ => throw new NotSupportedException("Unknown inventory card type")
-            }));
+            slot.summary.Set(new components.ui.Label(FormatSlotSummary((InventoryFairy)(slot.card))));
         foreach (var spellSlot in slot.spellSlots)
             InfoModeSpell(ref spellSlot.Get<components.ui.Slot>());
     }
@@ -103,7 +99,8 @@ public partial class ScrDeck
             inventory.SetSlot((InventoryFairy)slot.card, -1);
             deck.VacatedDeckSlot = slot.index;
             DragCard(deckEntity, ref deck, slot.card);
-            SetDeckSlot(slotEntity, ref deck);
+            UnsetSlot(ref slot);
+            SetListSlots(ref deck);
             return;
         }
 
