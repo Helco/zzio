@@ -2,6 +2,7 @@ using System;
 using DefaultEcs.System;
 using DefaultEcs.Command;
 using zzio.db;
+using zzio;
 
 namespace zzre.game.systems.ui;
 
@@ -10,6 +11,8 @@ public partial class UIScript : BaseScript<UIScript>
     private readonly MappedDB db;
     private readonly EntityCommandRecorder recorder;
     private readonly IDisposable executeUIScriptDisposable;
+    protected readonly Zanzarah zanzarah;
+    protected Inventory inventory => zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
 
     public enum ModifyWizformType
     {
@@ -28,6 +31,7 @@ public partial class UIScript : BaseScript<UIScript>
     public UIScript(ITagContainer diContainer) : base(diContainer, CreateEntityContainer)
     {
         db = diContainer.GetTag<MappedDB>();
+        zanzarah = diContainer.GetTag<Zanzarah>();
         recorder = diContainer.GetTag<EntityCommandRecorder>();
         executeUIScriptDisposable = World.Subscribe<messages.ui.ExecuteUIScript>(HandleExecuteUIScript);
     }
@@ -38,12 +42,50 @@ public partial class UIScript : BaseScript<UIScript>
         executeUIScriptDisposable.Dispose();
     }
 
-    private static void ModifyWizform(DefaultEcs.Entity scriptEntity, ModifyWizformType type, int value)
+    private bool ModifyWizform(DefaultEcs.Entity scriptEntity, ModifyWizformType type, int value)
     {
         ref var script = ref scriptEntity.Get<components.ui.UIScript>();
         ref var slot = ref script.DeckSlotEntity.Get<components.ui.Slot>();
+        var fairy = (InventoryFairy)slot.card!;
 
-        Console.WriteLine($"Not implemented: ModifyWizform, {scriptEntity}, {type}, {value}");
+        switch (type)
+        {
+            case ModifyWizformType.Heal:
+                fairy.currentMHP += (uint)value;
+                if (fairy.currentMHP > fairy.maxMHP)
+                    fairy.currentMHP = fairy.maxMHP;
+                return true;
+            case ModifyWizformType.AddXP:
+                inventory.AddXP(fairy, (uint)value);
+                return true;
+            case ModifyWizformType.ClearStatusEffects:
+                fairy.status = ZZPermSpellStatus.None;
+                return true;
+            case ModifyWizformType.Transform:
+                fairy.cardId = new CardId(CardType.Fairy, value);
+                fairy.dbUID = db.GetFairy(value).Uid;
+                // TODO: correctly handle evolution, including name, fairy stats
+                return true;
+            case ModifyWizformType.AddNearLevelXP:
+                var nearLevel = inventory.GetLevelupXP(fairy) - fairy.xp + 1;
+                if (nearLevel != null)
+                    inventory.AddXP(fairy, (uint)nearLevel);
+                // TODO: investigate golden carrot behaviour on level 59 & 60
+                return true;
+            case ModifyWizformType.Revive:
+                if (fairy.currentMHP != 0) return false;
+                // TODO: Determine the correct revive hp factor
+                fairy.currentMHP = (uint)(fairy.maxMHP * 0.5);
+                return true;
+            case ModifyWizformType.FillMana:
+                inventory.FillMana(fairy);
+                return true;
+            case ModifyWizformType.Rename:
+                Console.WriteLine($"Not implemented: ModifyWizform: Rename");
+                return false;
+            default:
+                throw new NotImplementedException($"Unimplemented ModifyWizformType: {type}");
+        }
     }
 
     private static bool IfIsWizform(DefaultEcs.Entity scriptEntity, int fairyI)
@@ -58,7 +100,7 @@ public partial class UIScript : BaseScript<UIScript>
     private void HandleExecuteUIScript(in messages.ui.ExecuteUIScript message)
     {
         var scriptEntity = World.CreateEntity();
-        scriptEntity.Set(new components.ui.UIScript(message.DeckSlotEntity));
+        scriptEntity.Set(new components.ui.UIScript(message.DeckSlotEntity, false));
         var scriptEntityRecord = recorder.Record(scriptEntity);
         scriptEntityRecord.Set(new components.ScriptExecution(db.GetItem(message.Item.dbUID).Script));
     }
@@ -67,6 +109,8 @@ public partial class UIScript : BaseScript<UIScript>
     private void Update(in DefaultEcs.Entity scriptEntity, ref components.ScriptExecution execution)
     {
         Continue(scriptEntity, ref execution);
+        ref var script = ref scriptEntity.Get<components.ui.UIScript>();
+        World.Publish(new messages.ui.UIScriptFinished(script.DeckSlotEntity, script.ItemConsumed));
         scriptEntity.Dispose();
     }
 }

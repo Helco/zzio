@@ -138,4 +138,16 @@ public partial class ScrDeck
             World.Publish(new messages.ui.ExecuteUIScript((InventoryItem)deck.DraggedCard, slotEntity));
         }
     }
+
+    protected void HandleUIScriptFinished(in messages.ui.UIScriptFinished message)
+    {
+        ref var deck = ref message.DeckSlotEntity.Get<components.Parent>().Entity.Get<components.ui.ScrDeck>();
+
+        SetDeckSlot(message.DeckSlotEntity, ref deck);
+        if (message.ItemConsumed)
+        {
+            inventory.RemoveCards(deck.DraggedCard!.cardId, 1);
+            DropCard(ref deck);
+        }
+    }
 }

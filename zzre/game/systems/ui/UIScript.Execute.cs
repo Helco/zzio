@@ -11,10 +11,11 @@ partial class UIScript
     protected override OpReturn Execute(in DefaultEcs.Entity entity, ref components.ScriptExecution script, RawInstruction instruction)
     {
         var args = instruction.Arguments;
+        ref var uiScript = ref entity.Get<components.ui.UIScript>();
         switch (instruction.Command)
         {
             case CmdModifyWizform:
-                ModifyWizform(entity, (ModifyWizformType)int.Parse(args[0]), int.Parse(args[1]));
+                uiScript.ItemConsumed = ModifyWizform(entity, (ModifyWizformType)int.Parse(args[0]), int.Parse(args[1]));
                 return OpReturn.Continue;
             case CmdIfIsWizform:
                 return IfIsWizform(entity, int.Parse(args.Single())) ? OpReturn.Continue : OpReturn.ConditionalSkip;
