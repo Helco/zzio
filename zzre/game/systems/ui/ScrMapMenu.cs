@@ -18,10 +18,6 @@ public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.
 
     protected override void HandleOpen(in messages.ui.OpenMapMenu message)
     {
-        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
-        if (!inventory.Contains(StdItemId.MapFairyGarden))
-            return;
-
         var entity = World.CreateEntity();
         entity.Set<components.ui.ScrMapMenu>();
         ref var mapMenu = ref entity.Get<components.ui.ScrMapMenu>();
@@ -67,42 +63,13 @@ public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.
     private void HandleElementDown(DefaultEcs.Entity entity, components.ui.ElementId id)
     {
         var mapMenuEntity = Set.GetEntities()[0];
-        if (id == IDOpenDeck)
-        {
-            mapMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenDeck>();
-        }
-        else if (id == IDOpenRunes)
-        {
-            mapMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
-        }
-        else if (id == IDOpenFairybook)
-        {
-            mapMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
-        }
-        else if (id == IDClose)
-            mapMenuEntity.Dispose();
+        HandleNavClick(id, zanzarah, mapMenuEntity, IDOpenMap);
     }
 
     protected override void HandleKeyDown(KeyCode key)
     {
         var mapMenuEntity = Set.GetEntities()[0];
         base.HandleKeyDown(key);
-        if (key == KeyCode.KF2) {
-            mapMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenRuneMenu>();
-        }
-        if (key == KeyCode.KF3) {
-            mapMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
-        }
-        if (key == KeyCode.KF5) {
-            mapMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenDeck>();
-        }
-        if (key == KeyCode.KReturn || key == KeyCode.KEscape || key == KeyCode.KF3)
-            Set.DisposeAll();
+        HandleNavKeyDown(key, zanzarah, mapMenuEntity, IDOpenMap);
     }
 }

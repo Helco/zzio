@@ -24,6 +24,7 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     private readonly IDisposable removedSubscription;
     protected readonly IZanzarahContainer zzContainer;
     protected readonly Zanzarah zanzarah;
+    protected Inventory inventory => zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
     protected readonly UI ui;
     protected readonly DefaultEcs.World uiWorld;// necessary as Dialog UI is owned by the game and not by the UI.
                                                 // Probably worth some cleanup but this would mean merging 
@@ -31,6 +32,7 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     protected readonly UIBuilder preload;
     protected event Action<DefaultEcs.Entity, components.ui.ElementId>? OnElementDown;
     protected event Action<DefaultEcs.Entity, components.ui.ElementId>? OnElementUp;
+    protected event Action? OnRightClick;
 
     protected Vector2 ScreenCenter => ui.LogicalScreen.Center;
 
@@ -62,6 +64,7 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
         zzContainer.OnMouseDown += HandleMouseDown;
         zzContainer.OnMouseUp += HandleMouseUp;
         zzContainer.OnKeyDown += HandleKeyDown;
+        zzContainer.OnScroll += HandleScroll;
 
         if (zanzarah.CurrentGame != null && blockFlags.HasFlag(BlockFlags.DisableGameUpdate))
             zanzarah.CurrentGame.IsUpdateEnabled = false;
@@ -76,6 +79,7 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
         zzContainer.OnMouseDown -= HandleMouseDown;
         zzContainer.OnMouseUp -= HandleMouseUp;
         zzContainer.OnKeyDown -= HandleKeyDown;
+        zzContainer.OnScroll -= HandleScroll;
 
         if (zanzarah.CurrentGame != null && blockFlags.HasFlag(BlockFlags.DisableGameUpdate))
             zanzarah.CurrentGame.IsUpdateEnabled = true;
@@ -89,6 +93,12 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     private void HandleMouseUp(MouseButton button, Vector2 pos) => HandleMouse(button, pos, isDown: false);
     private void HandleMouse(MouseButton button, Vector2 pos, bool isDown)
     {
+        if (button == MouseButton.Right)
+        {
+            if (isDown)
+                OnRightClick?.Invoke();
+            return;
+        }
         if (button != MouseButton.Left)
             return;
 
@@ -105,7 +115,9 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     protected virtual void HandleKeyDown(KeyCode key)
     {
     }
-
+    protected virtual void HandleScroll(float scrollAmount)
+    {
+    }
     protected abstract void HandleOpen(in TMessage message);
 
     [Update]

@@ -54,10 +54,6 @@ public partial class ScrRuneMenu : BaseScreen<components.ui.ScrRuneMenu, message
 
     protected override void HandleOpen(in messages.ui.OpenRuneMenu message)
     {
-        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
-        if (!inventory.Contains(StdItemId.RuneFairyGarden))
-            return;
-
         var entity = World.CreateEntity();
         entity.Set<components.ui.ScrRuneMenu>();
         ref var runeMenu = ref entity.Get<components.ui.ScrRuneMenu>();
@@ -145,42 +141,13 @@ public partial class ScrRuneMenu : BaseScreen<components.ui.ScrRuneMenu, message
             runeMenuEntity.Dispose();
             zanzarah.CurrentGame!.Publish(new messages.Teleport(runeInfo.scene, targetEntry: -1));
         }
-        else if (id == IDOpenDeck)
-        {
-            runeMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenDeck>();
-        }
-        else if (id == IDOpenFairybook)
-        {
-            runeMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
-        }
-        else if (id == IDOpenMap)
-        {
-            runeMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
-        }
-        else if (id == IDClose)
-            runeMenuEntity.Dispose();
+        else HandleNavClick(id, zanzarah, runeMenuEntity, IDOpenRunes);
     }
 
     protected override void HandleKeyDown(KeyCode key)
     {
         var runeMenuEntity = Set.GetEntities()[0];
         base.HandleKeyDown(key);
-        if (key == KeyCode.KF3) {
-            runeMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenBookMenu>();
-        }
-        if (key == KeyCode.KF4) {
-            runeMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenMapMenu>();
-        }
-        if (key == KeyCode.KF5) {
-            runeMenuEntity.Dispose();
-            zanzarah.UI.Publish<messages.ui.OpenDeck>();
-        }
-        if (key == KeyCode.KReturn || key == KeyCode.KEscape || key == KeyCode.KF3)
-            Set.DisposeAll();
+        HandleNavKeyDown(key, zanzarah, runeMenuEntity, IDOpenRunes);
     }
 }

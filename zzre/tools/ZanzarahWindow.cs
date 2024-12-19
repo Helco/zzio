@@ -73,6 +73,12 @@ public class ZanzarahWindow : IZanzarahContainer, IECSWindow
         remove => mouseArea.OnButtonUp -= value;
     }
 
+    public event Action<float> OnScroll
+    {
+        add => mouseArea.OnScroll += value;
+        remove => mouseArea.OnScroll -= value;
+    }
+
     public event Action<Vector2> OnMouseMove
     {
         add => onMouseMove += value;

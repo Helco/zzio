@@ -18,10 +18,12 @@ public class OpenMenuKeys : ISystem<float>
     private readonly IZanzarahContainer zzContainer;
     private readonly PlayerControls playerControls;
     private readonly UI ui;
+    private readonly Zanzarah zanzarah;
 
     public OpenMenuKeys(ITagContainer diContainer)
     {
         ui = diContainer.GetTag<UI>();
+        zanzarah = diContainer.GetTag<Zanzarah>();
         playerControls = diContainer.GetTag<PlayerControls>();
         zzContainer = diContainer.GetTag<IZanzarahContainer>();
         zzContainer.OnKeyDown += HandleKeyDown;
@@ -34,15 +36,28 @@ public class OpenMenuKeys : ISystem<float>
 
     private void HandleKeyDown(KeyCode code)
     {
+        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
         if (!IsEnabled || playerControls.IsLocked)
             return;
         switch (code)
         {
-            case MenuKey: ui.Publish<messages.ui.OpenDeck>(); break;
-            case RuneMenuKey: ui.Publish<messages.ui.OpenRuneMenu>(); break;
-            case BookMenuKey: ui.Publish<messages.ui.OpenBookMenu>(); break;
-            case MapMenuKey: ui.Publish<messages.ui.OpenMapMenu>(); break;
-            case DeckMenuKey: ui.Publish<messages.ui.OpenDeck>(); break;
+            case RuneMenuKey:
+                if (inventory.Contains(StdItemId.RuneFairyGarden))
+                    ui.Publish<messages.ui.OpenRuneMenu>();
+                break;
+            case BookMenuKey:
+                if (inventory.Contains(StdItemId.FairyBook))
+                    ui.Publish<messages.ui.OpenBookMenu>();
+                break;
+            case MapMenuKey:
+                if (inventory.Contains(StdItemId.MapFairyGarden))
+                    ui.Publish<messages.ui.OpenMapMenu>();
+                break;
+            case MenuKey:
+            case DeckMenuKey:
+                if (inventory.Contains(StdItemId.FairyBag))
+                    ui.Publish<messages.ui.OpenDeck>();
+                break;
         }
     }
 
