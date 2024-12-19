@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using zzio;
 using static zzre.game.systems.ui.InGameScreen;
@@ -134,7 +133,9 @@ public partial class ScrDeck
         }
         else if (deck.DraggedCard.cardId.Type == CardType.Item)
         {
-            Console.WriteLine("Apply item {deck.DraggedCard.cardId} to fairy {slotEntity}");
+            if (slot.card == default)
+                return;
+            World.Publish(new messages.ui.ExecuteUIScript((InventoryItem)deck.DraggedCard));
         }
     }
 }
