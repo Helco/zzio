@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Veldrid;
 using zzre.game;
 using zzre.materials;
@@ -36,7 +35,7 @@ public sealed class UITileSheetAsset : UIBitmapAsset
         this.info = info;
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override IEnumerable<AssetHandle> Load()
     {
         using var bitmap = LoadMaskedBitmap(info.Name);
         tileSheet = new TileSheet(info.Name, bitmap, info.IsFont);
@@ -65,7 +64,7 @@ public sealed class UITileSheetAsset : UIBitmapAsset
         material.MainTexture.Texture = texture;
         material.MainSampler.Sampler = samplerHandle.Get().Sampler;
         material.ScreenSize.Buffer = diContainer.GetTag<UI>().ProjectionBuffer;
-        return ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerHandle ]);
+        return [ samplerHandle ];
     }
 
     protected override void Unload()

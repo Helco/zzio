@@ -23,12 +23,12 @@ public interface IAssetRegistryDebug : IAssetRegistry
 
     /// <summary>Whether this registry was already disposed</summary>
     bool WasDisposed { get; }
-    /// <summary>Creats a snapshot of the state of all, currently registered assets</summary>
+    /// <summary>Creates a snapshot of the state of all, currently registered assets</summary>
     /// <param name="assetInfos">The asset states will be copied into this list</param>
     void CopyDebugInfo(List<AssetInfo> assetInfos);
 }
 
-partial class AssetRegistry : IAssetRegistryDebug
+public partial class AssetRegistry : IAssetRegistryDebug
 {
     void IAssetRegistryDebug.CopyDebugInfo(List<IAssetRegistryDebug.AssetInfo> assetInfos)
     {
