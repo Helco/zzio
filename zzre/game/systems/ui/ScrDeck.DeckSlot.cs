@@ -135,7 +135,7 @@ public partial class ScrDeck
         {
             if (slot.card == default)
                 return;
-            World.Publish(new messages.ui.ExecuteUIScript((InventoryItem)deck.DraggedCard));
+            World.Publish(new messages.ui.ExecuteUIScript((InventoryItem)deck.DraggedCard, slotEntity));
         }
     }
 }

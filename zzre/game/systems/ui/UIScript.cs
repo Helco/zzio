@@ -40,20 +40,27 @@ public partial class UIScript : BaseScript<UIScript>
 
     private static void ModifyWizform(DefaultEcs.Entity scriptEntity, ModifyWizformType type, int value)
     {
+        ref var script = ref scriptEntity.Get<components.ui.UIScript>();
+        ref var slot = ref script.DeckSlotEntity.Get<components.ui.Slot>();
+
         Console.WriteLine($"Not implemented: ModifyWizform, {scriptEntity}, {type}, {value}");
     }
 
-    private static bool IfIsWizform(DefaultEcs.Entity scriptEntity, int fairyI) // presumably?
+    private static bool IfIsWizform(DefaultEcs.Entity scriptEntity, int fairyI)
     {
-        Console.WriteLine($"Not implemented: IfIsWizform, {scriptEntity}, {fairyI}");
+        ref var script = ref scriptEntity.Get<components.ui.UIScript>();
+        ref var slot = ref script.DeckSlotEntity.Get<components.ui.Slot>();
+        if (slot.card!.cardId.EntityId == fairyI)
+            return true;
         return false;
     }
 
     private void HandleExecuteUIScript(in messages.ui.ExecuteUIScript message)
     {
         var scriptEntity = World.CreateEntity();
+        scriptEntity.Set(new components.ui.UIScript(message.DeckSlotEntity));
         var scriptEntityRecord = recorder.Record(scriptEntity);
-        scriptEntityRecord.Set(new components.ScriptExecution(db.GetItem(message.item.dbUID).Script));
+        scriptEntityRecord.Set(new components.ScriptExecution(db.GetItem(message.Item.dbUID).Script));
     }
 
     [Update]
