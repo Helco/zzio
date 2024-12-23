@@ -79,7 +79,7 @@ public partial class UIScript : BaseScript<UIScript>
                 return true;
             case ModifyWizformType.AddNearLevelXP:
                 PlayChime();
-                var nearLevel = inventory.GetLevelupXP(fairy) - fairy.xp + 1;
+                var nearLevel = inventory.GetLevelupXP(fairy) - fairy.xp;
                 if (nearLevel != null)
                     inventory.AddXP(fairy, (uint)nearLevel);
                 // TODO: investigate golden carrot behaviour on level 59 & 60
