@@ -20,7 +20,6 @@ public partial class ScrDeck
         ref var slot = ref entity.Get<components.ui.Slot>();
         slot.type = components.ui.Slot.Type.ListSlot;
         slot.index = index;
-        slot.buttonId = id;
         slot.button = preload.CreateButton(entity)
             .With(id)
             .With(pos)

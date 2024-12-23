@@ -9,7 +9,6 @@ public record struct Slot
     public int index;
     public InventoryCard? card;
     public DefaultEcs.Entity button;
-    public components.ui.ElementId buttonId;
     public DefaultEcs.Entity usedMarker; // ListSlot only
     public DefaultEcs.Entity summary;
     public DefaultEcs.Entity req; // SpellSlot only

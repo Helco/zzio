@@ -22,7 +22,6 @@ public partial class ScrDeck
         entity.Set(new components.ui.Slot());
         ref var slot = ref entity.Get<components.ui.Slot>();
         slot.index = index;
-        slot.buttonId = id;
         slot.button = preload.CreateButton(entity)
             .With(id)
             .With(Rect.FromTopLeftSize(Mid + new Vector2(31, 60 + 79 * slot.index), new Vector2(40, 40)))
