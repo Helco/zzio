@@ -184,7 +184,7 @@ public partial class ScrDeck
     private string FormatManaAmount(InventorySpell spell)
     {
         var dbSpell = mappedDB.GetSpell(spell.dbUID);
-        return dbSpell.MaxMana == 5
+        return dbSpell.Mana == 5
             ? "{104}-"
             : $"{{104}}{spell.mana}/{dbSpell.MaxMana}";
     }
