@@ -78,7 +78,7 @@ public partial class UIScript : BaseScript<UIScript>
                 // TODO: correctly handle evolution, including name, fairy stats
                 return true;
             case ModifyWizformType.AddNearLevelXP:
-                // TODO: is there a chime?
+                PlayChime();
                 var nearLevel = inventory.GetLevelupXP(fairy) - fairy.xp + 1;
                 if (nearLevel != null)
                     inventory.AddXP(fairy, (uint)nearLevel);
