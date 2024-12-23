@@ -119,6 +119,7 @@ public partial class ScrDeck
         var oldDrag = deck.DraggedCard;
         var newDrag = slot.card;
 
+        World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g008.wav"));
         inventory.SetSpellSlot((InventoryFairy)fairySlot.card, (InventorySpell)oldDrag, slot.index);
 
         // Swap spells

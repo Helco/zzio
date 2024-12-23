@@ -12,6 +12,7 @@ public partial class UIScript : BaseScript<UIScript>
     private readonly EntityCommandRecorder recorder;
     private readonly IDisposable executeUIScriptDisposable;
     protected readonly Zanzarah zanzarah;
+    protected readonly UI ui;
     protected Inventory inventory => zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
 
     public enum ModifyWizformType
@@ -28,10 +29,16 @@ public partial class UIScript : BaseScript<UIScript>
         Rename = 18,
     }
 
+    private void PlayChime()
+    {
+        World.Publish(new messages.SpawnSample("resources/audio/sfx/specials/_s021.wav"));
+    }
+
     public UIScript(ITagContainer diContainer) : base(diContainer, CreateEntityContainer)
     {
         db = diContainer.GetTag<MappedDB>();
         zanzarah = diContainer.GetTag<Zanzarah>();
+        ui = diContainer.GetTag<UI>();
         recorder = diContainer.GetTag<EntityCommandRecorder>();
         executeUIScriptDisposable = World.Subscribe<messages.ui.ExecuteUIScript>(HandleExecuteUIScript);
     }
@@ -51,14 +58,18 @@ public partial class UIScript : BaseScript<UIScript>
         switch (type)
         {
             case ModifyWizformType.Heal:
+                if (fairy.currentMHP == fairy.maxMHP) return false;
+                PlayChime();
                 fairy.currentMHP += (uint)value;
                 if (fairy.currentMHP > fairy.maxMHP)
                     fairy.currentMHP = fairy.maxMHP;
                 return true;
             case ModifyWizformType.AddXP:
+                // TODO: is there a chime?
                 inventory.AddXP(fairy, (uint)value);
                 return true;
             case ModifyWizformType.ClearStatusEffects:
+                PlayChime();
                 fairy.status = ZZPermSpellStatus.None;
                 return true;
             case ModifyWizformType.Transform:
@@ -67,17 +78,24 @@ public partial class UIScript : BaseScript<UIScript>
                 // TODO: correctly handle evolution, including name, fairy stats
                 return true;
             case ModifyWizformType.AddNearLevelXP:
+                // TODO: is there a chime?
                 var nearLevel = inventory.GetLevelupXP(fairy) - fairy.xp + 1;
                 if (nearLevel != null)
                     inventory.AddXP(fairy, (uint)nearLevel);
                 // TODO: investigate golden carrot behaviour on level 59 & 60
                 return true;
             case ModifyWizformType.Revive:
-                if (fairy.currentMHP != 0) return false;
+                if (fairy.currentMHP != 0)
+                {
+                    ui.Publish(new messages.ui.Notification(db.GetText(new UID(0x3D422781)).Text));
+                    return false;
+                }
+                // TODO: is there a chime?
                 // TODO: Determine the correct revive hp factor
                 fairy.currentMHP = (uint)(fairy.maxMHP * 0.5);
                 return true;
             case ModifyWizformType.FillMana:
+                PlayChime();
                 inventory.FillMana(fairy);
                 return true;
             case ModifyWizformType.Rename:

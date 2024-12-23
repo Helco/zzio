@@ -110,7 +110,10 @@ public partial class ScrDeck
         {
             var oldDrag = deck.DraggedCard;
             var newDrag = slot.card;
+
+            World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g012.wav"));
             inventory.SetSlot((InventoryFairy)oldDrag, slot.index);
+
             // Swap fairies
             if (newDrag != default)
             {
@@ -148,6 +151,11 @@ public partial class ScrDeck
         {
             inventory.RemoveCards(deck.DraggedCard!.cardId, 1);
             DropCard(ref deck);
+        }
+        else
+        {
+            World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g013.wav"));
+            ui.Publish(new messages.ui.Notification(mappedDB.GetText(new UID(0xB5E90B81)).Text));
         }
     }
 }
