@@ -44,7 +44,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     private readonly IAssetRegistry assetRegistry;
     private readonly zzio.db.MappedDB mappedDB;
-    private readonly IDisposable OnUIScriptFinished;
+    private readonly IDisposable OnUIScriptFinishedDisposable;
 
     public ScrDeck(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
     {
@@ -52,7 +52,15 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         mappedDB = diContainer.GetTag<zzio.db.MappedDB>();
         OnElementDown += HandleElementDown;
         OnRightClick += HandleRightClick;
-        OnUIScriptFinished = World.Subscribe<messages.ui.UIScriptFinished>(HandleUIScriptFinished);
+        OnUIScriptFinishedDisposable = World.Subscribe<messages.ui.UIScriptFinished>(HandleUIScriptFinished);
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        OnElementDown -= HandleElementDown;
+        OnRightClick -= HandleRightClick;
+        OnUIScriptFinishedDisposable.Dispose();
     }
 
     protected override void HandleOpen(in messages.ui.OpenDeck message)
