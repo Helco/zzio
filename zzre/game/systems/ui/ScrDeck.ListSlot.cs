@@ -14,9 +14,20 @@ public partial class ScrDeck
         int index
         )
     {
-        var entity = CreateBaseSlot(parent, pos, id, index);
+        var entity = World.CreateEntity();
+        entity.Set(new components.Parent(parent));
+        entity.Set(new components.ui.Slot());
         ref var slot = ref entity.Get<components.ui.Slot>();
         slot.type = components.ui.Slot.Type.ListSlot;
+        slot.index = index;
+        slot.buttonId = id;
+        slot.button = preload.CreateButton(entity)
+            .With(id)
+            .With(pos)
+            .With(new components.ui.ButtonTiles(-1))
+            .With(UIPreloadAsset.Wiz000)
+            .Build();
+        slot.button.Set(new components.ui.SlotButton());
 
         slot.usedMarker = preload.CreateImage(entity)
             .With(pos)
@@ -25,6 +36,7 @@ public partial class ScrDeck
             .Invisible()
             .Build();
 
+        UnsetSlot(ref slot);
         return entity;
     }
 

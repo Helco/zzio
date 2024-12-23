@@ -9,31 +9,6 @@ public partial class ScrDeck
     // Provide a size for buttons, including unset ones.
     public Vector2 SlotButtonSize = Vector2.One * 38;
 
-    private DefaultEcs.Entity CreateBaseSlot(
-        DefaultEcs.Entity parent,
-        Vector2 pos,
-        components.ui.ElementId id,
-        int index
-    )
-    {
-        var entity = World.CreateEntity();
-        entity.Set(new components.Parent(parent));
-        entity.Set(new components.ui.Slot());
-        ref var slot = ref entity.Get<components.ui.Slot>();
-        slot.index = index;
-        slot.buttonId = id;
-        slot.button = preload.CreateButton(entity)
-            .With(id)
-            .With(pos)
-            .With(new components.ui.ButtonTiles(-1))
-            .With(UIPreloadAsset.Wiz000)
-            .Build();
-        slot.button.Set(new components.ui.SlotButton());
-
-        UnsetSlot(ref slot);
-        return entity;
-    }
-
     private void CreateSlotSummary(DefaultEcs.Entity entity, Vector2 offset)
     {
         ref var slot = ref entity.Get<components.ui.Slot>();
