@@ -77,7 +77,7 @@ public partial class ScrDeck
     private string[] GetDefaultSummary(ref components.ui.ScrDeck deck)
     {
         if (deck.ActiveTab == components.ui.ScrDeck.Tab.Fairies)
-            return ["", $"{mappedDB.GetText(numCollectedFairies).Text} {inventory.Fairies.Count()}", "", ""];
+            return ["", $"\n\n{mappedDB.GetText(numCollectedFairies).Text} {inventory.Fairies.Count()}", "", ""];
         return ["", "", "", ""];
     }
 
