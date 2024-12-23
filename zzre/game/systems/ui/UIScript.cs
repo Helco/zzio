@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using DefaultEcs.System;
 using DefaultEcs.Command;
 using zzio.db;
@@ -128,6 +129,14 @@ public partial class UIScript : BaseScript<UIScript>
     {
         Continue(scriptEntity, ref execution);
         ref var script = ref scriptEntity.Get<components.ui.UIScript>();
+
+        if (!script.ItemConsumed)
+        {
+            World.Publish(new messages.SpawnSample("resources/audio/sfx/gui/_g013.wav"));
+            if (World.GetEntities().AsEnumerable().All(entity => !entity.Has<components.ui.ScrNotification>()))
+                // Default failure notification if no notification was thrown during script execution
+                ui.Publish(new messages.ui.Notification(db.GetText(new UID(0xB5E90B81)).Text));
+        }
         World.Publish(new messages.ui.UIScriptFinished(script.DeckSlotEntity, script.ItemConsumed));
         scriptEntity.Dispose();
     }
