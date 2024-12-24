@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using zzio;
 using static zzre.game.systems.ui.InGameScreen;
@@ -46,14 +47,14 @@ public partial class ScrDeck
         var card = inventory.GetFairyAtSlot(slot.index);
         if (card == default)
         {
-            UnsetSlot(ref slot);
+            UnsetDeckSlot(ref deck, ref slot);
             return;
         }
 
         slot.card = card;
         slot.button.Set(components.Visibility.Visible);
         slot.button.Set(new components.ui.ButtonTiles(card.cardId.EntityId));
-        slot.button.Set(new components.ui.TooltipUID(UIDSelectFairy));
+        SetDeckSlotTooltip(ref deck, ref slot);
         slot.summary.Set(new components.ui.Label(FormatSlotSummary(card)));
         SetSummaryOffset(ref slot);
 
@@ -69,6 +70,45 @@ public partial class ScrDeck
         }
         if (IsInfoTab(deck.ActiveTab)) InfoMode(ref slot);
         else SpellMode(ref slot);
+    }
+
+    private void UnsetDeckSlot(ref components.ui.ScrDeck deck, ref components.ui.Slot slot)
+    {
+        slot.card = default;
+        slot.button.Set(components.Visibility.Invisible);
+        SetDeckSlotTooltip(ref deck, ref slot);
+        UnsetSlotSummary(ref slot);
+        foreach (var spellSlot in slot.spellSlots)
+            UnsetSpellSlot(spellSlot);
+    }
+
+    private static void SetDeckSlotTooltip(ref components.ui.ScrDeck deck, ref components.ui.Slot slot)
+    {
+        var tooltip = DeckCardTooltip(ref deck, ref slot);
+        if (tooltip != null)
+            slot.button.Set(new components.ui.TooltipUID(tooltip.Value));
+        else if (slot.button.Has<components.ui.TooltipUID>())
+            slot.button.Remove<components.ui.TooltipUID>();
+    }
+
+    private static UID? DeckCardTooltip(ref components.ui.ScrDeck deck, ref components.ui.Slot slot)
+    {
+        if (deck.DraggedCard == default)
+            return slot.card != default
+                ? new UID(0x41912581) // select fairy
+                : null;
+
+        if (deck.DraggedCard.cardId.Type == CardType.Fairy)
+            return slot.card != default
+                ? new UID(0x5B971D81) // replace fairy
+                : new UID(0xD66A2581); // place fairy
+
+        if (deck.DraggedCard.cardId.Type == CardType.Item)
+            return slot.card != default
+                ? new UID(0x89A21981) // press key 1
+                : new UID(0xD66A2581); // place fairy (?!)
+
+        return null; // no tooltip for dragged spells
     }
 
     private void InfoMode(ref components.ui.Slot slot)
@@ -97,7 +137,7 @@ public partial class ScrDeck
             inventory.SetSlot((InventoryFairy)slot.card, -1);
             deck.VacatedDeckSlot = slot.index;
             DragCard(deckEntity, ref deck, slot.card);
-            UnsetSlot(ref slot);
+            UnsetDeckSlot(ref deck, ref slot);
             SetListSlots(ref deck);
             return;
         }
