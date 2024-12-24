@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using zzio;
 using static zzre.game.systems.ui.InGameScreen;
@@ -68,8 +67,8 @@ public partial class ScrDeck
             else
                 UnsetSpellSlot(slot.spellSlots[i]);
         }
-        if (IsInfoTab(deck.ActiveTab)) InfoMode(ref slot);
-        else SpellMode(ref slot);
+        if (IsInfoTab(deck.ActiveTab)) InfoMode(ref deck, ref slot);
+        else SpellMode(ref deck, ref slot);
     }
 
     private void UnsetDeckSlot(ref components.ui.ScrDeck deck, ref components.ui.Slot slot)
@@ -111,19 +110,19 @@ public partial class ScrDeck
         return null; // no tooltip for dragged spells
     }
 
-    private void InfoMode(ref components.ui.Slot slot)
+    private void InfoMode(ref components.ui.ScrDeck deck, ref components.ui.Slot slot)
     {
         if (slot.card != default)
             slot.summary.Set(new components.ui.Label(FormatSlotSummary((InventoryFairy)(slot.card))));
         foreach (var spellSlot in slot.spellSlots)
-            InfoModeSpell(ref spellSlot.Get<components.ui.Slot>());
+            InfoModeSpell(ref deck, ref slot, ref spellSlot.Get<components.ui.Slot>());
     }
 
-    private static void SpellMode(ref components.ui.Slot slot)
+    private static void SpellMode(ref components.ui.ScrDeck deck, ref components.ui.Slot slot)
     {
         slot.summary.Set(new components.ui.Label(""));
         foreach (var spellSlot in slot.spellSlots)
-            SpellModeSpell(ref spellSlot.Get<components.ui.Slot>());
+            SpellModeSpell(ref deck, ref slot, ref spellSlot.Get<components.ui.Slot>());
     }
 
     private void HandleDeckSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity, ref components.ui.Slot slot)

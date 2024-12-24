@@ -43,7 +43,7 @@ public partial class ScrDeck
             .Build();
         slot.button.Set(new components.ui.SlotButton());
 
-        InfoModeSpell(ref slot);
+        InfoModeSpell(ref parent.Get<components.Parent>().Entity.Get<components.ui.ScrDeck>(), ref parentSlot, ref slot);
 
         return entity;
     }
@@ -67,10 +67,33 @@ public partial class ScrDeck
         CreateSpellReq(entity);
     }
 
-    public void InfoModeSpell(ref components.ui.Slot slot)
+    private static void SetSpellSlotTooltip(ref components.ui.ScrDeck deck, ref components.ui.Slot fairySlot, ref components.ui.Slot slot)
+    {
+        var tooltip = SpellSlotTooltip(ref deck, ref fairySlot, ref slot);
+        if (tooltip != null)
+            slot.button.Set(new components.ui.TooltipUID(tooltip.Value));
+        else if (slot.button.Has<components.ui.TooltipUID>())
+            slot.button.Remove<components.ui.TooltipUID>();
+    }
+
+    private static UID? SpellSlotTooltip(ref components.ui.ScrDeck deck, ref components.ui.Slot fairySlot, ref components.ui.Slot slot)
+    {
+        if (fairySlot.card == default) return null;
+        if (deck.DraggedCard == default)
+            return IsInfoTab(deck.ActiveTab)
+                ? UIDFairyInfoDescriptions[slot.index]
+                : UIDSpellSlotNames[slot.index];
+        if (deck.DraggedCard.cardId.Type == CardType.Spell)
+            return slot.card == default
+                ? new UID(0x3B46CC81) // deploy spell
+                : new UID(0x0A05D081); // overwrite spell
+        return null;
+    }
+
+    public void InfoModeSpell(ref components.ui.ScrDeck deck, ref components.ui.Slot fairySlot, ref components.ui.Slot slot)
     {
         slot.button.Set(components.Visibility.Invisible);
-        slot.button.Set(new components.ui.TooltipUID(UIDFairyInfoDescriptions[slot.index]));
+        SetSpellSlotTooltip(ref deck, ref fairySlot, ref slot);
         if (slot.summary != default)
             slot.summary.Set(slot.card != default
                 ? new components.ui.Label(FormatManaAmount((InventorySpell)slot.card))
@@ -79,11 +102,11 @@ public partial class ScrDeck
             slot.req.Set(components.Visibility.Invisible);
     }
 
-    public static void SpellModeSpell(ref components.ui.Slot slot)
+    public static void SpellModeSpell(ref components.ui.ScrDeck deck, ref components.ui.Slot fairySlot, ref components.ui.Slot slot)
     {
         if (slot.button.Get<components.ui.ButtonTiles>().Normal != -1)
             slot.button.Set(components.Visibility.Visible);
-        slot.button.Set(new components.ui.TooltipUID(UIDSpellSlotNames[slot.index]));
+        SetSpellSlotTooltip(ref deck, ref fairySlot, ref slot);
         if (slot.summary != default)
             slot.summary.Set(new components.ui.Label(""));
         if (slot.req != default)

@@ -25,12 +25,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             .WithRenderOrder(-3)
             .Build();
         deck.DraggedOverlay.Set(components.ui.UIOffset.GameUpperLeft);
-
-        foreach (var slotEntity in deck.DeckSlots)
-        {
-            ref var slot = ref slotEntity.Get<components.ui.Slot>();
-            SetDeckSlotTooltip(ref deck, ref slot);
-        }
+        RefreshTooltips(ref deck);
     }
 
     private void DropCard(ref components.ui.ScrDeck deck)
@@ -49,11 +44,20 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.DraggedOverlay.Dispose();
         deck.DraggedOverlay = default;
         SetListSlots(ref deck);
+        RefreshTooltips(ref deck);
+    }
 
+    private static void RefreshTooltips(ref components.ui.ScrDeck deck)
+    {
         foreach (var slotEntity in deck.DeckSlots)
         {
             ref var slot = ref slotEntity.Get<components.ui.Slot>();
             SetDeckSlotTooltip(ref deck, ref slot);
+            foreach (var spellSlotEntity in slot.spellSlots)
+            {
+                ref var spellSlot = ref spellSlotEntity.Get<components.ui.Slot>();
+                SetSpellSlotTooltip(ref deck, ref slot, ref spellSlot);
+            }
         }
     }
 

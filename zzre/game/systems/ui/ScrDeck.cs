@@ -179,7 +179,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.SpellBackground.Set(components.Visibility.Visible);
         deck.SummaryBackground.Set(components.Visibility.Invisible);
         foreach (var deckCard in deck.DeckSlots)
-            SpellMode(ref deckCard.Get<components.ui.Slot>());
+            SpellMode(ref deck, ref deckCard.Get<components.ui.Slot>());
     }
 
     private void InfoMode(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
@@ -187,7 +187,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.SpellBackground.Set(components.Visibility.Invisible);
         deck.SummaryBackground.Set(components.Visibility.Visible);
         foreach (var deckCard in deck.DeckSlots)
-            InfoMode(ref deckCard.Get<components.ui.Slot>());
+            InfoMode(ref deck, ref deckCard.Get<components.ui.Slot>());
     }
 
     private static Vector2 ListSlotPos(int column, int row) =>
