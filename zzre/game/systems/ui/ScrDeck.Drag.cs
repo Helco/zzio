@@ -21,10 +21,11 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         if (deck.DraggedOverlay != default) deck.DraggedOverlay.Dispose();
         deck.DraggedOverlay = preload.CreateImage(deckEntity)
             .With(Mid)
-            .With(UIPreloadAsset.Dnd000, 0)
+            .With(UIPreloadAsset.Dnd000)
             .WithRenderOrder(-3)
             .Build();
         deck.DraggedOverlay.Set(components.ui.UIOffset.GameUpperLeft);
+        SetDragOverlayTile(ref deck);
         RefreshTooltips(ref deck);
     }
 
@@ -59,6 +60,25 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
                 SetSpellSlotTooltip(ref deck, ref slot, ref spellSlot);
             }
         }
+    }
+
+    private void SetDragOverlayTile(ref components.ui.ScrDeck deck)
+    {
+        if (deck.DraggedCard == default) return;
+        deck.DraggedOverlay.Set(new components.ui.ButtonTiles(DragOverlayTile(ref deck)));
+    }
+
+    private int DragOverlayTile(ref components.ui.ScrDeck deck)
+    {
+        if (deck.LastHovered == default) return 1;
+        if (!deck.LastHovered.Has<components.ui.SlotButton>()) return 1;
+        var slotEntity = deck.LastHovered.Get<components.Parent>().Entity;
+        ref var slot = ref slotEntity.Get<components.ui.Slot>();
+        if (slot.type == components.ui.Slot.Type.DeckSlot && deck.DraggedCard!.cardId.Type != CardType.Spell)
+            return 0;
+        if (slot.type == components.ui.Slot.Type.SpellSlot && deck.DraggedCard!.cardId.Type == CardType.Spell && IsOfMatchingSpellType(ref slot, deck.DraggedCard!))
+            return 0;
+        return 1;
     }
 
     private void Drag(ref components.ui.ScrDeck deck)

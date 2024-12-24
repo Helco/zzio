@@ -123,9 +123,7 @@ public partial class ScrDeck
 
         if (fairySlot.card == default) return;
 
-        if (mappedDB.GetSpell(deck.DraggedCard.dbUID).Type == 0 && slot.index % 2 != 0 ||
-            mappedDB.GetSpell(deck.DraggedCard.dbUID).Type != 0 && slot.index % 2 == 0
-        )
+        if (!IsOfMatchingSpellType(ref slot, deck.DraggedCard))
         {
             var note = slot.index % 2 == 0 ? new UID(0xC18D4C31) : new UID(0x9CD74C31);
             ui.Publish(new messages.ui.Notification(mappedDB.GetText(note).Text));
@@ -160,6 +158,9 @@ public partial class ScrDeck
         SetDeckSlot(fairyEntity, ref deck);
         return;
     }
+
+    private bool IsOfMatchingSpellType(ref components.ui.Slot slot, InventoryCard card) =>
+        mappedDB.GetSpell(card.dbUID).Type == slot.index % 2;
 
     private void CreateSpellSummary(DefaultEcs.Entity entity)
     {

@@ -339,6 +339,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
             deck.LastHovered = default;
             CreateStats(entity, ref deck);
+            SetDragOverlayTile(ref deck);
             return;
         }
 
@@ -355,6 +356,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             }
 
         CreateStats(entity, ref deck);
+        SetDragOverlayTile(ref deck);
     }
 
     private void UpdateScroll(DefaultEcs.Entity entity, ref components.ui.ScrDeck deck)
