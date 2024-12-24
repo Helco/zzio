@@ -128,6 +128,7 @@ public abstract class Game : BaseDisposable, ITagContainer
         clearColor = (scene.misc.clearColor.ToFColor() with { a = 1f }).ToVeldrid();
 
         ecsWorld.Publish(new messages.SceneLoaded(scene, GetTag<Savegame>()));
+        ui.World.Publish(new messages.SceneLoaded(scene, GetTag<Savegame>()));
     }
 
     private void DisposeUnusedAssets(in messages.SceneLoaded _)
