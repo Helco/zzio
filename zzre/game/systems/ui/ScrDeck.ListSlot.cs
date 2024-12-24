@@ -118,29 +118,17 @@ public partial class ScrDeck
             }
             else UnsetSpellImage(slot.spellImages[i]);
         }
-        if (slot.summary != default)
-            slot.summary.Set(new components.ui.Label(""));
+        UnsetSlotSummary(ref slot);
     }
 
     private void UnsetSpellImages(ref components.ui.Slot slot)
     {
         foreach (var spellImage in slot.spellImages)
             UnsetSpellImage(spellImage);
-
-        if (slot.summary != default && slot.card != default)
-        {
-            slot.summary.Set(new components.ui.Label(slot.card switch
-            {
-                InventoryItem item => FormatSlotSummary(item),
-                InventorySpell spell => FormatSlotSummary(spell),
-                InventoryFairy fairy => FormatSlotSummary(fairy),
-                _ => throw new NotSupportedException("Unknown inventory card type")
-            }));
-            SetSummaryOffset(ref slot);
-        }
+        SetSlotSummary(ref slot);
     }
 
-    private void UnsetSpellImage(DefaultEcs.Entity spellImage)
+    private static void UnsetSpellImage(DefaultEcs.Entity spellImage)
     {
         spellImage.Set(components.Visibility.Invisible);
         spellImage.Set(new components.ui.ButtonTiles(-1));

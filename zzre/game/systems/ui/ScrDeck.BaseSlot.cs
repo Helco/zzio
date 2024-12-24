@@ -54,17 +54,7 @@ public partial class ScrDeck
         slot.button.Set(new components.ui.ButtonTiles(card.cardId.EntityId));
         slot.button.Set(CardTooltip(card));
 
-        if (slot.summary != default)
-        {
-            slot.summary.Set(new components.ui.Label(slot.card switch
-            {
-                InventoryItem item => FormatSlotSummary(item),
-                InventorySpell spell => FormatSlotSummary(spell),
-                InventoryFairy fairy => FormatSlotSummary(fairy),
-                _ => throw new NotSupportedException("Unknown inventory card type")
-            }));
-            SetSummaryOffset(ref slot);
-        }
+        SetSlotSummary(ref slot);
     }
 
     private void UnsetSlot(ref components.ui.Slot slot)
@@ -75,13 +65,36 @@ public partial class ScrDeck
             slot.button.Remove<components.ui.TooltipUID>();
         if (slot.usedMarker != default)
             slot.usedMarker.Set(components.Visibility.Invisible);
-        if (slot.summary != default)
-            slot.summary.Set(new components.ui.Label(""));
+        UnsetSlotSummary(ref slot);
         if (slot.spellSlots != default)
             foreach (var spellSlot in slot.spellSlots)
                 UnsetSpellSlot(spellSlot);
         if (slot.spellImages != default)
             UnsetSpellImages(ref slot);
+    }
+
+    private void SetSlotSummary(ref components.ui.Slot slot)
+    {
+        if (slot.summary == default) return;
+        if (slot.card == default)
+        {
+            UnsetSlotSummary(ref slot);
+            return;
+        }
+        slot.summary.Set(new components.ui.Label(slot.card switch
+        {
+            InventoryItem item => FormatSlotSummary(item),
+            InventorySpell spell => FormatSlotSummary(spell),
+            InventoryFairy fairy => FormatSlotSummary(fairy),
+            _ => throw new NotSupportedException("Unknown inventory card type")
+        }));
+        SetSummaryOffset(ref slot);
+    }
+
+    private static void UnsetSlotSummary(ref components.ui.Slot slot)
+    {
+        if (slot.summary == default) return;
+        slot.summary.Set(new components.ui.Label(""));
     }
 
     private void HandleSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity)
