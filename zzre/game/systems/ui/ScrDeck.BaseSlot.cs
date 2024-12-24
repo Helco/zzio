@@ -80,6 +80,8 @@ public partial class ScrDeck
         if (slot.spellSlots != default)
             foreach (var spellSlot in slot.spellSlots)
                 UnsetSpellSlot(spellSlot);
+        if (slot.spellImages != default)
+            UnsetSpellImages(ref slot);
     }
 
     private void HandleSlotClick(DefaultEcs.Entity deckEntity, ref components.ui.ScrDeck deck, DefaultEcs.Entity slotEntity)

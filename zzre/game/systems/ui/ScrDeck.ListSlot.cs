@@ -47,6 +47,12 @@ public partial class ScrDeck
             ? components.Visibility.Visible
             : components.Visibility.Invisible);
         slot.button.Set(CardTooltip(card));
+
+        if (slot.spellImages != default)
+            if (slot.showSpells)
+                SetSpellImages(entity);
+            else
+                UnsetSpellImages(ref slot);
     }
 
     private bool IsDraggable(InventoryCard card) => card.cardId.Type switch
@@ -63,6 +69,81 @@ public partial class ScrDeck
         if (slot.card == default) return;
         if (!IsDraggable(slot.card)) return;
         DragCard(deckEntity, ref deck, slot.card);
+    }
+
+    private void CreateSpellImages(DefaultEcs.Entity entity)
+    {
+        ref var slot = ref entity.Get<components.ui.Slot>();
+        slot.spellImages = new DefaultEcs.Entity[4];
+        for (var i = 0; i < slot.spellImages.Length; i++)
+        {
+            slot.spellImages[i] = preload.CreateImage(entity)
+                .With(slot.button.Get<Rect>().Min + new Vector2(42 + 40 * i, 0))
+                .With(UIPreloadAsset.Spl000)
+                .Build();
+        }
+        UnsetSpellImages(ref slot);
+    }
+
+    private void SetHoverMode(DefaultEcs.Entity entity)
+    {
+        ref var slot = ref entity.Get<components.ui.Slot>();
+        if (slot.summary == default) return;
+        slot.showSpells = true;
+        SetSpellImages(entity);
+    }
+    private void UnsetHoverMode(DefaultEcs.Entity entity)
+    {
+        ref var slot = ref entity.Get<components.ui.Slot>();
+        if (slot.summary == default) return;
+        slot.showSpells = false;
+        UnsetSpellImages(ref slot);
+    }
+
+    private void SetSpellImages(DefaultEcs.Entity entity)
+    {
+        ref var slot = ref entity.Get<components.ui.Slot>();
+        if (slot.card == default || slot.card.cardId.Type != CardType.Fairy)
+        {
+            UnsetSpellImages(ref slot);
+            return;
+        }
+        for (var i = 0; i < slot.spellImages.Length; i++)
+        {
+            var spell = inventory.GetSpellAtSlot((InventoryFairy)slot.card, i);
+            if (spell != default)
+            {
+                slot.spellImages[i].Set(components.Visibility.Visible);
+                slot.spellImages[i].Set(new components.ui.ButtonTiles(spell.cardId.EntityId));
+            }
+            else UnsetSpellImage(slot.spellImages[i]);
+        }
+        if (slot.summary != default)
+            slot.summary.Set(new components.ui.Label(""));
+    }
+
+    private void UnsetSpellImages(ref components.ui.Slot slot)
+    {
+        foreach (var spellImage in slot.spellImages)
+            UnsetSpellImage(spellImage);
+
+        if (slot.summary != default && slot.card != default)
+        {
+            slot.summary.Set(new components.ui.Label(slot.card switch
+            {
+                InventoryItem item => FormatSlotSummary(item),
+                InventorySpell spell => FormatSlotSummary(spell),
+                InventoryFairy fairy => FormatSlotSummary(fairy),
+                _ => throw new NotSupportedException("Unknown inventory card type")
+            }));
+            SetSummaryOffset(ref slot);
+        }
+    }
+
+    private void UnsetSpellImage(DefaultEcs.Entity spellImage)
+    {
+        spellImage.Set(components.Visibility.Invisible);
+        spellImage.Set(new components.ui.ButtonTiles(-1));
     }
 
     private components.ui.TooltipUID CardTooltip(InventoryItem item)

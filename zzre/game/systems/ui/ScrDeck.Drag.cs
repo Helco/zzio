@@ -34,6 +34,8 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
             inventory.SetSlot((InventoryFairy)deck.DraggedCard!, deck.VacatedDeckSlot);
             SetDeckSlot(deck.DeckSlots[deck.VacatedDeckSlot], ref deck);
         }
+        foreach (var slotEntity in deck.ListSlots)
+            UnsetHoverMode(slotEntity);
         deck.VacatedDeckSlot = -1;
         deck.DraggedCard = default;
         deck.DraggedCardImage.Dispose();

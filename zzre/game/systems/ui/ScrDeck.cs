@@ -197,7 +197,10 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
                 var i = y * columns + x;
                 deck.ListSlots[i] = CreateListSlot(entity, ListSlotPos(x, y), FirstListCell + i, i);
                 if (columns == 1)
+                {
                     CreateSlotSummary(deck.ListSlots[i], new(42, 9));
+                    CreateSpellImages(deck.ListSlots[i]);
+                }
             }
         }
     }
@@ -319,6 +322,15 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         // Unhovered an entity
         if (deck.LastHovered != default)
         {
+            if (deck.DraggedCard == default)
+                if (deck.LastHovered.Has<components.ui.SlotButton>())
+                {
+                    var slotEntity = deck.LastHovered.Get<components.Parent>().Entity;
+                    ref var slot = ref slotEntity.Get<components.ui.Slot>();
+                    if (slot.type == components.ui.Slot.Type.ListSlot)
+                        UnsetHoverMode(slotEntity);
+                }
+
             deck.LastHovered = default;
             CreateStats(entity, ref deck);
             return;
@@ -326,6 +338,16 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
         // Hovered an entity
         deck.LastHovered = curHovered.Entity;
+
+        if (deck.DraggedCard == default)
+            if (deck.LastHovered.Has<components.ui.SlotButton>())
+            {
+                var slotEntity = deck.LastHovered.Get<components.Parent>().Entity;
+                ref var slot = ref slotEntity.Get<components.ui.Slot>();
+                if (slot.type == components.ui.Slot.Type.ListSlot)
+                    SetHoverMode(slotEntity);
+            }
+
         CreateStats(entity, ref deck);
     }
 
