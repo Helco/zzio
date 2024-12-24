@@ -329,7 +329,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         if (deck.LastHovered != default)
         {
             if (deck.DraggedCard == default)
-                if (deck.LastHovered.Has<components.ui.SlotButton>())
+                if (deck.LastHovered.IsAlive && deck.LastHovered.Has<components.ui.SlotButton>())
                 {
                     var slotEntity = deck.LastHovered.Get<components.Parent>().Entity;
                     ref var slot = ref slotEntity.Get<components.ui.Slot>();
@@ -346,7 +346,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         deck.LastHovered = curHovered.Entity;
 
         if (deck.DraggedCard == default)
-            if (deck.LastHovered.Has<components.ui.SlotButton>())
+            if (deck.LastHovered.IsAlive && deck.LastHovered.Has<components.ui.SlotButton>())
             {
                 var slotEntity = deck.LastHovered.Get<components.Parent>().Entity;
                 ref var slot = ref slotEntity.Get<components.ui.Slot>();
