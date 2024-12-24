@@ -68,6 +68,11 @@ public partial class ScrDeck
         if (deck.DraggedCard != default) return;
         if (slot.card == default) return;
         if (!IsDraggable(slot.card)) return;
+        if (!scene.dataset.canChangeDeck && slot.card.cardId.Type == CardType.Fairy)
+        {
+            ui.Publish(new messages.ui.Notification(mappedDB.GetText(new UID(0xC21C5531)).Text));
+            return;
+        }
         DragCard(deckEntity, ref deck, slot.card);
     }
 
@@ -142,7 +147,9 @@ public partial class ScrDeck
     private components.ui.TooltipUID CardTooltip(InventoryFairy fairy)
         => !IsDraggable(fairy)
         ? new UID(0x9054EAB1) // fairy is in use
-        : new UID(0x00B500A1); // select fairy
+        : scene.dataset.canChangeDeck
+        ? new UID(0x00B500A1) // select fairy
+        : new UID(0x4D1B04A1); // can only be changed in London
 
     private components.ui.TooltipUID CardTooltip(InventorySpell spell)
         => !IsDraggable(spell)

@@ -44,6 +44,8 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     private readonly IAssetRegistry assetRegistry;
     private readonly zzio.db.MappedDB mappedDB;
+    private zzio.scn.Scene scene = null!;
+    private readonly IDisposable SceneLoadedDisposable;
     private readonly IDisposable OnUIScriptFinishedDisposable;
 
     public ScrDeck(ITagContainer diContainer) : base(diContainer, BlockFlags.All)
@@ -52,6 +54,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         mappedDB = diContainer.GetTag<zzio.db.MappedDB>();
         OnElementDown += HandleElementDown;
         OnRightClick += HandleRightClick;
+        SceneLoadedDisposable = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         OnUIScriptFinishedDisposable = World.Subscribe<messages.ui.UIScriptFinished>(HandleUIScriptFinished);
     }
 
@@ -60,8 +63,11 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         base.Dispose();
         OnElementDown -= HandleElementDown;
         OnRightClick -= HandleRightClick;
+        SceneLoadedDisposable.Dispose();
         OnUIScriptFinishedDisposable.Dispose();
     }
+
+    protected void HandleSceneLoaded(in messages.SceneLoaded message) => scene = message.Scene;
 
     protected override void HandleOpen(in messages.ui.OpenDeck message)
     {
