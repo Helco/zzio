@@ -71,6 +71,7 @@ public class TestAssetRegistry : SynchronizedTestFixture
         public ManualGlobalAsset(IAssetRegistry registry, Guid id, Info info) : base(registry, id)
         {
             this.info = info;
+            info.Asset = this;
         }
 
         public class Info(TaskContinuationOptions tcsOptions, int id, bool waitForSecondary = true) : IEquatable<Info>
@@ -80,6 +81,7 @@ public class TestAssetRegistry : SynchronizedTestFixture
             public readonly TaskCompletionSource<IEnumerable<AssetHandle>> Completion = new();
             public readonly TaskCompletionSource WasStarted = new();
             public readonly TaskCompletionSource WasUnloaded = new();
+            public ManualGlobalAsset? Asset { get; set; }
             
             public void Complete(params AssetHandle[] secondary) => Completion.SetResult(secondary);
             public void Fail() => Completion.SetException(new IOException("Oh no, something failed"));
@@ -144,11 +146,11 @@ public class TestAssetRegistry : SynchronizedTestFixture
             localRegistry.Dispose();
             diContainer.Dispose();
             if (TestContext.CurrentContext.CancellationToken.IsCancellationRequested)
-                Assert.Fail($"Test was cancelled during {reason}, most likely due to a timeout.");
+                Assert.Fail($"Test was cancelled during {reason} in {TestContext.CurrentContext.Test.Name}, most likely due to a timeout.");
         }
         catch(Exception e)
         {
-            Assert.Fail($"Exception during {reason}: {e}");
+            Assert.Fail($"Exception during {reason} in {TestContext.CurrentContext.Test.Name}: {e}");
         }
     }
 

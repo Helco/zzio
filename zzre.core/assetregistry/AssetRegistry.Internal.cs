@@ -169,6 +169,10 @@ public partial class AssetRegistry
                         asset.StartLoading();
                     secondaryTasks.Add(asset.LoadTask);
                 }
+                catch(Exception e) // if the asset was already erroneous
+                {
+                    throw new AggregateException([e]);
+                }
                 finally
                 {
                     asset.StateLock.Release();

@@ -199,7 +199,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
             if (exception is null)
                 throw new InvalidOperationException("Asset was marked erroneous but does not contain exception");
             else
-                ExceptionDispatchInfo.Capture(exception.InnerException!).Throw();
+                ExceptionDispatchInfo.Throw(exception.InnerException ?? exception);
         }
         else if (State is AssetState.Disposed)
             throw new ObjectDisposedException(ToString());

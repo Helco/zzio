@@ -25,10 +25,10 @@ public static class TaskExtensions
         {
             await source.ConfigureAwait(false);
         }
-        catch
+        catch(Exception e)
         {
-            if (source.Exception == null) throw;
-            ExceptionDispatchInfo.Capture(source.Exception).Throw();
+            if (source.Exception == null) throw new AggregateException([e]); // however that happens...
+            ExceptionDispatchInfo.Throw(source.Exception);
         }
     }
 }
