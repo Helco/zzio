@@ -144,7 +144,7 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
         var targetDirAngle = MathF.Atan2(targetDir.TargetDirection.X, targetDir.TargetDirection.Z);
         var targetTargetDirAngle = MathF.Atan2(movement.TargetTargetDir.X, movement.TargetTargetDir.Z);
         var dirAngleDelta = MathEx.NormalizeAngle(targetTargetDirAngle - targetDirAngle);
-        var newAngle = targetDirAngle + MathF.CopySign(dirAngleDelta, elapsedTime * speed);
+        var newAngle = targetDirAngle + MathF.CopySign(elapsedTime * speed, dirAngleDelta);
         var newAngleDelta = MathEx.NormalizeAngle(targetTargetDirAngle - newAngle);
         if ((newAngleDelta < 0) != (dirAngleDelta < 0))
             newAngle = targetTargetDirAngle;
