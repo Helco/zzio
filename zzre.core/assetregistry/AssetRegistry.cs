@@ -65,10 +65,14 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         if (!IsMainThread)
             logger.Warning("AssetRegistry.Dispose is called from a secondary thread.");
         cancellationSource.Cancel();
-        Task.WhenAll(assets.Values
-            .Where(a => a.State is AssetState.Loading or AssetState.LoadingSecondary)
-            .Select(a => a.LoadTask))
-            .Wait(10000);
+        try
+        {
+            Task.WhenAll(assets.Values
+                .Where(a => a.State is AssetState.Loading or AssetState.LoadingSecondary)
+                .Select(a => a.LoadTask))
+                .Wait(10000);
+        }
+        catch (Exception e) when (e is AggregateException or OperationCanceledException) { }
         if (!Monitor.TryEnter(assets, 1000))
             logger.Warning("Could not lock assets in AssetRegistry disposal. This is ignored and assets are disposed regardless.");
         try

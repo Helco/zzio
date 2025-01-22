@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -7,12 +8,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
+using static zzre.IAssetRegistryDebug;
 
 namespace zzre.tests;
 
 [TestFixture(TaskContinuationOptions.None)]
 [TestFixture(TaskContinuationOptions.RunContinuationsAsynchronously)]
-[CancelAfter(1000)]
+[CancelAfter(3000)]
 public class TestAssetRegistry : SynchronizedTestFixture
 {
     class SynchronousAsset : Asset
@@ -142,7 +144,7 @@ public class TestAssetRegistry : SynchronizedTestFixture
             localRegistry.Dispose();
             diContainer.Dispose();
             if (TestContext.CurrentContext.CancellationToken.IsCancellationRequested)
-                Assert.Fail("Test was cancelled, most likely due to a timeout.");
+                Assert.Fail($"Test was cancelled during {reason}, most likely due to a timeout.");
         }
         catch(Exception e)
         {
@@ -503,6 +505,18 @@ public class TestAssetRegistry : SynchronizedTestFixture
     }
 
     [Test]
+    public async Task LoadAsyncAsset_RegistryDisposal()
+    {
+        var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
+
+        using var assetHandle = globalRegistry.Load(assetInfo, AssetLoadPriority.High, null);
+        await assetInfo.WasStarted.Task;
+
+        Task.Run(async () => { await Task.Delay(200); assetInfo.Complete(); });
+        globalRegistry.Dispose();
+    }
+
+    [Test]
     public async Task UnloadAsyncAsset_HighNormal()
     {
         var assetInfo = new ManualGlobalAsset.Info(tcsOptions, 42);
@@ -842,7 +856,7 @@ public class TestAssetRegistry : SynchronizedTestFixture
         Assert.That(assetHandleSecondary2.IsLoaded);
     }
 
-    [Test]
+    [Test, Repeat(1000)]
     public async Task SecondaryAssets_HighNoWait()
     {
         var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 42, waitForSecondary: false);
@@ -932,6 +946,22 @@ public class TestAssetRegistry : SynchronizedTestFixture
         Assert.That(assetHandlePrimary.IsLoaded, Is.False);
         Assert.That(assetHandleSecondary.IsLoaded, Is.False);
         Assert.That(assetHandleTertiary.IsLoaded, Is.False);
+    }
+
+    [Test]
+    public async Task SecondaryAssets_RegistryDisposal()
+    {
+        var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 1);
+        var assetInfoSecondary = new ManualGlobalAsset.Info(tcsOptions, 2);
+
+        using var assetHandlePrimary = globalRegistry.Load(assetInfoPrimary, AssetLoadPriority.High, null);
+        using var assetHandleSecondary = globalRegistry.Load(assetInfoSecondary, AssetLoadPriority.High, null);
+
+        assetInfoPrimary.Complete([assetHandleSecondary]);
+        await assetInfoSecondary.WasStarted.Task;
+
+        Task.Run(async () => { await Task.Delay(200); assetInfoSecondary.Complete(); });
+        globalRegistry.Dispose();
     }
 
     [Test]

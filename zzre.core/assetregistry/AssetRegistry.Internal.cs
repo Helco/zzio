@@ -15,6 +15,8 @@ public partial class AssetRegistry
     {
         if (handle.Registry != this)
             throw new ArgumentException("Tried to unload asset at wrong registry");
+        if (WasDisposed)
+            return; // not particularly nice, but all assets should be disposed anyway so ignoring handle disposal should be fine
         IAsset? asset = null;
         lock (assets)
             asset = assets.GetValueOrDefault(handle.AssetID);
