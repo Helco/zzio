@@ -77,6 +77,11 @@ public partial class SceneEditor
                     break;
             }
         }
+
+        public void SyncWithScene()
+        {
+            SceneTrigger.pos = Location.LocalPosition;
+        }
     }
 
     private sealed class TriggerComponent : BaseDisposable, IEnumerable<ISelectable>
@@ -90,7 +95,7 @@ public partial class SceneEditor
 
         private Trigger[] triggers = [];
         private bool wasSelected;
-        private float iconSize = 128f;
+        private float iconSize = 256f;
 
         public TriggerComponent(ITagContainer diContainer)
         {
@@ -112,6 +117,11 @@ public partial class SceneEditor
             iconRenderer.Material.MainSampler.Sampler = iconFont.Sampler;
             HandleResize();
         }
+        public void SyncWithScene()
+        {
+            foreach (var trigger in triggers)
+                trigger.SyncWithScene();
+        }
 
         protected override void DisposeManaged()
         {
@@ -121,6 +131,53 @@ public partial class SceneEditor
                 trigger.Dispose();
         }
 
+        public void DuplicateCurrentTrigger()
+        {
+            var currentTrigger = FindCurrentTrigger();
+            if (currentTrigger == null || editor.scene == null)
+                return;
+
+            SyncWithScene();
+
+            var copy = currentTrigger.SceneTrigger.Clone();
+            copy.idx = GetNextAvailableTriggerID();
+            editor.scene.triggers = [.. editor.scene.triggers, copy];
+            HandleLoadScene();
+            editor.Selected = triggers.Last();
+        }
+        public void DeleteCurrentTrigger()
+        {
+            var currentTrigger = FindCurrentTrigger();
+            if (currentTrigger == null || editor.scene == null)
+                return;
+
+            SyncWithScene();
+
+            editor.scene.triggers = editor.scene.triggers.Where(
+                trigger => trigger.idx != currentTrigger.SceneTrigger.idx
+            ).ToArray();
+
+            HandleLoadScene();
+            editor.Selected = null;
+        }
+        private uint GetNextAvailableTriggerID()
+        {
+            uint result = 1;
+            foreach (var trigger in triggers)
+            {
+                result = Math.Max(result, trigger.SceneTrigger.idx);
+            }
+            return result + 1;
+        }
+        private Trigger? FindCurrentTrigger()
+        {
+            foreach (var trigger in triggers)
+            {
+                if (trigger == editor.Selected)
+                    return trigger;
+            }
+            return null;
+        }
         private void HandleLoadScene()
         {
             foreach (var oldTrigger in triggers)

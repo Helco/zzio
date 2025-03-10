@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Numerics;
 using Veldrid;
@@ -7,6 +7,8 @@ using zzio.vfs;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
+
+using KeyCode = Silk.NET.SDL.KeyCode;
 
 namespace zzre.tools;
 
@@ -23,6 +25,9 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     private readonly AssetLocalRegistry assetRegistry;
     private readonly DefaultEcs.World ecsWorld;
 
+    private readonly TriggerComponent triggerComponent;
+    private readonly FOModelComponent foModelComponent;
+
     private event Action OnLoadScene = () => { };
 
     private readonly ITagContainer localDiContainer;
@@ -30,6 +35,8 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
 
     public IResource? CurrentResource { get; private set; }
     public Window Window { get; }
+
+    private bool ControlIsPressed;
 
     public SceneEditor(ITagContainer diContainer)
     {
@@ -46,6 +53,9 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         AddDisposable(locationBuffer);
         var menuBar = new MenuBarWindowTag(Window);
         menuBar.AddButton("Open", HandleMenuOpen);
+        menuBar.AddButton("Save", SaveScene);
+        menuBar.AddButton("Duplicate Selection", DuplicateCurrentSelection);
+        menuBar.AddButton("Delete Selection", DeleteCurrentSelection);
         openFileModal = new OpenFileModal(diContainer)
         {
             Filter = "*.scn",
@@ -81,13 +91,16 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         new DatasetComponent(localDiContainer);
         new WorldComponent(localDiContainer);
         new ModelComponent(localDiContainer);
-        new FOModelComponent(localDiContainer);
-        new TriggerComponent(localDiContainer);
         new LightComponent(localDiContainer);
         new EffectComponent(localDiContainer);
         new Sample3DComponent(localDiContainer);
         new WaypointComponent(localDiContainer);
         new SelectionComponent(localDiContainer);
+        foModelComponent = new FOModelComponent(localDiContainer);
+        triggerComponent = new TriggerComponent(localDiContainer);
+        Window.OnKeyUp += HandleKeyUp;
+        Window.OnKeyDown += HandleKeyDown;
+        Window.OnContent += HandleOnContent;
         diContainer.GetTag<OpenDocumentSet>().AddEditor(this);
     }
 
@@ -98,6 +111,43 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         assetRegistry.Dispose();
     }
 
+    private void HandleKeyDown(KeyCode key)
+    {
+        if (key == KeyCode.KLctrl)
+            ControlIsPressed = true;
+    }
+    private void HandleKeyUp(KeyCode key)
+    {
+        if (key == KeyCode.KLctrl)
+            ControlIsPressed = false;
+        else if (ControlIsPressed)
+        {
+            if (key == KeyCode.KD)
+                DuplicateCurrentSelection();
+            else if (key == KeyCode.KS)
+                SaveScene();
+            else if (key == KeyCode.KX)
+                DeleteCurrentSelection();
+        }
+    }
+    private void HandleOnContent()
+    {
+        if (Window.IsFocused == false)
+        {
+            ControlIsPressed = false;
+        }
+    }
+    private void DuplicateCurrentSelection()
+    {
+        triggerComponent.DuplicateCurrentTrigger();
+        foModelComponent.DuplicateCurrentFoModel();
+
+    }
+    private void DeleteCurrentSelection()
+    {
+        triggerComponent.DeleteCurrentTrigger();
+        foModelComponent.DeleteCurrentFoModel();
+    }
     public void Load(string pathText)
     {
         var resource = resourcePool.FindFile(pathText) ?? throw new FileNotFoundException($"Could not find world at {pathText}");
@@ -124,6 +174,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         ecsWorld.Publish(new game.messages.SceneLoaded(scene, Savegame: null!));
         OnLoadScene();
         assetRegistry.ApplyAssets();
+        editor.ResetColumnWidth();
     }
 
     private void HandleResize() => camera.Aspect = fbArea.Ratio;
@@ -133,4 +184,16 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         openFileModal.InitialSelectedResource = CurrentResource;
         openFileModal.Modal.Open();
     }
+    private void SaveScene()
+    {
+        if (CurrentResource == null || scene == null)
+            return;
+        triggerComponent.SyncWithScene();
+        foModelComponent.SyncWithScene();
+        var path = Path.Combine(Environment.CurrentDirectory, "..", CurrentResource.Path.ToString());
+
+        var stream = new FileStream(path, FileMode.Create);
+        scene.Write(stream);
+    }
+
 }

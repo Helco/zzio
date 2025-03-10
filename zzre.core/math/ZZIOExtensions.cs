@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using Veldrid;
 using zzio;
@@ -28,6 +28,12 @@ public static class ZZIOExtensions
         return Quaternion.Conjugate(Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateLookAt(Vector3.Zero, v, up)));
     }
 
+    public static Vector3 FromZZRotation(this Quaternion q)
+    {
+        Matrix4x4 rotationMatrix = Matrix4x4.CreateFromQuaternion(Quaternion.Conjugate(q));
+        return Vector3.Normalize(new Vector3(rotationMatrix.M13, rotationMatrix.M23, rotationMatrix.M33));
+    }
+
     public static Vector3 ToZZRotationVector(this Quaternion rotation) =>
         Vector3.Transform(-Vector3.UnitZ, rotation) * -1f;
 
@@ -45,7 +51,7 @@ public static class ZZIOExtensions
     };
 
     // adapted from https://gist.github.com/ciembor/1494530 - "It's the do what you want license :)"
-    
+
     public static FColor RGBToHSL(this FColor c)
     {
         float max = Max(Max(c.r, c.g), c.b);

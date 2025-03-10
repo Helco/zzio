@@ -39,7 +39,10 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - name: Build local dependencies
-        run: bash zzio/get-dependencies.sh
+        run: |
+          cd zzio
+          bash ./get-dependencies.sh
+          cd ..
       - name: Install remote dependencies
         run: dotnet restore zzio/zzio.sln -r ${{ matrix.target }} -p:NoWarn=NU1605
       - name: Build
