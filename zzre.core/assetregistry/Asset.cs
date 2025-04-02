@@ -82,6 +82,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
     private string? description;
     private AssetHandle[] secondaryAssets = [];
     private int refCount;
+    private AssetState state;
 
     private IAssetRegistryInternal InternalRegistry { get; } = registry.InternalRegistry;
     public IAssetRegistry Registry { get; } = registry;
@@ -89,7 +90,17 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
     /// <remarks>The ID is chosen randomly and will change at least per process per asset</remarks>
     public Guid ID { get; } = id;
     /// <summary>The current loading state of the asset</summary>
-    public AssetState State { get; private set; }
+    public AssetState State
+    {
+        get => state;
+        private set
+        {
+            if (state is AssetState.Disposed or AssetState.Error &&
+                value is not (AssetState.Disposed or AssetState.Error))
+                throw new ArgumentException("Invalid asset state transition");
+            state = value;
+        }
+    }
     Task IAsset.LoadTask => completionSource.Task;
     int IAsset.RefCount => refCount;
     AssetLoadPriority IAsset.Priority { get; set; }
