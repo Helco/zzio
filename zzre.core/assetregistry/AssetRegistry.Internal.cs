@@ -159,9 +159,11 @@ public partial class AssetRegistry
                 handle.CheckDisposed();
                 if (!assets.TryGetValue(handle.AssetID, out var asset))
                     continue;
-                asset.StateLock.Wait(Cancellation);
+                bool hasLock = false;
                 try
                 {
+                    asset.StateLock.Wait(Cancellation);
+                    hasLock = true;
                     asset.ThrowIfError();
                     if (asset.State == AssetState.Loaded)
                         continue;
@@ -175,7 +177,8 @@ public partial class AssetRegistry
                 }
                 finally
                 {
-                    asset.StateLock.Release();
+                    if (hasLock)
+                        asset.StateLock.Release();
                 }
             }
             return Task.WhenAll(secondaryTasks).WithAggregateException();
