@@ -22,7 +22,7 @@ public partial class AssetRegistry
             asset = assets.GetValueOrDefault(handle.AssetID);
         if (asset is null)
             throw new InvalidOperationException("Asset was not found or already deleted, this should not happen if you used a valid handle");
-        asset.StateLock.Wait();
+        asset.StateLock.Wait(Cancellation);
         try
         {
             asset.DelRef();
@@ -74,7 +74,7 @@ public partial class AssetRegistry
 
         AddApplyActions actions;
         Action<AssetHandle>? previousApplyActions = null;
-        asset.StateLock.Wait();
+        asset.StateLock.Wait(Cancellation);
         try
         {
             actions = DecideForApplying(asset);
@@ -106,7 +106,7 @@ public partial class AssetRegistry
 
         AddApplyActions actions;
         Action<AssetHandle>? previousApplyActions = null;
-        asset.StateLock.Wait();
+        asset.StateLock.Wait(Cancellation);
         try
         {
             actions = DecideForApplying(asset);
@@ -159,7 +159,7 @@ public partial class AssetRegistry
                 handle.CheckDisposed();
                 if (!assets.TryGetValue(handle.AssetID, out var asset))
                     continue;
-                asset.StateLock.Wait();
+                asset.StateLock.Wait(Cancellation);
                 try
                 {
                     asset.ThrowIfError();
@@ -203,7 +203,7 @@ public partial class AssetRegistry
         if (asset is not TAsset tasset)
             throw new InvalidOperationException($"Asset is not of type {typeof(TAsset).Name}");
 
-        asset.StateLock.Wait();
+        asset.StateLock.Wait(Cancellation);
         try
         {
             asset.ThrowIfError(); // so not disposed or error after this
@@ -232,7 +232,7 @@ public partial class AssetRegistry
         if (asset is not TAsset tasset)
             throw new InvalidOperationException($"Asset is not of type {typeof(TAsset).Name}");
 
-        asset.StateLock.Wait();
+        asset.StateLock.Wait(Cancellation);
         try
         {
             asset.ThrowIfError(); // so not disposed or error after this
@@ -260,7 +260,7 @@ public partial class AssetRegistry
             asset = assets.GetValueOrDefault(assetId);
         if (asset is null)
             throw new InvalidOperationException("Asset was not found or already deleted, this should not happen if you used a valid handle");
-        asset.StateLock.Wait();
+        asset.StateLock.Wait(Cancellation);
         try
         {
             if (asset.State is AssetState.Disposed)

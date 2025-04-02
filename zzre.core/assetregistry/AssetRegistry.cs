@@ -67,12 +67,17 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         cancellationSource.Cancel();
         try
         {
-            Task.WhenAll(assets.Values
-                .Where(a => a.State is AssetState.Loading or AssetState.LoadingSecondary)
-                .Select(a => a.LoadTask))
-                .Wait(10000);
+            if (!Task.WhenAll(assets.Values
+                     .Where(a => a.State is AssetState.Loading or AssetState.LoadingSecondary)
+                     .Select(a => a.LoadTask))
+                     .Wait(1000))
+                throw new OperationCanceledException("Waiting for loading assets timed out.");
         }
-        catch (Exception e) when (e is AggregateException or OperationCanceledException) { }
+        catch (Exception e) when (e is AggregateException or OperationCanceledException)
+        {
+            logger.Warning("Waiting for loading assets timed out. This is ignored and assets are disposed regardless.");
+            logger.Debug(e, "Waiting for loading assets timed out.");
+        }
         if (!Monitor.TryEnter(assets, 1000))
             logger.Warning("Could not lock assets in AssetRegistry disposal. This is ignored and assets are disposed regardless.");
         try
@@ -184,7 +189,7 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         LoadActions loadActions;
         Action<AssetHandle>? previousApplyActions = null;
 
-        asset.StateLock.Wait();
+        asset.StateLock.Wait(Cancellation);
         try
         {
             asset.AddRef();
@@ -236,7 +241,7 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         LoadActions loadActions;
         Action<AssetHandle>? previousApplyActions = null;
 
-        asset.StateLock.Wait();
+        asset.StateLock.Wait(Cancellation);
         try
         {
             if (addRef)
@@ -291,7 +296,7 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
 
         for (int i = 0; i < MaxLowPriorityAssetsPerFrame && assetsToStart.Reader.TryRead(out var asset); i++)
         {
-            asset.StateLock.Wait();
+            asset.StateLock.Wait(Cancellation);
             try
             {
                 if (asset.State == AssetState.Queued)

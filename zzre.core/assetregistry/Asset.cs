@@ -114,7 +114,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
     {
         Debug.Assert((this as IAsset).StateLock.CurrentCount == 0 && State == AssetState.Queued);
         State = AssetState.Loading;
-        Task.Run(PrivateLoad, InternalRegistry.Cancellation);
+        Task.Run(PrivateLoad); // we do not want a cancelalation in order to change the state from Loading at some point
     }
 
     void IAsset.AddRef()
@@ -137,7 +137,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
     {
         // TODO: This will currently not work when disposed while loading
 
-        if (State != AssetState.Loading)
+        if (State != AssetState.Loading) // TODO: Check throwing exception here, is it uncaught if it ever happens?
             throw new InvalidOperationException("Asset.PrivateLoad was called during an unexpected state");
 
         var ct = InternalRegistry.Cancellation;
@@ -155,7 +155,7 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
 
                 if (secondaryAssets.Length > 0 && NeedsSecondaryAssets)
                 {
-                    (this as IAsset).StateLock.Wait();
+                    (this as IAsset).StateLock.Wait(Registry.InternalRegistry.Cancellation);
                     try
                     {
                         Debug.Assert(State == AssetState.Loading);
@@ -176,16 +176,22 @@ public abstract class Asset(IAssetRegistry registry, Guid id) : IAsset
         }
         catch (Exception ex)
         {
-            (this as IAsset).StateLock.Wait();
             try
             {
-                completionSource.SetException(ex);
-                (this as IAsset).Dispose();
+                (this as IAsset).StateLock.Wait(Registry.InternalRegistry.Cancellation);
+                try
+                {
+                    (this as IAsset).Dispose();
+                }
+                finally
+                {
+                    (this as IAsset).StateLock.Release();
+                }
             }
             finally
             {
-                (this as IAsset).StateLock.Release();
                 State = AssetState.Error;
+                completionSource.TrySetException(ex);
             }
         }
     }

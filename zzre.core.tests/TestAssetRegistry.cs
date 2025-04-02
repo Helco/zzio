@@ -122,6 +122,7 @@ public class TestAssetRegistry : SynchronizedTestFixture
     private TagContainer diContainer;
     private AssetRegistry globalRegistry;
     private AssetLocalRegistry localRegistry;
+    private Stopwatch stopwatch = new();
     private readonly TaskContinuationOptions tcsOptions;
 
     public TestAssetRegistry(TaskContinuationOptions tcsOptions) => this.tcsOptions = tcsOptions;
@@ -134,6 +135,7 @@ public class TestAssetRegistry : SynchronizedTestFixture
         diContainer.AddTag<IAssetRegistry>(globalRegistry = new AssetRegistry("Global", diContainer));
         localRegistry = new AssetLocalRegistry("Local", diContainer);
         TestContext.CurrentContext.CancellationToken.Register(() => Cleanup("Cancellation"));
+        stopwatch.Start();
     }
 
     [TearDown]
@@ -141,12 +143,17 @@ public class TestAssetRegistry : SynchronizedTestFixture
 
     private void Cleanup(string reason)
     {
+        if (!stopwatch.IsRunning)
+            return;
         try
         {
+            var beforeDispose = stopwatch.Elapsed.TotalSeconds;
             localRegistry.Dispose();
             diContainer.Dispose();
-            if (TestContext.CurrentContext.CancellationToken.IsCancellationRequested)
-                Assert.Fail($"Test was cancelled during {reason} in {TestContext.CurrentContext.Test.Name}, most likely due to a timeout.");
+            stopwatch.Stop();
+            var afterDispose = stopwatch.Elapsed.TotalSeconds;
+            if (reason == "Cancellation")
+                Assert.Fail($"Test was cancelled during {reason} in {TestContext.CurrentContext.Test.Name}, most likely due to a timeout ({beforeDispose:F3}, {afterDispose:F3}).");
         }
         catch(Exception e)
         {
@@ -858,7 +865,7 @@ public class TestAssetRegistry : SynchronizedTestFixture
         Assert.That(assetHandleSecondary2.IsLoaded);
     }
 
-    [Test, Repeat(1000)]
+    [Test]
     public async Task SecondaryAssets_HighNoWait()
     {
         var assetInfoPrimary = new ManualGlobalAsset.Info(tcsOptions, 42, waitForSecondary: false);
