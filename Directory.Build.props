@@ -14,7 +14,7 @@
         <VeldridHash>g2c8a3f1b9e</VeldridHash>
         <DefaultEcsHash>0e92bb5</DefaultEcsHash>
         <ImguiHash>9b51cce</ImguiHash>
-        <MlangHash>227903d</MlangHash>
+        <MlangHash>5c3471e</MlangHash>
         <NLayerHash>01e1238</NLayerHash>
         <VeldridVersion>4.9.0-$(VeldridHash)</VeldridVersion>
         <VeldridRenderdocVersion>1.0.1-$(VeldridHash)</VeldridRenderdocVersion>
