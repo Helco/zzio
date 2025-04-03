@@ -16,7 +16,7 @@ public class MappedDB
 
     public MappedDB()
     {
-        foreach (var moduleType in Enum.GetValues(typeof(ModuleType)).Cast<ModuleType>())
+        foreach (var moduleType in Enum.GetValues<ModuleType>())
             modules.Add(moduleType, []);
         fairiesByIndex = new ResettableLazy<IReadOnlyDictionary<int, FairyRow>>(
             () => Fairies.ToDictionary(f => f.CardId.EntityId, f => f));

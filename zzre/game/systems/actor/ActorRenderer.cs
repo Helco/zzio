@@ -13,14 +13,12 @@ namespace zzre.game.systems;
 [With(typeof(components.ActorPart))]
 public partial class ActorRenderer : AEntitySetSystem<CommandList>
 {
-    private readonly ITagContainer diContainer;
     private readonly IAssetRegistry assetRegistry;
     private readonly GraphicsDevice graphicsDevice;
     private readonly Camera camera;
     private readonly Texture whiteTexture;
     private readonly List<DefaultEcs.Entity> entitiesToDraw = [];
     private readonly UniformBuffer<ModelFactors> modelFactors;
-    private readonly UniformBuffer<FogParams> fogParams; // this is not owned by us!
     private readonly IDisposable sceneLoadedSubscription;
     private readonly IDisposable loadActorSubscription;
     private Frustum viewFrustum;
@@ -28,10 +26,8 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     public ActorRenderer(ITagContainer diContainer) :
         base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
-        this.diContainer = diContainer;
         assetRegistry = diContainer.GetTag<IAssetRegistry>();
         camera = diContainer.GetTag<Camera>();
-        fogParams = diContainer.GetTag<UniformBuffer<FogParams>>();
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         loadActorSubscription = World.Subscribe<messages.LoadActor>(HandleLoadActor);
 

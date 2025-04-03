@@ -142,7 +142,7 @@ internal class Program
             }
             Console.Out.WriteLine();
             Console.Out.WriteLine("Formats:");
-            Array formats = Enum.GetValues(typeof(FileType));
+            var formats = Enum.GetValues<FileType>();
             foreach (FileType type in formats)
             {
                 if (type != FileType.Unknown)

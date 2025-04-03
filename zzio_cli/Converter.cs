@@ -83,7 +83,7 @@ public partial class ConversionMgr
     {
         this.args = args;
         conversions = new Dictionary<FileType, IConverter>();
-        Array formats = Enum.GetValues(typeof(FileType));
+        var formats = Enum.GetValues<FileType>();
         foreach (FileType type in formats)
             conversions[type] = null;
 

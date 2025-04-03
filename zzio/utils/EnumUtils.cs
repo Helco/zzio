@@ -5,9 +5,9 @@ namespace zzio;
 
 public static class EnumUtils
 {
-    public static T intToEnum<T>(int i) where T : struct, IConvertible => Enum.IsDefined(typeof(T), i)
-        ? (T)Enum.Parse(typeof(T), i.ToString())
-        : (T)Enum.Parse(typeof(T), "Unknown");
+    public static T intToEnum<T>(int i) where T : struct, Enum => Enum.IsDefined(typeof(T), i)
+        ? Enum.Parse<T>(i.ToString())
+        : Enum.Parse<T>("Unknown");
 
     public static T intToFlags<T>(uint value) where T : struct, IConvertible
     {
@@ -19,10 +19,10 @@ public static class EnumUtils
                 continue;
             if (flagString.Length > 0)
                 flagString.Append(',');
-            flagString.Append(Enum.Parse(typeof(T), intFlag.ToString()));
+            flagString.Append(Enum.Parse<T>(intFlag.ToString()));
         }
         return flagString.Length == 0
             ? default
-            : (T)Enum.Parse(typeof(T), flagString.ToString());
+            : Enum.Parse<T>(flagString.ToString());
     }
 }

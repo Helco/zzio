@@ -205,9 +205,8 @@ public partial class Inventory : IReadOnlyCollection<InventoryCard>
     public IEnumerable<InventorySpell> SupportSpells =>
         Spells.Where(s => mappedDB.GetSpell(s.dbUID).Type != 0);
 
-    public InventoryFairy? ActiveOverworldFairy => fairySlots
-        .Where(f => f?.currentMHP > 0)
-        .FirstOrDefault();
+    public InventoryFairy? ActiveOverworldFairy =>
+        fairySlots.FirstOrDefault(f => f?.currentMHP > 0);
 
     public IEnumerator<InventoryCard> GetEnumerator() => cards.NotNull().GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

@@ -91,10 +91,10 @@ public static class ImGuiEx
         return result != 0;
     }
 
-    public static bool EnumRadioButtonGroup<T>(ref T value, string[]? labels = null) where T : Enum
+    public static bool EnumRadioButtonGroup<T>(ref T value, string[]? labels = null) where T : struct, Enum
     {
-        var values = Enum.GetValues(typeof(T)).Cast<T>().ToArray();
-        labels ??= Enum.GetNames(typeof(T));
+        var values = Enum.GetValues<T>();
+        labels ??= Enum.GetNames<T>();
 
         bool hasChanged = false;
         for (int i = 0; i < labels.Length; i++)
@@ -108,12 +108,12 @@ public static class ImGuiEx
         return hasChanged;
     }
 
-    public static bool EnumCombo<T>(string label, ref T value, string[]? labels = null) where T : Enum => EnumComboUnsafe(label, ref value, labels);
+    public static bool EnumCombo<T>(string label, ref T value, string[]? labels = null) where T : struct, Enum => EnumComboUnsafe(label, ref value, labels);
 
-    public static bool EnumComboUnsafe<T>(string label, ref T value, string[]? labels = null)
+    public static bool EnumComboUnsafe<T>(string label, ref T value, string[]? labels = null) where T : struct, Enum
     {
-        var values = Enum.GetValues(typeof(T)).Cast<T>().ToArray();
-        labels ??= Enum.GetNames(typeof(T));
+        var values = Enum.GetValues<T>();
+        labels ??= Enum.GetNames<T>();
 
         if (!BeginCombo(label, value!.ToString()))
             return false;
@@ -133,7 +133,7 @@ public static class ImGuiEx
     public static bool FlagsCombo<T>(string label, ref T value, T[]? flags = null, string[]? labels = null, string noneText = "None") where T : struct, Enum
     {
         flags ??= Enum.GetValues<T>();
-        labels ??= flags.Select(f => f.ToString()).ToArray();
+        labels ??= [.. flags.Select(f => f.ToString())];
         var flagValues = flags.Select(f => f.GetHashCode()).ToArray();
         var intValue = value.GetHashCode();
         var newValue = intValue & ~flagValues.Aggregate((a, b) => a | b);
