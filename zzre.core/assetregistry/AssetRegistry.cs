@@ -137,9 +137,6 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         }
     }
 
-    private static bool IsFinalState(AssetState state) => 
-        state is AssetState.Loaded or AssetState.Disposed or AssetState.Error;
-
     [Flags]
     private enum LoadActions
     {
