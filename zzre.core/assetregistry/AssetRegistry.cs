@@ -10,6 +10,13 @@ using Serilog;
 
 namespace zzre;
 
+/*
+ * As global note to the AssetRegistry, as far as I see using ChannelWriter.TryWrite without
+ * checking the result is correct, as we always use a SingleConsumerUnboundChannelWriter so
+ * the only way TryWrite returns false is if the writer was completed in which not writing
+ * the item is correct.
+ */
+
 /// <summary>A global asset registry to facilitate loading, retrieval and disposal of assets</summary>
 public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryInternal
 {
@@ -48,43 +55,78 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
     {
         DIContainer = diContainer;
         this.apparentRegistry = apparentRegistry ?? this;
-        if (string.IsNullOrEmpty(debugName))
-            logger = diContainer.GetLoggerFor<AssetRegistry>();
-        else
-            logger = diContainer.GetTag<ILogger>().For($"{nameof(AssetRegistry)}-{debugName}");
+        logger = string.IsNullOrEmpty(debugName)
+            ? diContainer.GetLoggerFor<AssetRegistry>()
+            : diContainer.GetTag<ILogger>().For($"{nameof(AssetRegistry)}-{debugName}");
     }
 
     protected override void DisposeManaged()
     {
-        EnsureMainThread();
+        if (!IsMainThread)
+            logger.Warning("AssetRegistry.Dispose is called from a secondary thread.");
         cancellationSource.Cancel();
-        Task.WhenAll(assets.Values
-            .Where(a => a.State is AssetState.Loading or AssetState.LoadingSecondary)
-            .Select(a => a.LoadTask))
-            .Wait(10000);
-        foreach (var asset in assets.Values)
-            asset.Dispose();
-        assets.Clear();
-        assetsToRemove.Writer.Complete();
-        assetsToApply.Writer.Complete();
-        assetsToStart.Writer.Complete();
+        try
+        {
+            if (!Task.WhenAll(assets.Values
+                     .Where(a => a.State is AssetState.Loading or AssetState.LoadingSecondary)
+                     .Select(a => a.LoadTask))
+                     .Wait(1000))
+                throw new OperationCanceledException("Waiting for loading assets timed out.");
+        }
+        catch (Exception e) when (e is AggregateException or OperationCanceledException)
+        {
+            logger.Warning("Waiting for loading assets timed out. This is ignored and assets are disposed regardless.");
+            logger.Debug(e, "Waiting for loading assets timed out.");
+        }
+        if (!Monitor.TryEnter(assets, 1000))
+            logger.Warning("Could not lock assets in AssetRegistry disposal. This is ignored and assets are disposed regardless.");
+        try
+        {
+            assetsToRemove.Writer.Complete();
+            assetsToApply.Writer.Complete();
+            assetsToStart.Writer.Complete();
+
+            bool failedToDisposeSomeAsset = false;
+            foreach (var asset in assets.Values)
+            {
+                if (asset.StateLock.Wait(500))
+                {
+                    asset.Dispose();
+                    asset.StateLock.Release();
+                }
+                else if (!failedToDisposeSomeAsset)
+                {
+                    logger.Warning("Failed to dispose all assets, someone holds an asset state lock for way to long");
+                    failedToDisposeSomeAsset = true;   
+                }
+            }
+            assets.Clear();
+        }
+        finally
+        {
+            if (Monitor.IsEntered(assets))
+                Monitor.Exit(assets);
+        }
         cancellationSource.Dispose();
         logger.Verbose("Finished disposing registry");
     }
 
     private IAsset GetOrCreateAsset<TInfo>(in TInfo info)
-        where TInfo :  IEquatable<TInfo>
+        where TInfo : IEquatable<TInfo>
     {
         Cancellation.ThrowIfCancellationRequested();
         if (AssetInfoRegistry<TInfo>.Locality is not AssetLocality.Global && apparentRegistry == this)
             throw new InvalidOperationException("Cannot retrieve or create local assets in a global asset registry");
 
         var guid = AssetInfoRegistry<TInfo>.ToGuid(info);
-        lock(assets)
+        lock (assets)
         {
-            if (!assets.TryGetValue(guid, out var asset) || asset.State is AssetState.Disposed)
+            if (!assets.TryGetValue(guid, out var asset) || asset.State is AssetState.Disposed or AssetState.Error)
             {
-                logger.Verbose("New {Type} asset {Info} ({ID})", AssetInfoRegistry<TInfo>.Name, info, guid);
+                if (asset is null)
+                    logger.Verbose("New {Type} asset {Info} ({ID})", AssetInfoRegistry<TInfo>.Name, info, guid);
+                else
+                    logger.Verbose("New {Type} asset {Info} ({ID}) (previous: {PreviousState})", AssetInfoRegistry<TInfo>.Name, info, guid, asset.State);
                 stats.OnAssetCreated();
                 asset = AssetInfoRegistry<TInfo>.Construct(apparentRegistry, guid, in info);
                 assets[guid] = asset;
@@ -93,6 +135,43 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
             asset.ThrowIfError();
             return asset;
         }
+    }
+
+    [Flags]
+    private enum LoadActions
+    {
+        Complete = 1 << 0,
+        Apply = 1 << 1,
+        QueueApply = 1 << 2
+    }
+
+    private LoadActions DecideLoadActions(IAsset asset, AssetLoadPriority priority)
+    {
+        Debug.Assert(asset.StateLock.CurrentCount == 0);
+        LoadActions actions = default;
+
+        if (asset.State is AssetState.Queued)
+        {
+            if (priority is AssetLoadPriority.Low)
+                assetsToStart.Writer.TryWrite(asset);
+            else
+                asset.StartLoading();
+        }
+        if (priority == AssetLoadPriority.Synchronous)
+        {
+            if (!IsMainThread)
+                throw new InvalidOperationException("Cannot load synchronous assets on secondary threads.");
+            actions |= LoadActions.Complete | LoadActions.Apply;
+        }
+        else
+            actions |= IsMainThread && asset.State is AssetState.Loaded
+                ? LoadActions.Apply
+                : LoadActions.QueueApply;
+
+        // If we neither Apply nor QueueApply we lose apply actions
+        // If we both Apply and QueueApply we duplicate apply actions
+        Debug.Assert(actions.HasFlag(LoadActions.Apply) ^ actions.HasFlag(LoadActions.QueueApply));
+        return actions;
     }
 
     /// <inheritdoc/>
@@ -104,18 +183,34 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         where TInfo : IEquatable<TInfo>
     {
         var asset = GetOrCreateAsset(in info);
-        lock (asset)
+        LoadActions loadActions;
+        Action<AssetHandle>? previousApplyActions = null;
+
+        asset.StateLock.Wait(Cancellation);
+        try
         {
-            if (asset is { State: AssetState.Loaded } && IsMainThread)
-            {
-                // fast path: asset is already loaded and we only need to apply it
-                asset.AddRef();
-                var handle = new AssetHandle(this, asset.ID);
-                applyFnptr(handle, in applyContext);
-                return handle;
-            }
-            return LoadInner(asset, priority, ConvertFnptr(applyFnptr, applyContext));
+            asset.AddRef();
+            loadActions = DecideLoadActions(asset, priority);
+            if (loadActions.HasFlag(LoadActions.Apply))
+                previousApplyActions = asset.ApplyAction.Reset();
+            if (loadActions.HasFlag(LoadActions.QueueApply))
+                asset.ApplyAction.Next += ConvertFnptr(applyFnptr, in applyContext);
         }
+        finally
+        {
+            asset.StateLock.Release();
+        }
+
+        var handle = new AssetHandle(this, asset.ID);
+        if (loadActions.HasFlag(LoadActions.Complete))
+            asset.LoadTask.WaitAndRethrow();
+        asset.ThrowIfError();
+        if (loadActions.HasFlag(LoadActions.Apply))
+        {
+            previousApplyActions?.Invoke(handle);
+            applyFnptr(handle, in applyContext);
+        }
+        return handle;
     }
 
     private static unsafe Action<AssetHandle> ConvertFnptr<TContext>(
@@ -132,69 +227,43 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         AssetLoadPriority priority,
         Action<AssetHandle>? applyAction)
         where TInfo : IEquatable<TInfo>
+        => Load(GetOrCreateAsset(in info), priority, applyAction, addRef: true);
+
+    private AssetHandle Load(
+        IAsset asset,
+        AssetLoadPriority priority,
+        Action<AssetHandle>? applyAction,
+        bool addRef)
     {
-        var asset = GetOrCreateAsset(in info);
-        lock (asset)
+        LoadActions loadActions;
+        Action<AssetHandle>? previousApplyActions = null;
+
+        asset.StateLock.Wait(Cancellation);
+        try
         {
-            if (asset is { State: AssetState.Loaded } && IsMainThread)
-            {
+            if (addRef)
                 asset.AddRef();
-                var handle = new AssetHandle(this, asset.ID);
-                applyAction?.Invoke(handle);
-                return handle;
-            }
-            return LoadInner(asset, priority, applyAction);
+            loadActions = DecideLoadActions(asset, priority);
+            if (loadActions.HasFlag(LoadActions.Apply))
+                previousApplyActions = asset.ApplyAction.Reset();
+            if (loadActions.HasFlag(LoadActions.QueueApply) && applyAction is not null)
+                asset.ApplyAction.Next += applyAction;
         }
-    }
+        finally
+        {
+            asset.StateLock.Release();
+        }
 
-    private AssetHandle LoadInner(IAsset asset, AssetLoadPriority priority, Action<AssetHandle>? applyAction)
-    {
-        // We assume that asset is locked for our thread during this method
-        asset.AddRef();
         var handle = new AssetHandle(this, asset.ID);
-        switch(asset.State)
+        if (loadActions.HasFlag(LoadActions.Complete))
+            asset.LoadTask.WaitAndRethrow();
+        asset.ThrowIfError();
+        if (loadActions.HasFlag(LoadActions.Apply))
         {
-            case AssetState.Disposed or AssetState.Error:
-                throw new ArgumentException("LoadInner was called with asset in unexpected state");
-
-            case AssetState.Queued or AssetState.Loading or AssetState.LoadingSecondary:
-                if (applyAction is not null)
-                    asset.ApplyAction.Next += applyAction;
-                if (asset.State == AssetState.Queued)
-                    StartLoading(asset, priority);
-                return handle;
-
-            case AssetState.Loaded:
-                if (IsMainThread)
-                    applyAction?.Invoke(handle);
-                else if (applyAction is not null)
-                    assetsToApply.Writer.WriteAsync(asset, Cancellation).AsTask().WaitAndRethrow();
-                return handle;
-
-            default: throw new NotImplementedException($"Unimplemented asset state {asset.State}");
+            previousApplyActions?.Invoke(handle);
+            applyAction?.Invoke(handle);
         }
-    }
-
-    private void StartLoading(IAsset asset, AssetLoadPriority priority)
-    {
-        // We assume that asset is locked for our thread during this method
-        asset.Priority = priority;
-        switch (priority)
-        {
-            case AssetLoadPriority.Synchronous:
-                if (!asset.ApplyAction.IsEmpty && !IsMainThread)
-                    throw new InvalidOperationException("Cannot load assets with Apply functions synchronously on secondary threads");
-                asset.Complete();
-                asset.ApplyAction.Invoke(new(this, asset.ID));
-                break;
-            case AssetLoadPriority.High:
-                asset.StartLoading();
-                break;
-            case AssetLoadPriority.Low:
-                assetsToStart.Writer.WriteAsync(asset, Cancellation).AsTask().WaitAndRethrow();
-                break;
-            default: throw new NotImplementedException($"Unimplemented asset load priority {priority}");
-        }
+        return handle;
     }
 
     private void RemoveAsset(IAsset asset)
@@ -224,10 +293,15 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
 
         for (int i = 0; i < MaxLowPriorityAssetsPerFrame && assetsToStart.Reader.TryRead(out var asset); i++)
         {
-            lock (asset)
+            asset.StateLock.Wait(Cancellation);
+            try
             {
                 if (asset.State == AssetState.Queued)
                     asset.StartLoading();
+            }
+            finally
+            {
+                asset.StateLock.Release();
             }
         }
     }

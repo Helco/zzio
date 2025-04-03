@@ -24,7 +24,7 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
     {
         get
         {
-            CheckDisposed();
+            CheckDefault();
             return registryInternal.IsLoaded(AssetID);
         }
     }
@@ -50,6 +50,15 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
         AssetID = assetId;
     }
 
+    internal AssetHandle(AssetHandle original)
+    {
+        original.CheckDisposed();
+        registryInternal = original.registryInternal;
+        handleScope = original.handleScope;
+        AssetID = original.AssetID;
+        registryInternal.AddRefOf(original.AssetID);
+    }
+
     /// <summary>Disposes the stake on the asset this handle is tied to</summary>
     /// <remarks>*May* trigger disposal of the asset and related secondary assets</remarks>
     public void Dispose()
@@ -64,8 +73,12 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
     }
 
     [Conditional("DEBUG")]
-    private readonly void CheckDisposed() =>
+    internal readonly void CheckDisposed() =>
         ObjectDisposedException.ThrowIf(wasDisposed || AssetID == Guid.Empty, this);
+
+    [Conditional("DEBUG")]
+    private readonly void CheckDefault() =>
+        ObjectDisposedException.ThrowIf(AssetID == Guid.Empty, this);
 
     /// <summary>Returns a loaded asset instance</summary>
     /// <remarks>The asset has to be marked as <see cref="AssetState.Loaded"/>, otherwise it will try to synchronously wait for loading completion</remarks>
@@ -92,25 +105,12 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
     /// <typeparam name="TApplyContext">The type of the apply context given to the apply action</typeparam>
     /// <param name="applyFnptr">The function pointer to call as apply action</param>
     /// <param name="applyContext">The apply context given to the apply action</param>
-    public unsafe readonly void Apply<TApplyContext>(
+    public readonly unsafe void Apply<TApplyContext>(
         delegate* managed<AssetHandle, ref readonly TApplyContext, void> applyFnptr,
         in TApplyContext applyContext)
     {
         CheckDisposed();
         registryInternal.AddApplyAction(this, applyFnptr, in applyContext);
-    }
-
-    /// <summary>Adds an apply action to the asset</summary>
-    /// <remarks>Depending on whether the asset is already loaded the action will be called immediately or only stored for later execution</remarks>
-    /// <typeparam name="TApplyContext">The type of the apply context given to the apply action</typeparam>
-    /// <param name="applyAction">The delegate to call as apply action</param>
-    /// <param name="applyContext">The apply context given to the apply action</param>
-    public readonly void Apply<TApplyContext>(
-        IAssetRegistry.ApplyWithContextAction<TApplyContext> applyAction,
-        in TApplyContext applyContext)
-    {
-        CheckDisposed();
-        registryInternal.AddApplyAction(this, applyAction, in applyContext);
     }
 
     /// <summary>Adds an apply action to the asset</summary>
@@ -122,11 +122,11 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
         registryInternal.AddApplyAction(this, applyAction);
     }
 
-    public readonly override string ToString() => $"AssetHandle {AssetID}";
+    public override readonly string ToString() => $"AssetHandle {AssetID}";
 
     public override readonly bool Equals(object? obj) => obj is AssetHandle handle && Equals(handle);
-    public readonly bool Equals(AssetHandle other) => AssetID.Equals(other.AssetID);
-    public override readonly int GetHashCode() => HashCode.Combine(AssetID);
+    public readonly bool Equals(AssetHandle other) => AssetID.Equals(other.AssetID) && ReferenceEquals(registryInternal, other.registryInternal);
+    public override readonly int GetHashCode() => HashCode.Combine(AssetID, registryInternal);
     public static bool operator ==(AssetHandle left, AssetHandle right) => left.Equals(right);
     public static bool operator !=(AssetHandle left, AssetHandle right) => !(left == right);
 }
@@ -134,7 +134,7 @@ public struct AssetHandle : IDisposable, IEquatable<AssetHandle>
 /// <summary>A typed asset handle for convenience</summary>
 /// <remarks>The actual type is only checked upon retrieval of the instance</remarks>
 /// <typeparam name="TValue">The type of the asset instance</typeparam>
-public struct AssetHandle<TValue> : IDisposable, IEquatable<AssetHandle<TValue>>, IEquatable<AssetHandle>
+public readonly struct AssetHandle<TValue> : IDisposable, IEquatable<AssetHandle<TValue>>, IEquatable<AssetHandle>
     where TValue : Asset
 {
     /// <inheritdoc cref="AssetHandle.Invalid"/>
@@ -151,7 +151,7 @@ public struct AssetHandle<TValue> : IDisposable, IEquatable<AssetHandle<TValue>>
     /// <inheritdoc cref="AssetHandle.Get"/>
     public readonly TValue Get() => Inner.Get<TValue>();
 
-    public readonly override string ToString() => $"AssetHandle<{typeof(TValue).Name}> {Inner.AssetID}";
+    public override readonly string ToString() => $"AssetHandle<{typeof(TValue).Name}> {Inner.AssetID}";
 
     public static bool operator ==(AssetHandle<TValue> left, AssetHandle<TValue> right) => left.Equals(right);
     public static bool operator !=(AssetHandle<TValue> left, AssetHandle<TValue> right) => !(left == right);

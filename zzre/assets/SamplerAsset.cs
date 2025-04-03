@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 using Veldrid;
 
 namespace zzre;
@@ -35,7 +34,7 @@ public sealed class SamplerAsset : Asset
         DebugName = stringBuilder.ToString();
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override IEnumerable<AssetHandle> Load()
     {
         var resourceFactory = diContainer.GetTag<ResourceFactory>();
         sampler = resourceFactory.CreateSampler(info);

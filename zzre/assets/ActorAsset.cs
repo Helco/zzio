@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using zzio;
 using zzio.vfs;
 
@@ -38,7 +37,7 @@ public sealed class ActorAsset : Asset
         this.info = info;
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    protected override IEnumerable<AssetHandle> Load()
     {
         var resourcePool = diContainer.GetTag<IResourcePool>();
         using var stream = resourcePool.FindAndOpen(info.FullPath) ??
@@ -53,7 +52,7 @@ public sealed class ActorAsset : Asset
         AddSecondaryHandles(secondaryHandles, ref outI, Body, bodyAnimations);
         if (description.HasWings)
             AddSecondaryHandles(secondaryHandles, ref outI, Wings, wingsAnimations);
-        return ValueTask.FromResult<IEnumerable<AssetHandle>>(secondaryHandles);
+        return secondaryHandles;
     }
 
     private (AssetHandle<ClumpAsset>, AssetHandle<AnimationAsset>[]) LoadSecondaryPart(ActorPartDescription part)

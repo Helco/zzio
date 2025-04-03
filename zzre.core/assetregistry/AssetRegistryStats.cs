@@ -14,14 +14,14 @@ public struct AssetRegistryStats
     private int total;
 
     /// <summary>The number of assets created</summary>
-    public int Created => created;
+    public readonly int Created => created;
     /// <summary>The number of assets that finished loading</summary>
-    public int Loaded => loaded;
+    public readonly int Loaded => loaded;
     /// <summary>The number of assets removed from the registry</summary>
-    public int Removed => removed;
+    public readonly int Removed => removed;
     /// <summary>The number of currently registered assets</summary>
     /// <remarks>This counter is not monotonous</remarks>
-    public int Total => total;
+    public readonly int Total => total;
 
     internal void OnAssetCreated()
     {
@@ -53,7 +53,7 @@ public struct AssetRegistryStats
         total = rhs.total + lhs.total,
     };
 
-    public override string ToString()
+    public override readonly string ToString()
     {
         var builder = new StringBuilder(256);
         builder.Append("Created: ");
