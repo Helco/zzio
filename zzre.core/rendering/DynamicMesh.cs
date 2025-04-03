@@ -10,8 +10,6 @@ namespace zzre.rendering;
 
 public class DynamicMesh : BaseDisposable, IVertexAttributeContainer
 {
-    private const int MaxUploadDistance = 512;
-
     private interface IAttribute : IDisposable
     {
         string Name { get; }

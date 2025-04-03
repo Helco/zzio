@@ -16,7 +16,6 @@ internal interface IECSWindow
 
 internal sealed partial class ECSExplorer
 {
-    private readonly ITagContainer diContainer;
     private readonly IECSWindow ecsWindow;
 
     public Window Window { get; }
@@ -29,7 +28,6 @@ internal sealed partial class ECSExplorer
 
     public ECSExplorer(ITagContainer diContainer, IECSWindow ecsWindow)
     {
-        this.diContainer = diContainer;
         this.ecsWindow = ecsWindow;
         Window = diContainer.GetTag<WindowContainer>().NewWindow("ECS Explorer");
         Window.AddTag(this);

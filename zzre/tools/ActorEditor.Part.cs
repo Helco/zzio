@@ -245,8 +245,7 @@ partial class ActorEditor
         }
 
         private IEnumerable<AnimationType> GetUnusedAnimationTypes() => Enum
-            .GetValues(typeof(AnimationType))
-            .Cast<AnimationType>()
+            .GetValues<AnimationType>()
             .Except(animations.Select(t => t.type));
     }
 }

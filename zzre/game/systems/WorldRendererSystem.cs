@@ -21,7 +21,6 @@ public class WorldRendererSystem : ISystem<CommandList>
         FrustumCulling
     }
 
-    private readonly ITagContainer diContainer;
     private readonly IAssetRegistry assetRegistry;
     private readonly LocationBuffer locationBuffer;
     private readonly Camera camera;
@@ -46,7 +45,6 @@ public class WorldRendererSystem : ISystem<CommandList>
 
     public WorldRendererSystem(ITagContainer diContainer)
     {
-        this.diContainer = diContainer;
         assetRegistry = diContainer.GetTag<IAssetRegistry>();
         locationBuffer = diContainer.GetTag<LocationBuffer>();
         camera = diContainer.GetTag<Camera>();
