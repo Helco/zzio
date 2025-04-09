@@ -17,28 +17,13 @@ public partial class AssetRegistry
             throw new ArgumentException("Tried to unload asset at wrong registry");
         if (WasDisposed)
             return; // not particularly nice, but all assets should be disposed anyway so ignoring handle disposal should be fine
+            
         IAsset? asset = null;
         lock (assets)
             asset = assets.GetValueOrDefault(handle.AssetID);
         if (asset is null)
             throw new InvalidOperationException("Asset was not found or already deleted, this should not happen if you used a valid handle");
-        asset.StateLock.Wait(Cancellation);
-        try
-        {
-            asset.DelRef();
-        }
-        finally
-        {
-            asset.StateLock.Release();
-        }
-    }
-
-    [Flags]
-    private enum AddApplyActions
-    {
-        Execute = 1 << 0,
-        Add = 1 << 1,
-        Queue = 1 << 2
+        asset.DelRef();
     }
 
     private IAsset? TryGetForApplying(AssetHandle handle)
@@ -47,86 +32,27 @@ public partial class AssetRegistry
             return assets.GetValueOrDefault(handle.AssetID);
     }
 
-    private AddApplyActions DecideForApplying(IAsset? asset)
-    {
-        if (asset is null || asset.State is AssetState.Error or AssetState.Disposed)
-            return default;
-
-        AddApplyActions actions = default;
-        if (asset.State is AssetState.Loaded && IsMainThread)
-            actions = AddApplyActions.Execute;
-        else
-        {
-            actions |= AddApplyActions.Add;
-            if (asset.State is AssetState.Loaded)
-                actions |= AddApplyActions.Queue;
-        }
-        return actions;
-    }
-
     unsafe void IAssetRegistryInternal.AddApplyAction<TApplyContext>(AssetHandle handle,
         delegate* managed<AssetHandle, ref readonly TApplyContext, void> applyFnptr,
         in TApplyContext applyContext)
     {
-        var asset = TryGetForApplying(handle);
-        if (asset is null)
+        if (applyFnptr is null)
             return;
 
-        AddApplyActions actions;
-        Action<AssetHandle>? previousApplyActions = null;
-        asset.StateLock.Wait(Cancellation);
-        try
-        {
-            actions = DecideForApplying(asset);
-            if (actions.HasFlag(AddApplyActions.Execute))
-                previousApplyActions = asset.ApplyAction.Reset();
-            if (actions.HasFlag(AddApplyActions.Add))
-                asset.ApplyAction.Next += ConvertFnptr(applyFnptr, in applyContext);
-        }
-        finally
-        {
-            asset.StateLock.Release();
-        }
-
-        if (actions.HasFlag(AddApplyActions.Queue))
-            assetsToApply.Writer.TryWrite(asset);
-        if (actions.HasFlag(AddApplyActions.Execute))
-        {
-            previousApplyActions?.Invoke(handle);
-            applyFnptr(handle, in applyContext);
-        }
+        var asset = TryGetForApplying(handle);
+        if (asset is not null)
+            LoadApply(asset, new FnPtrApplyAdapter<TApplyContext>(applyFnptr, applyContext));
     }
 
     void IAssetRegistryInternal.AddApplyAction(AssetHandle handle,
         Action<AssetHandle> applyAction)
     {
-        var asset = TryGetForApplying(handle);
-        if (asset is null)
+        if (applyAction is null)
             return;
 
-        AddApplyActions actions;
-        Action<AssetHandle>? previousApplyActions = null;
-        asset.StateLock.Wait(Cancellation);
-        try
-        {
-            actions = DecideForApplying(asset);
-            if (actions.HasFlag(AddApplyActions.Execute))
-                previousApplyActions = asset.ApplyAction.Reset();
-            if (actions.HasFlag(AddApplyActions.Add) && applyAction is not null)
-                asset.ApplyAction.Next += applyAction;
-        }
-        finally
-        {
-            asset.StateLock.Release();
-        }
-
-        if (actions.HasFlag(AddApplyActions.Queue))
-            assetsToApply.Writer.TryWrite(asset);
-        if (actions.HasFlag(AddApplyActions.Execute))
-        {
-            previousApplyActions?.Invoke(handle);
-            applyAction?.Invoke(handle);
-        }
+        var asset = TryGetForApplying(handle);
+        if (asset is not null)
+            LoadApply(asset, new ActionApplyAdapter(applyAction));
     }
 
     void IAssetRegistryInternal.QueueRemoveAsset(IAsset asset)
@@ -159,26 +85,16 @@ public partial class AssetRegistry
                 handle.CheckDisposed();
                 if (!assets.TryGetValue(handle.AssetID, out var asset))
                     continue;
-                bool hasLock = false;
                 try
                 {
-                    asset.StateLock.Wait(Cancellation);
-                    hasLock = true;
                     asset.ThrowIfError();
                     if (asset.State == AssetState.Loaded)
                         continue;
-                    else if (asset.State == AssetState.Queued)
-                        asset.StartLoading();
-                    secondaryTasks.Add(asset.LoadTask);
+                    secondaryTasks.Add(asset.LoadTask.Completion.AsTask());
                 }
                 catch(Exception e) // if the asset was already erroneous
                 {
                     throw new AggregateException([e]);
-                }
-                finally
-                {
-                    if (hasLock)
-                        asset.StateLock.Release();
                 }
             }
             return Task.WhenAll(secondaryTasks).WithAggregateException();
@@ -206,17 +122,9 @@ public partial class AssetRegistry
         if (asset is not TAsset tasset)
             throw new InvalidOperationException($"Asset is not of type {typeof(TAsset).Name}");
 
-        asset.StateLock.Wait(Cancellation);
-        try
-        {
-            asset.ThrowIfError(); // so not disposed or error after this
-            if (asset.State is AssetState.Loaded)
-                return tasset;
-        }
-        finally
-        {
-            asset.StateLock.Release();
-        }
+        asset.ThrowIfError();
+        if (asset.State is AssetState.Loaded)
+            return tasset;
 
         // We ended up having to (potentially start and) wait for loading.
         // Let's use the normal synchronous load mechanism for that
@@ -235,25 +143,20 @@ public partial class AssetRegistry
         if (asset is not TAsset tasset)
             throw new InvalidOperationException($"Asset is not of type {typeof(TAsset).Name}");
 
-        asset.StateLock.Wait(Cancellation);
-        try
-        {
-            asset.ThrowIfError(); // so not disposed or error after this
-            if (asset.State is AssetState.Loaded)
-                return ValueTask.FromResult(tasset);
-        }
-        finally
-        {
-            asset.StateLock.Release();
-        }
-
+        asset.ThrowIfError();
+        if (asset.State is AssetState.Loaded)
+            return ValueTask.FromResult(tasset);
+            
         // We still use the normal loading mechanism but asynchronously and wait ourselves
         Load(asset, AssetLoadPriority.High, applyAction: null, addRef: false);
-        return new ValueTask<TAsset>(asset.LoadTask.ContinueWith(_ =>
+        return new(CompleteHighAndReturn(tasset));
+
+        static async Task<TAsset> CompleteHighAndReturn(TAsset asset)
         {
-            Debug.Assert(asset.State == AssetState.Loaded); // on exception we should have thrown already
-            return tasset;
-        }));
+            await asset.Complete(AssetLoadPriority.High);
+            asset.ThrowIfError();
+            return asset;
+        }
     }
 
     void IAssetRegistryInternal.AddRefOf(Guid assetId)
@@ -263,16 +166,8 @@ public partial class AssetRegistry
             asset = assets.GetValueOrDefault(assetId);
         if (asset is null)
             throw new InvalidOperationException("Asset was not found or already deleted, this should not happen if you used a valid handle");
-        asset.StateLock.Wait(Cancellation);
-        try
-        {
-            if (asset.State is AssetState.Disposed)
-                throw new InvalidOperationException("Asset was already disposed, this should not happen if you used a valid handle");
-            asset.AddRef();
-        }
-        finally
-        {
-            asset.StateLock.Release();
-        }
+
+        asset.ThrowIfError();
+        asset.AddRef();
     }
 }

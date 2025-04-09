@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace zzre;
 
@@ -24,15 +25,11 @@ public class OnceAction<T1>
 {
     public event Action<T1>? Next;
     public bool IsEmpty => Next is null;
-    public void Invoke(T1 a)
-    {
-        var next = Next;
-        Next = null;
-        next?.Invoke(a);
-    }
+    public void Invoke(T1 a) => Reset()?.Invoke(a);
+    
     public Action<T1>? Reset()
     {
-        var result = Next;
+        var result = Interlocked.Exchange(ref Next, null);
         Next = null;
         return result;
     }

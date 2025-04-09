@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Runtime.ExceptionServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace zzre;
 
 public static class TaskExtensions
 {
-    public static void WaitAndRethrow(this Task task)
+    public static void WaitAndRethrow(this Task task, CancellationToken ct)
     {
         try
         {
-            task.Wait();
+            task.Wait(ct);
         }
         catch(AggregateException ex)
         {

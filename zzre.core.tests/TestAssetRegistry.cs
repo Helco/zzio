@@ -93,16 +93,11 @@ public class TestAssetRegistry : SynchronizedTestFixture
         protected override bool NeedsSecondaryAssets => info.WaitForSecondary;
         private readonly Info info;
 
-        protected override IEnumerable<AssetHandle> Load()
+        protected override Task<IEnumerable<AssetHandle>?> LoadAsync(CancellationToken ct)
         {
-            info.WasStarted.SetResult(); // throws if we enter twice. Good.
-            if (info.Completion.Task.IsCompletedSuccessfully)
-                return info.Completion.Task.Result;
-            else
-                return LoadAsynchronously;
+            info.WasStarted.SetResult();
+            return info.Completion.Task.WaitAsync(ct);
         }
-
-        protected override Task<IEnumerable<AssetHandle>> LoadAsync() => info.Completion.Task;
 
         protected override void Unload()
         {
