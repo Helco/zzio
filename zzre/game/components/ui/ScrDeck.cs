@@ -1,4 +1,6 @@
-﻿namespace zzre.game.components.ui;
+using zzio;
+
+namespace zzre.game.components.ui;
 
 public struct ScrDeck
 {
@@ -14,14 +16,23 @@ public struct ScrDeck
     public Tab ActiveTab;
     public bool IsGridMode;
     public int Scroll;
-    public Inventory Inventory;
     public DefaultEcs.Entity SummaryBackground;
     public DefaultEcs.Entity SpellBackground;
+
+    public DefaultEcs.Entity[] TabButtons;
     public DefaultEcs.Entity ListSlider;
-    public DefaultEcs.Entity FairyHoverSummary;
-    public DefaultEcs.Entity[] ListTabs;
-    public DefaultEcs.Entity[] ListButtons;
-    public DefaultEcs.Entity[] ListUsedMarkers;
-    public DefaultEcs.Entity[] ListSummaries;
-    public DefaultEcs.Entity[] DeckSlotParents;
+
+    public DefaultEcs.Entity[] DeckSlots;
+    public DefaultEcs.Entity[] ListSlots;
+
+    public DefaultEcs.Entity LastHovered;
+    public DefaultEcs.Entity StatsTitle;
+    public DefaultEcs.Entity StatsDescriptions;
+    public DefaultEcs.Entity StatsLights;
+    public DefaultEcs.Entity StatsLevel;
+
+    public int VacatedDeckSlot;
+    public InventoryCard? DraggedCard;
+    public DefaultEcs.Entity DraggedCardImage;
+    public DefaultEcs.Entity DraggedOverlay;
 }

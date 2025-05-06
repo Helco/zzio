@@ -81,6 +81,7 @@ public class UI : BaseDisposable, ITagContainer
             new systems.ui.Tooltip(this),
             new systems.ui.CorrectRenderOrder(this),
             new systems.ui.Fade(this),
+            new systems.ui.UIScript(this),
 
             new systems.Reaper(this),
             new systems.ParentReaper(this));

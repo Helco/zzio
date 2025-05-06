@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using zzio.rwbs;
@@ -94,7 +94,7 @@ public sealed class WorldCollider : TreeCollider
             sectorType = RWPlaneSectionType.XPlane,
             leftValue = float.PositiveInfinity,
             rightValue = float.PositiveInfinity,
-            children = [rootAtomic, new RWString()]
+            children = [rootAtomic!, new RWString()]
         };
 
         var splits = new CollisionSplit[splitCount];

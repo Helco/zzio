@@ -24,6 +24,7 @@ public interface IZanzarahContainer
     event Action<MouseButton, Vector2> OnMouseDown;
     event Action<MouseButton, Vector2> OnMouseUp;
     event Action<Vector2> OnMouseMove;
+    event Action<float> OnScroll;
 }
 
 public class Zanzarah : ITagContainer

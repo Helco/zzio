@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace zzio;
 
@@ -155,6 +156,26 @@ public record struct SpellReq(ZZClass class0, ZZClass class1 = ZZClass.None, ZZC
         if (class2 != ZZClass.None) yield return class2;
     }
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public bool IsCompatible(zzio.db.SpellRow spell)
+    {
+        var zzclasses = Enum.GetValues<ZZClass>().Where(s => s != ZZClass.None);
+        List<ZZClass> skills = [class0, class1, class2];
+        List<ZZClass> reqs = [spell.PriceA, spell.PriceB, spell.PriceC];
+
+        var neutralsNeeded = 0;
+        foreach (var zzclass in zzclasses)
+        {
+            var skillHad = skills.Where(s => s == zzclass).Count();
+            var skillNeeded = reqs.Where(s => s == zzclass).Count();
+            var skillDeficit = skillNeeded - skillHad;
+            if (skillDeficit > 0)
+                neutralsNeeded += skillDeficit;
+        }
+        if (skills.Where(s => s == ZZClass.Neutral).Count() - neutralsNeeded < 0)
+            return false;
+        return true;
+    }
 }
 
 public enum ZZPermSpellStatus
