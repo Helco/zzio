@@ -37,6 +37,8 @@ public class TwoColumnEditorTag
 
     public void ClearInfoSections() => infoSections.Clear();
 
+    public void ResetColumnWidth() => didSetColumnWidth = 0;
+
     private void HandleContent()
     {
         ImGui.Columns(2, null, true);

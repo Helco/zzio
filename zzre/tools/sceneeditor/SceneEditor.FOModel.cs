@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
@@ -33,6 +34,12 @@ public partial class SceneEditor
         public IRaycastable SelectableBounds => mesh.BoundingBox.TransformToWorld(Location);
         public IRaycastable RenderedBounds => SelectableBounds;
         public float ViewSize => mesh.BoundingBox.MaxSizeComponent;
+
+        public void SyncWithScene()
+        {
+            SceneFOModel.pos = Location.LocalPosition;
+            SceneFOModel.rot = Location.LocalRotation.FromZZRotation();
+        }
 
         public FOModel(ITagContainer diContainer, zzio.scn.FOModel sceneModel)
         {
@@ -174,6 +181,12 @@ public partial class SceneEditor
             editor.editor.AddInfoSection("FOModels", HandleInfoSection, false);
         }
 
+        public void SyncWithScene()
+        {
+            foreach (var foModel in models)
+                foModel.SyncWithScene();
+        }
+
         protected override void DisposeManaged()
         {
             base.DisposeManaged();
@@ -189,7 +202,19 @@ public partial class SceneEditor
             if (editor.scene == null)
                 return;
 
-            models = editor.scene.foModels.Select(m => new FOModel(diContainer, m)).ToArray();
+            var list = new List<FOModel>();
+            foreach (var m in editor.scene.foModels)
+            {
+                try
+                {
+                    list.Add(new FOModel(diContainer, m));
+                }
+                catch (InvalidDataException)
+                {
+                    Console.Error.WriteLine("Fail to load FOModel with ID {0}, ignoring file {1}", m.idx, m.filename);
+                }
+            }
+            models = [.. list];
         }
 
         private void HandleRender(CommandList cl)
@@ -221,7 +246,54 @@ public partial class SceneEditor
                 TreePop();
             }
         }
+        private FOModel? FindCurrentFoModel()
+        {
+            foreach (var foModel in models)
+            {
+                if (foModel == editor.Selected)
+                    return foModel;
+            }
+            return null;
+        }
+        private uint GetNextAvailableFoModelID()
+        {
+            uint result = 1;
+            foreach (var foModel in models)
+            {
+                result = Math.Max(result, foModel.SceneFOModel.idx);
+            }
+            return result + 1;
+        }
+        public void DeleteCurrentFoModel()
+        {
+            var currentFoModel = FindCurrentFoModel();
+            if (currentFoModel == null || editor.scene == null)
+                return;
 
+            SyncWithScene();
+
+
+            editor.scene.foModels = editor.scene.foModels.Where(
+                model => model.idx != currentFoModel.SceneFOModel.idx
+            ).ToArray();
+
+            HandleLoadScene();
+            editor.Selected = null;
+        }
+        public void DuplicateCurrentFoModel()
+        {
+            var currentFoModel = FindCurrentFoModel();
+            if (currentFoModel == null || editor.scene == null)
+                return;
+
+            SyncWithScene();
+
+            var copy = currentFoModel.SceneFOModel.Clone();
+            copy.idx = GetNextAvailableFoModelID();
+            editor.scene.foModels = [.. editor.scene.foModels, copy];
+            HandleLoadScene();
+            editor.Selected = models.Last();
+        }
         IEnumerator<ISelectable> IEnumerable<ISelectable>.GetEnumerator() => ((IEnumerable<ISelectable>)models).GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => models.Cast<ISelectable>().GetEnumerator();
     }

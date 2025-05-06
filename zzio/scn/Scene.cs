@@ -115,6 +115,11 @@ namespace zzio
                 writer.WriteZString("[Scenefile]");
                 writeSingle(writer, version, "[Version]");
                 writeSingle(writer, misc, "[Misc]");
+                if (backdropFile.Length > 0)
+                {
+                    writer.WriteZString("[Backdrop]");
+                    writer.WriteZString(backdropFile);
+                }
                 writeArray(writer, lights, "[Lights]");
                 writeArray(writer, foModels, "[FOModels_v4]");
                 writeArray(writer, models, "[Models_v3]");
@@ -136,13 +141,6 @@ namespace zzio
                 writer.Write(sceneOrigin);
                 writeArray(writer, textureProperties, "[TextureProperties]");
                 writeSingle(writer, waypointSystem, "[WaypointSystem]");
-
-                if (backdropFile.Length > 0)
-                {
-                    writer.WriteZString("[Backdrop]");
-                    writer.WriteZString(backdropFile);
-                }
-                writeArray(writer, effects, "[Effects]");
                 writer.WriteZString("[EOS]");
             }
         }
