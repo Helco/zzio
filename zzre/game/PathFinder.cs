@@ -200,7 +200,7 @@ public class PathFinder : IDisposable
     }
 
     public uint TryRandomNextTraversable(uint fromId, out WaypointEdgeKind edgeKind) =>
-        TryRandomNextTraversable(fromId, ReadOnlySpan<uint>.Empty, out edgeKind);
+        TryRandomNextTraversable(fromId, [], out edgeKind);
 
     public uint TryRandomNextTraversable(uint fromId, ReadOnlySpan<uint> except, out WaypointEdgeKind edgeKind)
     {
