@@ -4,7 +4,6 @@ using System.Numerics;
 using DefaultEcs.System;
 using Serilog;
 using zzio;
-using zzre.game.components.behaviour;
 
 namespace zzre.game.systems;
 
@@ -227,7 +226,7 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
             movement.DistToCurWp = Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos);
             movement.DistMovedToCurWp = 0f;
 
-            // TODO: Investigate wheter DistToCurWp can be zero upon switch
+            // TODO: Investigate whether DistToCurWp can be zero upon switch
         }
         return FindPathResult.NotThereYet;
     }
