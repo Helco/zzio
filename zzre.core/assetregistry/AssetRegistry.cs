@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using DotNext;
 using DotNext.Threading;
 using Serilog;
 using Serilog.Core;
@@ -15,7 +13,15 @@ internal class AssetState
 {
     public required AsyncLazy<IDisposable> LoadLazy;
     public IAssetHandle[] Secondaries = [];
-    public IDisposable? Asset;
+    public IDisposable? Asset
+    {
+        get
+        {
+            var result = LoadLazy.Value;
+            return result is null || !result.Value.IsSuccessful
+                ? null : result.Value.Value;
+        }
+    }
     public int RefCount = 1;
 
     internal IAssetHandle[] Dispose()
@@ -34,7 +40,6 @@ public class AssetRegistry : IAssetRegistryInternal
     private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(3);
     internal static readonly AsyncLazy<IDisposable> NullAssetLoadLazy = new(NullDisposable.Instance);
 
-    private readonly Dictionary<Type, IAssetLoader> loaders = [];
     private readonly Dictionary<Guid, AssetState> assets = [];
     private readonly CancellationTokenSource cancellationSource = new();
     private readonly SemaphoreSlim semaphore = new(1, 1);
@@ -64,7 +69,6 @@ public class AssetRegistry : IAssetRegistryInternal
         if (semaphore.Wait(LockTimeout, Cancellation))
             logger.Warning("AssetRegistry could not lock during dispose, going ahead nonetheless");
         cancellationSource.Cancel();
-        loaders.Clear();
         foreach (var asset in assets.Values)
         {
             var secondaries = asset.Dispose();
@@ -144,22 +148,15 @@ public class AssetRegistry : IAssetRegistryInternal
 
     public AssetHandle<TAsset> Load<TInfo, TAsset>(in TInfo info, AssetPriority priority)
         where TInfo : struct, IEquatable<TInfo>
-        where TAsset : class, IDisposable
+        where TAsset : class, IAsset<TInfo>
     {
         ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
-        if ((parentRegistry is not null && !parentRegistry.loaders.TryGetValue(typeof(TInfo), out var loader)) ||
-            !loaders.TryGetValue(typeof(TInfo), out loader))
-            throw new ArgumentException($"No loader registered for info type: {typeof(TInfo).FullName}");
-        if (loader.AssetType != typeof(TAsset))
-            throw new ArgumentException($"Registered loader is for asset type {loader.AssetType.FullName} and not for {typeof(TAsset).FullName}");
-        if (loader.Locality is not AssetLocality.Global && !IsLocalRegistry)
+        if (TAsset.Locality is not AssetLocality.Global && !IsLocalRegistry)
             throw new ArgumentException($"Cannot load a local asset {typeof(TAsset).FullName} from a global registry");
-        if (loader.Locality is AssetLocality.Global && IsLocalRegistry)
+        if (TAsset.Locality is AssetLocality.Global && IsLocalRegistry)
             return parentRegistry!.Load<TInfo, TAsset>(info, priority);
-        var typedLoader = loader as IAssetLoader<TInfo, TAsset>;
-        Debug.Assert(typedLoader is not null);
 
-        var (assetId, assetState) = GetOrCreateAssetState(typedLoader, info);
+        var (assetId, assetState) = GetOrCreateAssetState<TInfo, TAsset>(info);
         var handle = new AssetHandle<TAsset>(this, assetId);
         if (!assetState.LoadLazy.IsValueCreated)
         {
@@ -187,11 +184,11 @@ public class AssetRegistry : IAssetRegistryInternal
         return handle;
     }
 
-    private (Guid, AssetState) GetOrCreateAssetState<TInfo, TAsset>(IAssetLoader<TInfo, TAsset> typedLoader, in TInfo info)
+    private (Guid, AssetState) GetOrCreateAssetState<TInfo, TAsset>(in TInfo info)
         where TInfo : struct, IEquatable<TInfo>
-        where TAsset : class, IDisposable
+        where TAsset : class, IAsset<TInfo>
     {
-        var assetId = typedLoader!.InfoToAssetId(info);
+        var assetId = TAsset.InfoToAssetId(info);
 
         if (!semaphore.Wait(LockTimeout, Cancellation))
             throw new InvalidOperationException("Could not lock registry, what is happening?");
@@ -206,7 +203,7 @@ public class AssetRegistry : IAssetRegistryInternal
             TInfo infoCopy = info;
             assetState = new()
             {
-                LoadLazy = new(ct => LoadAsset(typedLoader, infoCopy, assetId))
+                LoadLazy = new(ct => LoadAsset<TInfo, TAsset>(infoCopy, assetId))
             };
             assets[assetId] = assetState;
             return (assetId, assetState);
@@ -217,22 +214,47 @@ public class AssetRegistry : IAssetRegistryInternal
         }
     }
 
-    public void RegisterLoader<TInfo, TAsset>(IAssetLoader<TInfo, TAsset> loader)
+    private async Task<IDisposable> LoadAsset<TInfo, TAsset>(TInfo info, Guid assetId)
         where TInfo : struct, IEquatable<TInfo>
-        where TAsset : class, IDisposable
+        where TAsset : class, IAsset<TInfo>
     {
-        ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
-        if (ParentRegistry is not null)
-        {
-            ParentRegistry.RegisterLoader(loader);
-            return;
-        }
-    }
+        // Due to AsyncLazy we can flow exceptions outside this method
 
-    private Task<IDisposable> LoadAsset<TInfo, TAsset>(IAssetLoader<TInfo, TAsset> loader, in TInfo info, Guid assetId)
-        where TInfo : struct, IEquatable<TInfo>
-        where TAsset : class, IDisposable
-    {
-        return Task.FromResult<IDisposable>(NullDisposable.Instance);
+        // Load asset and secondary assets
+        var (asset, secondaries) = await TAsset.LoadAsync(info, Cancellation);
+        if (secondaries.Any())
+        {
+            try
+            {
+                await WaitForAll(secondaries, Cancellation);
+            }
+            finally
+            {
+                asset.Dispose();
+            }
+        }
+
+        // Propagate assets into registry state
+        if (!await semaphore.WaitAsync(LockTimeout, Cancellation))
+            throw new InvalidOperationException("Could not lock registry, what is happening?");
+        try
+        {
+            var assetState = assets.GetValueOrDefault(assetId);
+            ObjectDisposedException.ThrowIf(assetState is null or { RefCount: <= 0 }, typeof(AssetState));
+            assetState.Secondaries = [.. secondaries];
+        }
+        catch (Exception)
+        {
+            asset.Dispose();
+            foreach (var secondary in secondaries)
+                secondary.Dispose();
+            throw;
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+
+        return asset;
     }
 }

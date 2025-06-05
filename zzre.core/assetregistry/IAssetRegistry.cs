@@ -21,13 +21,9 @@ public interface IAssetRegistry : IDisposable
     bool IsLocalRegistry => ParentRegistry is not null;
     CancellationToken Cancellation { get; } // is triggered when registry is disposed
 
-    void RegisterLoader<TInfo, TAsset>(IAssetLoader<TInfo, TAsset> loader)
-        where TInfo : struct, IEquatable<TInfo>
-        where TAsset : class, IDisposable;
-
     AssetHandle<TAsset> Load<TInfo, TAsset>(in TInfo info, AssetPriority priority)
         where TInfo : struct, IEquatable<TInfo>
-        where TAsset : class, IDisposable;
+        where TAsset : class, IAsset<TInfo>;
 
     void StartNextLowBatch();
     Task WaitForAll(IEnumerable<IAssetHandle> assets, CancellationToken ct);
