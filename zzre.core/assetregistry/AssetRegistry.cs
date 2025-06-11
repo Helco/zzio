@@ -62,13 +62,18 @@ public class AssetRegistry : IAssetRegistryInternal
     public bool IsLocalRegistry => ParentRegistry is not null;
     public IAssetRegistry? ParentRegistry => ParentRegistry;
     public CancellationToken Cancellation => cancellationSource.Token;
+    public ITagContainer DIContainer { get; }
 
-    public AssetRegistry(AssetRegistry? parent = null, ILogger? logger = null)
+    public AssetRegistry(ITagContainer diContainer, AssetRegistry? parent = null, string? debugName = null)
     {
+        DIContainer = diContainer;
         if (parent is { IsLocalRegistry: true })
             throw new ArgumentException("Cannot use a local registry as parent");
         parentRegistry = parent;
-        this.logger = logger ?? Logger.None;
+        logger = // ILogger is optional, as well as the log prefix
+            !diContainer.TryGetTag<ILogger>(out var parentLogger) ? Logger.None
+            : string.IsNullOrEmpty(debugName) ? diContainer.GetLoggerFor<AssetRegistry>()
+            : diContainer.GetTag<ILogger>().For($"{nameof(AssetRegistry)}-{debugName}");
         mainThreadId = Environment.CurrentManagedThreadId;
     }
 
@@ -91,6 +96,7 @@ public class AssetRegistry : IAssetRegistryInternal
         assets.Clear();
         semaphore.Dispose();
         cancellationSource.Dispose();
+        logger.Verbose("Finished disposing registry");
     }
 
     void IAssetRegistryInternal.AddRef(Guid assetId)
@@ -248,7 +254,7 @@ public class AssetRegistry : IAssetRegistryInternal
         // Due to AsyncLazy we can flow exceptions outside this method
 
         // Load asset and secondary assets
-        var (asset, secondaries) = await TAsset.LoadAsync(info, Cancellation);
+        var (asset, secondaries) = await TAsset.LoadAsync(this, info, Cancellation);
         if (secondaries.Any())
         {
             try

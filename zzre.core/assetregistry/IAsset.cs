@@ -43,6 +43,6 @@ public interface IAsset<TInfo> : IAsset
     static Type IAsset.InfoType => typeof(TInfo);
 
     static virtual Guid InfoToAssetId(in TInfo info) => GeneralInfoToGuid(info);
-    static abstract Task<AssetLoadResult<TInfo>> LoadAsync(in TInfo info, CancellationToken ct);
+    static abstract Task<AssetLoadResult<TInfo>> LoadAsync(IAssetRegistry registry, in TInfo info, CancellationToken ct);
 }
 
