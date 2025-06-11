@@ -17,6 +17,19 @@ public interface IAsset : IDisposable
     static abstract AssetLocality Locality { get; }
     static abstract Type InfoType { get; }
     IAssetRegistry Registry { get; }
+
+    private static readonly object generalInfoLock = new();
+    private static readonly Dictionary<object, Guid> generalInfoToGuid = [];
+    internal static Guid GeneralInfoToGuid(object info)
+    {
+        lock (generalInfoLock)
+        {
+            if (generalInfoToGuid.TryGetValue(info, out var guid))
+                return guid;
+            generalInfoToGuid.Add(info, guid = Guid.NewGuid());
+            return guid;
+        }
+    }
 }
 
 public readonly record struct AssetLoadResult<TInfo>(
@@ -29,7 +42,7 @@ public interface IAsset<TInfo> : IAsset
 {
     static Type IAsset.InfoType => typeof(TInfo);
 
-    static abstract Guid InfoToAssetId(in TInfo info);
+    static virtual Guid InfoToAssetId(in TInfo info) => GeneralInfoToGuid(info);
     static abstract Task<AssetLoadResult<TInfo>> LoadAsync(in TInfo info, CancellationToken ct);
 }
 

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DotNext.Threading;
 using Serilog;
@@ -9,7 +11,7 @@ using Serilog.Core;
 
 namespace zzre;
 
-internal class AssetState
+internal sealed class AssetState
 {
     public required AsyncLazy<IDisposable> LoadLazy;
     public IAssetHandle[] Secondaries = [];
@@ -39,7 +41,15 @@ public class AssetRegistry : IAssetRegistryInternal
 {
     private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(3);
     internal static readonly AsyncLazy<IDisposable> NullAssetLoadLazy = new(NullDisposable.Instance);
+    private static readonly int MaxLowPriorityAssetsPerFrame = Math.Clamp(Environment.ProcessorCount, 1, 64);
+    private static readonly UnboundedChannelOptions ChannelOptions = new()
+    {
+        AllowSynchronousContinuations = true,
+        SingleReader = true,
+        SingleWriter = false
+    };
 
+    private readonly Channel<Guid> assetsToStart = Channel.CreateUnbounded<Guid>(ChannelOptions);
     private readonly Dictionary<Guid, AssetState> assets = [];
     private readonly CancellationTokenSource cancellationSource = new();
     private readonly SemaphoreSlim semaphore = new(1, 1);
@@ -81,12 +91,6 @@ public class AssetRegistry : IAssetRegistryInternal
         assets.Clear();
         semaphore.Dispose();
         cancellationSource.Dispose();
-    }
-
-    public void StartNextLowBatch()
-    {
-        ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
-        throw new NotImplementedException();
     }
 
     void IAssetRegistryInternal.AddRef(Guid assetId)
@@ -178,8 +182,10 @@ public class AssetRegistry : IAssetRegistryInternal
                     Task.Run(() => handle.GetAsync(Cancellation), Cancellation);
                     break;
                 case AssetPriority.Low:
-                    throw new NotImplementedException();
-            }            
+                    var success = assetsToStart.Writer.TryWrite(assetId);
+                    Debug.Assert(success); // As the channel is unbounded it should never fail to write
+                    break;
+            }
         }
         return handle;
     }
@@ -188,18 +194,31 @@ public class AssetRegistry : IAssetRegistryInternal
         where TInfo : struct, IEquatable<TInfo>
         where TAsset : class, IAsset<TInfo>
     {
-        var assetId = TAsset.InfoToAssetId(info);
-
         if (!semaphore.Wait(LockTimeout, Cancellation))
             throw new InvalidOperationException("Could not lock registry, what is happening?");
         try
         {
+            // Determine Asset ID
+            Guid assetId;
+            if (TAsset.Locality is AssetLocality.Unique)
+            {
+                do
+                {
+                    assetId = Guid.NewGuid();
+                } while (assets.ContainsKey(assetId)); // just paranoid...
+            }
+            else
+                assetId = TAsset.InfoToAssetId(info);
+
+            // Check previous asset state
             if (assets.TryGetValue(assetId, out var assetState) && assetState.RefCount > 0)
             {
+                SanityCheckSharedAsset(typeof(TAsset), assetState);
                 assetState.RefCount++;
                 return (assetId, assetState);
             }
 
+            // Create new asset state
             TInfo infoCopy = info;
             assetState = new()
             {
@@ -212,6 +231,14 @@ public class AssetRegistry : IAssetRegistryInternal
         {
             semaphore.Release();
         }
+    }
+
+    [Conditional("DEBUG")]
+    private static void SanityCheckSharedAsset(Type expectedType, AssetState asset)
+    {
+        if (asset.Asset is null) return;
+        var actualType = asset.Asset.GetType();
+        Debug.Assert(actualType.IsAssignableTo(expectedType), "Asset type mismatch, is this a GUID conflict?");
     }
 
     private async Task<IDisposable> LoadAsset<TInfo, TAsset>(TInfo info, Guid assetId)
@@ -256,5 +283,31 @@ public class AssetRegistry : IAssetRegistryInternal
         }
 
         return asset;
+    }
+    
+    public void StartNextLowBatch() =>
+        StartNextLowBatch(MaxLowPriorityAssetsPerFrame);
+
+    public void StartNextLowBatch(int maxAssets)
+    {
+        ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
+        if (!IsMainThread)
+            throw new InvalidOperationException("Low batch scheduling is only allowed on the main thread");
+        if (!semaphore.Wait(LockTimeout, Cancellation))
+            throw new InvalidOperationException("Could not lock registry, what is happening?");
+        try
+        {
+            for (int i = 0; i < maxAssets && assetsToStart.Reader.TryRead(out var assetId); i++)
+            {
+                if (assets.TryGetValue(assetId, out var assetState) &&
+                    assetState.LoadLazy != NullAssetLoadLazy &&
+                    !assetState.LoadLazy.IsValueCreated)
+                    Task.Run(() => assetState.LoadLazy.WithCancellation(Cancellation), Cancellation);
+            }
+        }
+        finally
+        {
+            semaphore.Release();
+        }
     }
 }
