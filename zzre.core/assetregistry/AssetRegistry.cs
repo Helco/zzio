@@ -60,13 +60,14 @@ public class AssetRegistry : IAssetRegistryInternal
     public bool WasDisposed => cancellationSource.IsCancellationRequested;
     public bool IsMainThread => mainThreadId == Environment.CurrentManagedThreadId;
     public bool IsLocalRegistry => ParentRegistry is not null;
-    public IAssetRegistry? ParentRegistry => ParentRegistry;
+    public IAssetRegistry? ParentRegistry => parentRegistry;
     public CancellationToken Cancellation => cancellationSource.Token;
     public ITagContainer DIContainer { get; }
 
     public AssetRegistry(ITagContainer diContainer, AssetRegistry? parent = null, string? debugName = null)
     {
         DIContainer = diContainer;
+        ObjectDisposedException.ThrowIf(parent is { WasDisposed: true }, typeof(AssetRegistry));
         if (parent is { IsLocalRegistry: true })
             throw new ArgumentException("Cannot use a local registry as parent");
         parentRegistry = parent;
@@ -255,6 +256,8 @@ public class AssetRegistry : IAssetRegistryInternal
 
         // Load asset and secondary assets
         var (asset, secondaries) = await TAsset.LoadAsync(this, info, Cancellation);
+        Debug.Assert(asset.Registry == this);
+        secondaries ??= [];
         if (secondaries.Any())
         {
             try

@@ -14,8 +14,8 @@ public enum AssetLocality
 
 public interface IAsset : IDisposable
 {
-    static abstract AssetLocality Locality { get; }
-    static abstract Type InfoType { get; }
+    public static abstract AssetLocality Locality { get; }
+    public static abstract Type InfoType { get; }
     IAssetRegistry Registry { get; }
 
     private static readonly object generalInfoLock = new();
@@ -34,7 +34,7 @@ public interface IAsset : IDisposable
 
 public readonly record struct AssetLoadResult<TInfo>(
     IAsset<TInfo> Asset,
-    IReadOnlyList<IAssetHandle> SecondaryAssets
+    IReadOnlyList<IAssetHandle>? SecondaryAssets = null
 ) where TInfo : struct, IEquatable<TInfo>;
 
 public interface IAsset<TInfo> : IAsset
@@ -43,6 +43,6 @@ public interface IAsset<TInfo> : IAsset
     static Type IAsset.InfoType => typeof(TInfo);
 
     static virtual Guid InfoToAssetId(in TInfo info) => GeneralInfoToGuid(info);
-    static abstract Task<AssetLoadResult<TInfo>> LoadAsync(IAssetRegistry registry, in TInfo info, CancellationToken ct);
+    static abstract Task<AssetLoadResult<TInfo>> LoadAsync(IAssetRegistry registry, TInfo info, CancellationToken ct);
 }
 
