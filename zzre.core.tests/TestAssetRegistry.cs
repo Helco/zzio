@@ -474,30 +474,72 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public async Task LoadSequential([Values] AssetPriority prio1, [Values] AssetPriority prio2, CancellationToken ct)
+    public async Task LoadLow_DelRefBeforeLoad(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
         var info = new TestInfo(1);
 
-        var (handle1, asset1) = await LoadAsset(prio1);
-        var (handle2, asset2) = await LoadAsset(prio2);
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+
+        info.FinishLoad.SetResult();
+        var asset1 = await handle1.GetAsync(ct);
+        handle1.Dispose();
+        global.Update();
+
+        Assert.That(handle1.Get, Throws.InstanceOf<ObjectDisposedException>());
+        Assert.That(asset1.WasDisposed, Is.False);
+        var asset2 = await handle2.GetAsync(ct);
+        Assert.That(asset1, Is.SameAs(asset2));
+        CommonAssetChecks(global, handle2, 1, asset2);
+    }
+
+    [Test]
+    public async Task LoadSequential([Values] AssetPriority prio1, [Values] AssetPriority prio2, CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+
+        var (handle1, asset1) = await CommonLoadAsset1(global, prio1, ct);
+        var (handle2, asset2) = await CommonLoadAsset1(global, prio2, ct);
         CommonAssetChecks(global, handle1, 1, asset1);
         CommonAssetChecks(global, handle2, 1, asset2);
+    }
 
-        async Task<(AssetHandle<GlobalTestAsset>, GlobalTestAsset)> LoadAsset(AssetPriority prio)
-        {
-            if (prio is AssetPriority.Synchronous)
-                info.FinishLoad.TrySetResult();
-            var handle = global.Load<TestInfo, GlobalTestAsset>(info, prio);
+    [Test]
+    public async Task LoadSequential_WithDisposal([Values] AssetPriority prio1, [Values] AssetPriority prio2, CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
 
-            if (prio is AssetPriority.Synchronous)
-                return (handle, handle.Get());
-            if (prio is AssetPriority.Low)
-                global.Update();
+        var (handle1, asset1) = await CommonLoadAsset1(global, prio1, ct);
+        CommonAssetChecks(global, handle1, 1, asset1);
+        handle1.Dispose();
+        Assert.That(asset1.WasDisposed, Is.True);
 
+        var (handle2, asset2) = await CommonLoadAsset1(global, prio2, ct);
+        CommonAssetChecks(global, handle2, 1, asset2);
+        handle2.Dispose();
+        Assert.That(asset2.WasDisposed, Is.True);
+
+        Assert.That(asset1, Is.Not.SameAs(asset2));
+    }
+
+    private async Task<(AssetHandle<GlobalTestAsset>, GlobalTestAsset)> CommonLoadAsset1(
+        AssetRegistry global,
+        AssetPriority prio,
+        CancellationToken ct)
+    {
+        var info = new TestInfo(1);
+        if (prio is AssetPriority.Synchronous)
             info.FinishLoad.TrySetResult();
-            return (handle, await Task.Run(() => handle.GetAsync(ct).AsTask(), ct));
-        }
+        var handle = global.Load<TestInfo, GlobalTestAsset>(info, prio);
+
+        if (prio is AssetPriority.Synchronous)
+            return (handle, handle.Get());
+        if (prio is AssetPriority.Low)
+            global.Update();
+
+        info.FinishLoad.TrySetResult();
+        return (handle, await Task.Run(() => handle.GetAsync(ct).AsTask(), ct));
     }
 
     [Test]
@@ -524,12 +566,16 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public void DisposeAsset_MultiSyncRefs()
+    public async Task DisposeAsset_MultiRefs(
+        [Values] AssetPriority prio1,
+        [Values] AssetPriority prio2,
+        [Values] AssetPriority prio3,
+        CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var handle1 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
-        var handle2 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
-        var handle3 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var (handle1, asset1) = await CommonLoadAsset1(global, prio1, ct);
+        var (handle2, asset2) = await CommonLoadAsset1(global, prio2, ct);
+        var (handle3, asset3) = await CommonLoadAsset1(global, prio3, ct);
         var asset = handle1.Asset;
 
         Assert.That(asset.WasDisposed, Is.False);
@@ -582,5 +628,34 @@ public class TestAssetRegistry
                 Assert.That(asset.Info.Disposed.Task.IsCompletedSuccessfully, Is.True);
             }, ct);
         }
+    }
+
+    [Test]
+    public async Task DisposeAsset_DuringHighLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1);
+
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        await info.StartedLoad.Task.WaitAsync(ct);
+        handle1.Dispose();
+        info.FinishLoad.SetResult();
+
+        await info.Disposed.Task.WaitAsync(ct);
+    }
+
+    [Test]
+    public async Task DisposeAsset_DuringLowLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1);
+
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+        global.Update();
+        await info.StartedLoad.Task.WaitAsync(ct);
+        handle1.Dispose();
+        info.FinishLoad.SetResult();
+
+        await info.Disposed.Task.WaitAsync(ct);
     }
 }
