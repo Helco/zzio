@@ -37,7 +37,7 @@ public class TestAssetRegistry
         {
             ct.ThrowIfCancellationRequested();
             Assert.That(info.StartedLoad.TrySetResult(), $"Asset {info.Id} was tried to be loaded twice");
-            await info.FinishLoad.Task;
+            await info.FinishLoad.Task.WaitAsync(ct);
             ct.ThrowIfCancellationRequested();
             return new(
                 new TAsset() { Info = info, Registry = registry },
@@ -153,11 +153,20 @@ public class TestAssetRegistry
         local = new AssetRegistry(DI, global);
         global.Dispose();
         local.Dispose();
+
+        global = new AssetRegistry(DI);
+        local = new AssetRegistry(DI, global);
+        var local2 = new AssetRegistry(DI, global);
+        local.Dispose();
+        global.Dispose();
+        local2.Dispose();
     }
 
-    private void CommonAssetChecks<TAsset>(IAssetRegistry registry, AssetHandle<TAsset> handle, int id)
+    private void CommonAssetChecks<TAsset>(IAssetRegistry registry, AssetHandle<TAsset> handle, int id, TAsset? extAsset = null)
     where TAsset : class, ITestAsset => Assert.Multiple(() =>
     {
+        if (extAsset is not null)
+            Assert.That(handle.Asset, Is.SameAs(extAsset));
         Assert.That(handle.Asset, Is.Not.Null);
         Assert.That(handle.Asset.Id, Is.EqualTo(id));
         Assert.That(handle.Asset.Registry, Is.SameAs(registry));
@@ -165,7 +174,7 @@ public class TestAssetRegistry
     });
 
     [Test]
-    public void LoadSyncGlobal_Single()
+    public void LoadSync_Single()
     {
         using var global = new AssetRegistry(DI);
         using var handle = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
@@ -173,7 +182,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public void LoadSyncGlobal_MultipleDiff()
+    public void LoadSync_MultipleDiff()
     {
         using var global = new AssetRegistry(DI);
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
@@ -185,7 +194,7 @@ public class TestAssetRegistry
     }
 
     [Test]
-    public void LoadSyncGlobal_MultipleSame()
+    public void LoadSync_MultipleSame()
     {
         using var global = new AssetRegistry(DI);
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
@@ -199,6 +208,319 @@ public class TestAssetRegistry
         Assert.That(handle1, Is.EqualTo(handle3));
         Assert.That(handle1.Asset, Is.SameAs(handle2.Asset));
         Assert.That(handle1.Asset, Is.SameAs(handle3.Asset));
+    }
+
+    [Test]
+    public async Task LoadHigh_Single(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1); // uncompleted
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        Assert.That(handle.Asset, Is.Null);
+        await info.StartedLoad.Task.WaitAsync(ct);
+        Assert.That(handle.Asset, Is.Null);
+        info.FinishLoad.SetResult();
+        var asset = await handle.GetAsync(ct);
+        CommonAssetChecks(global, handle, 1, asset);
+    }
+
+    [Test]
+    public async Task LoadHigh_MultipleDiff(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info1 = new TestInfo(1);
+        var info2 = new TestInfo(2);
+        var info3 = new TestInfo(3);
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info1, AssetPriority.High);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info2, AssetPriority.High);
+        using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info3, AssetPriority.High);
+
+        Assert.That(handle1.Asset, Is.Null);
+        Assert.That(handle2.Asset, Is.Null);
+        Assert.That(handle3.Asset, Is.Null);
+        info2.FinishLoad.SetResult();
+        var asset2 = await handle2.GetAsync(ct);
+        CommonAssetChecks(global, handle2, 2, asset2);
+
+        Assert.That(handle1.Asset, Is.Null);
+        Assert.That(handle2.Asset, Is.Not.Null);
+        Assert.That(handle3.Asset, Is.Null);
+        info1.FinishLoad.SetResult();
+        var asset1 = await handle1.GetAsync(ct);
+        CommonAssetChecks(global, handle1, 1, asset1);
+
+        Assert.That(handle1.Asset, Is.Not.Null);
+        Assert.That(handle2.Asset, Is.Not.Null);
+        Assert.That(handle3.Asset, Is.Null);
+        info3.FinishLoad.SetResult();
+        var asset3 = await handle3.GetAsync(ct);
+        CommonAssetChecks(global, handle3, 3, asset3);
+    }
+
+    [Test]
+    public async Task LoadHigh_MultipleSame_Parallel1(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1);
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        Assert.That(handle1.Asset, Is.Null);
+        Assert.That(handle2.Asset, Is.Null);
+        Assert.That(handle3.Asset, Is.Null);
+        info.FinishLoad.SetResult();
+
+        var asset2 = await handle2.GetAsync(ct);
+        CommonAssetChecks(global, handle2, 1, asset2);
+        Assert.That(handle1.Asset, Is.SameAs(asset2));
+        Assert.That(handle3.Asset, Is.SameAs(asset2));
+
+        var asset1 = await handle1.GetAsync(ct);
+        var asset3 = await handle1.GetAsync(ct);
+        CommonAssetChecks(global, handle1, 1, asset1);
+        CommonAssetChecks(global, handle3, 1, asset3);
+    }
+
+    [Test]
+    public async Task LoadHigh_MultipleSame_Parallel2(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1);
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        var waitTask = Task.WhenAll(
+            Task.Run(() => handle1.GetAsync(ct).AsTask(), ct),
+            Task.Run(() => handle2.GetAsync(ct).AsTask(), ct),
+            Task.Run(() => handle3.GetAsync(ct).AsTask(), ct));
+        info.FinishLoad.SetResult();
+        var results = await waitTask.WaitAsync(ct);
+
+        CommonAssetChecks(global, handle1, 1, results[0]);
+        CommonAssetChecks(global, handle1, 1, results[1]);
+        CommonAssetChecks(global, handle1, 1, results[2]);
+    }
+
+    [Test]
+    public async Task LoadHigh_MultipleSame_Sequential(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1).AsCompleted();
+
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        var asset1 = await handle1.GetAsync(ct);
+        CommonAssetChecks(global, handle1, 1, asset1);
+
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        var asset2 = await handle1.GetAsync(ct);
+        CommonAssetChecks(global, handle2, 1, asset2);
+        Assert.That(asset1, Is.SameAs(asset2));
+    }
+
+    [Test]
+    public async Task LoadHigh_MultipleSame_Interleaved(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1);
+
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        await info.StartedLoad.Task.WaitAsync(ct);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        info.FinishLoad.SetResult();
+
+        var asset2 = await handle2.GetAsync(ct);
+        var asset1 = await handle1.GetAsync(ct);
+        CommonAssetChecks(global, handle1, 1, asset1);
+        CommonAssetChecks(global, handle2, 1, asset2);
+        Assert.That(asset1, Is.SameAs(asset2));
+    }
+
+    [Test]
+    public async Task LoadLow_Single(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1); // uncompleted
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+
+        Assert.That(handle.Asset, Is.Null);
+        global.Update();
+        await info.StartedLoad.Task.WaitAsync(ct);
+        Assert.That(handle.Asset, Is.Null);
+        info.FinishLoad.SetResult();
+        var asset = await handle.GetAsync(ct);
+        CommonAssetChecks(global, handle, 1, asset);
+    }
+
+    [Test]
+    public async Task LoadLow_MultipleDiff(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info1 = new TestInfo(1);
+        var info2 = new TestInfo(2);
+        var info3 = new TestInfo(3);
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info1, AssetPriority.Low);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info2, AssetPriority.Low);
+        using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info3, AssetPriority.Low);
+
+        Assert.That(handle1.Asset, Is.Null);
+        Assert.That(handle2.Asset, Is.Null);
+        Assert.That(handle3.Asset, Is.Null);
+        global.Update();
+        info2.FinishLoad.SetResult();
+        var asset2 = await handle2.GetAsync(ct);
+        CommonAssetChecks(global, handle2, 2, asset2);
+
+        Assert.That(handle1.Asset, Is.Null);
+        Assert.That(handle2.Asset, Is.Not.Null);
+        Assert.That(handle3.Asset, Is.Null);
+        info1.FinishLoad.SetResult();
+        var asset1 = await handle1.GetAsync(ct);
+        CommonAssetChecks(global, handle1, 1, asset1);
+
+        Assert.That(handle1.Asset, Is.Not.Null);
+        Assert.That(handle2.Asset, Is.Not.Null);
+        Assert.That(handle3.Asset, Is.Null);
+        info3.FinishLoad.SetResult();
+        var asset3 = await handle3.GetAsync(ct);
+        CommonAssetChecks(global, handle3, 3, asset3);
+    }
+
+    [Test]
+    public async Task LoadLow_MultipleSame_Parallel1(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1);
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+        using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+
+        Assert.That(handle1.Asset, Is.Null);
+        Assert.That(handle2.Asset, Is.Null);
+        Assert.That(handle3.Asset, Is.Null);
+        global.Update();
+        info.FinishLoad.SetResult();
+
+        var asset2 = await handle2.GetAsync(ct);
+        CommonAssetChecks(global, handle2, 1, asset2);
+        Assert.That(handle1.Asset, Is.SameAs(asset2));
+        Assert.That(handle3.Asset, Is.SameAs(asset2));
+
+        var asset1 = await handle1.GetAsync(ct);
+        var asset3 = await handle1.GetAsync(ct);
+        CommonAssetChecks(global, handle1, 1, asset1);
+        CommonAssetChecks(global, handle3, 1, asset3);
+    }
+
+    [Test]
+    public async Task LoadLow_MultipleSame_Parallel2(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1);
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+        using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+
+        var waitTask = Task.WhenAll(
+            Task.Run(() => handle1.GetAsync(ct).AsTask(), ct),
+            Task.Run(() => handle2.GetAsync(ct).AsTask(), ct),
+            Task.Run(() => handle3.GetAsync(ct).AsTask(), ct));
+        global.Update();
+        info.FinishLoad.SetResult();
+        var results = await waitTask.WaitAsync(ct);
+
+        CommonAssetChecks(global, handle1, 1, results[0]);
+        CommonAssetChecks(global, handle1, 1, results[1]);
+        CommonAssetChecks(global, handle1, 1, results[2]);
+    }
+
+    [Test]
+    public async Task LoadLow_MultipleSame_Sequential(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1).AsCompleted();
+
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+        global.Update();
+        var asset1 = await handle1.GetAsync(ct);
+        CommonAssetChecks(global, handle1, 1, asset1);
+
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+        global.Update(); // should be noop
+        var asset2 = await handle1.GetAsync(ct);
+        CommonAssetChecks(global, handle2, 1, asset2);
+        Assert.That(asset1, Is.SameAs(asset2));
+    }
+
+    [Test]
+    public async Task LoadLow_MultipleSame_Interleaved(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1);
+
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+        global.Update();
+        await info.StartedLoad.Task.WaitAsync(ct);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+        info.FinishLoad.SetResult();
+
+        var asset2 = await handle2.GetAsync(ct);
+        var asset1 = await handle1.GetAsync(ct);
+        CommonAssetChecks(global, handle1, 1, asset1);
+        CommonAssetChecks(global, handle2, 1, asset2);
+        Assert.That(asset1, Is.SameAs(asset2));
+    }
+
+    [Test]
+    public async Task LoadSequential([Values] AssetPriority prio1, [Values] AssetPriority prio2, CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = new TestInfo(1);
+
+        var (handle1, asset1) = await LoadAsset(prio1);
+        var (handle2, asset2) = await LoadAsset(prio2);
+        CommonAssetChecks(global, handle1, 1, asset1);
+        CommonAssetChecks(global, handle2, 1, asset2);
+
+        async Task<(AssetHandle<GlobalTestAsset>, GlobalTestAsset)> LoadAsset(AssetPriority prio)
+        {
+            if (prio is AssetPriority.Synchronous)
+                info.FinishLoad.TrySetResult();
+            var handle = global.Load<TestInfo, GlobalTestAsset>(info, prio);
+
+            if (prio is AssetPriority.Synchronous)
+                return (handle, handle.Get());
+            if (prio is AssetPriority.Low)
+                global.Update();
+
+            info.FinishLoad.TrySetResult();
+            return (handle, await Task.Run(() => handle.GetAsync(ct).AsTask(), ct));
+        }
+    }
+
+    [Test]
+    public void DisposeRegistry_SyncAssset()
+    {
+        var global = new AssetRegistry(DI);
+        var handle1 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var asset = handle1.Get();
+        global.Dispose();
+
+        Assert.That(asset.WasDisposed, Is.True);
+        Assert.That(global.WasDisposed, Is.True);
+        Assert.That(handle1.Get, Throws.InstanceOf<ObjectDisposedException>());
+    }
+
+    [Test]
+    public void DisposeAsset_AccessAfter()
+    {
+        using var global = new AssetRegistry(DI);
+        var handle = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        handle.Dispose();
+
+        Assert.That(handle.Get, Throws.InstanceOf<ObjectDisposedException>());
     }
 
     [Test]
