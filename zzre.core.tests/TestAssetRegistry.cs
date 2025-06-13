@@ -6,7 +6,10 @@ using NUnit.Framework;
 
 namespace zzre.tests;
 
-[TestFixture, CancelAfter(3000), SingleThreaded]
+[TestFixture(TaskContinuationOptions.None)]
+[TestFixture(TaskContinuationOptions.RunContinuationsAsynchronously)]
+[TestFixture(TaskContinuationOptions.ExecuteSynchronously)]
+[CancelAfter(3000), SingleThreaded]
 public class TestAssetRegistry
 {
     private interface ITestAsset : IAsset<TestInfo>
@@ -16,15 +19,17 @@ public class TestAssetRegistry
         public int Id => Info.Id;
     }
 
-    private readonly struct TestInfo(int Id, Func<IAssetHandle[]>? CreateSecondaries = null) : IEquatable<TestInfo>
+    private readonly struct TestInfo(TaskContinuationOptions tcsOptions,
+        int Id, Func<IAssetHandle[]>? CreateSecondaries = null) : IEquatable<TestInfo>
     {
         public readonly int Id = Id;
         public readonly Func<IAssetHandle[]>? CreateSecondaries = null;
-        public readonly TaskCompletionSource StartedLoad = new();
-        public readonly TaskCompletionSource FinishLoad = new();
-        public readonly TaskCompletionSource Disposed = new();
+        public readonly TaskCompletionSource StartedLoad = new(tcsOptions);
+        public readonly TaskCompletionSource FinishLoad = new(tcsOptions);
+        public readonly TaskCompletionSource Disposed = new(tcsOptions);
 
-        public TestInfo(int Id, IAssetHandle[] secondaries) : this(Id, () => secondaries) { }
+        public TestInfo(TaskContinuationOptions tcsOptions, int Id, IAssetHandle[] secondaries)
+            : this(tcsOptions, Id, () => secondaries) { }
 
         public readonly TestInfo AsCompleted()
         {
@@ -119,6 +124,12 @@ public class TestAssetRegistry
     }
 
     private readonly TagContainer DI = new();
+    private readonly TaskContinuationOptions tcsOptions;
+
+    public TestAssetRegistry(TaskContinuationOptions tcsOptions) =>
+        this.tcsOptions = tcsOptions;
+
+    private TestInfo GetInfo(int id) => new TestInfo(tcsOptions, id);
 
     [Test]
     public void EmptyRegistries()
@@ -177,7 +188,7 @@ public class TestAssetRegistry
     public void LoadSync_Single()
     {
         using var global = new AssetRegistry(DI);
-        using var handle = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
         CommonAssetChecks(global, handle, 1);
     }
 
@@ -185,9 +196,9 @@ public class TestAssetRegistry
     public void LoadSync_MultipleDiff()
     {
         using var global = new AssetRegistry(DI);
-        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
-        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(42).AsCompleted(), AssetPriority.Synchronous);
-        using var handle3 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1337).AsCompleted(), AssetPriority.Synchronous);
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(42).AsCompleted(), AssetPriority.Synchronous);
+        using var handle3 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1337).AsCompleted(), AssetPriority.Synchronous);
         CommonAssetChecks(global, handle1, 1);
         CommonAssetChecks(global, handle2, 42);
         CommonAssetChecks(global, handle3, 1337);
@@ -197,9 +208,9 @@ public class TestAssetRegistry
     public void LoadSync_MultipleSame()
     {
         using var global = new AssetRegistry(DI);
-        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
-        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
-        using var handle3 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        using var handle3 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
         CommonAssetChecks(global, handle1, 1);
         CommonAssetChecks(global, handle2, 1);
         CommonAssetChecks(global, handle3, 1);
@@ -214,7 +225,7 @@ public class TestAssetRegistry
     public async Task LoadHigh_Single(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1); // uncompleted
+        var info = GetInfo(1); // uncompleted
         using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
 
         Assert.That(handle.Asset, Is.Null);
@@ -229,9 +240,9 @@ public class TestAssetRegistry
     public async Task LoadHigh_MultipleDiff(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info1 = new TestInfo(1);
-        var info2 = new TestInfo(2);
-        var info3 = new TestInfo(3);
+        var info1 = GetInfo(1);
+        var info2 = GetInfo(2);
+        var info3 = GetInfo(3);
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info1, AssetPriority.High);
         using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info2, AssetPriority.High);
         using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info3, AssetPriority.High);
@@ -262,7 +273,7 @@ public class TestAssetRegistry
     public async Task LoadHigh_MultipleSame_Parallel1(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1);
+        var info = GetInfo(1);
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
         using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
         using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
@@ -287,7 +298,7 @@ public class TestAssetRegistry
     public async Task LoadHigh_MultipleSame_Parallel2(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1);
+        var info = GetInfo(1);
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
         using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
         using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
@@ -308,7 +319,7 @@ public class TestAssetRegistry
     public async Task LoadHigh_MultipleSame_Sequential(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1).AsCompleted();
+        var info = GetInfo(1).AsCompleted();
 
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
         var asset1 = await handle1.GetAsync(ct);
@@ -324,7 +335,7 @@ public class TestAssetRegistry
     public async Task LoadHigh_MultipleSame_Interleaved(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1);
+        var info = GetInfo(1);
 
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
         await info.StartedLoad.Task.WaitAsync(ct);
@@ -339,10 +350,37 @@ public class TestAssetRegistry
     }
 
     [Test]
+    public void LoadHigh_AccessSync()
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        info.FinishLoad.SetResult();
+
+        var asset = handle.Get();
+        CommonAssetChecks(global, handle, 1, asset);
+    }
+
+    [Test]
+    public async Task LoadHigh_ThenLoadSync(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        await info.StartedLoad.Task.WaitAsync(ct);
+        info.FinishLoad.SetResult();
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Synchronous);
+        var asset2 = handle2.Get();
+
+        CommonAssetChecks(global, handle2, 1, asset2);
+    }
+
+    [Test]
     public async Task LoadLow_Single(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1); // uncompleted
+        var info = GetInfo(1); // uncompleted
         using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
 
         Assert.That(handle.Asset, Is.Null);
@@ -358,9 +396,9 @@ public class TestAssetRegistry
     public async Task LoadLow_MultipleDiff(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info1 = new TestInfo(1);
-        var info2 = new TestInfo(2);
-        var info3 = new TestInfo(3);
+        var info1 = GetInfo(1);
+        var info2 = GetInfo(2);
+        var info3 = GetInfo(3);
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info1, AssetPriority.Low);
         using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info2, AssetPriority.Low);
         using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info3, AssetPriority.Low);
@@ -392,7 +430,7 @@ public class TestAssetRegistry
     public async Task LoadLow_MultipleSame_Parallel1(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1);
+        var info = GetInfo(1);
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
         using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
         using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
@@ -418,7 +456,7 @@ public class TestAssetRegistry
     public async Task LoadLow_MultipleSame_Parallel2(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1);
+        var info = GetInfo(1);
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
         using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
         using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
@@ -440,7 +478,7 @@ public class TestAssetRegistry
     public async Task LoadLow_MultipleSame_Sequential(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1).AsCompleted();
+        var info = GetInfo(1).AsCompleted();
 
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
         global.Update();
@@ -458,7 +496,7 @@ public class TestAssetRegistry
     public async Task LoadLow_MultipleSame_Interleaved(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1);
+        var info = GetInfo(1);
 
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
         global.Update();
@@ -477,7 +515,7 @@ public class TestAssetRegistry
     public async Task LoadLow_DelRefBeforeLoad(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1);
+        var info = GetInfo(1);
 
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
         using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
@@ -528,7 +566,7 @@ public class TestAssetRegistry
         AssetPriority prio,
         CancellationToken ct)
     {
-        var info = new TestInfo(1);
+        var info = GetInfo(1);
         if (prio is AssetPriority.Synchronous)
             info.FinishLoad.TrySetResult();
         var handle = global.Load<TestInfo, GlobalTestAsset>(info, prio);
@@ -546,7 +584,7 @@ public class TestAssetRegistry
     public void DisposeRegistry_SyncAssset()
     {
         var global = new AssetRegistry(DI);
-        var handle1 = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var handle1 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
         var asset = handle1.Get();
         global.Dispose();
 
@@ -556,10 +594,35 @@ public class TestAssetRegistry
     }
 
     [Test]
+    public async Task DisposeRegistry_HighAsset_DuringLoad(CancellationToken ct)
+    {
+        var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+        var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        await info.StartedLoad.Task.WaitAsync(ct);
+        global.Dispose();
+        Assert.That(info.Disposed.Task.IsCompletedSuccessfully, Is.True);
+        Assert.That(handle.Get, Throws.InstanceOf<ObjectDisposedException>());
+    }
+
+    [Test]
+    public async Task DisposeRegistry_LowAsset_BeforeLoad()
+    {
+        var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+        var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+
+        global.Dispose();
+        Assert.That(info.StartedLoad.Task.IsCompleted, Is.False);
+        Assert.That(handle.Get, Throws.InstanceOf<ObjectDisposedException>());
+    }
+
+    [Test]
     public void DisposeAsset_AccessAfter()
     {
         using var global = new AssetRegistry(DI);
-        var handle = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
         handle.Dispose();
 
         Assert.That(handle.Get, Throws.InstanceOf<ObjectDisposedException>());
@@ -596,13 +659,13 @@ public class TestAssetRegistry
         ITestAsset asset;
         if (needsMainThread)
         {
-            var thandle = global.Load<TestInfo, GlobalMTDTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
+            var thandle = global.Load<TestInfo, GlobalMTDTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
             handle = thandle;
             asset = thandle.Asset!;
         }
         else
         {
-            var thandle = global.Load<TestInfo, GlobalTestAsset>(new TestInfo(1).AsCompleted(), AssetPriority.Synchronous);
+            var thandle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
             handle = thandle;
             asset = thandle.Asset!;
         }
@@ -634,7 +697,7 @@ public class TestAssetRegistry
     public async Task DisposeAsset_DuringHighLoad(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1);
+        var info = GetInfo(1);
 
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
         await info.StartedLoad.Task.WaitAsync(ct);
@@ -648,7 +711,7 @@ public class TestAssetRegistry
     public async Task DisposeAsset_DuringLowLoad(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
-        var info = new TestInfo(1);
+        var info = GetInfo(1);
 
         using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
         global.Update();
