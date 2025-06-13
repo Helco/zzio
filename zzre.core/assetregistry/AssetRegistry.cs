@@ -13,6 +13,7 @@ namespace zzre;
 
 internal sealed class AssetState
 {
+    public required bool NeedsMainThreadDisposal;
     public required AsyncLazy<IDisposable> LoadLazy;
     public IAssetHandle[] Secondaries = [];
     public IDisposable? Asset
@@ -25,16 +26,6 @@ internal sealed class AssetState
         }
     }
     public int RefCount = 1;
-
-    internal IAssetHandle[] Dispose()
-    {
-        RefCount = 0;
-        Asset?.Dispose();
-        var secondaries = Secondaries;
-        Secondaries = [];
-        LoadLazy = AssetRegistry.NullAssetLoadLazy;
-        return secondaries;
-    }
 }
 
 public class AssetRegistry : IAssetRegistryInternal
@@ -50,6 +41,7 @@ public class AssetRegistry : IAssetRegistryInternal
     };
 
     private readonly Channel<Guid> assetsToStart = Channel.CreateUnbounded<Guid>(ChannelOptions);
+    private readonly Channel<IDisposable> assetsToDispose = Channel.CreateUnbounded<IDisposable>(ChannelOptions);
     private readonly Dictionary<Guid, AssetState> assets = [];
     private readonly CancellationTokenSource cancellationSource = new();
     private readonly SemaphoreSlim semaphore = new(1, 1);
@@ -87,7 +79,7 @@ public class AssetRegistry : IAssetRegistryInternal
         cancellationSource.Cancel();
         foreach (var asset in assets.Values)
         {
-            var secondaries = asset.Dispose();
+            var secondaries = DisposeAssetState(asset);
             foreach (var secondary in secondaries)
             {
                 if (secondary.Registry != this)
@@ -95,9 +87,28 @@ public class AssetRegistry : IAssetRegistryInternal
             }
         }
         assets.Clear();
+        DisposeOldAssets(); // after current assets in case we add something into it (we shouldn't)
+
         semaphore.Dispose();
         cancellationSource.Dispose();
         logger.Verbose("Finished disposing registry");
+    }
+
+    private IAssetHandle[] DisposeAssetState(AssetState state)
+    {
+        if (IsMainThread || !state.NeedsMainThreadDisposal)
+            state.Asset?.Dispose();
+        else if (state.Asset is not null)
+        {
+            var success = assetsToDispose.Writer.TryWrite(state.Asset);
+            Debug.Assert(success);
+        }
+
+        state.RefCount = 0;
+        var secondaries = state.Secondaries;
+        state.Secondaries = [];
+        state.LoadLazy = NullAssetLoadLazy;
+        return secondaries;
     }
 
     void IAssetRegistryInternal.AddRef(Guid assetId)
@@ -129,7 +140,7 @@ public class AssetRegistry : IAssetRegistryInternal
                 return; // Let's just ignore already-dead assets, we got what we wanted
             if (--assetState.RefCount <= 0)
             {
-                assetState.Dispose();
+                DisposeAssetState(assetState);
                 assets.Remove(assetId);
             }
         }
@@ -229,6 +240,7 @@ public class AssetRegistry : IAssetRegistryInternal
             TInfo infoCopy = info;
             assetState = new()
             {
+                NeedsMainThreadDisposal = TAsset.NeedsMainThreadDisposal,
                 LoadLazy = new(ct => LoadAsset<TInfo, TAsset>(infoCopy, assetId))
             };
             assets[assetId] = assetState;
@@ -293,11 +305,11 @@ public class AssetRegistry : IAssetRegistryInternal
 
         return asset;
     }
-    
-    public void StartNextLowBatch() =>
-        StartNextLowBatch(MaxLowPriorityAssetsPerFrame);
 
-    public void StartNextLowBatch(int maxAssets)
+    public void Update() =>
+        Update(MaxLowPriorityAssetsPerFrame);
+
+    public void Update(int maxLowPrioAssets)
     {
         ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
         if (!IsMainThread)
@@ -306,7 +318,8 @@ public class AssetRegistry : IAssetRegistryInternal
             throw new InvalidOperationException("Could not lock registry, what is happening?");
         try
         {
-            for (int i = 0; i < maxAssets && assetsToStart.Reader.TryRead(out var assetId); i++)
+            DisposeOldAssets();
+            for (int i = 0; i < maxLowPrioAssets && assetsToStart.Reader.TryRead(out var assetId); i++)
             {
                 if (assets.TryGetValue(assetId, out var assetState) &&
                     assetState.LoadLazy != NullAssetLoadLazy &&
@@ -318,5 +331,13 @@ public class AssetRegistry : IAssetRegistryInternal
         {
             semaphore.Release();
         }
+    }
+
+    private void DisposeOldAssets()
+    {
+        Debug.Assert(IsMainThread);
+        Debug.Assert(semaphore.CurrentCount == 0);
+        while (assetsToDispose.Reader.TryRead(out var asset))
+            asset.Dispose();
     }
 }

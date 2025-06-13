@@ -25,7 +25,7 @@ public interface IAssetRegistry : IDisposable
         where TInfo : struct, IEquatable<TInfo>
         where TAsset : class, IAsset<TInfo>;
 
-    void StartNextLowBatch();
+    void Update();
     Task WaitForAll(IEnumerable<IAssetHandle> assets, CancellationToken ct);
 }
 

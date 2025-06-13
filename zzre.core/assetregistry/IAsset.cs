@@ -16,20 +16,8 @@ public interface IAsset : IDisposable
 {
     public static abstract AssetLocality Locality { get; }
     public static abstract Type InfoType { get; }
+    public static virtual bool NeedsMainThreadDisposal => false;
     IAssetRegistry Registry { get; }
-
-    private static readonly object generalInfoLock = new();
-    private static readonly Dictionary<object, Guid> generalInfoToGuid = [];
-    internal static Guid GeneralInfoToGuid(object info)
-    {
-        lock (generalInfoLock)
-        {
-            if (generalInfoToGuid.TryGetValue(info, out var guid))
-                return guid;
-            generalInfoToGuid.Add(info, guid = Guid.NewGuid());
-            return guid;
-        }
-    }
 }
 
 public readonly record struct AssetLoadResult<TInfo>(
@@ -44,5 +32,18 @@ public interface IAsset<TInfo> : IAsset
 
     static virtual Guid InfoToAssetId(in TInfo info) => GeneralInfoToGuid(info);
     static abstract Task<AssetLoadResult<TInfo>> LoadAsync(IAssetRegistry registry, TInfo info, CancellationToken ct);
+
+    private static readonly object generalInfoLock = new();
+    private static readonly Dictionary<TInfo, Guid> generalInfoToGuid = [];
+    internal static Guid GeneralInfoToGuid(in TInfo info)
+    {
+        lock (generalInfoLock)
+        {
+            if (generalInfoToGuid.TryGetValue(info, out var guid))
+                return guid;
+            generalInfoToGuid.Add(info, guid = Guid.NewGuid());
+            return guid;
+        }
+    }
 }
 
