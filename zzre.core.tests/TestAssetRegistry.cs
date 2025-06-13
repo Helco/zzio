@@ -1,8 +1,10 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 
 namespace zzre.tests;
 
@@ -34,6 +36,12 @@ public class TestAssetRegistry
         public readonly TestInfo AsCompleted()
         {
             FinishLoad.SetResult();
+            return this;
+        }
+
+        public readonly TestInfo AsErroneous()
+        {
+            FinishLoad.SetException(new TestException());
             return this;
         }
 
@@ -720,5 +728,123 @@ public class TestAssetRegistry
         info.FinishLoad.SetResult();
 
         await info.Disposed.Task.WaitAsync(ct);
+    }
+
+    private sealed class TestException : Exception
+    {
+
+    }
+    private static readonly InstanceOfTypeConstraint ThrowsAssetExceptions =
+        // TODO: Test inner TestExceptions in aggregated asset exceptions
+        Throws.InstanceOf<AggregateException>();
+
+    [Test]
+    public void Error_SingleSync()
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsErroneous();
+
+        Assert.That(() =>
+        {
+            global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Synchronous);
+        }, ThrowsAssetExceptions);
+    }
+
+    [Test]
+    public async Task Error_SingleHighUnobserved(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsErroneous();
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        await info.StartedLoad.Task.WaitAsync(ct);
+        await Task.Delay(10); // ugly but no real way to check...
+    }
+
+    [Test]
+    public async Task Error_SingleHighGetAsync(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsErroneous();
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        await Assert.ThatAsync(async () =>
+        {
+            _ = await handle.GetAsync(ct);
+        }, ThrowsAssetExceptions);
+        await Assert.ThatAsync(async () =>
+        {
+            _ = await handle.GetAsync(ct);
+        }, ThrowsAssetExceptions);
+    }
+
+    [Test]
+    public void Error_SingleHighGetSync()
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsErroneous();
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        Assert.That(() =>
+        {
+            _ = handle.Get();
+        }, ThrowsAssetExceptions);
+        Assert.That(() =>
+        {
+            _ = handle.Get();
+        }, ThrowsAssetExceptions);
+    }
+
+    [Test]
+    public async Task Error_ResetAfterDispose(
+        [Values(AssetPriority.Synchronous, AssetPriority.High)] AssetPriority priority,
+        [Values] bool getAsync,
+        CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        using (var handle1 = Load(true)) ;
+
+        using var handle2 = Load(false).Value;
+        var asset = getAsync
+            ? await handle2.GetAsync(ct)
+            : handle2.Get();
+        CommonAssetChecks(global, handle2, 1, asset);
+
+        AssetHandle<GlobalTestAsset>? Load(bool withException)
+        {
+            var info = withException
+                ? GetInfo(1).AsCompleted()
+                : GetInfo(1).AsErroneous();
+            if (priority is AssetPriority.Synchronous && withException)
+            {
+                Assert.That(() => global.Load<TestInfo, GlobalTestAsset>(info, priority),
+                    ThrowsAssetExceptions);
+                return null;
+            }
+            else
+                return global.Load<TestInfo, GlobalTestAsset>(info, priority);
+        }
+    }
+
+    [Test]
+    public async Task Error_NoResetWithRefs(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsErroneous();
+        var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        await Assert.ThatAsync(async () => handle1.GetAsync(ct), ThrowsAssetExceptions);
+
+        Assert.That(() =>
+        {
+            handle2.Get();
+        }, ThrowsAssetExceptions);
+
+        handle1.Dispose();
+
+        Assert.That(() =>
+        {
+            handle2.Get();
+        }, ThrowsAssetExceptions);
     }
 }
