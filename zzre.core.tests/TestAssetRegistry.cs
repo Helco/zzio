@@ -741,9 +741,8 @@ public class TestAssetRegistry
     {
 
     }
-    private static readonly InstanceOfTypeConstraint ThrowsAssetExceptions =
-        // TODO: Test inner TestExceptions in aggregated asset exceptions
-        Throws.InstanceOf<AggregateException>();
+    private static InstanceOfTypeConstraint ThrowsAssetExceptions =>
+        Throws.InstanceOf<TestException>();
 
     [Test]
     public void Error_SingleSync()

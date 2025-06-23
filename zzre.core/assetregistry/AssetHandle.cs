@@ -134,7 +134,16 @@ public record struct AssetHandle<TAsset>(IAssetRegistry Registry, Guid AssetId) 
             throw new InvalidOperationException("Synchronous asset loading is only allowed on the main thread");        
         var lazy = ((IAssetRegistryInternal)Registry).GetAsset(AssetId);
         if (!lazy.IsValueCreated)
-            lazy.WithCancellation(Registry.Cancellation).Wait(Registry.Cancellation);
+        {
+            try
+            {
+                lazy.WithCancellation(Registry.Cancellation).Wait(Registry.Cancellation);
+            }
+            catch (AggregateException e)
+            {
+                throw e.InnerException ?? e;
+            }
+        }
         return (TAsset)lazy.Value!.Value; // throws on error
     }
 

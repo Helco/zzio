@@ -189,11 +189,14 @@ public class AssetRegistry : IAssetRegistryInternal
                     {
                         handle.Get(); // checks main thread
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
                         // the user does not get the handle, so there shouldn't be a refcount on the asset
                         (this as IAssetRegistryInternal).DelRef(assetId);
-                        throw;
+                        if (e is AggregateException { InnerException: Exception inner })
+                            throw inner;
+                        else
+                            throw;
                     }
                     break;
                 case AssetPriority.High:
