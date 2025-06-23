@@ -276,11 +276,13 @@ public class AssetRegistry : IAssetRegistryInternal
             {
                 await WaitForAll(secondaries, Cancellation);
             }
-            finally
+            catch
             {
                 asset.Dispose();
+                throw;
             }
         }
+        CheckRegistryDisposal();
 
         // Propagate assets into registry state
         if (!await semaphore.WaitAsync(LockTimeout, Cancellation))
@@ -291,7 +293,7 @@ public class AssetRegistry : IAssetRegistryInternal
             ObjectDisposedException.ThrowIf(assetState is null or { RefCount: <= 0 }, typeof(AssetState));
             assetState.Secondaries = [.. secondaries];
         }
-        catch (Exception)
+        catch
         {
             asset.Dispose();
             foreach (var secondary in secondaries)
@@ -303,7 +305,19 @@ public class AssetRegistry : IAssetRegistryInternal
             semaphore.Release();
         }
 
+        CheckRegistryDisposal();
         return asset;
+
+        void CheckRegistryDisposal()
+        {
+            if (WasDisposed)
+            {
+                asset.Dispose();
+                foreach (var secondary in secondaries)
+                    secondary.Dispose();
+                ObjectDisposedException.ThrowIf(true, typeof(AssetRegistry));
+            }
+        }
     }
 
     public void Update() =>

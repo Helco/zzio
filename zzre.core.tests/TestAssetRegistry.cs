@@ -610,7 +610,14 @@ public class TestAssetRegistry
 
         await info.StartedLoad.Task.WaitAsync(ct);
         global.Dispose();
-        Assert.That(info.Disposed.Task.IsCompletedSuccessfully, Is.True);
+        info.FinishLoad.SetResult();
+
+        // we cannot guarantee that any actual dispose can be called if no asset 
+        // reference was ever given to AssetRegistry.
+        // In cases of cancellation during asset load, the asset load has to make
+        // sure that disposal of objects is called.
+
+        //Assert.That(info.Disposed.Task.IsCompletedSuccessfully, Is.True); 
         Assert.That(handle.Get, Throws.InstanceOf<ObjectDisposedException>());
     }
 
