@@ -818,8 +818,8 @@ public class TestAssetRegistry
         AssetHandle<GlobalTestAsset>? Load(bool withException)
         {
             var info = withException
-                ? GetInfo(1).AsCompleted()
-                : GetInfo(1).AsErroneous();
+                ? GetInfo(1).AsErroneous()
+                : GetInfo(1).AsCompleted();
             if (priority is AssetPriority.Synchronous && withException)
             {
                 Assert.That(() => global.Load<TestInfo, GlobalTestAsset>(info, priority),
@@ -839,7 +839,7 @@ public class TestAssetRegistry
         var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
         var handle2 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
 
-        await Assert.ThatAsync(async () => handle1.GetAsync(ct), ThrowsAssetExceptions);
+        await Assert.ThatAsync(async () => await handle1.GetAsync(ct), ThrowsAssetExceptions);
 
         Assert.That(() =>
         {
