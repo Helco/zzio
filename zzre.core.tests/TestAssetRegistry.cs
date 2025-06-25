@@ -924,6 +924,7 @@ public class TestAssetRegistry
         {
             await parentInfo.StartedLoad.Task;
             childHandle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(2).AsCompleted(), AssetPriority.High);
+            await childHandle.GetAsync(ct);
             parentInfo.FinishLoad.SetResult();
         }, ct);
 
@@ -931,7 +932,8 @@ public class TestAssetRegistry
         CommonAssetChecks(global, parentHandle, 1);
         CommonAssetChecks(global, childHandle, 2);
 
-        await loadChildTask.WaitAsync(ct); // just to be sure
+        await loadChildTask.WaitAsync(ct); // just to be sure it *finished*
+        // the secondary should have been ready after that synchronous primary load
     }
 
     [Test]
