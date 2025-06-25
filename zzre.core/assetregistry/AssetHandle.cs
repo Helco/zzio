@@ -199,7 +199,8 @@ public struct AssetHandle<TAsset>(IAssetRegistry registry, Guid assetId) : IAsse
     private readonly void ThrowIfDisposed()
     {
         ObjectDisposedException.ThrowIf(wasDisposed, typeof(AssetHandle<TAsset>));
-        ObjectDisposedException.ThrowIf(Registry.WasDisposed, typeof(IAssetRegistry));
+        ObjectDisposedException.ThrowIf(AssetId == Guid.Empty, typeof(AssetHandle<TAsset>));
+        ObjectDisposedException.ThrowIf(Registry?.WasDisposed is null or true, typeof(IAssetRegistry));
     }
 
     public readonly override int GetHashCode() =>
