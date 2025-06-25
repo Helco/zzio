@@ -98,10 +98,12 @@ public interface IAssetHandle : IDisposable
     Guid AssetId { get; }
 }
 
-public record struct AssetHandle<TAsset>(IAssetRegistry Registry, Guid AssetId) : IAssetHandle
+public struct AssetHandle<TAsset>(IAssetRegistry registry, Guid assetId) : IAssetHandle, IEquatable<AssetHandle<TAsset>>
     where TAsset : class, IDisposable
 {
     private bool wasDisposed;
+    public readonly IAssetRegistry Registry => registry;
+    public readonly Guid AssetId => assetId;
 
     internal AssetHandle(IAssetRegistry registry, Guid assetId, bool wasDisposed) : this(registry, assetId)
     {
@@ -131,7 +133,7 @@ public record struct AssetHandle<TAsset>(IAssetRegistry Registry, Guid AssetId) 
     {
         ThrowIfDisposed();
         if (!Registry.IsMainThread)
-            throw new InvalidOperationException("Synchronous asset loading is only allowed on the main thread");        
+            throw new InvalidOperationException("Synchronous asset loading is only allowed on the main thread");
         var lazy = ((IAssetRegistryInternal)Registry).GetAsset(AssetId);
         if (!lazy.IsValueCreated)
         {
@@ -199,4 +201,15 @@ public record struct AssetHandle<TAsset>(IAssetRegistry Registry, Guid AssetId) 
         ObjectDisposedException.ThrowIf(wasDisposed, typeof(AssetHandle<TAsset>));
         ObjectDisposedException.ThrowIf(Registry.WasDisposed, typeof(IAssetRegistry));
     }
+
+    public readonly override int GetHashCode() =>
+        HashCode.Combine(Registry, AssetId);
+    public readonly override bool Equals(object? obj) =>
+        obj is AssetHandle<TAsset> other && Equals(other);
+    public readonly bool Equals(AssetHandle<TAsset> other) =>
+        Registry == other.Registry && AssetId == other.AssetId;
+    public static bool operator ==(AssetHandle<TAsset> a, AssetHandle<TAsset> b) =>
+        a.Equals(b);
+    public static bool operator !=(AssetHandle<TAsset> a, AssetHandle<TAsset> b) =>
+        !a.Equals(b);
 }
