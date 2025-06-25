@@ -21,8 +21,7 @@ public interface IAsset : IDisposable
 }
 
 public readonly record struct AssetLoadResult<TInfo>(
-    IAsset<TInfo> Asset,
-    IReadOnlyList<IAssetHandle>? SecondaryAssets = null
+    IAsset<TInfo> Asset
 ) where TInfo : struct, IEquatable<TInfo>;
 
 public interface IAsset<TInfo> : IAsset

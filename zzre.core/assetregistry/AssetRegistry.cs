@@ -15,7 +15,6 @@ internal sealed class AssetState
 {
     public required bool NeedsMainThreadDisposal;
     public required AsyncLazy<IDisposable> LoadLazy;
-    public IAssetHandle[] Secondaries = [];
     public IDisposable? Asset
     {
         get
@@ -79,12 +78,7 @@ public class AssetRegistry : IAssetRegistryInternal
         cancellationSource.Cancel();
         foreach (var asset in assets.Values)
         {
-            var secondaries = DisposeAssetState(asset);
-            foreach (var secondary in secondaries)
-            {
-                if (secondary.Registry != this)
-                    secondary.Dispose();
-            }
+            DisposeAssetState(asset);
         }
         assets.Clear();
         DisposeOldAssets(); // after current assets in case we add something into it (we shouldn't)
@@ -94,7 +88,7 @@ public class AssetRegistry : IAssetRegistryInternal
         logger.Verbose("Finished disposing registry");
     }
 
-    private IAssetHandle[] DisposeAssetState(AssetState state)
+    private void DisposeAssetState(AssetState state)
     {
         if (IsMainThread || !state.NeedsMainThreadDisposal)
             state.Asset?.Dispose();
@@ -105,10 +99,7 @@ public class AssetRegistry : IAssetRegistryInternal
         }
 
         state.RefCount = 0;
-        var secondaries = state.Secondaries;
-        state.Secondaries = [];
         state.LoadLazy = NullAssetLoadLazy;
-        return secondaries;
     }
 
     void IAssetRegistryInternal.AddRef(Guid assetId)
@@ -270,21 +261,8 @@ public class AssetRegistry : IAssetRegistryInternal
         // Due to AsyncLazy we can flow exceptions outside this method
 
         // Load asset and secondary assets
-        var (asset, secondaries) = await TAsset.LoadAsync(this, info, Cancellation);
+        var asset = (await TAsset.LoadAsync(this, info, Cancellation)).Asset;
         Debug.Assert(asset.Registry == this);
-        secondaries ??= [];
-        if (secondaries.Any())
-        {
-            try
-            {
-                await WaitForAll(secondaries, Cancellation);
-            }
-            catch
-            {
-                asset.Dispose();
-                throw;
-            }
-        }
         CheckRegistryDisposal();
 
         // Propagate assets into registry state
@@ -294,13 +272,10 @@ public class AssetRegistry : IAssetRegistryInternal
         {
             var assetState = assets.GetValueOrDefault(assetId);
             ObjectDisposedException.ThrowIf(assetState is null or { RefCount: <= 0 }, typeof(AssetState));
-            assetState.Secondaries = [.. secondaries];
         }
         catch
         {
             asset.Dispose();
-            foreach (var secondary in secondaries)
-                secondary.Dispose();
             throw;
         }
         finally
@@ -316,10 +291,9 @@ public class AssetRegistry : IAssetRegistryInternal
             if (WasDisposed)
             {
                 asset.Dispose();
-                foreach (var secondary in secondaries)
-                    secondary.Dispose();
                 ObjectDisposedException.ThrowIf(true, typeof(AssetRegistry));
             }
+            Cancellation.ThrowIfCancellationRequested();
         }
     }
 

@@ -21,17 +21,15 @@ public class TestAssetRegistry
         public int Id => Info.Id;
     }
 
-    private readonly struct TestInfo(TaskContinuationOptions tcsOptions,
-        int Id, Func<IAssetHandle[]>? CreateSecondaries = null) : IEquatable<TestInfo>
+    private readonly struct TestInfo(TaskContinuationOptions tcsOptions, int Id) : IEquatable<TestInfo>
     {
         public readonly int Id = Id;
-        public readonly Func<IAssetHandle[]>? CreateSecondaries = CreateSecondaries;
         public readonly TaskCompletionSource StartedLoad = new(tcsOptions);
         public readonly TaskCompletionSource FinishLoad = new(tcsOptions);
         public readonly TaskCompletionSource Disposed = new(tcsOptions);
 
         public TestInfo(TaskContinuationOptions tcsOptions, int Id, IAssetHandle[] secondaries)
-            : this(tcsOptions, Id, () => secondaries) { }
+            : this(tcsOptions, Id) { }
 
         public readonly TestInfo AsCompleted()
         {
@@ -52,9 +50,7 @@ public class TestAssetRegistry
             Assert.That(info.StartedLoad.TrySetResult(), $"Asset {info.Id} was tried to be loaded twice");
             await info.FinishLoad.Task.WaitAsync(ct);
             ct.ThrowIfCancellationRequested();
-            return new(
-                new TAsset() { Info = info, Registry = registry },
-                info.CreateSecondaries?.Invoke());
+            return new(new TAsset() { Info = info, Registry = registry });
         }
 
         public bool Equals(TestInfo other) => Id == other.Id;
@@ -137,8 +133,8 @@ public class TestAssetRegistry
     public TestAssetRegistry(TaskContinuationOptions tcsOptions) =>
         this.tcsOptions = tcsOptions;
 
-    private TestInfo GetInfo(int id, Func<IAssetHandle[]>? createSecondaries = null) =>
-        new TestInfo(tcsOptions, id, createSecondaries);
+    private TestInfo GetInfo(int id) =>
+        new TestInfo(tcsOptions, id);
 
     [Test]
     public void EmptyRegistries()
@@ -892,35 +888,5 @@ public class TestAssetRegistry
         using var handle = local.Load<TestInfo, LocalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
         var asset = handle.Get();
         CommonAssetChecks(local, handle, 1, asset);
-    }
-
-    [Test]
-    public async Task Secondary_LoadHigh([Values] AssetPriority parentPrio, CancellationToken ct)
-    {
-        using var global = new AssetRegistry(DI);
-
-        AssetHandle<GlobalTestAsset> childHandle = default;
-        var childInfo = GetInfo(2).AsCompleted();
-        var parentInfo = GetInfo(1, () =>
-            [childHandle = global.Load<TestInfo, GlobalTestAsset>(childInfo, AssetPriority.High)]
-        ).AsCompleted();
-
-        var (parentHandle, parentAsset) = await CommonLoadAsset(global, parentInfo, parentPrio, ct);
-        CommonAssetChecks(global, parentHandle, 1, parentAsset);
-        CommonAssetChecks(global, childHandle, 2);
-    }
-
-    [Test]
-    public async Task Secondary_HighLoadLow(CancellationToken ct)
-    {
-        using var global = new AssetRegistry(DI);
-
-        AssetHandle<GlobalTestAsset> childHandle = default;
-        var childInfo = GetInfo(2).AsCompleted();
-        var parentInfo = GetInfo(1, () =>
-            [childHandle = global.Load<TestInfo, GlobalTestAsset>(childInfo, AssetPriority.Low)]
-        ).AsCompleted();
-
-        
     }
 }
