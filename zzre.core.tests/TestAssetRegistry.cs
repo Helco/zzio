@@ -853,4 +853,37 @@ public class TestAssetRegistry
             handle2.Get();
         }, ThrowsAssetExceptions);
     }
+
+    [Test]
+    public void Local_LoadLocalFromGlobal()
+    {
+        using var global = new AssetRegistry(DI);
+
+        Assert.That(() =>
+        {
+            global.Load<TestInfo, LocalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        }, Throws.Exception);
+    }
+
+    [Test]
+    public void Local_LoadGlobalFromLocal()
+    {
+        using var global = new AssetRegistry(DI);
+        using var local = new AssetRegistry(DI, global);
+
+        using var handle = local.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var asset = handle.Get();
+        CommonAssetChecks(global, handle, 1, asset);
+    }
+
+    [Test]
+    public void Local_LoadLocalFromLocal()
+    {
+        using var global = new AssetRegistry(DI);
+        using var local = new AssetRegistry(DI, global);
+
+        using var handle = local.Load<TestInfo, LocalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var asset = handle.Get();
+        CommonAssetChecks(local, handle, 1, asset);
+    }
 }
