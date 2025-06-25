@@ -933,4 +933,39 @@ public class TestAssetRegistry
 
         await loadChildTask.WaitAsync(ct); // just to be sure
     }
+
+    [Test]
+    public async Task LoadNested_Deep(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+
+        var info1 = GetInfo(1);
+        var info2 = GetInfo(2);
+        var info3 = GetInfo(3);
+        var info4 = GetInfo(4).AsCompleted();
+
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info1, AssetPriority.High);
+        await info1.StartedLoad.Task;
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info2, AssetPriority.High);
+        await info2.StartedLoad.Task;
+        using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info3, AssetPriority.High);
+        await info3.StartedLoad.Task;
+        using var handle4 = global.Load<TestInfo, GlobalTestAsset>(info4, AssetPriority.High);
+        var asset4 = await handle4.GetAsync(ct);
+        info3.FinishLoad.SetResult();
+        var asset3 = await handle3.GetAsync(ct);
+        info2.FinishLoad.SetResult();
+        var asset2 = await handle2.GetAsync(ct);
+        info1.FinishLoad.SetResult();
+        var asset1 = await handle1.GetAsync(ct);
+
+        CommonAssetChecks(global, handle1, 1, asset1);
+        CommonAssetChecks(global, handle2, 2, asset2);
+        CommonAssetChecks(global, handle3, 3, asset3);
+        CommonAssetChecks(global, handle4, 4, asset4);
+    }
+
+    // We cannot detect recursive loads, so we cannot test for it...
+
+    
 }
