@@ -889,4 +889,48 @@ public class TestAssetRegistry
         var asset = handle.Get();
         CommonAssetChecks(local, handle, 1, asset);
     }
+
+    [Test]
+    public async Task LoadNested_AsyncSecondaryHigh([Values] bool parentLow, CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+
+        var parentInfo = GetInfo(1);
+        using var parentHandle = global.Load<TestInfo, GlobalTestAsset>(parentInfo,
+            parentLow ? AssetPriority.Low : AssetPriority.High);
+        if (parentLow)
+            global.Update();
+
+        // We could load secondary low as the test setup would run the second .Update call on the main thread
+        // However that is not really a productive scenario
+        await parentInfo.StartedLoad.Task;
+        using var childHandle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(2).AsCompleted(), AssetPriority.High);
+        var childAsset = await childHandle.GetAsync(ct);
+        parentInfo.FinishLoad.SetResult();
+        var parentAsset = await parentHandle.GetAsync(ct);
+
+        CommonAssetChecks(global, parentHandle, 1, parentAsset);
+        CommonAssetChecks(global, childHandle, 2, childAsset);
+    }
+
+    [Test]
+    public async Task LoadNested_SyncSecondaryHigh(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+
+        var parentInfo = GetInfo(1);
+        AssetHandle<GlobalTestAsset> childHandle = default;
+        var loadChildTask = Task.Run(async () =>
+        {
+            await parentInfo.StartedLoad.Task;
+            childHandle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(2).AsCompleted(), AssetPriority.High);
+            parentInfo.FinishLoad.SetResult();
+        }, ct);
+
+        using var parentHandle = global.Load<TestInfo, GlobalTestAsset>(parentInfo, AssetPriority.Synchronous);
+        CommonAssetChecks(global, parentHandle, 1);
+        CommonAssetChecks(global, childHandle, 2);
+
+        await loadChildTask.WaitAsync(ct); // just to be sure
+    }
 }
