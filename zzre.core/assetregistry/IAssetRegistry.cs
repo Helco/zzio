@@ -18,7 +18,7 @@ public interface IAssetRegistry : IDisposable
     bool WasDisposed { get; }
     bool IsMainThread { get; }
     IAssetRegistry? ParentRegistry { get; }
-    bool IsLocalRegistry => ParentRegistry is not null;
+    bool IsLocalRegistry { get; }
     CancellationToken Cancellation { get; } // is triggered when registry is disposed
 
     AssetHandle<TAsset> Load<TInfo, TAsset>(in TInfo info, AssetPriority priority)

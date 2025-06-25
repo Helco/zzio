@@ -146,6 +146,15 @@ public class TestAssetRegistry
         Assert.That(global.IsLocalRegistry, Is.False);
         Assert.That(local.IsLocalRegistry, Is.True);
         Assert.That(local2.IsLocalRegistry, Is.True);
+        Assert.That(global.DIContainer, Is.SameAs(DI));
+    }
+
+    [Test]
+    public void RegistryWithLogger()
+    {
+        DI.AddTag<Serilog.ILogger>(Serilog.Core.Logger.None);
+        using var global = new AssetRegistry(DI);
+        using var local = new AssetRegistry(DI, global, "local registry");
     }
 
     [Test]
@@ -176,6 +185,13 @@ public class TestAssetRegistry
         local.Dispose();
         global.Dispose();
         local2.Dispose();
+    }
+
+    [Test]
+    public async Task UpdateOnNonMainThread(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        await Assert.ThatAsync(() => Task.Run(global.Update), Throws.InvalidOperationException);
     }
 
     private void CommonAssetChecks<TAsset>(IAssetRegistry registry, AssetHandle<TAsset> handle, int id, TAsset? extAsset = null)
@@ -538,6 +554,21 @@ public class TestAssetRegistry
     }
 
     [Test]
+    public void LoadLow_ThenGetSync(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsCompleted();
+
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+        var asset = handle.Get();
+        CommonAssetChecks(global, handle, 1, asset);
+
+        // check whether unnecessary low batch will break something
+        global.Update(); 
+        CommonAssetChecks(global, handle, 1, asset);
+    }
+
+    [Test]
     public async Task LoadSequential([Values] AssetPriority prio1, [Values] AssetPriority prio2, CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
@@ -634,6 +665,28 @@ public class TestAssetRegistry
         global.Dispose();
         Assert.That(info.StartedLoad.Task.IsCompleted, Is.False);
         Assert.That(handle.Get, Throws.InstanceOf<ObjectDisposedException>());
+    }
+
+    [Test]
+    public void DisposeRegistry_AccessAfter()
+    {
+        var global = new AssetRegistry(DI);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        global.Dispose();
+
+        Assert.That(handle.Get, Throws.InstanceOf<ObjectDisposedException>());
+    }
+
+    [Test]
+    public void DisposeRegistry_DisposeTwice()
+    {
+        var global = new AssetRegistry(DI);
+        global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        global.Load<TestInfo, GlobalTestAsset>(GetInfo(2).AsCompleted(), AssetPriority.Synchronous);
+        global.Load<TestInfo, GlobalTestAsset>(GetInfo(3).AsCompleted(), AssetPriority.Synchronous);
+
+        global.Dispose();
+        global.Dispose();
     }
 
     [Test]
@@ -858,6 +911,17 @@ public class TestAssetRegistry
     }
 
     [Test]
+    public void Error_LoadLowThenGetSync()
+    {
+        // this triggers an otherwise uncovered line
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsErroneous();
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+
+        Assert.That(() => handle.Get(), ThrowsAssetExceptions);
+    }
+
+    [Test]
     public void Local_LoadLocalFromGlobal()
     {
         using var global = new AssetRegistry(DI);
@@ -969,5 +1033,100 @@ public class TestAssetRegistry
 
     // We cannot detect recursive loads, so we cannot test for it...
 
-    
+    [Test]
+    public async Task LoadNested_SyncDoesNotWork(CancellationToken ct)
+    {
+        // with actual asynchronous loading (so not in the test env main thread)
+        // no synchronous loading can be done as that would be main thread material
+
+        using var global = new AssetRegistry(DI);
+
+        AssetHandle<GlobalTestAsset> childHandle = default;
+        var parentInfo = GetInfo(1);
+
+        var loadChildTask = Task.Run(async () =>
+        {
+            try
+            {
+                await parentInfo.StartedLoad.Task;
+                childHandle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(2).AsCompleted(), AssetPriority.Synchronous);
+                parentInfo.FinishLoad.SetResult();
+            }
+            catch (Exception e)
+            {
+                parentInfo.FinishLoad.SetException(e);
+            }
+        }, ct);
+
+        Assert.That(() => global.Load<TestInfo, GlobalTestAsset>(parentInfo, AssetPriority.Synchronous),
+            Throws.InvalidOperationException);
+        // the exception would have been within the parent load so no disposal can be done by AssetRegistry
+    }
+
+    [Test]
+    public void Handle_Duplicate()
+    {
+        using var global = new AssetRegistry(DI);
+
+        var info = GetInfo(1).AsCompleted();
+        var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Synchronous);
+        CommonAssetChecks(global, handle1, 1);
+
+        var handle2 = handle1.Duplicate();
+        CommonAssetChecks(global, handle2, 1);
+        Assert.That(handle2, Is.EqualTo(handle2));
+
+        handle1.Dispose();
+        Assert.That(info.Disposed.Task.IsCompleted, Is.False);
+
+        handle2.Dispose();
+        Assert.That(info.Disposed.Task.IsCompletedSuccessfully, Is.True);
+    }
+
+    [Test]
+    public void Handle_Move()
+    {
+        using var global = new AssetRegistry(DI);
+
+        var info = GetInfo(1).AsCompleted();
+        var handle1 = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Synchronous);
+        CommonAssetChecks(global, handle1, 1);
+
+        var handle2 = handle1.Move();
+        CommonAssetChecks(global, handle2, 1);
+
+        Assert.That(() => handle1.Asset, Throws.Exception);
+        Assert.That(() => handle1.Get(), Throws.Exception);
+        Assert.That(handle1, Is.EqualTo(handle2)); // equality does not change, Move=Duplicate+Dispose (conceptually)
+
+        handle1.Dispose();
+        Assert.That(info.Disposed.Task.IsCompleted, Is.False);
+
+        handle2.Dispose();
+        Assert.That(info.Disposed.Task.IsCompletedSuccessfully, Is.True);
+    }
+
+    [Test]
+    public void Handle_Equality()
+    {
+        using var global = new AssetRegistry(DI);
+
+        var info1 = GetInfo(1).AsCompleted();
+        var info2 = GetInfo(2).AsCompleted();
+        var handle1a = global.Load<TestInfo, GlobalTestAsset>(info1, AssetPriority.Synchronous);
+        var handle2 = global.Load<TestInfo, GlobalTestAsset>(info2, AssetPriority.Synchronous);
+        var handle1b = global.Load<TestInfo, GlobalTestAsset>(info1, AssetPriority.Synchronous);
+
+        Assert.That(handle1a, Is.EqualTo(handle1b));
+        Assert.That(handle1a, Is.Not.EqualTo(handle2));
+        Assert.That(handle2, Is.Not.EqualTo(handle1b));
+        Assert.That(handle1a.GetHashCode(), Is.EqualTo(handle1b.GetHashCode()));
+
+        Assert.That(handle1a == handle1b); // these are just for coverage
+        Assert.That(handle2 != handle1a);
+        Assert.That(handle1a.Equals((object)handle1b));
+        Assert.That(!handle1b.Equals(handle2));
+    }
+
+
 }

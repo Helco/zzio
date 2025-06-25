@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,7 +16,6 @@ public enum AssetLocality
 public interface IAsset : IDisposable
 {
     public static abstract AssetLocality Locality { get; }
-    public static abstract Type InfoType { get; }
     public static virtual bool NeedsMainThreadDisposal => false;
     IAssetRegistry Registry { get; }
 }
@@ -27,8 +27,6 @@ public readonly record struct AssetLoadResult<TInfo>(
 public interface IAsset<TInfo> : IAsset
     where TInfo : struct, IEquatable<TInfo>
 {
-    static Type IAsset.InfoType => typeof(TInfo);
-
     static virtual Guid InfoToAssetId(in TInfo info) => GeneralInfoToGuid(info);
     static abstract Task<AssetLoadResult<TInfo>> LoadAsync(IAssetRegistry registry, TInfo info, CancellationToken ct);
 

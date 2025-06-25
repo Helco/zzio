@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -102,11 +103,25 @@ public class AssetRegistry : IAssetRegistryInternal
         state.LoadLazy = NullAssetLoadLazy;
     }
 
+    [ExcludeFromCodeCoverage] // we cannot reasonably check for semaphore failure
+    private void LockSemaphore()
+    {
+        if (!semaphore.Wait(LockTimeout, Cancellation))
+            throw new InvalidOperationException("Could not lock asset registry");
+        // this should only happen in bug scenarios
+    }
+
+    [ExcludeFromCodeCoverage]
+    private async Task LockSemaphoreAsync(CancellationToken ct)
+    {
+        if (!await semaphore.WaitAsync(LockTimeout, Cancellation))
+            throw new InvalidOperationException("Could not lock asset registry");
+    }
+
     void IAssetRegistryInternal.AddRef(Guid assetId)
     {
         ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
-        if (!semaphore.Wait(LockTimeout, Cancellation))
-            throw new InvalidOperationException("Could not lock registry");
+        LockSemaphore();
         try
         {
             var assetState = assets.GetValueOrDefault(assetId);
@@ -119,11 +134,11 @@ public class AssetRegistry : IAssetRegistryInternal
         }
     }
 
+    [ExcludeFromCodeCoverage]
     void IAssetRegistryInternal.DelRef(Guid assetId)
     {
         if (WasDisposed) return; // Ignore out-of-order deletion, all assets are already dead
-        if (!semaphore.Wait(LockTimeout, Cancellation))
-            throw new InvalidOperationException("Could not lock registry");
+        LockSemaphore();
         try
         {
             var assetState = assets.GetValueOrDefault(assetId);
@@ -206,8 +221,7 @@ public class AssetRegistry : IAssetRegistryInternal
         where TInfo : struct, IEquatable<TInfo>
         where TAsset : class, IAsset<TInfo>
     {
-        if (!semaphore.Wait(LockTimeout, Cancellation))
-            throw new InvalidOperationException("Could not lock registry, what is happening?");
+        LockSemaphore();
         try
         {
             // Determine Asset ID
@@ -266,8 +280,7 @@ public class AssetRegistry : IAssetRegistryInternal
         CheckRegistryDisposal();
 
         // Propagate assets into registry state
-        if (!await semaphore.WaitAsync(LockTimeout, Cancellation))
-            throw new InvalidOperationException("Could not lock registry, what is happening?");
+        await LockSemaphoreAsync(Cancellation);
         try
         {
             var assetState = assets.GetValueOrDefault(assetId);
@@ -286,6 +299,7 @@ public class AssetRegistry : IAssetRegistryInternal
         CheckRegistryDisposal();
         return asset;
 
+        [ExcludeFromCodeCoverage] // we cannot reasonably test that, it would be a race condition
         void CheckRegistryDisposal()
         {
             if (WasDisposed)
@@ -305,8 +319,7 @@ public class AssetRegistry : IAssetRegistryInternal
         ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
         if (!IsMainThread)
             throw new InvalidOperationException("Low batch scheduling is only allowed on the main thread");
-        if (!semaphore.Wait(LockTimeout, Cancellation))
-            throw new InvalidOperationException("Could not lock registry, what is happening?");
+        LockSemaphore();
         try
         {
             DisposeOldAssets();
