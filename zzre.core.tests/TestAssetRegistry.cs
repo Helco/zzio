@@ -955,6 +955,26 @@ public class TestAssetRegistry
     }
 
     [Test]
+    public void Unique_LoadMultiple()
+    {
+        using var global = new AssetRegistry(DI);
+        using var local = new AssetRegistry(DI, global);
+
+        using var handle1 = local.Load<TestInfo, UniqueTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        using var handle2 = local.Load<TestInfo, UniqueTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var asset1 = handle1.Get();
+        var asset2 = handle2.Get();
+
+        CommonAssetChecks(local, handle1, 1, asset1);
+        CommonAssetChecks(local, handle2, 1, asset2);
+        Assert.That(handle1, Is.Not.EqualTo(handle2));
+        Assert.That(asset1, Is.Not.SameAs(asset2));
+
+        handle1.Dispose();
+        Assert.That(handle2.Get, Throws.Nothing); // not disposed
+    }
+
+    [Test]
     public async Task LoadNested_AsyncSecondaryHigh([Values] bool parentLow, CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
