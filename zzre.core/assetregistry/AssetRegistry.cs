@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -192,14 +191,11 @@ public class AssetRegistry : IAssetRegistryInternal
                     {
                         handle.Get(); // checks main thread
                     }
-                    catch (Exception e)
+                    catch
                     {
                         // the user does not get the handle, so there shouldn't be a refcount on the asset
                         (this as IAssetRegistryInternal).DelRef(assetId);
-                        if (e is AggregateException { InnerException: Exception inner })
-                            throw inner;
-                        else
-                            throw;
+                        throw;
                     }
                     break;
                 case AssetPriority.High:
