@@ -26,7 +26,6 @@ public interface IAssetRegistry : IDisposable
         where TAsset : class, IAsset<TInfo>;
 
     void Update();
-    Task WaitForAll(IEnumerable<IAssetHandle> assets, CancellationToken ct);
 }
 
 internal interface IAssetRegistryInternal : IAssetRegistry

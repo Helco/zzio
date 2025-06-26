@@ -564,7 +564,7 @@ public class TestAssetRegistry
         CommonAssetChecks(global, handle, 1, asset);
 
         // check whether unnecessary low batch will break something
-        global.Update(); 
+        global.Update();
         CommonAssetChecks(global, handle, 1, asset);
     }
 
@@ -1126,6 +1126,30 @@ public class TestAssetRegistry
         Assert.That(handle2 != handle1a);
         Assert.That(handle1a.Equals((object)handle1b));
         Assert.That(!handle1b.Equals(handle2));
+    }
+
+    [Test]
+    public void Handle_InvalidCopy_Duplicate()
+    {
+        using var global = new AssetRegistry(DI);
+
+        var original = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var invalidCopy = original;
+        original.Dispose();
+
+        Assert.That(() => invalidCopy.Duplicate(), Throws.InstanceOf<ObjectDisposedException>());
+    }
+
+    [Test]
+    public void Handle_InvalidCopy_Access()
+    {
+        using var global = new AssetRegistry(DI);
+
+        var original = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var invalidCopy = original;
+        original.Dispose();
+
+        Assert.That(() => invalidCopy.Get(), Throws.InstanceOf<ObjectDisposedException>());
     }
 
 

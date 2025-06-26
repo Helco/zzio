@@ -156,22 +156,19 @@ public class AssetRegistry : IAssetRegistryInternal
         }
     }
 
-    AsyncLazy<IDisposable> IAssetRegistryInternal.GetAsset(Guid assetId) =>
-        assets.GetValueOrDefault(assetId)?.LoadLazy ?? NullAssetLoadLazy;
-
-    public Task WaitForAll(IEnumerable<IAssetHandle> assetHandles, CancellationToken ct)
+    AsyncLazy<IDisposable> IAssetRegistryInternal.GetAsset(Guid assetId)
     {
-        ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
-        if (assetHandles.Any(h => h.Registry != this && h.Registry != ParentRegistry))
-            throw new ArgumentException("Cannot wait for assets from a foreign registry");
-        return Task.WhenAll(assetHandles
-                    .Select(id =>
-                        assets.GetValueOrDefault(id.AssetId) ??
-                        parentRegistry?.assets.GetValueOrDefault(id.AssetId))
-                    .Where(state =>
-                        state != null &&
-                        state.LoadLazy != NullAssetLoadLazy)
-                    .Select(state => state!.LoadLazy.WithCancellation(ct)));
+        AssetState asset;
+        LockSemaphore();
+        try
+        {
+            ObjectDisposedException.ThrowIf(!assets.TryGetValue(assetId, out asset!), nameof(IAssetHandle));
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+        return asset.LoadLazy;
     }
 
     public AssetHandle<TAsset> Load<TInfo, TAsset>(in TInfo info, AssetPriority priority)
