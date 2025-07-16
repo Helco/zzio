@@ -1172,5 +1172,16 @@ public class TestAssetRegistry
         Assert.That(() => invalidCopy.Get(), Throws.InstanceOf<ObjectDisposedException>());
     }
 
+    [Test]
+    public void Handle_Default_Dispose()
+    {
+        AssetHandle<GlobalTestAsset> handle = default;
+        Assert.That(() =>
+        {
+            handle.Dispose();
+            handle.Dispose();
+        }, Throws.Nothing);
+    }
+
 
 }

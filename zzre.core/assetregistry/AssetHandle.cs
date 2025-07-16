@@ -114,7 +114,8 @@ public struct AssetHandle<TAsset>(IAssetRegistry registry, Guid assetId) : IAsse
     {
         if (wasDisposed) return;
         wasDisposed = true;
-        ((IAssetRegistryInternal)Registry).DelRef(AssetId);
+        if (Registry is not null && AssetId != default)
+            ((IAssetRegistryInternal)Registry).DelRef(AssetId);
     }
 
     public readonly TAsset? Asset

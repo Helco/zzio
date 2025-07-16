@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using zzio;
 using zzio.vfs;
 
 namespace zzre;
 
-public sealed class AnimationAsset : Asset
+public sealed class AnimationAsset : IAsset<AnimationAsset.Info>
 {
     private static readonly FilePath BasePath = new("resources/models/actorsex");
 
@@ -16,33 +16,32 @@ public sealed class AnimationAsset : Asset
             Name.EndsWith(".ska", StringComparison.OrdinalIgnoreCase) ? Name : Name + ".ska");
     }
 
-    public static void Register() =>
-        AssetInfoRegistry<Info>.Register<AnimationAsset>(AssetLocality.Global);
-
     private readonly Info info;
-    private SkeletalAnimation? animation;
 
-    public SkeletalAnimation Animation => animation ??
-        throw new InvalidOperationException("Asset was not yet loaded");
+    public IAssetRegistry Registry { get; }
+    public SkeletalAnimation Animation { get; private set; }
 
-    public AnimationAsset(IAssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
+    private AnimationAsset(IAssetRegistry registry, Info info, SkeletalAnimation animation)
     {
         this.info = info;
+        Registry = registry;
+        Animation = animation;
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Info info, CancellationToken ct)
     {
-        var resourcePool = diContainer.GetTag<IResourcePool>();
+        var resourcePool = registry.DIContainer.GetTag<IResourcePool>();
         using var stream = resourcePool.FindAndOpen(info.FullPath) ??
             throw new System.IO.FileNotFoundException($"Could not find animation: {info.Name}");
-        animation = SkeletalAnimation.ReadNew(stream);
-        return NoSecondaryAssets;
+        var animation = SkeletalAnimation.ReadNew(stream);
+        return Task.FromResult(new AssetLoadResult<Info>(new AnimationAsset(registry, info, animation)));
     }
 
-    protected override void Unload()
-    {
-        animation = null;
-    }
+    public override string ToString() => $"Animation {info.Name}";
+}
 
-    protected override string ToStringInner() => $"Animation {info.Name}";
+static partial class AssetExtensions
+{
+    public static AssetHandle<AnimationAsset> LoadAnimation(this IAssetRegistry registry, string name, AssetPriority priority) =>
+        registry.Load<AnimationAsset.Info, AnimationAsset>(new(name), priority);
 }

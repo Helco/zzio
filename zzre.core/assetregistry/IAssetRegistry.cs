@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using DotNext.Threading;
 
 namespace zzre;
@@ -17,6 +15,7 @@ public interface IAssetRegistry : IDisposable
 {
     bool WasDisposed { get; }
     bool IsMainThread { get; }
+    ITagContainer DIContainer { get; }
     IAssetRegistry? ParentRegistry { get; }
     bool IsLocalRegistry { get; }
     CancellationToken Cancellation { get; } // is triggered when registry is disposed

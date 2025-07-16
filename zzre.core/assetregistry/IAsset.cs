@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,9 +14,11 @@ public enum AssetLocality
 
 public interface IAsset : IDisposable
 {
-    public static abstract AssetLocality Locality { get; }
+    public static virtual AssetLocality Locality => AssetLocality.Global;
     public static virtual bool NeedsMainThreadDisposal => false;
     IAssetRegistry Registry { get; }
+
+    void IDisposable.Dispose() { }
 }
 
 public readonly record struct AssetLoadResult<TInfo>(
