@@ -6,7 +6,6 @@ using Silk.NET.SDL;
 using Veldrid;
 using zzio;
 using zzio.vfs;
-using zzre.rendering;
 using Texture = Veldrid.Texture;
 using PixelFormat = Veldrid.PixelFormat;
 using System.Threading;
