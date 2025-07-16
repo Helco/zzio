@@ -37,6 +37,8 @@ public sealed class AnimationAsset : IAsset<AnimationAsset.Info>
         return Task.FromResult(new AssetLoadResult<Info>(new AnimationAsset(registry, info, animation)));
     }
 
+    public void Dispose() { }
+
     public override string ToString() => $"Animation {info.Name}";
 }
 

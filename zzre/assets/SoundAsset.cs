@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Silk.NET.OpenAL;
 using Silk.NET.OpenAL.Extensions.EXT;
@@ -11,51 +11,47 @@ using zzre.game.systems;
 
 namespace zzre;
 
-public sealed class SoundAsset : Asset
+public sealed class SoundAsset(IAssetRegistry registry, SoundAsset.Info info) : IAsset<SoundAsset.Info>
 {
     public readonly record struct Info(FilePath FullPath);
 
-    public static void Register() =>
-        AssetInfoRegistry<Info>.Register<SoundAsset>(AssetLocality.Context);
+    static AssetLocality IAsset.Locality => AssetLocality.Local;
+    // As long as SoundContext locks the deferred buffer disposals, 
+    // it is not necessary to set NeedsMainThreadDisposal
 
-    private readonly Info info;
-    private uint? buffer;
+    private readonly Info info = info;
 
-    public uint Buffer => buffer ??
-        throw new InvalidOperationException("Asset was not yet loaded");
+    public IAssetRegistry Registry { get; } = registry;
+    public uint Buffer { get; private set; }
 
-    public SoundAsset(IAssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
+    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Info info, CancellationToken ct)
     {
-        this.info = info;
+        var diContainer = registry.DIContainer;
+        uint buffer = 0; // a valid but unusable state
+        if (diContainer.TryGetTag(out OpenALDevice device) &&
+            diContainer.TryGetTag(out SoundContext context))
+        {
+            using var _ = context.EnsureIsCurrent();
+            var ext = Path.GetExtension(info.FullPath.Parts[^1]).ToLowerInvariant();
+            buffer = ext switch
+            {
+                ".wav" => LoadWave(diContainer, device, info),
+                ".mp3" => LoadMP3(diContainer, device, info),
+                _ => throw new NotSupportedException($"Unsupported sound extension: {ext}")
+            };
+        }
+        return Task.FromResult(new AssetLoadResult<Info>(
+            new SoundAsset(registry, info) { Buffer = buffer }
+        ));
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
-    {
-        if (!diContainer.TryGetTag(out OpenALDevice device) ||
-            !diContainer.TryGetTag(out SoundContext context))
-        {
-            buffer = 0; // A valid but unusable state
-            return NoSecondaryAssets;
-        }
-
-        using var _ = context.EnsureIsCurrent();
-        var ext = Path.GetExtension(info.FullPath.Parts[^1]).ToLowerInvariant();
-        switch(ext)
-        {
-            case ".wav": LoadWave(device); break;
-            case ".mp3": LoadMP3(device); break;
-            default: throw new NotSupportedException($"Unsupported sound extension: {ext}");
-        }
-        return NoSecondaryAssets;
-    }
-
-    private unsafe void LoadWave(OpenALDevice device)
+    private static unsafe uint LoadWave(ITagContainer diContainer, OpenALDevice device, in Info info)
     {
         var sdl = diContainer.GetTag<Sdl>();
         var resourcePool = diContainer.GetTag<IResourcePool>();
         var fileBuffer = resourcePool.FindAndRead(info.FullPath) ??
             throw new FileNotFoundException("Could not open sound: " + info.FullPath);
-        FixTruncatedWave(ref fileBuffer);
+        FixTruncatedWave(diContainer, ref fileBuffer, info);
         var rwops = sdl.RWFromConstMem(fileBuffer);
 
         AudioSpec audioSpec = default;
@@ -76,7 +72,7 @@ public sealed class SoundAsset : Asset
                 _ => throw new NotSupportedException($"Unsupported audio format {audioSpec.Format}, {audioSpec.Channels} channels")
             }, audioBuf, (int)audioBufLen, audioSpec.Freq);
             device.AL.ThrowOnError();
-            this.buffer = buffer;
+            return buffer;
         }
         finally
         {
@@ -91,7 +87,7 @@ public sealed class SoundAsset : Asset
     private const uint FourCCfmt = 0x20746D66u;
     private const uint FourCCfact = 0x74636166;
     private const uint FourCCdata = 0x61746164;
-    private void FixTruncatedWave(ref byte[] original)
+    private static void FixTruncatedWave(ITagContainer diContainer, ref byte[] original, in Info info)
     {
         /* Some of the ADPCM encoded wave files in Zanzarah have truncated data blocks meaning
          * the data chunk size does not adhere to the reported alignment and the file might
@@ -136,7 +132,7 @@ public sealed class SoundAsset : Asset
         diContainer.GetLoggerFor<SoundAsset>().Verbose("Fixed truncated WAVE file (adding {Bytes} bytes): {Path}", newDataSize - dataSize, info.FullPath);
     }
 
-    private void LoadMP3(OpenALDevice device)
+    private static uint LoadMP3(ITagContainer diContainer, OpenALDevice device, in Info info)
     {
         var resourcePool = diContainer.GetTag<IResourcePool>();
         using var stream = resourcePool.FindAndOpen(info.FullPath) ??
@@ -157,36 +153,23 @@ public sealed class SoundAsset : Asset
         var buffer = device!.AL.GenBuffer();
         device.AL.BufferData(buffer, format, samples, mpegFile.SampleRate);
         device.AL.ThrowOnError();
-        this.buffer = buffer;
+        return buffer;
     }
 
-    protected override void Unload()
+    public void Dispose()
     {
         // We cannot just delete the buffer directly as the emitter disposal might not 
         // have gone through yet, so we defer the disposal until later (usually next frame)
-        if (buffer is not (null or 0) && diContainer.TryGetTag(out SoundContext context))
-            context.AddBufferDisposal(buffer.Value);
-        buffer = null;
+        if (Buffer is not 0 && Registry.DIContainer.TryGetTag(out SoundContext context))
+            context.AddBufferDisposal(Buffer);
+        Buffer = 0;
     }
 
-    protected override string ToStringInner() => $"SoundAsset {info.FullPath}";
+    public override string ToString() => $"SoundAsset {info.FullPath}";
 }
 
-partial class AssetExtensions
+static partial class AssetExtensions
 {
-    public unsafe static AssetHandle<SoundAsset> LoadSound(this IAssetRegistry registry,
-        DefaultEcs.Entity entity,
-        FilePath path,
-        AssetLoadPriority priority)
-    {
-        var handle = registry.Load(new SoundAsset.Info(path), priority, &ApplySoundAssetToEntity, entity);
-        entity.Set(handle);
-        return handle.As<SoundAsset>();
-    }
-
-    private static void ApplySoundAssetToEntity(AssetHandle handle, ref readonly DefaultEcs.Entity entity)
-    {
-        if (entity.IsAlive)
-            entity.Set(new game.components.SoundBuffer(handle.Get<SoundAsset>().Buffer));
-    }
+    public static AssetHandle<SoundAsset> LoadSound(this IAssetRegistry registry, FilePath path, AssetPriority priority) =>
+        registry.Load<SoundAsset.Info, SoundAsset>(new(path), priority);
 }

@@ -1,26 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Veldrid;
 
 namespace zzre;
 
-public sealed class SamplerAsset : Asset
+public sealed class SamplerAsset(IAssetRegistry registry) : IAsset<SamplerDescription>
 {
-    public static void Register() =>
-        AssetInfoRegistry<SamplerDescription>.Register<SamplerAsset>(AssetLocality.Global);
+    public IAssetRegistry Registry { get; } = registry;
+    public string DebugName { get; private init; } = "";
+    public Sampler Sampler { get; private set; } = null!;
 
-    private readonly SamplerDescription info;
-    private Sampler? sampler;
-
-    public string DebugName { get; }
-    public Sampler Sampler => sampler ??
-        throw new InvalidOperationException("Asset was not yet loaded");
-
-    public SamplerAsset(IAssetRegistry registry, Guid assetId, SamplerDescription info) : base(registry, assetId)
+    static Task<AssetLoadResult<SamplerDescription>> IAsset<SamplerDescription>.LoadAsync(IAssetRegistry registry, SamplerDescription info, CancellationToken ct)
     {
-        this.info = info;
+        var resourceFactory = registry.DIContainer.GetTag<ResourceFactory>();
+        var sampler = resourceFactory.CreateSampler(info);
+        var debugName = GetDebugName(info);
+        sampler.Name = debugName;
+        return Task.FromResult(new AssetLoadResult<SamplerDescription>(
+            new SamplerAsset(registry)
+            {
+                DebugName = debugName,
+                Sampler = sampler
+            }
+        ));
+    }
+
+    private static string GetDebugName(in SamplerDescription info)
+    {
         var stringBuilder = new StringBuilder("Sampler ");
         stringBuilder.Append(info.Filter);
         stringBuilder.Append(' ');
@@ -32,28 +39,22 @@ public sealed class SamplerAsset : Asset
         }
         if (info.MaximumLod == 0)
             stringBuilder.Append(" (No LOD)");
-        DebugName = stringBuilder.ToString();
+        return stringBuilder.ToString();
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    public void Dispose()
     {
-        var resourceFactory = diContainer.GetTag<ResourceFactory>();
-        sampler = resourceFactory.CreateSampler(info);
-        sampler.Name = DebugName;
-        return NoSecondaryAssets;
+        Sampler?.Dispose();
+        Sampler = null!;
     }
 
-    protected override void Unload()
-    {
-        sampler?.Dispose();
-        sampler = null;
-    }
-
-    protected override string ToStringInner() => DebugName;
+    public override string ToString() => DebugName;
 }
 
-public static unsafe partial class AssetExtensions
+static partial class AssetExtensions
 {
-    public static AssetHandle<SamplerAsset> LoadSampler(this IAssetRegistry registry, in SamplerDescription info) =>
-        registry.Load(info, AssetLoadPriority.Synchronous).As<SamplerAsset>();
+    public static AssetHandle<SamplerAsset> LoadSampler(this IAssetRegistry registry,
+        in SamplerDescription info,
+        AssetPriority priority = AssetPriority.Synchronous) =>
+        registry.Load<SamplerDescription, SamplerAsset>(info, priority);
 }

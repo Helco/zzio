@@ -27,6 +27,8 @@ public sealed class ActorAsset(IAssetRegistry registry, ActorAsset.Info info) : 
         public void Dispose()
         {
             ClumpHandle.Dispose();
+            foreach (var animHandle in AnimHandles ?? [])
+                animHandle.Dispose();
         }
     }
 
@@ -85,5 +87,18 @@ public sealed class ActorAsset(IAssetRegistry registry, ActorAsset.Info info) : 
             handles[outI++] = animHandle.GetAsync(ct).AsTask();
     }
 
+    public void Dispose()
+    {
+        body.Dispose();
+        wings.Dispose();
+        body = wings = default;
+    }
+
     public override string ToString() => $"Actor {info.Name}";
+}
+
+static partial class AssetExtensions
+{
+    public static AssetHandle<ActorAsset> LoadActor(this IAssetRegistry registry, string name, AssetPriority priority) =>
+        registry.Load<ActorAsset.Info, ActorAsset>(new(name), priority);
 }

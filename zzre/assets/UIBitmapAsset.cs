@@ -42,7 +42,7 @@ public class UIBitmapAsset : Asset
         DebugName = debugName ?? ($"UIBitmap {info.Name}" + (info.HasRawMask ? "" : " (Raw mask)"));
     }
 
-    // strictly speaking this is a workaround: waiting on global secondary assets 
+    // strictly speaking this is a workaround: waiting on global secondary assets (the sampler)
     // from local primary ones currently does not work and will throw an exception
     // practically we do not need this functionality:
     //   - We do not wait for textures (Model/Effect materials) 

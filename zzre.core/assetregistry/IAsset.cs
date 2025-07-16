@@ -17,8 +17,6 @@ public interface IAsset : IDisposable
     public static virtual AssetLocality Locality => AssetLocality.Global;
     public static virtual bool NeedsMainThreadDisposal => false;
     IAssetRegistry Registry { get; }
-
-    void IDisposable.Dispose() { }
 }
 
 public readonly record struct AssetLoadResult<TInfo>(
