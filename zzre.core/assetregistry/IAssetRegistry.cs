@@ -24,6 +24,9 @@ public interface IAssetRegistry : IDisposable
         where TInfo : struct, IEquatable<TInfo>
         where TAsset : class, IAsset<TInfo>;
 
+    void Apply<TAsset>(AssetHandle<TAsset> handle, Action<AssetHandle<TAsset>> action)
+        where TAsset : class, IAsset;
+
     void Update();
 }
 

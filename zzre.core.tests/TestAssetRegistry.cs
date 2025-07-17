@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -1183,5 +1184,344 @@ public class TestAssetRegistry
         }, Throws.Nothing);
     }
 
+    [Test]
+    public void Apply_SyncAfter()
+    {
+        using var global = new AssetRegistry(DI);
 
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        int counter = 0;
+        global.Apply(handle, _ => counter++);
+
+        Assert.That(counter, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task Apply_HighBeforeLoadStart(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        int counter = 0;
+        global.Apply(handle, _ => counter++);
+        Assert.That(counter, Is.Zero);
+        global.Update();
+        Assert.That(counter, Is.Zero);
+
+        info.FinishLoad.SetResult();
+        var asset = await handle.GetAsync(ct);
+
+        Assert.That(counter, Is.Zero); // apply has to be called on main thread - during Update
+        global.Update();
+        Assert.That(counter, Is.EqualTo(1));
+        global.Update();
+        Assert.That(counter, Is.EqualTo(1)); // but not twice
+    }
+
+    [Test]
+    public async Task Apply_HighDuringLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        await info.StartedLoad.Task;
+
+        int counter = 0;
+        global.Apply(handle, _ => counter++);
+        Assert.That(counter, Is.Zero);
+        global.Update();
+        Assert.That(counter, Is.Zero);
+
+        info.FinishLoad.SetResult();
+        var asset = await handle.GetAsync(ct);
+
+        Assert.That(counter, Is.Zero); // apply has to be called on main thread - during Update
+        global.Update();
+        Assert.That(counter, Is.EqualTo(1));
+        global.Update();
+        Assert.That(counter, Is.EqualTo(1)); // but not twice
+    }
+
+    [Test]
+    public async Task Apply_HighAfterLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsCompleted();
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        var asset = await handle.GetAsync(ct);
+
+        int counter = 0;
+        global.Apply(handle, _ => counter++);
+        Assert.That(counter, Is.EqualTo(1)); // main thread and finished loading - fastpath
+    }
+
+    [Test]
+    public async Task Apply_LowBeforeStart(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsCompleted();
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+
+        int counter = 0;
+        global.Apply(handle, _ => counter++);
+        Assert.That(counter, Is.Zero); // not even started
+
+        global.Update();
+        Assert.That(counter, Is.Zero); // just started, not applied
+
+        var asset = await handle.GetAsync(ct);
+        Assert.That(counter, Is.Zero); // finished but not applied
+
+        global.Update();
+        Assert.That(counter, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task Apply_HighMultipleDuringLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        await info.StartedLoad.Task;
+        List<int> events = [];
+        global.Apply(handle, _ => events.Add(1));
+        global.Apply(handle, _ => events.Add(2));
+        global.Apply(handle, _ => events.Add(3));
+        info.FinishLoad.SetResult();
+        var asset = await handle.GetAsync(ct);
+
+        global.Update();
+        Assert.That(events, Is.EqualTo([1, 2, 3]));
+    }
+
+    [Test]
+    public async Task Apply_HighDuringLoadFromAsync(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        await info.StartedLoad.Task;
+        int counter = 0;
+        await Task.Run(() => global.Apply(handle, _ => counter++), ct);
+        info.FinishLoad.SetResult();
+        await handle.GetAsync(ct);
+
+        Assert.That(counter, Is.Zero); // was not finished 
+        global.Update();
+        Assert.That(counter, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task Apply_HighAfterLoadFromAsync(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.High);
+        await handle.GetAsync(ct);
+
+        int counter = 0;
+        await Task.Run(() => global.Apply(handle, _ => counter++), ct);
+
+        Assert.That(counter, Is.Zero); // was finished but Apply was not on main thread
+        global.Update();
+        Assert.That(counter, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task Apply_MixedAsyncOrder(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Low);
+
+        List<int> events = [];
+        global.Apply(handle, _ => events.Add(1));
+        await Task.Run(() => global.Apply(handle, _ => events.Add(2)), ct);
+        global.Apply(handle, _ => events.Add(3));
+        await Task.Run(() => global.Apply(handle, _ => events.Add(4)), ct);
+
+        global.Update();
+        await handle.GetAsync(ct);
+        global.Update();
+        Assert.That(events, Is.EqualTo([1, 2, 3, 4]));
+    }
+
+    [Test]
+    public void Apply_GlobalFromLocal()
+    {
+        using var global = new AssetRegistry(DI);
+        using var local = new AssetRegistry(DI, global);
+
+        using var handle = local.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        int counter = 0;
+        local.Apply(handle, _ => counter++);
+        Assert.That(counter, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void Apply_DefaultHandle()
+    {
+        using var global = new AssetRegistry(DI);
+
+        Assert.That(() =>
+        {
+            global.Apply<GlobalTestAsset>(default, _ => { });
+        }, Throws.ArgumentException);
+    }
+
+    [Test]
+    public void Apply_InvalidHandle()
+    {
+        using var global = new AssetRegistry(DI);
+
+        var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var invalidCopy = handle;
+        handle.Dispose();
+
+        Assert.That(() =>
+        {
+            global.Apply(invalidCopy, _ => { });
+        }, Throws.InstanceOf<ObjectDisposedException>());
+    }
+
+    [Test]
+    public void Apply_AfterRegistryDisposal()
+    {
+        var global = new AssetRegistry(DI);
+        var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        global.Dispose();
+
+        Assert.That(() =>
+        {
+            global.Apply(handle, _ => { });
+        }, Throws.InstanceOf<ObjectDisposedException>());
+    }
+
+    [Test]
+    public async Task Apply_AfterAssetDisposal(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Low);
+
+        int counter = 0;
+        global.Apply(handle, _ => counter++);
+        global.Update();
+        await handle.GetAsync(ct);
+        handle.Dispose(); // now the queue contains one dead asset ID
+        global.Update();
+
+        Assert.That(counter, Is.Zero);
+    }
+
+    [Test]
+    public async Task Apply_AfterAssetRevival(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsCompleted();
+        var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+
+        int counter = 0;
+        global.Apply(handle, _ => counter++);
+        global.Update();
+        await handle.GetAsync(ct);
+        handle.Dispose(); // now the queue contains one dead asset ID
+        Assert.That(info.Disposed.Task.IsCompletedSuccessfully); // and it really *is* dead
+        Assert.That(counter, Is.Zero);
+
+        handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        // now the queue contains the asset ID but not the asset the apply action was targeted at
+
+        global.Update();
+
+        Assert.That(counter, Is.Zero);
+    }
+
+    [Test]
+    public void Apply_ErrorSync()
+    {
+        using var global = new AssetRegistry(DI);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+
+        Assert.That(() =>
+        {
+            global.Apply(handle, _ => throw new TestException());
+        }, Throws.InstanceOf<TestException>());
+
+        _ = handle.Get(); // does not throw because Asset is still valid
+    }
+
+    [Test]
+    public async Task Apply_ErrorAsync(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info1 = GetInfo(1);
+        var info2 = GetInfo(2);
+        var info3 = GetInfo(3);
+        using var handle1 = global.Load<TestInfo, GlobalTestAsset>(info1, AssetPriority.High);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info2, AssetPriority.High);
+        using var handle3 = global.Load<TestInfo, GlobalTestAsset>(info3, AssetPriority.High);
+
+        int counter = 0;
+        global.Apply(handle1, _ => throw new TestException());
+        global.Apply(handle2, _ => counter++);
+        global.Apply(handle3, _ => throw new TestException());
+        global.Apply(handle1, _ => counter++); // subsequent apply actions are still executed
+
+        info1.FinishLoad.SetResult();
+        info2.FinishLoad.SetResult();
+        info3.FinishLoad.SetResult();
+        await Task.WhenAll([
+            handle1.GetAsync(ct).AsTask(),
+            handle2.GetAsync(ct).AsTask(),
+            handle3.GetAsync(ct).AsTask(),
+        ]);
+
+        Assert.That(() =>
+        {
+            global.Update();
+        }, Throws.InstanceOf<AggregateException>());
+        Assert.That(counter, Is.EqualTo(2));
+    }
+
+    [Test]
+    public async Task Apply_ErrorDuringLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        int counter = 0;
+        global.Apply(handle, _ => counter++);
+        info.FinishLoad.SetException(new TestException());
+
+        Assert.ThatAsync(async () =>
+        {
+            await handle.GetAsync(ct);
+        }, Throws.InstanceOf<TestException>());
+
+        Assert.That(counter, Is.Zero);
+        global.Update();
+        Assert.That(counter, Is.Zero); // even after Update no apply action of erroneous asset is called
+    }
+
+    [Test]
+    public async Task Apply_ErrorAfterLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsErroneous();
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        Assert.ThatAsync(async () =>
+        {
+            await handle.GetAsync(ct);
+        }, Throws.InstanceOf<TestException>());
+
+        int counter = 0;
+        global.Apply(handle, _ => counter++);
+
+        Assert.That(counter, Is.Zero);
+        global.Update();
+        Assert.That(counter, Is.Zero); // even after Update no apply action of erroneous asset is called
+    }
 }

@@ -15,6 +15,7 @@ internal sealed class AssetState
 {
     public required bool NeedsMainThreadDisposal;
     public required AsyncLazy<IDisposable> LoadLazy;
+    public required uint Tag; // used for apply actions to prevent triggering from revived assets
     public IDisposable? Asset
     {
         get
@@ -47,6 +48,9 @@ public class AssetRegistry : IAssetRegistryInternal
     private readonly ILogger logger;
     private readonly int mainThreadId;
     private readonly AssetRegistry? parentRegistry;
+    private readonly Dictionary<Type, Action<Guid, object>> applyActionCaster = [];
+    private List<(Guid assetId, uint tag, Type assetType, object action)> applyActions = [], applyActionsBackup = [];
+    private uint nextAssetTag = 0;
 
     public bool WasDisposed => cancellationSource.IsCancellationRequested;
     public bool IsMainThread => mainThreadId == Environment.CurrentManagedThreadId;
@@ -81,6 +85,10 @@ public class AssetRegistry : IAssetRegistryInternal
             DisposeAssetState(asset);
         }
         assets.Clear();
+        applyActions.Clear();
+        applyActionsBackup.Clear();
+        assetsToDispose.Writer.TryComplete();
+        assetsToStart.Writer.TryComplete();
         DisposeOldAssets(); // after current assets in case we add something into it (we shouldn't)
 
         semaphore.Dispose();
@@ -123,14 +131,23 @@ public class AssetRegistry : IAssetRegistryInternal
         LockSemaphore();
         try
         {
-            var assetState = assets.GetValueOrDefault(assetId);
-            ObjectDisposedException.ThrowIf(assetState is null || assetState.RefCount <= 0, typeof(AssetState));
-            assetState.RefCount++;
+            ObjectDisposedException.ThrowIf(!TryAddRefUnsafe(assetId), typeof(IAsset));
         }
         finally
         {
             semaphore.Release();
         }
+    }
+
+    private bool TryAddRefUnsafe(Guid assetId)
+    {
+        Debug.Assert(!WasDisposed);
+        Debug.Assert(semaphore.CurrentCount == 0);
+        var assetState = assets.GetValueOrDefault(assetId);
+        if (assetState is null || assetState.RefCount <= 0)
+            return false;
+        assetState.RefCount++;
+        return true;
     }
 
     [ExcludeFromCodeCoverage]
@@ -140,18 +157,25 @@ public class AssetRegistry : IAssetRegistryInternal
         LockSemaphore();
         try
         {
-            var assetState = assets.GetValueOrDefault(assetId);
-            if (assetState is null || assetState.RefCount <= 0)
-                return; // Let's just ignore already-dead assets, we got what we wanted
-            if (--assetState.RefCount <= 0)
-            {
-                DisposeAssetState(assetState);
-                assets.Remove(assetId);
-            }
+            DelRefUnsafe(assetId);
         }
         finally
         {
             semaphore.Release();
+        }
+    }
+
+    private void DelRefUnsafe(Guid assetId)
+    {
+        Debug.Assert(!WasDisposed);
+        Debug.Assert(semaphore.CurrentCount == 0);
+        var assetState = assets.GetValueOrDefault(assetId);
+        if (assetState is null || assetState.RefCount <= 0)
+            return; // Let's just ignore already-dead assets, we got what we wanted
+        if (--assetState.RefCount <= 0)
+        {
+            DisposeAssetState(assetState);
+            assets.Remove(assetId);
         }
     }
 
@@ -242,7 +266,8 @@ public class AssetRegistry : IAssetRegistryInternal
             assetState = new()
             {
                 NeedsMainThreadDisposal = TAsset.NeedsMainThreadDisposal,
-                LoadLazy = new(ct => LoadAsset<TInfo, TAsset>(infoCopy, assetId))
+                LoadLazy = new(ct => LoadAsset<TInfo, TAsset>(infoCopy, assetId)),
+                Tag = unchecked(++nextAssetTag)
             };
             assets[assetId] = assetState;
             return (assetId, assetState);
@@ -312,10 +337,12 @@ public class AssetRegistry : IAssetRegistryInternal
         ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
         if (!IsMainThread)
             throw new InvalidOperationException("Low batch scheduling is only allowed on the main thread");
+
         LockSemaphore();
         try
         {
             DisposeOldAssets();
+
             for (int i = 0; i < maxLowPrioAssets && assetsToStart.Reader.TryRead(out var assetId); i++)
             {
                 if (assets.TryGetValue(assetId, out var assetState) &&
@@ -323,11 +350,69 @@ public class AssetRegistry : IAssetRegistryInternal
                     !assetState.LoadLazy.IsValueCreated)
                     Task.Run(() => assetState.LoadLazy.WithCancellation(Cancellation), Cancellation);
             }
+
+            // Copy apply actions and make sure assets keep alive during applying
+            (applyActions, applyActionsBackup) = (applyActionsBackup, applyActions);
+            for (int i = 0; i < applyActionsBackup.Count; i++)
+            {
+                var assetId = applyActionsBackup[i].assetId;
+                if (!TryAddRefUnsafe(assetId))
+                    // Asset is not alive anymore
+                    applyActionsBackup[i] = default;
+                else if (assets[assetId].Tag != applyActionsBackup[i].tag)
+                {
+                    // Asset was revived, apply actions are outdated
+                    DelRefUnsafe(assetId);
+                    applyActionsBackup[i] = default;
+                }
+                else if (assets[assetId].Asset is null)
+                {
+                    // Asset was not yet loaded
+                    DelRefUnsafe(assetId);
+                    applyActions.Add(applyActionsBackup[i]);
+                    applyActionsBackup[i] = default;
+                }
+            }
         }
         finally
         {
             semaphore.Release();
         }
+
+        // We can safely access applyActionsBackup as we are on the main thread
+        var exceptions = new List<Exception>();
+        foreach (var (assetId, _, assetType, action) in applyActionsBackup)
+        {
+            if (assetId == default)
+                continue;
+            try
+            {
+                applyActionCaster[assetType](assetId, action);
+            }
+            catch (Exception e)
+            {
+                exceptions.Add(e);
+            }
+        }
+
+        // Remove reference we added earlier
+        LockSemaphore();
+        try
+        {
+            foreach (var (assetId, _, _, _) in applyActionsBackup)
+            {
+                if (assetId != default)
+                    DelRefUnsafe(assetId);
+            }
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+        applyActionsBackup.Clear();
+
+        if (exceptions.Count > 0)
+            throw new AggregateException(exceptions);
     }
 
     private void DisposeOldAssets()
@@ -336,5 +421,62 @@ public class AssetRegistry : IAssetRegistryInternal
         Debug.Assert(semaphore.CurrentCount == 0);
         while (assetsToDispose.Reader.TryRead(out var asset))
             asset.Dispose();
+    }
+
+    public void Apply<TAsset>(AssetHandle<TAsset> handle, Action<AssetHandle<TAsset>> action)
+        where TAsset : class, IAsset
+    {
+        ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
+        if (handle.Registry is null)
+            throw new ArgumentException("Invalid asset handle");
+        if (handle.Registry == ParentRegistry)
+        {
+            ParentRegistry.Apply(handle, action);
+            return;
+        }
+        if (handle.Registry != this)
+            throw new ArgumentException("Asset is not part of this registry or its parent");
+
+        bool shouldBeExecutedNow = false;
+
+        LockSemaphore();
+        try
+        {
+            if (!applyActionCaster.ContainsKey(typeof(TAsset)))
+            {
+                applyActionCaster.Add(typeof(TAsset), (assetId, action) =>
+                {
+                    ((Action<AssetHandle<TAsset>>)action)(new(this, assetId));
+                });
+            }
+
+            if (IsMainThread)
+            {
+                ObjectDisposedException.ThrowIf(!TryAddRefUnsafe(handle.AssetId), typeof(IAsset));
+                if (assets[handle.AssetId].Asset is null)
+                    DelRefUnsafe(handle.AssetId); // Asset was not yet loaded
+                else
+                    shouldBeExecutedNow = true;
+            }
+            if (!shouldBeExecutedNow)
+                applyActions.Add(new(handle.AssetId, assets[handle.AssetId].Tag, typeof(TAsset), action));
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+
+        // Fast-path: no queueing 
+        if (shouldBeExecutedNow)
+        {
+            try
+            {
+                action(new(this, handle.AssetId));
+            }
+            finally
+            {
+                (this as IAssetRegistryInternal).DelRef(handle.AssetId);
+            }
+        }
     }
 }
