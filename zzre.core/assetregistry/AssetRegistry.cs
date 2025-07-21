@@ -16,6 +16,7 @@ internal sealed class AssetState
     public required bool NeedsMainThreadDisposal;
     public required AsyncLazy<IDisposable> LoadLazy;
     public required uint Tag; // used for apply actions to prevent triggering from revived assets
+    public required Type AssetType;
     public IDisposable? Asset
     {
         get
@@ -50,7 +51,7 @@ public class AssetRegistry : IAssetRegistryInternal
     private readonly AssetRegistry? parentRegistry;
     private readonly Dictionary<Type, Action<Guid, object>> applyActionCaster = [];
     private List<(Guid assetId, uint tag, Type assetType, object action)> applyActions = [], applyActionsBackup = [];
-    private uint nextAssetTag = 0;
+    private uint nextAssetTag;
 
     public bool WasDisposed => cancellationSource.IsCancellationRequested;
     public bool IsMainThread => mainThreadId == Environment.CurrentManagedThreadId;
@@ -267,7 +268,8 @@ public class AssetRegistry : IAssetRegistryInternal
             {
                 NeedsMainThreadDisposal = TAsset.NeedsMainThreadDisposal,
                 LoadLazy = new(ct => LoadAsset<TInfo, TAsset>(infoCopy, assetId)),
-                Tag = unchecked(++nextAssetTag)
+                Tag = unchecked(++nextAssetTag),
+                AssetType = typeof(TAsset)
             };
             assets[assetId] = assetState;
             return (assetId, assetState);
@@ -326,6 +328,32 @@ public class AssetRegistry : IAssetRegistryInternal
                 ObjectDisposedException.ThrowIf(true, typeof(AssetRegistry));
             }
             Cancellation.ThrowIfCancellationRequested();
+        }
+    }
+
+    public bool TryGet<TAsset>(Guid assetId, out AssetHandle<TAsset> handle)
+        where TAsset : class, IAsset
+    {
+        ObjectDisposedException.ThrowIf(WasDisposed, typeof(AssetRegistry));   
+        if (ParentRegistry?.TryGet(assetId, out handle) is true)
+            return true;
+
+        handle = default;
+        LockSemaphore();
+        try
+        {
+            if (!assets.TryGetValue(assetId, out var assetState) ||
+                assetState.RefCount < 1 ||
+                !assetState.AssetType.IsAssignableTo(typeof(TAsset)))
+                return false;
+
+            assetState.RefCount++;
+            handle = new(this, assetId);
+            return true;
+        }
+        finally
+        {
+            semaphore.Release();
         }
     }
 

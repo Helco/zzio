@@ -27,7 +27,8 @@ public interface IAssetRegistry : IDisposable
     void Apply<TAsset>(AssetHandle<TAsset> handle, Action<AssetHandle<TAsset>> action)
         where TAsset : class, IAsset;
 
-    
+    bool TryGet<TAsset>(Guid assetId, out AssetHandle<TAsset> handle)
+        where TAsset : class, IAsset;
 
     void Update();
 }

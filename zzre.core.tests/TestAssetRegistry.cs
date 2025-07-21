@@ -1524,4 +1524,121 @@ public class TestAssetRegistry
         global.Update();
         Assert.That(counter, Is.Zero); // even after Update no apply action of erroneous asset is called
     }
+
+    [Test]
+    public void TryGet_AfterLoad()
+    {
+        using var global = new AssetRegistry(DI);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+
+        Assert.That(global.TryGet<GlobalTestAsset>(handle.AssetId, out var handle2), Is.True);
+        Assert.That(handle2.AssetId, Is.EqualTo(handle.AssetId));
+        Assert.That(handle2.Get(), Is.SameAs(handle.Get()));
+
+        handle.Dispose();
+        Assert.That(handle2.Get, Throws.Nothing);
+        Assert.That(handle2.Dispose, Throws.Nothing);
+    }
+
+    [Test]
+    public async Task TryGet_DuringLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        await info.StartedLoad.Task;
+        Assert.That(global.TryGet<GlobalTestAsset>(handle.AssetId, out var handle2), Is.True);
+        info.FinishLoad.SetResult();
+        var asset = await handle2.GetAsync(ct);
+        Assert.That(asset, Is.SameAs(handle.Asset));
+        Assert.That(asset, Is.Not.Null);
+    }
+
+    [Test]
+    public async Task TryGet_BeforeLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsCompleted();
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+
+        Assert.That(global.TryGet<GlobalTestAsset>(handle.AssetId, out var handle2), Is.True);
+        global.Update();
+        var asset = await handle2.GetAsync(ct);
+        Assert.That(asset, Is.SameAs(handle.Asset));
+        Assert.That(asset, Is.Not.Null);
+    }
+
+    [Test]
+    public async Task TryGet_ErrorDuringLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsErroneous();
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        await info.StartedLoad.Task;
+        Assert.That(global.TryGet<GlobalTestAsset>(handle.AssetId, out var handle2), Is.True);
+        Assert.ThatAsync(() => handle2.GetAsync(ct).AsTask(), Throws.InstanceOf<TestException>());
+    }
+
+    [Test]
+    public void TryGet_DefaultId()
+    {
+        using var global = new AssetRegistry(DI);
+        Assert.That(global.TryGet<GlobalTestAsset>(default, out var handle), Is.False);
+        Assert.That(handle, Is.Default);
+    }
+
+    [Test]
+    public void TryGet_InvalidId()
+    {
+        using var global = new AssetRegistry(DI);
+        Assert.That(global.TryGet<GlobalTestAsset>(Guid.NewGuid(), out var handle), Is.False);
+        Assert.That(handle, Is.Default);
+    }
+
+    [Test]
+    public void TryGet_WrongType()
+    {
+        using var global = new AssetRegistry(DI);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        Assert.That(global.TryGet<GlobalMTDTestAsset>(handle.AssetId, out var handle2), Is.False);
+        Assert.That(handle2, Is.Default);
+    }
+
+    [Test]
+    public void TryGet_DeadAsset()
+    {
+        using var global = new AssetRegistry(DI);
+        var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        handle.Dispose();
+        Assert.That(global.TryGet<GlobalTestAsset>(handle.AssetId, out _), Is.False);
+    }
+
+    [Test]
+    public void TryGet_LocalFromLocal()
+    {
+        using var global = new AssetRegistry(DI);
+        using var local = new AssetRegistry(DI, global);
+        using var handle = local.Load<TestInfo, LocalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        Assert.That(local.TryGet<LocalTestAsset>(handle.AssetId, out _), Is.True);
+    }
+
+    [Test]
+    public void TryGet_GlobalFromLocal()
+    {
+        using var global = new AssetRegistry(DI);
+        using var local = new AssetRegistry(DI, global);
+        using var handle = local.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        Assert.That(local.TryGet<GlobalTestAsset>(handle.AssetId, out _), Is.True);
+    }
+
+    [Test]
+    public void TryGet_LocalFromGlobal()
+    {
+        using var global = new AssetRegistry(DI);
+        using var local = new AssetRegistry(DI, global);
+        using var handle = local.Load<TestInfo, LocalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        Assert.That(global.TryGet<LocalTestAsset>(handle.AssetId, out _), Is.False);
+    }
 }
