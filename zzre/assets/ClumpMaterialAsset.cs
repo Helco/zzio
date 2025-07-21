@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Veldrid;
 using zzio;
 using zzio.rwbs;
@@ -9,7 +10,7 @@ using static zzre.ClumpMaterialAsset;
 
 namespace zzre;
 
-public sealed class ClumpMaterialAsset : ModelMaterialAsset
+public sealed class ClumpMaterialAsset(IAssetRegistry registry) : IAsset<Info>
 {
     private static readonly FilePath[] ClumpTextureBasePaths =
     [
@@ -17,16 +18,15 @@ public sealed class ClumpMaterialAsset : ModelMaterialAsset
         new FilePath("resources/textures/worlds"),
         new FilePath("resources/textures/backdrops")
     ];
-    protected override IReadOnlyList<FilePath> TextureBasePaths => ClumpTextureBasePaths;
+
+    static AssetLocality IAsset.Locality => AssetLocality.Local;
+    static bool IAsset.NeedsMainThreadDisposal => true; // an Apply action wants to access Material
 
     public readonly record struct Info(
-        string? textureName,
-        SamplerDescription sampler,
-        MaterialVariant config,
-        StandardTextureKind? texturePlaceholder = null);
-
-    public static void Register() =>
-        AssetInfoRegistry<Info>.Register<ClumpMaterialAsset>(AssetLocality.Context);
+        string? TextureName,
+        SamplerDescription Sampler,
+        MaterialVariant Variant,
+        StandardTextureKind? TexturePlaceholder = null);
 
     public readonly record struct MaterialVariant(
         ModelMaterial.BlendMode BlendMode = ModelMaterial.BlendMode.Opaque,
@@ -46,26 +46,85 @@ public sealed class ClumpMaterialAsset : ModelMaterialAsset
             zzio.effect.EffectPartRenderMode.NormalBlend => ModelMaterial.BlendMode.Alpha,
             _ => throw new NotSupportedException($"Unsupported effect part render mode: {renderMode}")
         };
+
+        public override string ToString() =>
+            $"{BlendMode} {Flag(!DepthWrite, "NoZWrite")} {Flag(!DepthTest, "NoZTest")} {Flag(HasEnvMap, "EnvMap")} {Flag(HasTexShift, "TexShift")} {Flag(!HasFog, "NoFog")}";
+
+        private static string Flag(bool enable, string value) => enable ? value : "";
     }
 
-    private readonly MaterialVariant materialVariant;
+    private AssetHandle<TextureAsset> textureHandle;
+    private AssetHandle<SamplerAsset> samplerHandle;
 
-    public ClumpMaterialAsset(IAssetRegistry registry, Guid assetId, Info info)
-        : base(registry, assetId, info.textureName, info.sampler, info.texturePlaceholder)
+    public IAssetRegistry Registry { get; } = registry;
+    public ModelMaterial Material { get; private set; } = null!;
+
+    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Info info, CancellationToken ct)
     {
-        materialVariant = info.config;
+        var diContainer = registry.DIContainer;
+        var material = new ModelMaterial(diContainer)
+        {
+            DebugName = $"ClumpMat {info.TextureName} {info.Variant}"
+        };
+        SetMaterialVariant(diContainer, material, info.Variant);
+
+        var camera = diContainer.GetTag<Camera>();
+        material.Projection.BufferRange = camera.ProjectionRange;
+        material.View.BufferRange = camera.ViewRange;
+        var samplerHandle = registry.LoadSampler(info.Sampler, AssetPriority.High);
+        material.Sampler.Sampler = (await samplerHandle.GetAsync(ct)).Sampler;
+        var (initalTexture, textureHandle) = await LoadTexture(registry, info.TextureName, info.TexturePlaceholder, ct);
+        material.Texture.Texture = initialTexture;
+
+        return new(new ClumpMaterialAsset(registry)
+        {
+            samplerHandle = samplerHandle,
+            textureHandle = textureHandle,
+            Material = material
+        });
     }
 
-    protected override void SetMaterialVariant(ModelMaterial material)
+    private static async Task<(Texture, AssetHandle<TextureAsset>)> LoadTexture(
+        IAssetRegistry registry,
+        ,
+        string? textureName,
+        StandardTextureKind? placeholder,
+        CancellationToken ct)
     {
-        Material.IsInstanced = true;
-        Material.IsSkinned = false;
-        Material.Blend = materialVariant.BlendMode;
-        Material.DepthWrite = materialVariant.DepthWrite;
-        Material.DepthTest = materialVariant.DepthTest;
-        Material.HasEnvMap = materialVariant.HasEnvMap;
-        Material.HasTexShift = materialVariant.HasTexShift;
-        Material.HasFog = materialVariant.HasFog;
+        var standardTextures = registry.DIContainer.GetTag<StandardTextures>();
+        if (textureName is null && placeholder is null)
+            throw new ArgumentNullException(nameof(textureName), "Both textureName and placeholder are null");
+        else if (textureName is null)
+        {
+            return (standardTextures.ByKind(placeholder!.Value), default);
+        }
+        else if (placeholder is null)
+        {
+            var handle = registry.LoadTexture(ClumpTextureBasePaths, textureName, AssetPriority.High);
+            var texture = await handle.GetAsync(ct);
+            return (texture.Texture, handle);
+        }
+        else
+        {
+            var handle = registry.LoadTexture(ClumpTextureBasePaths, textureName, AssetPriority.High);
+            registry.Apply(handle, h => )
+            return (standardTextures.ByKind(placeholder.Value), handle);
+        }
+    }
+
+    private static void SetMaterialVariant(
+        ITagContainer diContainer,
+        ModelMaterial material,
+        MaterialVariant materialVariant)
+    {
+        material.IsInstanced = true;
+        material.IsSkinned = false;
+        material.Blend = materialVariant.BlendMode;
+        material.DepthWrite = materialVariant.DepthWrite;
+        material.DepthTest = materialVariant.DepthTest;
+        material.HasEnvMap = materialVariant.HasEnvMap;
+        material.HasTexShift = materialVariant.HasTexShift;
+        material.HasFog = materialVariant.HasFog;
 
         material.Factors.Ref = new()
         {
@@ -76,6 +135,14 @@ public sealed class ClumpMaterialAsset : ModelMaterialAsset
         };
         if (materialVariant.HasFog && diContainer.TryGetTag<UniformBuffer<FogParams>>(out var fogParams))
             material.FogParams.Buffer = fogParams.Buffer;
+    }
+
+    public void Dispose()
+    {
+        textureHandle.Dispose();
+        samplerHandle.Dispose();
+        Material?.Dispose();
+        Material = null!;
     }
 }
 

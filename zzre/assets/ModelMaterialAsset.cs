@@ -9,7 +9,7 @@ using zzre.rendering;
 
 namespace zzre;
 
-public abstract class ModelMaterialAsset : Asset
+public abstract class ModelMaterialAsset(IAssetRegistry registry) : IAsset
 {
     private const string UseStandardTexture = "marker"; // Funatics never gave us this texture :(
 
@@ -18,7 +18,10 @@ public abstract class ModelMaterialAsset : Asset
     private readonly StandardTextureKind? texturePlaceholder;
     private ModelMaterial? material;
 
-    public string DebugName { get; protected set; }
+    static AssetLocality IAsset.Locality => AssetLocality.Local;
+
+    public IAssetRegistry Registry { get; } = registry;
+    public string DebugName { get; protected set; } = "";
     public ModelMaterial Material => material ??
         throw new InvalidOperationException("Asset was not yet loaded");
 

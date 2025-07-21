@@ -35,7 +35,7 @@ public sealed class StandardTextures : IDisposable
             new(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
         texture.Name = name;
         var bytes = stackalloc byte[4];
-        *((uint*)bytes) = color.Raw;
+        *(uint*)bytes = color.Raw;
         graphicsDevice.UpdateTexture(texture, (nint)bytes, 4, 0, 0, 0, 1, 1, 1, 0, 0);
         return texture;
     }
