@@ -48,7 +48,7 @@ public sealed class UIPreloadAsset(IAssetRegistry registry) : IAsset<UIPreloadAs
     static AssetLocality IAsset.Locality => AssetLocality.Local; // the bitmaps are local
     public IAssetRegistry Registry { get; } = registry;
 
-    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Info info, CancellationToken ct)
+    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid _, Info info, CancellationToken ct)
     {
         AssetHandle<UITileSheetAsset> Preload(out AssetHandle<UITileSheetAsset> handle, UITileSheetAsset.Info info) =>
             handle = registry.LoadUITileSheet(info, AssetPriority.High);

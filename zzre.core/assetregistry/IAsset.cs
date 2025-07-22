@@ -27,7 +27,7 @@ public interface IAsset<TInfo> : IAsset
     where TInfo : struct, IEquatable<TInfo>
 {
     static virtual Guid InfoToAssetId(in TInfo info) => GeneralInfoToGuid(info);
-    static abstract Task<AssetLoadResult<TInfo>> LoadAsync(IAssetRegistry registry, TInfo info, CancellationToken ct);
+    static abstract Task<AssetLoadResult<TInfo>> LoadAsync(IAssetRegistry registry, Guid assetId, TInfo info, CancellationToken ct);
 
     private static readonly object generalInfoLock = new();
     private static readonly Dictionary<TInfo, Guid> generalInfoToGuid = [];

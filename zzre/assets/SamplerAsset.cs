@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Veldrid;
@@ -11,7 +12,7 @@ public sealed class SamplerAsset(IAssetRegistry registry) : IAsset<SamplerDescri
     public string DebugName { get; private init; } = "";
     public Sampler Sampler { get; private set; } = null!;
 
-    static Task<AssetLoadResult<SamplerDescription>> IAsset<SamplerDescription>.LoadAsync(IAssetRegistry registry, SamplerDescription info, CancellationToken ct)
+    static Task<AssetLoadResult<SamplerDescription>> IAsset<SamplerDescription>.LoadAsync(IAssetRegistry registry, Guid _, SamplerDescription info, CancellationToken ct)
     {
         var resourceFactory = registry.DIContainer.GetTag<ResourceFactory>();
         var sampler = resourceFactory.CreateSampler(info);

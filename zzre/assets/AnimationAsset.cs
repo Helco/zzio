@@ -28,7 +28,7 @@ public sealed class AnimationAsset : IAsset<AnimationAsset.Info>
         Animation = animation;
     }
 
-    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Info info, CancellationToken ct)
+    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid _,  Info info, CancellationToken ct)
     {
         var resourcePool = registry.DIContainer.GetTag<IResourcePool>();
         using var stream = resourcePool.FindAndOpen(info.FullPath) ??

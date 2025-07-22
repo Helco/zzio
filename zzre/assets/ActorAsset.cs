@@ -44,7 +44,7 @@ public sealed class ActorAsset(IAssetRegistry registry, ActorAsset.Info info) : 
     public ReadOnlySpan<AnimationAsset> BodyAnimations => body.Animations;
     public ReadOnlySpan<AnimationAsset> WingsAnimations => wings.Animations;
 
-    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Info info, CancellationToken ct)
+    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid _, Info info, CancellationToken ct)
     {
         var resourcePool = registry.DIContainer.GetTag<IResourcePool>();
 

@@ -43,7 +43,7 @@ public sealed class ClumpAsset : IAsset<ClumpAsset.Info>
         Mesh = null!;
     }
 
-    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Info info, CancellationToken ct)
+    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid _,  Info info, CancellationToken ct)
     {
         var mesh = new ClumpMesh(registry.DIContainer, info.FullPath);
         return Task.FromResult(new AssetLoadResult<Info>(new ClumpAsset(registry, info, mesh)));

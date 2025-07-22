@@ -24,7 +24,7 @@ public sealed class SoundAsset(IAssetRegistry registry, SoundAsset.Info info) : 
     public IAssetRegistry Registry { get; } = registry;
     public uint Buffer { get; private set; }
 
-    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Info info, CancellationToken ct)
+    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid __, Info info, CancellationToken ct)
     {
         var diContainer = registry.DIContainer;
         uint buffer = 0; // a valid but unusable state

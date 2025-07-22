@@ -24,7 +24,7 @@ public sealed class TextureAsset(IAssetRegistry registry, TextureAsset.Info info
     public IAssetRegistry Registry { get; } = registry;
     public Texture Texture { get; private set; } = null!;
 
-    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Info info, CancellationToken ct)
+    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid _, Info info, CancellationToken ct)
     {
         var resourcePool = registry.DIContainer.GetTag<IResourcePool>();
         using var textureStream = resourcePool.FindAndOpen(info.FullPath) ??

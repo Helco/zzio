@@ -295,7 +295,7 @@ public class AssetRegistry : IAssetRegistryInternal
         // Due to AsyncLazy we can flow exceptions outside this method
 
         // Load asset and secondary assets
-        var asset = (await TAsset.LoadAsync(this, info, Cancellation)).Asset;
+        var asset = (await TAsset.LoadAsync(this, assetId, info, Cancellation)).Asset;
         Debug.Assert(asset.Registry == this);
         CheckRegistryDisposal();
 

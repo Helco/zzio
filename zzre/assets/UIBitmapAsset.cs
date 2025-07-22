@@ -33,7 +33,7 @@ public sealed class UIBitmapAsset(IAssetRegistry registry, UIBitmapAsset.Info in
     public UIMaterial Material { get; private set; } = null!;
     public Vector2 Size => new(Material.MainTexture.Texture!.Width, Material.MainTexture.Texture!.Height);
 
-    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Info info, CancellationToken ct)
+    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid _, Info info, CancellationToken ct)
     {
         var debugName = $"UIBitmap {info.Name}" + (info.HasRawMask ? "" : " (Raw mask)");
         var samplerAsset = registry.LoadSampler(SamplerDescription.Linear, AssetPriority.High);

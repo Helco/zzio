@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Veldrid;
 using zzre.game;
@@ -32,7 +33,7 @@ public sealed class UITileSheetAsset(IAssetRegistry registry) : IAsset<UITileShe
     public UIMaterial Material { get; private set; } = null!;
     public TileSheet TileSheet { get; private set; } = null!;
 
-    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Info info, CancellationToken ct)
+    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid _, Info info, CancellationToken ct)
     {
         var samplerHandle = registry.LoadSampler(SamplerDescription, AssetPriority.High);
         var isFont = (info.LineHeight ?? info.LineOffset ?? info.CharSpacing) is not null;
