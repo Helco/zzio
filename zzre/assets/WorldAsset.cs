@@ -1,48 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using zzio;
 using zzre.rendering;
 
 namespace zzre;
 
-public sealed class WorldAsset : Asset
+public sealed class WorldAsset(IAssetRegistry registry, WorldAsset.Info info, WorldMesh mesh) : IAsset<WorldAsset.Info>
 {
+    static AssetLocality IAsset.Locality => AssetLocality.Global;    
+
     public readonly record struct Info(FilePath FullPath);
 
-    public static void Register() =>
-        AssetInfoRegistry<Info>.Register<WorldAsset>(AssetLocality.Global);
+    public IAssetRegistry Registry { get; } = registry;
+    public WorldMesh Mesh { get; private set; } = mesh;
+    private readonly Info info = info;
 
-    private readonly Info info;
-    private WorldMesh? mesh;
-
-    public WorldMesh Mesh => mesh ??
-        throw new InvalidOperationException("Asset was not yet loaded");
-
-    public WorldAsset(IAssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
+    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid assetId, Info info, CancellationToken ct)
     {
-        this.info = info;
+        var mesh = new WorldMesh(registry.DIContainer, info.FullPath);
+        return Task.FromResult<AssetLoadResult<Info>>(new(
+            new WorldAsset(registry, info, mesh)
+        ));
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    public void Dispose()
     {
-        mesh = new WorldMesh(diContainer, info.FullPath);
-        return NoSecondaryAssets;
+        Mesh?.Dispose();
+        Mesh = null!;
     }
 
-    protected override void Unload()
-    {
-        mesh?.Dispose();
-        mesh = null;
-    }
-
-    protected override string ToStringInner() => $"World {info.FullPath.Parts[^1]}";
+    public override string ToString() => $"World {info.FullPath.Parts[^1]}";
 }
 
-public static unsafe partial class AssetExtensions
+static partial class AssetExtensions
 {
     public static AssetHandle<WorldAsset> LoadWorld(this IAssetRegistry registry,
         FilePath path,
-        AssetLoadPriority priority) =>
-        registry.Load(new WorldAsset.Info(path), priority).As<WorldAsset>();
+        AssetPriority priority) =>
+        registry.Load<WorldAsset.Info, WorldAsset>(new(path), priority);
 }
