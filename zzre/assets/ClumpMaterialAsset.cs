@@ -18,6 +18,14 @@ public sealed class ClumpMaterialAsset(IAssetRegistry registry) : IAsset<Info>
         new FilePath("resources/textures/backdrops")
     ];
 
+    private static readonly ModelFactors ModelFactors = new()
+    {
+        textureFactor = 1f,
+        vertexColorFactor = 1f,
+        tintFactor = 1f,
+        alphaReference = 0.082352944f
+    };
+
     static AssetLocality IAsset.Locality => AssetLocality.Local;
     static bool IAsset.NeedsMainThreadDisposal => true; // an Apply action wants to access Material
 
@@ -40,7 +48,7 @@ public sealed class ClumpMaterialAsset(IAssetRegistry registry) : IAsset<Info>
         {
             DebugName = $"ClumpMat {info.TextureName} {info.Variant}"
         };
-        material.Apply(info.Variant, diContainer);
+        material.Apply(info.Variant, ModelFactors, diContainer);
 
         var camera = diContainer.GetTag<Camera>();
         material.Projection.BufferRange = camera.ProjectionRange;
@@ -48,7 +56,13 @@ public sealed class ClumpMaterialAsset(IAssetRegistry registry) : IAsset<Info>
         var samplerHandle = registry.LoadSampler(info.Sampler, AssetPriority.High);
         material.Sampler.Sampler = (await samplerHandle.GetAsync(ct)).Sampler;
         var (initialTexture, textureHandle) = await AssetExtensions.LoadTextureForMaterial(
-            registry, ClumpTextureBasePaths, assetId, info.TextureName, info.TexturePlaceholder, ct);
+            registry,
+            ClumpTextureBasePaths,
+            assetId,
+            info.TextureName,
+            info.TexturePlaceholder,
+            AssetPriority.High,
+            ct);
         material.Texture.Texture = initialTexture;
 
         return new(new ClumpMaterialAsset(registry)

@@ -108,14 +108,14 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial, ITexture
         DepthTest = true;
     }
 
-    public void Apply(in Variant variant, ITagContainer diContainer)
+    public void Apply(in Variant variant, in ModelFactors? factors, ITagContainer diContainer)
     {
         if (!diContainer.TryGetTag(out UniformBuffer<FogParams> fogParams))
             fogParams = null!;
-        Apply(variant, fogParams);
+        Apply(variant, factors, fogParams);
     }
 
-    public void Apply(in Variant variant, UniformBuffer<FogParams>? fogParams = null)
+    public void Apply(in Variant variant, in ModelFactors? factors = null, UniformBuffer<FogParams>? fogParams = null)
     {
         IsInstanced = variant.IsInstanced;
         IsSkinned = variant.IsSkinned;
@@ -124,17 +124,15 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial, ITexture
         DepthTest = variant.DepthTest;
         HasEnvMap = variant.HasEnvMap;
         HasTexShift = variant.HasTexShift;
-        HasFog = variant.HasFog;
 
-        Factors.Ref = new()
-        {
-            textureFactor = 1f,
-            vertexColorFactor = 1f,
-            tintFactor = 1f,
-            alphaReference = 0.082352944f
-        };
+        if (factors.HasValue)
+            Factors.Ref = factors.Value;
+            
         if (variant.HasFog && fogParams is not null)
+        {
+            HasFog = true;
             FogParams.Buffer = fogParams.Buffer;
+        }
     }
 
     public readonly record struct Variant(

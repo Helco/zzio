@@ -22,6 +22,7 @@ partial class AssetExtensions
         Guid assetId,
         string? textureName,
         StandardTextureKind? placeholder,
+        AssetPriority priority,
         CancellationToken ct)
     {
         var standardTextures = registry.DIContainer.GetTag<StandardTextures>();
@@ -33,13 +34,13 @@ partial class AssetExtensions
         }
         else if (placeholder is null)
         {
-            var handle = registry.LoadTexture(texturePaths, textureName, AssetPriority.High);
+            var handle = registry.LoadTexture(texturePaths, textureName, priority);
             var texture = await handle.GetAsync(ct);
             return (texture.Texture, handle);
         }
         else
         {
-            var handle = registry.LoadTexture(texturePaths, textureName, AssetPriority.High);
+            var handle = registry.LoadTexture(texturePaths, textureName, priority);
             registry.Apply(handle, h =>
             {
                 if (registry.TryGet<IAsset>(assetId, out var materialHandle) &&

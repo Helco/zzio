@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Veldrid;
 using zzio;
@@ -7,16 +6,21 @@ using zzio.effect;
 using zzre.materials;
 using zzre.rendering;
 using static zzre.materials.EffectMaterial;
+using static zzre.EffectMaterialAsset;
+using System.Threading;
 
 namespace zzre;
 
-public sealed class EffectMaterialAsset : Asset
+public sealed class EffectMaterialAsset(IAssetRegistry registry) : IAsset<Info>
 {
-    private static readonly FilePath[] TextureBasePaths =
+    private static readonly FilePath[] EffectTextureBasePaths =
     [
         new("resources/textures/effects"),
         new("resources/textures/models")
     ];
+
+    static AssetLocality IAsset.Locality => AssetLocality.Local;
+    static bool IAsset.NeedsMainThreadDisposal => true; // an Apply action wants to access Material
 
     public readonly record struct Info(
         string TextureName,
@@ -27,115 +31,99 @@ public sealed class EffectMaterialAsset : Asset
         float AlphaReference = 0.03f,
         StandardTextureKind TexturePlaceholder = StandardTextureKind.Clear);
 
-    public static void Register() =>
-        AssetInfoRegistry<Info>.Register<EffectMaterialAsset>(AssetLocality.Context);
+    private AssetHandle<TextureAsset> textureHandle;
+    private AssetHandle<SamplerAsset> samplerHandle;
 
-    private readonly Info info;
-    private EffectMaterial? material;
+    public IAssetRegistry Registry { get; } = registry;
+    public EffectMaterial Material { get; private set; } = null!;
 
-    public string DebugName { get; }
-    public EffectMaterial Material => material ??
-        throw new InvalidOperationException("Asset was not yet loaded");
-
-    public EffectMaterialAsset(IAssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
+    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid assetId, Info info, CancellationToken ct)
     {
-        this.info = info;
-        DebugName = $"{info.TextureName} {info.BillboardMode} {info.BlendMode}";
-        if (!info.DepthTest)
-            DebugName += " NoDepthTest";
-    }
-
-    protected override bool NeedsSecondaryAssets => false;
-
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
-    {
+        var diContainer = registry.DIContainer;
         diContainer.TryGetTag(out UniformBuffer<FogParams> fogParams);
-        material = new EffectMaterial(diContainer)
+        var material = new EffectMaterial(diContainer)
         {
+            DebugName = $"EffectMat {info.TextureName} {info.BillboardMode} {info.BlendMode} {(info.DepthTest ? "" : "NoDepthtest")}",
             DepthTest = info.DepthTest,
             Billboard = info.BillboardMode,
             Blend = info.BlendMode,
-            HasFog = info.HasFog && fogParams != null,
-            DebugName = DebugName
+            HasFog = info.HasFog && fogParams != null
         };
-
-        var camera = diContainer.GetTag<Camera>();
-        var samplerHandle = Registry.LoadSampler(SamplerDescription.Linear);
-        var textureHandle = LoadTexture();
-        material.Sampler.Sampler = samplerHandle.Get().Sampler;
-        material.Projection.BufferRange = camera.ProjectionRange;
-        material.View.BufferRange = camera.ViewRange;
-        material.Factors.Value = new()
+        material.Factors.Ref = new()
         {
             alphaReference = info.AlphaReference
         };
-        if (info.HasFog && fogParams is not null)
-            material.FogParams.Buffer = fogParams.Buffer;
-        
-        return textureHandle is null
-            ? ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerHandle ])
-            : ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerHandle, textureHandle.Value ]);
-    }
 
-    private AssetHandle? LoadTexture()
-    {
-        if (material is null)
-            return null;
-        var standardTextures = diContainer.GetTag<StandardTextures>();
-        var handle = Registry.LoadTexture(
-            TextureBasePaths,
+        var camera = diContainer.GetTag<Camera>();
+        material.Projection.BufferRange = camera.ProjectionRange;
+        material.View.BufferRange = camera.ViewRange;
+        var samplerHandle = registry.LoadSampler(SamplerDescription.Linear, AssetPriority.High);
+        material.Sampler.Sampler = (await samplerHandle.GetAsync(ct)).Sampler;
+        var (initialTexture, textureHandle) = await AssetExtensions.LoadTextureForMaterial(
+            registry,
+            EffectTextureBasePaths,
+            assetId,
             info.TextureName,
-            AssetLoadPriority.Low,
-            material);
-        material.Texture.Texture ??= standardTextures.ByKind(info.TexturePlaceholder);
-        return handle;
+            info.TexturePlaceholder,
+            AssetPriority.Low,
+            ct);
+        material.Texture.Texture = initialTexture;
+
+        return new(new EffectMaterialAsset(registry)
+        {
+            samplerHandle = samplerHandle,
+            textureHandle = textureHandle,
+            Material = material
+        });
     }
 
-    protected override void Unload()
+    public void Dispose()
     {
-        material?.Dispose();
-        material = null;
+        textureHandle.Dispose();
+        samplerHandle.Dispose();
+        Material?.Dispose();
+        Material = null!;
     }
-
-    protected override string ToStringInner() => $"EffectMaterial {DebugName}";
 }
 
 partial class AssetExtensions
 {
     public static AssetHandle<EffectMaterialAsset> LoadEffectMaterial(this IAssetRegistry registry,
-        DefaultEcs.Entity entity,
         string textureName,
         BillboardMode billboardMode,
         EffectPartRenderMode renderMode,
-        bool depthTest) =>
-        registry.LoadEffectMaterial(entity, textureName, billboardMode, RenderToBlendMode(renderMode), depthTest);
+        bool depthTest,
+        AssetPriority priority = AssetPriority.Synchronous) =>
+        registry.LoadEffectMaterial(
+            textureName,
+            billboardMode,
+            RenderToBlendMode(renderMode),
+            depthTest,
+            priority: priority);
 
     public static unsafe AssetHandle<EffectMaterialAsset> LoadEffectMaterial(this IAssetRegistry registry,
-        DefaultEcs.Entity entity,
         string TextureName,
         BillboardMode BillboardMode,
         BlendMode BlendMode,
         bool DepthTest,
         bool HasFog = true,
         float AlphaReference = 0.03f,
-        StandardTextureKind TexturePlaceholder = StandardTextureKind.Clear) =>
-        registry.LoadEffectMaterial(entity, new EffectMaterialAsset.Info(
-            TextureName, BillboardMode, BlendMode, DepthTest, HasFog, AlphaReference, TexturePlaceholder));
+        StandardTextureKind TexturePlaceholder = StandardTextureKind.Clear,
+        AssetPriority priority = AssetPriority.Synchronous) =>
+        registry.LoadEffectMaterial(new Info(
+            TextureName,
+            BillboardMode,
+            BlendMode,
+            DepthTest,
+            HasFog,
+            AlphaReference,
+            TexturePlaceholder),
+            priority);
 
     public static unsafe AssetHandle<EffectMaterialAsset> LoadEffectMaterial(this IAssetRegistry registry,
-        DefaultEcs.Entity entity,
-        in EffectMaterialAsset.Info info)
-    {
-        var handle = registry.Load(info, AssetLoadPriority.Synchronous, &ApplyEffectMaterialToEntity, entity);
-        entity.Set(handle);
-        return handle.As<EffectMaterialAsset>();
-    }
-
-    private static void ApplyEffectMaterialToEntity(AssetHandle handle, ref readonly DefaultEcs.Entity entity)
-    {
-        if (entity.IsAlive)
-            entity.Set(handle.Get<EffectMaterialAsset>().Material);
-    }
+        in Info info,
+        AssetPriority priority = AssetPriority.Synchronous) =>
+        registry.Load<Info, EffectMaterialAsset>(info, priority);
 
     private static BlendMode RenderToBlendMode(EffectPartRenderMode renderMode) => renderMode switch
     {
