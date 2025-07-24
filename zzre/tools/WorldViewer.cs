@@ -34,7 +34,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
 
     private readonly ITagContainer localDiContainer;
     private readonly DefaultEcs.World ecsWorld;
-    private readonly AssetLocalRegistry assetRegistry;
+    private readonly IAssetRegistry assetRegistry;
     private readonly TwoColumnEditorTag editor;
     private readonly FlyControlsTag controls;
     private readonly FramebufferArea fbArea;
@@ -150,13 +150,13 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         rayRenderer.Material.LinkTransformsTo(world: worldTransform);
         AddDisposable(rayRenderer);
 
+        var globalAssetRegistry = diContainer.GetTag<IAssetRegistry>();
         localDiContainer = diContainer.ExtendedWith(camera, locationBuffer);
         AddDisposable(localDiContainer);
         localDiContainer
             .AddTag(ecsWorld = new DefaultEcs.World())
-            .AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("WorldViewer", localDiContainer));
+            .AddTag(assetRegistry = new AssetRegistry(localDiContainer, globalAssetRegistry, "WorldViewer"));
         AssetRegistry.SubscribeAt(ecsWorld);
-        assetRegistry.DelayDisposals = false;
         worldRenderer = new(localDiContainer);
         AddDisposable(worldRenderer);
     }

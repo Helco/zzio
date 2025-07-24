@@ -24,7 +24,7 @@ public partial class SceneEditor
         private readonly ClumpMesh mesh;
         private readonly AssetHandle<ClumpAsset> meshHandle;
         private readonly ModelMaterial[] materials;
-        private readonly List<AssetHandle> materialHandles = [];
+        private readonly List<IDisposable> materialHandles = [];
 
         public Location Location { get; } = new Location();
         public zzio.scn.FOModel SceneFOModel { get; }
@@ -49,24 +49,26 @@ public partial class SceneEditor
             Location.LocalRotation = sceneModel.rot.ToZZRotation();
 
             var assetRegistry = diContainer.GetTag<IAssetRegistry>();
-            meshHandle = assetRegistry.Load(ClumpAsset.Info.Model(sceneModel.filename), AssetPriority.Synchronous).As<ClumpAsset>();
+            meshHandle = assetRegistry.LoadModelClump(sceneModel.filename, AssetPriority.Synchronous);
             mesh = meshHandle.Get().Mesh;
             if (mesh.IsEmpty)
             {
                 materials = [];
                 return;
             }
-            materials = mesh.Materials.Select(rwMaterial =>
+            materials = [.. mesh.Materials.Select(rwMaterial =>
             {
-
                 var material = new ModelMaterial(diContainer);
                 var rwTexture = (RWTexture)rwMaterial.FindChildById(SectionId.Texture, true)!;
-                var rwTextureName = (RWString)rwTexture.FindChildById(SectionId.String, true)!;
-                var textureHandle = assetRegistry.LoadTexture(textureBasePaths, rwTextureName.value, AssetPriority.Synchronous, material);
+                var textureHandle = assetRegistry.TryLoadTextureForMaterial(
+                    textureBasePaths,
+                    rwTexture,
+                    material,
+                    StandardTextureKind.Error);
+                if (textureHandle.HasValue)
+                    materialHandles.Add(textureHandle.Value);
                 var samplerHandle = assetRegistry.LoadSampler(SamplerDescription.Linear);
-                materialHandles.Add(textureHandle);
                 materialHandles.Add(samplerHandle);
-                material.Texture.Texture = textureHandle.Get().Texture;
                 material.Sampler.Sampler = samplerHandle.Get().Sampler;
                 material.LinkTransformsTo(camera);
                 material.World.BufferRange = locationRange;
@@ -74,7 +76,7 @@ public partial class SceneEditor
                 material.Factors.Ref.vertexColorFactor = 0.0f;
                 material.Tint.Ref = rwMaterial.color.ToFColor() * sceneModel.color;
                 return material;
-            }).ToArray();
+            })];
         }
 
         protected override void DisposeManaged()

@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Silk.NET.SDL;
 using Veldrid;
 using zzio;
 using zzio.vfs;
+using zzio.rwbs;
+using zzre.rendering;
 using Texture = Veldrid.Texture;
 using PixelFormat = Veldrid.PixelFormat;
-using System.Threading;
 
 namespace zzre;
 
@@ -162,4 +164,25 @@ static partial class AssetExtensions
         FilePath fullPath,
         AssetPriority priority) =>
         registry.Load<TextureAsset.Info, TextureAsset>(new(fullPath), priority);
+
+    public static AssetHandle<TextureAsset>? TryLoadTextureForMaterial(this IAssetRegistry registry,
+        IReadOnlyList<FilePath> texturePaths,
+        RWTexture rwTexture,
+        ITexturedMaterial material,
+        StandardTextureKind? placeholder = null)
+    {
+        var rwTextureName = (RWString?)rwTexture.FindChildById(SectionId.String, true);
+        if (rwTextureName is not null)
+        {
+            var handle = registry.TryLoadTexture(texturePaths, rwTextureName.value, AssetPriority.Synchronous);
+            if (handle.HasValue)
+            {
+                material.Texture.Texture = handle.Value.Get().Texture;
+                return handle;
+            }
+        }
+        if (placeholder is not null && registry.DIContainer.TryGetTag<StandardTextures>(out var stdTextures))
+            material.Texture.Texture = stdTextures.ByKind(placeholder.Value);
+        return null;
+    }
 }

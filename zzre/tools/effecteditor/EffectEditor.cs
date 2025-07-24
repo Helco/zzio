@@ -37,7 +37,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
     private readonly GameTime gameTime;
     private readonly EffectCombiner emptyEffect = new();
     private readonly DefaultEcs.World ecsWorld = new();
-    private readonly AssetLocalRegistry assetRegistry;
+    private readonly IAssetRegistry assetRegistry;
     private readonly SequentialSystem<float> updateSystems = new();
     private readonly SequentialSystem<CommandList> renderSystems = new();
     private bool isPlaying = true;
@@ -83,9 +83,11 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
         diContainer.AddTag(new EffectMesh(diContainer, 1024, 2048));
         diContainer.AddTag(new ModelInstanceBuffer(diContainer, 128));
         diContainer.AddTag(camera = new Camera(diContainer));
-        diContainer.AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("EffectEditor", diContainer));
+        diContainer.AddTag(assetRegistry = new AssetRegistry(
+            diContainer,
+            diContainer.GetTag<IAssetRegistry>(),
+            "EffectEditor"));
         AssetRegistry.SubscribeAt(ecsWorld);
-        assetRegistry.DelayDisposals = false;
         controls = new OrbitControlsTag(Window, camera.Location, diContainer);
         AddDisposable(controls);
 
@@ -240,7 +242,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
 
     private void HandleRender(CommandList cl)
     {
-        assetRegistry.ApplyAssets();
+        assetRegistry.Update();
         if (isPlaying && effectEntity.IsAlive)
             updateSystems.Update(gameTime.Delta);
         UpdateSoundListener();
