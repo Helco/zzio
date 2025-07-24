@@ -8,12 +8,12 @@ public readonly record struct LoadModel(
     string ModelName,
     IColor Color,
     FOModelRenderType? RenderType = null,
-    AssetLoadPriority Priority = AssetLoadPriority.Synchronous)
+    AssetPriority Priority = AssetPriority.Synchronous)
 {
     public LoadModel(
         DefaultEcs.Entity AsEntity,
         string ModelName,
         FOModelRenderType? RenderType = null,
-        AssetLoadPriority Priority = AssetLoadPriority.Synchronous)
+        AssetPriority Priority = AssetPriority.Synchronous)
         : this(AsEntity, ModelName, IColor.White, RenderType, Priority) { }
 }

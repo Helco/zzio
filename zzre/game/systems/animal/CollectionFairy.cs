@@ -97,7 +97,7 @@ public partial class CollectionFairy : AEntitySetSystem<float>
             World.Publish(new messages.LoadActor(
                 AsEntity: entity,
                 ActorName: dbRow.Mesh,
-                AssetLoadPriority.Synchronous));
+                AssetPriority.Synchronous));
 
             var actorParts = entity.Get<components.ActorParts>();
             actorParts.Body.Get<Location>().Parent = entity.Get<Location>();

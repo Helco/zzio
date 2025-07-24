@@ -43,7 +43,7 @@ partial class ActorEditor
             var assetRegistry = diContainer.GetTag<IAssetRegistry>();
             var modelPath = new FilePath("resources/models/actorsex/").Combine(modelName);
 
-            var meshHandle = assetRegistry.Load(new ClumpAsset.Info(modelPath), AssetLoadPriority.Synchronous);
+            var meshHandle = assetRegistry.Load(new ClumpAsset.Info(modelPath), AssetPriority.Synchronous);
             AddDisposable(meshHandle);
             mesh = meshHandle.Get<ClumpAsset>().Mesh;
 
@@ -70,7 +70,7 @@ partial class ActorEditor
                 var rwTexture = (RWTexture)rwMaterial.FindChildById(SectionId.Texture, true)!;
                 var rwTextureName = (RWString)rwTexture.FindChildById(SectionId.String, true)!;
                 var textureHandle = assetRegistry.TryLoadTexture([TextureBasePath], rwTextureName.value,
-                    AssetLoadPriority.Synchronous, material, StandardTextureKind.Error);
+                    AssetPriority.Synchronous, material, StandardTextureKind.Error);
                 var samplerHandle = assetRegistry.LoadSampler(SamplerDescription.Linear);
                 if (textureHandle.HasValue)
                     AddDisposable(textureHandle.Value);

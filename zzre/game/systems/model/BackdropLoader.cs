@@ -92,7 +92,7 @@ public class BackdropLoader : ISystem<float>
         entity.Set(components.Visibility.Visible);
         entity.Set(components.RenderOrder.Backdrop);
         entity.Set(IColor.White);
-        assetRegistry.LoadBackdrop(entity, name, AssetLoadPriority.Synchronous, materialVariant, StandardTextureKind.Clear);
+        assetRegistry.LoadBackdrop(entity, name, AssetPriority.Synchronous, materialVariant, StandardTextureKind.Clear);
 
         return entity;
     }

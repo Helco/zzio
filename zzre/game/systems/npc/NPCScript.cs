@@ -77,7 +77,7 @@ public partial class NPCScript : BaseScript<NPCScript>
         World.Publish(new messages.LoadActor(
             AsEntity: entity,
             ActorName: name,
-            AssetLoadPriority.Synchronous));
+            AssetPriority.Synchronous));
 
         var actorParts = entity.Get<components.ActorParts>();
         var bodyClump = actorParts.Body.Get<ClumpMesh>();

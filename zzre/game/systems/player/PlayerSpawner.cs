@@ -56,7 +56,7 @@ public class PlayerSpawner : ISystem<float>
         ecsWorld.Publish(new messages.LoadActor(
             AsEntity: playerEntity,
             ActorName: "chr01",
-            AssetLoadPriority.Synchronous));
+            AssetPriority.Synchronous));
         playerEntity.Set(components.Visibility.Visible);
         playerEntity.Set<components.PlayerControls>();
         playerEntity.Set<components.PlayerPuppet>();

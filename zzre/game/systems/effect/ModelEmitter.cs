@@ -46,7 +46,7 @@ public sealed class ModelEmitter : BaseCombinerPart<
 
         assetRegistry.LoadModel(entity,
             data.texName,
-            AssetLoadPriority.Low,
+            AssetPriority.Low,
             new(data.renderMode, playback.DepthTest),
             StandardTextureKind.Clear);
         entity.Set<components.effect.RenderIndices>();

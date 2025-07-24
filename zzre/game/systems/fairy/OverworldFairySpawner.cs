@@ -82,7 +82,7 @@ public partial class OverworldFairySpawner : AEntitySetSystem<float>
         World.Publish(new messages.LoadActor(
             AsEntity: fairy,
             ActorName: dbRow.Mesh,
-            AssetLoadPriority.Synchronous));
+            AssetPriority.Synchronous));
 
         var actorParts = fairy.Get<components.ActorParts>();
         actorParts.Body.Get<Location>().Parent = fairy.Get<Location>();

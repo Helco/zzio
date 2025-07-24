@@ -12,7 +12,7 @@ public readonly record struct SpawnSample(
     bool Paused = false,
     Vector3? Position = null,
     Location? ParentLocation = null,
-    AssetLoadPriority Priority = AssetLoadPriority.Synchronous,
+    AssetPriority Priority = AssetPriority.Synchronous,
     bool IsMusic = false)
 {
     // a simple heuristic: If the caller cares about the entity, it probably needs the entity right away
@@ -26,7 +26,7 @@ public readonly record struct SpawnSample(
         bool Paused = false,
         Vector3? Position = null,
         Location? ParentLocation = null,
-        AssetLoadPriority Priority = AssetLoadPriority.High) // otherwise we can take a bit more time to load the sound
+        AssetPriority Priority = AssetPriority.High) // otherwise we can take a bit more time to load the sound
         : this(SamplePath, AsEntity: null,
               RefDistance, MaxDistance, Volume,
               Looping, Paused,

@@ -166,7 +166,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         boundingRenderer.Clear();
         coarseCollisionMode = default;
 
-        var meshHandle = assetRegistry.Load(new ClumpAsset.Info(resource.Path), AssetLoadPriority.Synchronous);
+        var meshHandle = assetRegistry.Load(new ClumpAsset.Info(resource.Path), AssetPriority.Synchronous);
         assetHandles.Add(meshHandle);
         mesh = meshHandle.Get<ClumpAsset>().Mesh;
 
@@ -177,7 +177,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
             var rwTexture = (RWTexture)rwMaterial.FindChildById(SectionId.Texture, true)!;
             var rwTextureName = (RWString)rwTexture.FindChildById(SectionId.String, true)!;
             var textureHandle = assetRegistry.TryLoadTexture(texturePaths, rwTextureName.value,
-                AssetLoadPriority.Synchronous, material, StandardTextureKind.Error);
+                AssetPriority.Synchronous, material, StandardTextureKind.Error);
             var samplerHandle = assetRegistry.LoadSampler(SamplerDescription.Linear);
             if (textureHandle.HasValue)
                 assetHandles.Add(textureHandle.Value);

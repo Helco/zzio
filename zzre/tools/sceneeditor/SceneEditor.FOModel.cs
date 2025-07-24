@@ -49,7 +49,7 @@ public partial class SceneEditor
             Location.LocalRotation = sceneModel.rot.ToZZRotation();
 
             var assetRegistry = diContainer.GetTag<IAssetRegistry>();
-            meshHandle = assetRegistry.Load(ClumpAsset.Info.Model(sceneModel.filename), AssetLoadPriority.Synchronous).As<ClumpAsset>();
+            meshHandle = assetRegistry.Load(ClumpAsset.Info.Model(sceneModel.filename), AssetPriority.Synchronous).As<ClumpAsset>();
             mesh = meshHandle.Get().Mesh;
             if (mesh.IsEmpty)
             {
@@ -62,7 +62,7 @@ public partial class SceneEditor
                 var material = new ModelMaterial(diContainer);
                 var rwTexture = (RWTexture)rwMaterial.FindChildById(SectionId.Texture, true)!;
                 var rwTextureName = (RWString)rwTexture.FindChildById(SectionId.String, true)!;
-                var textureHandle = assetRegistry.LoadTexture(textureBasePaths, rwTextureName.value, AssetLoadPriority.Synchronous, material);
+                var textureHandle = assetRegistry.LoadTexture(textureBasePaths, rwTextureName.value, AssetPriority.Synchronous, material);
                 var samplerHandle = assetRegistry.LoadSampler(SamplerDescription.Linear);
                 materialHandles.Add(textureHandle);
                 materialHandles.Add(samplerHandle);

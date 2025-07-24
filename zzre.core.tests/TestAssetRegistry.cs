@@ -65,7 +65,7 @@ public class TestAssetRegistry
         public IAssetRegistry Registry { get; init; }
         public TestInfo Info { get; init; }
 
-        public static Task<AssetLoadResult<TestInfo>> LoadAsync(IAssetRegistry registry, TestInfo info, CancellationToken ct)
+        public static Task<AssetLoadResult<TestInfo>> LoadAsync(IAssetRegistry registry, Guid _, TestInfo info, CancellationToken ct)
             => TestInfo.LoadAsync<GlobalTestAsset>(registry, info, ct);
 
         public void Dispose()
@@ -83,7 +83,7 @@ public class TestAssetRegistry
         public IAssetRegistry Registry { get; init; }
         public TestInfo Info { get; init; }
 
-        public static Task<AssetLoadResult<TestInfo>> LoadAsync(IAssetRegistry registry, TestInfo info, CancellationToken ct)
+        public static Task<AssetLoadResult<TestInfo>> LoadAsync(IAssetRegistry registry, Guid _, TestInfo info, CancellationToken ct)
             => TestInfo.LoadAsync<GlobalMTDTestAsset>(registry, info, ct);
 
         public void Dispose()
@@ -100,7 +100,7 @@ public class TestAssetRegistry
         public IAssetRegistry Registry { get; init; }
         public TestInfo Info { get; init; }
 
-        public static Task<AssetLoadResult<TestInfo>> LoadAsync(IAssetRegistry registry, TestInfo info, CancellationToken ct)
+        public static Task<AssetLoadResult<TestInfo>> LoadAsync(IAssetRegistry registry, Guid _, TestInfo info, CancellationToken ct)
             => TestInfo.LoadAsync<LocalTestAsset>(registry, info, ct);
 
         public void Dispose()
@@ -117,7 +117,7 @@ public class TestAssetRegistry
         public IAssetRegistry Registry { get; init; }
         public TestInfo Info { get; init; }
 
-        public static Task<AssetLoadResult<TestInfo>> LoadAsync(IAssetRegistry registry, TestInfo info, CancellationToken ct)
+        public static Task<AssetLoadResult<TestInfo>> LoadAsync(IAssetRegistry registry, Guid _, TestInfo info, CancellationToken ct)
             => TestInfo.LoadAsync<UniqueTestAsset>(registry, info, ct);
 
         public void Dispose()
