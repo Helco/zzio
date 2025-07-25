@@ -38,4 +38,5 @@ internal interface IAssetRegistryInternal : IAssetRegistry
     void AddRef(Guid assetId);
     void DelRef(Guid assetId);
     AsyncLazy<IDisposable> GetAsset(Guid assetId);
+    void CheckType(Guid assetId, Type type);
 }

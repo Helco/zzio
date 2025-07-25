@@ -194,6 +194,21 @@ public class AssetRegistry : IAssetRegistryInternal
         return asset.LoadLazy;
     }
 
+    void IAssetRegistryInternal.CheckType(Guid assetId, Type type)
+    {
+        LockSemaphore();
+        try
+        {
+            ObjectDisposedException.ThrowIf(!assets.TryGetValue(assetId, out var asset) || asset.RefCount <= 0, nameof(IAssetHandle));
+            if (!asset.AssetType.IsAssignableTo(type))
+                throw new InvalidCastException($"Cannot cast asset of type {asset.AssetType.FullName} to {type.FullName}");
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+    }
+
     public AssetHandle<TAsset> Load<TInfo, TAsset>(in TInfo info, AssetPriority priority)
         where TInfo : struct, IEquatable<TInfo>
         where TAsset : class, IAsset<TInfo>

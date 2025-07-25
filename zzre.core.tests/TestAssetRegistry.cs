@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DotNext;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 
@@ -1183,6 +1184,124 @@ public class TestAssetRegistry
             handle.Dispose();
         }, Throws.Nothing);
     }
+
+    [Test]
+    public void GenericHandle_FromAs()
+    {
+        using var global = new AssetRegistry(DI);
+        var thandle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var ghandle = thandle.As();
+
+        Assert.That(ghandle.Registry, Is.SameAs(thandle.Registry));
+        Assert.That(ghandle.AssetId, Is.EqualTo(thandle.AssetId));
+        thandle.Dispose();
+
+        var thandle2 = ghandle.As<GlobalTestAsset>();
+        CommonAssetChecks(global, thandle2, 1);
+    }
+
+    [Test]
+    public void GenericHandle_FromAsAndDisposal()
+    {
+        using var global = new AssetRegistry(DI);
+        var thandle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var ghandle = thandle.As();
+
+        Assert.That(ghandle.Registry, Is.SameAs(thandle.Registry));
+        Assert.That(ghandle.AssetId, Is.EqualTo(thandle.AssetId));
+        thandle.Dispose();
+        ghandle.Dispose();
+
+        Assert.That(() =>
+        {
+            ghandle.As<GlobalTestAsset>().Get();
+        }, Throws.Exception);
+    }
+
+    [Test]
+    public void GenericHandle_FromAsWasDisposed()
+    {
+        using var global = new AssetRegistry(DI);
+        var thandle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        thandle.Dispose();
+        var ghandle = thandle.As();
+
+        Assert.That(() =>
+        {
+            ghandle.As<GlobalTestAsset>().Get();
+        }, Throws.Exception);
+    }
+
+    [Test]
+    public void GenericHandle_FromDuplicate()
+    {
+        using var global = new AssetRegistry(DI);
+        var thandle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var ghandle = thandle.AsDuplicate();
+
+        Assert.That(ghandle.Registry, Is.SameAs(thandle.Registry));
+        Assert.That(ghandle.AssetId, Is.EqualTo(thandle.AssetId));
+
+        var thandle2 = ghandle.As<GlobalTestAsset>();
+        CommonAssetChecks(global, thandle2, 1);
+        CommonAssetChecks(global, thandle, 1);
+    }
+
+    [Test]
+    public void GenericHandle_TypeCheck()
+    {
+#if DEBUG
+        using var global = new AssetRegistry(DI);
+        var thandle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+
+        var ghandle = thandle.AsDuplicate();
+        Assert.That(() =>
+        {
+            using var _ = ghandle.As<GlobalTestAsset>();
+        }, Throws.Nothing);
+
+        ghandle = thandle.AsDuplicate();
+        Assert.That(() =>
+        {
+            using var _ = ghandle.As<LocalTestAsset>(); // no relation   
+        }, Throws.InstanceOf<InvalidCastException>());
+#else
+        Assert.Ignore("Type checks are only done in debug builds");
+        return;
+#endif
+    }
+
+    [Test]
+    public void GenericHandle_FromDuplicateAndDisposal()
+    {
+        using var global = new AssetRegistry(DI);
+        var thandle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var ghandle = thandle.AsDuplicate();
+
+        Assert.That(ghandle.Registry, Is.SameAs(thandle.Registry));
+        Assert.That(ghandle.AssetId, Is.EqualTo(thandle.AssetId));
+        thandle.Dispose();
+        ghandle.Dispose();
+
+        Assert.That(() =>
+        {
+            ghandle.As<GlobalTestAsset>().Get();
+        }, Throws.Exception);
+    }
+
+    [Test]
+    public void GenericHandle_FromDuplicateWasDisposed()
+    {
+        using var global = new AssetRegistry(DI);
+        var thandle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        thandle.Dispose();
+
+        Assert.That(() =>
+        {
+            var ghandle = thandle.AsDuplicate();
+        }, Throws.Exception);
+    }
+
 
     [Test]
     public void Apply_SyncAfter()
