@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using DotNext.Threading;
 
@@ -31,6 +32,25 @@ public interface IAssetRegistry : IDisposable
         where TAsset : class, IAsset;
 
     void Update();
+
+    /// <summary>A snapshot of an assets state</summary>
+    /// <param name="ID">The asset ID</param>
+    /// <param name="Type">The type of the asset instance</param>
+    /// <param name="Name">The debugging name of the asset</param>
+    /// <param name="RefCount">The reference count of the asset</param>
+    /// <param name="IsLoaded">The loading state of the asset</param>
+    /// <param name="Priority">The *effective* load priority of the asset</param>
+    public readonly record struct AssetInfo(
+        Guid ID,
+        Type Type,
+        string Name,
+        int RefCount,
+        bool IsLoaded,
+        AssetPriority Priority);
+
+    /// <summary>Creats a snapshot of the state of all, currently registered assets</summary>
+    /// <param name="assetInfos">The asset states will be copied into this list</param>
+    void CopyDebugInfo(List<AssetInfo> assetInfos);
 }
 
 internal interface IAssetRegistryInternal : IAssetRegistry

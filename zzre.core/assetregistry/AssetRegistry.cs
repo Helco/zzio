@@ -27,6 +27,8 @@ internal sealed class AssetState
         }
     }
     public int RefCount = 1;
+    public AssetPriority Priority;
+    public string? Name;
 }
 
 public class AssetRegistry : IAssetRegistryInternal
@@ -219,7 +221,7 @@ public class AssetRegistry : IAssetRegistryInternal
         if (TAsset.Locality is AssetLocality.Global && IsLocalRegistry)
             return ParentRegistry!.Load<TInfo, TAsset>(info, priority);
 
-        var (assetId, assetState) = GetOrCreateAssetState<TInfo, TAsset>(info);
+        var (assetId, assetState) = GetOrCreateAssetState<TInfo, TAsset>(info, priority);
         var handle = new AssetHandle<TAsset>(this, assetId);
         if (!assetState.LoadLazy.IsValueCreated)
         {
@@ -249,7 +251,7 @@ public class AssetRegistry : IAssetRegistryInternal
         return handle;
     }
 
-    private (Guid, AssetState) GetOrCreateAssetState<TInfo, TAsset>(in TInfo info)
+    private (Guid, AssetState) GetOrCreateAssetState<TInfo, TAsset>(in TInfo info, AssetPriority priority)
         where TInfo : struct, IEquatable<TInfo>
         where TAsset : class, IAsset<TInfo>
     {
@@ -273,6 +275,8 @@ public class AssetRegistry : IAssetRegistryInternal
             {
                 SanityCheckSharedAsset(typeof(TAsset), assetState);
                 assetState.RefCount++;
+                if (assetState.Asset is null && (int)priority < (int)assetState.Priority)
+                    assetState.Priority = priority;
                 return (assetId, assetState);
             }
 
@@ -283,7 +287,8 @@ public class AssetRegistry : IAssetRegistryInternal
                 NeedsMainThreadDisposal = TAsset.NeedsMainThreadDisposal,
                 LoadLazy = new(ct => LoadAsset<TInfo, TAsset>(infoCopy, assetId)),
                 Tag = unchecked(++nextAssetTag),
-                AssetType = typeof(TAsset)
+                AssetType = typeof(TAsset),
+                Priority = priority
             };
             assets[assetId] = assetState;
             return (assetId, assetState);
@@ -348,7 +353,7 @@ public class AssetRegistry : IAssetRegistryInternal
     public bool TryGet<TAsset>(Guid assetId, out AssetHandle<TAsset> handle)
         where TAsset : class, IAsset
     {
-        ObjectDisposedException.ThrowIf(WasDisposed, typeof(AssetRegistry));   
+        ObjectDisposedException.ThrowIf(WasDisposed, typeof(AssetRegistry));
         if (ParentRegistry?.TryGet(assetId, out handle) is true)
             return true;
 
@@ -519,6 +524,35 @@ public class AssetRegistry : IAssetRegistryInternal
             {
                 (this as IAssetRegistryInternal).DelRef(handle.AssetId);
             }
+        }
+    }
+
+    public void CopyDebugInfo(List<IAssetRegistry.AssetInfo> infos)
+    {
+        LockSemaphore();
+        try
+        {
+            infos.Clear();
+            infos.EnsureCapacity(assets.Count);
+            foreach (var (assetId, state) in assets)
+            {
+                var name =
+                    state.Name ??
+                    (state.Name = state.Asset?.ToString()) ??
+                    $"Loading {state.AssetType.Name}";
+                infos.Add(new(
+                    assetId,
+                    state.AssetType,
+                    name,
+                    state.RefCount,
+                    state.Asset is not null,
+                    state.Priority
+                ));
+            }
+        }
+        finally
+        {
+            semaphore.Release();
         }
     }
 }
