@@ -20,6 +20,7 @@ public interface IAssetRegistry : IDisposable
     IAssetRegistry? ParentRegistry { get; }
     bool IsLocalRegistry { get; }
     CancellationToken Cancellation { get; } // is triggered when registry is disposed
+    AssetRegistryStats Stats { get; }
 
     AssetHandle<TAsset> Load<TInfo, TAsset>(in TInfo info, AssetPriority priority)
         where TInfo : struct, IEquatable<TInfo>

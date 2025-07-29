@@ -60,6 +60,7 @@ public class AssetRegistry : IAssetRegistryInternal
     public IAssetRegistry? ParentRegistry { get; }
     public CancellationToken Cancellation => cancellationSource.Token;
     public ITagContainer DIContainer { get; }
+    public AssetRegistryStats Stats { get; private set; }
 
     public AssetRegistry(ITagContainer diContainer, IAssetRegistry? parent = null, string? debugName = null)
     {
@@ -101,7 +102,10 @@ public class AssetRegistry : IAssetRegistryInternal
     private void DisposeAssetState(AssetState state)
     {
         if (IsMainThread || !state.NeedsMainThreadDisposal)
+        {
+            Stats.OnAssetRemoved();
             state.Asset?.Dispose();
+        }
         else if (state.Asset is not null)
         {
             var success = assetsToDispose.Writer.TryWrite(state.Asset);
@@ -291,6 +295,7 @@ public class AssetRegistry : IAssetRegistryInternal
                 Priority = priority
             };
             assets[assetId] = assetState;
+            Stats.OnAssetCreated();
             return (assetId, assetState);
         }
         finally
@@ -313,7 +318,7 @@ public class AssetRegistry : IAssetRegistryInternal
     {
         // Due to AsyncLazy we can flow exceptions outside this method
 
-        // Load asset and secondary assets
+        // Load asset
         var asset = (await TAsset.LoadAsync(this, assetId, info, Cancellation)).Asset;
         Debug.Assert(asset.Registry == this);
         CheckRegistryDisposal();
@@ -324,6 +329,7 @@ public class AssetRegistry : IAssetRegistryInternal
         {
             var assetState = assets.GetValueOrDefault(assetId);
             ObjectDisposedException.ThrowIf(assetState is null or { RefCount: <= 0 }, typeof(AssetState));
+            Stats.OnAssetLoaded();
         }
         catch
         {
@@ -467,7 +473,10 @@ public class AssetRegistry : IAssetRegistryInternal
         Debug.Assert(IsMainThread);
         Debug.Assert(semaphore.CurrentCount == 0);
         while (assetsToDispose.Reader.TryRead(out var asset))
+        {
             asset.Dispose();
+            Stats.OnAssetRemoved();
+        }
     }
 
     public void Apply<TAsset>(AssetHandle<TAsset> handle, Action<AssetHandle<TAsset>> action)
