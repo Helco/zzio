@@ -1760,4 +1760,98 @@ public class TestAssetRegistry
         using var handle = local.Load<TestInfo, LocalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
         Assert.That(global.TryGet<LocalTestAsset>(handle.AssetId, out _), Is.False);
     }
+
+    [Test]
+    public void Stats()
+    {
+        // Stats are not terribly important, especially in error cases I accept that stats will not be correct
+        // this one test should suffice for now
+        using var global = new AssetRegistry(DI);
+        using var local = new AssetRegistry(DI, global);
+
+        // one asset being loaded twice
+        using var h1 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        using var h11 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+
+        // one asset being removed
+        var h2 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(2).AsCompleted(), AssetPriority.Synchronous);
+        h2.Dispose();
+
+        // one asset being created twice
+        var h3 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(3).AsCompleted(), AssetPriority.Synchronous);
+        h3.Dispose();
+        h3 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(3).AsCompleted(), AssetPriority.Synchronous);
+        h3.Dispose();
+
+        // two assets being created but not loaded
+        var h4 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(4), AssetPriority.High);
+        var h5 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(5), AssetPriority.Low);
+
+        // additional assets in the local registry
+        using var h6 = local.Load<TestInfo, LocalTestAsset>(GetInfo(6).AsCompleted(), AssetPriority.Synchronous);
+        var h7 = local.Load<TestInfo, LocalTestAsset>(GetInfo(7).AsCompleted(), AssetPriority.Synchronous);
+        h7.Dispose();
+
+        Assert.That(global.Stats, Is.EqualTo(new AssetRegistryStats(
+            created: 6,
+            loaded: 4,
+            removed: 3,
+            total: 3
+        )));
+
+        Assert.That(local.Stats, Is.EqualTo(new AssetRegistryStats(
+            created: 6 + 2,
+            loaded: 4 + 2,
+            removed: 3 + 1,
+            total: 3 + 1
+        )));
+    }
+
+    [Test]
+    public void Delayed_Undelayed()
+    {
+        using var global = new AssetRegistryDelayed(new AssetRegistry(DI));
+
+        var handle1 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var handle2 = handle1; // we use an invalid copy to check for asset disposal
+        handle1.Dispose();
+
+        Assert.That(handle2.Get, Throws.InstanceOf<ObjectDisposedException>());
+    }
+
+    [Test]
+    public void Delayed_Delayed()
+    {
+        using var global = new AssetRegistryDelayed(new AssetRegistry(DI));
+        global.DelayDeletion = true;
+
+        var handle1 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var handle2 = handle1; // we use an invalid copy to check for asset disposal
+        handle1.Dispose();
+
+        Assert.That(handle2.Get, Throws.Nothing);
+
+        global.DelayDeletion = false;
+        Assert.That(handle2.Get, Throws.Nothing);
+    }
+
+    [Test]
+    public void Delayed_DelayedTwice()
+    {
+        using var global = new AssetRegistryDelayed(new AssetRegistry(DI));
+        global.DelayDeletion = true;
+
+        var handle1 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var handle2 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        handle1.Dispose();
+
+        Assert.That(handle2.Get, Throws.Nothing);
+
+        global.DelayDeletion = false;
+        Assert.That(handle2.Get, Throws.Nothing);
+
+        global.DelayDeletion = true;
+        global.DelayDeletion = false;
+        Assert.That(handle2.Get, Throws.Nothing); // still alive
+    }
 }

@@ -53,6 +53,7 @@ public class AssetRegistry : IAssetRegistryInternal
     private readonly Dictionary<Type, Action<Guid, object>> applyActionCaster = [];
     private List<(Guid assetId, uint tag, Type assetType, object action)> applyActions = [], applyActionsBackup = [];
     private uint nextAssetTag;
+    private AssetRegistryStats localStats;
 
     public bool WasDisposed => cancellationSource.IsCancellationRequested;
     public bool IsMainThread => mainThreadId == Environment.CurrentManagedThreadId;
@@ -60,7 +61,7 @@ public class AssetRegistry : IAssetRegistryInternal
     public IAssetRegistry? ParentRegistry { get; }
     public CancellationToken Cancellation => cancellationSource.Token;
     public ITagContainer DIContainer { get; }
-    public AssetRegistryStats Stats { get; private set; }
+    public AssetRegistryStats Stats => (ParentRegistry?.Stats ?? default) + localStats;
 
     public AssetRegistry(ITagContainer diContainer, IAssetRegistry? parent = null, string? debugName = null)
     {
@@ -103,7 +104,7 @@ public class AssetRegistry : IAssetRegistryInternal
     {
         if (IsMainThread || !state.NeedsMainThreadDisposal)
         {
-            Stats.OnAssetRemoved();
+            localStats.OnAssetRemoved();
             state.Asset?.Dispose();
         }
         else if (state.Asset is not null)
@@ -295,7 +296,7 @@ public class AssetRegistry : IAssetRegistryInternal
                 Priority = priority
             };
             assets[assetId] = assetState;
-            Stats.OnAssetCreated();
+            localStats.OnAssetCreated();
             return (assetId, assetState);
         }
         finally
@@ -329,7 +330,7 @@ public class AssetRegistry : IAssetRegistryInternal
         {
             var assetState = assets.GetValueOrDefault(assetId);
             ObjectDisposedException.ThrowIf(assetState is null or { RefCount: <= 0 }, typeof(AssetState));
-            Stats.OnAssetLoaded();
+            localStats.OnAssetLoaded();
         }
         catch
         {
@@ -475,7 +476,7 @@ public class AssetRegistry : IAssetRegistryInternal
         while (assetsToDispose.Reader.TryRead(out var asset))
         {
             asset.Dispose();
-            Stats.OnAssetRemoved();
+            localStats.OnAssetRemoved();
         }
     }
 

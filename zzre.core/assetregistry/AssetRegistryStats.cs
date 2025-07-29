@@ -6,12 +6,12 @@ namespace zzre;
 /// <summary>
 /// A snapshot of mostly monotonous counters of an <see cref="IAssetRegistry"/>
 /// </summary>
-public struct AssetRegistryStats
+public struct AssetRegistryStats(int created, int loaded, int removed, int total)
 {
-    private int created;
-    private int loaded;
-    private int removed;
-    private int total;
+    private int created = created;
+    private int loaded = loaded;
+    private int removed = removed;
+    private int total = total;
 
     /// <summary>The number of assets created</summary>
     public readonly int Created => created;
