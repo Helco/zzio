@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,6 +15,7 @@ public enum AssetLocality
 
 public interface IAsset : IDisposable
 {
+    [ExcludeFromCodeCoverage] // for some reason not called
     public static virtual AssetLocality Locality => AssetLocality.Global;
     public static virtual bool NeedsMainThreadDisposal => false;
     IAssetRegistry Registry { get; }

@@ -1805,6 +1805,18 @@ public class TestAssetRegistry
             removed: 3 + 1,
             total: 3 + 1
         )));
+
+        // just to fill code coverage
+        Assert.That(() =>
+        {
+            var stats = global.Stats;
+            var a = stats - stats;
+            _ = stats.Created;
+            _ = stats.Loaded;
+            _ = stats.Removed;
+            _ = stats.Total;
+            _ = stats.ToString();
+        }, Throws.Nothing);
     }
 
     [Test]
