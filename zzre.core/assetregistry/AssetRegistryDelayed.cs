@@ -55,7 +55,7 @@ public sealed class AssetRegistryDelayed(IAssetRegistry Inner) : IAssetRegistryI
         where TAsset : class, IAsset =>
         Inner.TryGet(assetId, out handle);
 
-    public bool DelayDeletion
+    public bool DelayDisposals
     {
         get => Volatile.Read(ref delayDeletion);
         set
@@ -86,7 +86,7 @@ public sealed class AssetRegistryDelayed(IAssetRegistry Inner) : IAssetRegistryI
 
     void IAssetRegistryInternal.DelRef(Guid assetId)
     {
-        if (DelayDeletion)
+        if (DelayDisposals)
         {
             lock (assetIdsToDelete)
                 assetIdsToDelete.Add(assetId);

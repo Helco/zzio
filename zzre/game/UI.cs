@@ -9,7 +9,7 @@ public class UI : BaseDisposable, ITagContainer
 {
     private readonly ITagContainer tagContainer;
     private readonly IZanzarahContainer zzContainer;
-    private readonly AssetLocalRegistry assetRegistry;
+    private readonly AssetRegistryDelayed assetRegistry;
     private readonly Remotery profiler;
     private readonly GameTime time;
     private readonly systems.RecordingSequentialSystem<float> updateSystems;
@@ -29,6 +29,7 @@ public class UI : BaseDisposable, ITagContainer
         zzContainer.OnResize += HandleResize;
         profiler = GetTag<Remotery>();
         time = GetTag<GameTime>();
+        var globalRegistry = GetTag<IAssetRegistry>();
 
         var resourceFactory = GetTag<ResourceFactory>();
         graphicsDevice = GetTag<GraphicsDevice>();
@@ -39,7 +40,7 @@ public class UI : BaseDisposable, ITagContainer
         HandleResize();
 
         AddTag(this);
-        AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("UI", tagContainer));
+        AddTag<IAssetRegistry>(assetRegistry = new(new AssetRegistry(tagContainer, globalRegistry, "UI")));
         AddTag(World = new DefaultEcs.World());
         AddTag(Builder = new UIBuilder(this));
 
@@ -108,14 +109,14 @@ public class UI : BaseDisposable, ITagContainer
     public void Update()
     {
         using var _ = profiler.SampleCPU("UI.Update");
-        assetRegistry.ApplyAssets();
+        assetRegistry.Update();
         updateSystems.Update(time.Delta);
     }
 
     public void Render(CommandList cl)
     {
         using var _ = profiler.SampleCPU("UI.Render");
-        assetRegistry.ApplyAssets();
+        assetRegistry.Update();
         renderSystems.Update(cl);
     }
 

@@ -21,6 +21,14 @@ public struct AssetHandle(IAssetRegistry registry, Guid assetId) : IAssetHandle,
             ((IAssetRegistryInternal)Registry).DelRef(AssetId);
     }
 
+    public readonly TAsset Get<TAsset>()
+        where TAsset : class, IAsset
+    {
+        TypeCheck(typeof(TAsset));
+        var tmp = new AssetHandle<TAsset>(registry, assetId, wasDisposed); // an invalid copy        
+        return tmp.Get();
+    }
+
     public AssetHandle<TAsset> As<TAsset>()
         where TAsset : class, IAsset
     {

@@ -146,23 +146,8 @@ internal static partial class Program
     {
         var registryList = new AssetRegistryList();
         diContainer.AddTag(registryList);
-        var registry = new AssetRegistry("", diContainer);
+        var registry = new AssetRegistry(diContainer, debugName: "Global");
         registryList.Register("Global", registry);
-        SamplerAsset.Register();
-        TextureAsset.Register();
-        ClumpMaterialAsset.Register();
-        ClumpAsset.Register();
-        ActorMaterialAsset.Register();
-        ActorAsset.Register();
-        AnimationAsset.Register();
-        WorldMaterialAsset.Register();
-        WorldAsset.Register();
-        EffectMaterialAsset.Register();
-        EffectCombinerAsset.Register();
-        UIBitmapAsset.Register();
-        UITileSheetAsset.Register();
-        UIPreloadAsset.Register();
-        SoundAsset.Register();
         return registry;
     }
 

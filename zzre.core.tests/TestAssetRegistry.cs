@@ -1835,7 +1835,7 @@ public class TestAssetRegistry
     public void Delayed_Delayed()
     {
         using var global = new AssetRegistryDelayed(new AssetRegistry(DI));
-        global.DelayDeletion = true;
+        global.DelayDisposals = true;
 
         var handle1 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
         var handle2 = handle1; // we use an invalid copy to check for asset disposal
@@ -1843,7 +1843,7 @@ public class TestAssetRegistry
 
         Assert.That(handle2.Get, Throws.Nothing);
 
-        global.DelayDeletion = false;
+        global.DelayDisposals = false;
         Assert.That(handle2.Get, Throws.Nothing);
     }
 
@@ -1851,7 +1851,7 @@ public class TestAssetRegistry
     public void Delayed_DelayedTwice()
     {
         using var global = new AssetRegistryDelayed(new AssetRegistry(DI));
-        global.DelayDeletion = true;
+        global.DelayDisposals = true;
 
         var handle1 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
         var handle2 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
@@ -1859,11 +1859,11 @@ public class TestAssetRegistry
 
         Assert.That(handle2.Get, Throws.Nothing);
 
-        global.DelayDeletion = false;
+        global.DelayDisposals = false;
         Assert.That(handle2.Get, Throws.Nothing);
 
-        global.DelayDeletion = true;
-        global.DelayDeletion = false;
+        global.DelayDisposals = true;
+        global.DelayDisposals = false;
         Assert.That(handle2.Get, Throws.Nothing); // still alive
     }
 }

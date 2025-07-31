@@ -14,7 +14,7 @@ public abstract class Game : BaseDisposable, ITagContainer
 {
     protected readonly ITagContainer tagContainer;
     protected readonly IZanzarahContainer zzContainer;
-    protected readonly AssetLocalRegistry assetRegistry;
+    protected readonly AssetRegistryDelayed assetRegistry;
     protected readonly ILogger logger;
     protected readonly Remotery profiler;
     protected readonly GameTime time;
@@ -47,10 +47,11 @@ public abstract class Game : BaseDisposable, ITagContainer
         profiler = GetTag<Remotery>();
         time = GetTag<GameTime>();
         ui = GetTag<UI>();
+        var globalRegistry = GetTag<IAssetRegistry>();
 
         AddTag(this);
         AddTag(savegame);
-        AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("Game", tagContainer));
+        AddTag<IAssetRegistry>(assetRegistry = new(new AssetRegistry(tagContainer, globalRegistry, "Game")));
         AddTag(ecsWorld = new DefaultEcs.World());
         AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
         AddTag(new ModelInstanceBuffer(diContainer, 512)); // TODO: ModelRenderer should use central ModelInstanceBuffer
@@ -93,7 +94,7 @@ public abstract class Game : BaseDisposable, ITagContainer
     public void Update()
     {
         using var _ = profiler.SampleCPU("Game.Update");
-        assetRegistry.ApplyAssets();
+        assetRegistry.Update();
         onceUpdate.Invoke();
         updateSystems.Update(time.Delta);
     }
@@ -101,7 +102,7 @@ public abstract class Game : BaseDisposable, ITagContainer
     public void Render(CommandList cl)
     {
         using var _ = profiler.SampleCPU("Game.Render");
-        assetRegistry.ApplyAssets();
+        assetRegistry.Update();
         camera.Update(cl);
         syncedLocation.Update(cl);
         cl.ClearColorTarget(0, clearColor);
