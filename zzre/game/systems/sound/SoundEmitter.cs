@@ -80,7 +80,7 @@ public sealed partial class SoundEmitter : AComponentSystem<float, components.So
                 Parent = msg.ParentLocation
             });
         }
-        
+
         var handle = assetRegistry.LoadSound(new zzio.FilePath(msg.SamplePath), msg.Priority);
         if (msg.Priority is AssetPriority.Synchronous)
             ApplySpawnSample(handle, entity, msg);
@@ -89,6 +89,7 @@ public sealed partial class SoundEmitter : AComponentSystem<float, components.So
             var msg_ = msg;
             assetRegistry.Apply(handle, h => ApplySpawnSample(h, entity, msg_));
         }
+        entity.Set(handle.As());
     }
 
     private void ApplySpawnSample(AssetHandle<SoundAsset> handle, DefaultEcs.Entity entity, messages.SpawnSample msg)

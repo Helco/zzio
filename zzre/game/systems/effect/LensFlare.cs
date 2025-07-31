@@ -139,9 +139,11 @@ public partial class LensFlare : AEntitySetSystem<float>
             {
                 LocalPosition = trigger.pos
             });
-            assetRegistry.LoadEffectMaterial(entity, MaterialInfo);
+            var materialHandle = assetRegistry.LoadEffectMaterial(MaterialInfo);
             var vertexRange = effectMesh.RentVertices(4 * FlareInfos[(int)trigger.ii1].Count);
             var indexRange = effectMesh.RentQuadIndices(vertexRange);
+            entity.Set(materialHandle.Get().Material);
+            entity.Set(materialHandle.As());
             entity.Set(new components.effect.RenderIndices(indexRange));
             entity.Set(components.RenderOrder.LateEffect);
             entity.Set(new components.effect.LensFlare(
