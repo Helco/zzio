@@ -80,32 +80,35 @@ public sealed partial class SoundEmitter : AComponentSystem<float, components.So
                 Parent = msg.ParentLocation
             });
         }
-        var handle = assetRegistry.LoadSound(entity, new zzio.FilePath(msg.SamplePath), msg.Priority);
-        handle.Inner.Apply(&ApplySpawnSample, (this, entity, msg));
+        
+        var handle = assetRegistry.LoadSound(new zzio.FilePath(msg.SamplePath), msg.Priority);
+        if (msg.Priority is AssetPriority.Synchronous)
+            ApplySpawnSample(handle, entity, msg);
+        else
+        {
+            var msg_ = msg;
+            assetRegistry.Apply(handle, h => ApplySpawnSample(h, entity, msg_));
+        }
     }
 
-    private static void ApplySpawnSample(AssetHandle handle,
-        ref readonly (SoundEmitter, DefaultEcs.Entity, messages.SpawnSample) apply)
+    private void ApplySpawnSample(AssetHandle<SoundAsset> handle, DefaultEcs.Entity entity, messages.SpawnSample msg)
     {
-        var (thiz, entity, msg) = apply;
         if (!entity.IsAlive)
             return;
 
-        var context = thiz.context;
-        var device = thiz.device;
         using var _ = context.EnsureIsCurrent();
-        if (!thiz.sourcePool.TryDequeue(out var sourceId))
+        if (!sourcePool.TryDequeue(out var sourceId))
             sourceId = device.AL.GenSource();
         if (sourceId == 0)
             throw new InvalidOperationException("Source was not generated");
         bool is3D = msg.Position.HasValue || msg.ParentLocation != null;
-        device.AL.SetSourceProperty(sourceId, SourceFloat.Gain, msg.Volume * thiz.gameConfig.SoundVolumeFactor);
+        device.AL.SetSourceProperty(sourceId, SourceFloat.Gain, msg.Volume * gameConfig.SoundVolumeFactor);
         device.AL.SetSourceProperty(sourceId, SourceFloat.ReferenceDistance, msg.RefDistance);
         device.AL.SetSourceProperty(sourceId, SourceFloat.MaxDistance, msg.MaxDistance);
         device.AL.SetSourceProperty(sourceId, SourceFloat.MinGain, 0f);
         device.AL.SetSourceProperty(sourceId, SourceFloat.MaxGain, 1f);
         device.AL.SetSourceProperty(sourceId, SourceFloat.RolloffFactor, is3D ? 1f : 0f);
-        device.AL.SetSourceProperty(sourceId, SourceInteger.Buffer, handle.Get<SoundAsset>().Buffer);
+        device.AL.SetSourceProperty(sourceId, SourceInteger.Buffer, handle.Get().Buffer);
         device.AL.SetSourceProperty(sourceId, SourceBoolean.Looping, msg.Looping);
         device.AL.SetSourceProperty(sourceId, SourceBoolean.SourceRelative, false);
         if (!is3D)

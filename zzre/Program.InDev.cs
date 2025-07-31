@@ -151,7 +151,7 @@ internal partial class Program
             if (time.HasFramerateChanged)
                 window.Title = $"Zanzarah | {graphicsDevice.BackendType} | {time.FormattedStats}";
 
-            assetRegistry.ApplyAssets();
+            assetRegistry.Update();
             using (remotery.SampleCPU("WindowContainer.Render"))
             {
                 windowContainer.Render();
@@ -161,7 +161,7 @@ internal partial class Program
 
             sdl.PumpEvents();
             configuration.ApplyChanges();
-            assetRegistry.ApplyAssets();
+            assetRegistry.Update();
             windowContainer.BeginEventUpdate(time);
             Event ev = default;
             while (window.IsOpen && sdl.PollEvent(ref ev) != 0)

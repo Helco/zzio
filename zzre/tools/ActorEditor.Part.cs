@@ -41,11 +41,10 @@ partial class ActorEditor
             gameTime = diContainer.GetTag<GameTime>();
             var resourcePool = diContainer.GetTag<IResourcePool>();
             var assetRegistry = diContainer.GetTag<IAssetRegistry>();
-            var modelPath = new FilePath("resources/models/actorsex/").Combine(modelName);
 
-            var meshHandle = assetRegistry.Load(new ClumpAsset.Info(modelPath), AssetPriority.Synchronous);
+            var meshHandle = assetRegistry.LoadActorClump(modelName, AssetPriority.Synchronous);
             AddDisposable(meshHandle);
-            mesh = meshHandle.Get<ClumpAsset>().Mesh;
+            mesh = meshHandle.Get().Mesh;
 
             locationBufferRange = diContainer.GetTag<LocationBuffer>().Add(location);
             var camera = diContainer.GetTag<Camera>();
