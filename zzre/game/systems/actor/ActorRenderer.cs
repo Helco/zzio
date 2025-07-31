@@ -169,25 +169,23 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
 
     private DefaultEcs.Entity CreateActorPart(
         DefaultEcs.Entity parent,
-        AssetHandle<ClumpAsset> clumpHandle,
-        IReadOnlyList<AssetHandle<AnimationAsset>> animations,
+        ClumpAsset clumpAsset,
+        IReadOnlyList<AnimationAsset> animations,
         ActorPartDescription partDescr)
     {
-        var clumpAsset = clumpHandle.Get();
         var part = parent.World.CreateEntity();
         part.Set<components.SyncedLocation>();
         part.Set<components.Visibility>();
         part.Set<components.ActorPart>();
         part.Set<components.AnimationPool>();
         part.Set(new components.Parent(parent));
-        part.Set(clumpHandle);
         part.Set(clumpAsset.Mesh);
         if (clumpAsset.Mesh.Skin is not null) // unfortunately there are some unskinned actor parts
             part.Set(new Skeleton(clumpAsset.Mesh.Skin, clumpAsset.Name));
 
         ref var animationPool = ref part.Get<components.AnimationPool>();
         for (int i = 0; i < animations.Count; i++)
-            animationPool.Add(partDescr.animations[i].type, animations[i].Get().Animation);
+            animationPool.Add(partDescr.animations[i].type, animations[i].Animation);
 
         LoadActorPartMaterials(part, clumpAsset.Mesh);
 

@@ -29,11 +29,13 @@ public sealed class BeamStar : BaseCombinerPart<
             indexRange));
         Reset(ref entity.Get<components.effect.BeamStarState>(), data);
 
-        assetRegistry.LoadEffectMaterial(entity,
+        var materialHandle = assetRegistry.LoadEffectMaterial(
             data.texName,
             EffectMaterial.BillboardMode.None,
             data.renderMode,
             playback.DepthTest);
+        entity.Set(materialHandle.Get().Material);
+        entity.Set(materialHandle.As());
         entity.Set(new components.effect.RenderIndices(indexRange));
     }
 

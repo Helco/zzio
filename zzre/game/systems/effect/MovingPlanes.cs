@@ -32,11 +32,13 @@ public sealed class MovingPlanes : BaseCombinerPart<
         });
         Reset(ref entity.Get<components.effect.MovingPlanesState>(), data);
 
-        assetRegistry.LoadEffectMaterial(entity,
+        var materialHandle = assetRegistry.LoadEffectMaterial(
             data.texName,
             isBillboard ? EffectMaterial.BillboardMode.View : EffectMaterial.BillboardMode.None,
             data.renderMode,
             playback.DepthTest);
+        entity.Set(materialHandle.Get().Material);
+        entity.Set(materialHandle.As());
         entity.Set(new components.effect.RenderIndices(indexRange));
     }
 
