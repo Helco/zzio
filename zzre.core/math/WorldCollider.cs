@@ -86,7 +86,8 @@ public sealed class WorldCollider : TreeCollider
             Math.Max(1, world.FindAllChildrenById(SectionId.PlaneSection, true).Count());
         var rootPlane = world.FindChildById(SectionId.PlaneSection, false) as RWPlaneSection;
         var rootAtomic = world.FindChildById(SectionId.AtomicSection, false);
-        var rootSection = rootPlane ?? rootAtomic ?? throw new InvalidDataException("RWWorld has no geometry");
+        if (rootPlane is null && rootAtomic is null)
+            throw new InvalidDataException("RWWorld has no geometry");
 
         // add dummy plane for root atomic worlds
         rootPlane ??= new RWPlaneSection()
@@ -94,7 +95,7 @@ public sealed class WorldCollider : TreeCollider
             sectorType = RWPlaneSectionType.XPlane,
             leftValue = float.PositiveInfinity,
             rightValue = float.PositiveInfinity,
-            children = [rootAtomic, new RWString()]
+            children = [rootAtomic!, new RWString()]
         };
 
         var splits = new CollisionSplit[splitCount];

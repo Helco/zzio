@@ -123,7 +123,7 @@ internal static partial class Program
         {
             0 => new InMemoryResourcePool(),
             1 => CreateSingleResourcePool(logger, pools.Single()),
-            _ => new CombinedResourcePool(pools.Select(p => CreateSingleResourcePool(logger, p)).ToArray())
+            _ => new CombinedResourcePool([.. pools.Select(p => CreateSingleResourcePool(logger, p))])
         };
     }
 

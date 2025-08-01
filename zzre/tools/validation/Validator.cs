@@ -63,6 +63,7 @@ public class Validator(ITagContainer diContainer)
     {
         if (pool.Root.Type is ResourceType.File)
         {
+            Interlocked.Increment(ref queuedFileCount);
             yield return pool.Root;
             yield break;
         }
@@ -115,26 +116,22 @@ public class Validator(ITagContainer diContainer)
 
     private async Task ValidateWorld(IResource resource)
     {
-        using var handle = assetRegistry.LoadWorld(resource.Path, AssetLoadPriority.High);
-        await assetRegistry.WaitAsyncAll([handle.Inner]);
-        var world = handle.Get();
+        using var handle = assetRegistry.LoadWorld(resource.Path, AssetPriority.High);
+        var world = await handle.GetAsync(CancellationToken.None);
         var collider = WorldCollider.Create(world.Mesh.World);
     }
 
     private async Task ValidateClump(IResource resource)
     {
-        using var handle = assetRegistry.Load(
-            new ClumpAsset.Info(resource.Path),
-            AssetLoadPriority.High).As<ClumpAsset>();
-        await assetRegistry.WaitAsyncAll([handle.Inner]);
-        var world = handle.Get();
+        using var handle = assetRegistry.Load<ClumpAsset.Info, ClumpAsset>(new(resource.Path), AssetPriority.High);
+        var world = await handle.GetAsync(CancellationToken.None);
         var collider = GeometryCollider.Create(world.Mesh.Geometry, location: null);
     }
 
     private Task ValidateTexture(IResource resource)
     {
-        using var handle = assetRegistry.LoadTexture(resource.Path, AssetLoadPriority.Synchronous);
-        return assetRegistry.WaitAsyncAll([handle.Inner]);
+        using var handle = assetRegistry.LoadTexture(resource.Path, AssetPriority.Synchronous);
+        return Task.CompletedTask;
     }
 
     private static void ValidateScene(IResource resource)
@@ -147,17 +144,15 @@ public class Validator(ITagContainer diContainer)
 
     private Task ValidateActor(IResource resource)
     {
-        using var handle = assetRegistry.Load(
-            new ActorAsset.Info(Path.GetFileNameWithoutExtension(resource.Name)),
-            AssetLoadPriority.Synchronous);
-        return assetRegistry.WaitAsyncAll([handle]);
+        using var handle = assetRegistry.LoadActor(
+            Path.GetFileNameWithoutExtension(resource.Name),
+            AssetPriority.Synchronous);
+        return Task.CompletedTask;
     }
 
     private Task ValidateEffect(IResource resource)
     {
-        using var handle = assetRegistry.Load(
-            new EffectCombinerAsset.Info(resource.Path),
-            AssetLoadPriority.Synchronous);
-        return assetRegistry.WaitAsyncAll([handle]);
+        using var handle = assetRegistry.LoadEffectCombiner(resource.Path, AssetPriority.Synchronous);
+        return Task.CompletedTask;
     }
 }
