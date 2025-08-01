@@ -56,7 +56,7 @@ public class Validator(ITagContainer diContainer)
         resourceTraversalBlock.Complete();
         await processResourceBlock.Completion;
         stopwatch.Stop();
-        logger.Information("Validation of {ProcessedFileCount} resources finished in {Elapsed}", processedFileCount, stopwatch.Elapsed);
+        logger.Information("Validation of {ProcessedFileCount} ({FaultyFileCount} faulty) resources finished in {Elapsed}", processedFileCount, faultyFileCount, stopwatch.Elapsed);
     }
 
     private IEnumerable<IResource> TraverseResourcePool(IResourcePool pool)
@@ -128,10 +128,10 @@ public class Validator(ITagContainer diContainer)
         var collider = GeometryCollider.Create(world.Mesh.Geometry, location: null);
     }
 
-    private Task ValidateTexture(IResource resource)
+    private async Task ValidateTexture(IResource resource)
     {
-        using var handle = assetRegistry.LoadTexture(resource.Path, AssetPriority.Synchronous);
-        return Task.CompletedTask;
+        using var handle = assetRegistry.LoadTexture(resource.Path, AssetPriority.High);
+        await handle.GetAsync(CancellationToken.None);
     }
 
     private static void ValidateScene(IResource resource)
@@ -142,17 +142,17 @@ public class Validator(ITagContainer diContainer)
         scene.Read(stream);
     }
 
-    private Task ValidateActor(IResource resource)
+    private async Task ValidateActor(IResource resource)
     {
         using var handle = assetRegistry.LoadActor(
             Path.GetFileNameWithoutExtension(resource.Name),
-            AssetPriority.Synchronous);
-        return Task.CompletedTask;
+            AssetPriority.High);
+        await handle.GetAsync(CancellationToken.None);
     }
 
-    private Task ValidateEffect(IResource resource)
+    private async Task ValidateEffect(IResource resource)
     {
-        using var handle = assetRegistry.LoadEffectCombiner(resource.Path, AssetPriority.Synchronous);
-        return Task.CompletedTask;
+        using var handle = assetRegistry.LoadEffectCombiner(resource.Path, AssetPriority.High);
+        await handle.GetAsync(CancellationToken.None);
     }
 }
