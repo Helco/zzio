@@ -61,13 +61,12 @@ internal sealed record Image : Base<Image>
         }
         else if (bitmap != null)
         {
-            var handle = assetRegistry.LoadUIBitmap(entity, bitmap);
-            size = handle.Get().Size;
+            size = assetRegistry.LoadUIBitmapFor(entity, bitmap);
         }
         else // if (tileSheet != null)
         {
-            var handle = assetRegistry.LoadUITileSheet(entity, tileSheet!.Value);
-            size = handle.Get().TileSheet.GetPixelSize(tileI);
+            var sheet = assetRegistry.LoadUITileSheetFor(entity, tileSheet!.Value);
+            size = sheet.GetPixelSize(tileI);
         }
         AlignToSize(entity, size, alignment);
         entity.Set(new components.ui.Tile[] { new(tileI, rect) });
