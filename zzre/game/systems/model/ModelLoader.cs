@@ -133,7 +133,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
 
     private unsafe void LoadModel(DefaultEcs.Entity entity, string modelName, IColor color, FOModelRenderType? renderType, AssetPriority priority = AssetPriority.Synchronous)
     {
-        ClumpMaterialAsset.MaterialVariant material = renderType switch
+        ModelMaterial.Variant material = renderType switch
         {
             null => new(ModelMaterial.BlendMode.Opaque),
             FOModelRenderType.EarlySolid or FOModelRenderType.LateSolid or FOModelRenderType.Solid =>
@@ -156,18 +156,20 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
         entity.Set(RenderOrderFromRenderType(renderType));
         entity.Set(color with { a = AlphaFromRenderType(renderType) });
         entity.Set(ClumpAsset.Info.Model(modelName));
-        var handle = assetRegistry.LoadModel(entity, modelName, priority, material, StandardTextureKind.White);
-        handle.Inner.Apply(&ApplyModelAfterLoading, entity);
-    }
-
-    private static void ApplyModelAfterLoading(AssetHandle handle, ref readonly DefaultEcs.Entity entity)
-    {
-        if (!entity.IsAlive)
-            return;
-        if (HasEmptyMesh(entity))
-            entity.Dispose(); // I am fine with ignoring empty FOModels
-        else
-            SetSphereCollider(entity);
+        using var handle = assetRegistry.LoadModelClumpAndMaterialFor(entity,
+            modelName,
+            material,
+            StandardTextureKind.White,
+            priority);
+        assetRegistry.Apply(handle, handle =>
+        {
+            if (!entity.IsAlive)
+                return;
+            if (HasEmptyMesh(entity))
+                entity.Dispose(); // I am fine with ignoring empty FOModels
+            else
+                SetSphereCollider(entity);
+        });
     }
 
     private void HandleCreateItem(in messages.CreateItem msg)

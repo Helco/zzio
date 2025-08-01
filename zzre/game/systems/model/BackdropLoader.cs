@@ -77,12 +77,6 @@ public class BackdropLoader : ISystem<float>
 
     private DefaultEcs.Entity CreateStaticBackdrop(string name, bool depthTest = true, bool depthWrite = true, bool hasFog = true, Quaternion? rotation = null)
     {
-        var materialVariant = new ClumpMaterialAsset.MaterialVariant(
-            materials.ModelMaterial.BlendMode.Alpha,
-            DepthTest: depthTest,
-            DepthWrite: depthWrite,
-            HasFog: hasFog);
-
         var entity = ecsWorld.CreateEntity();
         entity.Set(new Location()
         {
@@ -92,7 +86,14 @@ public class BackdropLoader : ISystem<float>
         entity.Set(components.Visibility.Visible);
         entity.Set(components.RenderOrder.Backdrop);
         entity.Set(IColor.White);
-        assetRegistry.LoadBackdrop(entity, name, AssetPriority.Synchronous, materialVariant, StandardTextureKind.Clear);
+        assetRegistry.LoadBackdropClumpAndMaterialFor(entity, name,
+            new(
+                materials.ModelMaterial.BlendMode.Alpha,
+                DepthTest: depthTest,
+                DepthWrite: depthWrite,
+                HasFog: hasFog),
+            StandardTextureKind.Clear,
+            AssetPriority.Synchronous);
 
         return entity;
     }

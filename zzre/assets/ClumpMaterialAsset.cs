@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Veldrid;
 using zzio;
+using zzio.rwbs;
 using zzre.materials;
 using zzre.rendering;
 using static zzre.ClumpMaterialAsset;
@@ -94,4 +95,21 @@ partial class AssetExtensions
             new(textureName, sampler, config, texturePlaceholder),
             priority
         );
+
+    public static AssetHandle<ClumpMaterialAsset> LoadClumpMaterial(this IAssetRegistry registry,
+        RWMaterial rwMaterial,
+        ModelMaterial.Variant config,
+        StandardTextureKind? texturePlaceholder = null,
+        AssetPriority priority = AssetPriority.Synchronous)
+    {
+        var rwTexture = rwMaterial.FindChildById(SectionId.Texture, true) as RWTexture;
+        var rwTextureName = (rwTexture?.FindChildById(SectionId.String, true) as RWString)?.value;
+        var samplerDescription = GetSamplerDescription(rwTexture);
+        return registry.LoadClumpMaterial(
+            rwTextureName,
+            samplerDescription,
+            config,
+            texturePlaceholder,
+            priority);
+    }
 }
