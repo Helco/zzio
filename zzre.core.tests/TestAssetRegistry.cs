@@ -1614,7 +1614,7 @@ public class TestAssetRegistry
         global.Apply(handle, _ => counter++);
         info.FinishLoad.SetException(new TestException());
 
-        Assert.ThatAsync(async () =>
+        await Assert.ThatAsync(async () =>
         {
             await handle.GetAsync(ct);
         }, Throws.InstanceOf<TestException>());
@@ -1631,7 +1631,7 @@ public class TestAssetRegistry
         var info = GetInfo(1).AsErroneous();
         using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
 
-        Assert.ThatAsync(async () =>
+        await Assert.ThatAsync(async () =>
         {
             await handle.GetAsync(ct);
         }, Throws.InstanceOf<TestException>());
@@ -1697,7 +1697,7 @@ public class TestAssetRegistry
 
         await info.StartedLoad.Task;
         Assert.That(global.TryGet<GlobalTestAsset>(handle.AssetId, out var handle2), Is.True);
-        Assert.ThatAsync(() => handle2.GetAsync(ct).AsTask(), Throws.InstanceOf<TestException>());
+        await Assert.ThatAsync(() => handle2.GetAsync(ct).AsTask(), Throws.InstanceOf<TestException>());
     }
 
     [Test]
