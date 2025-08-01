@@ -67,7 +67,7 @@ public abstract class Game : BaseDisposable, ITagContainer
         ecsWorld.Set(new Location()); // world location
         ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
         ecsWorld.Subscribe<messages.SceneLoaded>(DisposeUnusedAssets);
-        AssetRegistry.SubscribeAt(ecsWorld);
+        assetRegistry.SubscribeAt(ecsWorld);
         assetRegistry.DelayDisposals = true;
     }
 

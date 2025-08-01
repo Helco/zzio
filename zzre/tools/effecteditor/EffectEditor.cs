@@ -87,7 +87,7 @@ public partial class EffectEditor : ListDisposable, IDocumentEditor, IECSWindow
             diContainer,
             diContainer.GetTag<IAssetRegistry>(),
             "EffectEditor"));
-        AssetRegistry.SubscribeAt(ecsWorld);
+        game.EntityAssetExtensions.SubscribeAt(assetRegistry, ecsWorld);
         controls = new OrbitControlsTag(Window, camera.Location, diContainer);
         AddDisposable(controls);
 

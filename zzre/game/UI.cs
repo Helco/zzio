@@ -46,7 +46,7 @@ public class UI : BaseDisposable, ITagContainer
 
         if (TryGetTag(out tools.AssetRegistryList assetRegistryList))
             assetRegistryList.Register("UI", assetRegistry);
-        AssetRegistry.SubscribeAt(World);
+        assetRegistry.SubscribeAt(World);
         assetRegistry.DelayDisposals = true;
         // we still use DelayDisposal in UI to prevent mostly sound samples to be freed
 

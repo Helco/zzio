@@ -12,6 +12,7 @@ using zzre.debug;
 using zzre.imgui;
 using zzre.materials;
 using zzre.rendering;
+using zzre.game;
 using zzre.game.systems;
 using static ImGuiNET.ImGui;
 
@@ -156,7 +157,7 @@ public class WorldViewer : ListDisposable, IDocumentEditor
         localDiContainer
             .AddTag(ecsWorld = new DefaultEcs.World())
             .AddTag(assetRegistry = new AssetRegistry(localDiContainer, globalAssetRegistry, "WorldViewer"));
-        AssetRegistry.SubscribeAt(ecsWorld);
+        assetRegistry.SubscribeAt(ecsWorld);
         worldRenderer = new(localDiContainer);
         AddDisposable(worldRenderer);
     }

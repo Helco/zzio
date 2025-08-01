@@ -7,6 +7,21 @@ namespace zzre.game;
 
 public static class EntityAssetExtensions
 {
+    public static void SubscribeAt(this IAssetRegistry registry, DefaultEcs.World world)
+    {
+        world.SubscribeEntityComponentRemoved<AssetHandle>(HandleAssetHandleRemoved);
+        world.SubscribeEntityComponentRemoved<AssetHandle[]>(HandleAssetHandlesRemoved);
+    }
+
+    private static void HandleAssetHandleRemoved(in DefaultEcs.Entity entity, in AssetHandle handle) =>
+        handle.Dispose();
+
+    private static void HandleAssetHandlesRemoved(in DefaultEcs.Entity entity, in AssetHandle[] handles)
+    {
+        foreach (var handle in handles)
+            handle.Dispose();
+    }
+
     public static Vector2 LoadUIBitmapFor(this IAssetRegistry registry, DefaultEcs.Entity entity,
         string bitmap, bool hasRawMask = false)
     {

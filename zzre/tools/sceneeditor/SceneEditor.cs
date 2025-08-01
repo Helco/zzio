@@ -76,7 +76,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
             .AddTag(assetRegistry = new AssetRegistry(localDiContainer, globalAssetRegistry, "SceneEditor"))
             .AddTag(ecsWorld = new DefaultEcs.World())
             .AddTag(camera);
-        AssetRegistry.SubscribeAt(ecsWorld);
+        game.EntityAssetExtensions.SubscribeAt(assetRegistry, ecsWorld);
         new MiscComponent(localDiContainer);
         new DatasetComponent(localDiContainer);
         new WorldComponent(localDiContainer);
