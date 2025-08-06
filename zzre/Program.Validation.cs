@@ -47,6 +47,10 @@ internal partial class Program
         }, cancellationSource.Token).WaitAndRethrow();
         WriteProgress();
 
+        foreach (var diagnostic in validator.Diagnostics)
+            diagnostic.WriteToConsole();
+        validator.LogSummary();
+
         CommonCleanup(diContainer);
 
         void WriteProgress() =>

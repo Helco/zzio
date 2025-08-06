@@ -9,6 +9,7 @@ using System.Threading.Tasks.Dataflow;
 using Serilog;
 using zzio.scn;
 using zzio.vfs;
+using static zzre.Diagnostics;
 
 namespace zzre.validation;
 
@@ -18,6 +19,7 @@ public class Validator(ITagContainer diContainer)
     private readonly IResourcePool resourcePool = diContainer.GetTag<IResourcePool>();
     private readonly IAssetRegistry assetRegistry = diContainer.GetTag<IAssetRegistry>();
     private readonly Stopwatch stopwatch = new();
+    private readonly List<Diagnostic> diagnostics = [];
     private uint queuedFileCount;
     private uint processedFileCount;
     private uint faultyFileCount;
@@ -25,6 +27,7 @@ public class Validator(ITagContainer diContainer)
     public uint QueuedFileCount => queuedFileCount;
     public uint ProcessedFileCount => processedFileCount;
     public uint FaultyFileCount => faultyFileCount;
+    public IReadOnlyList<Diagnostic> Diagnostics => diagnostics;
 
     public ushort MaxConcurrency { get; init; } = checked((ushort)Environment.ProcessorCount);
 
@@ -56,7 +59,25 @@ public class Validator(ITagContainer diContainer)
         resourceTraversalBlock.Complete();
         await processResourceBlock.Completion;
         stopwatch.Stop();
-        logger.Information("Validation of {ProcessedFileCount} ({FaultyFileCount} faulty) resources finished in {Elapsed}", processedFileCount, faultyFileCount, stopwatch.Elapsed);
+
+        diagnostics.Sort();
+    }
+
+    public void LogSummary()
+    {
+        int countInfos = diagnostics.Count(d => d.Severity == DiagnosticSeverity.Info);
+        int countWarns = diagnostics.Count(d => d.Severity == DiagnosticSeverity.Warning);
+        int countErrors = diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error);
+        int countIntErrors = diagnostics.Count(d => d.Severity == DiagnosticSeverity.InternalError);
+        logger.Information("Validation of {ProcessedFileCount} resources finished in {Elapsed}", processedFileCount, stopwatch.Elapsed);
+        if (countInfos > 0)
+            logger.Information($"Informations: {countInfos}");
+        if (countWarns > 0)
+            logger.Information($"    Warnings: {countWarns}");
+        if (countErrors > 0)
+            logger.Information($"      Errors: {countErrors}");
+        if (countIntErrors > 0)
+            logger.Information($" Int. Errors: {countIntErrors}");
     }
 
     private IEnumerable<IResource> TraverseResourcePool(IResourcePool pool)
@@ -87,7 +108,8 @@ public class Validator(ITagContainer diContainer)
         bool wasIgnored = false;
         try
         {
-            switch (Path.GetExtension(resource.Name).ToLowerInvariant())
+            var ext = Path.GetExtension(resource.Name).ToLowerInvariant();
+            switch (ext)
             {
                 case ".bsp": await ValidateWorld(resource); break;
                 case ".scn": ValidateScene(resource); break;
@@ -97,14 +119,14 @@ public class Validator(ITagContainer diContainer)
                 case ".ed": await ValidateEffect(resource); break;
                 case ".dff": await ValidateClump(resource); break;
                 default:
-                    logger.Verbose("Ignored file (due to extension): {FileName}", resource.Name);
+                    AddDiagnostic(ValIgnoredDueToExtension(resource.Path.ToString(), ext));
                     wasIgnored = true;
                     break;
             }
         }
         catch (Exception e)
         {
-            logger.Error("Exception when processing {Resource}: {Exception}", resource.Name, e);
+            AddDiagnostic(ValGeneralException(resource.Path.ToString(), e));
             Interlocked.Increment(ref faultyFileCount);
         }
         finally
@@ -154,5 +176,11 @@ public class Validator(ITagContainer diContainer)
     {
         using var handle = assetRegistry.LoadEffectCombiner(resource.Path, AssetPriority.High);
         await handle.GetAsync(CancellationToken.None);
+    }
+
+    private void AddDiagnostic(Diagnostic diagnostic)
+    {
+        lock (diagnostics)
+            diagnostics.Add(diagnostic);
     }
 }
