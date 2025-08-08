@@ -100,19 +100,23 @@ public class AssetRegistry : IAssetRegistryInternal
         logger.Verbose("Finished disposing registry");
     }
 
-    private void DisposeAssetState(AssetState state)
+    private void DisposeAssetObject(bool needsMainThreadDisposal, IDisposable? assetObject)
     {
-        if (IsMainThread || !state.NeedsMainThreadDisposal)
+        if (IsMainThread || !needsMainThreadDisposal)
         {
             localStats.OnAssetRemoved();
-            state.Asset?.Dispose();
+            assetObject?.Dispose();
         }
-        else if (state.Asset is not null)
+        else if (assetObject is not null)
         {
-            var success = assetsToDispose.Writer.TryWrite(state.Asset);
+            var success = assetsToDispose.Writer.TryWrite(assetObject);
             Debug.Assert(success);
         }
+    }
 
+    private void DisposeAssetState(AssetState state)
+    {
+        DisposeAssetObject(state.NeedsMainThreadDisposal, state.Asset);
         state.RefCount = 0;
         state.LoadLazy = NullAssetLoadLazy;
     }
@@ -245,7 +249,8 @@ public class AssetRegistry : IAssetRegistryInternal
                     }
                     break;
                 case AssetPriority.High:
-                    Task.Run(() => handle.GetAsync(Cancellation), Cancellation);
+                    Console.WriteLine($"Queue {info}");
+                    Task.Run(() => TryStartLoad(handle.AssetId), Cancellation);
                     break;
                 case AssetPriority.Low:
                     var success = assetsToStart.Writer.TryWrite(assetId);
@@ -313,34 +318,69 @@ public class AssetRegistry : IAssetRegistryInternal
         Debug.Assert(actualType.IsAssignableTo(expectedType), "Asset type mismatch, is this a GUID conflict?");
     }
 
+    private async Task TryStartLoad(Guid assetId)
+    {
+        AssetState? assetState = null;
+        await LockSemaphoreAsync(Cancellation);
+        try
+        {
+            assetState = assets.GetValueOrDefault(assetId);
+            if (assetState is null or { RefCount: <= 0 })
+            {
+                // if the High load cannot start because all handles are disposed
+                // then no one will know we never tried to load it in the first place
+                Console.WriteLine($"not started disposed {assetId}");
+                return;
+            }
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+
+        await assetState.LoadLazy.WithCancellation(Cancellation);
+    }
+
     private async Task<IDisposable> LoadAsset<TInfo, TAsset>(TInfo info, Guid assetId)
         where TInfo : struct, IEquatable<TInfo>
         where TAsset : class, IAsset<TInfo>
     {
         // Due to AsyncLazy we can flow exceptions outside this method
 
+        Console.WriteLine($"before load {info}");
+
         // Load asset
         var asset = (await TAsset.LoadAsync(this, assetId, info, Cancellation)).Asset;
         Debug.Assert(asset.Registry == this);
         CheckRegistryDisposal();
 
+        Console.WriteLine($"after load 2{info}");
+
         // Propagate assets into registry state
+        AssetState? assetState = null;
         await LockSemaphoreAsync(Cancellation);
         try
         {
-            var assetState = assets.GetValueOrDefault(assetId);
-            ObjectDisposedException.ThrowIf(assetState is null or { RefCount: <= 0 }, typeof(AssetState));
-            localStats.OnAssetLoaded();
-        }
-        catch
-        {
-            asset.Dispose();
-            throw;
+            assetState = assets.GetValueOrDefault(assetId);
+            if (assetState is null or { RefCount: <= 0 })
+                assetState = null;
+            else
+                localStats.OnAssetLoaded();
         }
         finally
         {
             semaphore.Release();
         }
+
+        if (assetState is null)
+        {
+            Console.WriteLine($"dispose after load {info}");
+            // handle was disposed during load, now dispose the asset itself
+            DisposeAssetObject(TAsset.NeedsMainThreadDisposal, asset);
+            ObjectDisposedException.ThrowIf(true, typeof(TAsset));
+        }
+
+        Console.WriteLine($"return {info}");
 
         CheckRegistryDisposal();
         return asset;
@@ -350,7 +390,10 @@ public class AssetRegistry : IAssetRegistryInternal
         {
             if (WasDisposed)
             {
-                asset.Dispose();
+                Console.WriteLine($"Dispose because registry disposal {info}");
+                if (!TAsset.NeedsMainThreadDisposal)
+                    asset.Dispose();
+                // otherwise we are in a predicament and my decision is to leak a couple assets
                 ObjectDisposedException.ThrowIf(true, typeof(AssetRegistry));
             }
             Cancellation.ThrowIfCancellationRequested();

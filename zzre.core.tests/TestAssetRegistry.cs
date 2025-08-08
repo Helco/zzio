@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using DotNext;
+using DotNext.Collections.Generic;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 
@@ -13,7 +15,7 @@ namespace zzre.tests;
 [TestFixture(TaskContinuationOptions.None)]
 [TestFixture(TaskContinuationOptions.RunContinuationsAsynchronously)]
 [TestFixture(TaskContinuationOptions.ExecuteSynchronously)]
-[CancelAfter(3000), SingleThreaded]
+[CancelAfter(10000), SingleThreaded]
 public class TestAssetRegistry
 {
     private interface ITestAsset : IAsset<TestInfo>
@@ -58,6 +60,7 @@ public class TestAssetRegistry
         public bool Equals(TestInfo other) => Id == other.Id;
         public override bool Equals([NotNullWhen(true)] object? obj) => obj is TestInfo other ? Equals(other) : false;
         public override int GetHashCode() => Id.GetHashCode();
+        public override string ToString() => $"Test {Id}";
     }
 
     private class GlobalTestAsset : ITestAsset
@@ -89,6 +92,8 @@ public class TestAssetRegistry
 
         public void Dispose()
         {
+            if (!Registry.IsMainThread)
+                Info.Disposed.TrySetException(new AssertionException("MTD asset was not disposed on main thread"));
             Volatile.Write(ref WasDisposed, true);
             Info.Disposed.TrySetResult();
         }
@@ -556,6 +561,22 @@ public class TestAssetRegistry
     }
 
     [Test]
+    public async Task LoadLow_DelRefDuringLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low);
+        global.Update();
+        await info.StartedLoad.Task.WaitAsync(ct);
+        handle.Dispose();
+        info.FinishLoad.SetResult();
+
+        await Task.Delay(50);
+        global.Update();
+    }
+
+    [Test]
     public void LoadLow_ThenGetSync(CancellationToken ct)
     {
         using var global = new AssetRegistry(DI);
@@ -766,6 +787,61 @@ public class TestAssetRegistry
         }
     }
 
+    [Test, Repeat(50, StopOnFailure = true)]
+    public async Task DisposeAsset_StressBeforeLowLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var infos = Enumerable.Range(1, 8).Select(i => GetInfo(i).AsCompleted()).ToArray();
+        var handles = infos.Select(info =>
+            global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Low))
+            .ToArray();
+        global.Update();
+        foreach (var handle in handles)
+            handle.Dispose();
+        await UpdateAndCheckDisposal(global, infos, ct);
+    }
+
+    [Test, Repeat(50, StopOnFailure = true)]
+    public async Task DisposeAsset_StressBeforeHighLoad(CancellationToken ct)
+    {
+        Console.WriteLine("started run");
+        using var global = new AssetRegistry(DI);
+        await Task.WhenAll(
+            Task.Run(() => SingularStress(1), ct),
+            Task.Run(() => SingularStress(2), ct),
+            Task.Run(() => SingularStress(3), ct),
+            Task.Run(() => SingularStress(4), ct),
+            Task.Run(() => SingularStress(5), ct),
+            Task.Run(() => SingularStress(6), ct),
+            Task.Run(() => SingularStress(7), ct),
+            Task.Run(() => SingularStress(8), ct)
+        ).WaitAsync(ct);
+        Console.WriteLine("ended run");
+
+        async Task SingularStress(int id)
+        {
+            var info = GetInfo(id).AsCompleted();
+            var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+            handle.Dispose();
+            await Task.Yield();
+            if (info.StartedLoad.Task.IsCompleted)
+                await info.Disposed.Task.WaitAsync(ct);
+            // if the load has not started, the disposal will obviously also never happen
+        }
+    }
+
+    [Test]
+    public async Task DisposeAsset_BeforeHighLoad(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1).AsCompleted();
+        var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+        handle.Dispose();
+        await Task.Delay(50);
+        if (info.StartedLoad.Task.IsCompleted)
+            await info.Disposed.Task.WaitAsync(ct);
+    }
+
     [Test]
     public async Task DisposeAsset_DuringHighLoad(CancellationToken ct)
     {
@@ -793,6 +869,41 @@ public class TestAssetRegistry
         info.FinishLoad.SetResult();
 
         await info.Disposed.Task.WaitAsync(ct);
+    }
+
+    [Test]
+    public async Task DisposeAsset_MTDAlreadyDead(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+
+        using var handle = global.Load<TestInfo, GlobalMTDTestAsset>(info, AssetPriority.High);
+        await info.StartedLoad.Task.WaitAsync(ct);
+        handle.Dispose();
+        info.FinishLoad.SetResult();
+
+        await UpdateAndCheckDisposal(global, [info], ct);
+    }
+
+    private async Task UpdateAndCheckDisposal(IAssetRegistry registry, TestInfo[] allInfos, CancellationToken ct)
+    {
+        var infos = allInfos.ToHashSet();
+        while (!ct.IsCancellationRequested && infos.Any())
+        {
+            await Task.Yield();
+            registry.Update();
+            infos.RemoveWhere(i =>
+            {
+                if (!i.StartedLoad.Task.IsCompleted)
+                    return true;
+                if (!i.Disposed.Task.IsCompleted)
+                    return false;
+                if (i.Disposed.Task.Exception is Exception e)
+                    ExceptionDispatchInfo.Throw(e);
+                return true;
+            });
+        }
+        ct.ThrowIfCancellationRequested();
     }
 
     private sealed class TestException : Exception
