@@ -175,7 +175,8 @@ public class AssetRegistry : IAssetRegistryInternal
     [ExcludeFromCodeCoverage]
     private async Task<IAssetRegistryLock.Releaser> LockSemaphoreAsync(CancellationToken ct)
     {
-        var releaser = await mainLock.WaitAsync(LockTimeout, Cancellation); // NOT LINKED TO CT
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(Cancellation, ct);
+        var releaser = await mainLock.WaitAsync(LockTimeout, cts.Token); // NOT LINKED TO CT
         if (!releaser)
             throw new InvalidOperationException("Could not lock asset registry");
         return releaser;
