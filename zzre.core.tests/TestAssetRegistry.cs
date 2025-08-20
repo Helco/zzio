@@ -806,15 +806,9 @@ public class TestAssetRegistry
     {
         Console.WriteLine("started run");
         using var global = new AssetRegistry(DI);
-        await Task.WhenAll(
-            Task.Run(() => SingularStress(1), ct),
-            Task.Run(() => SingularStress(2), ct),
-            Task.Run(() => SingularStress(3), ct),
-            Task.Run(() => SingularStress(4), ct),
-            Task.Run(() => SingularStress(5), ct),
-            Task.Run(() => SingularStress(6), ct),
-            Task.Run(() => SingularStress(7), ct),
-            Task.Run(() => SingularStress(8), ct)
+        await Task.WhenAll(Enumerable
+            .Range(1, 50)
+            .Select(i => Task.Run(() => SingularStress(i), ct))
         ).WaitAsync(ct);
         Console.WriteLine("ended run");
 

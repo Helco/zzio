@@ -31,47 +31,6 @@ internal sealed class AssetState
     public string? Name;
 }
 
-public interface IAssetRegistryLock : IDisposable
-{
-    Releaser Wait(TimeSpan timeout, CancellationToken ct);
-    Task<Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct);
-
-    protected void Release();
-    public struct Releaser(IAssetRegistryLock? parent) : IDisposable
-    {
-        private IAssetRegistryLock? parent = parent;
-        public void Dispose()
-        {
-            parent?.Release();
-            parent = null;
-        }
-        public static implicit operator bool(in Releaser l) => l.parent is not null;
-        public static bool operator true(in Releaser l) => l.parent is not null;
-        public static bool operator false(in Releaser l) => l.parent is null;
-
-        public static Releaser ContinueBoolTask(Task<bool> task, object? parent)
-            => task.Result ? new(parent as IAssetRegistryLock) : default;
-
-        public static Task<Releaser> ConvertFromBoolTask(Task<bool> task, IAssetRegistryLock l, CancellationToken ct) =>
-            task.ContinueWith(ContinueBoolTask, l, ct, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current);
-    }
-}
-
-public sealed class SemaphoreAssetLock : IAssetRegistryLock
-{
-    private readonly SemaphoreSlim semaphore = new(1, 1);
-
-    public void Dispose() => semaphore.Dispose();
-
-    void IAssetRegistryLock.Release() => semaphore.Release();
-
-    public IAssetRegistryLock.Releaser Wait(TimeSpan timeout, CancellationToken ct) =>
-        semaphore.Wait(timeout, ct) ? new(this) : default;
-
-    public Task<IAssetRegistryLock.Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct) =>
-        IAssetRegistryLock.Releaser.ConvertFromBoolTask(semaphore.WaitAsync(timeout, ct), this, ct);
-}
-
 public class AssetRegistry : IAssetRegistryInternal
 {
     private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(3);
@@ -88,7 +47,7 @@ public class AssetRegistry : IAssetRegistryInternal
     private readonly Channel<IDisposable> assetsToDispose = Channel.CreateUnbounded<IDisposable>(ChannelOptions);
     private readonly Dictionary<Guid, AssetState> assets = [];
     private readonly CancellationTokenSource cancellationSource = new();
-    private readonly IAssetRegistryLock mainLock = new SemaphoreAssetLock();
+    private readonly IAssetRegistryLock mainLock = new TrackingAssetLock(new SemaphoreAssetLock());
     private readonly ILogger logger;
     private readonly int mainThreadId;
     private readonly Dictionary<Type, Action<Guid, object>> applyActionCaster = [];
@@ -175,8 +134,8 @@ public class AssetRegistry : IAssetRegistryInternal
     [ExcludeFromCodeCoverage]
     private async Task<IAssetRegistryLock.Releaser> LockSemaphoreAsync(CancellationToken ct)
     {
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(Cancellation, ct);
-        var releaser = await mainLock.WaitAsync(LockTimeout, cts.Token); // NOT LINKED TO CT
+       // using var cts = CancellationTokenSource.CreateLinkedTokenSource(Cancellation, ct);
+        var releaser = await mainLock.WaitAsync(LockTimeout, Cancellation); // NOT LINKED TO CT
         if (!releaser)
             throw new InvalidOperationException("Could not lock asset registry");
         return releaser;
