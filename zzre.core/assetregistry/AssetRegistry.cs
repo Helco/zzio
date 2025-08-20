@@ -31,6 +31,47 @@ internal sealed class AssetState
     public string? Name;
 }
 
+public interface IAssetRegistryLock : IDisposable
+{
+    Releaser Wait(TimeSpan timeout, CancellationToken ct);
+    Task<Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct);
+
+    protected void Release();
+    public struct Releaser(IAssetRegistryLock? parent) : IDisposable
+    {
+        private IAssetRegistryLock? parent = parent;
+        public void Dispose()
+        {
+            parent?.Release();
+            parent = null;
+        }
+        public static implicit operator bool(in Releaser l) => l.parent is not null;
+        public static bool operator true(in Releaser l) => l.parent is not null;
+        public static bool operator false(in Releaser l) => l.parent is null;
+
+        public static Releaser ContinueBoolTask(Task<bool> task, object? parent)
+            => task.Result ? new(parent as IAssetRegistryLock) : default;
+
+        public static Task<Releaser> ConvertFromBoolTask(Task<bool> task, IAssetRegistryLock l, CancellationToken ct) =>
+            task.ContinueWith(ContinueBoolTask, l, ct, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current);
+    }
+}
+
+public sealed class SemaphoreAssetLock : IAssetRegistryLock
+{
+    private readonly SemaphoreSlim semaphore = new(1, 1);
+
+    public void Dispose() => semaphore.Dispose();
+
+    void IAssetRegistryLock.Release() => semaphore.Release();
+
+    public IAssetRegistryLock.Releaser Wait(TimeSpan timeout, CancellationToken ct) =>
+        semaphore.Wait(timeout, ct) ? new(this) : default;
+
+    public Task<IAssetRegistryLock.Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct) =>
+        IAssetRegistryLock.Releaser.ConvertFromBoolTask(semaphore.WaitAsync(timeout, ct), this, ct);
+}
+
 public class AssetRegistry : IAssetRegistryInternal
 {
     private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(3);
@@ -47,7 +88,7 @@ public class AssetRegistry : IAssetRegistryInternal
     private readonly Channel<IDisposable> assetsToDispose = Channel.CreateUnbounded<IDisposable>(ChannelOptions);
     private readonly Dictionary<Guid, AssetState> assets = [];
     private readonly CancellationTokenSource cancellationSource = new();
-    private readonly SemaphoreSlim semaphore = new(1, 1);
+    private readonly IAssetRegistryLock mainLock = new SemaphoreAssetLock();
     private readonly ILogger logger;
     private readonly int mainThreadId;
     private readonly Dictionary<Type, Action<Guid, object>> applyActionCaster = [];
@@ -81,7 +122,7 @@ public class AssetRegistry : IAssetRegistryInternal
     {
         if (WasDisposed)
             return;
-        if (semaphore.Wait(LockTimeout, Cancellation))
+        if (mainLock.Wait(LockTimeout, Cancellation))
             logger.Warning("AssetRegistry could not lock during dispose, going ahead nonetheless");
         cancellationSource.Cancel();
         foreach (var asset in assets.Values)
@@ -95,7 +136,7 @@ public class AssetRegistry : IAssetRegistryInternal
         assetsToStart.Writer.TryComplete();
         DisposeOldAssets(); // after current assets in case we add something into it (we shouldn't)
 
-        semaphore.Dispose();
+        mainLock.Dispose();
         cancellationSource.Dispose();
         logger.Verbose("Finished disposing registry");
     }
@@ -122,38 +163,35 @@ public class AssetRegistry : IAssetRegistryInternal
     }
 
     [ExcludeFromCodeCoverage] // we cannot reasonably check for semaphore failure
-    private void LockSemaphore()
+    private IAssetRegistryLock.Releaser LockSemaphore()
     {
-        if (!semaphore.Wait(LockTimeout, Cancellation))
+        var releaser = mainLock.Wait(LockTimeout, Cancellation);
+        if (!releaser)
             throw new InvalidOperationException("Could not lock asset registry");
+        return releaser;
         // this should only happen in bug scenarios
     }
 
     [ExcludeFromCodeCoverage]
-    private async Task LockSemaphoreAsync(CancellationToken ct)
+    private async Task<IAssetRegistryLock.Releaser> LockSemaphoreAsync(CancellationToken ct)
     {
-        if (!await semaphore.WaitAsync(LockTimeout, Cancellation))
+        var releaser = await mainLock.WaitAsync(LockTimeout, Cancellation); // NOT LINKED TO CT
+        if (!releaser)
             throw new InvalidOperationException("Could not lock asset registry");
+        return releaser;
     }
 
     void IAssetRegistryInternal.AddRef(Guid assetId)
     {
         ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
-        LockSemaphore();
-        try
-        {
-            ObjectDisposedException.ThrowIf(!TryAddRefUnsafe(assetId), typeof(IAsset));
-        }
-        finally
-        {
-            semaphore.Release();
-        }
+        using var _ = LockSemaphore();
+        ObjectDisposedException.ThrowIf(!TryAddRefUnsafe(assetId), typeof(IAsset));
     }
 
     private bool TryAddRefUnsafe(Guid assetId)
     {
         Debug.Assert(!WasDisposed);
-        Debug.Assert(semaphore.CurrentCount == 0);
+        //Debug.Assert(semaphore.CurrentCount == 0);
         var assetState = assets.GetValueOrDefault(assetId);
         if (assetState is null || assetState.RefCount <= 0)
             return false;
@@ -165,21 +203,14 @@ public class AssetRegistry : IAssetRegistryInternal
     void IAssetRegistryInternal.DelRef(Guid assetId)
     {
         if (WasDisposed) return; // Ignore out-of-order deletion, all assets are already dead
-        LockSemaphore();
-        try
-        {
-            DelRefUnsafe(assetId);
-        }
-        finally
-        {
-            semaphore.Release();
-        }
+        using var releaser = LockSemaphore();
+        DelRefUnsafe(assetId);
     }
 
     private void DelRefUnsafe(Guid assetId)
     {
         Debug.Assert(!WasDisposed);
-        Debug.Assert(semaphore.CurrentCount == 0);
+        //Debug.Assert(semaphore.CurrentCount == 0);
         var assetState = assets.GetValueOrDefault(assetId);
         if (assetState is null || assetState.RefCount <= 0)
             return; // Let's just ignore already-dead assets, we got what we wanted
@@ -193,31 +224,17 @@ public class AssetRegistry : IAssetRegistryInternal
     AsyncLazy<IDisposable> IAssetRegistryInternal.GetAsset(Guid assetId)
     {
         AssetState asset;
-        LockSemaphore();
-        try
-        {
-            ObjectDisposedException.ThrowIf(!assets.TryGetValue(assetId, out asset!), nameof(IAssetHandle));
-        }
-        finally
-        {
-            semaphore.Release();
-        }
+        using var releaser = LockSemaphore();
+        ObjectDisposedException.ThrowIf(!assets.TryGetValue(assetId, out asset!), nameof(IAssetHandle));
         return asset.LoadLazy;
     }
 
     void IAssetRegistryInternal.CheckType(Guid assetId, Type type)
     {
-        LockSemaphore();
-        try
-        {
-            ObjectDisposedException.ThrowIf(!assets.TryGetValue(assetId, out var asset) || asset.RefCount <= 0, nameof(IAssetHandle));
-            if (!asset.AssetType.IsAssignableTo(type))
-                throw new InvalidCastException($"Cannot cast asset of type {asset.AssetType.FullName} to {type.FullName}");
-        }
-        finally
-        {
-            semaphore.Release();
-        }
+        using var releaser = LockSemaphore();
+        ObjectDisposedException.ThrowIf(!assets.TryGetValue(assetId, out var asset) || asset.RefCount <= 0, nameof(IAssetHandle));
+        if (!asset.AssetType.IsAssignableTo(type))
+            throw new InvalidCastException($"Cannot cast asset of type {asset.AssetType.FullName} to {type.FullName}");
     }
 
     public AssetHandle<TAsset> Load<TInfo, TAsset>(in TInfo info, AssetPriority priority)
@@ -265,49 +282,43 @@ public class AssetRegistry : IAssetRegistryInternal
         where TInfo : struct, IEquatable<TInfo>
         where TAsset : class, IAsset<TInfo>
     {
-        LockSemaphore();
-        try
+        using var releaser = LockSemaphore();
+
+        // Determine Asset ID
+        Guid assetId;
+        if (TAsset.Locality is AssetLocality.Unique)
         {
-            // Determine Asset ID
-            Guid assetId;
-            if (TAsset.Locality is AssetLocality.Unique)
+            do
             {
-                do
-                {
-                    assetId = Guid.NewGuid();
-                } while (assets.ContainsKey(assetId)); // just paranoid...
-            }
-            else
-                assetId = TAsset.InfoToAssetId(info);
+                assetId = Guid.NewGuid();
+            } while (assets.ContainsKey(assetId)); // just paranoid...
+        }
+        else
+            assetId = TAsset.InfoToAssetId(info);
 
-            // Check previous asset state
-            if (assets.TryGetValue(assetId, out var assetState) && assetState.RefCount > 0)
-            {
-                SanityCheckSharedAsset(typeof(TAsset), assetState);
-                assetState.RefCount++;
-                if (assetState.Asset is null && (int)priority < (int)assetState.Priority)
-                    assetState.Priority = priority;
-                return (assetId, assetState);
-            }
-
-            // Create new asset state
-            TInfo infoCopy = info;
-            assetState = new()
-            {
-                NeedsMainThreadDisposal = TAsset.NeedsMainThreadDisposal,
-                LoadLazy = new(ct => LoadAsset<TInfo, TAsset>(infoCopy, assetId)),
-                Tag = unchecked(++nextAssetTag),
-                AssetType = typeof(TAsset),
-                Priority = priority
-            };
-            assets[assetId] = assetState;
-            localStats.OnAssetCreated();
+        // Check previous asset state
+        if (assets.TryGetValue(assetId, out var assetState) && assetState.RefCount > 0)
+        {
+            SanityCheckSharedAsset(typeof(TAsset), assetState);
+            assetState.RefCount++;
+            if (assetState.Asset is null && (int)priority < (int)assetState.Priority)
+                assetState.Priority = priority;
             return (assetId, assetState);
         }
-        finally
+
+        // Create new asset state
+        TInfo infoCopy = info;
+        assetState = new()
         {
-            semaphore.Release();
-        }
+            NeedsMainThreadDisposal = TAsset.NeedsMainThreadDisposal,
+            LoadLazy = new(ct => LoadAsset<TInfo, TAsset>(infoCopy, assetId)),
+            Tag = unchecked(++nextAssetTag),
+            AssetType = typeof(TAsset),
+            Priority = priority
+        };
+        assets[assetId] = assetState;
+        localStats.OnAssetCreated();
+        return (assetId, assetState);
     }
 
     [Conditional("DEBUG")]
@@ -321,8 +332,7 @@ public class AssetRegistry : IAssetRegistryInternal
     private async Task TryStartLoad(Guid assetId)
     {
         AssetState? assetState = null;
-        await LockSemaphoreAsync(Cancellation);
-        try
+        using (await LockSemaphoreAsync(Cancellation))
         {
             assetState = assets.GetValueOrDefault(assetId);
             if (assetState is null or { RefCount: <= 0 })
@@ -332,10 +342,6 @@ public class AssetRegistry : IAssetRegistryInternal
                 Console.WriteLine($"not started disposed {assetId}");
                 return;
             }
-        }
-        finally
-        {
-            semaphore.Release();
         }
 
         await assetState.LoadLazy.WithCancellation(Cancellation);
@@ -358,18 +364,13 @@ public class AssetRegistry : IAssetRegistryInternal
 
         // Propagate assets into registry state
         AssetState? assetState = null;
-        await LockSemaphoreAsync(Cancellation);
-        try
+        using (await LockSemaphoreAsync(Cancellation))
         {
             assetState = assets.GetValueOrDefault(assetId);
             if (assetState is null or { RefCount: <= 0 })
                 assetState = null;
             else
                 localStats.OnAssetLoaded();
-        }
-        finally
-        {
-            semaphore.Release();
         }
 
         if (assetState is null)
@@ -408,22 +409,15 @@ public class AssetRegistry : IAssetRegistryInternal
             return true;
 
         handle = default;
-        LockSemaphore();
-        try
-        {
-            if (!assets.TryGetValue(assetId, out var assetState) ||
-                assetState.RefCount < 1 ||
-                !assetState.AssetType.IsAssignableTo(typeof(TAsset)))
-                return false;
+        using var releaser = LockSemaphore();
+        if (!assets.TryGetValue(assetId, out var assetState) ||
+            assetState.RefCount < 1 ||
+            !assetState.AssetType.IsAssignableTo(typeof(TAsset)))
+            return false;
 
-            assetState.RefCount++;
-            handle = new(this, assetId);
-            return true;
-        }
-        finally
-        {
-            semaphore.Release();
-        }
+        assetState.RefCount++;
+        handle = new(this, assetId);
+        return true;
     }
 
     public void Update() =>
@@ -435,8 +429,7 @@ public class AssetRegistry : IAssetRegistryInternal
         if (!IsMainThread)
             throw new InvalidOperationException("Low batch scheduling is only allowed on the main thread");
 
-        LockSemaphore();
-        try
+        using (LockSemaphore())
         {
             DisposeOldAssets();
 
@@ -471,10 +464,6 @@ public class AssetRegistry : IAssetRegistryInternal
                 }
             }
         }
-        finally
-        {
-            semaphore.Release();
-        }
 
         // We can safely access applyActionsBackup as we are on the main thread
         var exceptions = new List<Exception>();
@@ -493,18 +482,13 @@ public class AssetRegistry : IAssetRegistryInternal
         }
 
         // Remove reference we added earlier
-        LockSemaphore();
-        try
+        using (LockSemaphore())
         {
             foreach (var (assetId, _, _, _) in applyActionsBackup)
             {
                 if (assetId != default)
                     DelRefUnsafe(assetId);
             }
-        }
-        finally
-        {
-            semaphore.Release();
         }
         applyActionsBackup.Clear();
 
@@ -515,7 +499,7 @@ public class AssetRegistry : IAssetRegistryInternal
     private void DisposeOldAssets()
     {
         Debug.Assert(IsMainThread);
-        Debug.Assert(semaphore.CurrentCount == 0);
+        //Debug.Assert(semaphore.CurrentCount == 0);
         while (assetsToDispose.Reader.TryRead(out var asset))
         {
             asset.Dispose();
@@ -539,8 +523,7 @@ public class AssetRegistry : IAssetRegistryInternal
 
         bool shouldBeExecutedNow = false;
 
-        LockSemaphore();
-        try
+        using (LockSemaphore())
         {
             if (!applyActionCaster.ContainsKey(typeof(TAsset)))
             {
@@ -561,10 +544,6 @@ public class AssetRegistry : IAssetRegistryInternal
             if (!shouldBeExecutedNow)
                 applyActions.Add(new(handle.AssetId, assets[handle.AssetId].Tag, typeof(TAsset), action));
         }
-        finally
-        {
-            semaphore.Release();
-        }
 
         // Fast-path: no queueing 
         if (shouldBeExecutedNow)
@@ -582,8 +561,7 @@ public class AssetRegistry : IAssetRegistryInternal
 
     public void CopyDebugInfo(List<IAssetRegistry.AssetInfo> infos)
     {
-        LockSemaphore();
-        try
+        using (LockSemaphore())
         {
             infos.Clear();
             infos.EnsureCapacity(assets.Count);
@@ -602,10 +580,6 @@ public class AssetRegistry : IAssetRegistryInternal
                     state.Priority
                 ));
             }
-        }
-        finally
-        {
-            semaphore.Release();
         }
     }
 }
