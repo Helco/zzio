@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -122,9 +123,9 @@ public class AssetRegistry : IAssetRegistryInternal
     }
 
     [ExcludeFromCodeCoverage] // we cannot reasonably check for semaphore failure
-    private IAssetRegistryLock.Releaser LockSemaphore()
+    private IAssetRegistryLock.Releaser LockSemaphore([CallerMemberName] string context = "<unknown>")
     {
-        var releaser = mainLock.Wait(LockTimeout, Cancellation);
+        var releaser = mainLock.Wait(LockTimeout, Cancellation, context);
         if (!releaser)
             throw new InvalidOperationException("Could not lock asset registry");
         return releaser;
@@ -132,10 +133,10 @@ public class AssetRegistry : IAssetRegistryInternal
     }
 
     [ExcludeFromCodeCoverage]
-    private async Task<IAssetRegistryLock.Releaser> LockSemaphoreAsync(CancellationToken ct)
+    private async Task<IAssetRegistryLock.Releaser> LockSemaphoreAsync(CancellationToken ct, [CallerMemberName] string context = "<unknown>")
     {
-       // using var cts = CancellationTokenSource.CreateLinkedTokenSource(Cancellation, ct);
-        var releaser = await mainLock.WaitAsync(LockTimeout, Cancellation); // NOT LINKED TO CT
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(Cancellation, ct);
+        var releaser = await mainLock.WaitAsync(LockTimeout, cts.Token, context);
         if (!releaser)
             throw new InvalidOperationException("Could not lock asset registry");
         return releaser;

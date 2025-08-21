@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,8 +8,8 @@ namespace zzre;
 
 public interface IAssetRegistryLock : IDisposable
 {
-    Releaser Wait(TimeSpan timeout, CancellationToken ct);
-    Task<Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct);
+    Releaser Wait(TimeSpan timeout, CancellationToken ct, [CallerMemberName] string context = "<unknown>");
+    Task<Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct, [CallerMemberName] string context = "<unknown>");
 
     internal void Release();
     public struct Releaser(IAssetRegistryLock? parent) : IDisposable
@@ -39,10 +40,10 @@ public sealed class SemaphoreAssetLock : IAssetRegistryLock
 
     void IAssetRegistryLock.Release() => semaphore.Release();
 
-    public IAssetRegistryLock.Releaser Wait(TimeSpan timeout, CancellationToken ct) =>
+    public IAssetRegistryLock.Releaser Wait(TimeSpan timeout, CancellationToken ct, string _) =>
         semaphore.Wait(timeout, ct) ? new(this) : default;
 
-    public Task<IAssetRegistryLock.Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct) =>
+    public Task<IAssetRegistryLock.Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct, string _) =>
         IAssetRegistryLock.Releaser.ConvertFromBoolTask(semaphore.WaitAsync(timeout, ct), this, ct);
 }
 
@@ -64,14 +65,13 @@ public sealed class TrackingAssetLock(IAssetRegistryLock inner) : IAssetRegistry
         last = null;
     }
 
-    public IAssetRegistryLock.Releaser Wait(TimeSpan timeout, CancellationToken ct)
+    public IAssetRegistryLock.Releaser Wait(TimeSpan timeout, CancellationToken ct, string context)
     {
-        var next = new StackFrame(1).ToString();
-        var releaser = inner.Wait(timeout, ct);
+        var releaser = inner.Wait(timeout, ct, context);
         try
         {
             if (releaser)
-                Interlocked.Exchange(ref last, next);
+                Interlocked.Exchange(ref last, context);
         }
         catch
         {
@@ -82,14 +82,13 @@ public sealed class TrackingAssetLock(IAssetRegistryLock inner) : IAssetRegistry
         return releaser;
     }
 
-    public async Task<IAssetRegistryLock.Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct)
+    public async Task<IAssetRegistryLock.Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct, string context)
     {
-        var next = new StackFrame(1).ToString();
-        var releaser = await inner.WaitAsync(timeout, ct);
+        var releaser = await inner.WaitAsync(timeout, ct, context);
         try
         {
             if (releaser)
-                Interlocked.Exchange(ref last, next);
+                Interlocked.Exchange(ref last, context);
         }
         catch
         {
