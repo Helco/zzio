@@ -103,12 +103,14 @@ public class AssetRegistry : IAssetRegistryInternal
 
     private void DisposeAssetObject(bool needsMainThreadDisposal, IDisposable? assetObject)
     {
+        if (assetObject is null)
+            return;
         if (IsMainThread || !needsMainThreadDisposal)
         {
             localStats.OnAssetRemoved();
-            assetObject?.Dispose();
+            assetObject.Dispose();
         }
-        else if (assetObject is not null)
+        else
         {
             var success = assetsToDispose.Writer.TryWrite(assetObject);
             Debug.Assert(success);
