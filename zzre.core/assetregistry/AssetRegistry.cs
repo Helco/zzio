@@ -48,7 +48,7 @@ public class AssetRegistry : IAssetRegistryInternal
     private readonly Channel<IDisposable> assetsToDispose = Channel.CreateUnbounded<IDisposable>(ChannelOptions);
     private readonly Dictionary<Guid, AssetState> assets = [];
     private readonly CancellationTokenSource cancellationSource = new();
-    private readonly IAssetRegistryLock mainLock = new TrackingAssetLock(new SemaphoreAssetLock());
+    private readonly IAssetRegistryLock mainLock = new TrackingAssetLock(new DotNextAsyncAssetLock());
     private readonly ILogger logger;
     private readonly int mainThreadId;
     private readonly Dictionary<Type, Action<Guid, object>> applyActionCaster = [];

@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using DotNext.Threading;
+using DotNext.Threading.Tasks;
 
 namespace zzre;
 
@@ -45,6 +47,56 @@ public sealed class SemaphoreAssetLock : IAssetRegistryLock
 
     public Task<IAssetRegistryLock.Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct, string _) =>
         IAssetRegistryLock.Releaser.ConvertFromBoolTask(semaphore.WaitAsync(timeout, ct), this, ct);
+}
+
+// do not use
+public sealed class MonitorAssetLock : IAssetRegistryLock
+{
+    public void Dispose() { }
+
+    public IAssetRegistryLock.Releaser Wait(TimeSpan timeout, CancellationToken ct, [CallerMemberName] string context = "<unknown>")
+    {
+        Monitor.Enter(this);
+        return new(this);
+    }
+
+    public Task<IAssetRegistryLock.Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct, [CallerMemberName] string context = "<unknown>")
+    {
+        Monitor.Enter(this);
+        return Task.FromResult<IAssetRegistryLock.Releaser>(new(this));
+    }
+
+    void IAssetRegistryLock.Release()
+    {
+        Debug.Assert(Monitor.IsEntered(this));
+    }
+}
+
+public sealed class DotNextAsyncAssetLock : IAssetRegistryLock
+{
+    private readonly AsyncExclusiveLock l = new(Environment.ProcessorCount + 1);
+
+    public void Dispose()
+    {
+        l.Dispose();
+    }
+
+    public IAssetRegistryLock.Releaser Wait(TimeSpan timeout, CancellationToken ct, [CallerMemberName] string context = "<unknown>")
+    {
+        l.AcquireAsync(timeout, ct).Wait();
+        return new(this);
+    }
+
+    public async Task<IAssetRegistryLock.Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct, [CallerMemberName] string context = "<unknown>")
+    {
+        await l.AcquireAsync(timeout, ct);
+        return new(this);
+    }
+
+    void IAssetRegistryLock.Release()
+    {
+        l.Release();
+    }
 }
 
 public sealed class TrackingAssetLock(IAssetRegistryLock inner) : IAssetRegistryLock
