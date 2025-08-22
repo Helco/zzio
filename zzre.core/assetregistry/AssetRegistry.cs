@@ -229,7 +229,6 @@ public class AssetRegistry : IAssetRegistryInternal
                     }
                     break;
                 case AssetPriority.High:
-                    Console.WriteLine($"Queue {info}");
                     Task.Run(() => TryStartLoad(handle.AssetId), Cancellation);
                     break;
                 case AssetPriority.Low:
@@ -302,7 +301,6 @@ public class AssetRegistry : IAssetRegistryInternal
             {
                 // if the High load cannot start because all handles are disposed
                 // then no one will know we never tried to load it in the first place
-                Console.WriteLine($"not started disposed {assetId}");
                 return;
             }
         }
@@ -316,14 +314,10 @@ public class AssetRegistry : IAssetRegistryInternal
     {
         // Due to AsyncLazy we can flow exceptions outside this method
 
-        Console.WriteLine($"before load {info}");
-
         // Load asset
         var asset = (await TAsset.LoadAsync(this, assetId, info, Cancellation)).Asset;
         Debug.Assert(asset.Registry == this);
         CheckRegistryDisposal();
-
-        Console.WriteLine($"after load 2{info}");
 
         // Propagate assets into registry state
         AssetState? assetState = null;
@@ -338,13 +332,10 @@ public class AssetRegistry : IAssetRegistryInternal
 
         if (assetState is null)
         {
-            Console.WriteLine($"dispose after load {info}");
             // handle was disposed during load, now dispose the asset itself
             DisposeAssetObject(TAsset.NeedsMainThreadDisposal, asset);
             ObjectDisposedException.ThrowIf(true, typeof(TAsset));
         }
-
-        Console.WriteLine($"return {info}");
 
         CheckRegistryDisposal();
         return asset;
@@ -354,7 +345,6 @@ public class AssetRegistry : IAssetRegistryInternal
         {
             if (WasDisposed)
             {
-                Console.WriteLine($"Dispose because registry disposal {info}");
                 if (!TAsset.NeedsMainThreadDisposal)
                     asset.Dispose();
                 // otherwise we are in a predicament and my decision is to leak a couple assets
