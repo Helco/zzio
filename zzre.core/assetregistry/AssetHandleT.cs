@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using DotNext;
+using DotNext.Threading.Tasks;
 
 namespace zzre;
 
@@ -36,7 +37,7 @@ public struct AssetHandle<TAsset>(IAssetRegistry registry, Guid assetId) : IAsse
         get
         {
             ThrowIfDisposed();
-            var result = ((IAssetRegistryInternal)Registry).GetAsset(AssetId).Value;
+            var result = ((IAssetRegistryInternal)Registry).GetAsset(AssetId).Task.TryGetResult();
             return result?.IsSuccessful is true
                 ? (TAsset)result.Value.Value
                 : null;
@@ -49,36 +50,36 @@ public struct AssetHandle<TAsset>(IAssetRegistry registry, Guid assetId) : IAsse
         if (!Registry.IsMainThread)
             throw new InvalidOperationException("Synchronous asset loading is only allowed on the main thread");
         var lazy = ((IAssetRegistryInternal)Registry).GetAsset(AssetId);
-        if (!lazy.IsValueCreated)
+        if (!lazy.Task.IsCompleted)
         {
             try
             {
-                lazy.WithCancellation(Registry.Cancellation).Wait(Registry.Cancellation);
+                lazy.Task.Wait(Registry.Cancellation);
             }
             catch (AggregateException e)
             {
                 throw e.InnerException ?? e;
             }
         }
-        return (TAsset)lazy.Value!.Value; // throws on error
+        return (TAsset)lazy.Task.Result; // throws on error
     }
 
     public readonly ValueTask<TAsset> GetAsync(CancellationToken ct)
     {
         ThrowIfDisposed();
         var lazy = ((IAssetRegistryInternal)Registry).GetAsset(AssetId);
-        if (lazy.Value is not Result<IDisposable> result)
+        if (lazy.Task.TryGetResult() is not Result<IDisposable> result)
             return new(DoGetAsync(ct));
         else if (result.IsSuccessful)
             return ValueTask.FromResult((TAsset)result.Value);
         else
-            return ValueTask.FromException<TAsset>(result.Error);
+            return ValueTask.FromException<TAsset>(result.Error!);
     }
 
     private readonly async Task<TAsset> DoGetAsync(CancellationToken ct)
     {
         var lazy = ((IAssetRegistryInternal)Registry).GetAsset(AssetId);
-        return (TAsset)await lazy.WithCancellation(ct);
+        return (TAsset)await lazy.Task.WaitAsync(ct);
     }
 
     public AssetHandle As()

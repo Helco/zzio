@@ -1,12 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DotNext.Threading;
+using DotNext.Threading.Tasks;
 using Serilog;
 using Serilog.Core;
 
@@ -15,18 +16,20 @@ namespace zzre;
 internal sealed class AssetState
 {
     public required bool NeedsMainThreadDisposal;
-    public required AsyncLazy<IDisposable> LoadLazy;
+    public required TaskCompletionSource<IDisposable> LoadLazy;
+    public required Func<Task> Factory;
     public required uint Tag; // used for apply actions to prevent triggering from revived assets
     public required Type AssetType;
     public IDisposable? Asset
     {
         get
         {
-            var result = LoadLazy.Value;
+            var result = LoadLazy.Task.TryGetResult();
             return result is null || !result.Value.IsSuccessful
                 ? null : result.Value.Value;
         }
     }
+    public bool WasStarted;
     public int RefCount = 1;
     public AssetPriority Priority;
     public string? Name;
@@ -35,7 +38,6 @@ internal sealed class AssetState
 public class AssetRegistry : IAssetRegistryInternal
 {
     private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(3);
-    internal static readonly AsyncLazy<IDisposable> NullAssetLoadLazy = new(NullDisposable.Instance);
     private static readonly int MaxLowPriorityAssetsPerFrame = Math.Clamp(Environment.ProcessorCount, 1, 64);
     private static readonly UnboundedChannelOptions ChannelOptions = new()
     {
@@ -63,6 +65,13 @@ public class AssetRegistry : IAssetRegistryInternal
     public CancellationToken Cancellation => cancellationSource.Token;
     public ITagContainer DIContainer { get; }
     public AssetRegistryStats Stats => (ParentRegistry?.Stats ?? default) + localStats;
+
+    private static readonly TaskCompletionSource<IDisposable> DisposedSource;
+    static AssetRegistry()
+    {
+        DisposedSource = new();
+        DisposedSource.SetException(new ObjectDisposedException("NullDisposedSource"));
+    }
 
     public AssetRegistry(ITagContainer diContainer, IAssetRegistry? parent = null, string? debugName = null)
     {
@@ -121,7 +130,8 @@ public class AssetRegistry : IAssetRegistryInternal
     {
         DisposeAssetObject(state.NeedsMainThreadDisposal, state.Asset);
         state.RefCount = 0;
-        state.LoadLazy = NullAssetLoadLazy;
+        state.LoadLazy = DisposedSource;
+        state.WasStarted = false;
     }
 
     [ExcludeFromCodeCoverage] // we cannot reasonably check for semaphore failure
@@ -184,11 +194,16 @@ public class AssetRegistry : IAssetRegistryInternal
         }
     }
 
-    AsyncLazy<IDisposable> IAssetRegistryInternal.GetAsset(Guid assetId)
+    TaskCompletionSource<IDisposable> IAssetRegistryInternal.GetAsset(Guid assetId)
     {
         AssetState asset;
         using var releaser = LockSemaphore();
         ObjectDisposedException.ThrowIf(!assets.TryGetValue(assetId, out asset!), nameof(IAssetHandle));
+        if (!asset.WasStarted)
+        {
+            Task.Run(() => TryStartLoad(assetId), Cancellation);
+            asset.WasStarted = true;
+        }
         return asset.LoadLazy;
     }
 
@@ -212,7 +227,7 @@ public class AssetRegistry : IAssetRegistryInternal
 
         var (assetId, assetState) = GetOrCreateAssetState<TInfo, TAsset>(info, priority);
         var handle = new AssetHandle<TAsset>(this, assetId);
-        if (!assetState.LoadLazy.IsValueCreated)
+        if (!assetState.LoadLazy.Task.IsCompleted)
         {
             switch (priority)
             {
@@ -230,6 +245,7 @@ public class AssetRegistry : IAssetRegistryInternal
                     break;
                 case AssetPriority.High:
                     Task.Run(() => TryStartLoad(handle.AssetId), Cancellation);
+                    assetState.WasStarted = true;
                     break;
                 case AssetPriority.Low:
                     var success = assetsToStart.Writer.TryWrite(assetId);
@@ -273,7 +289,8 @@ public class AssetRegistry : IAssetRegistryInternal
         assetState = new()
         {
             NeedsMainThreadDisposal = TAsset.NeedsMainThreadDisposal,
-            LoadLazy = new(ct => LoadAsset<TInfo, TAsset>(infoCopy, assetId)),
+            LoadLazy = new(TaskCreationOptions.RunContinuationsAsynchronously),
+            Factory = () => LoadAsset<TInfo, TAsset>(infoCopy, assetId),
             Tag = unchecked(++nextAssetTag),
             AssetType = typeof(TAsset),
             Priority = priority
@@ -305,7 +322,7 @@ public class AssetRegistry : IAssetRegistryInternal
             }
         }
 
-        await assetState.LoadLazy.WithCancellation(Cancellation);
+        await assetState.Factory();
     }
 
     private async Task<IDisposable> LoadAsset<TInfo, TAsset>(TInfo info, Guid assetId)
@@ -389,9 +406,13 @@ public class AssetRegistry : IAssetRegistryInternal
             for (int i = 0; i < maxLowPrioAssets && assetsToStart.Reader.TryRead(out var assetId); i++)
             {
                 if (assets.TryGetValue(assetId, out var assetState) &&
-                    assetState.LoadLazy != NullAssetLoadLazy &&
-                    !assetState.LoadLazy.IsValueCreated)
-                    Task.Run(() => assetState.LoadLazy.WithCancellation(Cancellation), Cancellation);
+                    assetState.LoadLazy != DisposedSource &&
+                    !assetState.LoadLazy.Task.IsCompleted &&
+                    !assetState.WasStarted)
+                {
+                    Task.Run(() => TryStartLoad(assetId), Cancellation);
+                    assetState.WasStarted = true;
+                }
             }
 
             // Copy apply actions and make sure assets keep alive during applying
