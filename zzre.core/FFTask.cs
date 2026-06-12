@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace zzre;
 
-internal sealed class FFTask<TResult> : IDisposable where TResult : class, IDisposable
+public sealed class FFTask<TResult> : IDisposable where TResult : class, IDisposable
 {
     private bool disposedValue;
     private int wasStarted;
@@ -20,15 +20,25 @@ internal sealed class FFTask<TResult> : IDisposable where TResult : class, IDisp
     {
         this.factory = factory;
         this.ct = ct;
-        cancelRegistration = ct.Register(() => tcs.TrySetCanceled());
+        cancelRegistration = ct.Register(() =>
+        {
+            // only cancel if we did not start yet. Otherwise we might 
+            // miss the result being produced successfullly
+            // the started Task will set tcs in any case
+            if (Interlocked.CompareExchange(ref wasStarted, 0, 0) == 0)
+                tcs.TrySetCanceled();
+        });
     }
 
     public Task<TResult> Start()
     {
-        if (ct.IsCancellationRequested)
-            return Task.FromCanceled<TResult>(ct);
         if (Interlocked.CompareExchange(ref wasStarted, 1, 0) == 0)
-            Task.Run(Run); // NO CANCELLATION, it has to run in order to set tcs for every situation
+        {
+            if (ct.IsCancellationRequested)
+                tcs.TrySetCanceled(ct);
+            else
+                Task.Run(Run); // NO CANCELLATION PASSED, it has to run in order to set tcs for every situation
+        }
         return tcs.Task;
     }
 
@@ -43,13 +53,17 @@ internal sealed class FFTask<TResult> : IDisposable where TResult : class, IDisp
         {
             var task = factory();
             if (task.IsCompletedSuccessfully)
-                tcs.TrySetResult(task.Result);
+            {
+                var result = task.Result;
+                if (!tcs.TrySetResult(result))
+                    result?.Dispose();
+            }
             else if (task.IsCanceled)
                 tcs.TrySetCanceled();
             else if (task.IsFaulted)
                 tcs.TrySetException(task.AsTask().Exception?.InnerException ?? new InvalidOperationException("Unknown failure in asset loading"));
             else
-                return task.AsTask().ContinueWith(AfterFactory);
+                return task.AsTask().ContinueWith(AfterFactory).WaitAsync(ct).ContinueWith(AfterFactoryWait);
         }
         catch(OperationCanceledException ex)
         {
@@ -65,10 +79,25 @@ internal sealed class FFTask<TResult> : IDisposable where TResult : class, IDisp
     private void AfterFactory(Task<TResult> task)
     {
         if (task.IsCompletedSuccessfully)
-            tcs.TrySetResult(task.Result);
+        {
+            var result = task.Result;
+            if (!tcs.TrySetResult(task.Result))
+                result?.Dispose();
+        }
         else if (task.IsCanceled)
             tcs.TrySetCanceled();
         else
+            tcs.TrySetException(task.Exception?.InnerException ?? new InvalidOperationException("Unknown failure in asset loading"));
+    }
+
+    private void AfterFactoryWait(Task task)
+    {
+        // This function cannot handle the result, but the only instance
+        // where it is called without AfterFactory being called would be 
+        // some fault (probably even only cancellation)
+        if (task.IsCanceled)
+            tcs.TrySetCanceled();
+        else if (task.IsFaulted)
             tcs.TrySetException(task.Exception?.InnerException ?? new InvalidOperationException("Unknown failure in asset loading"));
     }
 
@@ -78,6 +107,13 @@ internal sealed class FFTask<TResult> : IDisposable where TResult : class, IDisp
             return;
         disposedValue = true;
         cancelRegistration.Dispose();
+        Interlocked.Exchange(ref wasStarted, 1); // prevents start after disposal
+
+        // We dispose of the result. (maybe a future API should be able to prevent this)
+        tcs.Task.ContinueWith(
+            t => t.Result?.Dispose(),
+            TaskContinuationOptions.OnlyOnRanToCompletion |
+            TaskContinuationOptions.ExecuteSynchronously);
     }
 
     public void Dispose()
