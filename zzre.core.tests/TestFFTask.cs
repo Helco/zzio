@@ -329,7 +329,14 @@ public class TestFFTask
         var startTask = Task.Run(() => t.Start());
         var disposeTask = Task.Run(() => t.Dispose());
 
-        await Task.WhenAll(startTask, disposeTask).WaitAsync(ct);
+        try
+        {
+            await Task.WhenAll(startTask, disposeTask).WaitAsync(ct);
+        }
+        catch(ObjectDisposedException)
+        {
+            // this is okay, the disposal has won the race
+        }
     }
 
     [Test, Repeat(RepeatCount, true)]

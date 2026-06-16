@@ -114,6 +114,9 @@ public sealed class FFTask<TResult> : IDisposable where TResult : class, IDispos
             t => t.Result?.Dispose(),
             TaskContinuationOptions.OnlyOnRanToCompletion |
             TaskContinuationOptions.ExecuteSynchronously);
+
+        // and in case somebody still wants to wait for it, lets stop that as well
+        tcs.TrySetException(new ObjectDisposedException("FFTask"));
     }
 
     public void Dispose()
