@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
-using System.Threading.Tasks;
-using DotNext.Threading;
 
 namespace zzre;
 
@@ -48,7 +46,7 @@ public sealed class AssetRegistryDelayed(IAssetRegistry Inner) : IAssetRegistryI
         ((IAssetRegistryInternal)Inner).CheckType(assetId, type);
 
     [ExcludeFromCodeCoverage]
-    TaskCompletionSource<IDisposable> IAssetRegistryInternal.GetAsset(Guid assetId) =>
+    FFTask<IDisposable> IAssetRegistryInternal.GetAsset(Guid assetId) =>
         ((IAssetRegistryInternal)Inner).GetAsset(assetId);
 
     [ExcludeFromCodeCoverage]

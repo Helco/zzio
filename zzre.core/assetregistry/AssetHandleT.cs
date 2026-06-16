@@ -37,7 +37,7 @@ public struct AssetHandle<TAsset>(IAssetRegistry registry, Guid assetId) : IAsse
         get
         {
             ThrowIfDisposed();
-            var result = ((IAssetRegistryInternal)Registry).GetAsset(AssetId).Task.TryGetResult();
+            var result = ((IAssetRegistryInternal)Registry).GetAsset(AssetId).ObserverTask.TryGetResult();
             return result?.IsSuccessful is true
                 ? (TAsset)result.Value.Value
                 : null;
@@ -50,25 +50,25 @@ public struct AssetHandle<TAsset>(IAssetRegistry registry, Guid assetId) : IAsse
         if (!Registry.IsMainThread)
             throw new InvalidOperationException("Synchronous asset loading is only allowed on the main thread");
         var lazy = ((IAssetRegistryInternal)Registry).GetAsset(AssetId);
-        if (!lazy.Task.IsCompleted)
+        if (!lazy.ObserverTask.IsCompleted)
         {
             try
             {
-                lazy.Task.Wait(Registry.Cancellation);
+                lazy.WaitTask.Wait(Registry.Cancellation);
             }
             catch (AggregateException e)
             {
                 throw e.InnerException ?? e;
             }
         }
-        return (TAsset)lazy.Task.Result; // throws on error
+        return (TAsset)lazy.ObserverTask.Result; // throws on error
     }
 
     public readonly ValueTask<TAsset> GetAsync(CancellationToken ct)
     {
         ThrowIfDisposed();
         var lazy = ((IAssetRegistryInternal)Registry).GetAsset(AssetId);
-        if (lazy.Task.TryGetResult() is not Result<IDisposable> result)
+        if (lazy.ObserverTask.TryGetResult() is not Result<IDisposable> result)
             return new(DoGetAsync(ct));
         else if (result.IsSuccessful)
             return ValueTask.FromResult((TAsset)result.Value);
@@ -79,7 +79,7 @@ public struct AssetHandle<TAsset>(IAssetRegistry registry, Guid assetId) : IAsse
     private readonly async Task<TAsset> DoGetAsync(CancellationToken ct)
     {
         var lazy = ((IAssetRegistryInternal)Registry).GetAsset(AssetId);
-        return (TAsset)await lazy.Task.WaitAsync(ct);
+        return (TAsset)await lazy.WaitTask.WaitAsync(ct);
     }
 
     public AssetHandle As()

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
@@ -16,20 +15,18 @@ namespace zzre;
 internal sealed class AssetState
 {
     public required bool NeedsMainThreadDisposal;
-    public required TaskCompletionSource<IDisposable> LoadLazy;
-    public required Func<Task> Factory;
+    public required FFTask<IDisposable> Load;
     public required uint Tag; // used for apply actions to prevent triggering from revived assets
     public required Type AssetType;
     public IDisposable? Asset
     {
         get
         {
-            var result = LoadLazy.Task.TryGetResult();
+            var result = Load.ObserverTask.TryGetResult();
             return result is null || !result.Value.IsSuccessful
                 ? null : result.Value.Value;
         }
     }
-    public bool WasStarted;
     public int RefCount = 1;
     public AssetPriority Priority;
     public string? Name;
@@ -130,8 +127,7 @@ public class AssetRegistry : IAssetRegistryInternal
     {
         DisposeAssetObject(state.NeedsMainThreadDisposal, state.Asset);
         state.RefCount = 0;
-        state.LoadLazy = DisposedSource;
-        state.WasStarted = false;
+        state.Load.Dispose();
     }
 
     [ExcludeFromCodeCoverage] // we cannot reasonably check for semaphore failure
@@ -194,17 +190,12 @@ public class AssetRegistry : IAssetRegistryInternal
         }
     }
 
-    TaskCompletionSource<IDisposable> IAssetRegistryInternal.GetAsset(Guid assetId)
+    FFTask<IDisposable> IAssetRegistryInternal.GetAsset(Guid assetId)
     {
         AssetState asset;
         using var releaser = LockSemaphore();
         ObjectDisposedException.ThrowIf(!assets.TryGetValue(assetId, out asset!), nameof(IAssetHandle));
-        if (!asset.WasStarted)
-        {
-            Task.Run(() => TryStartLoad(assetId), Cancellation);
-            asset.WasStarted = true;
-        }
-        return asset.LoadLazy;
+        return asset.Load;
     }
 
     void IAssetRegistryInternal.CheckType(Guid assetId, Type type)
@@ -227,7 +218,7 @@ public class AssetRegistry : IAssetRegistryInternal
 
         var (assetId, assetState) = GetOrCreateAssetState<TInfo, TAsset>(info, priority);
         var handle = new AssetHandle<TAsset>(this, assetId);
-        if (!assetState.LoadLazy.Task.IsCompleted)
+        if (!assetState.Load.ObserverTask.IsCompleted)
         {
             switch (priority)
             {
@@ -245,7 +236,6 @@ public class AssetRegistry : IAssetRegistryInternal
                     break;
                 case AssetPriority.High:
                     Task.Run(() => TryStartLoad(handle.AssetId), Cancellation);
-                    assetState.WasStarted = true;
                     break;
                 case AssetPriority.Low:
                     var success = assetsToStart.Writer.TryWrite(assetId);
@@ -289,8 +279,7 @@ public class AssetRegistry : IAssetRegistryInternal
         assetState = new()
         {
             NeedsMainThreadDisposal = TAsset.NeedsMainThreadDisposal,
-            LoadLazy = new(TaskCreationOptions.RunContinuationsAsynchronously),
-            Factory = () => LoadAsset<TInfo, TAsset>(infoCopy, assetId),
+            Load = new(() => LoadAsset<TInfo, TAsset>(infoCopy, assetId), Cancellation),
             Tag = unchecked(++nextAssetTag),
             AssetType = typeof(TAsset),
             Priority = priority
@@ -322,10 +311,10 @@ public class AssetRegistry : IAssetRegistryInternal
             }
         }
 
-        await assetState.Factory();
+        await assetState.Load.Start();
     }
 
-    private async Task<IDisposable> LoadAsset<TInfo, TAsset>(TInfo info, Guid assetId)
+    private async ValueTask<IDisposable> LoadAsset<TInfo, TAsset>(TInfo info, Guid assetId)
         where TInfo : struct, IEquatable<TInfo>
         where TAsset : class, IAsset<TInfo>
     {
@@ -406,12 +395,10 @@ public class AssetRegistry : IAssetRegistryInternal
             for (int i = 0; i < maxLowPrioAssets && assetsToStart.Reader.TryRead(out var assetId); i++)
             {
                 if (assets.TryGetValue(assetId, out var assetState) &&
-                    assetState.LoadLazy != DisposedSource &&
-                    !assetState.LoadLazy.Task.IsCompleted &&
-                    !assetState.WasStarted)
+                    !assetState.Load.IsDisposed)
                 {
+                    assetState.Load.Start();
                     Task.Run(() => TryStartLoad(assetId), Cancellation);
-                    assetState.WasStarted = true;
                 }
             }
 

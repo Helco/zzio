@@ -6,7 +6,6 @@ namespace zzre;
 
 public sealed class FFTask<TResult> : IDisposable where TResult : class, IDisposable
 {
-    private bool disposedValue;
     private int wasStarted;
     private readonly Func<ValueTask<TResult>> factory;
     private readonly CancellationToken ct;
@@ -15,6 +14,7 @@ public sealed class FFTask<TResult> : IDisposable where TResult : class, IDispos
 
     public Task<TResult> ObserverTask => tcs.Task;
     public Task<TResult> WaitTask => Start();
+    public bool IsDisposed { get; private set; }
 
     public FFTask(Func<ValueTask<TResult>> factory, CancellationToken ct)
     {
@@ -103,9 +103,9 @@ public sealed class FFTask<TResult> : IDisposable where TResult : class, IDispos
 
     private void Dispose(bool disposing)
     {
-        if (disposedValue || !disposing)
+        if (IsDisposed || !disposing)
             return;
-        disposedValue = true;
+        IsDisposed = true;
         cancelRegistration.Dispose();
         Interlocked.Exchange(ref wasStarted, 1); // prevents start after disposal
 

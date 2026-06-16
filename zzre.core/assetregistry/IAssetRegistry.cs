@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
-using DotNext.Threading;
 
 namespace zzre;
 
@@ -59,6 +57,6 @@ internal interface IAssetRegistryInternal : IAssetRegistry
 {
     void AddRef(Guid assetId);
     void DelRef(Guid assetId);
-    TaskCompletionSource<IDisposable> GetAsset(Guid assetId);
+    FFTask<IDisposable> GetAsset(Guid assetId);
     void CheckType(Guid assetId, Type type);
 }
