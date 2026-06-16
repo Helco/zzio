@@ -16,4 +16,6 @@ public struct AIMovement
     public bool TryBailout;
     public bool ShouldAdvanceNode;
     public bool DidTimeoutFindingPath;
+    public bool DidReverse;
+    public bool IsPlayerNear;
 }

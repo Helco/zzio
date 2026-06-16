@@ -11,6 +11,7 @@ public struct AIPath
     public FindPathResult LastResult;
 
     public readonly bool HasNextWaypoint => TargetIndex + 1 < WaypointIds.Count;
+    public readonly bool HasPrevWaypoint => TargetIndex > 0;
 }
 
 /*

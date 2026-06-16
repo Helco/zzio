@@ -21,6 +21,8 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
     private int ManaPerJump = -500;
     [Configuration]
     private float FloorOffset = -0.2f;
+    [Configuration]
+    private float PlayerNearDistance = 0.5f;
 
     private readonly ILogger logger;
     private readonly IDisposable configDisposable;
@@ -45,6 +47,7 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
         ref var movement = ref msg.ForEntity.Get<components.AIMovement>();
         movement.DistMovedToCurWp = movement.DistToCurWp = -1f;
         movement.ShouldAdvanceNode = true;
+        movement.DidReverse = false;
     }
 
     [Update]
@@ -66,9 +69,19 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
         var speed = WizFormSpeed * invFairy.moveSpeed;
         // TODO: AI Movement: Disable movement in some condition
         // TODO: AI Movement: Slow down sharp turns
-        // TODO: AI Movement: Reverse AI movement if player is near
         float moveDistLeft = speed * elapsedTime;
-        var result = UpdateForward(moveDistLeft, entity, location, ref path, ref movement);
+
+        FindPathResult result;
+        if (Vector3.DistanceSquared(playerPos, location.LocalPosition) < PlayerNearDistance * PlayerNearDistance)
+            movement.IsPlayerNear = true;
+        if (movement.IsPlayerNear)
+        {
+            result = UpdateReverse(moveDistLeft, entity, location, ref path, ref movement);
+            if (result is FindPathResult.NotFound)
+                movement.IsPlayerNear = false;
+        }
+        else
+            result = UpdateForward(moveDistLeft, entity, location, ref path, ref movement);
         if (result is not (FindPathResult.Success or FindPathResult.NotThereYet))
             return;
 
@@ -159,7 +172,9 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
         ref components.AIPath path,
         ref components.AIMovement movement)
     {
-        // TODO: Check path reversal
+        if (movement.DidReverse) // message to reset path as well
+            World.Publish(new messages.ResetAIMovement(entity));
+
         var result = AdvancePath(ref moveDistLeft, entity, location, ref path, ref movement);
         movement.ShouldAdvanceNode = result is not FindPathResult.NotFound;
 
@@ -178,6 +193,32 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
         return result;
     }
 
+    private FindPathResult UpdateReverse(
+        float moveDistLeft,
+        in DefaultEcs.Entity entity,
+        Location location,
+        ref components.AIPath path,
+        ref components.AIMovement movement)
+    {
+        if (!movement.DidReverse)
+        {
+            movement.DidReverse = true;
+            movement.DirToCurrentWp *= -1f;
+            movement.DistMovedToCurWp = Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos);
+            path.TargetIndex--;
+        }
+
+        var result = AdvancePathReverse(ref moveDistLeft, entity, location, ref path, ref movement);
+        movement.ShouldAdvanceNode = result is not FindPathResult.NotFound;
+
+        if (result is FindPathResult.Success or FindPathResult.NotThereYet)
+        {
+            movement.CurrentPos += moveDistLeft * movement.DirToCurrentWp;
+            movement.DistMovedToCurWp += moveDistLeft;
+        }
+        return result;
+    }
+
     private FindPathResult AdvancePath(
         ref float moveDistLeft,
         in DefaultEcs.Entity entity,
@@ -189,7 +230,7 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
         {
             if (!path.Waypoints.IsEmpty && movement.DistToCurWp - (movement.DistMovedToCurWp + moveDistLeft) > 0f)
                 break;
-            //if (movement.ShouldAdvanceNode && path.WaypointIds.Count > 2) // TODO: Why 2?
+            //if (movement.ShouldAdvanceNode && path.WaypointIds.Count > 2)
             //    path.CurrentIndex++;
 
             var needsNewPath = /*path.WaypointIds.Count < MinPathLength || */ !path.HasNextWaypoint;
@@ -231,6 +272,34 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
         return FindPathResult.NotThereYet;
     }
 
+
+    private FindPathResult AdvancePathReverse(
+        ref float moveDistLeft,
+        in DefaultEcs.Entity entity,
+        Location location,
+        ref components.AIPath path,
+        ref components.AIMovement movement)
+    {
+        while (moveDistLeft > 0f)
+        {
+            if (!path.HasPrevWaypoint && movement.DistToCurWp - (moveDistLeft + movement.DistMovedToCurWp) > 0)
+                return FindPathResult.NotThereYet;
+
+            if (movement.ShouldAdvanceNode && path.WaypointIds.Count > 2)
+                path.TargetIndex--;
+            if (path.Waypoints.IsEmpty || !path.HasPrevWaypoint) // || isFabricated
+                return FindPathResult.NotFound;
+
+            moveDistLeft -= Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos);
+            movement.CurrentPos = path.Waypoints[path.TargetIndex];
+            path.TargetIndex--;
+            movement.CurrentEdgeKind = path.EdgeKinds[path.TargetIndex];
+            movement.DirToCurrentWp = MathEx.SafeNormalize(path.Waypoints[path.TargetIndex] - movement.CurrentPos);
+            movement.DistToCurWp = Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos);
+            movement.DistMovedToCurWp = 0f;
+        }
+        return FindPathResult.NotThereYet;
+    }
 
     private bool FindPlayerFairy(out Vector3 playerPosition)
     {
