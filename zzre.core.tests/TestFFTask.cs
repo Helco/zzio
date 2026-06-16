@@ -340,6 +340,17 @@ public class TestFFTask
     }
 
     [Test, Repeat(RepeatCount, true)]
+    public async Task ConcurrentDispose(CancellationToken ct)
+    {
+        using var t = new FFTask<IntResult>(GetFourtyTwo, ct);
+
+        var tasks = Enumerable.Repeat(0, 10)
+            .Select(_ => Task.Run(() => t.Dispose()))
+            .ToArray();
+        await Task.WhenAll(tasks).WaitAsync(ct);
+    }
+
+    [Test, Repeat(RepeatCount, true)]
     public async Task FactoryThrowsDirectly(CancellationToken ct)
     {
         using var t = new FFTask<IntResult>(() =>
