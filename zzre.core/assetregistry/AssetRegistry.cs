@@ -34,7 +34,7 @@ internal sealed class AssetState
 
 public class AssetRegistry : IAssetRegistryInternal
 {
-    private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(2);
     private static readonly int MaxLowPriorityAssetsPerFrame = Math.Clamp(Environment.ProcessorCount, 1, 64);
     private static readonly UnboundedChannelOptions ChannelOptions = new()
     {
@@ -47,7 +47,7 @@ public class AssetRegistry : IAssetRegistryInternal
     private readonly Channel<IDisposable> assetsToDispose = Channel.CreateUnbounded<IDisposable>(ChannelOptions);
     private readonly Dictionary<Guid, AssetState> assets = [];
     private readonly CancellationTokenSource cancellationSource = new();
-    private readonly IAssetRegistryLock mainLock = new TrackingAssetLock(new DotNextAsyncAssetLock());
+    private readonly IAssetRegistryLock mainLock = new TrackingAssetLock(new SemaphoreAssetLock());
     private readonly ILogger logger;
     private readonly int mainThreadId;
     private readonly Dictionary<Type, Action<Guid, object>> applyActionCaster = [];
@@ -311,7 +311,7 @@ public class AssetRegistry : IAssetRegistryInternal
             }
         }
 
-        await assetState.Load.Start();
+        _ = assetState.Load.Start(); // this task not need care about asset load completion and not care about the exceptions during it
     }
 
     private async ValueTask<IDisposable> LoadAsset<TInfo, TAsset>(TInfo info, Guid assetId)

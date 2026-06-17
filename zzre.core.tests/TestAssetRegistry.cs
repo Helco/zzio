@@ -15,7 +15,8 @@ namespace zzre.tests;
 [TestFixture(TaskContinuationOptions.None)]
 [TestFixture(TaskContinuationOptions.RunContinuationsAsynchronously)]
 [TestFixture(TaskContinuationOptions.ExecuteSynchronously)]
-[CancelAfter(10000), SingleThreaded]
+[SingleThreaded]
+//[CancelAfter(10000)]
 public class TestAssetRegistry
 {
     private interface ITestAsset : IAsset<TestInfo>
@@ -801,7 +802,7 @@ public class TestAssetRegistry
         await UpdateAndCheckDisposal(global, infos, ct);
     }
 
-    [Test, Repeat(50, StopOnFailure = true)]
+    [Test, Repeat(500, StopOnFailure = true)]
     public async Task DisposeAsset_StressBeforeHighLoad(CancellationToken ct)
     {
         Console.WriteLine("started run");
@@ -818,7 +819,7 @@ public class TestAssetRegistry
             var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
             handle.Dispose();
             await Task.Yield();
-            if (info.StartedLoad.Task.IsCompleted)
+            if (info.StartedLoad.Task.IsCompletedSuccessfully)
                 await info.Disposed.Task.WaitAsync(ct);
             // if the load has not started, the disposal will obviously also never happen
         }
@@ -832,7 +833,7 @@ public class TestAssetRegistry
         var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
         handle.Dispose();
         await Task.Delay(50);
-        if (info.StartedLoad.Task.IsCompleted)
+        if (info.StartedLoad.Task.IsCompletedSuccessfully)
             await info.Disposed.Task.WaitAsync(ct);
     }
 

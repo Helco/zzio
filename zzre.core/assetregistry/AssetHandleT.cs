@@ -61,7 +61,10 @@ public struct AssetHandle<TAsset>(IAssetRegistry registry, Guid assetId) : IAsse
                 throw e.InnerException ?? e;
             }
         }
-        return (TAsset)lazy.ObserverTask.Result; // throws on error
+        if (lazy.ObserverTask.Exception is AggregateException ex)
+            throw (ex.InnerException ?? ex); // unpack the actual exception
+        else
+            return (TAsset)lazy.ObserverTask.Result;
     }
 
     public readonly ValueTask<TAsset> GetAsync(CancellationToken ct)

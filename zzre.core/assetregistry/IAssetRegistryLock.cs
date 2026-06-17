@@ -119,7 +119,11 @@ public sealed class TrackingAssetLock(IAssetRegistryLock inner) : IAssetRegistry
 
     public IAssetRegistryLock.Releaser Wait(TimeSpan timeout, CancellationToken ct, string context)
     {
+        if (Task.CurrentId is int id)
+            context = $"Task {id}: {context}";
         var releaser = inner.Wait(timeout, ct, context);
+        if (!releaser)
+            Console.WriteLine("Could not lock due to: " + last);
         try
         {
             if (releaser)
