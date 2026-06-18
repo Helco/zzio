@@ -125,9 +125,8 @@ public class AssetRegistry : IAssetRegistryInternal
 
     private void DisposeAssetState(AssetState state)
     {
-        DisposeAssetObject(state.NeedsMainThreadDisposal, state.Asset);
+        DisposeAssetObject(state.NeedsMainThreadDisposal, state.Load);
         state.RefCount = 0;
-        state.Load.Dispose();
     }
 
     [ExcludeFromCodeCoverage] // we cannot reasonably check for semaphore failure
@@ -235,7 +234,7 @@ public class AssetRegistry : IAssetRegistryInternal
                     }
                     break;
                 case AssetPriority.High:
-                    Task.Run(() => TryStartLoad(handle.AssetId), Cancellation);
+                    Task.Run(() => TryStartLoad(handle.AssetId));
                     break;
                 case AssetPriority.Low:
                     var success = assetsToStart.Writer.TryWrite(assetId);
@@ -340,6 +339,7 @@ public class AssetRegistry : IAssetRegistryInternal
         {
             // handle was disposed during load, now dispose the asset itself
             DisposeAssetObject(TAsset.NeedsMainThreadDisposal, asset);
+            asset = null;
             ObjectDisposedException.ThrowIf(true, typeof(TAsset));
         }
 
@@ -398,7 +398,7 @@ public class AssetRegistry : IAssetRegistryInternal
                     !assetState.Load.IsDisposed)
                 {
                     assetState.Load.Start();
-                    Task.Run(() => TryStartLoad(assetId), Cancellation);
+                    Task.Run(() => TryStartLoad(assetId));
                 }
             }
 

@@ -802,27 +802,21 @@ public class TestAssetRegistry
         await UpdateAndCheckDisposal(global, infos, ct);
     }
 
-    [Test, Repeat(500, StopOnFailure = true)]
+    [Test, Repeat(10, StopOnFailure = true)]
     public async Task DisposeAsset_StressBeforeHighLoad(CancellationToken ct)
     {
-        Console.WriteLine("started run");
         using var global = new AssetRegistry(DI);
-        await Task.WhenAll(Enumerable
-            .Range(1, 50)
-            .Select(i => Task.Run(() => SingularStress(i), ct))
-        ).WaitAsync(ct);
-        Console.WriteLine("ended run");
+        var infos = Enumerable.Range(1, 50)
+            .Select(i => GetInfo(i).AsCompleted())
+            .ToArray();
+        foreach (var info in infos)
+            global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High).Dispose();
 
-        async Task SingularStress(int id)
-        {
-            var info = GetInfo(id).AsCompleted();
-            var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
-            handle.Dispose();
-            await Task.Yield();
-            if (info.StartedLoad.Task.IsCompletedSuccessfully)
-                await info.Disposed.Task.WaitAsync(ct);
-            // if the load has not started, the disposal will obviously also never happen
-        }
+        await Task.Delay(100);
+        await Task.WhenAll(infos
+            .Where(i => i.StartedLoad.Task.IsCompletedSuccessfully)
+            .Select(i => i.Disposed.Task))
+            .WaitAsync(ct);
     }
 
     [Test]

@@ -2,7 +2,7 @@
   <Import Project="../NoCodeQuality.props"/>
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>NU1605;nullable</WarningsAsErrors>
     <IsPackable>false</IsPackable>
