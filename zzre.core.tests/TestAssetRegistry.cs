@@ -64,6 +64,20 @@ public class TestAssetRegistry
         public override string ToString() => $"Test {Id}";
     }
 
+    private class TrivialTestAsset : IAsset<int>
+    {
+        public static AssetLocality Locality => AssetLocality.Global;
+        public IAssetRegistry Registry { get; init; }
+        public int Info { get; init; }
+
+        public static Task<AssetLoadResult<int>> LoadAsync(IAssetRegistry registry, Guid _, int info, CancellationToken ct)
+        {
+            return Task.FromResult<AssetLoadResult<int>>(new(new TrivialTestAsset() { Registry = registry, Info = info }));
+        }
+
+        public void Dispose() { }
+    }
+
     private class GlobalTestAsset : ITestAsset
     {
         public static AssetLocality Locality => AssetLocality.Global;
@@ -202,16 +216,30 @@ public class TestAssetRegistry
         await Assert.ThatAsync(() => Task.Run(global.Update), Throws.InvalidOperationException);
     }
 
-    private void CommonAssetChecks<TAsset>(IAssetRegistry registry, AssetHandle<TAsset> handle, int id, TAsset? extAsset = null)
+    private void CommonAssetChecks<TAsset>(IAssetRegistry registry, AssetHandle<TAsset> handle, int id, TAsset? extAsset = null, bool checkHandleRegistry = true)
     where TAsset : class, ITestAsset => Assert.Multiple(() =>
     {
+        var getAsset = handle.Get();
+        Assert.That(handle.Asset, Is.SameAs(getAsset));
         if (extAsset is not null)
             Assert.That(handle.Asset, Is.SameAs(extAsset));
         Assert.That(handle.Asset, Is.Not.Null);
         Assert.That(handle.Asset.Id, Is.EqualTo(id));
         Assert.That(handle.Asset.Registry, Is.SameAs(registry));
-        Assert.That(handle.Registry, Is.SameAs(registry));
+        if (checkHandleRegistry) // this can be helpful for AssetRegistryDelayed where actual registries might be difficult to ascertain
+            Assert.That(handle.Registry, Is.SameAs(registry));
     });
+
+    [Test]
+    public void LoadSync_TrivialSingle()
+    {
+        using var global = new AssetRegistry(DI);
+        using var handle = global.Load<int, TrivialTestAsset>(42, AssetPriority.Synchronous);
+        var asset = handle.Get();
+        Assert.That(asset, Is.Not.Null);
+        Assert.That(asset.Info, Is.EqualTo(42));
+        Assert.That(asset.Registry, Is.SameAs(global));
+    }
 
     [Test]
     public void LoadSync_Single()
@@ -1046,6 +1074,20 @@ public class TestAssetRegistry
     }
 
     [Test]
+    public void Local_LoadGlobalFromLocalWhileDelayed()
+    {
+        using var global = new AssetRegistry(DI);
+        using var local = new AssetRegistry(DI, global);
+        using var delay = new AssetRegistryDelayed(local);
+        delay.DelayDisposals = true;
+
+        using var handle = delay.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var asset = handle.Get();
+        CommonAssetChecks(global, handle, 1, asset, checkHandleRegistry: false);
+        delay.DelayDisposals = false;
+    }
+
+    [Test]
     public void Local_LoadLocalFromLocal()
     {
         using var global = new AssetRegistry(DI);
@@ -1054,6 +1096,19 @@ public class TestAssetRegistry
         using var handle = local.Load<TestInfo, LocalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
         var asset = handle.Get();
         CommonAssetChecks(local, handle, 1, asset);
+    }
+
+    [Test]
+    public void Local_LoadLocalFromLocalWhileDelayed()
+    {
+        using var global = new AssetRegistry(DI);
+        using var local = new AssetRegistry(DI, global);
+        using var delay = new AssetRegistryDelayed(local);
+        delay.DelayDisposals = true;
+
+        using var handle = delay.Load<TestInfo, LocalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var asset = handle.Get();
+        CommonAssetChecks(local, handle, 1, asset, checkHandleRegistry: false);
     }
 
     [Test]
