@@ -20,9 +20,10 @@ public sealed class ActorAsset(IAssetRegistry registry, ActorAsset.Info info) : 
         AssetHandle<ClumpAsset> ClumpHandle,
         AssetHandle<AnimationAsset>[] AnimHandles)
     {
-        public readonly ClumpAsset? Clump = ClumpHandle.Asset;
-        public readonly AnimationAsset[] Animations = [.. AnimHandles.Select(h => h.Asset ??
-            throw new InvalidOperationException("Secondary asset was not loaded"))];
+        public readonly ClumpAsset? Clump = ClumpHandle == default ? null : ClumpHandle.Asset;
+        private readonly Lazy<AnimationAsset[]> animations = new(() => [.. AnimHandles.Select(h => h.Asset ??
+            throw new InvalidOperationException("Secondary asset was not loaded"))]);
+        public readonly AnimationAsset[] Animations => animations.Value; // we have to use Lazy as we construct before the animations are loadedy
 
         public void Dispose()
         {
@@ -56,10 +57,10 @@ public sealed class ActorAsset(IAssetRegistry registry, ActorAsset.Info info) : 
         if (description.HasWings)
             wings = LoadSecondaryPart(registry, description.wings);
 
-        var secondaryHandles = new Task[(description.HasWings ? 2 : 1) + body.Animations.Length + wings.Animations.Length];
+        var secondaryHandles = new Task[(description.HasWings ? 2 : 1) + body.AnimHandles.Length + wings.AnimHandles.Length];
         var outI = 0;
         AddSecondaryHandles(secondaryHandles, ref outI, body, ct);
-        if (wings != default)
+        if (wings.ClumpHandle != default)
             AddSecondaryHandles(secondaryHandles, ref outI, wings, ct);
         await Task.WhenAll(secondaryHandles).WaitAsync(ct);
 

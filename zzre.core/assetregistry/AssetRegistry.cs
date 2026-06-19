@@ -34,7 +34,7 @@ internal sealed class AssetState
 
 public class AssetRegistry : IAssetRegistryInternal
 {
-    private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(8);
     private static readonly int MaxLowPriorityAssetsPerFrame = Math.Clamp(Environment.ProcessorCount, 1, 64);
     private static readonly UnboundedChannelOptions ChannelOptions = new()
     {
