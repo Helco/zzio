@@ -118,6 +118,7 @@ public class Validator(ITagContainer diContainer)
                 case ".aed": await ValidateActor(resource); break;
                 case ".ed": await ValidateEffect(resource); break;
                 case ".dff": await ValidateClump(resource); break;
+                case ".ska": await ValidateAnimation(resource); break;
                 default:
                     AddDiagnostic(ValIgnoredDueToExtension(resource.Path.ToString(), ext));
                     wasIgnored = true;
@@ -175,6 +176,12 @@ public class Validator(ITagContainer diContainer)
     private async Task ValidateEffect(IResource resource)
     {
         using var handle = assetRegistry.LoadEffectCombiner(resource.Path, AssetPriority.High);
+        await handle.GetAsync(CancellationToken.None);
+    }
+
+    private async Task ValidateAnimation(IResource resource)
+    {
+        using var handle = assetRegistry.LoadAnimation(resource.Name, AssetPriority.High);
         await handle.GetAsync(CancellationToken.None);
     }
 
