@@ -9,7 +9,7 @@ public class UI : BaseDisposable, ITagContainer
 {
     private readonly ITagContainer tagContainer;
     private readonly IZanzarahContainer zzContainer;
-    private readonly AssetRegistryDelayed assetRegistry;
+    private readonly AssetRegistry assetRegistry;
     private readonly Remotery profiler;
     private readonly GameTime time;
     private readonly systems.RecordingSequentialSystem<float> updateSystems;
@@ -40,14 +40,14 @@ public class UI : BaseDisposable, ITagContainer
         HandleResize();
 
         AddTag(this);
-        AddTag<IAssetRegistry>(assetRegistry = new(new AssetRegistry(tagContainer, globalRegistry, "UI")));
+        AddTag<IAssetRegistry>(assetRegistry = new AssetRegistry(tagContainer, globalRegistry, "UI"));
         AddTag(World = new DefaultEcs.World());
         AddTag(Builder = new UIBuilder(this));
 
         if (TryGetTag(out tools.AssetRegistryList assetRegistryList))
             assetRegistryList.Register("UI", assetRegistry);
         assetRegistry.SubscribeAt(World);
-        assetRegistry.DelayDisposals = true;
+        //assetRegistry.DelayDisposals = true;
         // we still use DelayDisposal in UI to prevent mostly sound samples to be freed
 
         CursorEntity = World.CreateEntity();
@@ -93,7 +93,7 @@ public class UI : BaseDisposable, ITagContainer
 
     protected override void DisposeManaged()
     {
-        assetRegistry.DelayDisposals = false;
+        //assetRegistry.DelayDisposals = false;
         tagContainer.RemoveTag<IAssetRegistry>(dispose: false);
         updateSystems.Dispose();
         renderSystems.Dispose();
@@ -122,8 +122,8 @@ public class UI : BaseDisposable, ITagContainer
 
     public void DisposeUnusedAssets()
     {
-        assetRegistry.DelayDisposals = false;
-        assetRegistry.DelayDisposals = true;
+        //assetRegistry.DelayDisposals = false;
+        //assetRegistry.DelayDisposals = true;
     }
 
     private void HandleResize()

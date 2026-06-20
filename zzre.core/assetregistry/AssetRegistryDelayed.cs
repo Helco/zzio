@@ -39,7 +39,7 @@ public sealed class AssetRegistryDelayed : IAssetRegistryInternal
     [ExcludeFromCodeCoverage]
     public void Apply<TAsset>(AssetHandle<TAsset> handle, Action<AssetHandle<TAsset>> action)
         where TAsset : class, IAsset =>
-        Inner.Apply(handle, action);
+        Inner.Apply(ConvertAssetToThem(handle), h => action(ConvertAssetToMe(h)));
 
     [ExcludeFromCodeCoverage]
     void IAssetRegistryInternal.CheckType(Guid assetId, Type type) =>
@@ -50,9 +50,13 @@ public sealed class AssetRegistryDelayed : IAssetRegistryInternal
         ((IAssetRegistryInternal)Inner).GetAsset(assetId);
 
     [ExcludeFromCodeCoverage]
-    public bool TryGet<TAsset>(Guid assetId, out AssetHandle<TAsset> handle)
-        where TAsset : class, IAsset =>
-        Inner.TryGet(assetId, out handle);
+    public bool TryGet<TAsset>(Guid assetId, out AssetHandle<TAsset> handle) where TAsset : class, IAsset
+    {
+        if (!Inner.TryGet(assetId, out handle))
+            return false;
+        handle = ConvertAssetToMe(handle);
+        return true;
+    }
 
     public bool DelayDisposals
     {
@@ -88,10 +92,23 @@ public sealed class AssetRegistryDelayed : IAssetRegistryInternal
     {
         var parentHandle = Inner.Load<TInfo, TAsset>(info, priority);
         Debug.Assert(parentHandle.Asset == parentHandle.Asset); // checks that the handle is not disposed
-        Debug.Assert(parentHandle.Registry == Inner || (parentHandle.Registry == Inner.ParentRegistry && Inner.ParentRegistry is not null));
-        return parentHandle.Registry == Inner.ParentRegistry
-            ? new(globalAdapter, parentHandle.AssetId, false)
-            : new(this, parentHandle.AssetId, false);
+        return ConvertAssetToMe(parentHandle);
+    }
+
+    private AssetHandle<TAsset> ConvertAssetToMe<TAsset>(AssetHandle<TAsset> handle) where TAsset : class, IAsset
+    {
+        Debug.Assert(handle.Registry == Inner || (handle.Registry == Inner.ParentRegistry && Inner.ParentRegistry is not null));
+        return handle.Registry == Inner
+            ? new AssetHandle<TAsset>(this, handle.AssetId)
+            : new AssetHandle<TAsset>(globalAdapter, handle.AssetId);
+    }
+
+    private AssetHandle<TAsset> ConvertAssetToThem<TAsset>(AssetHandle<TAsset> handle) where TAsset : class, IAsset
+    {
+        Debug.Assert(handle.Registry == this || handle.Registry == globalAdapter);
+        return handle.Registry == this
+            ? new AssetHandle<TAsset>(Inner, handle.AssetId)
+            : new AssetHandle<TAsset>(Inner.ParentRegistry!, handle.AssetId);
     }
 
     void IAssetRegistryInternal.DelRef(Guid assetId)
