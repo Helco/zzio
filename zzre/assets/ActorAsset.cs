@@ -20,10 +20,14 @@ public sealed class ActorAsset(IAssetRegistry registry, ActorAsset.Info info) : 
         AssetHandle<ClumpAsset> ClumpHandle,
         AssetHandle<AnimationAsset>[] AnimHandles)
     {
-        public readonly ClumpAsset? Clump = ClumpHandle == default ? null : ClumpHandle.Asset;
-        private readonly Lazy<AnimationAsset[]> animations = new(() => [.. AnimHandles.Select(h => h.Asset ??
-            throw new InvalidOperationException("Secondary asset was not loaded"))]);
-        public readonly AnimationAsset[] Animations => animations.Value; // we have to use Lazy as we construct before the animations are loadedy
+        public readonly ClumpAsset? Clump = null;
+        public readonly AnimationAsset[] Animations = [];
+
+        public Part(Part unloaded) : this(unloaded.ClumpHandle, unloaded.AnimHandles)
+        {
+            Clump = ClumpHandle.Asset ?? throw new InvalidOperationException("Secondary asset was not loaded");
+            Animations = [.. AnimHandles.Select(h => h.Asset ?? throw new InvalidOperationException("Secondary assset was not loaded"))];
+        }
 
         public void Dispose()
         {
@@ -66,8 +70,8 @@ public sealed class ActorAsset(IAssetRegistry registry, ActorAsset.Info info) : 
 
         return new AssetLoadResult<Info>(new ActorAsset(registry, info)
         {
-            body = body,
-            wings = wings,
+            body = new(body), // reinstantiate to fetch the asset references from the handles
+            wings = new(wings),
             Description = description
         });
     }

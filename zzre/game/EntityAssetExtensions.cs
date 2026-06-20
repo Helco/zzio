@@ -92,8 +92,8 @@ public static class EntityAssetExtensions
             entity.Set(mesh);
 
             var materials = new List<ModelMaterial>(mesh.Materials.Count);
-            var materialHandles = new AssetHandle[materials.Count];
-            for (int i = 0; i < materials.Count; i++)
+            var materialHandles = new AssetHandle[mesh.Materials.Count];
+            for (int i = 0; i < mesh.Materials.Count; i++)
             {
                 var materialHandle = registry.LoadClumpMaterial(
                     mesh.Materials[i],
