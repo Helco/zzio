@@ -88,12 +88,13 @@ public class AssetRegistry : IAssetRegistryInternal
     {
         if (WasDisposed)
             return;
-        if (mainLock.Wait(LockTimeout, Cancellation))
+        if (!mainLock.Wait(LockTimeout, Cancellation))
             logger.Warning("AssetRegistry could not lock during dispose, going ahead nonetheless");
         cancellationSource.Cancel();
         foreach (var asset in assets.Values)
         {
-            DisposeAssetState(asset);
+            asset.RefCount = 0;
+            DisposeAssetObject(false, asset.Load);
         }
         assets.Clear();
         applyActions.Clear();
@@ -121,12 +122,6 @@ public class AssetRegistry : IAssetRegistryInternal
             var success = assetsToDispose.Writer.TryWrite(assetObject);
             Debug.Assert(success);
         }
-    }
-
-    private void DisposeAssetState(AssetState state)
-    {
-        DisposeAssetObject(state.NeedsMainThreadDisposal, state.Load);
-        state.RefCount = 0;
     }
 
     [ExcludeFromCodeCoverage] // we cannot reasonably check for semaphore failure
@@ -159,7 +154,6 @@ public class AssetRegistry : IAssetRegistryInternal
     private bool TryAddRefUnsafe(Guid assetId)
     {
         Debug.Assert(!WasDisposed);
-        //Debug.Assert(semaphore.CurrentCount == 0);
         var assetState = assets.GetValueOrDefault(assetId);
         if (assetState is null || assetState.RefCount <= 0)
             return false;
@@ -171,22 +165,24 @@ public class AssetRegistry : IAssetRegistryInternal
     void IAssetRegistryInternal.DelRef(Guid assetId)
     {
         if (WasDisposed) return; // Ignore out-of-order deletion, all assets are already dead
-        using var releaser = LockSemaphore();
-        DelRefUnsafe(assetId);
+        AssetState? stateToBeDisposed;
+        using (var releaser = LockSemaphore())
+            stateToBeDisposed = DelRefUnsafe(assetId);
+        if (stateToBeDisposed is not null)
+            DisposeAssetObject(stateToBeDisposed.NeedsMainThreadDisposal, stateToBeDisposed.Load);
     }
 
-    private void DelRefUnsafe(Guid assetId)
+    // returns the state only if it is meant to be disposed. *AFTER RELEASING THE LOCK*
+    private AssetState? DelRefUnsafe(Guid assetId)
     {
         Debug.Assert(!WasDisposed);
-        //Debug.Assert(semaphore.CurrentCount == 0);
         var assetState = assets.GetValueOrDefault(assetId);
-        if (assetState is null || assetState.RefCount <= 0)
-            return; // Let's just ignore already-dead assets, we got what we wanted
-        if (--assetState.RefCount <= 0)
+        if (assetState is not null && --assetState.RefCount <= 0)
         {
-            DisposeAssetState(assetState);
             assets.Remove(assetId);
+            return assetState;
         }
+        return null; // Let's just ignore already-dead assets, we got what we wanted
     }
 
     FFTask<IDisposable> IAssetRegistryInternal.GetAsset(Guid assetId)
@@ -390,8 +386,6 @@ public class AssetRegistry : IAssetRegistryInternal
 
         using (LockSemaphore())
         {
-            DisposeOldAssets();
-
             for (int i = 0; i < maxLowPrioAssets && assetsToStart.Reader.TryRead(out var assetId); i++)
             {
                 if (assets.TryGetValue(assetId, out var assetState) &&
@@ -413,13 +407,15 @@ public class AssetRegistry : IAssetRegistryInternal
                 else if (assets[assetId].Tag != applyActionsBackup[i].tag)
                 {
                     // Asset was revived, apply actions are outdated
-                    DelRefUnsafe(assetId);
+                    if (DelRefUnsafe(assetId) is AssetState toBeDisposed)
+                        assetsToDispose.Writer.TryWrite(toBeDisposed.Load);
                     applyActionsBackup[i] = default;
                 }
                 else if (assets[assetId].Asset is null)
                 {
                     // Asset was not yet loaded
-                    DelRefUnsafe(assetId);
+                    if (DelRefUnsafe(assetId) is AssetState toBeDisposed)
+                        assetsToDispose.Writer.TryWrite(toBeDisposed.Load);
                     applyActions.Add(applyActionsBackup[i]);
                     applyActionsBackup[i] = default;
                 }
@@ -447,20 +443,24 @@ public class AssetRegistry : IAssetRegistryInternal
         {
             foreach (var (assetId, _, _, _) in applyActionsBackup)
             {
-                if (assetId != default)
-                    DelRefUnsafe(assetId);
+                if (assetId != default && DelRefUnsafe(assetId) is AssetState toBeDisposed)
+                    assetsToDispose.Writer.TryWrite(toBeDisposed.Load);
             }
         }
         applyActionsBackup.Clear();
+
+
+        // we might add a bunch of old assets previously, so only dispose now
+        DisposeOldAssets();
 
         if (exceptions.Count > 0)
             throw new AggregateException(exceptions);
     }
 
+    // this should *not* be called under semaphore lock in case of secondary assets
     private void DisposeOldAssets()
     {
         Debug.Assert(IsMainThread);
-        //Debug.Assert(semaphore.CurrentCount == 0);
         while (assetsToDispose.Reader.TryRead(out var asset))
         {
             asset.Dispose();
@@ -482,6 +482,7 @@ public class AssetRegistry : IAssetRegistryInternal
         if (handle.Registry != this)
             throw new ArgumentException("Asset is not part of this registry or its parent");
 
+        AssetState? toDispose = null;
         bool shouldBeExecutedNow = false;
 
         using (LockSemaphore())
@@ -498,7 +499,7 @@ public class AssetRegistry : IAssetRegistryInternal
             {
                 ObjectDisposedException.ThrowIf(!TryAddRefUnsafe(handle.AssetId), typeof(IAsset));
                 if (assets[handle.AssetId].Asset is null)
-                    DelRefUnsafe(handle.AssetId); // Asset was not yet loaded
+                    toDispose = DelRefUnsafe(handle.AssetId); // Asset was not yet loaded
                 else
                     shouldBeExecutedNow = true;
             }
@@ -518,6 +519,10 @@ public class AssetRegistry : IAssetRegistryInternal
                 (this as IAssetRegistryInternal).DelRef(handle.AssetId);
             }
         }
+
+        // dispose outside the lock
+        if (toDispose != null)
+            DisposeAssetObject(toDispose.NeedsMainThreadDisposal, toDispose.Load);
     }
 
     public void CopyDebugInfo(List<IAssetRegistry.AssetInfo> infos)

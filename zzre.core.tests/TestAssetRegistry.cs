@@ -78,6 +78,29 @@ public class TestAssetRegistry
         public void Dispose() { }
     }
 
+    public readonly record struct NestedTestInfo(int Id, Func<AssetHandle> LoadSecondary);
+
+    private class NestedTestAsset : IAsset<NestedTestInfo>
+    {
+        public static AssetLocality Locality => AssetLocality.Global;
+        public IAssetRegistry Registry { get; init; }
+        public NestedTestInfo Info { get; init; }
+        public AssetHandle Secondary { get; init; }
+
+        public static async Task<AssetLoadResult<NestedTestInfo>> LoadAsync(IAssetRegistry registry, Guid _, NestedTestInfo info, CancellationToken ct)
+        {
+            var secondary = info.LoadSecondary();
+            if (secondary != default)
+                await secondary.GetAsync<NestedTestAsset>(ct);
+            return new(new NestedTestAsset() { Registry = registry, Info = info, Secondary = secondary });
+        }
+
+        public void Dispose()
+        {
+            Secondary.Dispose();
+        }
+    }
+
     private class GlobalTestAsset : ITestAsset
     {
         public static AssetLocality Locality => AssetLocality.Global;
@@ -845,6 +868,22 @@ public class TestAssetRegistry
             .Where(i => i.StartedLoad.Task.IsCompletedSuccessfully)
             .Select(i => i.Disposed.Task))
             .WaitAsync(ct);
+    }
+
+    [Test, CancelAfter(2000)] // shorter cancel as exceptions might happen outside this task (in FFTask.Dispose)
+    public async Task DisposeAsset_SecondaryAsset([Values] bool primaryAsync, CancellationToken ct)
+    {
+        var primaryPrio = primaryAsync ? AssetPriority.High : AssetPriority.Synchronous;
+        // secondary can only be High
+
+        using var global = new AssetRegistry(DI);
+        using var handle = global.Load<NestedTestInfo, NestedTestAsset>(new(1,
+            () => global.Load<NestedTestInfo, NestedTestAsset>(new(2, () => default), AssetPriority.High).As()),
+            primaryPrio);
+        var asset = await handle.GetAsync(ct);
+        Assert.That(asset.Secondary, Is.Not.Default);
+        Assert.That(asset.Secondary.As<NestedTestAsset>().Asset, Is.Not.Null);
+        handle.Dispose();
     }
 
     [Test]

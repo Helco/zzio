@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -110,10 +111,19 @@ public sealed class FFTask<TResult> : IDisposable where TResult : class, IDispos
         Interlocked.Exchange(ref wasStarted, 1); // prevents start after disposal
 
         // We dispose of the result. (maybe a future API should be able to prevent this)
-        tcs.Task.ContinueWith(
-            t => t.Result?.Dispose(),
-            TaskContinuationOptions.OnlyOnRanToCompletion |
-            TaskContinuationOptions.ExecuteSynchronously);
+        tcs.Task.ContinueWith(t =>
+        {
+            try
+            {
+                t.Result?.Dispose();
+            }
+            catch(Exception ex)
+            {
+                var exState = ExceptionDispatchInfo.Capture(ex);
+                ThreadPool.QueueUserWorkItem(_ => exState.Throw());
+            }
+        }, TaskContinuationOptions.OnlyOnRanToCompletion |
+        TaskContinuationOptions.ExecuteSynchronously);
 
         // and in case somebody still wants to wait for it, lets stop that as well
         tcs.TrySetException(new ObjectDisposedException("FFTask"));

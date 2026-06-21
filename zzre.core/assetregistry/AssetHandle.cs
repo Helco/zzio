@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 namespace zzre;
 
 public struct AssetHandle(IAssetRegistry registry, Guid assetId) : IAssetHandle, IEquatable<AssetHandle>
@@ -27,6 +29,13 @@ public struct AssetHandle(IAssetRegistry registry, Guid assetId) : IAssetHandle,
         TypeCheck(typeof(TAsset));
         var tmp = new AssetHandle<TAsset>(registry, assetId, wasDisposed); // an invalid copy        
         return tmp.Get();
+    }
+
+    public readonly ValueTask<TAsset> GetAsync<TAsset>(CancellationToken ct) where TAsset : class, IAsset
+    {
+        TypeCheck(typeof(TAsset));
+        var tmp = new AssetHandle<TAsset>(registry, assetId, wasDisposed);
+        return tmp.GetAsync(ct);
     }
 
     public AssetHandle<TAsset> As<TAsset>()

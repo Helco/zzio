@@ -3,8 +3,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using DotNext.Threading;
-using DotNext.Threading.Tasks;
 
 namespace zzre;
 
@@ -49,30 +47,7 @@ public sealed class SemaphoreAssetLock : IAssetRegistryLock
         IAssetRegistryLock.Releaser.ConvertFromBoolTask(semaphore.WaitAsync(timeout, ct), this, ct);
 }
 
-// do not use
-public sealed class MonitorAssetLock : IAssetRegistryLock
-{
-    public void Dispose() { }
-
-    public IAssetRegistryLock.Releaser Wait(TimeSpan timeout, CancellationToken ct, [CallerMemberName] string context = "<unknown>")
-    {
-        Monitor.Enter(this);
-        return new(this);
-    }
-
-    public Task<IAssetRegistryLock.Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct, [CallerMemberName] string context = "<unknown>")
-    {
-        Monitor.Enter(this);
-        return Task.FromResult<IAssetRegistryLock.Releaser>(new(this));
-    }
-
-    void IAssetRegistryLock.Release()
-    {
-        Debug.Assert(Monitor.IsEntered(this));
-    }
-}
-
-public sealed class DotNextAsyncAssetLock : IAssetRegistryLock
+/*public sealed class DotNextAsyncAssetLock : IAssetRegistryLock
 {
     private readonly AsyncExclusiveLock l = new(Environment.ProcessorCount + 1);
 
@@ -97,7 +72,7 @@ public sealed class DotNextAsyncAssetLock : IAssetRegistryLock
     {
         l.Release();
     }
-}
+}*/
 
 public sealed class TrackingAssetLock(IAssetRegistryLock inner) : IAssetRegistryLock
 {
