@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
@@ -498,8 +499,8 @@ public class AssetRegistry : IAssetRegistryInternal
                 ObjectDisposedException.ThrowIf(!TryAddRefUnsafe(handle.AssetId), typeof(IAsset));
                 if (assets[handle.AssetId].Asset is null)
                     toDispose = DelRefUnsafe(handle.AssetId); // Asset was not yet loaded
-                else
-                    shouldBeExecutedNow = true;
+                else // if there are any applyActions (to this asset), the order could be broken by executing now
+                    shouldBeExecutedNow = !applyActions.Any(t => t.assetId == handle.AssetId);
             }
             if (!shouldBeExecutedNow)
                 applyActions.Add(new(handle.AssetId, assets[handle.AssetId].Tag, typeof(TAsset), action));
@@ -508,6 +509,7 @@ public class AssetRegistry : IAssetRegistryInternal
         // Fast-path: no queueing 
         if (shouldBeExecutedNow)
         {
+            Debug.Assert(IsMainThread);
             try
             {
                 action(new(this, handle.AssetId));

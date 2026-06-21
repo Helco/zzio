@@ -1659,6 +1659,46 @@ public class TestAssetRegistry
     }
 
     [Test]
+    public async Task Apply_OrderWithUnexecutedActions(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+        var info = GetInfo(1);
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.High);
+
+        List<int> events = [];
+        global.Apply(handle, _ => events.Add(1));
+        global.Apply(handle, _ => events.Add(2));
+        info.FinishLoad.SetResult();
+        await handle.GetAsync(ct);
+        global.Apply(handle, _ => events.Add(3));
+        global.Apply(handle, _ => events.Add(4));
+        global.Update();
+
+        Assert.That(events, Is.EqualTo([1, 2, 3, 4]));
+    }
+
+    [Test]
+    public async Task Apply_OrderWithUnexcutedActionsAndOtherAssets(CancellationToken ct)
+    {
+        using var global = new AssetRegistry(DI);
+
+        // ID 2 is to create an unrelated apply action. It should not interfer with ID 1
+        var info2 = GetInfo(2);
+        using var handle2 = global.Load<TestInfo, GlobalTestAsset>(info2, AssetPriority.High);
+        global.Apply(handle2, _ => { });
+
+        using var handle = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        List<int> events = [];
+        global.Apply(handle, _ => events.Add(1));
+        global.Apply(handle, _ => events.Add(2));
+        // no udpate, the asset was already loaded, so fast-path execution should have occurred
+
+        Assert.That(events, Is.EqualTo([1, 2]));
+
+        info2.FinishLoad.SetResult();
+    }
+
+    [Test]
     public void Apply_GlobalFromLocal()
     {
         using var global = new AssetRegistry(DI);
