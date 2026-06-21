@@ -25,7 +25,7 @@ public sealed class ActorAsset(IAssetRegistry registry, ActorAsset.Info info) : 
 
         public Part(Part unloaded) : this(unloaded.ClumpHandle, unloaded.AnimHandles)
         {
-            Clump = ClumpHandle.Asset ?? throw new InvalidOperationException("Secondary asset was not loaded");
+            Clump = ClumpHandle == default ? null : ClumpHandle.Asset ?? throw new InvalidOperationException("Secondary asset was not loaded");
             Animations = [.. AnimHandles.Select(h => h.Asset ?? throw new InvalidOperationException("Secondary assset was not loaded"))];
         }
 
