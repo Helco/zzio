@@ -5,8 +5,6 @@ using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
-using DotNext;
-using DotNext.Collections.Generic;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 

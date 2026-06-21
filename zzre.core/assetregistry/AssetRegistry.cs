@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DotNext.Threading.Tasks;
 using Serilog;
 using Serilog.Core;
 
@@ -22,9 +21,8 @@ internal sealed class AssetState
     {
         get
         {
-            var result = Load.ObserverTask.TryGetResult();
-            return result is null || !result.Value.IsSuccessful
-                ? null : result.Value.Value;
+            var task = Load.ObserverTask;
+            return task.IsCompletedSuccessfully ? task.Result : null;
         }
     }
     public int RefCount = 1;

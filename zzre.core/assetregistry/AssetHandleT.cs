@@ -1,8 +1,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using DotNext;
-using DotNext.Threading.Tasks;
 
 namespace zzre;
 
@@ -37,9 +35,9 @@ public struct AssetHandle<TAsset>(IAssetRegistry registry, Guid assetId) : IAsse
         get
         {
             ThrowIfDisposed();
-            var result = ((IAssetRegistryInternal)Registry).GetAsset(AssetId).ObserverTask.TryGetResult();
-            return result?.IsSuccessful is true
-                ? (TAsset)result.Value.Value
+            var task = ((IAssetRegistryInternal)Registry).GetAsset(AssetId).ObserverTask;
+            return task.IsCompletedSuccessfully
+                ? (TAsset)task.Result
                 : null;
         }
     }
@@ -70,13 +68,13 @@ public struct AssetHandle<TAsset>(IAssetRegistry registry, Guid assetId) : IAsse
     public readonly ValueTask<TAsset> GetAsync(CancellationToken ct)
     {
         ThrowIfDisposed();
-        var lazy = ((IAssetRegistryInternal)Registry).GetAsset(AssetId);
-        if (lazy.ObserverTask.TryGetResult() is not Result<IDisposable> result)
+        var task = ((IAssetRegistryInternal)Registry).GetAsset(AssetId).ObserverTask;
+        if (!task.IsCompleted)
             return new(DoGetAsync(ct));
-        else if (result.IsSuccessful)
-            return ValueTask.FromResult((TAsset)result.Value);
+        else if (task.IsCompletedSuccessfully)
+            return ValueTask.FromResult((TAsset)task.Result);
         else
-            return ValueTask.FromException<TAsset>(result.Error!);
+            return ValueTask.FromException<TAsset>(task.Exception?.InnerException ?? new InvalidOperationException("Unknown asset load error"));
     }
 
     private readonly async Task<TAsset> DoGetAsync(CancellationToken ct)
