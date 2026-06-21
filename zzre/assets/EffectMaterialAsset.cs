@@ -54,6 +54,8 @@ public sealed class EffectMaterialAsset(IAssetRegistry registry) : IAsset<Info>,
         {
             alphaReference = info.AlphaReference
         };
+        if (info.HasFog && fogParams != null)
+            material.FogParams.Buffer = fogParams.Buffer;
 
         var camera = diContainer.GetTag<Camera>();
         material.Projection.BufferRange = camera.ProjectionRange;
