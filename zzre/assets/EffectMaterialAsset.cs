@@ -11,7 +11,7 @@ using System.Threading;
 
 namespace zzre;
 
-public sealed class EffectMaterialAsset(IAssetRegistry registry) : IAsset<Info>
+public sealed class EffectMaterialAsset(IAssetRegistry registry) : IAsset<Info>, ITexturedMaterialAsset
 {
     private static readonly FilePath[] EffectTextureBasePaths =
     [
@@ -36,6 +36,7 @@ public sealed class EffectMaterialAsset(IAssetRegistry registry) : IAsset<Info>
 
     public IAssetRegistry Registry { get; } = registry;
     public EffectMaterial Material { get; private set; } = null!;
+    ITexturedMaterial ITexturedMaterialAsset.Material => Material;
 
     static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid assetId, Info info, CancellationToken ct)
     {

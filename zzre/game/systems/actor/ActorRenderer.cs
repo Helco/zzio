@@ -142,6 +142,7 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
             if (!entity.IsAlive)
                 return;
             var asset = actorHandle.Get();
+            entity.Set(asset);
             entity.Set(asset.Description);
 
             var body = CreateActorPart(entity, asset.Body, asset.BodyAnimations, asset.Description.body);

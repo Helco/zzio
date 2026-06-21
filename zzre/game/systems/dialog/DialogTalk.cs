@@ -99,8 +99,7 @@ public partial class DialogTalk : ui.BaseScreen<components.DialogTalk, messages.
         if (!npcEntity.TryGet<components.ActorParts>(out var actorParts))
             return null;
 
-        var npcModelName = actorParts.Body.Get<AssetHandle<ClumpAsset>>().Get().Name
-            .Replace(".dff", "", StringComparison.OrdinalIgnoreCase);
+        var npcModelName = actorParts.Body.Get<rendering.ClumpMesh>().Name;
         var hasFace = resourcePool.FindFile($"{BaseFacePath}{npcModelName}.bmp") != null;
 
         if (!hasFace)

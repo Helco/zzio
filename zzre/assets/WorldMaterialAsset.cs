@@ -9,7 +9,7 @@ using zzre.rendering;
 
 namespace zzre;
 
-public sealed class WorldMaterialAsset(IAssetRegistry registry) : IAsset<WorldMaterialAsset.Info>
+public sealed class WorldMaterialAsset(IAssetRegistry registry) : IAsset<WorldMaterialAsset.Info>, ITexturedMaterialAsset
 {
     private static readonly FilePath[] WorldTextureBasePaths =
     [
@@ -42,6 +42,7 @@ public sealed class WorldMaterialAsset(IAssetRegistry registry) : IAsset<WorldMa
 
     public IAssetRegistry Registry { get; } = registry;
     public ModelMaterial Material { get; private set; } = null!;
+    ITexturedMaterial ITexturedMaterialAsset.Material => Material;
 
     static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid assetId, Info info, CancellationToken ct)
     {

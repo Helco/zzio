@@ -10,7 +10,7 @@ using static zzre.ClumpMaterialAsset;
 
 namespace zzre;
 
-public sealed class ClumpMaterialAsset(IAssetRegistry registry) : IAsset<Info>
+public sealed class ClumpMaterialAsset(IAssetRegistry registry) : IAsset<Info>, ITexturedMaterialAsset
 {
     private static readonly FilePath[] ClumpTextureBasePaths =
     [
@@ -41,6 +41,7 @@ public sealed class ClumpMaterialAsset(IAssetRegistry registry) : IAsset<Info>
 
     public IAssetRegistry Registry { get; } = registry;
     public ModelMaterial Material { get; private set; } = null!;
+    ITexturedMaterial ITexturedMaterialAsset.Material => Material;
 
     static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid assetId, Info info, CancellationToken ct)
     {

@@ -56,8 +56,7 @@ partial class ECSExplorer
         AddEntityNamerByComponent<ActorPart>(High, e => $"ActorPart {e}");
         AddEntityNamerByComponent<DuelParticipant>(High, e => e.World.Get<PlayerEntity>().Entity == e ? "Player" : $"DuelParticipant {e}");
 
-        AddEntityNamerByComponent<ActorParts>(Def + 1,
-            e => $"Actor {e.Get<AssetHandle>().Get<ActorAsset>().Name} {e}");
+        AddEntityNamerByComponent<ActorAsset>(Def + 1, e => $"Actor {e.Get<ActorAsset>().Name} {e}");
         AddEntityNamerByComponent<ClumpMesh>(Def, e => $"Model {e.Get<ClumpMesh>().Name} {e}");
         AddEntityNamerByComponent<SoundEmitter>(Def, e => $"{(e.Has<Location>() ? "3D" : "2D")} Sample {e}");
 

@@ -10,7 +10,7 @@ using static zzre.ActorMaterialAsset;
 
 namespace zzre;
 
-public sealed class ActorMaterialAsset(IAssetRegistry registry) : IAsset<Info>
+public sealed class ActorMaterialAsset(IAssetRegistry registry) : IAsset<Info>, ITexturedMaterialAsset
 {
     private static readonly FilePath[] ActorTextureBasePaths =
     [
@@ -40,6 +40,7 @@ public sealed class ActorMaterialAsset(IAssetRegistry registry) : IAsset<Info>
 
     public IAssetRegistry Registry { get; } = registry;
     public ModelMaterial Material { get; private set; } = null!;
+    ITexturedMaterial ITexturedMaterialAsset.Material => Material;
 
     static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid assetId, Info info, CancellationToken ct)
     {
