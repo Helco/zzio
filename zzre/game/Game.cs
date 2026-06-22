@@ -138,6 +138,11 @@ public abstract class Game : BaseDisposable, ITagContainer
     private void DisposeUnusedAssets(in messages.SceneLoaded _)
     {
         var assetStatsBeforeRemoving = assetRegistry.Stats;
+        ecsWorld.GetEntities()
+            .WithEither<AssetHandle>()
+            .Or<AssetHandle[]>()
+            .Without<components.KeepDuringSceneChange>()
+            .DisposeAll();
         //assetRegistry.DelayDisposals = false;
         //assetRegistry.DelayDisposals = true;
         ui.DisposeUnusedAssets();

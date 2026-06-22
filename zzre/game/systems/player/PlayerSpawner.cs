@@ -58,6 +58,7 @@ public class PlayerSpawner : ISystem<float>
             ActorName: "chr01",
             AssetPriority.Synchronous));
         playerEntity.Set(components.Visibility.Visible);
+        playerEntity.Set<components.KeepDuringSceneChange>();
         playerEntity.Set<components.PlayerControls>();
         playerEntity.Set<components.PlayerPuppet>();
         playerEntity.Set(new components.NonFairyAnimation(Random.Shared));
@@ -70,6 +71,7 @@ public class PlayerSpawner : ISystem<float>
         playerEntity.Set(new Inventory(diContainer, savegame));
         playerEntity.Set(components.GameFlow.Normal); // TODO: Move GameFlow component to world instead of player entity
         playerEntity.Get<components.ActorParts>().Body.Set<components.SoundListener>();
+        playerEntity.Get<components.ActorParts>().Body.Set<components.KeepDuringSceneChange>();
         ecsWorld.Set(new components.PlayerEntity(playerEntity));
     }
 
