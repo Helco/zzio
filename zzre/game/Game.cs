@@ -61,6 +61,9 @@ public abstract class Game : BaseDisposable, ITagContainer
             assetRegistryList.Register(GetType().Name, assetRegistry);
 
         syncedLocation = new systems.SyncedLocation(this);
+#if DEBUG
+        AddTag(new systems.DebugProtection(this));
+#endif
 
         ecsWorld.SetMaxCapacity<Scene>(1);
         ecsWorld.SetMaxCapacity<components.SoundListener>(1);
