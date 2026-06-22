@@ -83,6 +83,8 @@ public sealed class WorldMaterialAsset(IAssetRegistry registry) : IAsset<WorldMa
         Material?.Dispose();
         Material = null!;
     }
+
+    public override string ToString() => Material?.DebugName ?? "Disposed WorldMaterial";
 }
 
 partial class AssetExtensions

@@ -82,6 +82,8 @@ public sealed class ClumpMaterialAsset(IAssetRegistry registry) : IAsset<Info>, 
         Material?.Dispose();
         Material = null!;
     }
+
+    public override string ToString() => Material?.DebugName ?? "Disposed ClumpMaterial";
 }
 
 partial class AssetExtensions

@@ -86,6 +86,8 @@ public sealed class ActorMaterialAsset(IAssetRegistry registry) : IAsset<Info>, 
         Material?.Dispose();
         Material = null!;
     }
+
+    public override string ToString() => Material?.DebugName ?? "Disposed ActorMaterial";
 }
 
 partial class AssetExtensions
