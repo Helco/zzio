@@ -43,9 +43,11 @@ partial class AssetExtensions
             var handle = registry.LoadTexture(texturePaths, textureName, priority);
             registry.Apply(handle, h =>
             {
-                if (registry.TryGet<IAsset>(assetId, out var materialHandle) &&
+                AssetHandle<IAsset> materialHandle;
+                if (registry.TryGet(assetId, out materialHandle) &&
                     materialHandle.Asset is ITexturedMaterialAsset { Material: ITexturedMaterial material })
                     material.Texture.Texture = h.Asset?.Texture ?? material.Texture.Texture;
+                materialHandle.Dispose();
             });
             return (standardTextures.ByKind(placeholder.Value), handle);
         }
