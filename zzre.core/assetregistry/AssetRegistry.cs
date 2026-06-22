@@ -29,6 +29,10 @@ internal sealed class AssetState
     public int RefCount = 1;
     public AssetPriority Priority;
     public string? Name;
+
+#if DEBUG
+    public List<string> RefAddStacktraces = [];
+#endif
 }
 
 public class AssetRegistry : IAssetRegistryInternal
@@ -157,6 +161,9 @@ public class AssetRegistry : IAssetRegistryInternal
         if (assetState is null || assetState.RefCount <= 0)
             return false;
         assetState.RefCount++;
+#if DEBUG
+        assetState.RefAddStacktraces.Add(new StackTrace().ToString());
+#endif
         return true;
     }
 
@@ -178,6 +185,9 @@ public class AssetRegistry : IAssetRegistryInternal
         var assetState = assets.GetValueOrDefault(assetId);
         if (assetState is not null && --assetState.RefCount <= 0)
         {
+#if DEBUG
+            assetState.RefAddStacktraces.Clear();
+#endif
             assets.Remove(assetId);
             return assetState;
         }
@@ -278,6 +288,9 @@ public class AssetRegistry : IAssetRegistryInternal
             AssetType = typeof(TAsset),
             Priority = priority
         };
+#if DEBUG
+        assetState.RefAddStacktraces.Add(new StackTrace().ToString());
+#endif
         assets[assetId] = assetState;
         localStats.OnAssetCreated();
         return (assetId, assetState);
@@ -369,6 +382,9 @@ public class AssetRegistry : IAssetRegistryInternal
             !assetState.AssetType.IsAssignableTo(typeof(TAsset)))
             return false;
 
+#if DEBUG
+        assetState.RefAddStacktraces.Add(new StackTrace().ToString());
+#endif
         assetState.RefCount++;
         handle = new(this, assetId);
         return true;
