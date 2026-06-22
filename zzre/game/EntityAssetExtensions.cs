@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
+using DefaultEcs;
 using zzre.materials;
 using zzre.rendering;
 
@@ -9,8 +11,18 @@ public static class EntityAssetExtensions
 {
     public static void SubscribeAt(this IAssetRegistry registry, DefaultEcs.World world)
     {
-        world.SubscribeEntityComponentRemoved<AssetHandle>(HandleAssetHandleRemoved);
-        world.SubscribeEntityComponentRemoved<AssetHandle[]>(HandleAssetHandlesRemoved);
+        world.SubscribeEntityDisposed(HandleEntityDisposed);
+    }
+
+    private static void HandleEntityDisposed(in Entity entity)
+    {
+        if (entity.TryGet<AssetHandle>(out var handle))
+            handle.Dispose();
+        if (entity.TryGet<AssetHandle[]>(out var handles))
+        {
+            foreach (var handle_ in handles)
+                handle_.Dispose();
+        }
     }
 
     private static void HandleAssetHandleRemoved(in DefaultEcs.Entity entity, in AssetHandle handle) =>

@@ -86,7 +86,7 @@ public class BackdropLoader : ISystem<float>
         entity.Set(components.Visibility.Visible);
         entity.Set(components.RenderOrder.Backdrop);
         entity.Set(IColor.White);
-        assetRegistry.LoadBackdropClumpAndMaterialFor(entity, name,
+        using var backdropHandle = assetRegistry.LoadBackdropClumpAndMaterialFor(entity, name,
             new(
                 materials.ModelMaterial.BlendMode.Alpha,
                 DepthTest: depthTest,

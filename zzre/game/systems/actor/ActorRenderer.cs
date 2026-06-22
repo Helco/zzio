@@ -36,12 +36,14 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         whiteTexture.Name = "White";
         graphicsDevice.UpdateTexture(whiteTexture, new byte[] { 255, 255, 255, 255 }, 0, 0, 0, 1, 1, 1, 0, 0);
 
-        modelFactors = new(graphicsDevice.ResourceFactory);
-        modelFactors.Ref = ModelFactors.Default with
+        modelFactors = new(graphicsDevice.ResourceFactory)
         {
-            vertexColorFactor = 0f,
-            tintFactor = 1f,
-            ambient = Vector4.One
+            Ref = ModelFactors.Default with
+            {
+                vertexColorFactor = 0f,
+                tintFactor = 1f,
+                ambient = Vector4.One
+            }
         };
     }
 
