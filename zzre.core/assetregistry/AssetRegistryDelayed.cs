@@ -37,9 +37,12 @@ public sealed class AssetRegistryDelayed : IAssetRegistryInternal
         ((IAssetRegistryInternal)Inner).AddRef(assetId);
 
     [ExcludeFromCodeCoverage]
+    void IAssetRegistryInternal.DelRef(Guid assetId) =>
+        ((IAssetRegistryInternal)Inner).DelRef(assetId);
+
+    [ExcludeFromCodeCoverage]
     public void Apply<TAsset>(AssetHandle<TAsset> handle, Action<AssetHandle<TAsset>> action)
-        where TAsset : class, IAsset =>
-        Inner.Apply(ConvertAssetToThem(handle), h => action(ConvertAssetToMe(h)));
+        where TAsset : class, IAsset => Inner.Apply(handle, action);
 
     [ExcludeFromCodeCoverage]
     void IAssetRegistryInternal.CheckType(Guid assetId, Type type) =>
@@ -50,40 +53,15 @@ public sealed class AssetRegistryDelayed : IAssetRegistryInternal
         ((IAssetRegistryInternal)Inner).GetAsset(assetId);
 
     [ExcludeFromCodeCoverage]
-    public bool TryGet<TAsset>(Guid assetId, out AssetHandle<TAsset> handle) where TAsset : class, IAsset
-    {
-        if (!Inner.TryGet(assetId, out handle))
-            return false;
-        handle = ConvertAssetToMe(handle);
-        return true;
-    }
-
-    public bool DelayDisposals
-    {
-        get => Volatile.Read(ref delayDeletion);
-        set
-        {
-            Volatile.Write(ref delayDeletion, value);
-            if (!value || Inner.WasDisposed)
-                return;
-            lock (assetIdsToDelete)
-            {
-                foreach (var id in assetIdsToDelete)
-                    ((IAssetRegistryInternal)Inner).DelRef(id);
-                assetIdsToDelete.Clear();
-            }
-        }
-    }
+    public bool TryGet<TAsset>(Guid assetId, out AssetHandle<TAsset> handle) where TAsset : class, IAsset =>
+        Inner.TryGet(assetId, out handle);
 
     public readonly IAssetRegistry Inner;
-    private readonly GlobalRegistryAdapter globalAdapter;
-    private readonly List<Guid> assetIdsToDelete = new(64);
-    private bool delayDeletion;
+    private readonly HashSet<AssetHandle> assetIdsToDelete = new(64);
 
     public AssetRegistryDelayed(IAssetRegistry inner)
     {
         Inner = inner;
-        globalAdapter = new(this);
     }
 
     public AssetHandle<TAsset> Load<TInfo, TAsset>(in TInfo info, AssetPriority priority)
@@ -92,75 +70,22 @@ public sealed class AssetRegistryDelayed : IAssetRegistryInternal
     {
         var parentHandle = Inner.Load<TInfo, TAsset>(info, priority);
         Debug.Assert(parentHandle.Asset == parentHandle.Asset); // checks that the handle is not disposed
-        return ConvertAssetToMe(parentHandle);
-    }
-
-    private AssetHandle<TAsset> ConvertAssetToMe<TAsset>(AssetHandle<TAsset> handle) where TAsset : class, IAsset
-    {
-        Debug.Assert(handle.Registry == Inner || (handle.Registry == Inner.ParentRegistry && Inner.ParentRegistry is not null));
-        return handle.Registry == Inner
-            ? new AssetHandle<TAsset>(this, handle.AssetId)
-            : new AssetHandle<TAsset>(globalAdapter, handle.AssetId);
-    }
-
-    private AssetHandle<TAsset> ConvertAssetToThem<TAsset>(AssetHandle<TAsset> handle) where TAsset : class, IAsset
-    {
-        Debug.Assert(handle.Registry == this || handle.Registry == globalAdapter);
-        return handle.Registry == this
-            ? new AssetHandle<TAsset>(Inner, handle.AssetId)
-            : new AssetHandle<TAsset>(Inner.ParentRegistry!, handle.AssetId);
-    }
-
-    void IAssetRegistryInternal.DelRef(Guid assetId)
-    {
-        if (DelayDisposals)
+        lock (assetIdsToDelete)
         {
-            lock (assetIdsToDelete)
-                assetIdsToDelete.Add(assetId);
+            var unsafeCopy = new AssetHandle(parentHandle.Registry, parentHandle.AssetId);
+            if (assetIdsToDelete.Add(unsafeCopy))
+                unsafeCopy.Duplicate(); // increment the reference count only if we have to
         }
-        else
-            ((IAssetRegistryInternal)Inner).DelRef(assetId);
+        return parentHandle;
     }
 
-    private sealed class GlobalRegistryAdapter(AssetRegistryDelayed Parent) : IAssetRegistryInternal
+    public void DisposeDelayedAssets()
     {
-        // Reference counting has to be done by delayed registry
-        public void AddRef(Guid assetId) => ((IAssetRegistryInternal)Parent).AddRef(assetId);
-        public void DelRef(Guid assetId) => ((IAssetRegistryInternal)Parent).DelRef(assetId);
-
-        // Asset retrieval has to use the *global* registry
-        public FFTask<IDisposable> GetAsset(Guid assetId) => ((IAssetRegistryInternal)Parent.ParentRegistry!).GetAsset(assetId);
-
-        // Pure referals or exceptions
-        public bool WasDisposed => Parent.WasDisposed;
-        public bool IsMainThread => Parent.IsMainThread;
-        public ITagContainer DIContainer => Parent.DIContainer;
-        public IAssetRegistry? ParentRegistry => Parent.ParentRegistry;
-        public bool IsLocalRegistry => Parent.IsLocalRegistry;
-        public CancellationToken Cancellation => Parent.Cancellation;
-        public AssetRegistryStats Stats => Parent.Stats;
-
-        private static void ThrowUnexpectedUsage() =>
-            throw new InvalidOperationException("The global adapter of a delayed registry cannot be used for this operation");
-
-        public void CopyDebugInfo(List<IAssetRegistry.AssetInfo> assetInfos) => ThrowUnexpectedUsage();
-        public void CheckType(Guid assetId, Type type) => ThrowUnexpectedUsage();
-        public void Dispose() => ThrowUnexpectedUsage();
-        public void Update() => ThrowUnexpectedUsage();
-
-        void IAssetRegistry.Apply<TAsset>(AssetHandle<TAsset> handle, Action<AssetHandle<TAsset>> action) => ThrowUnexpectedUsage();
-
-        AssetHandle<TAsset> IAssetRegistry.Load<TInfo, TAsset>(in TInfo info, AssetPriority priority)
+        lock (assetIdsToDelete)
         {
-            ThrowUnexpectedUsage();
-            return default;
-        }
-
-        bool IAssetRegistry.TryGet<TAsset>(Guid assetId, out AssetHandle<TAsset> handle)
-        {
-            ThrowUnexpectedUsage();
-            handle = default;
-            return default;
+            foreach (var handle in assetIdsToDelete)
+                handle.Dispose();
+            assetIdsToDelete.Clear();
         }
     }
 }

@@ -31,6 +31,8 @@ public class TestAssetRegistry
         public readonly TaskCompletionSource FinishLoad = new(tcsOptions);
         public readonly TaskCompletionSource Disposed = new(tcsOptions);
 
+        public bool IsDisposed => Disposed.Task.IsCompletedSuccessfully;
+
         public TestInfo(TaskContinuationOptions tcsOptions, int Id, IAssetHandle[] secondaries)
             : this(tcsOptions, Id) { }
 
@@ -237,7 +239,7 @@ public class TestAssetRegistry
         await Assert.ThatAsync(() => Task.Run(global.Update), Throws.InvalidOperationException);
     }
 
-    private void CommonAssetChecks<TAsset>(IAssetRegistry registry, AssetHandle<TAsset> handle, int id, TAsset? extAsset = null, bool checkHandleRegistry = true)
+    private void CommonAssetChecks<TAsset>(IAssetRegistry registry, AssetHandle<TAsset> handle, int id, TAsset? extAsset = null)
     where TAsset : class, ITestAsset => Assert.Multiple(() =>
     {
         var getAsset = handle.Get();
@@ -247,8 +249,7 @@ public class TestAssetRegistry
         Assert.That(handle.Asset, Is.Not.Null);
         Assert.That(handle.Asset.Id, Is.EqualTo(id));
         Assert.That(handle.Asset.Registry, Is.SameAs(registry));
-        if (checkHandleRegistry) // this can be helpful for AssetRegistryDelayed where actual registries might be difficult to ascertain
-            Assert.That(handle.Registry, Is.SameAs(registry));
+        Assert.That(handle.Registry, Is.SameAs(registry));
     });
 
     [Test]
@@ -1110,18 +1111,29 @@ public class TestAssetRegistry
         CommonAssetChecks(global, handle, 1, asset);
     }
 
+    private static void DelayedAssetChecks<TAsset>(AssetRegistryDelayed registry, AssetHandle<TAsset> handle, TestInfo info) where TAsset : class, IAsset
+    {
+        Assert.That(info.IsDisposed, Is.False);
+
+        handle.Dispose();
+        Assert.That(info.IsDisposed, Is.False);
+
+        registry.DisposeDelayedAssets();
+        Assert.That(info.IsDisposed, Is.True);
+    }
+
     [Test]
     public void Local_LoadGlobalFromLocalWhileDelayed()
     {
         using var global = new AssetRegistry(DI);
         using var local = new AssetRegistry(DI, global);
         using var delay = new AssetRegistryDelayed(local);
-        delay.DelayDisposals = true;
 
-        using var handle = delay.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var info = GetInfo(1).AsCompleted();
+        using var handle = delay.Load<TestInfo, GlobalTestAsset>(info, AssetPriority.Synchronous);
         var asset = handle.Get();
-        CommonAssetChecks(global, handle, 1, asset, checkHandleRegistry: false);
-        delay.DelayDisposals = false;
+        CommonAssetChecks(global, handle, 1, asset);
+        DelayedAssetChecks(delay, handle, info);
     }
 
     [Test]
@@ -1141,11 +1153,12 @@ public class TestAssetRegistry
         using var global = new AssetRegistry(DI);
         using var local = new AssetRegistry(DI, global);
         using var delay = new AssetRegistryDelayed(local);
-        delay.DelayDisposals = true;
 
-        using var handle = delay.Load<TestInfo, LocalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var info = GetInfo(1).AsCompleted();
+        using var handle = delay.Load<TestInfo, LocalTestAsset>(info, AssetPriority.Synchronous);
         var asset = handle.Get();
-        CommonAssetChecks(local, handle, 1, asset, checkHandleRegistry: false);
+        CommonAssetChecks(local, handle, 1, asset);
+        DelayedAssetChecks(delay, handle, info);
     }
 
     [Test]
@@ -2060,14 +2073,13 @@ public class TestAssetRegistry
         var handle2 = handle1; // we use an invalid copy to check for asset disposal
         handle1.Dispose();
 
-        Assert.That(handle2.Get, Throws.InstanceOf<ObjectDisposedException>());
+        Assert.That(handle2.Get, Throws.Nothing);
     }
 
     [Test]
     public void Delayed_Delayed()
     {
         using var global = new AssetRegistryDelayed(new AssetRegistry(DI));
-        global.DelayDisposals = true;
 
         var handle1 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
         var handle2 = handle1; // we use an invalid copy to check for asset disposal
@@ -2075,27 +2087,29 @@ public class TestAssetRegistry
 
         Assert.That(handle2.Get, Throws.Nothing);
 
-        global.DelayDisposals = false;
-        Assert.That(handle2.Get, Throws.Nothing);
+        global.DisposeDelayedAssets();
+        Assert.That(handle2.Get, Throws.InstanceOf<ObjectDisposedException>());
     }
 
     [Test]
     public void Delayed_DelayedTwice()
     {
         using var global = new AssetRegistryDelayed(new AssetRegistry(DI));
-        global.DelayDisposals = true;
 
         var handle1 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
         var handle2 = global.Load<TestInfo, GlobalTestAsset>(GetInfo(1).AsCompleted(), AssetPriority.Synchronous);
+        var handle3 = handle2; // we use an invalid copy to check for asset disposal
         handle1.Dispose();
 
         Assert.That(handle2.Get, Throws.Nothing);
 
-        global.DelayDisposals = false;
+        global.DisposeDelayedAssets();
         Assert.That(handle2.Get, Throws.Nothing);
 
-        global.DelayDisposals = true;
-        global.DelayDisposals = false;
+        global.DisposeDelayedAssets();
         Assert.That(handle2.Get, Throws.Nothing); // still alive
+
+        handle2.Dispose();
+        Assert.That(handle3.Get, Throws.InstanceOf<ObjectDisposedException>()); // not alive anymore, the new AssetRegistryDelayed only keeps a single ref per asset
     }
 }

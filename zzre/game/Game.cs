@@ -14,7 +14,7 @@ public abstract class Game : BaseDisposable, ITagContainer
 {
     protected readonly ITagContainer tagContainer;
     protected readonly IZanzarahContainer zzContainer;
-    protected readonly AssetRegistry assetRegistry;
+    protected readonly AssetRegistryDelayed assetRegistry;
     protected readonly ILogger logger;
     protected readonly Remotery profiler;
     protected readonly GameTime time;
@@ -51,7 +51,7 @@ public abstract class Game : BaseDisposable, ITagContainer
 
         AddTag(this);
         AddTag(savegame);
-        AddTag<IAssetRegistry>(assetRegistry = new AssetRegistry(tagContainer, globalRegistry, "Game"));
+        AddTag<IAssetRegistry>(assetRegistry = new(new AssetRegistry(tagContainer, globalRegistry, "Game")));
         AddTag(ecsWorld = new DefaultEcs.World());
         AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
         AddTag(new ModelInstanceBuffer(diContainer, 512)); // TODO: ModelRenderer should use central ModelInstanceBuffer
@@ -143,8 +143,7 @@ public abstract class Game : BaseDisposable, ITagContainer
             .Or<AssetHandle[]>()
             .Without<components.KeepDuringSceneChange>()
             .DisposeAll();
-        //assetRegistry.DelayDisposals = false;
-        //assetRegistry.DelayDisposals = true;
+        assetRegistry.DisposeDelayedAssets();
         ui.DisposeUnusedAssets();
         var assetStatsAfterLoading = assetRegistry.Stats;
         var removalDiff = assetStatsAfterLoading - assetStatsBeforeRemoving;

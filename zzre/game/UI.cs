@@ -9,7 +9,7 @@ public class UI : BaseDisposable, ITagContainer
 {
     private readonly ITagContainer tagContainer;
     private readonly IZanzarahContainer zzContainer;
-    private readonly AssetRegistry assetRegistry;
+    private readonly AssetRegistryDelayed assetRegistry;
     private readonly Remotery profiler;
     private readonly GameTime time;
     private readonly systems.RecordingSequentialSystem<float> updateSystems;
@@ -40,7 +40,7 @@ public class UI : BaseDisposable, ITagContainer
         HandleResize();
 
         AddTag(this);
-        AddTag<IAssetRegistry>(assetRegistry = new AssetRegistry(tagContainer, globalRegistry, "UI"));
+        AddTag<IAssetRegistry>(assetRegistry = new(new AssetRegistry(tagContainer, globalRegistry, "UI")));
         AddTag(World = new DefaultEcs.World());
         AddTag(Builder = new UIBuilder(this));
 
@@ -122,8 +122,7 @@ public class UI : BaseDisposable, ITagContainer
 
     public void DisposeUnusedAssets()
     {
-        //assetRegistry.DelayDisposals = false;
-        //assetRegistry.DelayDisposals = true;
+        assetRegistry.DisposeDelayedAssets();
     }
 
     private void HandleResize()
