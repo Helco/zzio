@@ -143,6 +143,7 @@ public sealed class OverworldGame : Game
             new systems.effect.EffectRenderer(this, components.RenderOrder.LateEffect),
             new systems.effect.EffectModelRenderer(this, components.RenderOrder.LateEffect));
 
+        ecsWorld.Subscribe<messages.SceneLoaded>(DisposeUnusedAssets);
         onceUpdate.Next += () => LoadScene(savegame.sceneId, () => FindEntryTrigger(savegame.entryId));
     }
 

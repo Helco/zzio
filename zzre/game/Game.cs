@@ -69,9 +69,7 @@ public abstract class Game : BaseDisposable, ITagContainer
         ecsWorld.SetMaxCapacity<components.SoundListener>(1);
         ecsWorld.Set(new Location()); // world location
         ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
-        ecsWorld.Subscribe<messages.SceneLoaded>(DisposeUnusedAssets);
         assetRegistry.SubscribeAt(ecsWorld);
-        //assetRegistry.DelayDisposals = true;
     }
 
     protected override void DisposeManaged()
@@ -135,7 +133,7 @@ public abstract class Game : BaseDisposable, ITagContainer
         ecsWorld.Publish(new messages.SceneLoaded(scene, GetTag<Savegame>()));
     }
 
-    private void DisposeUnusedAssets(in messages.SceneLoaded _)
+    protected void DisposeUnusedAssets(in messages.SceneLoaded _)
     {
         var assetStatsBeforeRemoving = assetRegistry.Stats;
         ecsWorld.GetEntities()
