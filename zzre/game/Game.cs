@@ -26,7 +26,7 @@ public abstract class Game : BaseDisposable, ITagContainer
     protected ISystem<float> updateSystems = null!; // TODO: Replace static systems list
     protected ISystem<CommandList> renderSystems = null!;
     private RgbaFloat clearColor = RgbaFloat.Black;
-    private AssetRegistryStats assetStatsBeforeLoading;
+    private AssetRegistryStats assetStatsBeforeLoading, assetStatsBeforeRemoving;
     private float timeBeforeLoading;
 
     public DefaultEcs.Entity PlayerEntity => ecsWorld.Get<components.PlayerEntity>().Entity;
@@ -70,6 +70,8 @@ public abstract class Game : BaseDisposable, ITagContainer
         ecsWorld.Set(new Location()); // world location
         ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
         assetRegistry.SubscribeAt(ecsWorld);
+
+        //ecsWorld.Subscribe<messages.SceneLoaded>(DisposeUnusedAssets);
     }
 
     protected override void DisposeManaged()
@@ -120,6 +122,12 @@ public abstract class Game : BaseDisposable, ITagContainer
         ecsWorld.Publish(new messages.SceneChanging(sceneName));
         ecsWorld.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
 
+        ecsWorld.GetEntities()
+            .WithEither<AssetHandle>()
+            .Or<AssetHandle[]>()
+            .Without<components.KeepDuringSceneChange>()
+            .DisposeAll();
+
         // TODO: Make Scene a registerable asset type
         var resourcePool = GetTag<IResourcePool>();
         SceneResource = resourcePool.FindFile($"resources/worlds/{sceneName}.scn") ??
@@ -135,12 +143,7 @@ public abstract class Game : BaseDisposable, ITagContainer
 
     protected void DisposeUnusedAssets(in messages.SceneLoaded _)
     {
-        var assetStatsBeforeRemoving = assetRegistry.Stats;
-        ecsWorld.GetEntities()
-            .WithEither<AssetHandle>()
-            .Or<AssetHandle[]>()
-            .Without<components.KeepDuringSceneChange>()
-            .DisposeAll();
+        assetStatsBeforeRemoving = assetRegistry.Stats;
         assetRegistry.DisposeDelayedAssets();
         ui.DisposeUnusedAssets();
         var assetStatsAfterLoading = assetRegistry.Stats;

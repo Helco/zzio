@@ -5,6 +5,7 @@ using DefaultEcs.System;
 using Veldrid;
 using zzre.materials;
 using zzio;
+using zzre.rendering;
 
 namespace zzre.game.systems.ui;
 
@@ -121,6 +122,7 @@ public partial class Batcher : AEntitySortedSetSystem<CommandList, components.ui
         cl.PushDebugGroup("UIBatcher");
         // TODO: Update UI batches only if changed
         instanceBuffer.Update(cl);
+        ((IMaterial)untexturedMaterial).ApplyPipeline(cl);
         untexturedMaterial.ApplyAttributes(cl, instanceBuffer);
         uint instanceStart = 0;
         foreach (var batch in batches)

@@ -121,6 +121,11 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     {
         var clumpMeshComponents = World.GetComponents<ClumpMesh>();
         var materialComponents = World.GetComponents<ModelMaterial[]>();
+        if (entitiesToDraw.Any())
+        {
+            var firstMaterial = materialComponents[entitiesToDraw[0]][0];
+            (firstMaterial as IMaterial).ApplyPipeline(cl);
+        }
         foreach (var entity in entitiesToDraw)
             DrawEntity(cl, entity, clumpMeshComponents[entity], materialComponents[entity]);
 
