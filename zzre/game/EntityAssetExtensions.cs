@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Numerics;
 using DefaultEcs;
@@ -23,15 +22,6 @@ public static class EntityAssetExtensions
             foreach (var handle_ in handles)
                 handle_.Dispose();
         }
-    }
-
-    private static void HandleAssetHandleRemoved(in DefaultEcs.Entity entity, in AssetHandle handle) =>
-        handle.Dispose();
-
-    private static void HandleAssetHandlesRemoved(in DefaultEcs.Entity entity, in AssetHandle[] handles)
-    {
-        foreach (var handle in handles)
-            handle.Dispose();
     }
 
     public static Vector2 LoadUIBitmapFor(this IAssetRegistry registry, DefaultEcs.Entity entity,
