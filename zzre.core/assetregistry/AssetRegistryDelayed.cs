@@ -28,8 +28,6 @@ public sealed class AssetRegistryDelayed : IAssetRegistryInternal
         Inner.CopyDebugInfo(assetInfos);
 
     [ExcludeFromCodeCoverage]
-    public void Dispose() => Inner.Dispose();
-    [ExcludeFromCodeCoverage]
     public void Update() => Inner.Update();
 
     [ExcludeFromCodeCoverage]
@@ -64,12 +62,25 @@ public sealed class AssetRegistryDelayed : IAssetRegistryInternal
         Inner = inner;
     }
 
+    public void Dispose()
+    {
+        Inner.Dispose();
+        lock(assetIdsToDelete)
+        {
+            foreach (var handle in assetIdsToDelete)
+            {
+                if (handle.Registry != Inner) // the registry dispose much more efficiently disposed all assets
+                    handle.Dispose();
+            }
+            assetIdsToDelete.Clear();
+        }
+    }
+
     public AssetHandle<TAsset> Load<TInfo, TAsset>(in TInfo info, AssetPriority priority)
         where TInfo : struct, IEquatable<TInfo>
         where TAsset : class, IAsset<TInfo>
     {
         var parentHandle = Inner.Load<TInfo, TAsset>(info, priority);
-        Debug.Assert(parentHandle.Asset == parentHandle.Asset); // checks that the handle is not disposed
         lock (assetIdsToDelete)
         {
             var unsafeCopy = new AssetHandle(parentHandle.Registry, parentHandle.AssetId);
