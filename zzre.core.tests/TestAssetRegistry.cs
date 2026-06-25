@@ -14,7 +14,7 @@ namespace zzre.tests;
 [TestFixture(TaskContinuationOptions.RunContinuationsAsynchronously)]
 [TestFixture(TaskContinuationOptions.ExecuteSynchronously)]
 [SingleThreaded]
-//[CancelAfter(10000)]
+[CancelAfter(10000)]
 public class TestAssetRegistry
 {
     private interface ITestAsset : IAsset<TestInfo>
