@@ -43,7 +43,7 @@ public class ModelViewer : ListDisposable, IDocumentEditor
     private readonly OpenFileModal openFileModal;
     private readonly ModelMaterialEdit modelMaterialEdit;
     private readonly LocationBuffer locationBuffer;
-    private readonly List<AssetHandle> assetHandles = [];
+    private readonly List<IDisposable> assetHandles = [];
 
     private ClumpMesh? mesh;
     private GeometryCollider? collider;
@@ -166,18 +166,19 @@ public class ModelViewer : ListDisposable, IDocumentEditor
         boundingRenderer.Clear();
         coarseCollisionMode = default;
 
-        var meshHandle = assetRegistry.Load(new ClumpAsset.Info(resource.Path), AssetLoadPriority.Synchronous);
+        var meshHandle = assetRegistry.Load<ClumpAsset.Info, ClumpAsset>(new(resource.Path), AssetPriority.Synchronous);
         assetHandles.Add(meshHandle);
-        mesh = meshHandle.Get<ClumpAsset>().Mesh;
+        mesh = meshHandle.Get().Mesh;
 
         materials = new ModelMaterial[mesh.Materials.Count];
         foreach (var (rwMaterial, index) in mesh.Materials.Indexed())
         {
             var material = materials[index] = new ModelMaterial(diContainer);
             var rwTexture = (RWTexture)rwMaterial.FindChildById(SectionId.Texture, true)!;
-            var rwTextureName = (RWString)rwTexture.FindChildById(SectionId.String, true)!;
-            var textureHandle = assetRegistry.TryLoadTexture(texturePaths, rwTextureName.value,
-                AssetLoadPriority.Synchronous, material, StandardTextureKind.Error);
+            var textureHandle = assetRegistry.TryLoadTextureForMaterial(texturePaths,
+                rwTexture,
+                material,
+                StandardTextureKind.Error);
             var samplerHandle = assetRegistry.LoadSampler(SamplerDescription.Linear);
             if (textureHandle.HasValue)
                 assetHandles.Add(textureHandle.Value);

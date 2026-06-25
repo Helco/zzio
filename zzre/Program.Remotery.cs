@@ -20,13 +20,6 @@ using static RemoteryNET.RemoteryPInvoke;
 
 namespace zzre;
 
-internal sealed class NullDisposable : IDisposable
-{
-    private NullDisposable() { }
-    public void Dispose() { }
-    public static readonly NullDisposable Instance = new();
-}
-
 public sealed unsafe class Remotery : IDisposable, ILogEventSink
 {
 #if REMOTERY

@@ -79,8 +79,7 @@ internal abstract record LabelLike<T> : Base<T> where T : LabelLike<T>
             throw new System.InvalidOperationException("Font was not set on label-like UI element");
         var entity = base.BuildBase();
         var assetRegistry = preload.UI.GetTag<IAssetRegistry>();
-        var tileSheetHandle = assetRegistry.LoadUITileSheet(entity, font.Value);
-        var tileSheet = tileSheetHandle.Get().TileSheet;
+        var tileSheet = assetRegistry.LoadUITileSheetFor(entity, font.Value);
 
         if (lineHeight == null && useTotalFontHeight)
             lineHeight = tileSheet.TotalSize.Y;

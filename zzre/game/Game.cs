@@ -14,7 +14,7 @@ public abstract class Game : BaseDisposable, ITagContainer
 {
     protected readonly ITagContainer tagContainer;
     protected readonly IZanzarahContainer zzContainer;
-    protected readonly AssetLocalRegistry assetRegistry;
+    protected readonly AssetRegistryDelayed assetRegistry;
     protected readonly ILogger logger;
     protected readonly Remotery profiler;
     protected readonly GameTime time;
@@ -26,7 +26,7 @@ public abstract class Game : BaseDisposable, ITagContainer
     protected ISystem<float> updateSystems = null!; // TODO: Replace static systems list
     protected ISystem<CommandList> renderSystems = null!;
     private RgbaFloat clearColor = RgbaFloat.Black;
-    private AssetRegistryStats assetStatsBeforeLoading;
+    private AssetRegistryStats assetStatsBeforeLoading, assetStatsBeforeRemoving;
     private float timeBeforeLoading;
 
     public DefaultEcs.Entity PlayerEntity => ecsWorld.Get<components.PlayerEntity>().Entity;
@@ -47,10 +47,11 @@ public abstract class Game : BaseDisposable, ITagContainer
         profiler = GetTag<Remotery>();
         time = GetTag<GameTime>();
         ui = GetTag<UI>();
+        var globalRegistry = GetTag<IAssetRegistry>();
 
         AddTag(this);
         AddTag(savegame);
-        AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("Game", tagContainer));
+        AddTag<IAssetRegistry>(assetRegistry = new(new AssetRegistry(tagContainer, globalRegistry, "Game")));
         AddTag(ecsWorld = new DefaultEcs.World());
         AddTag(new LocationBuffer(GetTag<GraphicsDevice>(), 4096));
         AddTag(new ModelInstanceBuffer(diContainer, 512)); // TODO: ModelRenderer should use central ModelInstanceBuffer
@@ -60,19 +61,22 @@ public abstract class Game : BaseDisposable, ITagContainer
             assetRegistryList.Register(GetType().Name, assetRegistry);
 
         syncedLocation = new systems.SyncedLocation(this);
+#if DEBUG
+        AddTag(new systems.DebugProtection(this));
+#endif
 
         ecsWorld.SetMaxCapacity<Scene>(1);
         ecsWorld.SetMaxCapacity<components.SoundListener>(1);
         ecsWorld.Set(new Location()); // world location
         ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
-        ecsWorld.Subscribe<messages.SceneLoaded>(DisposeUnusedAssets);
-        AssetRegistry.SubscribeAt(ecsWorld);
-        assetRegistry.DelayDisposals = true;
+        assetRegistry.SubscribeAt(ecsWorld);
+
+        //ecsWorld.Subscribe<messages.SceneLoaded>(DisposeUnusedAssets);
     }
 
     protected override void DisposeManaged()
     {
-        assetRegistry.DelayDisposals = false;
+        //assetRegistry.DelayDisposals = false;
         tagContainer.RemoveTag<IAssetRegistry>(dispose: false); // remove all entities first, then destroy registry
         updateSystems.Dispose();
         renderSystems.Dispose();
@@ -93,7 +97,7 @@ public abstract class Game : BaseDisposable, ITagContainer
     public void Update()
     {
         using var _ = profiler.SampleCPU("Game.Update");
-        assetRegistry.ApplyAssets();
+        assetRegistry.Update();
         onceUpdate.Invoke();
         updateSystems.Update(time.Delta);
     }
@@ -101,7 +105,7 @@ public abstract class Game : BaseDisposable, ITagContainer
     public void Render(CommandList cl)
     {
         using var _ = profiler.SampleCPU("Game.Render");
-        assetRegistry.ApplyAssets();
+        assetRegistry.Update();
         camera.Update(cl);
         syncedLocation.Update(cl);
         cl.ClearColorTarget(0, clearColor);
@@ -118,6 +122,13 @@ public abstract class Game : BaseDisposable, ITagContainer
         ecsWorld.Publish(new messages.SceneChanging(sceneName));
         ecsWorld.Publish(messages.LockPlayerControl.Unlock); // otherwise the timed entry locking will be ignored
 
+        ecsWorld.GetEntities()
+            .WithEither<AssetHandle>()
+            .Or<AssetHandle[]>()
+            .Without<components.KeepDuringSceneChange>()
+            .DisposeAll();
+
+        // TODO: Make Scene a registerable asset type
         var resourcePool = GetTag<IResourcePool>();
         SceneResource = resourcePool.FindFile($"resources/worlds/{sceneName}.scn") ??
             throw new System.IO.FileNotFoundException($"Could not find scene: {sceneName}"); ;
@@ -130,11 +141,10 @@ public abstract class Game : BaseDisposable, ITagContainer
         ecsWorld.Publish(new messages.SceneLoaded(scene, GetTag<Savegame>()));
     }
 
-    private void DisposeUnusedAssets(in messages.SceneLoaded _)
+    protected void DisposeUnusedAssets(in messages.SceneLoaded _)
     {
-        var assetStatsBeforeRemoving = assetRegistry.Stats;
-        assetRegistry.DelayDisposals = false;
-        assetRegistry.DelayDisposals = true;
+        assetStatsBeforeRemoving = assetRegistry.Stats;
+        assetRegistry.DisposeDelayedAssets();
         ui.DisposeUnusedAssets();
         var assetStatsAfterLoading = assetRegistry.Stats;
         var removalDiff = assetStatsAfterLoading - assetStatsBeforeRemoving;

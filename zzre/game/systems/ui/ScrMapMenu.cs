@@ -33,8 +33,8 @@ public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.
             .With(new Rect(-320, -240, 640, 480))
             .WithRenderOrder(1)
             .Build();
-        var mapHandle = assetRegistry.LoadUIBitmap(mapEntity, "map001", hasRawMask: true);
-        mapHandle.Get().Material.MaskBits.Value = CollectMaskBits(inventory);
+        assetRegistry.LoadUIBitmapFor(mapEntity, "map001", hasRawMask: true);
+        entity.Get<materials.UIMaterial>().MaskBits.Value = CollectMaskBits(inventory);
 
         preload.CreateTooltipTarget(entity)
             .With(new Vector2(-320 + 11, -240 + 11))
@@ -46,10 +46,10 @@ public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.
 
     private static readonly IReadOnlyList<StdItemId> MapSectionItems = new[]
     {
-        (StdItemId)(ushort.MaxValue),
+        (StdItemId)ushort.MaxValue,
         StdItemId.MapShadowRealm,
         StdItemId.MapFairyGarden,
-        (StdItemId)(ushort.MaxValue),
+        (StdItemId)ushort.MaxValue,
         StdItemId.MapSkyRealm,
         StdItemId.MapDarkSwamp,
         StdItemId.MapForest,

@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using System.Threading;
 using System.Threading.Tasks;
 using Silk.NET.SDL;
 using Veldrid;
@@ -13,7 +13,8 @@ using PixelFormat = Veldrid.PixelFormat;
 
 namespace zzre;
 
-public class UIBitmapAsset : Asset
+public sealed class UIBitmapAsset(IAssetRegistry registry, UIBitmapAsset.Info info)
+    : IAsset<UIBitmapAsset.Info>
 {
     private const string UnmaskedSuffix = ".bmp";
     private const string ColorSuffix = "T.bmp";
@@ -23,50 +24,35 @@ public class UIBitmapAsset : Asset
 
     public readonly record struct Info(string Name, bool HasRawMask = false);
 
-    public static void Register() =>
-        AssetInfoRegistry<Info>.Register<UIBitmapAsset>(AssetLocality.Context);
+    static AssetLocality IAsset.Locality => AssetLocality.Local; // we set the UI projection matrix
 
-    private readonly Info info;
-    protected UIMaterial? material;
+    private readonly Info info = info;
+    private AssetHandle<SamplerAsset> samplerHandle;
 
-    public string DebugName { get; }
-    public UIMaterial Material => material ??
-        throw new InvalidOperationException("Asset was not yet loaded");
-    public Vector2 Size => material is null ? Vector2.Zero
-        : new Vector2(material.MainTexture.Texture!.Width, material.MainTexture.Texture!.Height);
+    public IAssetRegistry Registry => registry;
+    public UIMaterial Material { get; private set; } = null!;
+    public Vector2 Size => new(Material.MainTexture.Texture!.Width, Material.MainTexture.Texture!.Height);
 
-    public UIBitmapAsset(IAssetRegistry registry, Guid assetId, Info info) : this(registry, assetId, info, null) { }
-    public UIBitmapAsset(IAssetRegistry registry, Guid assetId, Info info, string? debugName) : base(registry, assetId)
+    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid _, Info info, CancellationToken ct)
     {
-        this.info = info;
-        DebugName = debugName ?? ($"UIBitmap {info.Name}" + (info.HasRawMask ? "" : " (Raw mask)"));
-    }
-
-    // strictly speaking this is a workaround: waiting on global secondary assets 
-    // from local primary ones currently does not work and will throw an exception
-    // practically we do not need this functionality:
-    //   - We do not wait for textures (Model/Effect materials) 
-    //   - We don't have to wait for samplers
-    protected override bool NeedsSecondaryAssets => false;
-
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
-    {
+        var debugName = $"UIBitmap {info.Name}" + (info.HasRawMask ? "" : " (Raw mask)");
+        var samplerAsset = registry.LoadSampler(SamplerDescription.Linear, AssetPriority.High);
+        var diContainer = registry.DIContainer;
         var graphicsDevice = diContainer.GetTag<GraphicsDevice>();
-        using var bitmap = LoadMaskedBitmap(info.Name);
-        var texture = bitmap.ToTexture(graphicsDevice, DebugName);
-        var samplerAsset = Registry.LoadSampler(SamplerDescription.Linear);
-        material = new UIMaterial(diContainer)
+        using var bitmap = LoadMaskedBitmap(diContainer, info.Name);
+        var texture = bitmap.ToTexture(graphicsDevice, debugName);
+        var material = new UIMaterial(diContainer)
         {
-            DebugName = DebugName,
+            DebugName = debugName,
             HasMask = info.HasRawMask
         };
         material.MainTexture.Texture = texture;
-        material.MainSampler.Sampler = samplerAsset.Get().Sampler;
+        material.MainSampler.Sampler = (await samplerAsset.GetAsync(ct)).Sampler;
         material.ScreenSize.Buffer = diContainer.GetTag<UI>().ProjectionBuffer;
 
         if (info.HasRawMask)
         {
-            var mask = LoadRawMask(bitmap.Width, bitmap.Height);
+            var mask = LoadRawMask(diContainer, info.Name, bitmap.Width, bitmap.Height);
             var maskTexture = graphicsDevice.ResourceFactory.CreateTexture(new(
                 (uint)bitmap.Width, (uint)bitmap.Height, depth: 1,
                 mipLevels: 1, arrayLayers: 1,
@@ -77,19 +63,23 @@ public class UIBitmapAsset : Asset
             material.MaskTexture.Texture = maskTexture;
         }
 
-        return ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerAsset ]);
+        return new(new UIBitmapAsset(registry, info)
+        {
+            samplerHandle = samplerAsset,
+            Material = material
+        });
     }
 
-    protected unsafe SdlSurfacePtr LoadMaskedBitmap(string name)
+    internal static unsafe SdlSurfacePtr LoadMaskedBitmap(ITagContainer diContainer, string name)
     {
         var sdl = diContainer.GetTag<Sdl>();
         var resourcePool = diContainer.GetTag<IResourcePool>();
         var bitmap =
-            LoadBitmap(name, UnmaskedSuffix, withAlpha: true) ??
-            LoadBitmap(name, ColorSuffix, withAlpha: true) ??
+            LoadBitmap(diContainer, name, UnmaskedSuffix, withAlpha: true) ??
+            LoadBitmap(diContainer, name, ColorSuffix, withAlpha: true) ??
             throw new FileNotFoundException($"Could not open bitmap {name}");
 
-        using var maskBitmap = LoadBitmap(name, MaskSuffix, withAlpha: null);
+        using var maskBitmap = LoadBitmap(diContainer, name, MaskSuffix, withAlpha: null);
         if (maskBitmap == null)
             return bitmap;
         if (bitmap.Width != maskBitmap?.Width || bitmap.Height != maskBitmap?.Height)
@@ -103,7 +93,7 @@ public class UIBitmapAsset : Asset
         return bitmap;
     }
 
-    private unsafe SdlSurfacePtr? LoadBitmap(string name, string suffix, bool? withAlpha)
+    private static unsafe SdlSurfacePtr? LoadBitmap(ITagContainer diContainer, string name, string suffix, bool? withAlpha)
     {
         var sdl = diContainer.GetTag<Sdl>();
         var resourcePool = diContainer.GetTag<IResourcePool>();
@@ -139,10 +129,10 @@ public class UIBitmapAsset : Asset
         return new(sdl, rawPointer);
     }
 
-    private byte[] LoadRawMask(int width, int height)
+    private static byte[] LoadRawMask(ITagContainer diContainer, string name, int width, int height)
     {
         var resourcePool = diContainer.GetTag<IResourcePool>();
-        var maskPath = BasePath.Combine(info.Name + RawMaskSuffix);
+        var maskPath = BasePath.Combine(name + RawMaskSuffix);
         using var stream = resourcePool.FindAndOpen(maskPath) ??
             throw new FileNotFoundException($"Could not open mask {maskPath}");
         if (stream.Length != width * height)
@@ -152,35 +142,25 @@ public class UIBitmapAsset : Asset
         return mask;
     }
 
-    protected override void Unload()
+    public void Dispose()
     {
         // UIBitmap (and UITileSheet) contain their textures without secondary assets
         // that is because sharing textures across UI materials does not exist
-        material?.MainTexture.Texture?.Dispose();
-        material?.MaskTexture.Texture?.Dispose();
-        material?.Dispose();
-        material = null;
+        Material?.MainTexture.Texture?.Dispose();
+        Material?.MaskTexture.Texture?.Dispose();
+        Material?.Dispose();
+        Material = null!;
+        samplerHandle.Dispose();
     }
 
-    protected override string ToStringInner() => DebugName;
+    public override string ToString() => Material.DebugName;
 }
 
-partial class AssetExtensions
+static partial class AssetExtensions
 {
-    public static unsafe AssetHandle<UIBitmapAsset> LoadUIBitmap(this IAssetRegistry registry,
-        DefaultEcs.Entity entity,
+    public static AssetHandle<UIBitmapAsset> LoadUIBitmap(this IAssetRegistry registry,
         string name,
         bool hasRawMask = false,
-        AssetLoadPriority priority = AssetLoadPriority.Synchronous)
-    {
-        var handle = registry.Load(new UIBitmapAsset.Info(name, hasRawMask), priority, &ApplyUIBitmapToEntity, entity);
-        entity.Set(handle);
-        return handle.As<UIBitmapAsset>();
-    }
-
-    private static void ApplyUIBitmapToEntity(AssetHandle handle, ref readonly DefaultEcs.Entity entity)
-    {
-        if (entity.IsAlive)
-            entity.Set(handle.Get<UIBitmapAsset>().Material);
-    }
+        AssetPriority priority = AssetPriority.Synchronous) =>
+        registry.Load<UIBitmapAsset.Info, UIBitmapAsset>(new(name, hasRawMask), priority);
 }

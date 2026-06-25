@@ -48,11 +48,13 @@ public sealed class RandomPlanes : BaseCombinerPart<
         var billboardMode = data.circlesAround
             ? EffectMaterial.BillboardMode.None
             : EffectMaterial.BillboardMode.View;
-        assetRegistry.LoadEffectMaterial(entity,
+        var materialHandle = assetRegistry.LoadEffectMaterial(
             data.texName,
             billboardMode,
             data.renderMode,
             playback.DepthTest);
+        entity.Set(materialHandle.Get().Material);
+        entity.Set(materialHandle.As());
         entity.Set(new components.effect.RenderIndices(default));
     }
 

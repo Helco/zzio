@@ -82,7 +82,7 @@ public class WorldRendererSystem : ISystem<CommandList>
     {
         DisposeWorld();
 
-        worldAssetHandle = assetRegistry.LoadWorld(path, AssetLoadPriority.Synchronous);
+        worldAssetHandle = assetRegistry.LoadWorld(path, AssetPriority.Synchronous);
         worldMesh = worldAssetHandle.Get().Mesh;
         visibleMeshSections.EnsureCapacity(worldMesh.Sections.Count(s => s is WorldMesh.MeshSection));
         visibleSubMeshes.EnsureCapacity(worldMesh.SubMeshes.Count);
@@ -92,7 +92,7 @@ public class WorldRendererSystem : ISystem<CommandList>
         materials.EnsureCapacity(worldMesh.Materials.Count);
         foreach (var rwMaterial in worldMesh.Materials)
         {
-            var handle = assetRegistry.LoadWorldMaterial(rwMaterial, AssetLoadPriority.Synchronous);
+            var handle = assetRegistry.LoadWorldMaterial(rwMaterial, AssetPriority.Synchronous);
             materialAssetHandles.Add(handle);
             var material = handle.Get().Material;
             material.World.BufferRange = locationRange;

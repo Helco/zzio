@@ -41,11 +41,10 @@ partial class ActorEditor
             gameTime = diContainer.GetTag<GameTime>();
             var resourcePool = diContainer.GetTag<IResourcePool>();
             var assetRegistry = diContainer.GetTag<IAssetRegistry>();
-            var modelPath = new FilePath("resources/models/actorsex/").Combine(modelName);
 
-            var meshHandle = assetRegistry.Load(new ClumpAsset.Info(modelPath), AssetLoadPriority.Synchronous);
+            var meshHandle = assetRegistry.LoadActorClump(modelName, AssetPriority.Synchronous);
             AddDisposable(meshHandle);
-            mesh = meshHandle.Get<ClumpAsset>().Mesh;
+            mesh = meshHandle.Get().Mesh;
 
             locationBufferRange = diContainer.GetTag<LocationBuffer>().Add(location);
             var camera = diContainer.GetTag<Camera>();
@@ -68,9 +67,8 @@ partial class ActorEditor
             {
                 var material = materials[index] = new ModelMaterial(diContainer) { IsSkinned = skeleton != null };
                 var rwTexture = (RWTexture)rwMaterial.FindChildById(SectionId.Texture, true)!;
-                var rwTextureName = (RWString)rwTexture.FindChildById(SectionId.String, true)!;
-                var textureHandle = assetRegistry.TryLoadTexture([TextureBasePath], rwTextureName.value,
-                    AssetLoadPriority.Synchronous, material, StandardTextureKind.Error);
+                var textureHandle = assetRegistry.TryLoadTextureForMaterial(
+                    [TextureBasePath], rwTexture, material, StandardTextureKind.Error);
                 var samplerHandle = assetRegistry.LoadSampler(SamplerDescription.Linear);
                 if (textureHandle.HasValue)
                     AddDisposable(textureHandle.Value);
@@ -94,7 +92,7 @@ partial class ActorEditor
                     throw new InvalidDataException($"Animation {filename} is incompatible with actor skeleton {modelName}");
                 return animation;
             }
-            animations = animationNames.Select(t => (t.type, t.filename, LoadAnimation(t.filename))).ToArray();
+            animations = [.. animationNames.Select(t => (t.type, t.filename, LoadAnimation(t.filename)))];
             skeleton?.ResetToBinding();
         }
 

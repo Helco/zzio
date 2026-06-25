@@ -50,11 +50,13 @@ public sealed class ParticleEmitter : BaseCombinerPart<
             vertexRange,
             indexRange));
 
-        assetRegistry.LoadEffectMaterial(entity,
+        var materialHandle = assetRegistry.LoadEffectMaterial(
             data.texName,
             EffectMaterial.BillboardMode.View,
             data.renderMode,
             playback.DepthTest);
+        entity.Set(materialHandle.Get().Material);
+        entity.Set(materialHandle.As());
         entity.Set(new components.effect.RenderIndices(default));
     }
 

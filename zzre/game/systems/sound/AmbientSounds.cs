@@ -180,7 +180,7 @@ internal sealed class AmbientSounds : ISystem<float>
                 MaxDistance: 20f,
                 Position: position,
                 AsEntity: landscapeEntities[i],
-                Priority: AssetLoadPriority.Low));
+                Priority: AssetPriority.Low));
             logger.Verbose("Spawned landscape sample {Sample} at relative {Position}", landscapeSamples[i], relativePosition);
             return;
         }

@@ -247,7 +247,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
         entity.Set(components.ui.UIOffset.Center);
         entity.Set(new components.ui.RenderOrder(renderOrder));
         entity.Set(IColor.White);
-        assetRegistry.LoadUITileSheet(entity, isAttack ? UIPreloadAsset.Cls001 : UIPreloadAsset.Cls000);
+        assetRegistry.LoadUITileSheetFor(entity, isAttack ? UIPreloadAsset.Cls001 : UIPreloadAsset.Cls000);
 
         var tileSize = entity.Get<rendering.TileSheet>().GetPixelSize(0);
         entity.Set(Rect.FromTopLeftSize(pos, tileSize * 3));

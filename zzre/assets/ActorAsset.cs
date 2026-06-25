@@ -1,83 +1,109 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using zzio;
 using zzio.vfs;
 
 namespace zzre;
 
-public sealed class ActorAsset : Asset
+public sealed class ActorAsset(IAssetRegistry registry, ActorAsset.Info info) : IAsset<ActorAsset.Info>
 {
     private static readonly FilePath BasePath = new("resources/models/actorsex");
-    private const AssetLoadPriority SecondaryPriority = AssetLoadPriority.High;
 
     public readonly record struct Info(string Name)
     {
         public FilePath FullPath => BasePath.Combine(Name + ".aed");
     }
 
-    public static void Register() =>
-        AssetInfoRegistry<Info>.Register<ActorAsset>(AssetLocality.Global);
-
-    private readonly Info info;
-    private ActorExDescription? description;
-    private AssetHandle<AnimationAsset>[] bodyAnimations = [];
-    private AssetHandle<AnimationAsset>[] wingsAnimations = [];
-
-    public string Name => info.Name;
-    public ActorExDescription Description => description ??
-        throw new InvalidOperationException("Asset was not yet loaded");
-
-    public AssetHandle<ClumpAsset> Body { get; set; } = AssetHandle<ClumpAsset>.Invalid;
-    public AssetHandle<ClumpAsset> Wings { get; set; } = AssetHandle<ClumpAsset>.Invalid;
-    public IReadOnlyList<AssetHandle<AnimationAsset>> BodyAnimations => bodyAnimations;
-    public IReadOnlyList<AssetHandle<AnimationAsset>> WingsAnimations => wingsAnimations;
-
-    public ActorAsset(IAssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
+    private readonly record struct Part(
+        AssetHandle<ClumpAsset> ClumpHandle,
+        AssetHandle<AnimationAsset>[] AnimHandles)
     {
-        this.info = info;
+        public readonly ClumpAsset? Clump = null;
+        public readonly AnimationAsset[] Animations = [];
+
+        public Part(Part unloaded) : this(unloaded.ClumpHandle, unloaded.AnimHandles)
+        {
+            Clump = ClumpHandle == default ? null : ClumpHandle.Asset ?? throw new InvalidOperationException("Secondary asset was not loaded");
+            Animations = [.. AnimHandles.Select(h => h.Asset ?? throw new InvalidOperationException("Secondary assset was not loaded"))];
+        }
+
+        public void Dispose()
+        {
+            ClumpHandle.Dispose();
+            foreach (var animHandle in AnimHandles ?? [])
+                animHandle.Dispose();
+        }
     }
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
+    private readonly Info info = info;
+    private Part body, wings;
+
+    public IAssetRegistry Registry { get; } = registry;
+    public string Name => info.Name;
+
+    public ActorExDescription Description { get; private init; } = null!;
+    public ClumpAsset Body => body.Clump!;
+    public ClumpAsset? Wings => wings.Clump;
+    public ReadOnlySpan<AnimationAsset> BodyAnimations => body.Animations;
+    public ReadOnlySpan<AnimationAsset> WingsAnimations => wings.Animations;
+
+    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid _, Info info, CancellationToken ct)
     {
-        var resourcePool = diContainer.GetTag<IResourcePool>();
+        var resourcePool = registry.DIContainer.GetTag<IResourcePool>();
+
         using var stream = resourcePool.FindAndOpen(info.FullPath) ??
             throw new System.IO.FileNotFoundException($"Could not find actor: {info.Name}");
-        description = ActorExDescription.ReadNew(stream);
-        (Body, bodyAnimations) = LoadSecondaryPart(description.body);
+        var description = ActorExDescription.ReadNew(stream);
+        var body = LoadSecondaryPart(registry, description.body);
+        var wings = new Part(default, []); 
         if (description.HasWings)
-            (Wings, wingsAnimations) = LoadSecondaryPart(description.wings);
+            wings = LoadSecondaryPart(registry, description.wings);
 
-        var secondaryHandles = new AssetHandle[(description.HasWings ? 2 : 1) + bodyAnimations.Length + wingsAnimations.Length];
+        var secondaryHandles = new Task[(description.HasWings ? 2 : 1) + body.AnimHandles.Length + wings.AnimHandles.Length];
         var outI = 0;
-        AddSecondaryHandles(secondaryHandles, ref outI, Body, bodyAnimations);
-        if (description.HasWings)
-            AddSecondaryHandles(secondaryHandles, ref outI, Wings, wingsAnimations);
-        return ValueTask.FromResult<IEnumerable<AssetHandle>>(secondaryHandles);
+        AddSecondaryHandles(secondaryHandles, ref outI, body, ct);
+        if (wings.ClumpHandle != default)
+            AddSecondaryHandles(secondaryHandles, ref outI, wings, ct);
+        await Task.WhenAll(secondaryHandles).WaitAsync(ct);
+
+        return new AssetLoadResult<Info>(new ActorAsset(registry, info)
+        {
+            body = new(body), // reinstantiate to fetch the asset references from the handles
+            wings = new(wings),
+            Description = description
+        });
     }
 
-    private (AssetHandle<ClumpAsset>, AssetHandle<AnimationAsset>[]) LoadSecondaryPart(ActorPartDescription part)
+    private static Part LoadSecondaryPart(IAssetRegistry registry, ActorPartDescription part)
     {
-        var clump = Registry.Load(ClumpAsset.Info.Actor(part.model), SecondaryPriority).As<ClumpAsset>();
+        var clump = registry.LoadActorClump(part.model, AssetPriority.High);
         var animations = new AssetHandle<AnimationAsset>[part.animations.Length];
         for (int i = 0; i < animations.Length; i++)
-            animations[i] = Registry.Load(new AnimationAsset.Info(part.animations[i].filename), SecondaryPriority).As<AnimationAsset>();
-        return (clump, animations);
+            animations[i] = registry.LoadAnimation(part.animations[i].filename, AssetPriority.High);
+        return new(clump, animations);
     }
 
-    private static void AddSecondaryHandles(AssetHandle[] handles, ref int outI, AssetHandle clump, AssetHandle<AnimationAsset>[] animations)
+    private static void AddSecondaryHandles(Task[] handles, ref int outI, in Part part, CancellationToken ct)
     {
-        handles[outI++] = clump;
-        for (int i = 0; i < animations.Length; i++)
-            handles[outI++] = animations[i];
+        handles[outI++] = part.ClumpHandle.GetAsync(ct).AsTask();
+        foreach (var animHandle in part.AnimHandles)
+            handles[outI++] = animHandle.GetAsync(ct).AsTask();
     }
 
-    protected override void Unload()
+    public void Dispose()
     {
-        description = null;
-        bodyAnimations = [];
-        wingsAnimations = [];
+        body.Dispose();
+        wings.Dispose();
+        body = wings = default;
     }
 
-    protected override string ToStringInner() => $"Actor {info.Name}";
+    public override string ToString() => $"Actor {info.Name}";
+}
+
+static partial class AssetExtensions
+{
+    public static AssetHandle<ActorAsset> LoadActor(this IAssetRegistry registry, string name, AssetPriority priority) =>
+        registry.Load<ActorAsset.Info, ActorAsset>(new(name), priority);
 }

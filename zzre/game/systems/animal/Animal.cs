@@ -71,7 +71,7 @@ public class Animal : BaseDisposable, ISystem<float>
                 ecsWorld.Publish(new messages.LoadActor(
                     AsEntity: entity,
                     ActorName: actorFile,
-                    AssetLoadPriority.Synchronous));
+                    AssetPriority.Synchronous));
                 var body = entity.Get<components.ActorParts>().Body;
                 body.Get<Location>().Parent = location;
                 body.Get<Skeleton>().JumpToAnimation(

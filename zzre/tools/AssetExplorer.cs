@@ -4,14 +4,14 @@ using ImGuiNET;
 using zzre.imgui;
 
 using static ImGuiNET.ImGui;
-using static zzre.IAssetRegistryDebug;
+using static zzre.IAssetRegistry;
 
 namespace zzre.tools;
 
 internal sealed class AssetRegistryList
 {
-    private readonly List<(string, IAssetRegistryDebug)> registries = [];
-    public IReadOnlyList<(string Name, IAssetRegistryDebug Registry)> Registries
+    private readonly List<(string, IAssetRegistry)> registries = [];
+    public IReadOnlyList<(string Name, IAssetRegistry Registry)> Registries
     {
         get
         {
@@ -19,7 +19,7 @@ internal sealed class AssetRegistryList
             return registries;
         }
     }
-    public void Register(string name, IAssetRegistryDebug registry) => registries.Add((name, registry));
+    public void Register(string name, IAssetRegistry registry) => registries.Add((name, registry));
 
     internal AssetExplorer? OpenExplorer { get; set; }
 }
@@ -67,7 +67,8 @@ internal sealed class AssetExplorer
         BeginTabBar("Registries", ImGuiTabBarFlags.None);
         foreach (var (name, registry) in registries)
         {
-            if (BeginTabItem($"{name} ({registry.LocalStats.Total})###{name}"))
+            var localTotal = registry.Stats.Total - (registry.ParentRegistry?.Stats.Total ?? 0);
+            if (BeginTabItem($"{name} ({localTotal})###{name}"))
             {
                 HandleContentFor(registry);
                 EndTabItem();
@@ -86,7 +87,7 @@ internal sealed class AssetExplorer
         Priority
     }
 
-    private void HandleContentFor(IAssetRegistryDebug registry)
+    private void HandleContentFor(IAssetRegistry registry)
     {
         registry.CopyDebugInfo(assets);
         if (!BeginTable("Assets", 6,
@@ -122,7 +123,7 @@ internal sealed class AssetExplorer
             if (TableSetColumnIndex(i++))
                 if (Selectable(asset.Name, selectedRow == asset.ID, ImGuiSelectableFlags.SpanAllColumns))
                     selectedRow = asset.ID;
-            if (TableSetColumnIndex(i++)) ImGuiEx.Text(asset.State);
+            if (TableSetColumnIndex(i++)) Text(asset.IsLoaded ? "Loaded" : "Not loaded");
             if (TableSetColumnIndex(i++)) Text(asset.RefCount.ToString());
             if (TableSetColumnIndex(i++)) ImGuiEx.Text(asset.Priority);
             if (selectedRow == asset.ID && focusSelectedRow)
@@ -154,7 +155,7 @@ internal sealed class AssetExplorer
                     Column.Type => stringComparer.Compare(a.Type.Name, b.Type.Name),
                     Column.Name => stringComparer.Compare(a.Name, b.Name),
                     Column.RefCount => b.RefCount - a.RefCount,
-                    Column.State => (int)b.State - (int)a.State,
+                    Column.State => (b.IsLoaded ? 1 : 0) - (a.IsLoaded ? 1 : 0),
                     Column.Priority => (int)b.Priority - (int)a.Priority,
                     _ => 0
                 };

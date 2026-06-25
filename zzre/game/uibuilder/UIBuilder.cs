@@ -25,7 +25,7 @@ public class UIBuilder : BaseDisposable
         mappedDb = diContainer.GetTag<MappedDB>();
         assetRegistry = diContainer.GetTag<IAssetRegistry>();
 
-        preloadAssetHandle = assetRegistry.Load(new UIPreloadAsset.Info(), AssetLoadPriority.High).As<UIPreloadAsset>();
+        preloadAssetHandle = assetRegistry.Load<UIPreloadAsset.Info, UIPreloadAsset>(new(), AssetPriority.High);
     }
 
     protected override void DisposeManaged()

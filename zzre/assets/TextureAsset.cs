@@ -1,53 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Silk.NET.SDL;
 using Veldrid;
 using zzio;
 using zzio.vfs;
+using zzio.rwbs;
 using zzre.rendering;
 using Texture = Veldrid.Texture;
 using PixelFormat = Veldrid.PixelFormat;
 
 namespace zzre;
 
-public sealed class TextureAsset : Asset
-{    public readonly record struct Info(FilePath FullPath)
+public sealed class TextureAsset(IAssetRegistry registry, TextureAsset.Info info) : IAsset<TextureAsset.Info>
+{
+    public readonly record struct Info(FilePath FullPath)
     {
         public Info(string fullPath) : this(new FilePath(fullPath)) { }
     }
 
-    public static void Register() =>
-        AssetInfoRegistry<Info>.Register<TextureAsset>(AssetLocality.Global);
+    private readonly Info info = info;
 
-    private readonly FilePath path;
-    private Texture? texture;
+    public IAssetRegistry Registry { get; } = registry;
+    public Texture Texture { get; private set; } = null!;
 
-    public Texture Texture => texture ??
-        throw new InvalidOperationException("Asset was not yet loaded");
-
-    public TextureAsset(IAssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
+    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid _, Info info, CancellationToken ct)
     {
-        path = info.FullPath;
-    }
-
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
-    {
-        var resourcePool = diContainer.GetTag<IResourcePool>();
-        using var textureStream = resourcePool.FindAndOpen(path) ??
-            throw new FileNotFoundException($"Could not open texture {path}");
-        texture = (path.Extension ?? "").ToLowerInvariant() switch
+        var resourcePool = registry.DIContainer.GetTag<IResourcePool>();
+        using var textureStream = resourcePool.FindAndOpen(info.FullPath) ??
+            throw new FileNotFoundException($"Could not open texture {info.FullPath}");
+        var texture = (info.FullPath.Extension ?? "").ToLowerInvariant() switch
         {
-            "dds" => LoadFromDDS(textureStream),
-            "bmp" => LoadFromBMP(textureStream),
-            _ => throw new NotSupportedException($"Unsupported texture extension: {path.Extension}")
+            "dds" => LoadFromDDS(registry.DIContainer, textureStream),
+            "bmp" => LoadFromBMP(registry.DIContainer, textureStream),
+            _ => throw new NotSupportedException($"Unsupported texture extension: {info.FullPath.Extension}")
         };
-        texture.Name = path.Parts[^1];
-        return NoSecondaryAssets;
+        texture.Name = info.FullPath.Parts[^1];
+        return Task.FromResult(new AssetLoadResult<Info>(
+            new TextureAsset(registry, info) { Texture = texture }
+        ));
     }
 
-    private unsafe Texture LoadFromBMP(Stream textureStream)
+    private static unsafe Texture LoadFromBMP(ITagContainer diContainer, Stream textureStream)
     {
         var sdl = diContainer.GetTag<Sdl>();
         var graphicsDevice = diContainer.GetTag<GraphicsDevice>();
@@ -74,7 +70,7 @@ public sealed class TextureAsset : Asset
         return image.ToTexture(graphicsDevice, "UNSET NAME");
     }
 
-    private unsafe Texture LoadFromDDS(Stream stream)
+    private static unsafe Texture LoadFromDDS(ITagContainer diContainer, Stream stream)
     {
         using var image = Pfim.Dds.Create(stream, new Pfim.PfimConfig());
 
@@ -124,27 +120,25 @@ public sealed class TextureAsset : Asset
         _ => null
     };
 
-    protected override void Unload()
+    public void Dispose()
     {
-        texture?.Dispose();
-        texture = null;
+        Texture?.Dispose();
+        Texture = null!;
     }
 
-    protected override string ToStringInner() => path.Parts.Count > 1
-        ? $"Texture {path.Parts[^1]} ({path.Parts[^2]})"
-        : $"Texture {path.ToPOSIXString()}";
+    public override string ToString() => info.FullPath.Parts.Count > 1
+        ? $"Texture {info.FullPath.Parts[^1]} ({info.FullPath.Parts[^2]})"
+        : $"Texture {info.FullPath.ToPOSIXString()}";
 }
 
-public static unsafe partial class AssetExtensions
+static partial class AssetExtensions
 {
     private static readonly IReadOnlyList<string> TextureExtensions = [".dds", ".bmp"];
 
     public static AssetHandle<TextureAsset>? TryLoadTexture(this IAssetRegistry registry,
         IReadOnlyList<FilePath> texturePaths,
         string textureName,
-        AssetLoadPriority priority,
-        ITexturedMaterial? material = null,
-        StandardTextureKind? placeholder = null)
+        AssetPriority priority)
     {
         var resourcePool = registry.DIContainer.GetTag<IResourcePool>();
         foreach (var texturePath in texturePaths)
@@ -153,33 +147,42 @@ public static unsafe partial class AssetExtensions
             {
                 var path = texturePath.Combine(textureName + extension);
                 if (resourcePool.FindFile(path) is not null)
-                    return registry.LoadTexture(path, priority, material);
+                    return registry.LoadTexture(path, priority);
             }
         }
-        if (material != null && placeholder != null)
-            material.Texture.Texture = registry.DIContainer.GetTag<StandardTextures>().ByKind(placeholder.Value);
         return null;
     }
 
     public static AssetHandle<TextureAsset> LoadTexture(this IAssetRegistry registry,
         IReadOnlyList<FilePath> texturePaths,
         string textureName,
-        AssetLoadPriority priority,
-        ITexturedMaterial? material = null) =>
-        registry.TryLoadTexture(texturePaths, textureName, priority, material) ??
+        AssetPriority priority) =>
+        registry.TryLoadTexture(texturePaths, textureName, priority) ??
         throw new FileNotFoundException($"Could not find any texture \"{textureName}\"");
 
     public static AssetHandle<TextureAsset> LoadTexture(this IAssetRegistry registry,
         FilePath fullPath,
-        AssetLoadPriority priority,
-        ITexturedMaterial? material = null) => material is null
-        ? registry.Load(new TextureAsset.Info(fullPath), priority).As<TextureAsset>()
-        : registry.Load(new TextureAsset.Info(fullPath), priority, &ApplyTextureToMaterial, material).As<TextureAsset>();
+        AssetPriority priority) =>
+        registry.Load<TextureAsset.Info, TextureAsset>(new(fullPath), priority);
 
-    private static void ApplyTextureToMaterial(AssetHandle handle, ref readonly ITexturedMaterial material)
+    public static AssetHandle<TextureAsset>? TryLoadTextureForMaterial(this IAssetRegistry registry,
+        IReadOnlyList<FilePath> texturePaths,
+        RWTexture rwTexture,
+        ITexturedMaterial material,
+        StandardTextureKind? placeholder = null)
     {
-        var texture = handle.Get<TextureAsset>().Texture;
-        if (!material.WasDisposed)
-            material.Texture.Texture = texture;
+        var rwTextureName = (RWString?)rwTexture.FindChildById(SectionId.String, true);
+        if (rwTextureName is not null)
+        {
+            var handle = registry.TryLoadTexture(texturePaths, rwTextureName.value, AssetPriority.Synchronous);
+            if (handle.HasValue)
+            {
+                material.Texture.Texture = handle.Value.Get().Texture;
+                return handle;
+            }
+        }
+        if (placeholder is not null && registry.DIContainer.TryGetTag<StandardTextures>(out var stdTextures))
+            material.Texture.Texture = stdTextures.ByKind(placeholder.Value);
+        return null;
     }
 }

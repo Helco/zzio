@@ -107,6 +107,60 @@ public class ModelMaterial : MlangMaterial, IStandardTransformMaterial, ITexture
         DepthWrite = true;
         DepthTest = true;
     }
+
+    public void Apply(in Variant variant, in ModelFactors? factors, ITagContainer diContainer)
+    {
+        if (!diContainer.TryGetTag(out UniformBuffer<FogParams> fogParams))
+            fogParams = null!;
+        Apply(variant, factors, fogParams);
+    }
+
+    public void Apply(in Variant variant, in ModelFactors? factors = null, UniformBuffer<FogParams>? fogParams = null)
+    {
+        IsInstanced = variant.IsInstanced;
+        IsSkinned = variant.IsSkinned;
+        Blend = variant.BlendMode;
+        DepthWrite = variant.DepthWrite;
+        DepthTest = variant.DepthTest;
+        HasEnvMap = variant.HasEnvMap;
+        HasTexShift = variant.HasTexShift;
+
+        if (factors.HasValue)
+            Factors.Ref = factors.Value;
+            
+        if (variant.HasFog && fogParams is not null)
+        {
+            HasFog = true;
+            FogParams.Buffer = fogParams.Buffer;
+        }
+    }
+
+    public readonly record struct Variant(
+        BlendMode BlendMode = BlendMode.Opaque,
+        bool DepthWrite = true,
+        bool DepthTest = true,
+        bool HasEnvMap = false,
+        bool HasTexShift = true,
+        bool HasFog = true,
+        bool IsInstanced = true,
+        bool IsSkinned = false)
+    {
+        public Variant(zzio.effect.EffectPartRenderMode renderMode, bool depthTest)
+            : this(BlendFromRenderMode(renderMode), DepthWrite: false, depthTest, HasTexShift: false) { }
+
+        private static BlendMode BlendFromRenderMode(zzio.effect.EffectPartRenderMode renderMode) => renderMode switch
+        {
+            zzio.effect.EffectPartRenderMode.Additive => BlendMode.Additive,
+            zzio.effect.EffectPartRenderMode.AdditiveAlpha => BlendMode.AdditiveAlpha,
+            zzio.effect.EffectPartRenderMode.NormalBlend => BlendMode.Alpha,
+            _ => throw new NotSupportedException($"Unsupported effect part render mode: {renderMode}")
+        };
+
+        public override string ToString() =>
+            $"{BlendMode} {Flag(!DepthWrite, "NoZWrite")} {Flag(!DepthTest, "NoZTest")} {Flag(HasEnvMap, "EnvMap")} {Flag(HasTexShift, "TexShift")} {Flag(!HasFog, "NoFog")}";
+
+        private static string Flag(bool enable, string value) => enable ? value : "";
+    }
 }
 
 public sealed class ModelInstanceBuffer : DynamicMesh

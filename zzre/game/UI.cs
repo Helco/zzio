@@ -9,7 +9,7 @@ public class UI : BaseDisposable, ITagContainer
 {
     private readonly ITagContainer tagContainer;
     private readonly IZanzarahContainer zzContainer;
-    private readonly AssetLocalRegistry assetRegistry;
+    private readonly AssetRegistryDelayed assetRegistry;
     private readonly Remotery profiler;
     private readonly GameTime time;
     private readonly systems.RecordingSequentialSystem<float> updateSystems;
@@ -29,6 +29,7 @@ public class UI : BaseDisposable, ITagContainer
         zzContainer.OnResize += HandleResize;
         profiler = GetTag<Remotery>();
         time = GetTag<GameTime>();
+        var globalRegistry = GetTag<IAssetRegistry>();
 
         var resourceFactory = GetTag<ResourceFactory>();
         graphicsDevice = GetTag<GraphicsDevice>();
@@ -39,14 +40,14 @@ public class UI : BaseDisposable, ITagContainer
         HandleResize();
 
         AddTag(this);
-        AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("UI", tagContainer));
+        AddTag<IAssetRegistry>(assetRegistry = new(new AssetRegistry(tagContainer, globalRegistry, "UI")));
         AddTag(World = new DefaultEcs.World());
         AddTag(Builder = new UIBuilder(this));
 
         if (TryGetTag(out tools.AssetRegistryList assetRegistryList))
             assetRegistryList.Register("UI", assetRegistry);
-        AssetRegistry.SubscribeAt(World);
-        assetRegistry.DelayDisposals = true;
+        assetRegistry.SubscribeAt(World);
+        //assetRegistry.DelayDisposals = true;
         // we still use DelayDisposal in UI to prevent mostly sound samples to be freed
 
         CursorEntity = World.CreateEntity();
@@ -92,7 +93,7 @@ public class UI : BaseDisposable, ITagContainer
 
     protected override void DisposeManaged()
     {
-        assetRegistry.DelayDisposals = false;
+        //assetRegistry.DelayDisposals = false;
         tagContainer.RemoveTag<IAssetRegistry>(dispose: false);
         updateSystems.Dispose();
         renderSystems.Dispose();
@@ -108,21 +109,20 @@ public class UI : BaseDisposable, ITagContainer
     public void Update()
     {
         using var _ = profiler.SampleCPU("UI.Update");
-        assetRegistry.ApplyAssets();
+        assetRegistry.Update();
         updateSystems.Update(time.Delta);
     }
 
     public void Render(CommandList cl)
     {
         using var _ = profiler.SampleCPU("UI.Render");
-        assetRegistry.ApplyAssets();
+        assetRegistry.Update();
         renderSystems.Update(cl);
     }
 
     public void DisposeUnusedAssets()
     {
-        assetRegistry.DelayDisposals = false;
-        assetRegistry.DelayDisposals = true;
+        assetRegistry.DisposeDelayedAssets();
     }
 
     private void HandleResize()

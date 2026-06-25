@@ -36,12 +36,14 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         whiteTexture.Name = "White";
         graphicsDevice.UpdateTexture(whiteTexture, new byte[] { 255, 255, 255, 255 }, 0, 0, 0, 1, 1, 1, 0, 0);
 
-        modelFactors = new(graphicsDevice.ResourceFactory);
-        modelFactors.Ref = ModelFactors.Default with
+        modelFactors = new(graphicsDevice.ResourceFactory)
         {
-            vertexColorFactor = 0f,
-            tintFactor = 1f,
-            ambient = Vector4.One
+            Ref = ModelFactors.Default with
+            {
+                vertexColorFactor = 0f,
+                tintFactor = 1f,
+                ambient = Vector4.One
+            }
         };
     }
 
@@ -119,6 +121,11 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
     {
         var clumpMeshComponents = World.GetComponents<ClumpMesh>();
         var materialComponents = World.GetComponents<ModelMaterial[]>();
+        if (entitiesToDraw.Any())
+        {
+            var firstMaterial = materialComponents[entitiesToDraw[0]][0];
+            (firstMaterial as IMaterial).ApplyPipeline(cl);
+        }
         foreach (var entity in entitiesToDraw)
             DrawEntity(cl, entity, clumpMeshComponents[entity], materialComponents[entity]);
 
@@ -130,64 +137,59 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         modelFactors.Ref.ambient = msg.Scene.misc.ambientLight.ToNumerics();
     }
 
-    private unsafe void HandleLoadActor(in messages.LoadActor msg)
+    private void HandleLoadActor(in messages.LoadActor msg)
     {
-        var handle = assetRegistry.Load(
-            new ActorAsset.Info(msg.ActorName),
-            msg.Priority,
-            &ApplyActorToEntity,
-            (this, msg.AsEntity));
-        msg.AsEntity.Set(handle);
-    }
+        var entity = msg.AsEntity;
+        var actorHandle = assetRegistry.LoadActor(msg.ActorName, msg.Priority);
+        assetRegistry.Apply(actorHandle, ApplyActorToEntity);
+        entity.Set(actorHandle.As());
 
-    private static void ApplyActorToEntity(AssetHandle handle,
-        ref readonly (ActorRenderer thiz, DefaultEcs.Entity entity) context)
-    {
-        var (thiz, entity) = context;
-        if (!entity.IsAlive)
-            return;
-        var asset = handle.Get<ActorAsset>();
-        entity.Set(asset.Description);
-        var body = thiz.CreateActorPart(entity, asset.Body, asset.BodyAnimations, asset.Description.body);
-        var wings = asset.Description.HasWings
-            ? thiz.CreateActorPart(entity, asset.Wings, asset.WingsAnimations, asset.Description.wings)
-            : null as DefaultEcs.Entity?;
-        entity.Set(new components.ActorParts(body, wings));
-
-        // attach to the "grandparent" as only animals are controlled directly by the entity
-        // (not meant as an insult by the way)
-        body.Get<Location>().Parent = entity.Get<Location>().Parent;
-        var bodySkeleton = body.Get<Skeleton>();
-        bodySkeleton.Location.Parent = body.Get<Location>();
-
-        if (wings is not null)
+        void ApplyActorToEntity(AssetHandle<ActorAsset> actorHandle)
         {
-            var wingsParentBone = bodySkeleton.Bones[asset.Description.attachWingsToBone];
-            wings.Value.Get<Location>().Parent = wingsParentBone;
+            if (!entity.IsAlive)
+                return;
+            var asset = actorHandle.Get();
+            entity.Set(asset);
+            entity.Set(asset.Description);
+
+            var body = CreateActorPart(entity, asset.Body, asset.BodyAnimations, asset.Description.body);
+            var wings = asset.Wings is null ? null as DefaultEcs.Entity?
+                : CreateActorPart(entity, asset.Wings, asset.WingsAnimations, asset.Description.wings);
+            entity.Set(new components.ActorParts(body, wings));
+
+            // attach to the "grandparent" as only animals are controlled directly by the entity
+            // (not meant as an insult by the way)
+            body.Get<Location>().Parent = entity.Get<Location>().Parent;
+            var bodySkeleton = body.Get<Skeleton>();
+            bodySkeleton.Location.Parent = body.Get<Location>();
+
+            if (wings is not null)
+            {
+                var wingsParentBone = bodySkeleton.Bones[asset.Description.attachWingsToBone];
+                wings.Value.Get<Location>().Parent = wingsParentBone;
+            }
         }
     }
 
     private DefaultEcs.Entity CreateActorPart(
         DefaultEcs.Entity parent,
-        AssetHandle<ClumpAsset> clumpHandle,
-        IReadOnlyList<AssetHandle<AnimationAsset>> animations,
+        ClumpAsset clumpAsset,
+        ReadOnlySpan<AnimationAsset> animations,
         ActorPartDescription partDescr)
     {
-        var clumpAsset = clumpHandle.Get();
         var part = parent.World.CreateEntity();
         part.Set<components.SyncedLocation>();
         part.Set<components.Visibility>();
         part.Set<components.ActorPart>();
         part.Set<components.AnimationPool>();
         part.Set(new components.Parent(parent));
-        part.Set(clumpHandle);
         part.Set(clumpAsset.Mesh);
         if (clumpAsset.Mesh.Skin is not null) // unfortunately there are some unskinned actor parts
             part.Set(new Skeleton(clumpAsset.Mesh.Skin, clumpAsset.Name));
 
         ref var animationPool = ref part.Get<components.AnimationPool>();
-        for (int i = 0; i < animations.Count; i++)
-            animationPool.Add(partDescr.animations[i].type, animations[i].Get().Animation);
+        for (int i = 0; i < animations.Length; i++)
+            animationPool.Add(partDescr.animations[i].type, animations[i].Animation);
 
         LoadActorPartMaterials(part, clumpAsset.Mesh);
 
@@ -202,12 +204,12 @@ public partial class ActorRenderer : AEntitySetSystem<CommandList>
         {
             entity.TryGet(out Skeleton skeleton);
             var materialHandle = assetRegistry.LoadActorMaterial(mesh.Materials[i], isSkinned: skeleton is not null);
-            handles[i] = materialHandle;
             var material = materials[i] = materialHandle.Get().Material;
             material.World.BufferRange = entity.Get<components.SyncedLocation>().BufferRange;
             material.Factors.Buffer = modelFactors.Buffer;
             if (skeleton is not null)
                 material.Pose.Skeleton = skeleton;
+            handles[i] = materialHandle.As();
         }
         entity.Set(materials);
         entity.Set(handles);

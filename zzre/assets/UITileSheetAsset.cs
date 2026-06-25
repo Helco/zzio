@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Veldrid;
 using zzre.game;
@@ -9,7 +9,7 @@ using PixelFormat = Veldrid.PixelFormat;
 
 namespace zzre;
 
-public sealed class UITileSheetAsset : UIBitmapAsset
+public sealed class UITileSheetAsset(IAssetRegistry registry) : IAsset<UITileSheetAsset.Info>
 {
     private static readonly SamplerDescription SamplerDescription = new(
         SamplerAddressMode.Clamp, // the standard linear sampler uses Wrap
@@ -19,30 +19,37 @@ public sealed class UITileSheetAsset : UIBitmapAsset
         comparisonKind: null,
         0, 0, 0, 0, SamplerBorderColor.TransparentBlack);
 
-    public new readonly record struct Info(string Name, bool IsFont);
+    public readonly record struct Info(
+        string Name,
+        float? LineHeight = null, // set any of these to make this asset a font
+        float? LineOffset = null,
+        float? CharSpacing = null);
 
-    public new static void Register() =>
-        AssetInfoRegistry<Info>.Register<UITileSheetAsset>(AssetLocality.Context);
+    static AssetLocality IAsset.Locality => AssetLocality.Local;
 
-    private readonly Info info;
-    private TileSheet? tileSheet;
+    private AssetHandle<SamplerAsset> samplerHandle;
 
-    public TileSheet TileSheet => tileSheet ??
-        throw new InvalidOperationException("Asset was not yet loaded");
+    public IAssetRegistry Registry => registry;
+    public UIMaterial Material { get; private set; } = null!;
+    public TileSheet TileSheet { get; private set; } = null!;
 
-    public UITileSheetAsset(IAssetRegistry registry, Guid assetId, Info info) : base(registry, assetId, new(info.Name),
-        $"UITileSheet {info.Name}" + (info.IsFont ? " (font)" : ""))
+    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid _, Info info, CancellationToken ct)
     {
-        this.info = info;
-    }
+        var samplerHandle = registry.LoadSampler(SamplerDescription, AssetPriority.High);
+        var isFont = (info.LineHeight ?? info.LineOffset ?? info.CharSpacing) is not null;
+        var debugName = $"UITileSheet {info.Name}" + (isFont ? " (font)" : "");
+        var diContainer = registry.DIContainer;
+        using var bitmap = UIBitmapAsset.LoadMaskedBitmap(diContainer, info.Name);
 
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
-    {
-        using var bitmap = LoadMaskedBitmap(info.Name);
-        tileSheet = new TileSheet(info.Name, bitmap, info.IsFont);
+        var tileSheet = new TileSheet(info.Name, bitmap, isFont);
+        if (info.LineHeight is float lineHeight)
+            tileSheet.LineHeight = lineHeight;
+        if (info.LineOffset is float lineOffset)
+            tileSheet.LineOffset = lineOffset;
+        if (info.CharSpacing is float charSpacing)
+            tileSheet.CharSpacing = charSpacing;
 
         var graphicsDevice = diContainer.GetTag<GraphicsDevice>();
-        var samplerHandle = Registry.LoadSampler(SamplerDescription);
         var texture = graphicsDevice.ResourceFactory.CreateTexture(
             new TextureDescription(
                 (uint)bitmap.Width,
@@ -53,63 +60,49 @@ public sealed class UITileSheetAsset : UIBitmapAsset
                 PixelFormat.R8_G8_B8_A8_UNorm,
                 TextureUsage.Sampled,
                 TextureType.Texture2D));
-        texture.Name = DebugName;
-        graphicsDevice.UpdateTexture(texture, bitmap.Data[(bitmap.Width * 4)..],
-            0, 0, 0, width: texture.Width, height: texture.Height, depth: 1, mipLevel: 0, arrayLayer: 0);
+        texture.Name = debugName;
+        graphicsDevice.UpdateTexture(texture,
+            bitmap.Data[(bitmap.Width * 4)..],
+            0, 0, 0,
+            width: texture.Width, height: texture.Height, depth: 1,
+            mipLevel: 0, arrayLayer: 0);
 
-        material = new UIMaterial(diContainer)
+        var material = new UIMaterial(diContainer)
         {
-            DebugName = DebugName,
-            IsFont = info.IsFont
+            DebugName = debugName,
+            IsFont = isFont
         };
         material.MainTexture.Texture = texture;
-        material.MainSampler.Sampler = samplerHandle.Get().Sampler;
+        material.MainSampler.Sampler = (await samplerHandle.GetAsync(ct)).Sampler;
         material.ScreenSize.Buffer = diContainer.GetTag<UI>().ProjectionBuffer;
-        return ValueTask.FromResult<IEnumerable<AssetHandle>>([ samplerHandle ]);
+        return new(new UITileSheetAsset(registry)
+        {
+            samplerHandle = samplerHandle,
+            Material = material,
+            TileSheet = tileSheet
+        });
     }
 
-    protected override void Unload()
+    public void Dispose()
     {
-        base.Unload();
-        tileSheet = null;
+        // UIBitmap (and UITileSheet) contain their textures without secondary assets
+        // that is because sharing textures across UI materials does not exist
+        Material?.MainTexture.Texture?.Dispose();
+        Material?.MaskTexture.Texture?.Dispose();
+        Material?.Dispose();
+        Material = null!;
+        samplerHandle.Dispose();
+        TileSheet = null!;
     }
+
+    public override string ToString() => Material.DebugName;
 }
 
-partial class AssetExtensions
+static partial class AssetExtensions
 {
-    public static unsafe AssetHandle<UITileSheetAsset> LoadUITileSheet(this IAssetRegistry registry,
-        DefaultEcs.Entity entity,
-        in UITileSheetAsset.Info info,
-        AssetLoadPriority priority = AssetLoadPriority.Synchronous)
-    {
-        var handle = registry.Load(info, priority, &ApplyUITileSheetToEntity, entity);
-        entity.Set(handle);
-        return handle.As<UITileSheetAsset>();
-    }
-
-    private static void ApplyUITileSheetToEntity(AssetHandle handle, ref readonly DefaultEcs.Entity entity)
-    {
-        if (entity.IsAlive)
-        {
-            var asset = handle.Get<UITileSheetAsset>();
-            entity.Set(asset.Material);
-            entity.Set(asset.TileSheet);
-        }
-    }
-
     public static AssetHandle<UITileSheetAsset> LoadUITileSheet(this IAssetRegistry registry,
-        in DefaultEcs.Command.EntityRecord entity,
-        in UITileSheetAsset.Info info)
-    {
-        // as the EntityRecord will be invalidated,
-        // loading tilesheets into a record can only be done synchronously
-        var handle = registry.Load(info, AssetLoadPriority.Synchronous);
-        entity.Set(handle);
-
-        var asset = handle.Get<UITileSheetAsset>();
-        entity.Set(asset.Material);
-        entity.Set(asset.TileSheet);
-        return handle.As<UITileSheetAsset>();
-    }
+        in UITileSheetAsset.Info info,
+        AssetPriority priority = AssetPriority.Synchronous) =>
+        registry.Load<UITileSheetAsset.Info, UITileSheetAsset>(info, priority);
 }
 

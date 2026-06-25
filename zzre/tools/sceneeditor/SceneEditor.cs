@@ -20,7 +20,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
     private readonly LocationBuffer locationBuffer;
     private readonly DebugLineRenderer gridRenderer;
     private readonly Camera camera;
-    private readonly AssetLocalRegistry assetRegistry;
+    private readonly IAssetRegistry assetRegistry;
     private readonly DefaultEcs.World ecsWorld;
 
     private event Action OnLoadScene = () => { };
@@ -67,16 +67,16 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         fbArea.OnRender += locationBuffer.Update;
         fbArea.OnRender += gridRenderer.Render;
 
+        var globalAssetRegistry = diContainer.GetTag<IAssetRegistry>();
         localDiContainer = diContainer
            .FallbackTo(Window)
            .ExtendedWith(this, Window, gridRenderer, locationBuffer);
         AddDisposable(localDiContainer);
         localDiContainer
-            .AddTag<IAssetRegistry>(assetRegistry = new AssetLocalRegistry("SceneEditor", localDiContainer))
+            .AddTag(assetRegistry = new AssetRegistry(localDiContainer, globalAssetRegistry, "SceneEditor"))
             .AddTag(ecsWorld = new DefaultEcs.World())
             .AddTag(camera);
-        AssetRegistry.SubscribeAt(localDiContainer.GetTag<DefaultEcs.World>());
-        assetRegistry.DelayDisposals = false;
+        game.EntityAssetExtensions.SubscribeAt(assetRegistry, ecsWorld);
         new MiscComponent(localDiContainer);
         new DatasetComponent(localDiContainer);
         new WorldComponent(localDiContainer);
@@ -123,7 +123,7 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
         Window.Title = $"Scene Editor - {resource.Path.ToPOSIXString()}";
         ecsWorld.Publish(new game.messages.SceneLoaded(scene, Savegame: null!));
         OnLoadScene();
-        assetRegistry.ApplyAssets();
+        assetRegistry.Update();
     }
 
     private void HandleResize() => camera.Aspect = fbArea.Ratio;

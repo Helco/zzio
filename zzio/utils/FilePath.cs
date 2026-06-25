@@ -138,9 +138,9 @@ public sealed class FilePath : IEquatable<FilePath>, IEquatable<string>
         var normalized = Normalized;
         if (normalized.Parts.Count == 0)
             return 0;
-        var hash = normalized.Parts[0].GetHashCode();
+        var hash = normalized.Parts[0].GetHashCode(StringComparison.InvariantCultureIgnoreCase);
         for (int i = 1; i < normalized.Parts.Count; i++)
-            hash = HashCode.Combine(hash, normalized.Parts[i]);
+            hash = HashCode.Combine(hash, normalized.Parts[i].GetHashCode(StringComparison.InvariantCultureIgnoreCase));
         return hash;
     }
 

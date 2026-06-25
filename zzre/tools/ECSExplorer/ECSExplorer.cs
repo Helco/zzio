@@ -1,7 +1,9 @@
 ﻿namespace zzre.tools;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using IconFonts;
 using ImGuiNET;
 using zzre.game.components;
 using zzre.imgui;
@@ -78,6 +80,7 @@ internal sealed partial class ECSExplorer
 
         void HandleEntity(DefaultEcs.Entity entity)
         {
+            HandleEntityProtection(entity);
             if (!TreeNodeEx(GetEntityName(entity), ImGuiTreeNodeFlags.Framed | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow))
                 return;
             if (!BeginTable("components", 2, ImGuiTableFlags.BordersOuter | ImGuiTableFlags.RowBg))
@@ -97,6 +100,23 @@ internal sealed partial class ECSExplorer
             }
 
             TreePop();
+        }
+
+        [Conditional("DEBUG")]
+        static void HandleEntityProtection(DefaultEcs.Entity entity)
+        {
+            bool isProtected = entity.Has<DebugProtected>();
+
+            PushID(entity.GetHashCode());
+            if (Button(isProtected ? ForkAwesome.Lock : ForkAwesome.Unlock))
+            {
+                if (isProtected)
+                    entity.Remove<DebugProtected>();
+                else
+                    entity.Set<DebugProtected>();
+            }
+            PopID();
+            SameLine();
         }
     }
 

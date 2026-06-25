@@ -108,7 +108,7 @@ public partial class Label : AEntitySetSystem<float>
         entity.Set<components.ui.SubLabel>();
         entity.Set(tiles.Select(t => t.tile).ToArray());
         entity.Set(new components.Parent(parent));
-        assetRegistry.LoadUITileSheet(entity, new(tiles.Key.Name, tiles.Key.IsFont));
+        assetRegistry.LoadUITileSheetFor(ref entity, new(tiles.Key.Name, CharSpacing: tiles.Key.IsFont ? 0 : null));
     }
 
     private static IReadOnlyList<(TileSheet tileSheet, components.ui.Tile tile)> FormatToTiles(in Rect rect, TileSheet rootTileSheet, string text, float lineHeight)

@@ -1,96 +1,62 @@
-﻿using System;
-using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
 using System.Threading;
+
 namespace zzre;
 
-/// <summary>Controls when an asset is actually loaded</summary>
-public enum AssetLoadPriority
+public enum AssetPriority
 {
-    /// <summary>The asset will be completly loaded before the <c>Load</c> method returns</summary>
     Synchronous,
-    /// <summary>Loading will be started immediately but may finish asynchronously</summary>
     High,
-    /// <summary>Loading will be started at a later point and will always finish asynchronously</summary>
     Low
 }
 
-/// <summary>A <see cref="IAssetRegistry"/> facilitates loading, retrieval and disposal of assets</summary>
-/// <remarks>This interface may point to a local or a global registry</remarks>
 public interface IAssetRegistry : IDisposable
 {
-    public delegate void ApplyWithContextAction<TApplyContext>(AssetHandle handle, in TApplyContext context);
-
-    internal IAssetRegistryInternal InternalRegistry { get; }
-    /// <summary>The <see cref="ITagContainer"/> given to this registry at construction to be used for loading the asset contents</summary>
+    bool WasDisposed { get; }
+    bool IsMainThread { get; }
     ITagContainer DIContainer { get; }
-    /// <summary>Basic statistics of the registry, containing mostly monotonous counters</summary>
-    /// <remarks>This property will include the statistics of parent registries</remarks>
+    IAssetRegistry? ParentRegistry { get; }
+    bool IsLocalRegistry { get; }
+    CancellationToken Cancellation { get; } // is triggered when registry is disposed
     AssetRegistryStats Stats { get; }
-    /// <summary>Basic statistics of the registry, containing mostly monotonous counters</summary>
-    /// <remarks>This property will not include statistics of parent registries</remarks>
-    AssetRegistryStats LocalStats => Stats;
 
-    /// <summary>Registers an asset for loading or returns a handle to a previously-registered asset</summary>
-    /// <remarks>Depending on whether the asset is already loaded the apply action will be called immediately or only stored for later execution</remarks>
-    /// <typeparam name="TInfo">The type that will determine the asset type</typeparam>
-    /// <typeparam name="TApplyContext">The type of the apply context given to the apply action</typeparam>
-    /// <param name="info">The value identifying the specific asset to load</param>
-    /// <param name="priority">The load priority of the asset (ignored if already loaded)</param>
-    /// <param name="applyFnptr">The function pointer to call as apply action</param>
-    /// <param name="applyContext">The apply context given to the apply action</param>
-    /// <returns>An untyped <see cref="AssetHandle"/> to the asset that controlles the lifetime of the asset instance</returns>
-    unsafe AssetHandle Load<TInfo, TApplyContext>(
-        in TInfo info,
-        AssetLoadPriority priority,
-        delegate* managed<AssetHandle, ref readonly TApplyContext, void> applyFnptr,
-        in TApplyContext applyContext)
-        where TInfo : IEquatable<TInfo>;
+    AssetHandle<TAsset> Load<TInfo, TAsset>(in TInfo info, AssetPriority priority)
+        where TInfo : struct, IEquatable<TInfo>
+        where TAsset : class, IAsset<TInfo>;
 
-    /// <summary>Registers an asset for loading or returns a handle to a previously-registered asset</summary>
-    /// <remarks>Depending on whether the asset is already loaded the apply action will be called immediately or only stored for later execution</remarks>
-    /// <typeparam name="TInfo">The type that will determine the asset type</typeparam>
-    /// <param name="info">The value identifying the specific asset to load</param>
-    /// <param name="priority">The load priority of the asset (ignored if already loaded)</param>
-    /// <param name="applyAction">The delegate to call as apply action</param>
-    /// <returns>An untyped <see cref="AssetHandle"/> to the asset that controlles the lifetime of the asset instance</returns>
-    AssetHandle Load<TInfo>(
-        in TInfo info,
-        AssetLoadPriority priority,
-        Action<AssetHandle>? applyAction = null)
-        where TInfo : IEquatable<TInfo>;
+    void Apply<TAsset>(AssetHandle<TAsset> handle, Action<AssetHandle<TAsset>> action)
+        where TAsset : class, IAsset;
 
-    /// <summary>Synchronously applies all outstanding removal or apply action of assets, as well as start loading of low-prioritised assets</summary>
-    /// <remarks>This method is only to be called from the main thread</remarks>
-    void ApplyAssets();
+    bool TryGet<TAsset>(Guid assetId, out AssetHandle<TAsset> handle)
+        where TAsset : class, IAsset;
 
-    /// <summary>Asynchronously wait for one or more assets to finish loading</summary>
-    /// <remarks>Use this method to wait for secondary assets</remarks>
-    /// <param name="assets">Handles to the asset to wait for</param>
-    /// <returns>A task completing when all given assets finish loading</returns>
-    Task WaitAsyncAll(AssetHandle[] assets) => InternalRegistry.WaitAsyncAll(assets);
+    void Update();
+
+    /// <summary>A snapshot of an assets state</summary>
+    /// <param name="ID">The asset ID</param>
+    /// <param name="Type">The type of the asset instance</param>
+    /// <param name="Name">The debugging name of the asset</param>
+    /// <param name="RefCount">The reference count of the asset</param>
+    /// <param name="IsLoaded">The loading state of the asset</param>
+    /// <param name="Priority">The *effective* load priority of the asset</param>
+    public readonly record struct AssetInfo(
+        Guid ID,
+        Type Type,
+        string Name,
+        int RefCount,
+        bool IsLoaded,
+        AssetPriority Priority);
+
+    /// <summary>Creats a snapshot of the state of all, currently registered assets</summary>
+    /// <param name="assetInfos">The asset states will be copied into this list</param>
+    void CopyDebugInfo(List<AssetInfo> assetInfos);
 }
 
 internal interface IAssetRegistryInternal : IAssetRegistry
 {
-    IAssetRegistryInternal IAssetRegistry.InternalRegistry => this;
-
-    bool IsLocalRegistry { get; }
-    CancellationToken Cancellation { get; }
-
-    unsafe void AddApplyAction<TApplyContext>(AssetHandle asset,
-        delegate* managed<AssetHandle, ref readonly TApplyContext, void> applyFnptr,
-        in TApplyContext applyContext);
-
-    void AddApplyAction<TApplyContext>(AssetHandle asset,
-        ApplyWithContextAction<TApplyContext> applyAction,
-        in TApplyContext applyContext);
-
-    void AddApplyAction(AssetHandle asset,
-        Action<AssetHandle> applyAction);
-
-    void DisposeHandle(AssetHandle handle);
-    ValueTask QueueRemoveAsset(IAsset asset);
-    ValueTask QueueApplyAsset(IAsset asset);
-    bool IsLoaded(Guid assetId);
-    TAsset GetLoadedAsset<TAsset>(Guid assetId);
+    void AddRef(Guid assetId);
+    void DelRef(Guid assetId);
+    FFTask<IDisposable> GetAsset(Guid assetId);
+    void CheckType(Guid assetId, Type type);
 }

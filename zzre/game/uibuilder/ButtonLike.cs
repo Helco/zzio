@@ -41,7 +41,7 @@ internal abstract record ButtonLike<T> : Identified<T> where T : ButtonLike<T>
             throw new InvalidOperationException("Button-like UI element has no tile sheet");
         var entity = base.BuildBase();
         var assetRegistry = preload.UI.GetTag<IAssetRegistry>();
-        assetRegistry.LoadUITileSheet(entity, tileSheet.Value);
+        assetRegistry.LoadUITileSheetFor(entity, tileSheet.Value);
         entity.Set(btnAlign);
         entity.Set(buttonTiles.Value);
         return entity;

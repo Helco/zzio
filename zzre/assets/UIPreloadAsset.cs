@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace zzre;
@@ -13,44 +14,46 @@ namespace zzre;
 // form circular dependencies (fnt000 -> fnt001 -> fnt000) 
 // which cannot be loaded by the AssetRegistry.
 
-public sealed class UIPreloadAsset : Asset
+public sealed class UIPreloadAsset(IAssetRegistry registry) : IAsset<UIPreloadAsset.Info>
 {
     public static readonly UITileSheetAsset.Info
-        Btn000 = new("btn000", IsFont: false),
-        Btn001 = new("btn001", IsFont: false),
-        Btn002 = new("btn002", IsFont: false),
-        Sld000 = new("sld000", IsFont: false),
-        Tit000 = new("tit000", IsFont: false),
-        Cur000 = new("cur000", IsFont: false),
-        Dnd000 = new("dnd000", IsFont: false),
-        Wiz000 = new("wiz000", IsFont: false),
-        Itm000 = new("itm000", IsFont: false),
-        Spl000 = new("spl000", IsFont: false),
-        Lne000 = new("lne000", IsFont: false),
-        Fnt000 = new("fnt000", IsFont: true),
-        Fnt001 = new("fnt001", IsFont: true),
-        Fnt002 = new("fnt002", IsFont: true),
-        Fnt003 = new("fnt003", IsFont: true),
-        Fnt004 = new("fnt004", IsFont: true),
-        Fsp000 = new("fsp000", IsFont: true),
-        Inf000 = new("inf000", IsFont: false),
-        Log000 = new("log000", IsFont: false),
-        Cls000 = new("cls000", IsFont: false),
-        Cls001 = new("cls001", IsFont: false),
-        Map000 = new("map000", IsFont: false),
-        Swt000 = new("swt000", IsFont: false);
+        Btn000 = new("btn000"),
+        Btn001 = new("btn001"),
+        Btn002 = new("btn002"),
+        Sld000 = new("sld000"),
+        Tit000 = new("tit000"),
+        Cur000 = new("cur000"),
+        Dnd000 = new("dnd000"),
+        Wiz000 = new("wiz000"),
+        Itm000 = new("itm000"),
+        Spl000 = new("spl000"),
+        Lne000 = new("lne000"),
+        Fnt000 = new("fnt000", LineHeight: 14f, CharSpacing: 1f),
+        Fnt001 = new("fnt001", CharSpacing: 1f),
+        Fnt002 = new("fnt002", LineHeight: 17f, CharSpacing: 1f, LineOffset: 2f),
+        Fnt003 = new("fnt003", LineHeight: 14f, CharSpacing: 1f),
+        Fnt004 = new("fnt004", LineHeight: 14f, CharSpacing: 1f),
+        Fsp000 = new("fsp000", CharSpacing: 0f),
+        Inf000 = new("inf000"),
+        Log000 = new("log000"),
+        Cls000 = new("cls000"),
+        Cls001 = new("cls001"),
+        Map000 = new("map000"),
+        Swt000 = new("swt000");
 
     public readonly record struct Info;
 
-    public static void Register() =>
-        AssetInfoRegistry<Info>.Register<UIPreloadAsset>(AssetLocality.Context);
+    private AssetHandle<UITileSheetAsset>[] handles = [];
 
-    public UIPreloadAsset(IAssetRegistry registry, Guid assetId, Info _) : base(registry, assetId)
-    { }
+    static AssetLocality IAsset.Locality => AssetLocality.Local; // the bitmaps are local
+    public IAssetRegistry Registry { get; } = registry;
 
-    protected override async ValueTask<IEnumerable<AssetHandle>> Load()
+    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid _, Info info, CancellationToken ct)
     {
-        AssetHandle[] allAssets =
+        AssetHandle<UITileSheetAsset> Preload(out AssetHandle<UITileSheetAsset> handle, UITileSheetAsset.Info info) =>
+            handle = registry.LoadUITileSheet(info, AssetPriority.High);
+
+        AssetHandle<UITileSheetAsset>[] allAssets =
         [
             Preload(out var btn000, Btn000),
             Preload(out var btn001, Btn001),
@@ -63,11 +66,11 @@ public sealed class UIPreloadAsset : Asset
             Preload(out var itm000, Itm000),
             Preload(out var spl000, Spl000),
             Preload(out var lne000, Lne000),
-            Preload(out var fnt000, Fnt000, lineHeight: 14f, charSpacing: 1f),
-            Preload(out var fnt001, Fnt001, charSpacing: 1f),
-            Preload(out var fnt002, Fnt002, lineHeight: 17f, charSpacing: 1f, lineOffset: 2f),
-            Preload(out var fnt003, Fnt003, lineHeight: 14f, charSpacing: 1f),
-            Preload(out var fnt004, Fnt004, lineHeight: 14f, charSpacing: 1f),
+            Preload(out var fnt000, Fnt000),
+            Preload(out var fnt001, Fnt001),
+            Preload(out var fnt002, Fnt002),
+            Preload(out var fnt003, Fnt003),
+            Preload(out var fnt004, Fnt004),
             Preload(out var fsp000, Fsp000),
             Preload(out var inf000, Inf000),
             Preload(out var log000, Log000),
@@ -77,9 +80,9 @@ public sealed class UIPreloadAsset : Asset
             Preload(out var swt000, Swt000)
         ];
 
-        await Registry.WaitAsyncAll([fnt000, fnt001, fnt002, fnt003]);
+        await Task.WhenAll(allAssets.Select(h => h.GetAsync(ct).AsTask())).WaitAsync(ct);
 
-        await SetAlternatives(target: fnt000,
+        SetAlternatives(target: fnt000,
             fnt001,
             fnt002,
             fsp000,
@@ -90,12 +93,12 @@ public sealed class UIPreloadAsset : Asset
             cls001,
             fnt004);
 
-        await SetAlternatives(target: fnt001,
+        SetAlternatives(target: fnt001,
             fnt002,
             inf000,
             fnt000);
 
-        await SetAlternatives(target: fnt002,
+        SetAlternatives(target: fnt002,
             fnt001,
             inf000,
             fsp000,
@@ -103,7 +106,7 @@ public sealed class UIPreloadAsset : Asset
             cls000,
             cls001);
 
-        await SetAlternatives(target: fnt003,
+        SetAlternatives(target: fnt003,
             fnt001,
             fnt002,
             fsp000,
@@ -114,41 +117,25 @@ public sealed class UIPreloadAsset : Asset
             cls001,
             fnt004);
 
-        return allAssets;
+        return new(new UIPreloadAsset(registry)
+        {
+            handles = allAssets
+        });
     }
 
-    protected override void Unload()
-    { } // we only have secondary assets
-
-    private unsafe AssetHandle Preload(out AssetHandle<UITileSheetAsset> handle, UITileSheetAsset.Info info,
-        float? lineHeight = null,
-        float? lineOffset = null,
-        float? charSpacing = null)
+    private static void SetAlternatives(AssetHandle<UITileSheetAsset> target, params AssetHandle<UITileSheetAsset>[] alternatives)
     {
-        var applyConfig = (lineHeight ?? lineOffset ?? charSpacing) is not null;
-        return handle = (applyConfig
-            ? Registry.Load(info, AssetLoadPriority.High, &ApplyFontConfig, (lineHeight, lineOffset, charSpacing))
-            : Registry.Load(info, AssetLoadPriority.High))
-            .As<UITileSheetAsset>();
-    }
-
-    private static void ApplyFontConfig(AssetHandle handle, ref readonly (float?, float?, float?) config)
-    {
-        var tileSheet = handle.Get<UITileSheetAsset>().TileSheet;
-        var (lineHeight, lineOffset, charSpacing) = config;
-        if (lineHeight is not null)
-            tileSheet.LineHeight = lineHeight.Value;
-        if (lineOffset is not null)
-            tileSheet.LineOffset = lineOffset.Value;
-        if (charSpacing is not null)
-            tileSheet.CharSpacing = charSpacing.Value;
-    }
-
-    private async Task SetAlternatives(AssetHandle target, params AssetHandle[] alternatives)
-    {
-        await Registry.WaitAsyncAll(alternatives);
-        var targetTileSheet = target.Get<UITileSheetAsset>().TileSheet;
+        var targetTileSheet = target.Asset?.TileSheet
+            ?? throw new InvalidOperationException("Secondary asset was not loaded");
         foreach (var alternative in alternatives)
-            targetTileSheet.Alternatives.Add(alternative.Get<UITileSheetAsset>().TileSheet);
+            targetTileSheet.Alternatives.Add(alternative.Asset?.TileSheet
+                ?? throw new InvalidOperationException("Secondary asset was not loaded"));
+    }
+    
+    public void Dispose()
+    {
+        foreach (var handle in handles)
+            handle.Dispose();
+        handles = [];
     }
 }

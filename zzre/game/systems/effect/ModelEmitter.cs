@@ -44,11 +44,11 @@ public sealed class ModelEmitter : BaseCombinerPart<
             maxParticleCount));
         entity.Set(modelInstanceBuffer.RentVertices(maxParticleCount));
 
-        assetRegistry.LoadModel(entity,
+        using var _ = assetRegistry.LoadModelClumpAndMaterialFor(entity,
             data.texName,
-            AssetLoadPriority.Low,
             new(data.renderMode, playback.DepthTest),
-            StandardTextureKind.Clear);
+            StandardTextureKind.Clear,
+            AssetPriority.Low);
         entity.Set<components.effect.RenderIndices>();
     }
 

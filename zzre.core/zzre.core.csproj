@@ -27,6 +27,7 @@
     <PackageReference Include="Serilog" Version="3.1.1" />
     <PackageReference Include="Silk.NET.SDL" Version="2.20.0" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="System.Threading.Channels" Version="10.0.9" />
     <PackageReference Include="Veldrid" Version="$(VeldridVersion)" />
     <PackageReference Include="ImGui.NET" Version="$(ImguiVersion)" />
     <PackageReference Include="ImGuizmo.NET" Version="$(ImguizmoVersion)" />

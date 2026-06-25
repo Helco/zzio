@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using zzio;
 using zzio.effect;
@@ -7,60 +7,43 @@ using zzio.vfs;
 
 namespace zzre;
 
-public sealed class EffectCombinerAsset : Asset
-{    
+public sealed class EffectCombinerAsset(IAssetRegistry registry, EffectCombinerAsset.Info info, EffectCombiner effect) : IAsset<EffectCombinerAsset.Info>
+{
+    static AssetLocality IAsset.Locality => AssetLocality.Global;
+
     public readonly record struct Info(FilePath FullPath)
     {
         public readonly string Name => FullPath.Parts[^1];
     }
 
-    public static void Register() =>
-        AssetInfoRegistry<Info>.Register<EffectCombinerAsset>(AssetLocality.Global);
+    private readonly Info info = info;
+    public IAssetRegistry Registry { get; } = registry;
+    public EffectCombiner EffectCombiner { get; private set; } = effect;
 
-    private readonly Info info;
-    private EffectCombiner? effectCombiner;
-
-    public EffectCombiner EffectCombiner => effectCombiner ??
-        throw new InvalidOperationException("Asset was not yet loaded");
-
-    public EffectCombinerAsset(IAssetRegistry registry, Guid assetId, Info info) : base(registry, assetId)
+    static Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid assetId, Info info, CancellationToken ct)
     {
-        this.info = info;
-    }
-
-    protected override ValueTask<IEnumerable<AssetHandle>> Load()
-    {
-        var resourcePool = diContainer.GetTag<IResourcePool>();
+        var resourcePool = registry.DIContainer.GetTag<IResourcePool>();
         using var stream = resourcePool.FindAndOpen(info.FullPath) ??
             throw new System.IO.FileNotFoundException($"Could not find effect combiner: {info.Name}");
-        effectCombiner = new();
+        var effectCombiner = new EffectCombiner();
         effectCombiner.Read(stream);
-        return NoSecondaryAssets;
+        return Task.FromResult<AssetLoadResult<Info>>(new(
+            new EffectCombinerAsset(registry, info, effectCombiner)
+        ));
     }
 
-    protected override void Unload()
+    public void Dispose()
     {
-        effectCombiner = null;
+        EffectCombiner = null!;    
     }
 
-    protected override string ToStringInner() => $"EffectCombiner {info.Name}";
+    public override string ToString() => $"EffectCombiner {info.Name}";
 }
 
 partial class AssetExtensions
 {
-    public unsafe static AssetHandle<EffectCombinerAsset> LoadEffectCombiner(this IAssetRegistry registry,
-        DefaultEcs.Entity entity,
+    public static AssetHandle<EffectCombinerAsset> LoadEffectCombiner(this IAssetRegistry registry,
         FilePath fullPath,
-        AssetLoadPriority priority)
-    {
-        var handle = registry.Load(new EffectCombinerAsset.Info(fullPath), priority, &ApplyEffectCombinerToEntity, entity);
-        entity.Set(handle);
-        return handle.As<EffectCombinerAsset>();
-    }
-
-    private static void ApplyEffectCombinerToEntity(AssetHandle handle, ref readonly DefaultEcs.Entity entity)
-    {
-        if (entity.IsAlive)
-            entity.Set(handle.Get<EffectCombinerAsset>().EffectCombiner);
-    }
+        AssetPriority priority = AssetPriority.Synchronous) =>
+        registry.Load<EffectCombinerAsset.Info, EffectCombinerAsset>(new(fullPath), priority);
 }

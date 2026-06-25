@@ -33,7 +33,7 @@ public sealed class Sound : BaseCombinerPart<
             Paused: true,
             AsEntity: emitter,
             ParentLocation: parentLocation,
-            Priority: AssetLoadPriority.High));
+            Priority: AssetPriority.High));
         entity.Set(new components.effect.SoundState(emitter));
     }
 

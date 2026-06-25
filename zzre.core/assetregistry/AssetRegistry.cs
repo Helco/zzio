@@ -1,19 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Serilog;
+using Serilog.Core;
 
 namespace zzre;
 
-/// <summary>A global asset registry to facilitate loading, retrieval and disposal of assets</summary>
-public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryInternal
+internal sealed class AssetState
 {
-    private static readonly int MaxLowPriorityAssetsPerFrame = Math.Max(1, Environment.ProcessorCount);
+    public required bool NeedsMainThreadDisposal;
+    public required FFTask<IDisposable> Load;
+    public required uint Tag; // used for apply actions to prevent triggering from revived assets
+    public required Type AssetType;
+    public IDisposable? Asset
+    {
+        get
+        {
+            var task = Load.ObserverTask;
+            return task.IsCompletedSuccessfully ? task.Result : null;
+        }
+    }
+    public int RefCount = 1;
+    public AssetPriority Priority;
+    public string? Name;
+
+#if DEBUG
+    public List<string> RefAddStacktraces = [];
+#endif
+}
+
+public class AssetRegistry : IAssetRegistryInternal
+{
+    private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(8);
+    private static readonly int MaxLowPriorityAssetsPerFrame = Math.Clamp(Environment.ProcessorCount, 1, 64);
     private static readonly UnboundedChannelOptions ChannelOptions = new()
     {
         AllowSynchronousContinuations = true,
@@ -21,221 +46,522 @@ public sealed partial class AssetRegistry : zzio.BaseDisposable, IAssetRegistryI
         SingleWriter = false
     };
 
-    private readonly ILogger logger;
-    private readonly int mainThreadId = Environment.CurrentManagedThreadId;
-    /// <summary>The apparent registry is the interface given to assets, it will differ for local registries</summary>s
-    private readonly IAssetRegistry apparentRegistry;
-    private readonly Dictionary<Guid, IAsset> assets = [];
+    private readonly Channel<Guid> assetsToStart = Channel.CreateUnbounded<Guid>(ChannelOptions);
+    private readonly Channel<IDisposable> assetsToDispose = Channel.CreateUnbounded<IDisposable>(ChannelOptions);
+    private readonly Dictionary<Guid, AssetState> assets = [];
     private readonly CancellationTokenSource cancellationSource = new();
-    private readonly Channel<IAsset> assetsToRemove = Channel.CreateUnbounded<IAsset>(ChannelOptions);
-    private readonly Channel<IAsset> assetsToApply = Channel.CreateUnbounded<IAsset>(ChannelOptions);
-    private readonly Channel<IAsset> assetsToStart = Channel.CreateUnbounded<IAsset>(ChannelOptions);
-    private AssetRegistryStats stats;
+    private readonly IAssetRegistryLock mainLock = new TrackingAssetLock(new SemaphoreAssetLock());
+    private readonly ILogger logger;
+    private readonly int mainThreadId;
+    private readonly Dictionary<Type, Action<Guid, object>> applyActionCaster = [];
+    private List<(Guid assetId, uint tag, Type assetType, object action)> applyActions = [], applyActionsBackup = [];
+    private uint nextAssetTag;
+    private AssetRegistryStats localStats;
 
-    private CancellationToken Cancellation => cancellationSource.Token;
-    private bool IsMainThread => mainThreadId == Environment.CurrentManagedThreadId;
-    /// <inheritdoc/>
+    public bool WasDisposed => cancellationSource.IsCancellationRequested;
+    public bool IsMainThread => mainThreadId == Environment.CurrentManagedThreadId;
+    public bool IsLocalRegistry => ParentRegistry is not null;
+    public IAssetRegistry? ParentRegistry { get; }
+    public CancellationToken Cancellation => cancellationSource.Token;
     public ITagContainer DIContainer { get; }
-    /// <inheritdoc/>
-    public AssetRegistryStats Stats => stats;
+    public AssetRegistryStats Stats => (ParentRegistry?.Stats ?? default) + localStats;
 
-    /// <summary>Constructs a global asset registry</summary>
-    /// <param name="debugName">A name for debugging purposes (used in logs)</param>
-    /// <param name="diContainer">The <see cref="ITagContainer"/> given to this registry for loading the asset contents</param>
-    public AssetRegistry(string debugName, ITagContainer diContainer) : this(debugName, diContainer, null) { }
-
-    internal AssetRegistry(string debugName, ITagContainer diContainer, IAssetRegistry? apparentRegistry)
+    private static readonly TaskCompletionSource<IDisposable> DisposedSource;
+    static AssetRegistry()
     {
-        DIContainer = diContainer;
-        this.apparentRegistry = apparentRegistry ?? this;
-        if (string.IsNullOrEmpty(debugName))
-            logger = diContainer.GetLoggerFor<AssetRegistry>();
-        else
-            logger = diContainer.GetTag<ILogger>().For($"{nameof(AssetRegistry)}-{debugName}");
+        DisposedSource = new();
+        DisposedSource.SetException(new ObjectDisposedException("NullDisposedSource"));
     }
 
-    protected override void DisposeManaged()
+    public AssetRegistry(ITagContainer diContainer, IAssetRegistry? parent = null, string? debugName = null)
     {
-        EnsureMainThread();
+        DIContainer = diContainer;
+        ObjectDisposedException.ThrowIf(parent is { WasDisposed: true }, typeof(AssetRegistry));
+        if (parent is { IsLocalRegistry: true })
+            throw new ArgumentException("Cannot use a local registry as parent");
+        ParentRegistry = parent;
+        logger = // ILogger is optional, as well as the log prefix
+            !diContainer.TryGetTag<ILogger>(out var parentLogger) ? Logger.None
+            : string.IsNullOrEmpty(debugName) ? diContainer.GetLoggerFor<AssetRegistry>()
+            : diContainer.GetTag<ILogger>().For($"{nameof(AssetRegistry)}-{debugName}");
+        mainThreadId = Environment.CurrentManagedThreadId;
+    }
+
+    public void Dispose()
+    {
+        if (WasDisposed)
+            return;
+        if (!mainLock.Wait(LockTimeout, Cancellation))
+            logger.Warning("AssetRegistry could not lock during dispose, going ahead nonetheless");
         cancellationSource.Cancel();
-        Task.WhenAll(assets.Values
-            .Where(a => a.State is AssetState.Loading or AssetState.LoadingSecondary)
-            .Select(a => a.LoadTask))
-            .Wait(10000);
         foreach (var asset in assets.Values)
-            asset.Dispose();
+        {
+            asset.RefCount = 0;
+            DisposeAssetObject(false, asset.Load);
+        }
         assets.Clear();
-        assetsToRemove.Writer.Complete();
-        assetsToApply.Writer.Complete();
-        assetsToStart.Writer.Complete();
+        applyActions.Clear();
+        applyActionsBackup.Clear();
+        assetsToDispose.Writer.TryComplete();
+        assetsToStart.Writer.TryComplete();
+        DisposeOldAssets(); // after current assets in case we add something into it (we shouldn't)
+
+        mainLock.Dispose();
         cancellationSource.Dispose();
         logger.Verbose("Finished disposing registry");
     }
 
-    private IAsset GetOrCreateAsset<TInfo>(in TInfo info)
-        where TInfo :  IEquatable<TInfo>
+    private void DisposeAssetObject(bool needsMainThreadDisposal, IDisposable? assetObject)
     {
-        Cancellation.ThrowIfCancellationRequested();
-        if (AssetInfoRegistry<TInfo>.Locality is not AssetLocality.Global && apparentRegistry == this)
-            throw new InvalidOperationException("Cannot retrieve or create local assets in a global asset registry");
-
-        var guid = AssetInfoRegistry<TInfo>.ToGuid(info);
-        lock(assets)
+        if (assetObject is null)
+            return;
+        if (IsMainThread || !needsMainThreadDisposal)
         {
-            if (!assets.TryGetValue(guid, out var asset) || asset.State is AssetState.Disposed)
+            localStats.OnAssetRemoved();
+            assetObject.Dispose();
+        }
+        else
+        {
+            var success = assetsToDispose.Writer.TryWrite(assetObject);
+            Debug.Assert(success);
+        }
+    }
+
+    [ExcludeFromCodeCoverage] // we cannot reasonably check for semaphore failure
+    private IAssetRegistryLock.Releaser LockSemaphore([CallerMemberName] string context = "<unknown>")
+    {
+        var releaser = mainLock.Wait(LockTimeout, Cancellation, context);
+        if (!releaser)
+            throw new InvalidOperationException("Could not lock asset registry");
+        return releaser;
+        // this should only happen in bug scenarios
+    }
+
+    [ExcludeFromCodeCoverage]
+    private async Task<IAssetRegistryLock.Releaser> LockSemaphoreAsync(CancellationToken ct, [CallerMemberName] string context = "<unknown>")
+    {
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(Cancellation, ct);
+        var releaser = await mainLock.WaitAsync(LockTimeout, cts.Token, context);
+        if (!releaser)
+            throw new InvalidOperationException("Could not lock asset registry");
+        return releaser;
+    }
+
+    void IAssetRegistryInternal.AddRef(Guid assetId)
+    {
+        ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
+        using var _ = LockSemaphore();
+        ObjectDisposedException.ThrowIf(!TryAddRefUnsafe(assetId), typeof(IAsset));
+    }
+
+    private bool TryAddRefUnsafe(Guid assetId)
+    {
+        Debug.Assert(!WasDisposed);
+        var assetState = assets.GetValueOrDefault(assetId);
+        if (assetState is null || assetState.RefCount <= 0)
+            return false;
+        assetState.RefCount++;
+#if DEBUG
+        assetState.RefAddStacktraces.Add(new StackTrace().ToString());
+#endif
+        return true;
+    }
+
+    [ExcludeFromCodeCoverage]
+    void IAssetRegistryInternal.DelRef(Guid assetId)
+    {
+        if (WasDisposed) return; // Ignore out-of-order deletion, all assets are already dead
+        AssetState? stateToBeDisposed;
+        using (var releaser = LockSemaphore())
+            stateToBeDisposed = DelRefUnsafe(assetId);
+        if (stateToBeDisposed is not null)
+            DisposeAssetObject(stateToBeDisposed.NeedsMainThreadDisposal, stateToBeDisposed.Load);
+    }
+
+    // returns the state only if it is meant to be disposed. *AFTER RELEASING THE LOCK*
+    private AssetState? DelRefUnsafe(Guid assetId)
+    {
+        Debug.Assert(!WasDisposed);
+        var assetState = assets.GetValueOrDefault(assetId);
+        if (assetState is not null && --assetState.RefCount <= 0)
+        {
+#if DEBUG
+            assetState.RefAddStacktraces.Clear();
+#endif
+            assets.Remove(assetId);
+            return assetState;
+        }
+        return null; // Let's just ignore already-dead assets, we got what we wanted
+    }
+
+    FFTask<IDisposable> IAssetRegistryInternal.GetAsset(Guid assetId)
+    {
+        AssetState asset;
+        using var releaser = LockSemaphore();
+        ObjectDisposedException.ThrowIf(!assets.TryGetValue(assetId, out asset!), nameof(IAssetHandle));
+        return asset.Load;
+    }
+
+    void IAssetRegistryInternal.CheckType(Guid assetId, Type type)
+    {
+        using var releaser = LockSemaphore();
+        ObjectDisposedException.ThrowIf(!assets.TryGetValue(assetId, out var asset) || asset.RefCount <= 0, nameof(IAssetHandle));
+        if (!asset.AssetType.IsAssignableTo(type))
+            throw new InvalidCastException($"Cannot cast asset of type {asset.AssetType.FullName} to {type.FullName}");
+    }
+
+    public AssetHandle<TAsset> Load<TInfo, TAsset>(in TInfo info, AssetPriority priority)
+        where TInfo : struct, IEquatable<TInfo>
+        where TAsset : class, IAsset<TInfo>
+    {
+        ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
+        if (TAsset.Locality is not AssetLocality.Global && !IsLocalRegistry)
+            throw new ArgumentException($"Cannot load a local asset {typeof(TAsset).FullName} from a global registry");
+        if (TAsset.Locality is AssetLocality.Global && IsLocalRegistry)
+            return ParentRegistry!.Load<TInfo, TAsset>(info, priority);
+
+        var (assetId, assetState) = GetOrCreateAssetState<TInfo, TAsset>(info, priority);
+        var handle = new AssetHandle<TAsset>(this, assetId);
+        if (!assetState.Load.ObserverTask.IsCompleted)
+        {
+            switch (priority)
             {
-                logger.Verbose("New {Type} asset {Info} ({ID})", AssetInfoRegistry<TInfo>.Name, info, guid);
-                stats.OnAssetCreated();
-                asset = AssetInfoRegistry<TInfo>.Construct(apparentRegistry, guid, in info);
-                assets[guid] = asset;
-                return asset;
-            }
-            asset.ThrowIfError();
-            return asset;
-        }
-    }
-
-    /// <inheritdoc/>
-    public unsafe AssetHandle Load<TInfo, TApplyContext>(
-        in TInfo info,
-        AssetLoadPriority priority,
-        delegate* managed<AssetHandle, ref readonly TApplyContext, void> applyFnptr,
-        in TApplyContext applyContext)
-        where TInfo : IEquatable<TInfo>
-    {
-        var asset = GetOrCreateAsset(in info);
-        lock (asset)
-        {
-            if (asset is { State: AssetState.Loaded } && IsMainThread)
-            {
-                // fast path: asset is already loaded and we only need to apply it
-                asset.AddRef();
-                var handle = new AssetHandle(this, asset.ID);
-                applyFnptr(handle, in applyContext);
-                return handle;
-            }
-            return LoadInner(asset, priority, ConvertFnptr(applyFnptr, applyContext));
-        }
-    }
-
-    private static unsafe Action<AssetHandle> ConvertFnptr<TContext>(
-        delegate* managed<AssetHandle, ref readonly TContext, void> fnptr,
-        in TContext context)
-    {
-        var contextCopy = context;
-        return handle => fnptr(handle, in contextCopy);
-    }
-
-    /// <inheritdoc/>
-    public AssetHandle Load<TInfo>(
-        in TInfo info,
-        AssetLoadPriority priority,
-        Action<AssetHandle>? applyAction)
-        where TInfo : IEquatable<TInfo>
-    {
-        var asset = GetOrCreateAsset(in info);
-        lock (asset)
-        {
-            if (asset is { State: AssetState.Loaded } && IsMainThread)
-            {
-                asset.AddRef();
-                var handle = new AssetHandle(this, asset.ID);
-                applyAction?.Invoke(handle);
-                return handle;
-            }
-            return LoadInner(asset, priority, applyAction);
-        }
-    }
-
-    private AssetHandle LoadInner(IAsset asset, AssetLoadPriority priority, Action<AssetHandle>? applyAction)
-    {
-        // We assume that asset is locked for our thread during this method
-        asset.AddRef();
-        var handle = new AssetHandle(this, asset.ID);
-        switch(asset.State)
-        {
-            case AssetState.Disposed or AssetState.Error:
-                throw new ArgumentException("LoadInner was called with asset in unexpected state");
-
-            case AssetState.Queued or AssetState.Loading or AssetState.LoadingSecondary:
-                if (applyAction is not null)
-                    asset.ApplyAction.Next += applyAction;
-                if (asset.State == AssetState.Queued)
-                    StartLoading(asset, priority);
-                return handle;
-
-            case AssetState.Loaded:
-                if (IsMainThread)
-                    applyAction?.Invoke(handle);
-                else if (applyAction is not null)
-                    assetsToApply.Writer.WriteAsync(asset, Cancellation).AsTask().WaitAndRethrow();
-                return handle;
-
-            default: throw new NotImplementedException($"Unimplemented asset state {asset.State}");
-        }
-    }
-
-    private void StartLoading(IAsset asset, AssetLoadPriority priority)
-    {
-        // We assume that asset is locked for our thread during this method
-        asset.Priority = priority;
-        switch (priority)
-        {
-            case AssetLoadPriority.Synchronous:
-                if (!asset.ApplyAction.IsEmpty && !IsMainThread)
-                    throw new InvalidOperationException("Cannot load assets with Apply functions synchronously on secondary threads");
-                asset.Complete();
-                asset.ApplyAction.Invoke(new(this, asset.ID));
-                break;
-            case AssetLoadPriority.High:
-                asset.StartLoading();
-                break;
-            case AssetLoadPriority.Low:
-                assetsToStart.Writer.WriteAsync(asset, Cancellation).AsTask().WaitAndRethrow();
-                break;
-            default: throw new NotImplementedException($"Unimplemented asset load priority {priority}");
-        }
-    }
-
-    private void RemoveAsset(IAsset asset)
-    {
-        if (asset.State is not (AssetState.Disposed or AssetState.Error))
-            throw new InvalidOperationException($"Unexpected asset state for removal: {asset.State}");
-        lock (assets)
-            assets.Remove(asset.ID);
-        logger.Verbose("Remove asset {Type} {ID}", asset.GetType().Name, asset.ID);
-    }
-
-    private void ApplyAsset(IAsset asset)
-    {
-        if (!asset.LoadTask.IsCompleted)
-            throw new InvalidOperationException("Cannot apply assets that are not (internally) loaded");
-        asset.ApplyAction.Invoke(new(this, asset.ID));
-    }
-
-    /// <inheritdoc/>
-    public void ApplyAssets()
-    {
-        EnsureMainThread();
-        while (assetsToRemove.Reader.TryRead(out var asset))
-            RemoveAsset(asset);
-        while (assetsToApply.Reader.TryRead(out var asset))
-            ApplyAsset(asset);
-
-        for (int i = 0; i < MaxLowPriorityAssetsPerFrame && assetsToStart.Reader.TryRead(out var asset); i++)
-        {
-            lock (asset)
-            {
-                if (asset.State == AssetState.Queued)
-                    asset.StartLoading();
+                case AssetPriority.Synchronous:
+                    try
+                    {
+                        handle.Get(); // checks main thread
+                    }
+                    catch
+                    {
+                        // the user does not get the handle, so there shouldn't be a refcount on the asset
+                        (this as IAssetRegistryInternal).DelRef(assetId);
+                        throw;
+                    }
+                    break;
+                case AssetPriority.High:
+                    Task.Run(() => TryStartLoad(handle.AssetId));
+                    break;
+                case AssetPriority.Low:
+                    var success = assetsToStart.Writer.TryWrite(assetId);
+                    Debug.Assert(success); // As the channel is unbounded it should never fail to write
+                    break;
             }
         }
+        return handle;
+    }
+
+    private (Guid, AssetState) GetOrCreateAssetState<TInfo, TAsset>(in TInfo info, AssetPriority priority)
+        where TInfo : struct, IEquatable<TInfo>
+        where TAsset : class, IAsset<TInfo>
+    {
+        using var releaser = LockSemaphore();
+
+        // Determine Asset ID
+        Guid assetId;
+        if (TAsset.Locality is AssetLocality.Unique)
+        {
+            do
+            {
+                assetId = Guid.NewGuid();
+            } while (assets.ContainsKey(assetId)); // just paranoid...
+        }
+        else
+            assetId = TAsset.InfoToAssetId(info);
+
+        // Check previous asset state
+        if (assets.TryGetValue(assetId, out var assetState) && assetState.RefCount > 0)
+        {
+            SanityCheckSharedAsset(typeof(TAsset), assetState);
+            assetState.RefCount++;
+            if (assetState.Asset is null && (int)priority < (int)assetState.Priority)
+                assetState.Priority = priority;
+            return (assetId, assetState);
+        }
+
+        // Create new asset state
+        TInfo infoCopy = info;
+        assetState = new()
+        {
+            NeedsMainThreadDisposal = TAsset.NeedsMainThreadDisposal,
+            Load = new(() => LoadAsset<TInfo, TAsset>(infoCopy, assetId), Cancellation),
+            Tag = unchecked(++nextAssetTag),
+            AssetType = typeof(TAsset),
+            Priority = priority
+        };
+#if DEBUG
+        assetState.RefAddStacktraces.Add(new StackTrace().ToString());
+#endif
+        assets[assetId] = assetState;
+        localStats.OnAssetCreated();
+        return (assetId, assetState);
     }
 
     [Conditional("DEBUG")]
-    private void EnsureMainThread([CallerMemberName] string methodName = "<null>")
+    private static void SanityCheckSharedAsset(Type expectedType, AssetState asset)
     {
+        if (asset.Asset is null) return;
+        var actualType = asset.Asset.GetType();
+        Debug.Assert(actualType.IsAssignableTo(expectedType), "Asset type mismatch, is this a GUID conflict?");
+    }
+
+    private async Task TryStartLoad(Guid assetId)
+    {
+        AssetState? assetState = null;
+        using (await LockSemaphoreAsync(Cancellation))
+        {
+            assetState = assets.GetValueOrDefault(assetId);
+            if (assetState is null or { RefCount: <= 0 })
+            {
+                // if the High load cannot start because all handles are disposed
+                // then no one will know we never tried to load it in the first place
+                return;
+            }
+        }
+
+        _ = assetState.Load.Start(); // this task not need care about asset load completion and not care about the exceptions during it
+    }
+
+    private async ValueTask<IDisposable> LoadAsset<TInfo, TAsset>(TInfo info, Guid assetId)
+        where TInfo : struct, IEquatable<TInfo>
+        where TAsset : class, IAsset<TInfo>
+    {
+        // Due to AsyncLazy we can flow exceptions outside this method
+
+        // Load asset
+        var asset = (await TAsset.LoadAsync(this, assetId, info, Cancellation)).Asset;
+        Debug.Assert(asset.Registry == this);
+        CheckRegistryDisposal();
+
+        // Propagate assets into registry state
+        AssetState? assetState = null;
+        using (await LockSemaphoreAsync(Cancellation))
+        {
+            assetState = assets.GetValueOrDefault(assetId);
+            if (assetState is null or { RefCount: <= 0 })
+                assetState = null;
+            else
+                localStats.OnAssetLoaded();
+        }
+
+        if (assetState is null)
+        {
+            // handle was disposed during load, now dispose the asset itself
+            DisposeAssetObject(TAsset.NeedsMainThreadDisposal, asset);
+            asset = null;
+            ObjectDisposedException.ThrowIf(true, typeof(TAsset));
+        }
+
+        CheckRegistryDisposal();
+        return asset;
+
+        [ExcludeFromCodeCoverage] // we cannot reasonably test that, it would be a race condition
+        void CheckRegistryDisposal()
+        {
+            if (WasDisposed)
+            {
+                if (!TAsset.NeedsMainThreadDisposal)
+                    asset.Dispose();
+                // otherwise we are in a predicament and my decision is to leak a couple assets
+                ObjectDisposedException.ThrowIf(true, typeof(AssetRegistry));
+            }
+            Cancellation.ThrowIfCancellationRequested();
+        }
+    }
+
+    public bool TryGet<TAsset>(Guid assetId, out AssetHandle<TAsset> handle)
+        where TAsset : class, IAsset
+    {
+        ObjectDisposedException.ThrowIf(WasDisposed, typeof(AssetRegistry));
+        if (ParentRegistry?.TryGet(assetId, out handle) is true)
+            return true;
+
+        handle = default;
+        using var releaser = LockSemaphore();
+        if (!assets.TryGetValue(assetId, out var assetState) ||
+            assetState.RefCount < 1 ||
+            !assetState.AssetType.IsAssignableTo(typeof(TAsset)))
+            return false;
+
+#if DEBUG
+        assetState.RefAddStacktraces.Add(new StackTrace().ToString());
+#endif
+        assetState.RefCount++;
+        handle = new(this, assetId);
+        return true;
+    }
+
+    public void Update() =>
+        Update(MaxLowPriorityAssetsPerFrame);
+
+    public void Update(int maxLowPrioAssets)
+    {
+        ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
         if (!IsMainThread)
-            throw new InvalidOperationException($"Cannot call AssetRegistry.{methodName} from secondary threads");
+            throw new InvalidOperationException("Low batch scheduling is only allowed on the main thread");
+
+        using (LockSemaphore())
+        {
+            for (int i = 0; i < maxLowPrioAssets && assetsToStart.Reader.TryRead(out var assetId); i++)
+            {
+                if (assets.TryGetValue(assetId, out var assetState) &&
+                    !assetState.Load.IsDisposed)
+                {
+                    assetState.Load.Start();
+                    Task.Run(() => TryStartLoad(assetId));
+                }
+            }
+
+            // Copy apply actions and make sure assets keep alive during applying
+            (applyActions, applyActionsBackup) = (applyActionsBackup, applyActions);
+            for (int i = 0; i < applyActionsBackup.Count; i++)
+            {
+                var assetId = applyActionsBackup[i].assetId;
+                if (!TryAddRefUnsafe(assetId))
+                    // Asset is not alive anymore
+                    applyActionsBackup[i] = default;
+                else if (assets[assetId].Tag != applyActionsBackup[i].tag)
+                {
+                    // Asset was revived, apply actions are outdated
+                    if (DelRefUnsafe(assetId) is AssetState toBeDisposed)
+                        assetsToDispose.Writer.TryWrite(toBeDisposed.Load);
+                    applyActionsBackup[i] = default;
+                }
+                else if (assets[assetId].Asset is null)
+                {
+                    // Asset was not yet loaded
+                    if (DelRefUnsafe(assetId) is AssetState toBeDisposed)
+                        assetsToDispose.Writer.TryWrite(toBeDisposed.Load);
+                    applyActions.Add(applyActionsBackup[i]);
+                    applyActionsBackup[i] = default;
+                }
+            }
+        }
+
+        // We can safely access applyActionsBackup as we are on the main thread
+        var exceptions = new List<Exception>();
+        foreach (var (assetId, _, assetType, action) in applyActionsBackup)
+        {
+            if (assetId == default)
+                continue;
+            try
+            {
+                applyActionCaster[assetType](assetId, action);
+            }
+            catch (Exception e)
+            {
+                exceptions.Add(e);
+            }
+        }
+
+        // Remove reference we added earlier
+        using (LockSemaphore())
+        {
+            foreach (var (assetId, _, _, _) in applyActionsBackup)
+            {
+                if (assetId != default && DelRefUnsafe(assetId) is AssetState toBeDisposed)
+                    assetsToDispose.Writer.TryWrite(toBeDisposed.Load);
+            }
+        }
+        applyActionsBackup.Clear();
+
+
+        // we might add a bunch of old assets previously, so only dispose now
+        DisposeOldAssets();
+
+        if (exceptions.Count > 0)
+            throw new AggregateException(exceptions);
+    }
+
+    // this should *not* be called under semaphore lock in case of secondary assets
+    private void DisposeOldAssets()
+    {
+        Debug.Assert(IsMainThread);
+        while (assetsToDispose.Reader.TryRead(out var asset))
+        {
+            asset.Dispose();
+            localStats.OnAssetRemoved();
+        }
+    }
+
+    public void Apply<TAsset>(AssetHandle<TAsset> handle, Action<AssetHandle<TAsset>> action)
+        where TAsset : class, IAsset
+    {
+        ObjectDisposedException.ThrowIf(WasDisposed, typeof(IAssetRegistry));
+        if (handle.Registry is null)
+            throw new ArgumentException("Invalid asset handle");
+        if (handle.Registry == ParentRegistry)
+        {
+            ParentRegistry.Apply(handle, action);
+            return;
+        }
+        if (handle.Registry != this)
+            throw new ArgumentException("Asset is not part of this registry or its parent");
+
+        AssetState? toDispose = null;
+        bool shouldBeExecutedNow = false;
+
+        using (LockSemaphore())
+        {
+            if (!applyActionCaster.ContainsKey(typeof(TAsset)))
+            {
+                applyActionCaster.Add(typeof(TAsset), (assetId, action) =>
+                {
+                    ((Action<AssetHandle<TAsset>>)action)(new(this, assetId));
+                });
+            }
+
+            if (IsMainThread)
+            {
+                ObjectDisposedException.ThrowIf(!TryAddRefUnsafe(handle.AssetId), typeof(IAsset));
+                if (assets[handle.AssetId].Asset is null)
+                    toDispose = DelRefUnsafe(handle.AssetId); // Asset was not yet loaded
+                else // if there are any applyActions (to this asset), the order could be broken by executing now
+                    shouldBeExecutedNow = !applyActions.Any(t => t.assetId == handle.AssetId);
+            }
+            if (!shouldBeExecutedNow)
+                applyActions.Add(new(handle.AssetId, assets[handle.AssetId].Tag, typeof(TAsset), action));
+        }
+
+        // Fast-path: no queueing 
+        if (shouldBeExecutedNow)
+        {
+            Debug.Assert(IsMainThread);
+            try
+            {
+                action(new(this, handle.AssetId));
+            }
+            finally
+            {
+                (this as IAssetRegistryInternal).DelRef(handle.AssetId);
+            }
+        }
+
+        // dispose outside the lock
+        if (toDispose != null)
+            DisposeAssetObject(toDispose.NeedsMainThreadDisposal, toDispose.Load);
+    }
+
+    public void CopyDebugInfo(List<IAssetRegistry.AssetInfo> infos)
+    {
+        using (LockSemaphore())
+        {
+            infos.Clear();
+            infos.EnsureCapacity(assets.Count);
+            foreach (var (assetId, state) in assets)
+            {
+                var name =
+                    state.Name ??
+                    (state.Name = state.Asset?.ToString()) ??
+                    $"Loading {state.AssetType.Name}";
+                infos.Add(new(
+                    assetId,
+                    state.AssetType,
+                    name,
+                    state.RefCount,
+                    state.Asset is not null,
+                    state.Priority
+                ));
+            }
+        }
     }
 }

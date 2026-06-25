@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Veldrid;
 using zzio;
 using zzio.rwbs;
@@ -9,7 +10,7 @@ using static zzre.ActorMaterialAsset;
 
 namespace zzre;
 
-public sealed class ActorMaterialAsset : ModelMaterialAsset
+public sealed class ActorMaterialAsset(IAssetRegistry registry) : IAsset<Info>, ITexturedMaterialAsset
 {
     private static readonly FilePath[] ActorTextureBasePaths =
     [
@@ -17,52 +18,103 @@ public sealed class ActorMaterialAsset : ModelMaterialAsset
         new FilePath("resources/textures/models"),
         new FilePath("resources/textures/worlds"),
     ];
-    protected override IReadOnlyList<FilePath> TextureBasePaths => ActorTextureBasePaths;
+
+    // no factors, they are managed by ActorRenderer to set ambient light
+
+    private static readonly ModelMaterial.Variant MaterialVariant = new(
+        IsInstanced: false,
+        IsSkinned: true, // TODO: comment why generally yes, but can differ
+        HasTexShift: false);
+
+    static AssetLocality IAsset.Locality => AssetLocality.Unique; // due to skeleton buffers, no reuse possible
+    static bool IAsset.NeedsMainThreadDisposal => true; // an Apply action wants to access Material
 
     public readonly record struct Info(
-        string? textureName,
-        SamplerDescription sampler,
-        IColor color,
-        bool isSkinned,
-        StandardTextureKind? texturePlaceholder = null);
+        string? TextureName,
+        SamplerDescription Sampler,
+        IColor Color,
+        bool IsSkinned);
 
-    public static void Register() =>
-        AssetInfoRegistry<Info>.Register<ActorMaterialAsset>(AssetLocality.SingleUsage);
+    private AssetHandle<TextureAsset> textureHandle;
+    private AssetHandle<SamplerAsset> samplerHandle;
 
-    private readonly IColor color;
-    private readonly bool isSkinned;
+    public IAssetRegistry Registry { get; } = registry;
+    public ModelMaterial Material { get; private set; } = null!;
+    ITexturedMaterial ITexturedMaterialAsset.Material => Material;
 
-    public ActorMaterialAsset(IAssetRegistry registry, Guid assetId, Info info)
-        : base(registry, assetId, info.textureName, info.sampler, info.texturePlaceholder)
+    static async Task<AssetLoadResult<Info>> IAsset<Info>.LoadAsync(IAssetRegistry registry, Guid assetId, Info info, CancellationToken ct)
     {
-        color = info.color;
-        isSkinned = info.isSkinned;
+        var diContainer = registry.DIContainer;
+        var material = new ModelMaterial(diContainer)
+        {
+            DebugName = $"ActorMat {info.TextureName} {(info.IsSkinned ? "" : "Unskinned")}"
+        };
+        material.Apply(
+            MaterialVariant with { IsSkinned = info.IsSkinned },
+            factors: null,
+            diContainer
+        );
+        material.Tint.Ref = info.Color;
+
+        var camera = diContainer.GetTag<Camera>();
+        material.Projection.BufferRange = camera.ProjectionRange;
+        material.View.BufferRange = camera.ViewRange;
+        var samplerHandle = registry.LoadSampler(info.Sampler, AssetPriority.High);
+        material.Sampler.Sampler = (await samplerHandle.GetAsync(ct)).Sampler;
+        var (initialTexture, textureHandle) = await AssetExtensions.LoadTextureForMaterial(
+            registry,
+            ActorTextureBasePaths,
+            assetId,
+            info.TextureName,
+            StandardTextureKind.White,
+            AssetPriority.High,
+            ct);
+        material.Texture.Texture = initialTexture;
+
+        return new(new ActorMaterialAsset(registry)
+        {
+            samplerHandle = samplerHandle,
+            textureHandle = textureHandle,
+            Material = material
+        });
     }
 
-    protected override void SetMaterialVariant(ModelMaterial material)
+    public void Dispose()
     {
-        Material.Blend = ModelMaterial.BlendMode.Opaque;
-        Material.IsInstanced = false;
-        Material.IsSkinned = isSkinned;
-        Material.HasTexShift = false;
-        Material.HasFog = true;
-        Material.Tint.Ref = color;
-        if (diContainer.TryGetTag<UniformBuffer<FogParams>>(out var fogParams))
-            Material.FogParams.Buffer = fogParams.Buffer;
+        textureHandle.Dispose();
+        samplerHandle.Dispose();
+        Material?.Dispose();
+        Material = null!;
     }
+
+    public override string ToString() => Material?.DebugName ?? "Disposed ActorMaterial";
 }
 
 partial class AssetExtensions
 {
     public static AssetHandle<ActorMaterialAsset> LoadActorMaterial(this IAssetRegistry registry,
-        RWMaterial rwMaterial, bool isSkinned)
+        string? textureName,
+        SamplerDescription sampler,
+        IColor color,
+        bool isSkinned = true,
+        AssetPriority priority = AssetPriority.Synchronous) =>
+        registry.Load<Info, ActorMaterialAsset>(
+            new(textureName, sampler, color, isSkinned),
+            priority);
+
+    public static AssetHandle<ActorMaterialAsset> LoadActorMaterial(this IAssetRegistry registry,
+        RWMaterial rwMaterial,
+        bool isSkinned = true,
+        AssetPriority priority = AssetPriority.Synchronous)
     {
         var rwTexture = rwMaterial.FindChildById(SectionId.Texture, true) as RWTexture;
         var rwTextureName = (rwTexture?.FindChildById(SectionId.String, true) as RWString)?.value;
         var samplerDescription = GetSamplerDescription(rwTexture);
-        return registry.Load(
-            new Info(rwTextureName, samplerDescription, rwMaterial.color, isSkinned, StandardTextureKind.White),
-            AssetLoadPriority.Synchronous)
-            .As<ActorMaterialAsset>();
+        return registry.LoadActorMaterial(
+            rwTextureName,
+            samplerDescription,
+            rwMaterial.color,
+            isSkinned,
+            priority);
     }
 }

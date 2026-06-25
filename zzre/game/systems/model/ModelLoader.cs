@@ -88,8 +88,8 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
             bool hasBehavior = behaviors.TryGetValue(model.idx, out var behaviour);
             var renderType = model.isVisualOnly ? FOModelRenderType.Solid : null as FOModelRenderType?;
             var priority = hasBehavior
-                ? AssetLoadPriority.Synchronous
-                : AssetLoadPriority.High;
+                ? AssetPriority.Synchronous
+                : AssetPriority.High;
             LoadModel(entity, model.filename, model.color, renderType, priority);
 
             if (hasBehavior)
@@ -121,7 +121,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
             });
             SetPlantWiggle(entity, foModel.wiggleAmpl, plantWiggleDelay);
 
-            LoadModel(entity, foModel.filename, foModel.color, foModel.renderType, AssetLoadPriority.Low);
+            LoadModel(entity, foModel.filename, foModel.color, foModel.renderType, AssetPriority.Low);
             SetDistanceAlphaFade(entity, foModel);
 
             plantWiggleDelay++;
@@ -131,9 +131,9 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
     private void HandleLoadModel(in messages.LoadModel msg) =>
         LoadModel(msg.AsEntity, msg.ModelName, msg.Color, msg.RenderType, msg.Priority);
 
-    private unsafe void LoadModel(DefaultEcs.Entity entity, string modelName, IColor color, FOModelRenderType? renderType, AssetLoadPriority priority = AssetLoadPriority.Synchronous)
+    private unsafe void LoadModel(DefaultEcs.Entity entity, string modelName, IColor color, FOModelRenderType? renderType, AssetPriority priority = AssetPriority.Synchronous)
     {
-        ClumpMaterialAsset.MaterialVariant material = renderType switch
+        ModelMaterial.Variant material = renderType switch
         {
             null => new(ModelMaterial.BlendMode.Opaque),
             FOModelRenderType.EarlySolid or FOModelRenderType.LateSolid or FOModelRenderType.Solid =>
@@ -156,18 +156,20 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
         entity.Set(RenderOrderFromRenderType(renderType));
         entity.Set(color with { a = AlphaFromRenderType(renderType) });
         entity.Set(ClumpAsset.Info.Model(modelName));
-        var handle = assetRegistry.LoadModel(entity, modelName, priority, material, StandardTextureKind.White);
-        handle.Inner.Apply(&ApplyModelAfterLoading, entity);
-    }
-
-    private static void ApplyModelAfterLoading(AssetHandle handle, ref readonly DefaultEcs.Entity entity)
-    {
-        if (!entity.IsAlive)
-            return;
-        if (HasEmptyMesh(entity))
-            entity.Dispose(); // I am fine with ignoring empty FOModels
-        else
-            SetSphereCollider(entity);
+        using var handle = assetRegistry.LoadModelClumpAndMaterialFor(entity,
+            modelName,
+            material,
+            StandardTextureKind.White,
+            priority);
+        assetRegistry.Apply(handle, handle =>
+        {
+            if (!entity.IsAlive)
+                return;
+            if (HasEmptyMesh(entity))
+                entity.Dispose(); // I am fine with ignoring empty FOModels
+            else
+                SetSphereCollider(entity);
+        });
     }
 
     private void HandleCreateItem(in messages.CreateItem msg)
@@ -185,7 +187,7 @@ public sealed class ModelLoader : BaseDisposable, ISystem<float>
                 LocalRotation = Vector3.UnitX.ToZZRotation()
             });
             SetBehaviour(entity, BehaviourType.CollectablePhysics, uint.MaxValue);
-            LoadModel(entity, $"itm{msg.ItemId:D3}", IColor.White, FOModelRenderType.Solid, AssetLoadPriority.Synchronous);
+            LoadModel(entity, $"itm{msg.ItemId:D3}", IColor.White, FOModelRenderType.Solid, AssetPriority.Synchronous);
         }
     }
 
