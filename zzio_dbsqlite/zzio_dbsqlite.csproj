@@ -1,19 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../NoCodeQuality.props"/>
-
+  <Import Project="../NoCodeQuality.props" />
   <ItemGroup>
     <ProjectReference Include="..\zzio\zzio.csproj" />
     <ProjectReference Include="..\zzsc\zzsc.csproj" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="System.Data.SQLite" Version="1.0.119" />
+    <PackageReference Include="System.Data.SQLite" />
   </ItemGroup>
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
-
 </Project>

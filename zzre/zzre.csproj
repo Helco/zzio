@@ -4,77 +4,65 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-
     <Remotery Condition="'$(Remotery)' == '' and '$(Configuration)'=='Debug'">true</Remotery>
     <Remotery Condition="'$(Remotery)' == '' and '$(Configuration)'!='Debug'">false</Remotery>
-
     <MlangOutputGeneratedSourceOnError>true</MlangOutputGeneratedSourceOnError>
     <MlangEmbedShaderSource>true</MlangEmbedShaderSource>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
-  
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <PublishTrimmed>true</PublishTrimmed>
     <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
     <TrimMode>link</TrimMode>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Remotery)' == 'true'">
     <DefineConstants>$(DefineConstants);REMOTERY</DefineConstants>
   </PropertyGroup>
-
   <ItemGroup>
     <ShaderSourceDir Include="shaders" />
     <EmbeddedResource Include="shaders\*.frag" />
     <EmbeddedResource Include="shaders\*.vert" />
   </ItemGroup>
-
   <ItemGroup>
     <MlangShader Include="shaders\model.mlang" />
     <MlangShader Include="shaders\debug.mlang" />
     <MlangShader Include="shaders\ui.mlang" />
     <MlangShader Include="shaders\effect.mlang" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="DefaultEcs.Analyzer" Version="0.17.0">
+    <PackageReference Include="DefaultEcs.Analyzer">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Primitives" Version="8.0.0" />
-    <PackageReference Include="Pfim" Version="0.11.2" />
-    <PackageReference Include="Serilog" Version="3.1.1" />
-    <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageReference Include="Mlang.MSBuild" Version="$(MlangVersion)" />
-    <PackageReference Include="Remotery.NET" Version="$(RemoteryVersion)" />
-    <PackageReference Include="MojoAL.NET.Native" Version="$(MojoALVersion)" />
-    <PackageReference Include="NLayer" Version="$(NLayerVersion)" />
-    <PackageReference Include="Silk.NET.OpenAL" Version="2.20.0" />
-    <PackageReference Include="Silk.NET.OpenAL.Extensions.Enumeration" Version="2.20.0" />
-    <PackageReference Include="Silk.NET.OpenAL.Extensions.EXT" Version="2.20.0" />
+    <PackageReference Include="Microsoft.Extensions.Primitives" />
+    <PackageReference Include="Pfim" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Sinks.Async" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="System.CommandLine" />
+    <PackageReference Include="Mlang.MSBuild" />
+    <PackageReference Include="Remotery.NET" />
+    <PackageReference Include="MojoAL.NET.Native" />
+    <PackageReference Include="NLayer" />
+    <PackageReference Include="Silk.NET.OpenAL" />
+    <PackageReference Include="Silk.NET.OpenAL.Extensions.Enumeration" />
+    <PackageReference Include="Silk.NET.OpenAL.Extensions.EXT" />
   </ItemGroup>
-
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
-    <PackageReference Include="Veldrid.RenderDoc" Version="$(VeldridRenderdocVersion)" />
+    <PackageReference Include="Veldrid.RenderDoc" />
   </ItemGroup>
-
   <ItemGroup Condition="'$(Remotery)' == 'true'">
-    <PackageReference Include="Remotery.NET.Native" Version="$(RemoteryVersion)" />
+    <PackageReference Include="Remotery.NET.Native" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\zzio\zzio.csproj" />
     <ProjectReference Include="..\zzre.core\zzre.core.csproj" />
     <ProjectReference Include="..\zzre.sourcegen\zzre.sourcegen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
-
 </Project>

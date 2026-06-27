@@ -4,15 +4,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
-
   <ItemGroup>
     <None Remove="assets\forkawesome-webfont.ttf" />
   </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Include="assets\forkawesome-webfont.ttf" />
     <EmbeddedResource Include="assets\imgui-vertex.spv">
@@ -22,29 +19,23 @@
       <LogicalName>imgui-frag</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Serilog" Version="3.1.1" />
-    <PackageReference Include="Silk.NET.SDL" Version="2.20.0" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
-    <PackageReference Include="System.Threading.Channels" Version="10.0.9" />
-    <PackageReference Include="Veldrid" Version="$(VeldridVersion)" />
-    <PackageReference Include="ImGui.NET" Version="$(ImguiVersion)" />
-    <PackageReference Include="ImGuizmo.NET" Version="$(ImguizmoVersion)" />
-    <PackageReference Include="Mlang" Version="$(MlangVersion)" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Silk.NET.SDL" />
+    <PackageReference Include="System.Threading.Channels" />
+    <PackageReference Include="Veldrid" />
+    <PackageReference Include="ImGui.NET" />
+    <PackageReference Include="ImGuizmo.NET" />
+    <PackageReference Include="Mlang" />
   </ItemGroup>
-
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
-    <PackageReference Include="DefaultEcs" Version="$(DefaultEcsSafeVersion)" />
+    <PackageReference Include="DefaultEcs" />
   </ItemGroup>
-
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
-    <PackageReference Include="DefaultEcs" Version="$(DefaultEcsVersion)" />
+    <PackageReference Include="DefaultEcs" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\zzio\zzio.csproj" />
     <ProjectReference Include="..\zzre.sourcegen\zzre.sourcegen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
-
 </Project>

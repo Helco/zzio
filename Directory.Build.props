@@ -1,44 +1,23 @@
 <Project>
-    <!-- Metadata -->
+  <!-- Metadata -->
+  <PropertyGroup>
+    <Author>Helco</Author>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/Helco/zzio</RepositoryUrl>
+    <GitVersion>false</GitVersion>
+    <RestoreSources>$(RestoreSources);../nuget-feed;https://api.nuget.org/v3/index.json</RestoreSources>
+  </PropertyGroup>
+  <Target Name="GitVersion" />
+  <ItemGroup>
+    <PackageReference Include="GitInfo" PrivateAssets="all" />
+  </ItemGroup>
+  <Target Name="PopulateRepositoryInfo" DependsOnTargets="GitVersion" BeforeTargets="GetAssemblyVersion;GenerateNuspec;GetPackageContents">
     <PropertyGroup>
-        <Author>Helco</Author>
-        <VersionPrefix>1.0.0</VersionPrefix> <!-- Do not copy SlangVersion as we might want to increment for our own code -->
-        <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/Helco/zzio</RepositoryUrl>
-        <GitVersion>false</GitVersion>
+      <RepositoryBranch>$(GitBranch)</RepositoryBranch>
+      <RepositoryCommit>$(GitCommit)</RepositoryCommit>
+      <VersionSuffix Condition="'$(VersionSuffix)' == ''">$(GitCommit)</VersionSuffix>
+      <VersionSuffix Condition="'$(VersionSuffix)' != ''">$(GitCommit)-$(VersionSuffix)</VersionSuffix>
     </PropertyGroup>
-
-    <!-- Common Dependency versioning -->
-    <PropertyGroup>
-        <RestoreSources>$(RestoreSources);../nuget-feed;https://api.nuget.org/v3/index.json</RestoreSources>
-        <VeldridHash>g2c8a3f1b9e</VeldridHash>
-        <DefaultEcsHash>0e92bb5</DefaultEcsHash>
-        <ImguiHash>9b51cce</ImguiHash>
-        <MlangHash>5c3471e</MlangHash>
-        <NLayerHash>01e1238</NLayerHash>
-        <VeldridVersion>4.9.0-$(VeldridHash)</VeldridVersion>
-        <VeldridRenderdocVersion>1.0.1-$(VeldridHash)</VeldridRenderdocVersion>
-        <DefaultEcsVersion>1.0.0-$(DefaultEcsHash)</DefaultEcsVersion>
-        <DefaultEcsSafeVersion>1.0.0-safe-$(DefaultEcsHash)</DefaultEcsSafeVersion>
-        <ImguiVersion>1.90.1.1-$(ImguiHash)</ImguiVersion>
-        <ImguizmoVersion>1.61.0-$(ImguiHash)</ImguizmoVersion>
-        <MlangVersion>1.0.0-$(MlangHash)</MlangVersion>
-        <RemoteryVersion>1.21.1</RemoteryVersion>
-        <MojoALVersion>1.1.2</MojoALVersion>
-        <NLayerVersion>1.15.0-$(NLayerHash)</NLayerVersion>
-    </PropertyGroup>
-
-    <Target Name="GitVersion" />
-    <ItemGroup>
-        <PackageReference Include="GitInfo" Version="3.3.5" PrivateAssets="all"/>
-    </ItemGroup>
-
-    <Target Name="PopulateRepositoryInfo" DependsOnTargets="GitVersion" BeforeTargets="GetAssemblyVersion;GenerateNuspec;GetPackageContents">
-        <PropertyGroup>
-            <RepositoryBranch>$(GitBranch)</RepositoryBranch>
-            <RepositoryCommit>$(GitCommit)</RepositoryCommit>
-            <VersionSuffix Condition="'$(VersionSuffix)' == ''">$(GitCommit)</VersionSuffix>
-            <VersionSuffix Condition="'$(VersionSuffix)' != ''">$(GitCommit)-$(VersionSuffix)</VersionSuffix>
-        </PropertyGroup>
-    </Target>
+  </Target>
 </Project>
