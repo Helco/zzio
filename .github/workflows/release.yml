@@ -55,7 +55,7 @@ jobs:
           filename: zzre-${{ matrix.target }}
           directory: zzre
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v7
         with:
           name: zzre
           path: ./zzre/zzre-${{ matrix.target }}.zip
