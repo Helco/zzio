@@ -19,7 +19,7 @@ jobs:
   Build:
     runs-on: ${{ inputs.runs-on }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
       with:
         path: zzio
         submodules: true
