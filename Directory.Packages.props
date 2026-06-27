@@ -4,26 +4,27 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="GitInfo" Version="3.3.5" />
+    <PackageVersion Include="GitInfo" Version="3.3.5" /> <!-- Later versions changed license -->
+    
     <!-- zzre.core -->
-    <PackageVersion Include="DefaultEcs" Version="1.0.0-safe-0e92bb5" />
+    <PackageVersion Include="DefaultEcs" Version="1.0.0-safe-0e92bb5" /> <!-- Forked for fixes and safe-mode -->
     <PackageVersion Include="DefaultEcs.Analyzer" Version="0.17.0" />
     <PackageVersion Include="Serilog" Version="4.3.1" />
     <PackageVersion Include="Silk.NET.SDL" Version="2.23.0" />
     <PackageVersion Include="System.Threading.Channels" Version="10.0.9" />
-    <PackageVersion Include="Veldrid" Version="4.9.0-g2c8a3f1b9e" />
-    <PackageVersion Include="ImGui.NET" Version="1.90.1.1-9b51cce" />
+    <PackageVersion Include="Veldrid" Version="4.9.0-g2c8a3f1b9e" /> <!-- Forked for additional fixes by PizzaDev and us -->
+    <PackageVersion Include="ImGui.NET" Version="1.90.1.1-9b51cce" /> <!-- Forked for additional fixes -->
     <PackageVersion Include="ImGuizmo.NET" Version="1.61.0-9b51cce" />
-    <PackageVersion Include="Mlang" Version="1.0.0-243edf7" />
+    <PackageVersion Include="Mlang" Version="1.0.0-243edf7" /> <!-- Our library, not published on NuGet -->
     <!-- zzre -->
     <PackageVersion Include="Veldrid.RenderDoc" Version="1.0.1-g2c8a3f1b9e" />
     <PackageVersion Include="Mlang.MSBuild" Version="1.0.0-243edf7" />
     <PackageVersion Include="Microsoft.Extensions.Primitives" Version="10.0.9" />
     <PackageVersion Include="Pfim" Version="0.11.4" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" /> <!-- Later versions have extensive breaking changes -->
     <PackageVersion Include="Remotery.NET" Version="1.21.1" />
     <PackageVersion Include="Remotery.NET.Native" Version="1.21.1" />
-    <PackageVersion Include="NLayer" Version="1.15.0-01e1238" />
+    <PackageVersion Include="NLayer" Version="1.15.0-01e1238" /> <!-- Forked by PizzaDev for optimizations -->
     <PackageVersion Include="Silk.NET.OpenAL" Version="2.23.0" />
     <PackageVersion Include="Silk.NET.OpenAL.Extensions.Enumeration" Version="2.23.0" />
     <PackageVersion Include="Silk.NET.OpenAL.Extensions.EXT" Version="2.23.0" />
