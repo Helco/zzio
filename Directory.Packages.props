@@ -11,7 +11,6 @@
     <PackageVersion Include="DefaultEcs.Analyzer" Version="0.17.0" />
     <PackageVersion Include="Serilog" Version="4.3.1" />
     <PackageVersion Include="Silk.NET.SDL" Version="2.23.0" />
-    <PackageVersion Include="System.Threading.Channels" Version="10.0.9" />
     <PackageVersion Include="Veldrid" Version="4.9.0-g2c8a3f1b9e" /> <!-- Forked for additional fixes by PizzaDev and us -->
     <PackageVersion Include="ImGui.NET" Version="1.90.1.1-9b51cce" /> <!-- Forked for additional fixes -->
     <PackageVersion Include="ImGuizmo.NET" Version="1.61.0-9b51cce" />
