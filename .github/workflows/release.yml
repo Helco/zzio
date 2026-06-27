@@ -34,10 +34,10 @@ jobs:
           path: zzio
           submodules: true
           fetch-depth: 0
-      - name: Setup .NET Core 8.0.x
+      - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.301
       - name: Build local dependencies
         run: bash zzio/get-dependencies.sh
       - name: Install remote dependencies
