@@ -2,7 +2,6 @@
   <Import Project="../CodeQuality.props" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Remotery Condition="'$(Remotery)' == '' and '$(Configuration)'=='Debug'">true</Remotery>
     <Remotery Condition="'$(Remotery)' == '' and '$(Configuration)'!='Debug'">false</Remotery>
