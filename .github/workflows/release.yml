@@ -41,10 +41,10 @@ jobs:
       - name: Build local dependencies
         run: bash zzio/get-dependencies.sh
       - name: Install remote dependencies
-        run: dotnet restore zzio/zzio.sln -r ${{ matrix.target }} -p:NoWarn=NU1605
+        run: dotnet restore zzio/zzio.slnx -r ${{ matrix.target }} -p:NoWarn=NU1605
       - name: Build
         run: |
-          dotnet build zzio/zzio.sln --configuration Release --no-restore
+          dotnet build zzio/zzio.slnx --configuration Release --no-restore
           dotnet build zzio/zzre/zzre.csproj -c Release --no-restore -r ${{ matrix.target }}
       - name: Publish
         run: dotnet publish zzio/zzre/zzre.csproj -f net8.0 -c Release --no-build --self-contained true -r ${{ matrix.target }} -o ./zzre

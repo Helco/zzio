@@ -1,0 +1,29 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/0Common/">
+    <File Path=".editorconfig" />
+    <File Path="CodeQuality.props" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="NoCodeQuality.props" />
+  </Folder>
+  <Folder Name="/cli/">
+    <Project Path="zzio_cli/zzio_cli.csproj" />
+    <Project Path="zzio_dbsqlite/zzio_dbsqlite.csproj" />
+    <Project Path="zzsc/zzsc.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="zzio.tests/zzio.tests.csproj" />
+    <Project Path="zzre.core.tests/zzre.core.tests.csproj" />
+  </Folder>
+  <Folder Name="/zzre/">
+    <Project Path="zzre.core/zzre.core.csproj" />
+    <Project Path="zzre.sourcegen/zzre.sourcegen.csproj" />
+    <Project Path="zzre/zzre.csproj" />
+  </Folder>
+  <Project Path="zzio/zzio.csproj" />
+</Solution>
