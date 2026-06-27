@@ -21,7 +21,6 @@
   <ItemGroup>
     <PackageReference Include="Serilog" />
     <PackageReference Include="Silk.NET.SDL" />
-    <PackageReference Include="System.Threading.Channels" />
     <PackageReference Include="Veldrid" />
     <PackageReference Include="ImGui.NET" />
     <PackageReference Include="ImGuizmo.NET" />
