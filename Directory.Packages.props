@@ -5,51 +5,44 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="GitInfo" Version="3.3.5" />
-    
     <!-- zzre.core -->
     <PackageVersion Include="DefaultEcs" Version="1.0.0-safe-0e92bb5" />
     <PackageVersion Include="DefaultEcs.Analyzer" Version="0.17.0" />
-    <PackageVersion Include="Serilog" Version="3.1.1" />
-    <PackageVersion Include="Silk.NET.SDL" Version="2.20.0" />
+    <PackageVersion Include="Serilog" Version="4.3.1" />
+    <PackageVersion Include="Silk.NET.SDL" Version="2.23.0" />
     <PackageVersion Include="System.Threading.Channels" Version="10.0.9" />
     <PackageVersion Include="Veldrid" Version="4.9.0-g2c8a3f1b9e" />
     <PackageVersion Include="ImGui.NET" Version="1.90.1.1-9b51cce" />
     <PackageVersion Include="ImGuizmo.NET" Version="1.61.0-9b51cce" />
     <PackageVersion Include="Mlang" Version="1.0.0-243edf7" />
-    
     <!-- zzre -->
     <PackageVersion Include="Veldrid.RenderDoc" Version="1.0.1-g2c8a3f1b9e" />
     <PackageVersion Include="Mlang.MSBuild" Version="1.0.0-243edf7" />
-    <PackageVersion Include="Microsoft.Extensions.Primitives" Version="8.0.0" />
-    <PackageVersion Include="Pfim" Version="0.11.2" />
+    <PackageVersion Include="Microsoft.Extensions.Primitives" Version="10.0.9" />
+    <PackageVersion Include="Pfim" Version="0.11.4" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="Remotery.NET" Version="1.21.1" />
     <PackageVersion Include="Remotery.NET.Native" Version="1.21.1" />
     <PackageVersion Include="NLayer" Version="1.15.0-01e1238" />
-    <PackageVersion Include="Silk.NET.OpenAL" Version="2.20.0" />
-    <PackageVersion Include="Silk.NET.OpenAL.Extensions.Enumeration" Version="2.20.0" />
-    <PackageVersion Include="Silk.NET.OpenAL.Extensions.EXT" Version="2.20.0" />
+    <PackageVersion Include="Silk.NET.OpenAL" Version="2.23.0" />
+    <PackageVersion Include="Silk.NET.OpenAL.Extensions.Enumeration" Version="2.23.0" />
+    <PackageVersion Include="Silk.NET.OpenAL.Extensions.EXT" Version="2.23.0" />
     <PackageVersion Include="MojoAL.NET.Native" Version="1.1.2" />
-    <PackageVersion Include="Serilog.Sinks.Async" Version="1.5.0" />
-    <PackageVersion Include="Serilog.Sinks.Console" Version="5.0.1" />
-    <PackageVersion Include="Serilog.Sinks.File" Version="5.0.0" />
-    
+    <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <!-- zzre.sourcegen -->
-    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
-    <PackageVersion Include="Polyfill" Version="7.0.0" />
-    <PackageVersion Include="System.Numerics.Vectors" Version="4.5.0" />
-    
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.3.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+    <PackageVersion Include="Polyfill" Version="10.11.0" />
+    <PackageVersion Include="System.Numerics.Vectors" Version="4.6.1" />
     <!-- tests -->
-    <PackageVersion Include="nunit" Version="4.3.2" />
-    <PackageVersion Include="NUnit3TestAdapter" Version="4.6.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
-    
+    <PackageVersion Include="nunit" Version="4.6.1" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="6.2.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
     <!-- cli -->
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-    
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <!-- dbsqlite -->
-    <PackageVersion Include="System.Data.SQLite" Version="1.0.119" />
-    
+    <PackageVersion Include="System.Data.SQLite" Version="2.0.3" />
   </ItemGroup>
 </Project>
