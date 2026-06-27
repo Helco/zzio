@@ -8,6 +8,12 @@ updates:
   - package-ecosystem: "nuget" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly"
+      interval: "monthly"
+    labels:
+      - "dependencies"
+  - package-ecosystem: github-actions
+    directory: ".github/workflows"
+    schedule:
+      interval: "monthly"
     labels:
       - "dependencies"
