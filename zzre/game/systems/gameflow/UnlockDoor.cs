@@ -15,7 +15,6 @@ public partial class UnlockDoor : AEntitySetSystem<float>
         Cleanup
     }
 
-    private readonly Game game;
     private readonly UI ui;
     private readonly MappedDB db;
     private readonly IDisposable messageDisposable;
@@ -25,9 +24,10 @@ public partial class UnlockDoor : AEntitySetSystem<float>
     private StdItemId keyItem;
     private DefaultEcs.Entity lockEntity, doorEntity;
 
+    private DefaultEcs.Entity PlayerEntity => World.Get<components.PlayerEntity>().Entity;
+
     public UnlockDoor(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
-        game = diContainer.GetTag<Game>();
         ui = diContainer.GetTag<UI>();
         db = diContainer.GetTag<MappedDB>();
         messageDisposable = World.Subscribe<messages.UnlockDoor>(HandleMessage);
@@ -44,7 +44,7 @@ public partial class UnlockDoor : AEntitySetSystem<float>
         (doorEntity, lockEntity, keyItem) = msg;
         state = State.Initial;
         timer = 0f;
-        game.PlayerEntity.Set(components.GameFlow.UnlockDoor);
+        PlayerEntity.Set(components.GameFlow.UnlockDoor);
     }
 
     [WithPredicate]
@@ -58,7 +58,7 @@ public partial class UnlockDoor : AEntitySetSystem<float>
             case State.Initial:
                 World.Publish(messages.LockPlayerControl.Forever);
                 World.Publish(messages.SetCameraMode.PlayerToBehind(lockEntity));
-                game.PlayerEntity.Set(new components.PuppetActorTarget(lockEntity.Get<Location>()));
+                PlayerEntity.Set(new components.PuppetActorTarget(lockEntity.Get<Location>()));
                 // we could async load s012 here
                 state = State.Camera;
                 break;
@@ -99,8 +99,8 @@ public partial class UnlockDoor : AEntitySetSystem<float>
                 timer = 0f;
                 World.Publish(messages.LockPlayerControl.Unlock);
                 World.Publish(messages.SetCameraMode.Overworld);
-                game.PlayerEntity.Set(components.GameFlow.Normal);
-                game.PlayerEntity.Remove<components.PuppetActorTarget>();
+                PlayerEntity.Set(components.GameFlow.Normal);
+                PlayerEntity.Remove<components.PuppetActorTarget>();
                 break;
         }
     }

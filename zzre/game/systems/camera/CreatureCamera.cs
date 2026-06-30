@@ -6,7 +6,6 @@ namespace zzre.game.systems;
 
 internal sealed class CreatureCamera : BaseCamera
 {
-    private readonly Game game;
     private readonly IDisposable setCameraModeSubscription;
 
     private DefaultEcs.Entity source;
@@ -16,7 +15,6 @@ internal sealed class CreatureCamera : BaseCamera
 
     public CreatureCamera(ITagContainer diContainer) : base(diContainer)
     {
-        game = diContainer.GetTag<Game>();
         setCameraModeSubscription = world.Subscribe<messages.SetCameraMode>(HandleSetCameraMode);
     }
 
@@ -46,10 +44,10 @@ internal sealed class CreatureCamera : BaseCamera
             };
         }
         (sourceLoc, targetLoc) = majorMode == 10
-            ? (playerLocation, npcLocation)
-            : (npcLocation, playerLocation);
+            ? (PlayerLocation, npcLocation)
+            : (npcLocation, PlayerLocation);
         source = majorMode == 10
-            ? game.PlayerEntity
+            ? world.Get<components.PlayerEntity>().Entity
             : message.TargetEntity;
 
         IsEnabled = true;

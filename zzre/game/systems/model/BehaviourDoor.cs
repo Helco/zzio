@@ -13,19 +13,15 @@ public partial class BehaviourDoor : AEntitySetSystem<float>
     private const float MaxPlayerYDistance = 1.5f;
     private const float MaxAngle = 90f;
 
-    private Location PlayerLocation => playerLocationLazy.Value;
-    private readonly Game game;
+    private DefaultEcs.Entity PlayerEntity => World.Get<components.PlayerEntity>().Entity;
     private readonly UI ui;
-    private readonly Lazy<Location> playerLocationLazy;
     private readonly DefaultEcs.EntitySet locks;
     private readonly IDisposable addedSubscription;
     private DefaultEcs.Entity openLeftSound, openRightSound, closeLeftSound, closeRightSound;
 
     public BehaviourDoor(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
-        game = diContainer.GetTag<Game>();
         ui = diContainer.GetTag<UI>();
-        playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         addedSubscription = World.SubscribeEntityComponentAdded<components.behaviour.Door>(HandleComponentAdded);
 
         locks = World
@@ -55,13 +51,14 @@ public partial class BehaviourDoor : AEntitySetSystem<float>
         Location location,
         ref components.behaviour.Door door)
     {
+        var playerLocation = PlayerEntity.Get<Location>();
         bool playerIsNear =
-            location.DistanceSquared(PlayerLocation) < MaxPlayerDistanceSqr &&
-            MathF.Abs(location.LocalPosition.Y - PlayerLocation.LocalPosition.Y) < MaxPlayerYDistance;
+            location.DistanceSquared(playerLocation) < MaxPlayerDistanceSqr &&
+            MathF.Abs(location.LocalPosition.Y - playerLocation.LocalPosition.Y) < MaxPlayerYDistance;
 
         if (door.IsLocked && door.KeyItemId is not null && playerIsNear &&
-            game.PlayerEntity.Get<Inventory>().Contains(door.KeyItemId.Value) &&
-            game.PlayerEntity.Get<components.GameFlow>() == components.GameFlow.Normal)
+            PlayerEntity.Get<Inventory>().Contains(door.KeyItemId.Value) &&
+            PlayerEntity.Get<components.GameFlow>() == components.GameFlow.Normal)
         {
             var myLock = FindLockNearTo(location);
             if (myLock is null)

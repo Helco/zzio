@@ -1,5 +1,4 @@
-﻿using System;
-using DefaultEcs.System;
+﻿using DefaultEcs.System;
 using zzre.rendering;
 
 namespace zzre.game.systems;
@@ -9,8 +8,7 @@ public class BaseCamera : ISystem<float>
     protected readonly IZanzarahContainer zzContainer;
     protected readonly Camera camera;
     protected readonly DefaultEcs.World world;
-    private readonly Lazy<Location> playerLocationLazy;
-    protected Location playerLocation => playerLocationLazy.Value;
+    protected Location PlayerLocation => world.Get<components.PlayerEntity>().Entity.Get<Location>();
 
     public bool IsEnabled
     {
@@ -37,9 +35,6 @@ public class BaseCamera : ISystem<float>
         world.SetMaxCapacity<components.ActiveCamera>(1);
         zzContainer = diContainer.GetTag<IZanzarahContainer>();
         camera = diContainer.GetTag<Camera>();
-
-        var game = diContainer.GetTag<Game>();
-        playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
     }
 
     public virtual void Dispose()

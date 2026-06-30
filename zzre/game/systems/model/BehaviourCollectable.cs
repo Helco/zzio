@@ -23,16 +23,13 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
     private const string ModelNameYYY = "itmyyy.dff";
     private const string ModelNameZZZ = "itmzzz.dff";
 
-    private Location playerLocation => playerLocationLazy.Value;
-    private readonly Game game;
-    private readonly Lazy<Location> playerLocationLazy;
     private readonly zzio.db.MappedDB mappedDb;
+
+    private DefaultEcs.Entity PlayerEntity => World.Get<components.PlayerEntity>().Entity;
 
     public BehaviourCollectable(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
         World.SetMaxCapacity<components.behaviour.Collecting>(1);
-        game = diContainer.GetTag<Game>();
-        playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         mappedDb = diContainer.GetTag<zzio.db.MappedDB>();
     }
 
@@ -69,7 +66,7 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
     {
         if (!collectable.IsDying)
             return;
-        var targetPos = playerLocation.LocalPosition + Vector3.UnitY *
+        var targetPos = PlayerEntity.Get<Location>().LocalPosition + Vector3.UnitY *
             (MathF.Sin(collectable.Age * BounceSpeed) * BounceAmplitude + BounceOffset);
 
         location.LocalPosition = Vector3.DistanceSquared(targetPos, location.LocalPosition) >= MinLerpDistSqr
@@ -92,19 +89,19 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         in ClumpAsset.Info clumpInfo,
         ref components.behaviour.Collectable collectable)
     {
-        if (collectable.IsDying || location.DistanceSquared(playerLocation) >= MaxPlayerDistanceSqr)
+        if (collectable.IsDying || location.DistanceSquared(PlayerEntity.Get<Location>()) >= MaxPlayerDistanceSqr)
             return;
 
-        if (game.PlayerEntity.TryGet<components.behaviour.Collecting>(out var collecting) &&
+        if (PlayerEntity.TryGet<components.behaviour.Collecting>(out var collecting) &&
             collecting.Entity.IsAlive)
             collecting.Entity.Set<components.Dead>();
-        game.PlayerEntity.Set(new components.behaviour.Collecting(entity));
+        PlayerEntity.Set(new components.behaviour.Collecting(entity));
 
         collectable.IsDying = true;
         collectable.Age = 0f;
         World.Publish(new messages.SpawnSample("resources/audio/sfx/specials/_s020.wav"));
         if (!collectable.IsDynamic)
-            game.Publish(new GSModRemoveItem(collectable.ModelId));
+            World.Publish(new GSModRemoveItem(collectable.ModelId));
         Collect(clumpInfo);
     }
 
@@ -124,21 +121,21 @@ public partial class BehaviourCollectable : AEntitySetSystem<float>
         int amount = itemId == (int)StdItemId.Gold
             ? random.Next(MinGoldAmount, MaxGoldAmount)
             : 1;
-        game.PlayerEntity.Get<Inventory>().AddItem(itemId, amount);
+        PlayerEntity.Get<Inventory>().AddItem(itemId, amount);
 
         var dbRow = mappedDb.Items.First(i => i.CardId.EntityId == itemId);
         if (dbRow.Special != 0 || parsedItemId < 0)
-            game.Publish(new messages.GotCard(dbRow.Uid, amount));
+            World.Publish(new messages.GotCard(dbRow.Uid, amount));
     }
 
-    private static readonly ImmutableArray<StdItemId> ItemPoolXXX = new[]
+    private static readonly ImmutableArray<StdItemId> ItemPoolXXX = [.. new[]
     {
         Enumerable.Repeat(StdItemId.Gold, 8),
         Enumerable.Repeat(StdItemId.SmallHealingPotion, 6),
         Enumerable.Repeat(StdItemId.NormalHealingPotion, 3),
         Enumerable.Repeat(StdItemId.BigHealingPotion, 2),
         Enumerable.Repeat(StdItemId.HealingHerb, 1)
-    }.SelectMany().ToImmutableArray();
+    }.SelectMany()];
 
     private static readonly ImmutableArray<StdItemId> ItemPoolYYY =
     [

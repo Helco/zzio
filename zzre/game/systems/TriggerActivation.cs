@@ -16,13 +16,10 @@ public partial class TriggerActivation : AEntitySetSystem<float>
     private readonly IDisposable sceneLoadedSubscription;
     private readonly IDisposable disableTriggerSubscription;
     private readonly IDisposable disableAttackTriggerSubscription;
-    private Location playerLocation => playerLocationLazy.Value;
-    private readonly Lazy<Location> playerLocationLazy;
+    private Location PlayerLocation => World.Get<components.PlayerEntity>().Entity.Get<Location>();
 
     public TriggerActivation(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
-        var game = diContainer.GetTag<Game>();
-        playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         sceneChangingSubscription = World.Subscribe<messages.SceneChanging>(HandleSceneChanging);
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
         disableTriggerSubscription = World.Subscribe<GSModDisableTrigger>(HandleDisableTrigger);
@@ -105,7 +102,7 @@ public partial class TriggerActivation : AEntitySetSystem<float>
 
     private bool ShouldBeActive(Location location, Trigger trigger)
     {
-        var playerPos = playerLocation.LocalPosition;
+        var playerPos = PlayerLocation.LocalPosition;
         switch (trigger.colliderType)
         {
             case TriggerColliderType.Point: return false;
@@ -128,6 +125,6 @@ public partial class TriggerActivation : AEntitySetSystem<float>
         if (!trigger.requiresLooking)
             return true;
 
-        return Vector3.DistanceSquared(location.InnerForward, playerLocation.InnerForward) < MaxLookingDistSqr;
+        return Vector3.DistanceSquared(location.InnerForward, PlayerLocation.InnerForward) < MaxLookingDistSqr;
     }
 }

@@ -5,14 +5,12 @@ using DefaultEcs.System;
 [PauseDuring(PauseTrigger.UIScreen)]
 public partial class GotCard : AEntitySetSystem<float>
 {
-    private readonly Game game;
     private readonly UI ui;
     private readonly IDisposable gotCardDisposable;
     private messages.GotCard lastMessage;
 
     public GotCard(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
-        game = diContainer.GetTag<Game>();
         ui = diContainer.GetTag<UI>();
         gotCardDisposable = World.Subscribe<messages.GotCard>(HandleGotCard);
     }
@@ -26,7 +24,7 @@ public partial class GotCard : AEntitySetSystem<float>
     private void HandleGotCard(in messages.GotCard message)
     {
         lastMessage = message;
-        game.PlayerEntity.Set(components.GameFlow.GotCard);
+        World.Get<components.PlayerEntity>().Entity.Set(components.GameFlow.GotCard);
     }
 
     [WithPredicate]

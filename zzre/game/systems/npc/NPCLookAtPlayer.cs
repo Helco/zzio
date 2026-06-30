@@ -1,5 +1,4 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using DefaultEcs.System;
 
 using RotationMode = zzre.game.components.NPCLookAtPlayer.Mode;
@@ -13,13 +12,11 @@ public partial class NPCLookAtPlayer : AEntitySetSystem<float>
     private const float SlerpSpeed = 20f;
     private const float MaxSmoothRotationDistSqr = 3f;
 
-    private Location playerLocation => playerLocationLazy.Value;
-    private readonly Lazy<Location> playerLocationLazy;
+    private Location PlayerLocation => World.Get<components.PlayerEntity>().Entity.Get<Location>();
 
     public NPCLookAtPlayer(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         var game = diContainer.GetTag<Game>();
-        playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
     }
 
     [WithPredicate]
@@ -34,7 +31,7 @@ public partial class NPCLookAtPlayer : AEntitySetSystem<float>
         ref components.NPCLookAtPlayer lookAt,
         ref components.PuppetActorMovement puppetActorMovement)
     {
-        var playerPos = playerLocation.LocalPosition;
+        var playerPos = PlayerLocation.LocalPosition;
         var dirToPlayer = Vector3.Normalize(playerPos - location.LocalPosition);
         switch (lookAt.RotationMode)
         {
