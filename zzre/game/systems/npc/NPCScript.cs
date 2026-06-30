@@ -18,20 +18,18 @@ public partial class NPCScript : BaseScript<NPCScript>
 
     private readonly IDisposable executeScriptSubscription;
     private readonly IDisposable sceneLoadedSubscription;
-    private readonly Game game;
     private readonly MappedDB db;
     private readonly EntityCommandRecorder recorder;
-    private Location playerLocation => playerLocationLazy.Value;
-    private readonly Lazy<Location> playerLocationLazy;
+
+    private DefaultEcs.Entity PlayerEntity => World.Get<components.PlayerEntity>().Entity;
+    private Location PlayerLocation => PlayerEntity.Get<Location>();
 
     private Scene scene = null!;
 
     public NPCScript(ITagContainer diContainer) : base(diContainer, CreateEntityContainer)
     {
-        game = diContainer.GetTag<Game>();
         db = diContainer.GetTag<MappedDB>();
         recorder = diContainer.GetTag<EntityCommandRecorder>();
-        playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         executeScriptSubscription = World.Subscribe<messages.ExecuteNPCScript>(HandleExecuteNPCScript);
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
     }
@@ -216,7 +214,7 @@ public partial class NPCScript : BaseScript<NPCScript>
 
     private void StartPrelude(DefaultEcs.Entity entity)
     {
-        if (game.PlayerEntity.Get<components.GameFlow>() == components.GameFlow.Normal)
+        if (PlayerEntity.Get<components.GameFlow>() == components.GameFlow.Normal)
             World.Publish(new messages.StartDialog(entity, components.DialogCause.Trigger));
     }
 
@@ -232,7 +230,7 @@ public partial class NPCScript : BaseScript<NPCScript>
 
     private void DeployPlayerAtTrigger(DefaultEcs.Entity entity, int triggerI)
     {
-        World.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, triggerI));
+        World.Publish(new messages.CreaturePlaceToTrigger(PlayerEntity, triggerI));
     }
 
     private static bool IfCloseToWaypoint(DefaultEcs.Entity entity, int waypointI)
@@ -304,7 +302,7 @@ public partial class NPCScript : BaseScript<NPCScript>
     {
         // TODO: Check the gameflow state in NPC IfPlayerIsClose
         var location = entity.Get<Location>();
-        return Vector3.DistanceSquared(location.LocalPosition, playerLocation.LocalPosition) < maxDistSqr;
+        return Vector3.DistanceSquared(location.LocalPosition, PlayerLocation.LocalPosition) < maxDistSqr;
     }
 
     private static void SetCollision(DefaultEcs.Entity entity, bool isSolid)

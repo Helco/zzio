@@ -8,16 +8,13 @@ public partial class NPCActivator : AEntitySetSystem<float>
 {
     private const float NPCComfortZoneSqr = 2.5f * 2.5f;
 
-    private Location playerLocation => playerLocationLazy.Value;
-    private readonly Lazy<Location> playerLocationLazy;
+    private Location PlayerLocation => World.Get<components.PlayerEntity>().Entity.Get<Location>();
     private readonly IDisposable playerEnteredSubscription;
 
     public NPCActivator(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         World.SetMaxCapacity<components.ActiveNPC>(1);
         playerEnteredSubscription = World.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
-        var game = diContainer.GetTag<Game>();
-        playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
 
         Set.EntityRemoved += HandleEntityRemoved;
     }
@@ -49,7 +46,7 @@ public partial class NPCActivator : AEntitySetSystem<float>
         in DefaultEcs.Entity entity,
         Location npcLocation)
     {
-        var currentDistanceSqr = playerLocation.DistanceSquared(npcLocation);
+        var currentDistanceSqr = PlayerLocation.DistanceSquared(npcLocation);
         var isInComfortZone = currentDistanceSqr < NPCComfortZoneSqr;
 
         var nonFairyAnim = entity.TryGet<components.NonFairyAnimation>();
@@ -61,7 +58,7 @@ public partial class NPCActivator : AEntitySetSystem<float>
         if (World.Has<components.ActiveNPC>())
         {
             otherNPC = World.Get<components.ActiveNPC>().Entity;
-            otherDistanceSqr = playerLocation.DistanceSquared(otherNPC.Value.Get<Location>());
+            otherDistanceSqr = PlayerLocation.DistanceSquared(otherNPC.Value.Get<Location>());
         }
 
         if (!isInComfortZone && entity == otherNPC)

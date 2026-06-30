@@ -33,6 +33,8 @@ public abstract partial class BaseScreen<TComponent, TMessage> : AEntitySetSyste
     protected event Action<DefaultEcs.Entity, components.ui.ElementId>? OnElementUp;
 
     protected Vector2 ScreenCenter => ui.LogicalScreen.Center;
+    protected DefaultEcs.World GameWorld => zanzarah.CurrentGame!.GetTag<DefaultEcs.World>();
+    protected DefaultEcs.Entity PlayerEntity => GameWorld.Get<components.PlayerEntity>().Entity;
 
     protected BaseScreen(ITagContainer diContainer, BlockFlags blockFlags) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {

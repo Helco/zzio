@@ -48,7 +48,6 @@ public partial class DialogScript : BaseScript<DialogScript>
     private readonly IResourcePool resourcePool;
     private readonly MappedDB db;
     private readonly UI ui;
-    private readonly Game game;
     private readonly zzio.Savegame savegame;
     private readonly EntityCommandRecorder recorder;
     private readonly IDisposable startDialogDisposable;
@@ -59,6 +58,7 @@ public partial class DialogScript : BaseScript<DialogScript>
     private DefaultEcs.Entity dialogEntity;
     private EntityRecord RecordDialogEntity() => recorder.Record(dialogEntity);
     private DefaultEcs.Entity NPCEntity => dialogEntity.Get<components.DialogNPC>().Entity;
+    private DefaultEcs.Entity PlayerEntity => World.Get<components.PlayerEntity>().Entity;
 
     public DialogScript(ITagContainer diContainer) : base(diContainer, CreateEntityContainer)
     {
@@ -66,7 +66,6 @@ public partial class DialogScript : BaseScript<DialogScript>
         resourcePool = diContainer.GetTag<IResourcePool>();
         db = diContainer.GetTag<MappedDB>();
         ui = diContainer.GetTag<UI>();
-        game = diContainer.GetTag<Game>();
         savegame = diContainer.GetTag<zzio.Savegame>();
         recorder = diContainer.GetTag<EntityCommandRecorder>();
         startDialogDisposable = World.Subscribe<messages.StartDialog>(HandleStartDialog);
@@ -103,8 +102,8 @@ public partial class DialogScript : BaseScript<DialogScript>
             SayLabel = CreateSayLabel()
         });
 
-        var playerRecord = recorder.Record(game.PlayerEntity);
-        playerRecord.Set(game.PlayerEntity.Get<components.NonFairyAnimation>() with { Next = AnimationType.Idle0 });
+        var playerRecord = recorder.Record(PlayerEntity);
+        playerRecord.Set(PlayerEntity.Get<components.NonFairyAnimation>() with { Next = AnimationType.Idle0 });
 
         World.Publish(default(messages.ui.GameScreenOpened));
         World.Publish(messages.LockPlayerControl.Forever);
@@ -274,7 +273,7 @@ public partial class DialogScript : BaseScript<DialogScript>
                 triggerEntity.Set<components.Disabled>();
         }
 
-        ref var playerPuppet = ref game.PlayerEntity.Get<components.PuppetActorMovement>();
+        ref var playerPuppet = ref PlayerEntity.Get<components.PuppetActorMovement>();
         playerPuppet.TargetDirection = MathEx.SafeNormalize(playerPuppet.TargetDirection with { Y = 0f });
 
         entity.Set(components.DialogState.FadeOut);
@@ -367,7 +366,7 @@ public partial class DialogScript : BaseScript<DialogScript>
 
     private void DeployPlayerAtTrigger(int triggerI)
     {
-        World.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, triggerI, orientByTrigger: true, moveToGround: true));
+        World.Publish(new messages.CreaturePlaceToTrigger(PlayerEntity, triggerI, orientByTrigger: true, moveToGround: true));
     }
 
     private void DeployNPCAtTrigger(int triggerI, UID uid)
@@ -381,7 +380,7 @@ public partial class DialogScript : BaseScript<DialogScript>
 
         otherNpc.Get<components.NPCMovement>().CurWaypointId = -1;
         var isFairyNpc = otherNpc.Get<components.NPCType>() == components.NPCType.Flying;
-        World.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, triggerI, orientByTrigger: true, moveToGround: !isFairyNpc));
+        World.Publish(new messages.CreaturePlaceToTrigger(PlayerEntity, triggerI, orientByTrigger: true, moveToGround: !isFairyNpc));
 
         if (isFairyNpc)
             logger.Warning("DeployNPCAtTrigger not implemented for fairy NPCs"); // TODO: Implement DeployNPCAtTrigger for fairy NPCs
@@ -532,7 +531,7 @@ public partial class DialogScript : BaseScript<DialogScript>
 
     private void PlayPlayerAnimation(DefaultEcs.Entity entity, AnimationType animation)
     {
-        game.PlayerEntity.Get<components.NonFairyAnimation>().Next = animation;
+        PlayerEntity.Get<components.NonFairyAnimation>().Next = animation;
     }
 
     private static readonly FilePath AmyVoiceBasePath = new("resources/audio/sfx/voices/amy/");

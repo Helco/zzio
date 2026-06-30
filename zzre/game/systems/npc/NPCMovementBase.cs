@@ -13,19 +13,16 @@ public abstract class NPCMovementBase : AEntitySetSystem<float>
     private const float SlerpCurvature = 100f;
     private const float SlerpSpeed = 2f;
 
-    private readonly Lazy<Location> playerLocationLazy;
     private readonly IDisposable sceneLoadedSubscription;
     protected IReadOnlyDictionary<int, Trigger> waypointById = new Dictionary<int, Trigger>();
     protected IReadOnlyDictionary<int, Trigger> waypointByIdx = new Dictionary<int, Trigger>();
     protected ILookup<int, Trigger> waypointsByCategory = Enumerable.Empty<Trigger>().ToLookup(t => 0);
 
-    protected Location PlayerLocation => playerLocationLazy.Value;
+    protected Location PlayerLocation => World.Get<components.PlayerEntity>().Entity.Get<Location>();
 
     protected NPCMovementBase(ITagContainer diContainer, Func<object, DefaultEcs.World, DefaultEcs.EntitySet> factory, bool useBuffer)
         : base(diContainer.GetTag<DefaultEcs.World>(), factory, useBuffer: true)
     {
-        var game = diContainer.GetTag<Game>();
-        playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         sceneLoadedSubscription = World.Subscribe<messages.SceneLoaded>(HandleSceneLoaded);
     }
 

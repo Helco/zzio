@@ -57,8 +57,8 @@ public sealed class OverworldCamera : BaseGameCamera
         currentVerAngle = 0f;
         curCamDistance = maxCameraDistance;
 
-        camera.Location.LookNotIn(playerLocation.GlobalForward);
-        camera.Location.LocalPosition = playerLocation.GlobalPosition +
+        camera.Location.LookNotIn(PlayerLocation.GlobalForward);
+        camera.Location.LocalPosition = PlayerLocation.GlobalPosition +
             camera.Location.InnerForward * maxCameraDistance / 3f;
         // this mimicks the original game loading freeze good enough
     }
@@ -74,7 +74,7 @@ public sealed class OverworldCamera : BaseGameCamera
         delta.X = -DeadZone(delta.X, HorizontalDeadzone);
         delta = delta * SpeedFactor * elapsedTime;
 
-        playerLocation.LocalRotation *= Quaternion.CreateFromAxisAngle(Vector3.UnitY, delta.X * MathEx.DegToRad);
+        PlayerLocation.LocalRotation *= Quaternion.CreateFromAxisAngle(Vector3.UnitY, delta.X * MathEx.DegToRad);
 
         var (newPos, newDir) = FindTarget(elapsedTime, delta);
         float lerpSpeed = curCamDistance > MinFastLerpDistance
@@ -92,11 +92,11 @@ public sealed class OverworldCamera : BaseGameCamera
 
     private (Vector3 pos, Vector3 dir) FindTarget(float elapsedTime, Vector2 delta)
     {
-        var newCamPos = playerLocation.LocalPosition + Vector3.UnitY * AdditionalHeight;
+        var newCamPos = PlayerLocation.LocalPosition + Vector3.UnitY * AdditionalHeight;
         currentVerAngle = Math.Clamp(currentVerAngle + delta.Y, -MaxVerAngle, +MaxVerAngle);
 
-        var newCamDir = new Vector3(MathF.Cos(currentVerAngle)) * playerLocation.InnerForward;
-        newCamDir.Y = MathF.Sin(currentVerAngle) + playerLocation.InnerForward.Y;
+        var newCamDir = new Vector3(MathF.Cos(currentVerAngle)) * PlayerLocation.InnerForward;
+        newCamDir.Y = MathF.Sin(currentVerAngle) + PlayerLocation.InnerForward.Y;
         newCamDir = Vector3.Normalize(newCamDir);
         newCamPos -= newCamDir * new Vector3(1f, 0.5f, 1f) * maxCameraDistance;
 
@@ -115,7 +115,7 @@ public sealed class OverworldCamera : BaseGameCamera
         if (clipDistance < curCamDistance) // this is framerate dependant
             curCamDistance -= (curCamDistance - clipDistance) * ForwardFraction;
 
-        newCamPos = playerLocation.LocalPosition + Vector3.UnitY * (ClipDistance + AdditionalHeight);
+        newCamPos = PlayerLocation.LocalPosition + Vector3.UnitY * (ClipDistance + AdditionalHeight);
         newCamPos -= newCamDir * CameraDirectionFactor * curCamDistance;
 
         // TODO: Add water handling for the overworld camera
@@ -128,7 +128,7 @@ public sealed class OverworldCamera : BaseGameCamera
         var camRight = -camera.Location.InnerRight;
         var target = baseCamPos + camRight * ClipDistance * direction;
         target.Y -= direction * ClipDistance;
-        var cast = worldCollider.Cast(new Line(playerLocation.LocalPosition, target));
+        var cast = worldCollider.Cast(new Line(PlayerLocation.LocalPosition, target));
         return cast?.Distance ?? float.MaxValue;
     }
 }

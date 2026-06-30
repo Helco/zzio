@@ -7,18 +7,17 @@ public class DialogLookAt : ISystem<float>
 {
     public bool IsEnabled { get; set; } = true;
 
-    private readonly Game game;
+    private readonly DefaultEcs.World ecsWorld;
     private readonly IDisposable addedSubscription;
     private readonly IDisposable removedSubscription;
     private readonly IDisposable changedSubscription;
 
     public DialogLookAt(ITagContainer diContainer)
     {
-        game = diContainer.GetTag<Game>();
-        var world = diContainer.GetTag<DefaultEcs.World>();
-        addedSubscription = world.SubscribeEntityComponentAdded<components.DialogState>(HandleAddedComponent);
-        removedSubscription = world.SubscribeEntityComponentRemoved<components.DialogState>(HandleRemovedComponent);
-        changedSubscription = world.SubscribeEntityComponentChanged<components.DialogState>(HandleChangedComponent);
+        ecsWorld = diContainer.GetTag<DefaultEcs.World>();
+        addedSubscription = ecsWorld.SubscribeEntityComponentAdded<components.DialogState>(HandleAddedComponent);
+        removedSubscription = ecsWorld.SubscribeEntityComponentRemoved<components.DialogState>(HandleRemovedComponent);
+        changedSubscription = ecsWorld.SubscribeEntityComponentChanged<components.DialogState>(HandleChangedComponent);
     }
     public void Dispose()
     {
@@ -55,13 +54,14 @@ public class DialogLookAt : ISystem<float>
 
     private void HandlePlayerLookAt(DefaultEcs.Entity dialogEntity, bool isEnabled)
     {
+        var playerEntity = ecsWorld.Get<components.PlayerEntity>().Entity;
         if (isEnabled && dialogEntity.IsAlive)
         {
             var npcLocation = dialogEntity.Get<components.DialogNPC>().Entity.Get<Location>();
-            game.PlayerEntity.Set(new components.PuppetActorTarget(npcLocation));
+            playerEntity.Set(new components.PuppetActorTarget(npcLocation));
         }
         else
-            game.PlayerEntity.Remove<components.PuppetActorTarget>();
+            playerEntity.Remove<components.PuppetActorTarget>();
     }
 
     private static bool ShouldNPCLookAt(components.DialogState state) =>
@@ -76,8 +76,9 @@ public class DialogLookAt : ISystem<float>
         if (!npcEntity.IsAlive)
             return;
 
+        var playerLocation = ecsWorld.Get<components.PlayerEntity>().Entity.Get<Location>();
         if (isEnabled && npcEntity.Get<components.NPCType>() == components.NPCType.Biped) // TODO: Fix Fairy NPCs not looking at player during dialogs
-            npcEntity.Set(new components.PuppetActorTarget(game.PlayerEntity.Get<Location>()));
+            npcEntity.Set(new components.PuppetActorTarget(playerLocation));
         else
             npcEntity.Remove<components.PuppetActorTarget>();
     }

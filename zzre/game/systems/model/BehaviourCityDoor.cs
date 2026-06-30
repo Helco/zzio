@@ -11,16 +11,12 @@ public partial class BehaviourCityDoor : AEntitySetSystem<float>
     private const float MaxPlayerDistanceSqr = 3f * 3f;
     private const float MoveHeightFactor = 0.9f;
 
-    private Location playerLocation => playerLocationLazy.Value;
-    private readonly Game game;
-    private readonly Lazy<Location> playerLocationLazy;
+    private Location PlayerLocation => World.Get<components.PlayerEntity>().Entity.Get<Location>();
     private readonly DefaultEcs.EntitySet locks;
     private readonly IDisposable addedSubscription;
 
     public BehaviourCityDoor(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: false)
     {
-        game = diContainer.GetTag<Game>();
-        playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         addedSubscription = World.SubscribeEntityComponentAdded<components.behaviour.CityDoor>(HandleComponentAdded);
 
         locks = World
@@ -55,7 +51,7 @@ public partial class BehaviourCityDoor : AEntitySetSystem<float>
         Location location,
         ref components.behaviour.CityDoor door)
     {
-        bool keepOpen = playerLocation.DistanceSquared(door.StartPosition) < MaxPlayerDistanceSqr;
+        bool keepOpen = PlayerLocation.DistanceSquared(door.StartPosition) < MaxPlayerDistanceSqr;
 
         // TODO: Add city door unlock behaviour
 

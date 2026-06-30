@@ -6,7 +6,7 @@ namespace zzre.game.systems;
 
 partial class DialogScript
 {
-    private Inventory PlayerInventory => game.PlayerEntity.Get<Inventory>();
+    private Inventory PlayerInventory => PlayerEntity.Get<Inventory>();
 
     private bool IfPlayerHasCards(DefaultEcs.Entity entity, int count, CardType type, int id)
     {

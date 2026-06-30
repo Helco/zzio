@@ -15,17 +15,16 @@ public partial class PlantWiggle : AEntitySetSystem<float>
     private static readonly Vector3 PlayerDistanceShift = new(0f, 0.7f, 0f);
 
     private readonly IDisposable addComponentSubscription;
-    private Location playerLocation => playerLocationLazy.Value;
-    private readonly Lazy<Location> playerLocationLazy;
     private readonly Location cameraLocation;
     private readonly GameTime gameTime;
     private bool didStartSoundThisFrame;
+
+    private Location PlayerLocation => World.Get<components.PlayerEntity>().Entity.Get<Location>();
 
     public PlantWiggle(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
     {
         var game = diContainer.GetTag<Game>();
         gameTime = diContainer.GetTag<GameTime>();
-        playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
         cameraLocation = diContainer.GetTag<rendering.Camera>().Location;
         addComponentSubscription = World.SubscribeEntityComponentAdded<components.PlantWiggle>(HandleComponentAdded);
     }
@@ -59,7 +58,7 @@ public partial class PlantWiggle : AEntitySetSystem<float>
 
         var camDist = Vector3.Distance(plantLocation.LocalPosition, cameraLocation.LocalPosition);
         var playerDist = Vector3.DistanceSquared(
-            playerLocation.LocalPosition,
+            PlayerLocation.LocalPosition,
             plantLocation.LocalPosition + PlayerDistanceShift);
         if (camDist < MaxCameraDistance && collider.Radius > MinColliderSize)
         {

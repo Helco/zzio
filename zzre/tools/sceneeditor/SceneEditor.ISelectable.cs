@@ -24,13 +24,12 @@ public partial class SceneEditor
     private readonly List<IEnumerable<ISelectable>> selectableContainers = [];
     private IEnumerable<ISelectable> Selectables => selectableContainers.SelectMany(c => c);
 
-    private ISelectable? _selected;
     private ISelectable? Selected
     {
-        get => _selected;
+        get;
         set
         {
-            _selected = value;
+            field = value;
             OnNewSelection.Invoke(value);
         }
     }

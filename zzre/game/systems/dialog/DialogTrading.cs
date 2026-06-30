@@ -63,7 +63,7 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
         entity.Set(new components.Parent(parent));
 
         preload.CreateDialogBackground(entity, animateOverlay: false, out var bgRect);
-        preload.CreateCurrencyLabel(entity, trading.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
+        preload.CreateCurrencyLabel(entity, trading.Currency, PlayerEntity.Get<Inventory>());
         for (int i = 0; i < trading.CardTrades.Count; i++)
             AddTrade(entity, trading, i, bgRect);
         preload.CreateSingleDialogButton(entity, new UID(0xF7DFDC21), IDExit, bgRect);
@@ -152,7 +152,7 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
             .With(UIPreloadAsset.Fnt000)
             .Build();
 
-        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        var inventory = PlayerEntity.Get<Inventory>();
         if (inventory.CountCards(trading.Currency.CardId) >= price) {
             preload.CreateButton(entity)
                 .With(purchase)
@@ -186,7 +186,7 @@ public partial class DialogTrading : ui.BaseScreen<components.DialogTrading, mes
             var purchase = trading.Purchase!;
             var price = trading.CardTrades.First(trade => trade.uid == purchase.Uid).price;
 
-            var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+            var inventory = PlayerEntity.Get<Inventory>();
             inventory.Add(purchase.CardId);
             inventory.RemoveCards(trading.Currency.CardId, (uint)price);
 

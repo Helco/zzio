@@ -23,20 +23,15 @@ public class PlayerTriggers : ISystem<float>
 
     public bool IsEnabled { get; set; } = true;
     public bool IsMarkerActive => npcMarker.Has<components.Visibility>();
-
-    private Location playerLocation => playerLocationLazy.Value;
-    private readonly Lazy<Location> playerLocationLazy;
+    private Location PlayerLocation => world.Get<components.PlayerEntity>().Entity.Get<Location>();
 
     public PlayerTriggers(ITagContainer diContainer)
     {
         world = diContainer.GetTag<DefaultEcs.World>();
         playerControls = diContainer.GetTag<PlayerControls>();
+        cameraLocation = diContainer.GetTag<rendering.Camera>().Location;
         zzContainer = diContainer.GetTag<IZanzarahContainer>();
         zzContainer.OnMouseDown += HandleMouseDown;
-
-        var game = diContainer.GetTag<Game>();
-        cameraLocation = diContainer.GetTag<rendering.Camera>().Location;
-        playerLocationLazy = new Lazy<Location>(() => game.PlayerEntity.Get<Location>());
 
         sceneChangingDisposable = world.Subscribe<messages.SceneChanging>(HandleSceneChanging);
     }
@@ -116,7 +111,7 @@ public class PlayerTriggers : ISystem<float>
             return false;
 
         var npcLocation = npc.Get<Location>();
-        var playerToNpc = (playerLocation.GlobalPosition - npcLocation.GlobalPosition) with { Y = 0.001f };
+        var playerToNpc = (PlayerLocation.GlobalPosition - npcLocation.GlobalPosition) with { Y = 0.001f };
         var cameraDir = cameraLocation.GlobalForward with { Y = 0.001f };
         var dirDistance = Vector3.Distance(Vector3.Normalize(playerToNpc), Vector3.Normalize(cameraDir));
         return dirDistance < MaxNpcDirDistance;

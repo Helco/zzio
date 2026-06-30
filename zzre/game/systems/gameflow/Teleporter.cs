@@ -78,7 +78,7 @@ public partial class Teleporter : AEntitySetSystem<float>
             return;
         }
 
-        game.Publish(new messages.Teleport(sceneId: unchecked((int)trigger.ii3), targetEntry: (int)trigger.ii2));
+        World.Publish(new messages.Teleport(sceneId: unchecked((int)trigger.ii3), targetEntry: (int)trigger.ii2));
         
         // Apparently having gone through states 2 or 8 can cause this to happen if subsequently using an in-scene elevator...
         //game.Publish(new messages.CreaturePlaceToTrigger(game.PlayerEntity, (int)trigger.idx));
@@ -92,7 +92,7 @@ public partial class Teleporter : AEntitySetSystem<float>
         teleportSoundEntity = ui.World.CreateEntity();
         World.Publish(new messages.SpawnSample($"resources/audio/sfx/specials/_s009.wav", AsEntity: teleportSoundEntity, Volume: 0f));
 
-        game.PlayerEntity.Set(components.GameFlow.Teleporter);
+        World.Get<components.PlayerEntity>().Entity.Set(components.GameFlow.Teleporter);
         state = State.Initialize;
         targetScene = message.sceneId;
         targetEntry = message.targetEntry;
