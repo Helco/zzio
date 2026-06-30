@@ -32,6 +32,7 @@ public class PlayerSpawner : ISystem<float>
         playerEnteredSubscription = ecsWorld.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
 
         ecsWorld.SetMaxCapacity<components.PlayerEntity>(1);
+        ecsWorld.SetMaxCapacity<components.GameFlow>(1);
     }
 
     public void Dispose()
@@ -69,10 +70,10 @@ public class PlayerSpawner : ISystem<float>
         playerEntity.Set(new components.HumanPhysics(playerColliderSize));
         playerEntity.Set(new Sphere(Vector3.Zero, playerColliderSize));
         playerEntity.Set(new Inventory(diContainer, savegame));
-        playerEntity.Set(components.GameFlow.Normal); // TODO: Move GameFlow component to world instead of player entity
         playerEntity.Get<components.ActorParts>().Body.Set<components.SoundListener>();
         playerEntity.Get<components.ActorParts>().Body.Set<components.KeepDuringSceneChange>();
         ecsWorld.Set(new components.PlayerEntity(playerEntity));
+        ecsWorld.Set(components.GameFlow.Normal);
     }
 
     private void HandlePlayerEntered(in messages.PlayerEntered message)

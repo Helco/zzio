@@ -58,7 +58,7 @@ public partial class BehaviourDoor : AEntitySetSystem<float>
 
         if (door.IsLocked && door.KeyItemId is not null && playerIsNear &&
             PlayerEntity.Get<Inventory>().Contains(door.KeyItemId.Value) &&
-            PlayerEntity.Get<components.GameFlow>() == components.GameFlow.Normal)
+            World.Get<components.GameFlow>() == components.GameFlow.Normal)
         {
             var myLock = FindLockNearTo(location);
             if (myLock is null)

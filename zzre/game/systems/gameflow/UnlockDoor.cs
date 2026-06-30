@@ -4,7 +4,7 @@ using DefaultEcs.System;
 using zzio;
 using zzio.db;
 
-public partial class UnlockDoor : AEntitySetSystem<float>
+public partial class UnlockDoor : ISystem<float>
 {
     private enum State
     {
@@ -15,6 +15,7 @@ public partial class UnlockDoor : AEntitySetSystem<float>
         Cleanup
     }
 
+    private readonly DefaultEcs.World ecsWorld;
     private readonly UI ui;
     private readonly MappedDB db;
     private readonly IDisposable messageDisposable;
@@ -24,18 +25,20 @@ public partial class UnlockDoor : AEntitySetSystem<float>
     private StdItemId keyItem;
     private DefaultEcs.Entity lockEntity, doorEntity;
 
-    private DefaultEcs.Entity PlayerEntity => World.Get<components.PlayerEntity>().Entity;
+    private DefaultEcs.Entity PlayerEntity => ecsWorld.Get<components.PlayerEntity>().Entity;
 
-    public UnlockDoor(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
+    public bool IsEnabled { get; set; } = true;
+
+    public UnlockDoor(ITagContainer diContainer)
     {
+        ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         ui = diContainer.GetTag<UI>();
         db = diContainer.GetTag<MappedDB>();
-        messageDisposable = World.Subscribe<messages.UnlockDoor>(HandleMessage);
+        messageDisposable = ecsWorld.Subscribe<messages.UnlockDoor>(HandleMessage);
     }
 
-    public override void Dispose()
+    public void Dispose()
     {
-        base.Dispose();
         messageDisposable.Dispose();
     }
 
@@ -44,20 +47,18 @@ public partial class UnlockDoor : AEntitySetSystem<float>
         (doorEntity, lockEntity, keyItem) = msg;
         state = State.Initial;
         timer = 0f;
-        PlayerEntity.Set(components.GameFlow.UnlockDoor);
+        ecsWorld.Set(components.GameFlow.UnlockDoor);
     }
 
-    [WithPredicate]
-    private static bool IsInGameFlow(in components.GameFlow flow) => flow == components.GameFlow.UnlockDoor;
-
-    [Update]
-    private new void Update(float elapsedTime, in DefaultEcs.Entity entity)
+    public void Update(float elapsedTime)
     {
+        if (!IsEnabled || ecsWorld.Get<components.GameFlow>() != components.GameFlow.UnlockDoor)
+            return;
         switch(state)
         {
             case State.Initial:
-                World.Publish(messages.LockPlayerControl.Forever);
-                World.Publish(messages.SetCameraMode.PlayerToBehind(lockEntity));
+                ecsWorld.Publish(messages.LockPlayerControl.Forever);
+                ecsWorld.Publish(messages.SetCameraMode.PlayerToBehind(lockEntity));
                 PlayerEntity.Set(new components.PuppetActorTarget(lockEntity.Get<Location>()));
                 // we could async load s012 here
                 state = State.Camera;
@@ -70,9 +71,9 @@ public partial class UnlockDoor : AEntitySetSystem<float>
                     state = State.ShowNotification;
                     var modelId = lockEntity.Get<components.behaviour.Lock>().ModelId;
                     var location = lockEntity.Get<Location>();
-                    World.Publish(new GSModRemoveModel(modelId));
-                    World.Publish(new messages.SpawnEffectCombiner(4002, Position: location.GlobalPosition));
-                    World.Publish(new messages.SpawnSample("resources/audio/sfx/specials/_s012.wav"));
+                    ecsWorld.Publish(new GSModRemoveModel(modelId));
+                    ecsWorld.Publish(new messages.SpawnEffectCombiner(4002, Position: location.GlobalPosition));
+                    ecsWorld.Publish(new messages.SpawnSample("resources/audio/sfx/specials/_s012.wav"));
                 }
                 break;
             case State.ShowNotification:
@@ -97,9 +98,9 @@ public partial class UnlockDoor : AEntitySetSystem<float>
             default: // just as an emergency fallback
                 state = State.Initial;
                 timer = 0f;
-                World.Publish(messages.LockPlayerControl.Unlock);
-                World.Publish(messages.SetCameraMode.Overworld);
-                PlayerEntity.Set(components.GameFlow.Normal);
+                ecsWorld.Publish(messages.LockPlayerControl.Unlock);
+                ecsWorld.Publish(messages.SetCameraMode.Overworld);
+                ecsWorld.Set(components.GameFlow.Normal);
                 PlayerEntity.Remove<components.PuppetActorTarget>();
                 break;
         }
