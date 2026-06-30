@@ -3,37 +3,38 @@ using System;
 using DefaultEcs.System;
 
 [PauseDuring(PauseTrigger.UIScreen)]
-public partial class GotCard : AEntitySetSystem<float>
+public partial class GotCard : ISystem<float>
 {
+    private readonly DefaultEcs.World ecsWorld;
     private readonly UI ui;
     private readonly IDisposable gotCardDisposable;
     private messages.GotCard lastMessage;
 
-    public GotCard(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
+    public bool IsEnabled { get; set; } = true;
+
+    public GotCard(ITagContainer diContainer)
     {
+        ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         ui = diContainer.GetTag<UI>();
-        gotCardDisposable = World.Subscribe<messages.GotCard>(HandleGotCard);
+        gotCardDisposable = ecsWorld.Subscribe<messages.GotCard>(HandleGotCard);
     }
 
-    public override void Dispose()
+    public void Dispose()
     {
-        base.Dispose();
         gotCardDisposable?.Dispose();
     }
      
     private void HandleGotCard(in messages.GotCard message)
     {
         lastMessage = message;
-        World.Get<components.PlayerEntity>().Entity.Set(components.GameFlow.GotCard);
+        ecsWorld.Set(components.GameFlow.GotCard);
     }
 
-    [WithPredicate]
-    private static bool IsInGameFlow(in components.GameFlow flow) => flow == components.GameFlow.GotCard;
-
-    [Update]
-    private void Update(in DefaultEcs.Entity entity)
+    public void Update(float _)
     {
-        entity.Set(components.GameFlow.Normal);
+        if (!IsEnabled || ecsWorld.Get<components.GameFlow>() != components.GameFlow.GotCard)
+            return;
+        ecsWorld.Set(components.GameFlow.Normal);
         ui.Publish(new messages.ui.OpenGotCard(lastMessage.UID, lastMessage.Amount));
     }
 }

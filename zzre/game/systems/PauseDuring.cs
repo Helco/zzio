@@ -44,10 +44,10 @@ public class PauseDuring : ISystem<float>
         var ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         openSubscription = ecsWorld.Subscribe((in messages.ui.GameScreenOpened _) => HandleTrigger(PauseTrigger.UIScreen, false));
         closeSubscription = ecsWorld.Subscribe((in messages.ui.GameScreenClosed _) => HandleTrigger(PauseTrigger.UIScreen, true));
-        gameFlowChangeSubscription = ecsWorld.SubscribeEntityComponentChanged<components.GameFlow>(HandleGameFlowChange);
+        gameFlowChangeSubscription = ecsWorld.SubscribeWorldComponentChanged<components.GameFlow>(HandleGameFlowChange);
     }
 
-    private void HandleGameFlowChange(in DefaultEcs.Entity _, in components.GameFlow oldValue, in components.GameFlow newValue)
+    private void HandleGameFlowChange(DefaultEcs.World _, in components.GameFlow oldValue, in components.GameFlow newValue)
     {
         var isNowNormal = newValue == components.GameFlow.Normal;
         if ((oldValue == components.GameFlow.Normal) != isNowNormal)

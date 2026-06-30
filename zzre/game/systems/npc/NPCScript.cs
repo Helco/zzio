@@ -214,7 +214,7 @@ public partial class NPCScript : BaseScript<NPCScript>
 
     private void StartPrelude(DefaultEcs.Entity entity)
     {
-        if (PlayerEntity.Get<components.GameFlow>() == components.GameFlow.Normal)
+        if (World.Get<components.GameFlow>() == components.GameFlow.Normal)
             World.Publish(new messages.StartDialog(entity, components.DialogCause.Trigger));
     }
 

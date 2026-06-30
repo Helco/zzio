@@ -6,8 +6,9 @@ using zzio.db;
 using zzio.scn;
 
 [PauseDuring(PauseTrigger.UIScreen)]
-public partial class Doorway : AEntitySetSystem<float>
+public partial class Doorway : ISystem<float>
 {
+    private readonly DefaultEcs.World ecsWorld;
     private readonly UI ui;
     private readonly OverworldGame game;
     private readonly MappedDB db;
@@ -19,18 +20,20 @@ public partial class Doorway : AEntitySetSystem<float>
     private int targetEntry;
     private DefaultEcs.Entity fadeEntity;
 
-    public Doorway(ITagContainer diContainer) : base(diContainer.GetTag<DefaultEcs.World>(), CreateEntityContainer, useBuffer: true)
+    public bool IsEnabled { get; set; } = true;
+
+    public Doorway(ITagContainer diContainer)
     {
+        ecsWorld = diContainer.GetTag<DefaultEcs.World>();
         ui = diContainer.GetTag<UI>();
         game = diContainer.GetTag<OverworldGame>();
         db = diContainer.GetTag<MappedDB>();
-        doorwayTriggerDisposable = World.SubscribeEntityComponentAdded<components.ActiveTrigger>(HandleActiveTrigger);
-        enteredDisposable = World.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
+        doorwayTriggerDisposable = ecsWorld.SubscribeEntityComponentAdded<components.ActiveTrigger>(HandleActiveTrigger);
+        enteredDisposable = ecsWorld.Subscribe<messages.PlayerEntered>(HandlePlayerEntered);
     }
 
-    public override void Dispose()
+    public void Dispose()
     {
-        base.Dispose();
         doorwayTriggerDisposable.Dispose();
         enteredDisposable.Dispose();
     }
@@ -44,25 +47,23 @@ public partial class Doorway : AEntitySetSystem<float>
         if (trigger.type != TriggerType.Doorway)
             return;
 
-        World.Get<components.PlayerEntity>().Entity.Set(components.GameFlow.Doorway);
+        ecsWorld.Set(components.GameFlow.Doorway);
         targetScene = $"sc_{trigger.ii3:D4}";
         targetEntry = (int)trigger.ii2;
         fadeEntity = ui.Builder.CreateStdFlashFade(parent: default);
-        World.Publish(messages.LockPlayerControl.Forever);
-        World.Publish(new messages.PlayerLeaving(targetScene));
+        ecsWorld.Publish(messages.LockPlayerControl.Forever);
+        ecsWorld.Publish(new messages.PlayerLeaving(targetScene));
         // TODO: Add fade off during scene changes
     }
 
-    [WithPredicate]
-    private static bool IsInGameFlow(in components.GameFlow flow) => flow == components.GameFlow.Doorway;
-
-    [Update]
-    private new void Update(float elapsedTime, in DefaultEcs.Entity entity)
+    public void Update(float elapsedTime)
     {
+        if (!IsEnabled || ecsWorld.Get<components.GameFlow>() != components.GameFlow.Doorway)
+            return;
         if (fadeEntity == default)
         {
             game.LoadScene(targetScene, () => game.FindEntryTrigger(targetEntry));
-            entity.Set(components.GameFlow.Normal);
+            ecsWorld.Set(components.GameFlow.Normal);
         }
         else if (fadeEntity.TryGet<components.ui.Fade>(out var fade) && fade.IsFadedIn)
         {
@@ -74,7 +75,7 @@ public partial class Doorway : AEntitySetSystem<float>
 
     private void HandlePlayerEntered(in messages.PlayerEntered message)
     {
-        var newSceneName = World.Get<Scene>().dataset.nameUID;
+        var newSceneName = ecsWorld.Get<Scene>().dataset.nameUID;
         if (newSceneName != lastSceneName && newSceneName != UID.Invalid)
         {
             lastSceneName = newSceneName;
