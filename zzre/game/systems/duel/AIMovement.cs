@@ -228,7 +228,7 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
     {
         while (moveDistLeft > 0f)
         {
-            if (!path.Waypoints.IsEmpty && movement.DistToCurWp - (movement.DistMovedToCurWp + moveDistLeft) > 0f)
+            if (!path.Waypoints.IsEmpty && movement.DistToCurWp - movement.DistMovedToCurWp > moveDistLeft)
                 break;
             //if (movement.ShouldAdvanceNode && path.WaypointIds.Count > 2)
             //    path.CurrentIndex++;
@@ -282,15 +282,19 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
     {
         while (moveDistLeft > 0f)
         {
-            if (!path.HasPrevWaypoint && movement.DistToCurWp - (moveDistLeft + movement.DistMovedToCurWp) > 0)
+            if (!path.HasPrevWaypoint && movement.DistLeftToCurWp > moveDistLeft)
                 return FindPathResult.NotThereYet;
 
-            if (movement.ShouldAdvanceNode && path.WaypointIds.Count > 2)
+            var anotherDistToCurWp = Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos);
+            if (MathF.Abs(anotherDistToCurWp - movement.DistLeftToCurWp) > 0.01f)
+                logger.Warning("Calculated is not recalculated");
+
+            if (movement.ShouldAdvanceNode && path.WaypointIds.Count > 2) // shouldnt this check TargetIndex instead?
                 path.TargetIndex--;
             if (path.Waypoints.IsEmpty || !path.HasPrevWaypoint) // || isFabricated
                 return FindPathResult.NotFound;
 
-            moveDistLeft -= Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos);
+            moveDistLeft -= anotherDistToCurWp;
             movement.CurrentPos = path.Waypoints[path.TargetIndex];
             path.TargetIndex--;
             movement.CurrentEdgeKind = path.EdgeKinds[path.TargetIndex];

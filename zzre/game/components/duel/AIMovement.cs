@@ -18,4 +18,6 @@ public struct AIMovement
     public bool DidTimeoutFindingPath;
     public bool DidReverse;
     public bool IsPlayerNear;
+
+    public readonly float DistLeftToCurWp => DistToCurWp - DistMovedToCurWp;
 }
