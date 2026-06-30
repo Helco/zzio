@@ -29,7 +29,7 @@ public partial class ScrBookMenu : BaseScreen<components.ui.ScrBookMenu, message
 
     protected override void HandleOpen(in messages.ui.OpenBookMenu message)
     {
-        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        var inventory = PlayerEntity.Get<Inventory>();
         if (!inventory.Contains(StdItemId.FairyBook))
             return;
 

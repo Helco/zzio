@@ -97,7 +97,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
                 .With(new Vector2(gambling.BgRect.Max.X - 55, gambling.BgRect.Min.Y + 29))
                 .With(new CardId(CardType.Item, (int)StdItemId.CloverLeaf))
                 .Build();
-        gambling.CurrencyLabel = preload.CreateCurrencyLabel(entity, gambling.Currency, zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>());
+        gambling.CurrencyLabel = preload.CreateCurrencyLabel(entity, gambling.Currency, PlayerEntity.Get<Inventory>());
         if (gambling.SelectedCards.Count == rows) {
             RebuildPrimary(entity, ref gambling, allowPurchaseButtons);
         } else if (!CanAfford(ref gambling)) {
@@ -170,7 +170,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         var spellClass = preload.GetClassText(card.PriceA);
         var prices = UIBuilder.GetSpellPrices(card);
 
-        if (!zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Contains(card.CardId)) {
+        if (!PlayerEntity.Get<Inventory>().Contains(card.CardId)) {
             var newSpell = db.GetText(UIDNewSpell).Text.ToUpper(cultureInfo);
             return $"{name} - {newSpell}\n{spellType} - {spellClass} - {prices}";
         } else {
@@ -179,7 +179,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     }
 
     private string TextSpellCount(SpellRow card) {
-        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        var inventory = PlayerEntity.Get<Inventory>();
         var count = inventory.CountCards(card.CardId);
         var countInUse = inventory.CountCards(card.CardId, inUse: true);
 
@@ -348,18 +348,18 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
     }
 
     private bool CanAfford(ref components.DialogGambling gambling) =>
-        zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().CountCards(gambling.Currency.CardId) >= pricePerRow * rows;
+        PlayerEntity.Get<Inventory>().CountCards(gambling.Currency.CardId) >= pricePerRow * rows;
 
     private void Pay(ref components.DialogGambling gambling)
     {
-        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        var inventory = PlayerEntity.Get<Inventory>();
         inventory.RemoveCards(gambling.Currency.CardId, pricePerRow);
         gambling.CurrencyLabel.Dispose();
         gambling.CurrencyLabel = preload.CreateCurrencyLabel(gambling.Profile, gambling.Currency, inventory);
     }
 
     private bool HasCloverleaf() =>
-        zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Contains(StdItemId.CloverLeaf);
+        PlayerEntity.Get<Inventory>().Contains(StdItemId.CloverLeaf);
 
     private List<int?> CloverleafFilter(List<int?> cards) {
         if (!HasCloverleaf()) return cards;
@@ -383,7 +383,7 @@ public partial class DialogGambling : ui.BaseScreen<components.DialogGambling, m
         }
         else if (clickedId == IDYes) {
             World.Publish(new messages.SpawnSample($"resources/audio/sfx/gui/_g008.wav"));
-            zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>().Add(gambling.Purchase!.CardId);
+            PlayerEntity.Get<Inventory>().Add(gambling.Purchase!.CardId);
             gambling.Profile.Dispose();
             gambling.Profile = CreatePrimary(uiEntity, ref gambling, allowPurchaseButtons: false);
         }

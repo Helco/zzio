@@ -54,7 +54,7 @@ public partial class ScrRuneMenu : BaseScreen<components.ui.ScrRuneMenu, message
 
     protected override void HandleOpen(in messages.ui.OpenRuneMenu message)
     {
-        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        var inventory = PlayerEntity.Get<Inventory>();
         if (!inventory.Contains(StdItemId.RuneFairyGarden))
             return;
 

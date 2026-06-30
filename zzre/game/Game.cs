@@ -29,7 +29,6 @@ public abstract class Game : BaseDisposable, ITagContainer
     private AssetRegistryStats assetStatsBeforeLoading, assetStatsBeforeRemoving;
     private float timeBeforeLoading;
 
-    public DefaultEcs.Entity PlayerEntity => ecsWorld.Get<components.PlayerEntity>().Entity;
     public IResource SceneResource { get; private set; } = null!;
 
     public bool IsUpdateEnabled

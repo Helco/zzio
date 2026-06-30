@@ -18,7 +18,7 @@ public partial class ScrMapMenu : BaseScreen<components.ui.ScrMapMenu, messages.
 
     protected override void HandleOpen(in messages.ui.OpenMapMenu message)
     {
-        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        var inventory = PlayerEntity.Get<Inventory>();
         if (!inventory.Contains(StdItemId.MapFairyGarden))
             return;
 

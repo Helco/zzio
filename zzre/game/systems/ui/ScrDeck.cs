@@ -55,7 +55,7 @@ public partial class ScrDeck : BaseScreen<components.ui.ScrDeck, messages.ui.Ope
 
     protected override void HandleOpen(in messages.ui.OpenDeck message)
     {
-        var inventory = zanzarah.CurrentGame!.PlayerEntity.Get<Inventory>();
+        var inventory = PlayerEntity.Get<Inventory>();
         if (!inventory.Contains(StdItemId.FairyBag))
            return;
 
