@@ -70,13 +70,10 @@ public abstract class Game : BaseDisposable, ITagContainer
         ecsWorld.Set(new Location()); // world location
         ecsWorld.Subscribe<messages.SpawnSample>(diContainer.GetTag<UI>().Publish); // make sound a bit easier on us
         assetRegistry.SubscribeAt(ecsWorld);
-
-        //ecsWorld.Subscribe<messages.SceneLoaded>(DisposeUnusedAssets);
     }
 
     protected override void DisposeManaged()
     {
-        //assetRegistry.DelayDisposals = false;
         tagContainer.RemoveTag<IAssetRegistry>(dispose: false); // remove all entities first, then destroy registry
         updateSystems.Dispose();
         renderSystems.Dispose();
