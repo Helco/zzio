@@ -12,23 +12,22 @@ public class BaseCamera : ISystem<float>
     private readonly Lazy<Location> playerLocationLazy;
     protected Location playerLocation => playerLocationLazy.Value;
 
-    private bool isEnabled;
     public bool IsEnabled
     {
-        get => isEnabled;
+        get;
         set
         {
             if (world.Has<components.ActiveCamera>())
             {
                 ref readonly var activeCamera = ref world.Get<components.ActiveCamera>();
                 if (activeCamera.System != this)
-                    activeCamera.System.isEnabled = false;
+                    activeCamera.System.IsEnabled = false;
             }
             if (value)
                 world.Set(new components.ActiveCamera(this));
             else
                 world.Remove<components.ActiveCamera>();
-            isEnabled = value;
+            field = value;
         }
     }
 

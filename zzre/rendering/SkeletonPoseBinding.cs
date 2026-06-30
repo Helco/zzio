@@ -10,24 +10,23 @@ public class SkeletonPoseBinding : BaseBinding
     private const int MaxBoneCount = 128;
 
     private bool isContentDirty = true;
-    private Skeleton? skeleton;
     private DeviceBuffer? poseBuffer;
     private DeviceBufferRange poseBufferRange;
 
     public Skeleton? Skeleton
     {
-        get => skeleton;
+        get;
         set
         {
             ArgumentNullException.ThrowIfNull(value);
             ArgumentOutOfRangeException.ThrowIfGreaterThan(value.Bones.Count, MaxBoneCount, nameof(value));
-            skeleton = value;
+            field = value;
             poseBuffer?.Dispose();
             poseBuffer = Parent.Device.ResourceFactory.CreateBuffer(new BufferDescription(
                 MaxBoneCount * 4 * 4 * sizeof(float),
                 BufferUsage.StructuredBufferReadOnly | BufferUsage.DynamicWrite,
                 4 * 4 * sizeof(float)));
-            poseBuffer.Name = $"{skeleton.Name} Pose {GetHashCode()}";
+            poseBuffer.Name = $"{field.Name} Pose {GetHashCode()}";
             poseBufferRange = new DeviceBufferRange(PoseBuffer, 0, poseBuffer.SizeInBytes);
             isContentDirty = true;
             isBindingDirty = true;
