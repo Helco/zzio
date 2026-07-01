@@ -48,9 +48,13 @@ public interface IAssetRegistry : IDisposable
         bool IsLoaded,
         AssetPriority Priority);
 
-    /// <summary>Creats a snapshot of the state of all, currently registered assets</summary>
+    /// <summary>Creates a snapshot of the state of all, currently registered assets</summary>
     /// <param name="assetInfos">The asset states will be copied into this list</param>
     void CopyDebugInfo(List<AssetInfo> assetInfos);
+
+    /// <summary>Breaks at a point where a certain asset state is present in the local variables for inspection</summary>
+    /// <param name="assetId">ID of the asset state to inspect</param>
+    void DebugAssetState(Guid assetId);
 }
 
 internal interface IAssetRegistryInternal : IAssetRegistry

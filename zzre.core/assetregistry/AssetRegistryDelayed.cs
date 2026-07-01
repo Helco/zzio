@@ -27,6 +27,10 @@ public sealed class AssetRegistryDelayed : IAssetRegistryInternal
         Inner.CopyDebugInfo(assetInfos);
 
     [ExcludeFromCodeCoverage]
+    public void DebugAssetState(Guid assetId) =>
+        Inner.DebugAssetState(assetId);
+
+    [ExcludeFromCodeCoverage]
     public void Update() => Inner.Update();
 
     [ExcludeFromCodeCoverage]

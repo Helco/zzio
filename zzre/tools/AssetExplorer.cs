@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using ImGuiNET;
 using zzre.imgui;
 
@@ -118,11 +119,20 @@ internal sealed class AssetExplorer
         {
             TableNextRow();
             int i = 0;
-            if (TableSetColumnIndex(i++)) ImGuiEx.Text(asset.ID);
+            if (TableSetColumnIndex(i++))
+            {
+                ImGuiEx.Text(asset.ID);
+                if (ImGui.IsItemHovered() && IsMouseDoubleClicked(ImGuiMouseButton.Left))
+                    HandleAssetDebug(registry, asset.ID);
+            }
             if (TableSetColumnIndex(i++)) Text(asset.Type.Name);
             if (TableSetColumnIndex(i++))
+            {
                 if (Selectable(asset.Name, selectedRow == asset.ID, ImGuiSelectableFlags.SpanAllColumns))
+                {
                     selectedRow = asset.ID;
+                }
+            }
             if (TableSetColumnIndex(i++)) Text(asset.IsLoaded ? "Loaded" : "Not loaded");
             if (TableSetColumnIndex(i++)) Text(asset.RefCount.ToString());
             if (TableSetColumnIndex(i++)) ImGuiEx.Text(asset.Priority);
@@ -164,5 +174,11 @@ internal sealed class AssetExplorer
             }
             return 0;
         });
+    }
+
+    [Conditional("DEBUG")]
+    private void HandleAssetDebug(IAssetRegistry registry, Guid assetId)
+    {
+        registry.DebugAssetState(assetId);
     }
 }

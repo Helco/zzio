@@ -564,4 +564,17 @@ public class AssetRegistry : IAssetRegistryInternal
             }
         }
     }
+
+    [ExcludeFromCodeCoverage]
+    void IAssetRegistry.DebugAssetState(Guid assetId)
+    {
+        if (!Debugger.IsAttached)
+            logger.Warning("No debugger is attached, ignore asset state debug request");
+        AssetState? state = null;
+        using (LockSemaphore())
+        {
+            assets.TryGetValue(assetId, out state);
+        }
+        Debugger.Break();
+    }
 }
