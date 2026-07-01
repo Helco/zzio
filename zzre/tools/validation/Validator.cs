@@ -157,12 +157,10 @@ public class Validator(ITagContainer diContainer)
         await handle.GetAsync(CancellationToken.None);
     }
 
-    private static void ValidateScene(IResource resource)
+    private async Task ValidateScene(IResource resource)
     {
-        using var stream = resource.OpenContent() ??
-            throw new IOException($"Could not open scene {resource.Name}");
-        var scene = new Scene();
-        scene.Read(stream);
+        using var handle = assetRegistry.LoadScene(resource.Path, AssetPriority.High);
+        await handle.GetAsync(CancellationToken.None);
     }
 
     private async Task ValidateActor(IResource resource)

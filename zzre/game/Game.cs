@@ -73,6 +73,8 @@ public abstract class Game : BaseDisposable, ITagContainer
 
     protected override void DisposeManaged()
     {
+        if (ecsWorld.Has<AssetHandle<SceneAsset>>())
+            ecsWorld.Get<AssetHandle<SceneAsset>>().Dispose();
         tagContainer.RemoveTag<IAssetRegistry>(dispose: false); // remove all entities first, then destroy registry
         updateSystems.Dispose();
         renderSystems.Dispose();
@@ -123,18 +125,17 @@ public abstract class Game : BaseDisposable, ITagContainer
             .Or<AssetHandle[]>()
             .Without<components.KeepDuringSceneChange>()
             .DisposeAll();
+        if (ecsWorld.Has<AssetHandle<SceneAsset>>())
+            ecsWorld.Get<AssetHandle<SceneAsset>>().Dispose();
 
-        // TODO: Make Scene a registerable asset type
-        var resourcePool = GetTag<IResourcePool>();
-        SceneResource = resourcePool.FindFile($"resources/worlds/{sceneName}.scn") ??
-            throw new System.IO.FileNotFoundException($"Could not find scene: {sceneName}"); ;
-        using var sceneStream = SceneResource.OpenContent() ?? throw new System.IO.FileNotFoundException($"Could not open scene: {sceneName}");
-        var scene = new Scene();
-        scene.Read(sceneStream);
-        ecsWorld.Set(scene);
-        clearColor = (scene.misc.clearColor.ToFColor() with { a = 1f }).ToVeldrid();
+        using var sceneHandle = assetRegistry.LoadScene(sceneName, AssetPriority.Synchronous);
+        var sceneAsset = sceneHandle.Get();
+        ecsWorld.Set(sceneHandle.Move());
+        ecsWorld.Set(sceneAsset.Scene);
+        SceneResource = sceneAsset.Resource;
+        clearColor = (sceneAsset.Scene.misc.clearColor.ToFColor() with { a = 1f }).ToVeldrid();
 
-        ecsWorld.Publish(new messages.SceneLoaded(scene, GetTag<Savegame>()));
+        ecsWorld.Publish(new messages.SceneLoaded(sceneAsset.Scene, GetTag<Savegame>()));
     }
 
     protected void DisposeUnusedAssets(in messages.SceneLoaded _)
