@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Serilog;
-using zzio.scn;
 using zzio.vfs;
 using static zzre.Diagnostics;
 
@@ -112,7 +111,7 @@ public class Validator(ITagContainer diContainer)
             switch (ext)
             {
                 case ".bsp": await ValidateWorld(resource); break;
-                case ".scn": ValidateScene(resource); break;
+                case ".scn": await ValidateScene(resource); break;
                 case ".bmp":
                 case ".dds": await ValidateTexture(resource); break;
                 case ".aed": await ValidateActor(resource); break;
