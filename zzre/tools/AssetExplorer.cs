@@ -177,7 +177,7 @@ internal sealed class AssetExplorer
     }
 
     [Conditional("DEBUG")]
-    private void HandleAssetDebug(IAssetRegistry registry, Guid assetId)
+    private static void HandleAssetDebug(IAssetRegistry registry, Guid assetId)
     {
         registry.DebugAssetState(assetId);
     }
