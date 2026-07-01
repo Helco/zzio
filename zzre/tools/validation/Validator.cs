@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Serilog;
-using zzio.scn;
 using zzio.vfs;
 using static zzre.Diagnostics;
 
@@ -112,7 +111,7 @@ public class Validator(ITagContainer diContainer)
             switch (ext)
             {
                 case ".bsp": await ValidateWorld(resource); break;
-                case ".scn": ValidateScene(resource); break;
+                case ".scn": await ValidateScene(resource); break;
                 case ".bmp":
                 case ".dds": await ValidateTexture(resource); break;
                 case ".aed": await ValidateActor(resource); break;
@@ -157,12 +156,10 @@ public class Validator(ITagContainer diContainer)
         await handle.GetAsync(CancellationToken.None);
     }
 
-    private static void ValidateScene(IResource resource)
+    private async Task ValidateScene(IResource resource)
     {
-        using var stream = resource.OpenContent() ??
-            throw new IOException($"Could not open scene {resource.Name}");
-        var scene = new Scene();
-        scene.Read(stream);
+        using var handle = assetRegistry.LoadScene(resource.Path, AssetPriority.High);
+        await handle.GetAsync(CancellationToken.None);
     }
 
     private async Task ValidateActor(IResource resource)

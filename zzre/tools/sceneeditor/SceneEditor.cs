@@ -113,6 +113,8 @@ public partial class SceneEditor : ListDisposable, IDocumentEditor
             return;
         CurrentResource = null;
 
+        // Do not use SceneAsset just yet, the scene editor currently modifies its instance
+        // and we do not want that for the games
         using var contentStream = resource.OpenContent() ?? throw new IOException($"Could not open scene at {resource.Path.ToPOSIXString()}");
         scene = new Scene();
         scene.Read(contentStream);
