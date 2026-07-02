@@ -27,7 +27,7 @@
     <PackageReference Include="Mlang" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
-    <PackageReference Include="DefaultEcs" />
+    <PackageReference Include="DefaultEcs.Safe" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
     <PackageReference Include="DefaultEcs" />
