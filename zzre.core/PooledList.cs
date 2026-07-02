@@ -15,6 +15,7 @@ public struct PooledList<T> : IDisposable, IEnumerable<T> where T : struct
 
     public readonly int Capacity => array.Length;
     public readonly bool IsFull => count >= array.Length;
+    public readonly bool IsEmpty => count == 0;
 
     public int Count
     {
@@ -80,4 +81,6 @@ public struct PooledList<T> : IDisposable, IEnumerable<T> where T : struct
         new ArraySegment<T>(array, 0, count).GetEnumerator();
     readonly IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
     readonly IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public static implicit operator ReadOnlySpan<T>(in PooledList<T> list) => list.Span;
 }

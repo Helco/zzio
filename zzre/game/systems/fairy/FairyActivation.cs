@@ -113,6 +113,11 @@ public sealed partial class FairyActivation : ISystem<float>
         participant.ActiveSlot = nextSlotI;
         var nextFairy = participant.ActiveFairy;
         nextFairy.Enable();
+        if (fairy.Participant != ecsWorld.Get<components.PlayerEntity>().Entity)
+        {
+            ecsWorld.Publish(new messages.ResetAIMovement(nextFairy));
+            ecsWorld.Publish(new messages.GenerateAIPath(nextFairy));
+        }
     }
 
     private (Vector3 pos, Vector3 dir) FindFarthestStartPoint()
@@ -121,11 +126,11 @@ public sealed partial class FairyActivation : ISystem<float>
             throw new InvalidOperationException("No start points were found in scene");
 
         int bestTriggerI = -1;
-        float bestDistanceSqr = float.PositiveInfinity;
+        float bestDistanceSqr = float.NegativeInfinity;
         for (int i = 0; i < startPoints.Count; i++)
         {
             var curDistanceSqr = GetMinimalDistanceToFairies(startPoints[i].pos);
-            if (curDistanceSqr < bestDistanceSqr)
+            if (curDistanceSqr > bestDistanceSqr)
             {
                 bestDistanceSqr = curDistanceSqr;
                 bestTriggerI = i;
