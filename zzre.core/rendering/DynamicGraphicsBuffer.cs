@@ -16,7 +16,6 @@ public class DynamicGraphicsBuffer : BaseDisposable
     private readonly RangeCollection dirtyBytes = new(0);
     private readonly RangeCollection usedElements = new(0);
     private byte[]? bytes;
-    private int sizePerElement;
 
     public DeviceBuffer? OptionalBuffer { get; private set; }
     public DeviceBuffer Buffer => OptionalBuffer ??
@@ -24,13 +23,13 @@ public class DynamicGraphicsBuffer : BaseDisposable
 
     public int SizePerElement
     {
-        get => sizePerElement;
+        get;
         set
         {
             if (Count > 0)
                 throw new InvalidOperationException("Cannot change sizePerElement of a non-empty buffer");
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
-            sizePerElement = value;
+            field = value;
         }
     }
     public int CommittedCapacity => SizePerElement > 0
@@ -97,7 +96,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
 
     private void Commit()
     {
-        if (sizePerElement == 0)
+        if (SizePerElement == 0)
             throw new InvalidOperationException("Cannot commit dynamic graphics buffer without a size per element");
 
         int nextCapacity = ReservedCapacity;
@@ -107,7 +106,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
             ReservedCapacity = Math.Max(ReservedCapacity, nextCapacity);
         }
 
-        var nextCapacityInBytes = nextCapacity * sizePerElement;
+        var nextCapacityInBytes = nextCapacity * SizePerElement;
         if (nextCapacityInBytes > (bytes?.Length ?? 0))
         {
             Array.Resize(ref bytes, nextCapacityInBytes);
@@ -118,7 +117,7 @@ public class DynamicGraphicsBuffer : BaseDisposable
     private Range AsByteRange(Range range)
     {
         var (offset, length) = range.GetOffsetAndLength(ReservedCapacity);
-        return (offset * sizePerElement)..((offset + length) * sizePerElement);
+        return (offset * SizePerElement)..((offset + length) * SizePerElement);
     }
 
     public ReadOnlySpan<byte> Read(Range range)

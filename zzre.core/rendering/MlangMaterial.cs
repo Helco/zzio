@@ -20,21 +20,23 @@ public class MlangMaterial : BaseDisposable, IMaterial
     private readonly Dictionary<string, BaseBinding?> bindings;
     private readonly string shaderName;
     protected readonly ShaderInfo shaderInfo;
-    private IBuiltPipeline? pipeline;
     private ResourceSet[]? resourceSets;
 
     public GraphicsDevice Device { get; }
     public string DebugName { get; set; } = "";
 
+    [AllowNull]
     public IBuiltPipeline Pipeline
     {
         get
         {
-            if (pipeline != null)
-                return pipeline;
-            pipeline = variantCollection.GetBuiltPipeline(shaderInfo.VariantKeyFor(options));
-            return pipeline;
+            if (field != null)
+                return field;
+            field = variantCollection.GetBuiltPipeline(shaderInfo.VariantKeyFor(options));
+            return field;
         }
+
+        private set;
     }
     IBuiltPipeline IMaterial.Pipeline => Pipeline;
 
@@ -53,7 +55,7 @@ public class MlangMaterial : BaseDisposable, IMaterial
         base.DisposeManaged();
         foreach (var binding in bindings.Values)
             binding?.Dispose();
-        pipeline = null;
+        Pipeline = null;
         ClearResourceSets();
     }
 
@@ -71,7 +73,7 @@ public class MlangMaterial : BaseDisposable, IMaterial
         if (!options.ContainsKey(option))
             throw new ArgumentException($"Option {option} does not exist for shader {shaderName}");
         options[option] = value;
-        pipeline = null;
+        Pipeline = null;
         ClearResourceSets();
     }
 

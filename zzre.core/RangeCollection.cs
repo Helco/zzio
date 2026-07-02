@@ -25,17 +25,16 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
         ? ranges.Last().End.GetOffset(MaxRangeValue) - 1
         : -1;
 
-    private int _maxRangeValue;
     /// <summary>Exclusive limit of ranges stored in this list</summary>
     public int MaxRangeValue
     {
-        get => _maxRangeValue;
+        get;
         set
         {
             ArgumentOutOfRangeException.ThrowIfNegative(value);
-            if (_maxRangeValue > value)
+            if (field > value)
                 Remove(value..);
-            _maxRangeValue = value;
+            field = value;
         }
     }
 
