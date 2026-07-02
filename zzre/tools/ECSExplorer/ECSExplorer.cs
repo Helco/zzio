@@ -1,13 +1,12 @@
 ﻿namespace zzre.tools;
+using IconFonts;
+using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using IconFonts;
-using ImGuiNET;
 using zzre.game.components;
 using zzre.imgui;
-
 using static ImGuiNET.ImGui;
 
 internal interface IECSWindow
@@ -56,6 +55,8 @@ internal sealed partial class ECSExplorer
     private static void HandleContentFor(DefaultEcs.World world)
     {
         var entityContentRenderer = new EntityContentRenderer();
+
+        HandleWorldComponentsFor(world);
 
         var children = world.ToLookup(e => e.TryGet<Parent>().GetValueOrDefault().Entity);
 
@@ -117,6 +118,37 @@ internal sealed partial class ECSExplorer
             }
             PopID();
             SameLine();
+        }
+    }
+
+    private static void HandleWorldComponentsFor(DefaultEcs.World world)
+    {
+        var hasAny = new CountComponentReader();
+        world.ReadAllWorldComponents(hasAny);
+        if (hasAny.ComponentCount == 0)
+            return;
+
+        var entityContentRenderer = new EntityContentRenderer();
+        if (!TreeNodeEx("World", ImGuiTreeNodeFlags.Framed | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow))
+            return;
+        if (!BeginTable("components", 2, ImGuiTableFlags.BordersOuter | ImGuiTableFlags.RowBg))
+        {
+            TreePop();
+            return;
+        }
+        TableSetupColumn("Name");
+        TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
+        world.ReadAllWorldComponents(entityContentRenderer);
+        EndTable();
+        TreePop();
+    }
+
+    private sealed class CountComponentReader : DefaultEcs.Serialization.IComponentReader
+    {
+        public int ComponentCount { get; private set; }
+        public void OnRead<T>(in T component, in DefaultEcs.Entity componentOwner)
+        {
+            ComponentCount++;
         }
     }
 
