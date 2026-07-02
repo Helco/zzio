@@ -7,8 +7,8 @@
     <PackageVersion Include="GitInfo" Version="3.3.5" /> <!-- Later versions changed license -->
     
     <!-- zzre.core -->
-    <PackageVersion Include="DefaultEcs" Version="1.0.0-6c35427" /> <!-- Forked for fixes and safe-mode -->
-    <PackageVersion Include="DefaultEcs.Safe" Version="1.0.0-safe-6c35427" />
+    <PackageVersion Include="DefaultEcs" Version="1.0.0-20e53ce" /> <!-- Forked for fixes and safe-mode -->
+    <PackageVersion Include="DefaultEcs.Safe" Version="1.0.0-safe-20e53ce" />
     <PackageVersion Include="DefaultEcs.Analyzer" Version="0.17.0" />
     <PackageVersion Include="Serilog" Version="4.3.1" />
     <PackageVersion Include="Silk.NET.SDL" Version="2.23.0" />
