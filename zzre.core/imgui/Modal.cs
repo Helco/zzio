@@ -14,8 +14,7 @@ public class Modal : BaseWindow
         Close
     }
 
-    private string uniqueId = $"###{Guid.NewGuid()}";
-    private string FullTitle => Title + uniqueId;
+    private string FullTitle { get => Title + field; set; } = $"###{Guid.NewGuid()}";
     private bool isOpen;
     private NextAction nextAction = NextAction.None;
 
@@ -66,7 +65,7 @@ public class Modal : BaseWindow
     public void Open()
     {
         nextAction = NextAction.Open;
-        uniqueId = $"###{Guid.NewGuid()}";
+        FullTitle = $"###{Guid.NewGuid()}";
     }
     public void Close() => nextAction = NextAction.Close;
 

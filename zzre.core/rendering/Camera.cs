@@ -19,10 +19,7 @@ public class Camera : BaseDisposable
     private readonly UniformBuffer<Matrix4x4> projection;
     private readonly ResettableLazyValue<Matrix4x4> invProjection;
     private readonly UniformBuffer<CameraView> view;
-    private float aspect = 1.0f;
     private float vfov = StandardVFoV * MathF.PI / 180.0f;
-    private float nearPlane = 0.1f;
-    private float farPlane = 500.0f;
 
     public Location Location { get; } = new Location();
     public DeviceBufferRange ViewRange => new(view.Buffer, 0, view.Buffer.SizeInBytes);
@@ -33,13 +30,13 @@ public class Camera : BaseDisposable
 
     public float Aspect
     {
-        get => aspect;
+        get;
         set
         {
-            aspect = value;
+            field = value;
             UpdateProjection();
         }
-    }
+    } = 1.0f;
 
     public float VFoV
     {
@@ -53,33 +50,33 @@ public class Camera : BaseDisposable
 
     public float HFoV
     {
-        get => aspect * vfov;
+        get => Aspect * vfov;
         set
         {
-            vfov = value / aspect;
+            vfov = value / Aspect;
             UpdateProjection();
         }
     }
 
     public float NearPlane
     {
-        get => nearPlane;
+        get;
         set
         {
-            nearPlane = value;
+            field = value;
             UpdateProjection();
         }
-    }
+    } = 0.1f;
 
     public float FarPlane
     {
-        get => farPlane;
+        get;
         set
         {
-            farPlane = value;
+            field = value;
             UpdateProjection();
         }
-    }
+    } = 500.0f;
 
     public Camera(ITagContainer diContainer)
     {
@@ -108,7 +105,7 @@ public class Camera : BaseDisposable
 
     private void UpdateProjection()
     {
-        projection.Ref = Matrix4x4.CreatePerspectiveFieldOfView(vfov, aspect, nearPlane, farPlane);
+        projection.Ref = Matrix4x4.CreatePerspectiveFieldOfView(vfov, Aspect, NearPlane, FarPlane);
         invProjection.Reset();
     }
 

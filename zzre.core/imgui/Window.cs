@@ -18,19 +18,18 @@ public class Window : BaseWindow
     public Rect Bounds { get; set; }
     public override bool IsOpen => OpenState != WindowOpenState.Closed;
 
-    private WindowOpenState _openState = WindowOpenState.Open;
     public WindowOpenState OpenState
     {
-        get => _openState;
+        get;
         set
         {
-            var prevOpenState = _openState;
-            _openState = value;
+            var prevOpenState = field;
+            field = value;
 
             if (prevOpenState != value && value == WindowOpenState.Closed)
                 OnClose();
         }
-    }
+    } = WindowOpenState.Open;
     public event Action OnClose = () => { };
 
     public Window(WindowContainer container, string title = "Window") : base(container, title) { }

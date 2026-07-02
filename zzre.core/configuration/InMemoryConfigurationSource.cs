@@ -5,7 +5,7 @@ namespace zzre;
 public sealed class InMemoryConfigurationSource(string name) : IConfigurationSource
 {
     private readonly Dictionary<string, ConfigurationValue> variables = [];
-    private bool keysHaveChanged, valuesHaveChanged;
+    private bool keysHaveChanged;
 
     public string Name => name;
     public bool KeysHaveChanged
@@ -21,10 +21,12 @@ public sealed class InMemoryConfigurationSource(string name) : IConfigurationSou
     {
         get
         {
-            var prev = valuesHaveChanged;
-            valuesHaveChanged = false;
+            var prev = field;
+            field = false;
             return prev;
         }
+
+        private set;
     }
     public IEnumerable<string> Keys => variables.Keys;
 
@@ -33,7 +35,7 @@ public sealed class InMemoryConfigurationSource(string name) : IConfigurationSou
         get => variables[key];
         set
         {
-            valuesHaveChanged = true;
+            ValuesHaveChanged = true;
             if (variables.TryAdd(key, value))
                 keysHaveChanged = true;
             else
