@@ -78,7 +78,7 @@ public struct PooledList<T> : IDisposable, IEnumerable<T> where T : struct
 
     [MethodImpl(MIOptions)]
     public readonly ArraySegment<T>.Enumerator GetEnumerator() =>
-        new ArraySegment<T>(array, 0, count).GetEnumerator();
+        ArraySegment.GetEnumerator();
     readonly IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
     readonly IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 

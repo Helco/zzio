@@ -9,8 +9,6 @@ namespace zzre.game.systems;
 
 public sealed partial class AIMovement : AEntitySetSystem<float>
 {
-    private const int MinPathLength = 4; // TODO: Is this necessary or configurable?
-
     [Configuration(Key = "/zanzarah.ai.AI_WIZ_FORM_SPEED")]
     private float WizFormSpeed = 2.0f;
     [Configuration(Key = "/zanzarah.ai.AI_GRAVITY")]
@@ -21,7 +19,7 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
     private int ManaPerJump = -500;
     [Configuration]
     private float FloorOffset = -0.2f;
-    [Configuration]
+    [Configuration(Min = 0.0f, Description = "At which the path movement is reversed")]
     private float PlayerNearDistance = 0.5f;
 
     private readonly ILogger logger;
@@ -76,12 +74,12 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
             movement.IsPlayerNear = true;
         if (movement.IsPlayerNear)
         {
-            result = UpdateReverse(moveDistLeft, entity, location, ref path, ref movement);
+            result = UpdateOnPath(-1, moveDistLeft, entity, location, ref path, ref movement);
             if (result is FindPathResult.NotFound)
-                movement.IsPlayerNear = false;
+                movement.IsPlayerNear = false; // breaking out of reverse movement
         }
         else
-            result = UpdateForward(moveDistLeft, entity, location, ref path, ref movement);
+            result = UpdateOnPath(1, moveDistLeft, entity, location, ref path, ref movement);
         if (result is not (FindPathResult.Success or FindPathResult.NotThereYet))
             return;
 
@@ -165,138 +163,88 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
         location.LookIn(targetDir.TargetDirection);
     }
 
-    private FindPathResult UpdateForward(
+    private FindPathResult UpdateOnPath(
+        int direction,
         float moveDistLeft,
         in DefaultEcs.Entity entity,
         Location location,
         ref components.AIPath path,
         ref components.AIMovement movement)
     {
-        if (movement.DidReverse) // message to reset path as well
+        if (direction is not (1 or -1))
+            throw new ArgumentOutOfRangeException(nameof(direction));
+
+        if (movement.DidReverse && direction > 0)
             World.Publish(new messages.ResetAIMovement(entity));
-
-        var result = AdvancePath(ref moveDistLeft, entity, location, ref path, ref movement);
-        movement.ShouldAdvanceNode = result is not FindPathResult.NotFound;
-
-        if (result is FindPathResult.NotFound)
-        {
-            // set scatter6 state
-            movement.TryBailout = true;
-            result = AdvancePath(ref moveDistLeft, entity, location, ref path, ref movement);
-            movement.ShouldAdvanceNode = result is FindPathResult.Success;
-        }
-        else if (result is FindPathResult.Success or FindPathResult.NotThereYet)
-        {
-            movement.CurrentPos += moveDistLeft * movement.DirToCurrentWp;
-            movement.DistMovedToCurWp += moveDistLeft;
-        }
-        return result;
-    }
-
-    private FindPathResult UpdateReverse(
-        float moveDistLeft,
-        in DefaultEcs.Entity entity,
-        Location location,
-        ref components.AIPath path,
-        ref components.AIMovement movement)
-    {
-        if (!movement.DidReverse)
+        else if (!movement.DidReverse && direction < 0) // we need to reverse movement
         {
             movement.DidReverse = true;
             movement.DirToCurrentWp *= -1f;
             movement.DistMovedToCurWp = Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos);
             path.TargetIndex--;
+            Debug.Assert(path.TargetIndex >= 0);
         }
 
-        var result = AdvancePathReverse(ref moveDistLeft, entity, location, ref path, ref movement);
-        movement.ShouldAdvanceNode = result is not FindPathResult.NotFound;
-
-        if (result is FindPathResult.Success or FindPathResult.NotThereYet)
+        var result = AdvanceOnPath(direction, ref moveDistLeft, entity, location, ref path, ref movement);
+        switch(result)
         {
-            movement.CurrentPos += moveDistLeft * movement.DirToCurrentWp;
-            movement.DistMovedToCurWp += moveDistLeft;
+            case FindPathResult.NotThereYet:
+                movement.CurrentPos += moveDistLeft * movement.DirToCurrentWp;
+                movement.DistMovedToCurWp += moveDistLeft;
+                break;
+            case FindPathResult.NotFound when direction > 0:
+                // set scatter6 state
+                movement.TryBailout = true;
+                return AdvanceOnPath(direction, ref moveDistLeft, entity, location, ref path, ref movement);
         }
         return result;
     }
 
-    private FindPathResult AdvancePath(
+    private FindPathResult AdvanceOnPath(
+        int direction,
         ref float moveDistLeft,
         in DefaultEcs.Entity entity,
         Location location,
         ref components.AIPath path,
         ref components.AIMovement movement)
     {
-        while (moveDistLeft > 0f)
+        while (moveDistLeft > 0)
         {
-            if (!path.Waypoints.IsEmpty && movement.DistToCurWp - movement.DistMovedToCurWp > moveDistLeft)
-                break;
-            //if (movement.ShouldAdvanceNode && path.WaypointIds.Count > 2)
-            //    path.CurrentIndex++;
+            if (!path.Waypoints.IsEmpty && movement.DistLeftToCurWp > moveDistLeft)
+                return FindPathResult.NotThereYet;
 
-            var needsNewPath = /*path.WaypointIds.Count < MinPathLength || */ !path.HasNextWaypoint;
-            // TODO: Add bailout behavior
-
-            if (needsNewPath)
+            // We are at the end of the path
+            if (path.Waypoints.IsEmpty || !path.IsInBounds(path.TargetIndex + direction))
             {
+                if (direction < 0) // eventually resetting direction
+                    return FindPathResult.NotFound;
+
                 movement.DidTimeoutFindingPath = false;
                 var lastWaypointId = path.WaypointIds.Count > 0 ? path.WaypointIds[^1] : PathFinder.InvalidId;
                 World.Publish(new messages.GenerateAIPath(entity, lastWaypointId));
-
-                if (path.LastResult is FindPathResult.Timeout)
+                
+                switch(path.LastResult)
                 {
-                    movement.DidTimeoutFindingPath = true;
-                    logger.Warning("Path find timeout");
-                    return FindPathResult.Timeout;
-                }
-
-                if (path.LastResult is not FindPathResult.Success)
-                {
-                    path.WaypointIds.Clear();
-                    return path.LastResult;
+                    case FindPathResult.Success: break;
+                    case FindPathResult.Timeout:
+                        movement.DidTimeoutFindingPath = true;
+                        logger.Warning("Path finder timeout");
+                        return FindPathResult.Timeout;
+                    default:
+                        path.WaypointIds.Clear();
+                        return path.LastResult;
                 }
 
                 // I skipped a lot of weird original cached/non-cached/smoothing waypoint handling here
             }
 
-            Debug.Assert(path.WaypointIds.Count > 0 && path.HasNextWaypoint);
-            moveDistLeft -= Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos); // rest distance
+            // Switch to next path node
+            Debug.Assert(!path.WaypointIds.IsEmpty &&
+                path.IsInBounds(path.TargetIndex) &&
+                path.IsInBounds(path.TargetIndex + direction));
+            moveDistLeft -= movement.DistLeftToCurWp;
             movement.CurrentPos = path.Waypoints[path.TargetIndex];
-            path.TargetIndex++;
-            movement.CurrentEdgeKind = path.EdgeKinds[path.TargetIndex];
-            movement.DirToCurrentWp = MathEx.SafeNormalize(path.Waypoints[path.TargetIndex] - movement.CurrentPos);
-            movement.DistToCurWp = Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos);
-            movement.DistMovedToCurWp = 0f;
-
-            // TODO: Investigate whether DistToCurWp can be zero upon switch
-        }
-        return FindPathResult.NotThereYet;
-    }
-
-
-    private FindPathResult AdvancePathReverse(
-        ref float moveDistLeft,
-        in DefaultEcs.Entity entity,
-        Location location,
-        ref components.AIPath path,
-        ref components.AIMovement movement)
-    {
-        while (moveDistLeft > 0f)
-        {
-            if (!path.HasPrevWaypoint && movement.DistLeftToCurWp > moveDistLeft)
-                return FindPathResult.NotThereYet;
-
-            var anotherDistToCurWp = Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos);
-            if (MathF.Abs(anotherDistToCurWp - movement.DistLeftToCurWp) > 0.01f)
-                logger.Warning("Calculated is not recalculated");
-
-            if (movement.ShouldAdvanceNode && path.WaypointIds.Count > 2) // shouldnt this check TargetIndex instead?
-                path.TargetIndex--;
-            if (path.Waypoints.IsEmpty || !path.HasPrevWaypoint) // || isFabricated
-                return FindPathResult.NotFound;
-
-            moveDistLeft -= anotherDistToCurWp;
-            movement.CurrentPos = path.Waypoints[path.TargetIndex];
-            path.TargetIndex--;
+            path.TargetIndex += direction;
             movement.CurrentEdgeKind = path.EdgeKinds[path.TargetIndex];
             movement.DirToCurrentWp = MathEx.SafeNormalize(path.Waypoints[path.TargetIndex] - movement.CurrentPos);
             movement.DistToCurWp = Vector3.Distance(path.Waypoints[path.TargetIndex], movement.CurrentPos);
