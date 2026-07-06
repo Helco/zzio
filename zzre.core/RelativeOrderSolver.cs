@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-namespace zzre.core;
+namespace zzre;
 
 public class RelativeOrderSolver<T> : IReadOnlyList<T> where T : notnull
 {
@@ -51,5 +52,5 @@ public class RelativeOrderSolver<T> : IReadOnlyList<T> where T : notnull
     public T this[int index] => ordering[index];
     public int Count => ordering.Count;
     public IEnumerator<T> GetEnumerator() => ordering.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    [ExcludeFromCodeCoverage] IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace zzre.core.tests;
+namespace zzre.tests;
 
 [TestFixture]
 public class TestFallbackTagContainer
@@ -54,5 +54,24 @@ public class TestFallbackTagContainer
         Assert.That(main.HasTag<Tag4>());
         Assert.That(container.RemoveTag<Tag4>());
         Assert.That(main.HasTag<Tag4>(), Is.False);
+    }
+
+    [Test]
+    public void GetTagPrefersMain()
+    {
+        Assert.That(container.GetTag<Tag1>(), Is.SameAs(main.GetTag<Tag1>()));
+        Assert.That(container.GetTag<Tag2>(), Is.SameAs(fallback.GetTag<Tag2>()));
+        Assert.That(container.GetTag<Tag3>(), Is.SameAs(main.GetTag<Tag3>()));
+    }
+
+    [Test]
+    public void TryGetTagPrefersMain()
+    {
+        Assert.That(container.TryGetTag<Tag1>(out var tag1), Is.True);
+        Assert.That(container.TryGetTag<Tag2>(out var tag2), Is.True);
+        Assert.That(container.TryGetTag<Tag3>(out var tag3), Is.True);
+        Assert.That(tag1, Is.SameAs(main.GetTag<Tag1>()));
+        Assert.That(tag2, Is.SameAs(fallback.GetTag<Tag2>()));
+        Assert.That(tag3, Is.SameAs(main.GetTag<Tag3>()));
     }
 }

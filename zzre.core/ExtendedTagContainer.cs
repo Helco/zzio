@@ -45,21 +45,25 @@ public class ExtendedTagContainer : BaseDisposable, ITagContainer
 
 public static class TagContainerExtensions
 {
+    [ExcludeFromCodeCoverage]
     public static ITagContainer ExtendedWith<T1>(this ITagContainer parent, T1 t1)
         where T1 : class =>
         new ExtendedTagContainer(parent).AddTag(t1);
 
+    [ExcludeFromCodeCoverage]
     public static ITagContainer ExtendedWith<T1, T2>(this ITagContainer parent, T1 t1, T2 t2)
         where T1 : class
         where T2 : class =>
         new ExtendedTagContainer(parent).AddTag(t1).AddTag(t2);
 
+    [ExcludeFromCodeCoverage]
     public static ITagContainer ExtendedWith<T1, T2, T3>(this ITagContainer parent, T1 t1, T2 t2, T3 t3)
         where T1 : class
         where T2 : class
         where T3 : class =>
         new ExtendedTagContainer(parent).AddTag(t1).AddTag(t2).AddTag(t3);
 
+    [ExcludeFromCodeCoverage]
     public static ITagContainer ExtendedWith<T1, T2, T3, T4>(this ITagContainer parent, T1 t1, T2 t2, T3 t3, T4 t4)
         where T1 : class
         where T2 : class

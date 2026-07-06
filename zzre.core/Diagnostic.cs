@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using Serilog;
@@ -163,6 +164,7 @@ public readonly record struct Diagnostic(
             logger.Information(sourceInfo + Type.Message, MessageParams);
     }
 
+    [ExcludeFromCodeCoverage]
     public void WriteToConsole()
     {
         var prevBackground = Console.BackgroundColor;
@@ -200,6 +202,7 @@ public readonly record struct Diagnostic(
         _ => throw new NotImplementedException($"Unimplemented severity: {s}")
     };
 
+    [ExcludeFromCodeCoverage]
     private static ConsoleColor SeverityToConsoleColor(DiagnosticSeverity s) => s switch
     {
         DiagnosticSeverity.Info => ConsoleColor.DarkGray,

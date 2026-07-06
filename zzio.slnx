@@ -6,6 +6,7 @@
   </Configurations>
   <Folder Name="/0Common/">
     <File Path=".editorconfig" />
+    <File Path=".gitignore" />
     <File Path="CodeQuality.props" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />

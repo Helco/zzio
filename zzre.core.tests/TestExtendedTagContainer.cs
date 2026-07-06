@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace zzre.core.tests;
+namespace zzre.tests;
 
 [TestFixture]
 public class TestExtendedTagContainer
@@ -56,5 +56,64 @@ public class TestExtendedTagContainer
     {
         Assert.That(container.RemoveTag<Tag2>(), Is.False);
         Assert.That(parentContainer.HasTag<Tag2>());
+    }
+
+    private class DisposalTest<T> : IDisposable
+    {
+        public bool IsDisposed { get; private set; }
+        public void Dispose() => IsDisposed = true;
+    }
+
+    [Test]
+    public void DisposeOnlyDisposesOwnTags()
+    {
+        var parentInt = new DisposalTest<int>();
+        var parentBool = new DisposalTest<bool>();
+        var extensionBool = new DisposalTest<bool>();
+        using var parent = new TagContainer();
+        parent.AddTag(parentInt);
+        parent.AddTag(parentBool);
+
+        using var extension = new ExtendedTagContainer(parent);
+        extension.AddTag(extensionBool);
+        extension.Dispose();
+
+        Assert.That(extensionBool.IsDisposed, Is.True);
+        Assert.That(parentBool.IsDisposed, Is.False);
+        Assert.That(parentInt.IsDisposed, Is.False);
+    }
+
+    [Test]
+    public void TryGetTagPrefersExtension()
+    {
+        using var parent = new TagContainer();
+        parent.AddTag(new Tag1());
+        parent.AddTag(new Tag2());
+        using var extension = new ExtendedTagContainer(parent);
+        var extensionTag2 = new Tag2();
+        extension.AddTag(extensionTag2);
+        extension.AddTag(new Tag3());
+
+        Assert.That(extension.TryGetTag<Tag1>(out _), Is.True);
+        Assert.That(extension.TryGetTag<Tag2>(out var actualTag2), Is.True);
+        Assert.That(actualTag2, Is.SameAs(extensionTag2));
+        Assert.That(extension.TryGetTag<Tag3>(out _), Is.True);
+        Assert.That(parent.TryGetTag<Tag3>(out _), Is.False);
+    }
+
+    [Test]
+    public void GetTagPrefersExtension()
+    {
+        using var parent = new TagContainer();
+        parent.AddTag(new Tag1());
+        parent.AddTag(new Tag2());
+        using var extension = new ExtendedTagContainer(parent);
+        var extensionTag2 = new Tag2();
+        extension.AddTag(extensionTag2);
+        extension.AddTag(new Tag3());
+
+        Assert.That(() => extension.GetTag<Tag1>(), Throws.Nothing);
+        Assert.That(extension.GetTag<Tag2>(), Is.SameAs(extensionTag2));
+        Assert.That(() => extension.GetTag<Tag3>(), Throws.Nothing);
     }
 }

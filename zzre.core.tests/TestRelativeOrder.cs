@@ -1,7 +1,8 @@
 using NUnit.Framework;
+using System;
 using System.Linq;
 
-namespace zzre.core.tests;
+namespace zzre.tests;
 
 public class TestRelativeOrder
 {
@@ -37,6 +38,26 @@ public class TestRelativeOrder
         Assert.That(indexByItem[item1], Is.LessThan(indexByItem[item2]));
         Assert.That(indexByItem[item2], Is.LessThan(indexByItem[item3]));
         Assert.That(indexByItem[item3], Is.LessThan(indexByItem[item4]));
+    }
+
+    [Test]
+    public void afterForwardIndex()
+    {
+        var solver = new RelativeOrderSolver<RelativeOrderItem>(Identity);
+
+        var item1 = new RelativeOrderItem();
+        var item2 = new RelativeOrderItem().After(item1);
+        var item3 = new RelativeOrderItem().After(item2);
+        var item4 = new RelativeOrderItem().After(item3).After(item2).After(item1);
+        solver.SolveFor(new[] { item1, item2, item3, item4 });
+
+        Assert.That(solver.Count, Is.EqualTo(4));
+        Assert.That(solver[0], Is.SameAs(item1));
+        Assert.That(solver[1], Is.SameAs(item2));
+        Assert.That(solver[2], Is.SameAs(item3));
+        Assert.That(solver[3], Is.SameAs(item4));
+        Assert.That(() => solver[4], Throws.InstanceOf<ArgumentOutOfRangeException>());
+        Assert.That(() => solver[-1], Throws.InstanceOf<ArgumentOutOfRangeException>());
     }
 
     [Test]
@@ -111,5 +132,18 @@ public class TestRelativeOrder
             .ToDictionary(p => p.item, p => p.index);
         Assert.That(indexByItem[item1], Is.LessThan(indexByItem[item2]));
         Assert.That(indexByItem[item2], Is.LessThan(indexByItem[item3]));
+    }
+
+    [Test]
+    public void unsolvable()
+    {
+        var solver = new RelativeOrderSolver<RelativeOrderItem>(Identity);
+
+        var item1 = new RelativeOrderItem();
+        var item2 = new RelativeOrderItem().Before(item1);
+        item1 = item1.Before(item2);
+
+        Assert.That(solver.TrySolveFor([item1, item2]), Is.False);
+        Assert.That(() => solver.SolveFor([item1, item2]), Throws.ArgumentException);
     }
 }
