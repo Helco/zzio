@@ -136,6 +136,7 @@ public sealed partial class AIMovement : AEntitySetSystem<float>
         bool isHinderedByGravity,
         Vector3 playerPos)
     {
+        // TODO: AI Movement: Handle target dir when spinning
         movement.TargetTargetDir = 0 switch
         {
             // _ when isSpinning => Vector3.Zero,
