@@ -14,7 +14,7 @@ public class TagContainer : BaseDisposable, ITagContainer
     {
         base.DisposeManaged();
         foreach (var disposableTag in GetRawTags<IDisposable>())
-            (disposableTag as IDisposable)?.Dispose();
+            (disposableTag as IDisposable)!.Dispose();
     }
 
     public bool HasTag<TTag>() where TTag : class => TryGetTag<TTag>(out _);
@@ -24,8 +24,6 @@ public class TagContainer : BaseDisposable, ITagContainer
         tag = default!;
         object? tagBase = default;
         if (!tags.TryGetValue(typeof(TTag), out tagBase))
-            return false;
-        if (tagBase == null)
             return false;
 
         tag = (TTag)tagBase;

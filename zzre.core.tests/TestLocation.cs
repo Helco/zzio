@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using System.Numerics;
 
-namespace zzre.core.tests;
+namespace zzre.tests;
 
 [TestFixture]
 public class TestLocation

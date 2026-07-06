@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using NUnit.Framework;
 
-namespace zzre.core.tests.math;
+namespace zzre.tests;
 
 [TestFixture]
 public class TestMath

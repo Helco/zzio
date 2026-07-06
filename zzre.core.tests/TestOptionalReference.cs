@@ -1,7 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 
-namespace zzre.core.tests;
+namespace zzre.tests;
 
 public class TestOptionalReference
 {
