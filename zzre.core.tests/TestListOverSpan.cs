@@ -12,6 +12,8 @@ public class TestListOverSpan
     public void Ctor_Default()
     {
         ListOverSpan<int> list = default;
+        Assert.That(list.Capacity, Is.EqualTo(0));
+        Assert.That(list.IsFull, Is.True);
     }
 
     [Test]
@@ -19,6 +21,7 @@ public class TestListOverSpan
     {
         var array = new int[arrayLength];
         ListOverSpan<int> list = new(array);
+        Assert.That(list.Capacity, Is.EqualTo(arrayLength));
     }
 
     [Test]
@@ -87,6 +90,14 @@ public class TestListOverSpan
             list.Add();
             list.Add();
             list.Add();
+        }, Throws.InvalidOperationException);
+        Assert.That(() =>
+        {
+            ListOverSpan<int> list = new(new int[2]);
+            int i = 42;
+            list.Add(i);
+            list.Add(i);
+            list.Add(i);
         }, Throws.InvalidOperationException);
     }
 
@@ -206,5 +217,24 @@ public class TestListOverSpan
 
         Assert.That(e2.Current, Is.EqualTo(1337));
         Assert.That(e1.Current, Is.EqualTo(42));
+    }
+
+    [Test]
+    public void ListAsSpan()
+    {
+        ListOverSpan<int> list = new(new int[2]);
+        Assert.That(list.Span.Length, Is.EqualTo(0));
+
+        list.Add() = 42;
+        Assert.That(list.Span.Length, Is.EqualTo(1));
+        Assert.That(list.Span[0], Is.EqualTo(42));
+
+        list.Add() = 1337;
+        Assert.That(list.Span.Length, Is.EqualTo(2));
+        Assert.That(list.Span[0], Is.EqualTo(42));
+        Assert.That(list.Span[1], Is.EqualTo(1337));
+
+        list.Clear();
+        Assert.That(list.Span.Length, Is.EqualTo(0));
     }
 }
