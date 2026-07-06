@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,8 @@ public interface IAssetRegistryLock : IDisposable
     Task<Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct, [CallerMemberName] string context = "<unknown>");
 
     internal void Release();
+
+    [ExcludeFromCodeCoverage]
     public struct Releaser(IAssetRegistryLock? parent) : IDisposable
     {
         private IAssetRegistryLock? parent = parent;
@@ -32,6 +35,7 @@ public interface IAssetRegistryLock : IDisposable
     }
 }
 
+[ExcludeFromCodeCoverage]
 public sealed class SemaphoreAssetLock : IAssetRegistryLock
 {
     private readonly SemaphoreSlim semaphore = new(1, 1);
@@ -47,33 +51,7 @@ public sealed class SemaphoreAssetLock : IAssetRegistryLock
         IAssetRegistryLock.Releaser.ConvertFromBoolTask(semaphore.WaitAsync(timeout, ct), this, ct);
 }
 
-/*public sealed class DotNextAsyncAssetLock : IAssetRegistryLock
-{
-    private readonly AsyncExclusiveLock l = new(Environment.ProcessorCount + 1);
-
-    public void Dispose()
-    {
-        l.Dispose();
-    }
-
-    public IAssetRegistryLock.Releaser Wait(TimeSpan timeout, CancellationToken ct, [CallerMemberName] string context = "<unknown>")
-    {
-        l.AcquireAsync(timeout, ct).Wait();
-        return new(this);
-    }
-
-    public async Task<IAssetRegistryLock.Releaser> WaitAsync(TimeSpan timeout, CancellationToken ct, [CallerMemberName] string context = "<unknown>")
-    {
-        await l.AcquireAsync(timeout, ct);
-        return new(this);
-    }
-
-    void IAssetRegistryLock.Release()
-    {
-        l.Release();
-    }
-}*/
-
+[ExcludeFromCodeCoverage]
 public sealed class TrackingAssetLock(IAssetRegistryLock inner) : IAssetRegistryLock
 {
     private string? last;
