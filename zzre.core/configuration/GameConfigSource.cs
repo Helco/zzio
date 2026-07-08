@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
-using zzio;
+﻿using zzio;
 using static zzio.GameConfig;
 
 namespace zzre;
 
+/// <summary>
+/// An adapter for accessing game user config as an <see cref="IConfigurationSection"/>
+/// </summary>
 public sealed partial class GameConfigSection
 {
     // only those keys that are relevant for zzio
@@ -66,16 +68,9 @@ public sealed partial class GameConfigSection
     }
 }
 
-public sealed class ConfigurationSectionAsSource(string name, IConfigurationSection section) : IConfigurationSource
-{
-    public string Name => name; 
-    public bool KeysHaveChanged => false;
-    public bool ValuesHaveChanged => false;
-
-    public IEnumerable<string> Keys => section.Keys;
-    public ConfigurationValue this[string key] => section[key];
-}
-
+/// <summary>
+/// An adapter for embedding user game config as <see cref="IConfigurationSource"/>
+/// </summary>
 public static class GameConfigSource
 {
     public static readonly IConfigurationSource Default =
