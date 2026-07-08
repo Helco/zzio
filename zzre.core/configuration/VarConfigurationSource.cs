@@ -4,7 +4,13 @@ using zzio;
 
 namespace zzre;
 
-public sealed class VarConfigurationSource(string name, VarConfig config, string section = "") : IConfigurationSource
+/// <summary>
+/// An adapter accessing <see cref="VarConfig"/> files as <see cref="IConfigurationSource"/>
+/// </summary>
+/// <param name="name">The name of the source</param>
+/// <param name="config">The set of values read from a var-config file</param>
+/// <param name="section">A prefix for the configuration keys</param>
+public sealed class VarConfigurationSource(string name, VarConfig config, string section) : IConfigurationSource
 {
     public string Name => name;
     public bool KeysHaveChanged => false;
@@ -24,4 +30,6 @@ public sealed class VarConfigurationSource(string name, VarConfig config, string
                 : new(v.stringValue);
         }
     }
+
+    public void ResetChanged() { }
 }

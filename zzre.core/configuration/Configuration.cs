@@ -18,6 +18,9 @@ public interface IConfigurationSource
     bool KeysHaveChanged { get; }
     bool ValuesHaveChanged { get; }
 
+    /// <summary>Should reset <see cref="KeysHaveChanged"/> and <see cref="ValuesHaveChanged"/> to <c>false</c></summary>
+    void ResetChanged();
+
     IEnumerable<string> Keys { get; }
     ConfigurationValue this[string key] { get; }
 }
@@ -109,8 +112,7 @@ public sealed partial class Configuration
         {
             keysHaveChanged |= source.KeysHaveChanged;
             valuesHaveChanged |= source.ValuesHaveChanged;
-            if (keysHaveChanged)
-                break;
+            source.ResetChanged();
         }
         valuesHaveChanged |= keysHaveChanged;
 
