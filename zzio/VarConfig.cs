@@ -7,16 +7,10 @@ using System.Security.Cryptography;
 
 namespace zzio;
 
-public struct VarConfigValue
+public readonly record struct VarConfigValue(float floatValue, string stringValue)
 {
-    public readonly float floatValue;
-    public readonly string stringValue;
-
-    private VarConfigValue(float floatValue, string stringValue)
-    {
-        this.floatValue = floatValue;
-        this.stringValue = stringValue;
-    }
+    public VarConfigValue(float floatValue) : this(floatValue, "") { }
+    public VarConfigValue(string stringValue) : this(0.0f, stringValue) { }
 
     public static VarConfigValue ReadNew(BinaryReader reader)
     {

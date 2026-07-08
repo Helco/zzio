@@ -73,7 +73,14 @@ public sealed partial class Configuration
     /// <remarks>A change of values will not increment this counter</remarks>
     public int KeyVersion { get; private set; }
 
-    public Configuration() => sources = [defaultSource, overwriteSource];
+    public Configuration() : this(useDefaultSource: true) { }
+    internal Configuration(bool useDefaultSource)
+    {
+        sources = useDefaultSource
+            ? [defaultSource, overwriteSource]
+            : [overwriteSource];
+        ApplyChanges(); // to set up key mappings from default 
+    }
 
     /// <summary>Adds a new <see cref="IConfigurationSource"/> to the <see cref="Configuration"/>.</summary>
     /// <remarks>It will added as the highest-priority source (except for overwritten values)</remarks>
@@ -208,6 +215,13 @@ public sealed partial class Configuration
             return false;
         }
     }
+
+    /// <summary>Retrieves a single configuration value by key</summary>
+    /// <param name="key">The key of the configuration value</param>
+    /// <returns>The configuration value</returns>
+    public ConfigurationValue GetValue(string key) =>
+        TryGetValue(key, out var value) ? value
+        : throw new KeyNotFoundException($"Configuration key not found: {key}");
 
     /// <summary>
     /// Binds a new <see cref="IConfigurationSection"/> instance to the <see cref="Configuration"/>, thus enabling changes to be propagated to it.
