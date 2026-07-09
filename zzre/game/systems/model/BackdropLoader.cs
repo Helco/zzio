@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Buffers;
 using System.Linq;
+using System.Numerics;
 using DefaultEcs.System;
 using zzre.rendering;
-using System.Numerics;
 using zzio;
 using Serilog;
 
@@ -10,6 +11,7 @@ namespace zzre.game.systems;
 
 public class BackdropLoader : ISystem<float>
 {
+    private static readonly SearchValues<char> Digits = SearchValues.Create("0123456789");
     private readonly ILogger logger;
     private readonly Camera camera;
     private readonly DefaultEcs.World ecsWorld;
@@ -48,7 +50,7 @@ public class BackdropLoader : ISystem<float>
             return;
 
         int? dynBackdropId = char.IsDigit(backdropName.First())
-            ? int.Parse(backdropName[..backdropName.IndexOfAnyNot("0123456789".ToArray())])
+            ? int.Parse(backdropName[..backdropName.AsSpan().IndexOfAnyExcept(Digits)])
             : null;
         switch(dynBackdropId)
         {

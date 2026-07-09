@@ -60,6 +60,14 @@ public class TestStackOverSpan
             stack.Push();
             stack.Push();
         }, Throws.InvalidOperationException);
+        Assert.That(() =>
+        {
+            StackOverSpan<int> stack = new(new int[2]);
+            stack.Push();
+            stack.Push();
+            int i = 42;
+            stack.Push(i);
+        }, Throws.InvalidOperationException);
     }
 
     [Test]

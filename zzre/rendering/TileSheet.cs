@@ -74,13 +74,14 @@ public class TileSheet : IReadOnlyList<Rect>
     public string WrapLines(string text, float maxWidth)
     {
         var newText = text.ToCharArray();
+        var textSpan = text.AsSpan();
         float spaceWidth = pixelSizes.First().X;
         float curLineWidth = 0;
-        int nonSpaceI = text.IndexOfAnyNot(SpaceChars);
+        int nonSpaceI = textSpan.IndexOfAnyExcept(SpaceChars);
         int lastSpaceI = 0;
         while (nonSpaceI >= 0)
         {
-            int spaceI = text.IndexOfAny(SpaceChars, nonSpaceI);
+            int spaceI = textSpan[nonSpaceI..].IndexOfAny(SpaceChars);
             float wordWidth = GetUnformattedWidth(spaceI < 0
                 ? text[nonSpaceI..]
                 : text[nonSpaceI..spaceI]);
@@ -105,7 +106,7 @@ public class TileSheet : IReadOnlyList<Rect>
             }
 
             lastSpaceI = spaceI;
-            nonSpaceI = text.IndexOfAnyNot(SpaceChars, spaceI);
+            nonSpaceI = textSpan[spaceI..].IndexOfAnyExcept(SpaceChars);
         }
         return new string(newText);
     }
