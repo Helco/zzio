@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using zzio;
 
@@ -10,7 +11,7 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
 {
     private readonly List<Range> ranges = [];
 
-    public bool IsReadOnly => false;
+    [ExcludeFromCodeCoverage] public bool IsReadOnly => false;
     public int Count => ranges.Count;
     public Range Total => ranges.Any()
         ? ranges.First().Start..ranges.Last().End

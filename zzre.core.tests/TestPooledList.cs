@@ -105,6 +105,11 @@ public class TestPooledList
         list.Add();
         Assert.That(list.Count, Is.EqualTo(2));
         Assert.That(() => list.Add(), Throws.InvalidOperationException);
+        Assert.That(() =>
+        {
+            int i = 42;
+            list.Add(i);
+        }, Throws.InvalidOperationException);
     }
 
     [Test]
@@ -199,5 +204,75 @@ public class TestPooledList
 
         Assert.That(e2.Current, Is.EqualTo(1337));
         Assert.That(e1.Current, Is.EqualTo(42));
+    }
+
+    [Test]
+    public void IsEmptyIsFull()
+    {
+        using PooledList<int> list = new(2);
+        Assert.That(list.IsEmpty, Is.True);
+        Assert.That(list.IsFull, Is.False);
+
+        list.Add() = 42;
+        Assert.That(list.IsEmpty, Is.False);
+        Assert.That(list.IsFull, Is.False);
+
+        while (list.Count < list.Capacity) // we cannot control what array we actually get
+            list.Add() = 1337;
+        Assert.That(list.IsEmpty, Is.False);
+        Assert.That(list.IsFull, Is.True);
+
+        list.Clear();
+        Assert.That(list.IsEmpty, Is.True);
+        Assert.That(list.IsFull, Is.False);
+    }
+
+    [Test]
+    public void SetCount()
+    {
+        PooledList<int> list = new(2);
+        list.Add() = 42;
+        list.Add() = 1337;
+        Assert.That(list.Count, Is.EqualTo(2));
+
+        list.Count = 2;
+        Assert.That(list.Count, Is.EqualTo(2));
+
+        list.Count = 1;
+        Assert.That(list, Is.EquivalentTo([42]));
+
+        list.Count = 0;
+        Assert.That(list, Is.Empty);
+
+        list.Count = 2;
+        Assert.That(list, Is.EquivalentTo([42, 1337]));
+
+        Assert.That(() => list.Count = -1, Throws.InstanceOf<ArgumentOutOfRangeException>());
+        Assert.That(() => list.Count = list.Capacity + 1, Throws.InstanceOf<ArgumentOutOfRangeException>());
+    }
+
+    [Test]
+    public void Spans()
+    {
+        PooledList<int> list = new(2);
+        Assert.That(list.Span.ToArray(), Is.Empty);
+        Assert.That(list.FullSpan.Length, Is.EqualTo(list.Capacity)); // undefined contents
+
+        list.Add() = 42;
+        Assert.That(list.Span.ToArray(), Is.EqualTo([42]));
+        Assert.That(list.FullSpan.Length, Is.EqualTo(list.Capacity)); // undefined content in the second slot
+
+        list.Add() = 1337;
+        Assert.That(list.Span.ToArray(), Is.EqualTo([42, 1337]));
+        Assert.That(list.FullSpan[..2].ToArray(), Is.EqualTo([42, 1337]));
+
+        ReadOnlySpan<int> casted = list;
+        Assert.That(casted.ToArray(), Is.EqualTo([42, 1337]));
+
+        list.Clear();
+        casted = list;
+        Assert.That(list.Span.ToArray(), Is.Empty);
+        Assert.That(list.FullSpan.Length, Is.EqualTo(list.Capacity));
+        Assert.That(casted.Length, Is.Zero);
     }
 }

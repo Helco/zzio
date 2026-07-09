@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using static zzre.MathEx;
 
@@ -79,8 +80,8 @@ public struct PooledList<T> : IDisposable, IEnumerable<T> where T : struct
     [MethodImpl(MIOptions)]
     public readonly ArraySegment<T>.Enumerator GetEnumerator() =>
         ArraySegment.GetEnumerator();
-    readonly IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
-    readonly IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    [ExcludeFromCodeCoverage] readonly IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+    [ExcludeFromCodeCoverage] readonly IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public static implicit operator ReadOnlySpan<T>(in PooledList<T> list) => list.Span;
 }

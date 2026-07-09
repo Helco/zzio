@@ -9,6 +9,10 @@ namespace zzre.tests;
 [TestFixture]
 public class TestMath
 {
+    private const float EPS = 0.00001f;
+    private const float PINF = float.PositiveInfinity;
+    private const float NAN = float.NaN;
+
     [Test]
     public void TestRoundtrip()
     {
@@ -119,5 +123,45 @@ public class TestMath
     {
         var value = Random.Shared.NextOf<AlmostANumber>([A, B, C, D, E], [B, C, D]);
         Assert.That(value, Is.AnyOf(A, E));
+    }
+
+    [Test]
+    public void TestNaNVectors()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(MathEx.Vector2NaN.X, Is.NaN);
+            Assert.That(MathEx.Vector2NaN.Y, Is.NaN);
+            Assert.That(MathEx.Vector3NaN.X, Is.NaN);
+            Assert.That(MathEx.Vector3NaN.Y, Is.NaN);
+            Assert.That(MathEx.Vector3NaN.Z, Is.NaN);
+            Assert.That(MathEx.Vector4NaN.X, Is.NaN);
+            Assert.That(MathEx.Vector4NaN.Y, Is.NaN);
+            Assert.That(MathEx.Vector4NaN.Z, Is.NaN);
+            Assert.That(MathEx.Vector4NaN.W, Is.NaN);
+        });
+    }
+
+    [Test]
+    public void TestIsFinite()
+    {
+        Assert.That(MathEx.IsFinite(new Vector2(0, 0)), Is.True);
+        Assert.That(MathEx.IsFinite(new Vector2(42, 1337)), Is.True);
+        Assert.That(MathEx.IsFinite(new Vector2(PINF, PINF)), Is.False);
+        Assert.That(MathEx.IsFinite(new Vector2(PINF, 42)), Is.False);
+        Assert.That(MathEx.IsFinite(new Vector2(1337, PINF)), Is.False);
+        Assert.That(MathEx.IsFinite(new Vector2(1337, NAN)), Is.False);
+        Assert.That(MathEx.IsFinite(new Vector2(NAN, 1337)), Is.False);
+        Assert.That(MathEx.IsFinite(new Vector2(NAN, NAN)), Is.False);
+
+        Assert.That(MathEx.IsFinite(Vector3.Zero), Is.True);
+        Assert.That(MathEx.IsFinite(Vector3.One), Is.True);
+        Assert.That(MathEx.IsFinite(MathEx.Vector3NaN), Is.False);
+        Assert.That(MathEx.IsFinite(new Vector3(1, NAN, 2)), Is.False);
+
+        Assert.That(MathEx.IsFinite(Vector4.Zero), Is.True);
+        Assert.That(MathEx.IsFinite(Vector4.One), Is.True);
+        Assert.That(MathEx.IsFinite(MathEx.Vector4NaN), Is.False);
+        Assert.That(MathEx.IsFinite(new Vector4(1, NAN, 2, 3)), Is.False);
     }
 }
