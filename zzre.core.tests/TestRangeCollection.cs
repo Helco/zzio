@@ -79,6 +79,14 @@ public class TestRangeCollection
     }
 
     [Test]
+    public void AddBestFit_Empty()
+    {
+        var coll = new RangeCollection();
+        Assert.That(coll.AddBestFit(4), Is.EqualTo(0..4));
+        Assert.That(coll, Is.EqualTo([0..4]));
+    }
+
+    [Test]
     public void AddBestFit_Simple()
     {
         var coll = new RangeCollection(10) { 0..3 };
@@ -92,6 +100,14 @@ public class TestRangeCollection
         var coll = new RangeCollection { 0..3, 7..10 };
         Assert.That(coll.AddBestFit(2), Is.EqualTo(5..7));
         Assert.That(coll, Is.EqualTo(new[] { 0..3, 5..10 }));
+    }
+
+    [Test]
+    public void AddBestFit_OptimalHoleInTheMiddle()
+    {
+        var coll = new RangeCollection { 0..3, 7..10 };
+        Assert.That(coll.AddBestFit(4), Is.EqualTo(3..7));
+        Assert.That(coll, Is.EqualTo(new[] { 0..10 }));
     }
 
     [Test]
@@ -232,6 +248,18 @@ public class TestRangeCollection
         var coll = new RangeCollection(10) { 2..7 };
         Assert.That(coll.Remove(5..5));
         Assert.That(coll, Is.EqualTo(new[] { 2..7 }));
+    }
+
+    [Test]
+    public void RemoveAll()
+    {
+        var coll = new RangeCollection()
+        {
+            3..5, 7..9
+        };
+        coll.Remove(1..11);
+
+        Assert.That(coll.Area, Is.Zero);
     }
 
     [Test]
@@ -476,5 +504,66 @@ public class TestRangeCollection
         };
         coll.MergeNearbyRanges(2);
         Assert.That(coll, Is.EqualTo(new[] { 0..4, 7..10 }));
+    }
+
+    [Test]
+    public void EmptyRangeCollection()
+    {
+        var coll = new RangeCollection();
+        Assert.Multiple(() =>
+        {
+            Assert.That(coll.Area, Is.EqualTo(0));
+            Assert.That(coll.Total, Is.EqualTo(0..0));
+            Assert.That(coll.MinValue, Is.EqualTo(-1));
+            Assert.That(coll.MaxValue, Is.EqualTo(-1));
+            Assert.That(() => coll.MergeNearbyRanges(2), Throws.Nothing);
+            Assert.That(() => coll.MergeNearbyRanges(0), Throws.Nothing);
+        });
+    }
+
+    [Test]
+    public void Clear()
+    {
+        var coll = new RangeCollection()
+        {
+            0..4,
+            6..10
+        };
+        coll.Clear();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(coll.Total, Is.EqualTo(0..0));
+            Assert.That(coll.Area, Is.Zero);
+            Assert.That(coll.Count, Is.Zero);
+        });
+    }
+
+    [Test]
+    public void CopyTo()
+    {
+        var coll = new RangeCollection()
+        {
+            6..10,
+            0..4
+        };
+        var result = new Range[3];
+        result[0] = 42..67;
+        coll.CopyTo(result, 1);
+        Assert.That(result, Is.EqualTo([42..67, 0..4, 6..10]));
+    }
+
+    [Test]
+    public void MaxRangeValue_CanRemove()
+    {
+        var coll = new RangeCollection()
+        {
+            0..4,
+            5..9,
+            10..15
+        };
+        coll.MaxRangeValue = 8;
+
+        Assert.That(coll, Is.EqualTo([0..4, 5..8]));
     }
 }

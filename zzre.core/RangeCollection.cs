@@ -187,7 +187,8 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
         if (ranges.Count == 0)
             return false;
         var rangeI = FindRangeIndexContaining(item.Start.GetOffset(MaxRangeValue));
-        return rangeI >= 0 && Contains(inner: item, outer: ranges[rangeI]);
+        return rangeI >= 0 &&
+            item.End.GetOffset(MaxRangeValue) <= ranges[rangeI].End.GetOffset(MaxRangeValue);
     }
 
     public bool Intersects(Range item) =>
@@ -248,10 +249,6 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
         : startOffset >= r2.End.GetOffset(MaxRangeValue) ? 1
         : 0;
 
-    private bool Contains(Range inner, Range outer) =>
-        inner.Start.GetOffset(MaxRangeValue) >= outer.Start.GetOffset(MaxRangeValue) &&
-        inner.End.GetOffset(MaxRangeValue) <= outer.End.GetOffset(MaxRangeValue);
-
     public void MergeNearbyRanges(int maxDistance)
     {
         // this method is only ever compacting the ranges, so we can work in-place
@@ -274,11 +271,6 @@ public class RangeCollection : ICollection<Range>, IReadOnlyCollection<Range>
 
     public void Clear() => ranges.Clear();
     public void CopyTo(Range[] array, int arrayIndex) => ranges.CopyTo(array, arrayIndex);
-    public IEnumerator<Range> GetEnumerator() => ranges.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ranges.GetEnumerator();
-
-    private sealed class RangeComparer : IComparer<Range>
-    {
-        public int Compare(Range x, Range y) => x.Start.Value - y.Start.Value;
-    }
+    [ExcludeFromCodeCoverage] public IEnumerator<Range> GetEnumerator() => ranges.GetEnumerator();
+    [ExcludeFromCodeCoverage] IEnumerator IEnumerable.GetEnumerator() => ranges.GetEnumerator();
 }
