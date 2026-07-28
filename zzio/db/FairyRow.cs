@@ -67,7 +67,14 @@ public class FairyRow : MappedRow
         _ => 0.0
     } * 0.9;
 
-    public double BaseJumpPower => JumpPower switch
+    public double BaseJumpPower => BaseJumpPowerOf(JumpPower);
+
+    /// <summary>Jump power factor for a jump power step, as the original computes it</summary>
+    /// <remarks>
+    /// FUN_00439d61 multiplies the base factor by a per-step constant for every
+    /// step except 2, where it assigns the base factor directly (no fmul).
+    /// </remarks>
+    public static double BaseJumpPowerOf(int jumpPower) => jumpPower switch
     {
         0 => 0.5,
         1 => 0.8,
@@ -76,6 +83,24 @@ public class FairyRow : MappedRow
         4 => 1.6,
         _ => 0.0
     } * 1.2;
+
+    /// <summary>Maximum hitpoints a fairy with this base MHP has at a level</summary>
+    /// <remarks>
+    /// FUN_00439a3d: base = MHP * 0.1f, then
+    /// maxHP = (int)((float)(int)((MHP - base) * (level / 60f)) + base).
+    /// The level-scaled part is truncated *before* the base is added and the
+    /// sum is truncated again - collapsing this into a single truncation is
+    /// off by one for many combinations.
+    /// </remarks>
+    public static int MaxHPAtLevel(int maxMHP, int level)
+    {
+        float tenth = maxMHP * 0.1f;
+        float scaled = (maxMHP - tenth) * (level / 60f);
+        return (int)((int)scaled + tenth);
+    }
+
+    /// <summary>Maximum hitpoints at a level, based on this row's base MHP</summary>
+    public int MaxHPAtLevel(int level) => MaxHPAtLevel(MHP, level);
 
     public double BaseCriticalHit => CriticalHit switch
     {

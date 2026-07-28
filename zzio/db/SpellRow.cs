@@ -39,4 +39,32 @@ public class SpellRow : MappedRow
         4 => 55,
         _ => 1000
     };
+
+    /// <summary>Damage this spell deals before any modifiers</summary>
+    public int BaseDamage => BaseDamageOf(Damage);
+
+    /// <summary>How fast this spell charges up while its button is held</summary>
+    public double BaseLoadupRate => BaseLoadupRateOf(Loadup);
+
+    /// <summary>Base damage for a damage step, as the original looks it up</summary>
+    /// <remarks>FUN_0044b4d6. Support spells always carry step 0.</remarks>
+    public static int BaseDamageOf(int damage) => damage switch
+    {
+        1 => 65,
+        2 => 70,
+        3 => 95,
+        4 => 110,
+        _ => 50
+    };
+
+    /// <summary>Charge rate for a loadup step, as the original looks it up</summary>
+    /// <remarks>FUN_0043addc. A higher step charges <i>faster</i>.</remarks>
+    public static double BaseLoadupRateOf(int loadup) => loadup switch
+    {
+        1 => 0.7,
+        2 => 1.0,
+        3 => 1.3,
+        4 => 1.7,
+        _ => 0.4
+    };
 }

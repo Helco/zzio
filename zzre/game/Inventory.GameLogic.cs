@@ -30,10 +30,8 @@ public partial class Inventory
 
     private void UpdateMaxMHP(InventoryFairy fairy)
     {
-        var levelFactor = GetLevelFactor(fairy);
         var reallyMaxMHP = mappedDB.GetFairy(fairy.dbUID).MHP;
-        var oneTenth = reallyMaxMHP / 10.0;
-        fairy.maxMHP = (uint)(levelFactor * (reallyMaxMHP - oneTenth) + oneTenth);
+        fairy.maxMHP = (uint)FairyRow.MaxHPAtLevel(reallyMaxMHP, (int)fairy.level);
     }
 
     private void UpdateMoveSpeed(InventoryFairy fairy)
