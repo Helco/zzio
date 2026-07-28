@@ -152,6 +152,10 @@ public unsafe class SdlWindow : BaseDisposable
                 if (jniEnv == null)
                     sdl.ThrowError(nameof(Sdl.AndroidGetJNIEnv));
                 return SwapchainSource.CreateAndroidSurface((nint)sysWmInfo.Info.Android.Surface, (nint)jniEnv);
+            case SysWMType.UIKit:
+                // SDL reports the UIWindow, and Veldrid wants the view backing the
+                // swapchain - a UIWindow is a UIView, so it can serve directly.
+                return SwapchainSource.CreateUIView((nint)sysWmInfo.Info.UIKit.Window);
             default:
                 throw new PlatformNotSupportedException("Cannot create a SwapchainSource for " + sysWmInfo.Subsystem + ".");
         }
