@@ -95,6 +95,12 @@ public class Savegame
     {
         version.Write(w);
         w.WriteZString(name);
+        // ReadNew liest diese beiden Felder vor dem Location-Block — ohne sie
+        // ist jedes selbst geschriebene Savegame unlesbar (der Leser nimmt
+        // LocationBlockSize als secondsPlayed und scheitert zwei Felder spaeter
+        // am Groessen-Check).
+        w.Write(secondsPlayed);
+        w.Write(progress);
         w.Write(LocationBlockSize);
         w.Write(sceneId);
         w.Write(entryId);
