@@ -111,7 +111,14 @@ public class Savegame
             w.WriteZString(sceneName);
             w.Write(mods.Count);
             foreach (var mod in mods)
+            {
+                // ReadNew reads the type before the payload, but the mods'
+                // Write methods only write their payload — without this
+                // prefix any savegame containing game state mods (a first
+                // picked-up item, an opened chest, ...) is unreadable.
+                w.Write((int)mod.Type);
                 mod.Write(w);
+            }
         }
 
         w.Write(inventory.Count);
