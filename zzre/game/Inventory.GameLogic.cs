@@ -115,7 +115,11 @@ public partial class Inventory
         {
             // TODO: Refactor original XP increase method
             fairy.xp = Math.Min(MaxXP, fairy.xp + 1);
-            var newLevel = GetLevelByXP(fairy);
+            // clamp at the internal level cap 59 (= displayed 60): the raw
+            // curve yields 60 at the XP cap 15000 for 9 of the 12 levelup
+            // values in the fairy database, but the original engine has no
+            // level-up threshold beyond 59 (also see GetLevelupXP below)
+            var newLevel = Math.Min(GetLevelByXP(fairy), (uint)(MaxLevel - 1));
             if (newLevel <= fairy.level)
                 continue;
             // TODO: Handle fairy attribute change upon level change
